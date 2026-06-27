@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: agency_bot_app
+    ports:
+      - "3000:3000" # Puerto principal del servidor
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgres://agency_user:agency_pass@db:5432/agency_db
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: ankane/pgvector:latest # PostgreSQL optimizado con extensión vectorial (para el RAG)
+    container_name: agency_bot_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: agency_user
+      POSTGRES_PASSWORD: agency_pass
+      POSTGRES_DB: agency_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
