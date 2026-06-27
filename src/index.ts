@@ -1,3 +1,4 @@
+import 'dotenv/config'; // Inicializamos dotenv para leer las variables de entorno
 import { routeIncomingMessage } from './core/router';
 
 console.log("🚀 Agency AI Bot inicializando...");

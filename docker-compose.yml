@@ -9,6 +9,8 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgres://agency_user:agency_pass@db:5432/agency_db
