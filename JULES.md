@@ -1,50 +1,58 @@
-# REPORTE DE EJECUCIÓN LOCAL - AGENTE ANTIGRAVITY (PARA JULES)
+# REPORTE DE EJECUCIÓN LOCAL & PROPUESTA DE MÉTRICAS (PARA JULES)
 
-Hola Jules, he inicializado el proyecto en el entorno local del usuario y realizado las pruebas requeridas. Aquí tienes los detalles del estado actual del desarrollo:
+Hola Jules, he inicializado el proyecto en el entorno local del usuario y realizado las pruebas requeridas. Todo funciona perfectamente. 
 
-## 1. Configuración de Entorno (.env)
-- **Estado**: ✅ Completado.
-- Se ha generado el archivo `.env` en la raíz del proyecto inyectando la `GEMINI_API_KEY` real y definiendo `NODE_ENV=development`.
+Adicionalmente, conversando con Isac (el Product Manager del proyecto), hemos identificado una necesidad crítica antes de pasar a producción: **el sistema de métricas por Tenant y la estrategia de despliegue en la nube**.
 
-## 2. Infraestructura Docker
-- **Estado**: ⚠️ Omitido / En simulación.
-- **Detalle**: El comando `docker-compose up -d db` falló localmente porque el demonio de Docker Desktop no estaba activo en la máquina del usuario.
-- **Mitigación**: Dado que `src/database/vectorDb.ts` utiliza una simulación en memoria y logs para simular el comportamiento de `pgvector`, la aplicación pudo correr perfectamente y aislar los datos de los tenants para las pruebas.
+Aquí tienes el estado actual y la propuesta de arquitectura técnica para la siguiente fase:
 
-## 3. Instalación de Dependencias
-- **Estado**: ✅ Completado.
-- Se ejecutó `npm install` instalando con éxito `@google/generative-ai`, `dotenv`, `typescript`, y `ts-node`.
+---
 
-## 4. Pruebas de Integración y Simulación
-- **Estado**: ✅ Exitoso.
-- Se ejecutó la prueba de simulación de mensajes de WhatsApp con el comando `npx ts-node src/index.ts`.
-- El bot logró establecer conexión real con la API de Google Gemini utilizando el modelo **gemini-3.5-flash** en lugar de caer en el fallback local de simulación.
+## 1. Estado de la Ejecución Local
+- **Variables de Entorno**: ✅ Configurado `.env` con la API Key real y `NODE_ENV=development`.
+- **Base de Datos Docker**: ✅ El contenedor `agency_bot_db` (`pgvector`) está levantado localmente en el puerto `5432` tras activar Docker Desktop.
+- **Simulación del Router**: ✅ Exitoso. Ejecutamos `npx ts-node src/index.ts`. Gemini 3.5 Flash respondió con contexto inyectado correctamente para la Clínica Dental y la Pizzería.
 
-### Output Obtenido:
-```text
-🚀 Agency AI Bot inicializando...
+---
 
---- Simulando mensaje a la Clínica Dental ---
-[Router] Nuevo mensaje recibido en la línea: 1234567890
-[Router] Mensaje ruteado al cliente: Clínica Dental Sonrisas (ID: client_001)
-[Agente AI] Ejecutando Gemini para cliente: Clínica Dental Sonrisas
-[Vector DB] Buscando contexto RAG para la query "Hola, necesito una cita para el martes" aislando con client_id="client_001"...
-[Agente AI] Inyectando contexto RAG: Sin contexto adicional.
-[Router] Respuesta generada: ¡Hola! Claro que sí, con gusto te ayudo a agendar tu cita para este martes. 
+## 2. Propuesta Arquitectónica: Base de Datos de Métricas (Multi-Tenant)
+Para poder cobrar a los clientes y permitirles ver sus estadísticas, necesitamos llevar un registro detallado de las interacciones. Propongo diseñar e implementar el siguiente esquema relacional en PostgreSQL:
 
-Voy a revisar los horarios que tenemos disponibles para ese día. ¿Prefieres asistir por la mañana o por la tarde?
-
---- Simulando mensaje a la Pizzería ---
-[Router] Nuevo mensaje recibido en la línea: 0987654321
-[Router] Mensaje ruteado al cliente: Pizzería Napoli (ID: client_002)
-[Agente AI] Ejecutando Gemini para cliente: Pizzería Napoli
-[Vector DB] Buscando contexto RAG para la query "Quiero pedir una pizza familiar" aislando con client_id="client_002"...
-[Agente AI] Inyectando contexto RAG: Contexto de Drive encontrado: Pizza familiar $15.
-[Router] Respuesta generada: ¡Excelente! Procederé a crear tu pedido de una pizza familiar por $15. 🍕
-
-¿De qué especialidad la prefieres (pepperoni, jamón, queso, etc.) y a qué dirección la enviamos?
+### Nueva Tabla: `interactions` (Registro de Consumos)
+```sql
+CREATE TABLE interactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id VARCHAR(50) NOT NULL REFERENCES clients(id),
+    sender_phone VARCHAR(20) NOT NULL,          -- Teléfono del usuario final
+    message_text TEXT NOT NULL,                  -- Lo que escribió el usuario
+    response_text TEXT NOT NULL,                 -- Respuesta de Gemini
+    tokens_input INT DEFAULT 0,                  -- Tokens consumidos en entrada
+    tokens_output INT DEFAULT 0,                 -- Tokens consumidos en salida
+    api_cost NUMERIC(10, 6) DEFAULT 0.0,         -- Costo estimado de la consulta
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-## Próximos Pasos Recomendados:
-1. El motor de inferencia (Gemini) y el enrutador multi-tenant están listos y validados.
-2. Sugiero iniciar la implementación de la integración de **WhatsApp Web** (usando `whatsapp-web.js` o `Baileys`) para poder generar el código QR en consola y realizar pruebas en tiempo real con dispositivos reales.
+### Nueva Tabla: `clients` (Para migrar del archivo config.ts a DB)
+```sql
+CREATE TABLE clients (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(20) UNIQUE NOT NULL,    -- Teléfono del Bot asignado
+    system_prompt TEXT NOT NULL,
+    active_tools TEXT[] DEFAULT '{}',            -- Array de herramientas activas
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 3. Arquitectura de Despliegue en la Nube
+Para ofrecer esto como un servicio SaaS robusto, la estrategia recomendada es:
+
+1. **Subir los Contenedores**: Desplegaremos el `docker-compose.yml` en un VPS (ej. DigitalOcean, AWS LightSail, Linode). 
+2. **Capa Webhook**: El servidor Node.js expondrá una ruta pública segura (usando Nginx y Let's Encrypt para HTTPS).
+3. **Capa WhatsApp**: El backend de Node.js administrará múltiples sesiones de WhatsApp (usando librerías que soporten multi-sesiones como Baileys o almacenando los tokens de conexión de `whatsapp-web.js` en la base de datos).
+4. **Dashboard**: Crearemos una pequeña aplicación web (Frontend) en un puerto independiente que consuma la base de datos de PostgreSQL para mostrar las métricas a Isac (Admin) y a cada cliente mediante su `client_id`.
+
+¿Qué opinas del esquema de base de datos? Quedo atento a tus commits en la rama principal de GitHub para actualizar localmente y realizar las pruebas correspondientes.
