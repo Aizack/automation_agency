@@ -10,7 +10,7 @@ export const fetchDocumentsFromDrive = async (clientId: string) => {
     // Simulación de lectura de archivos PDF/Docx en Google Drive
     // La estructura en Drive sería algo como: /Agencia_Data/{clientId}/
 
-    let mockDocuments = [];
+    let mockDocuments: string[] = [];
 
     if (clientId === "client_001") {
         mockDocuments = [

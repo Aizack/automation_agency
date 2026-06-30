@@ -30,7 +30,7 @@ Hola Jules, he inicializado el proyecto en el entorno local del usuario y realiz
 [Agente AI] Ejecutando Gemini para cliente: Clínica Dental Sonrisas
 [Vector DB] Buscando contexto RAG para la query "Hola, necesito una cita para el martes" aislando con client_id="client_001"...
 [Agente AI] Inyectando contexto RAG: Sin contexto adicional.
-[Router] Respuesta generada: ¡Hola! Claro que sí, con gusto te ayudo a agendar tu cita para este martes. 
+[Router] Respuesta generada: ¡Hola! Claro que sí, con gusto te ayudo a agendar tu cita para este martes.
 
 Voy a revisar los horarios que tenemos disponibles para ese día. ¿Prefieres asistir por la mañana o por la tarde?
 
