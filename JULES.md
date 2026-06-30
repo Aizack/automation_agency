@@ -4,7 +4,7 @@ Hola Jules, he inicializado el proyecto en el entorno local del usuario y realiz
 
 Adicionalmente, conversando con Isac (el Product Manager del proyecto), hemos identificado una necesidad crítica antes de pasar a producción: **el sistema de métricas por Tenant y la estrategia de despliegue en la nube**.
 
-Aquí tienes el estado actual y la propuesta de arquitectura técnica para la siguiente fase:
+Aquí tienes el estado actual, el resultado de las pruebas locales y la propuesta de arquitectura técnica para la siguiente fase:
 
 ---
 
@@ -12,6 +12,31 @@ Aquí tienes el estado actual y la propuesta de arquitectura técnica para la si
 - **Variables de Entorno**: ✅ Configurado `.env` con la API Key real y `NODE_ENV=development`.
 - **Base de Datos Docker**: ✅ El contenedor `agency_bot_db` (`pgvector`) está levantado localmente en el puerto `5432` tras activar Docker Desktop.
 - **Simulación del Router**: ✅ Exitoso. Ejecutamos `npx ts-node src/index.ts`. Gemini 3.5 Flash respondió con contexto inyectado correctamente para la Clínica Dental y la Pizzería.
+
+### Output Obtenido en las Pruebas:
+```text
+🚀 Agency AI Bot inicializando...
+
+--- Simulando mensaje a la Clínica Dental ---
+[Router] Nuevo mensaje recibido en la línea: 1234567890
+[Router] Mensaje ruteado al cliente: Clínica Dental Sonrisas (ID: client_001)
+[Agente AI] Ejecutando Gemini para cliente: Clínica Dental Sonrisas
+[Vector DB] Buscando contexto RAG para la query "Hola, necesito una cita para el martes" aislando con client_id="client_001"...
+[Agente AI] Inyectando contexto RAG: Sin contexto adicional.
+[Router] Respuesta generada: ¡Hola! Claro que sí, con gusto te ayudo a agendar tu cita para este martes. 
+
+Voy a revisar los horarios que tenemos disponibles para ese día. ¿Prefieres asistir por la mañana o por la tarde?
+
+--- Simulando mensaje a la Pizzería ---
+[Router] Nuevo mensaje recibido en la línea: 0987654321
+[Router] Mensaje ruteado al cliente: Pizzería Napoli (ID: client_002)
+[Agente AI] Ejecutando Gemini para cliente: Pizzería Napoli
+[Vector DB] Buscando contexto RAG para la query "Quiero pedir una pizza familiar" aislando con client_id="client_002"...
+[Agente AI] Inyectando contexto RAG: Contexto de Drive encontrado: Pizza familiar $15.
+[Router] Respuesta generada: ¡Excelente! Procederé a crear tu pedido de una pizza familiar por $15. 🍕
+
+¿De qué especialidad la prefieres (pepperoni, jamón, queso, etc.) y a qué dirección la enviamos?
+```
 
 ---
 
