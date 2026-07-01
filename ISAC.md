@@ -50,7 +50,7 @@ Con estos registros en la base de datos, Jules podrá construir un **Frontend We
 1. **Comprar un Servidor (VPS)**: Contratamos un servidor virtual en servicios como DigitalOcean, AWS o Render (normalmente cuesta de $5 a $15 USD mensuales para iniciar).
 2. **Subir el código**: Clonamos tu repositorio de GitHub en ese servidor remoto.
 3. **Encender Docker**: Ejecutamos el comando `docker compose up --build -d` en el servidor. Esto levantará tanto la base de datos PostgreSQL (`pgvector`) como la aplicación de Node.js en internet de forma permanente.
-4. **Configurar el Webhook**: Vinculamos el servidor a un dominio web seguro (ej. `api.tuagencia.com`) con certificado SSL (HTTPS).
+4. **Configurar un Webhook**: Vinculamos el servidor a un dominio web seguro (ej. `api.tuagencia.com`) con certificado SSL (HTTPS).
 5. **Producción**: El bot estará activo 24/7 procesando chats en tiempo real sin necesidad de que tu computadora local esté encendida.
 
 ---
@@ -69,3 +69,19 @@ Es de suma importancia comprender que WhatsApp Web (QR) no es la vía oficial y 
 * **Solución Premium (API Oficial)**: Para clientes corporativos o de alto presupuesto, debes ofrecer la **WhatsApp Business API de Meta**. Aunque tiene un costo por chat (aprox. $0.01 USD), es 100% estable, no requiere un teléfono encendido y el número es inmune a baneos por comportamiento de bot.
 
 **Tu Estrategia como PM**: Ofrece la opción de código QR gratis para pequeños negocios que deseen arrancar rápido y sin costos extra de Meta, y deja la API oficial como una opción "Enterprise" para clientes con más recursos o flujos muy grandes.
+
+---
+
+## 5. El Gran Combo: Marketing Digital + Automatización IA 🚀
+
+Vender marketing digital (anuncios en Meta/Google) y automatización de IA juntos te permite ofrecer un servicio de **extremo valor**. Los anuncios atraen el tráfico a WhatsApp y el bot atiende, filtra y agenda las citas inmediatamente, eliminando el error humano de responder tarde.
+
+### A. Módulos de tu Plataforma SaaS:
+1. **CRM & Notificaciones**:
+   * **Recordatorios de Citas**: Envío automático de recordatorios por WhatsApp 24 horas antes de la cita para reducir el ausentismo (que genera pérdidas directas al negocio).
+   * **Seguimiento de Logística**: Actualizaciones del estado del pedido (ej: *"Tu pedido ya va en camino"*).
+2. **Campañas Masivas (Broadcasts)**:
+   * **Estrategia Antiban Híbrida**: Para enviar promociones masivas (difusión a cientos de clientes), **se debe cambiar obligatoriamente a la API Oficial de Meta**. Hacer difusiones masivas usando el QR gratuito provocará baneos inmediatos del número del cliente. 
+   * **Estructura Recomendada**:
+     * **Soporte Diario (QR gratis)**: Los chats habituales de atención al cliente entrantes se atienden gratis mediante el QR.
+     * **Difusiones (API Oficial)**: Las campañas masivas de ofertas se envían usando un número oficial de Meta Cloud API. Si el usuario responde al anuncio, la IA toma la conversación para cerrar la venta.
