@@ -44,7 +44,7 @@ Con estos registros en la base de datos, Jules podrá construir un **Frontend We
 
 ## 3. ¿Cómo se sube esto online? ¿Subimos el contenedor?
 
-**Sí, subiremos los contenedores de Docker a internet.** Esta es la gran ventaja de Docker: lo que funciona en tu computadora local funcionará exactamente igual en la nube.
+**Sí, subiremos los contenedores de Docker a internet.** Esta es la gran ventaja de haber configurado Docker: lo que funciona localmente funcionará exactamente igual en la nube.
 
 ### El proceso de despliegue a producción:
 1. **Comprar un Servidor (VPS)**: Contratamos un servidor virtual en servicios como DigitalOcean, AWS o Render (normalmente cuesta de $5 a $15 USD mensuales para iniciar).
@@ -55,6 +55,17 @@ Con estos registros en la base de datos, Jules podrá construir un **Frontend We
 
 ---
 
-### Aspectos de PM a tener en cuenta para la siguiente fase:
-* **Presupuesto de APIs**: Monitorea de cerca el costo del modelo de Gemini. Aunque hoy en día es sumamente económico, es importante establecer un límite de uso mensual por cliente para evitar cobros inesperados.
-* **Escaneo de QR**: Define con Jules cómo tus clientes van a escanear el código QR de WhatsApp. ¿Será mediante la consola o construirán una página web simple donde el cliente pueda hacer click en "Conectar WhatsApp" y ver el QR? (Esto último es lo ideal para un producto comercial).
+## 4. Análisis de Riesgos de WhatsApp: QR Gratis vs. API Oficial
+
+Es de suma importancia comprender que WhatsApp Web (QR) no es la vía oficial y posee ciertos riesgos que debes gestionar:
+
+### A. Riesgo de Baneo (Bloqueo de número)
+* **La Causa**: Si WhatsApp detecta que un número tiene comportamientos puramente automatizados (ej: responder en 0.1 segundos con textos idénticos o enviar spam masivo a desconocidos), bloqueará temporalmente el número.
+* **Mitigación Comercial**: Utiliza este bot **únicamente para flujos entrantes** (Inbound). Si los usuarios finales inician la conversación buscando ayuda, el riesgo de bloqueo es casi nulo. Además, calienta los números con uso humano real antes de activarlos.
+* **Mitigación Técnica**: Añadiremos en el servidor retardos en la respuesta (2-4 segundos) y activaremos el estado visual de "escribiendo..." en el chat para simular el comportamiento humano.
+
+### B. Riesgo de Estabilidad
+* **La Causa**: Si Meta actualiza el código de WhatsApp Web, la librería local puede fallar hasta que se actualice. Además, si el celular del cliente se apaga o pierde internet, la sesión de WhatsApp Web puede cerrarse.
+* **Solución Premium (API Oficial)**: Para clientes corporativos o de alto presupuesto, debes ofrecer la **WhatsApp Business API de Meta**. Aunque tiene un costo por chat (aprox. $0.01 USD), es 100% estable, no requiere un teléfono encendido y el número es inmune a baneos por comportamiento de bot.
+
+**Tu Estrategia como PM**: Ofrece la opción de código QR gratis para pequeños negocios que deseen arrancar rápido y sin costos extra de Meta, y deja la API oficial como una opción "Enterprise" para clientes con más recursos o flujos muy grandes.

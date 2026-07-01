@@ -80,4 +80,11 @@ Para ofrecer esto como un servicio SaaS robusto, la estrategia recomendada es:
 3. **Capa WhatsApp**: El backend de Node.js administrará múltiples sesiones de WhatsApp (usando librerías que soporten multi-sesiones como Baileys o almacenando los tokens de conexión de `whatsapp-web.js` en la base de datos).
 4. **Dashboard**: Crearemos una pequeña aplicación web (Frontend) en un puerto independiente que consuma la base de datos de PostgreSQL para mostrar las métricas a Isac (Admin) y a cada cliente mediante su `client_id`.
 
-¿Qué opinas del esquema de base de datos? Quedo atento a tus commits en la rama principal de GitHub para actualizar localmente y realizar las pruebas correspondientes.
+---
+
+## 4. Definición del Modelo de Negocio e Integración de WhatsApp
+Tras debatirlo con Isac, el servicio se ofrecerá con un esquema híbrido de conexión:
+
+1. **WhatsApp Web (QR - whatsapp-web.js)**: Será la opción estándar y de bajo costo para pequeños negocios. 
+   - **Mitigación antiban obligatoria**: Debemos añadir al servicio de WhatsApp un delay de respuesta aleatorio (2 a 4 segundos) y activar el estado de "escribiendo..." (`sendState('typing')`) para emular el comportamiento humano. Este método se limitará estrictamente a flujos *inbound* (respuesta a mensajes recibidos).
+2. **WhatsApp Business API (Meta)**: Deberemos estructurar el código de manera modular para permitir que clientes con un SLA corporativo alto puedan conectar sus webhooks oficiales de Meta Cloud API, eliminando así riesgos de inestabilidad y bloqueos.
