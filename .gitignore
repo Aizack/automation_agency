@@ -1,3 +1,5 @@
 node_modules/
 .env
 Api Key.txt
+.wwebjs_auth/
+.wwebjs_cache/

@@ -11,6 +11,8 @@ const client = new Client({
     }
 });
 
+const startupTime = Math.floor(Date.now() / 1000);
+
 export const initializeWhatsAppClient = () => {
     console.log("[WhatsApp] Iniciando cliente...");
 
@@ -32,6 +34,15 @@ export const initializeWhatsAppClient = () => {
         // Ignoramos los mensajes propios del bot o mensajes de estado
         if (msg.from === 'status@broadcast') return;
 
+        // Evitar responder a grupos
+        if (msg.from.endsWith('@g.us')) return;
+
+        // Evitar responder a mensajes antiguos/no leídos previos a encender el bot
+        if (msg.timestamp < startupTime) {
+            console.log(`[WhatsApp] Ignorando mensaje antiguo de ${msg.from}`);
+            return;
+        }
+
         console.log(`[WhatsApp] Mensaje recibido de ${msg.from}: ${msg.body}`);
 
         try {
@@ -49,6 +60,14 @@ export const initializeWhatsAppClient = () => {
             const responseText = await routeIncomingMessage(recipientPhone, senderPhone, msg.body);
 
             if (responseText) {
+                // Simulación de tipeo humana y retardo antiban
+                const chat = await msg.getChat();
+                await chat.sendStateTyping();
+
+                // Retardo aleatorio de 2 a 4 segundos
+                const delayMs = Math.floor(Math.random() * 2000) + 2000;
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+
                 // Enviar la respuesta generada por Gemini de vuelta al usuario por WhatsApp
                 await msg.reply(responseText);
             }
