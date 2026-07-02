@@ -107,10 +107,11 @@ export const AdminDashboard: React.FC = () => {
         setFormData({ name: '', phone_number: '', agent_phone: '' });
         fetchData(); // Recargar lista
       } else {
-        alert(`Error: ${data.error || data.message}`);
+        alert(`Error: ${data.error || data.message || 'Error desconocido del servidor'}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[AdminDashboard] Error creando cliente:", error);
+      alert(`Error de red o conexión: ${error.message || 'No se pudo conectar al servidor'}`);
     }
   };
 
