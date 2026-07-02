@@ -47,6 +47,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   const [toneOfVoice, setToneOfVoice] = useState('Friendly');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Solicitar arranque de conexión de WhatsApp
+  const handleConnectWhatsApp = async () => {
+    try {
+      await fetch('/api/whatsapp/connect', { method: 'POST' });
+    } catch (error) {
+      console.error("[ClientDashboard] Error solicitando conexión:", error);
+    }
+  };
+
   // Cargar datos estáticos del Cliente (Solo al iniciar o cambiar de ID)
   useEffect(() => {
     const fetchClientInfo = async () => {
@@ -275,11 +284,22 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                   className="w-full h-full object-cover" 
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(whatsappStatus.qr)}`}
                 />
-              ) : (
+              ) : whatsappStatus.status === 'INITIALIZING' ? (
                 <div className="text-surface font-bold text-center text-xs p-2 flex flex-col items-center">
                   <span className="material-symbols-outlined text-4xl text-gray-400 mb-2 animate-spin">refresh</span>
                   <span className="text-gray-600">INICIALIZANDO CANAL</span>
                   <span className="text-[9px] text-gray-400 font-normal mt-1">Espera un momento...</span>
+                </div>
+              ) : (
+                <div className="text-surface font-bold text-center text-xs p-2 flex flex-col items-center justify-center">
+                  <span className="material-symbols-outlined text-4xl text-gray-400 mb-1">sync_disabled</span>
+                  <span className="text-gray-600 uppercase mb-3 text-[10px] tracking-wider">Sin Vinculación Activa</span>
+                  <button 
+                    onClick={handleConnectWhatsApp}
+                    className="bg-primary-container text-on-primary-container px-3 py-1.5 rounded-lg text-[11px] font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                  >
+                    Generar Código QR
+                  </button>
                 </div>
               )}
               {!isWaConnected && whatsappStatus.status === 'QR' && <div className="scan-line"></div>}

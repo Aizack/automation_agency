@@ -84,12 +84,32 @@ export const initializeWhatsAppClient = () => {
     });
 
     // Evento: Desconexión
-    client.on('disconnected', (reason) => {
+    client.on('disconnected', async (reason) => {
         console.log('[WhatsApp] Cliente desconectado:', reason);
         whatsappState.status = 'DISCONNECTED';
         whatsappState.qr = '';
         whatsappState.phone = '';
+        try {
+            await client.destroy();
+        } catch (err) {
+            console.error("[WhatsApp] Error destruyendo cliente en desconexión:", err);
+        }
     });
+};
 
-    client.initialize();
+// Conectar WhatsApp bajo demanda
+export const connectWhatsApp = async () => {
+    if (whatsappState.status === 'CONNECTED' || whatsappState.status === 'QR' || whatsappState.status === 'INITIALIZING') {
+        return;
+    }
+    whatsappState.status = 'INITIALIZING';
+    whatsappState.qr = '';
+    whatsappState.phone = '';
+    console.log("[WhatsApp] Inicializando cliente a petición del usuario...");
+    try {
+        await client.initialize();
+    } catch (err) {
+        console.error("[WhatsApp] Error al inicializar cliente:", err);
+        whatsappState.status = 'DISCONNECTED';
+    }
 };

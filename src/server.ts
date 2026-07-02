@@ -10,7 +10,7 @@ import {
   updateClientStatus 
 } from './database/clientsCrud';
 import { pool } from './database/postgres';
-import { whatsappState } from './services/whatsapp';
+import { whatsappState, initializeWhatsAppClient, connectWhatsApp } from './services/whatsapp';
 
 const app = express();
 app.use(express.json());
@@ -24,6 +24,15 @@ const PORT = process.env.PORT || 3000;
 // --- ENDPOINT DE VINCULACIÓN WHATSAPP ---
 app.get('/api/whatsapp/status', (req: Request, res: Response) => {
   res.json({ success: true, data: whatsappState });
+});
+
+app.post('/api/whatsapp/connect', (req: Request, res: Response) => {
+  try {
+    connectWhatsApp();
+    res.json({ success: true, message: 'Inicializando conexión de WhatsApp...' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // --- ENDPOINTS DE CLIENTES (CRUD) ---
@@ -221,4 +230,7 @@ app.listen(PORT, () => {
   console.log(`🚀 [Servidor API] Servidor Express activo en el puerto ${PORT}`);
   console.log(`📊 Endpoints CRUD de Clientes disponibles en: http://localhost:${PORT}/api/clients`);
   console.log(`📈 Estadísticas de Métricas y Costos en: http://localhost:${PORT}/api/metrics`);
+  
+  // Inicializamos el receptor de eventos de WhatsApp al arrancar
+  initializeWhatsAppClient();
 });
