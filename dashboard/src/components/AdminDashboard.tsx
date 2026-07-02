@@ -30,18 +30,16 @@ export const AdminDashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
 
-  // Formulario nuevo cliente
+  // Formulario nuevo cliente (Simplificado sin ID ni Prompt)
   const [formData, setFormData] = useState({
-    id: '',
     name: '',
     phone_number: '',
-    system_prompt: '',
     agent_phone: '',
   });
 
   const [loading, setLoading] = useState(true);
 
-  // Cargar datos
+  // Cargar datos del backend
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -87,8 +85,8 @@ export const AdminDashboard: React.FC = () => {
   // Crear nuevo cliente
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.id || !formData.name || !formData.phone_number || !formData.system_prompt) {
-      alert("Por favor completa los campos obligatorios.");
+    if (!formData.name || !formData.phone_number) {
+      alert("Por favor completa los campos obligatorios: Nombre de la Empresa y Número del Bot.");
       return;
     }
 
@@ -97,22 +95,19 @@ export const AdminDashboard: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: formData.id,
           name: formData.name,
           phone_number: formData.phone_number,
-          system_prompt: formData.system_prompt,
           agent_phone: formData.agent_phone || undefined,
-          active_tools: []
         }),
       });
 
       const data = await res.json();
       if (data.success) {
         setShowModal(false);
-        setFormData({ id: '', name: '', phone_number: '', system_prompt: '', agent_phone: '' });
-        fetchData(); // Recargar
+        setFormData({ name: '', phone_number: '', agent_phone: '' });
+        fetchData(); // Recargar lista
       } else {
-        alert(`Error: ${data.error}`);
+        alert(`Error: ${data.error || data.message}`);
       }
     } catch (error) {
       console.error("[AdminDashboard] Error creando cliente:", error);
@@ -138,34 +133,34 @@ export const AdminDashboard: React.FC = () => {
             <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>smart_toy</span>
             Frant
           </h1>
-          <p className="text-on-surface-variant text-label-sm mt-1 opacity-70">by Diaz Lab</p>
+          <p className="text-on-surface-variant text-label-sm mt-1 opacity-70">por Diaz Lab</p>
         </div>
         <nav className="flex-grow space-y-2 overflow-y-auto custom-scrollbar">
           <a className="sidebar-item-active flex items-center gap-4 p-3 rounded-lg transition-all duration-200" href="#">
             <span className="material-symbols-outlined">dashboard</span>
-            <span className="font-label-md">Overview</span>
+            <span className="font-label-md">Visión General</span>
           </a>
           <a className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg" href="#">
             <span className="material-symbols-outlined">group</span>
-            <span className="font-label-md">Clients</span>
+            <span className="font-label-md">Clientes</span>
           </a>
           <a className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg" href="#">
             <span className="material-symbols-outlined">settings_suggest</span>
-            <span className="font-label-md">System Status</span>
+            <span className="font-label-md">Estado de Red</span>
           </a>
           <a className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg" href="#">
             <span className="material-symbols-outlined">payments</span>
-            <span className="font-label-md">Billing</span>
+            <span className="font-label-md">Facturación</span>
           </a>
         </nav>
         <div className="mt-auto space-y-2 pt-4 border-t border-outline/20">
           <a className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg" href="#">
             <span className="material-symbols-outlined">settings</span>
-            <span className="font-label-md">Settings</span>
+            <span className="font-label-md">Configuración</span>
           </a>
           <a className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg" href="#">
             <span className="material-symbols-outlined">logout</span>
-            <span className="font-label-md">Logout</span>
+            <span className="font-label-md">Cerrar Sesión</span>
           </a>
         </div>
       </aside>
@@ -175,15 +170,15 @@ export const AdminDashboard: React.FC = () => {
         {/* Header Section */}
         <header className="flex justify-between items-end mb-10">
           <div>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface mb-1">Dashboard Overview</h2>
-            <p className="text-on-surface-variant font-body-md opacity-80">Real-time monitoring and client orchestration.</p>
+            <h2 className="font-headline-lg text-headline-lg text-on-surface mb-1">Visión General</h2>
+            <p className="text-on-surface-variant font-body-md opacity-80">Monitoreo en tiempo real y orquestación de clientes.</p>
           </div>
           <button 
             className="bg-primary-container text-on-primary-container font-label-md px-4 py-2.5 rounded-xl flex items-center gap-2 primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer"
             onClick={() => setShowModal(true)}
           >
             <span className="material-symbols-outlined">person_add</span>
-            Create New Client
+            Crear Nuevo Cliente
           </button>
         </header>
 
@@ -192,13 +187,13 @@ export const AdminDashboard: React.FC = () => {
           {/* Metric 1 */}
           <div className="glass-card rounded-xl p-6 relative overflow-hidden group">
             <div className="flex justify-between items-start mb-2">
-              <p className="text-on-surface-variant font-label-md">Total Messages Processed</p>
+              <p className="text-on-surface-variant font-label-md">Mensajes Procesados</p>
               <span className="material-symbols-outlined text-primary/50">chat_bubble</span>
             </div>
             <div className="flex items-end gap-2">
               <h3 className="font-headline-lg text-headline-lg text-primary">{metrics.totalInteractions}</h3>
               <span className="text-secondary text-label-sm flex items-center gap-1 mb-1.5 font-bold">
-                <span className="material-symbols-outlined text-[14px]">trending_up</span> Live
+                <span className="material-symbols-outlined text-[14px]">trending_up</span> En Vivo
               </span>
             </div>
             <div className="mt-4 flex items-end gap-[2px] h-12">
@@ -216,19 +211,19 @@ export const AdminDashboard: React.FC = () => {
           <div className="glass-card rounded-xl p-6 flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start mb-2">
-                <p className="text-on-surface-variant font-label-md">Estimated API Cost</p>
+                <p className="text-on-surface-variant font-label-md">Costo Estimado de API</p>
                 <span className="material-symbols-outlined text-tertiary/50 font-bold">$</span>
               </div>
               <h3 className="font-headline-lg text-headline-lg text-tertiary">${metrics.totalApiCost.toFixed(6)}</h3>
             </div>
-            <p className="text-on-surface-variant text-label-sm mt-2 opacity-60">Avg. ${(metrics.totalApiCost / (metrics.totalInteractions || 1)).toFixed(6)} per interaction</p>
+            <p className="text-on-surface-variant text-label-sm mt-2 opacity-60">Promedio de ${(metrics.totalApiCost / (metrics.totalInteractions || 1)).toFixed(6)} por interacción</p>
           </div>
 
           {/* Metric 3 */}
           <div className="glass-card rounded-xl p-6 flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start mb-2">
-                <p className="text-on-surface-variant font-label-md">Total Time Saved</p>
+                <p className="text-on-surface-variant font-label-md">Tiempo Ahorrado</p>
                 <span className="material-symbols-outlined text-secondary/50">timer</span>
               </div>
               <h3 className="font-headline-lg text-headline-lg text-secondary">{totalHoursSaved} hrs</h3>
@@ -236,14 +231,14 @@ export const AdminDashboard: React.FC = () => {
             <div className="mt-2 bg-secondary/10 h-1 rounded-full overflow-hidden">
               <div className="bg-secondary h-full w-[75%]"></div>
             </div>
-            <p className="text-on-surface-variant text-label-sm mt-1 opacity-60">Based on 3 min per human reply</p>
+            <p className="text-on-surface-variant text-label-sm mt-1 opacity-60">Basado en 3 min por chat humano</p>
           </div>
 
           {/* Metric 4 */}
           <div className="glass-card rounded-xl p-6 flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start mb-2">
-                <p className="text-on-surface-variant font-label-md">Active WhatsApp Lines</p>
+                <p className="text-on-surface-variant font-label-md">Líneas de WhatsApp</p>
                 <span className="material-symbols-outlined text-primary/50">nest_remote_comfort_sensor</span>
               </div>
               <h3 className="font-headline-lg text-headline-lg text-on-surface">
@@ -252,7 +247,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
             <div className="flex gap-2 mt-2 items-center">
               <div className="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></div>
-              <span className="text-secondary text-label-sm">System Healthy</span>
+              <span className="text-secondary text-label-sm">Red Estable</span>
             </div>
           </div>
         </div>
@@ -260,13 +255,13 @@ export const AdminDashboard: React.FC = () => {
         {/* Client Management Section */}
         <section className="glass-card rounded-xl overflow-hidden">
           <div className="p-6 border-b border-outline/20 flex justify-between items-center bg-surface-container-low/50">
-            <h3 className="font-headline-md text-headline-md">Client Management</h3>
+            <h3 className="font-headline-md text-headline-md">Gestión de Clientes</h3>
             <div className="flex items-center gap-6">
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-md">search</span>
                 <input 
                   className="bg-surface-container border-outline/20 border rounded-lg pl-10 pr-4 py-1.5 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md outline-none w-64 text-on-surface" 
-                  placeholder="Search clients..." 
+                  placeholder="Buscar cliente..." 
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -274,7 +269,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <button className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md">
                 <span className="material-symbols-outlined">filter_list</span>
-                Filter
+                Filtrar
               </button>
             </div>
           </div>
@@ -283,12 +278,12 @@ export const AdminDashboard: React.FC = () => {
             <table className="w-full text-left">
               <thead>
                 <tr className="text-on-surface-variant border-b border-outline/20 bg-surface-container-low/30">
-                  <th className="px-6 py-3 font-label-md">Client Name</th>
-                  <th className="px-6 py-3 font-label-md">Bot Number</th>
-                  <th className="px-6 py-3 font-label-md">Human Agent</th>
-                  <th className="px-6 py-3 font-label-md">Status</th>
-                  <th className="px-6 py-3 font-label-md">App Console</th>
-                  <th className="px-6 py-3 font-label-md text-right">Actions</th>
+                  <th className="px-6 py-3 font-label-md">Cliente</th>
+                  <th className="px-6 py-3 font-label-md">Línea del Bot</th>
+                  <th className="px-6 py-3 font-label-md">Asesor Humano</th>
+                  <th className="px-6 py-3 font-label-md">Estado</th>
+                  <th className="px-6 py-3 font-label-md">Acceso al Panel</th>
+                  <th className="px-6 py-3 font-label-md text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline/10">
@@ -337,7 +332,7 @@ export const AdminDashboard: React.FC = () => {
                         className="text-secondary hover:text-primary transition-colors underline font-label-md" 
                         href={`/?view=client&id=${client.id}`}
                       >
-                        Ver Panel
+                        Abrir Panel de Control
                       </a>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -351,7 +346,7 @@ export const AdminDashboard: React.FC = () => {
             </table>
           </div>
           <div className="p-6 border-t border-outline/20 flex justify-between items-center text-on-surface-variant text-label-sm">
-            <p>Showing {filteredClients.length} of {clients.length} clients</p>
+            <p>Mostrando {filteredClients.length} de {clients.length} clientes</p>
             <div className="flex gap-2">
               <button className="p-2 border border-outline/20 rounded hover:bg-surface-variant/30 transition-all"><span className="material-symbols-outlined text-[16px]">chevron_left</span></button>
               <button className="p-2 border border-outline/20 rounded bg-primary-container/20 text-primary font-bold text-xs w-8 h-8 flex items-center justify-center">1</button>
@@ -367,8 +362,8 @@ export const AdminDashboard: React.FC = () => {
           <div className="glass-card w-full max-w-lg rounded-2xl p-8 shadow-2xl transition-transform duration-300">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="font-headline-md text-headline-md text-on-surface">Register New Client</h3>
-                <p className="text-on-surface-variant text-body-md opacity-70">Initialize a new Frant deployment instance.</p>
+                <h3 className="font-headline-md text-headline-md text-on-surface">Registrar Empresa</h3>
+                <p className="text-on-surface-variant text-body-md opacity-70">Inicializa una nueva instancia de bot en el sistema.</p>
               </div>
               <button 
                 className="p-2 hover:bg-surface-variant rounded-full text-on-surface-variant transition-all cursor-pointer"
@@ -379,52 +374,33 @@ export const AdminDashboard: React.FC = () => {
             </div>
             <form onSubmit={handleCreateClient} className="space-y-4">
               <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">Client ID (Unique, e.g. client_003)</label>
+                <label className="font-label-md text-on-surface-variant ml-1">Nombre de la Empresa</label>
                 <input 
                   className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
-                  placeholder="e.g. client_003" 
-                  type="text"
-                  value={formData.id}
-                  onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">Client Name</label>
-                <input 
-                  className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
-                  placeholder="e.g. Barbería El Bigote" 
+                  placeholder="ej. Clínica Odontológica de Colombia" 
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
               <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">WhatsApp Bot Number (E.164, without '+' or spaces)</label>
+                <label className="font-label-md text-on-surface-variant ml-1">Línea del Bot (Solo números, con indicativo. Ej. 573001234567)</label>
                 <input 
                   className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
-                  placeholder="e.g. 573001112222" 
+                  placeholder="ej. 573001234567" 
                   type="text"
                   value={formData.phone_number}
                   onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                 />
               </div>
               <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">Human Agent Phone (Takeover, E.164)</label>
+                <label className="font-label-md text-on-surface-variant ml-1">Teléfono Asesor Humano (Traspaso de emergencias. Ej. 573009998888)</label>
                 <input 
                   className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
-                  placeholder="e.g. 573009998888" 
+                  placeholder="ej. 573009998888" 
                   type="text"
                   value={formData.agent_phone}
                   onChange={(e) => setFormData({ ...formData, agent_phone: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">System Prompt / AI Behavior</label>
-                <textarea 
-                  className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all h-24" 
-                  placeholder="Define cómo debe comportarse el bot..." 
-                  value={formData.system_prompt}
-                  onChange={(e) => setFormData({ ...formData, system_prompt: e.target.value })}
                 />
               </div>
               <div className="pt-4 flex gap-4">
@@ -433,13 +409,13 @@ export const AdminDashboard: React.FC = () => {
                   onClick={() => setShowModal(false)}
                   type="button"
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button 
                   className="flex-1 px-4 py-2.5 bg-primary-container text-on-primary-container font-label-md rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer" 
                   type="submit"
                 >
-                  Create Account
+                  Crear Cliente
                 </button>
               </div>
             </form>

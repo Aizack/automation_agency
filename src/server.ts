@@ -10,6 +10,7 @@ import {
   updateClientStatus 
 } from './database/clientsCrud';
 import { pool } from './database/postgres';
+import { whatsappState } from './services/whatsapp';
 
 const app = express();
 app.use(express.json());
@@ -19,6 +20,11 @@ app.use(express.static(path.join(process.cwd(), 'dashboard/dist')));
 
 // Puerto de ejecución del servidor (default: 3000)
 const PORT = process.env.PORT || 3000;
+
+// --- ENDPOINT DE VINCULACIÓN WHATSAPP ---
+app.get('/api/whatsapp/status', (req: Request, res: Response) => {
+  res.json({ success: true, data: whatsappState });
+});
 
 // --- ENDPOINTS DE CLIENTES (CRUD) ---
 
@@ -46,19 +52,47 @@ app.get('/api/clients/:id', async (req: Request, res: Response) => {
   }
 });
 
-// 3. Crear un cliente
+// 2.5. Obtener los logs de chat de un cliente desde PostgreSQL
+app.get('/api/clients/:id/logs', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const logs = await pool.query(
+      'SELECT sender_phone, message_text, response_text, api_cost, timestamp FROM interactions WHERE client_id = $1 ORDER BY timestamp DESC LIMIT 50',
+      [id]
+    );
+    res.json({ success: true, count: logs.rowCount, data: logs.rows });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 3. Crear un cliente (ID automático y Prompt opcional)
 app.post('/api/clients', async (req: Request, res: Response) => {
   try {
     const { id, name, phone_number, system_prompt, active_tools, agent_phone } = req.body;
-    if (!id || !name || !phone_number || !system_prompt) {
+    if (!name || !phone_number) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Faltan campos obligatorios: id, name, phone_number, system_prompt' 
+        message: 'Faltan campos obligatorios: name, phone_number' 
       });
     }
 
-    await createClient({ id, name, phone_number, system_prompt, active_tools, agent_phone });
-    res.status(201).json({ success: true, message: `Cliente '${name}' creado exitosamente` });
+    const clientId = id || 'client_' + Math.random().toString(36).substring(2, 10);
+    const finalPrompt = system_prompt || `Eres un asistente de IA amable y servicial para la empresa ${name}.`;
+
+    await createClient({ 
+      id: clientId, 
+      name, 
+      phone_number, 
+      system_prompt: finalPrompt, 
+      active_tools: active_tools || [], 
+      agent_phone 
+    });
+    res.status(201).json({ 
+      success: true, 
+      message: `Cliente '${name}' creado exitosamente`,
+      data: { id: clientId }
+    });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }

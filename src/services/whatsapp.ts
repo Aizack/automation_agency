@@ -2,8 +2,14 @@ import { Client, LocalAuth } from 'whatsapp-web.js';
 import * as qrcode from 'qrcode-terminal';
 import { routeIncomingMessage } from '../core/router';
 
+// Estado global de WhatsApp expuesto para el Dashboard
+export const whatsappState = {
+    status: 'DISCONNECTED', // 'DISCONNECTED', 'QR', 'CONNECTED'
+    qr: '',
+    phone: '',
+};
+
 // Usamos LocalAuth para que la sesión se guarde en la computadora
-// y no tengas que escanear el QR cada vez que apagas y enciendes el bot.
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -22,22 +28,28 @@ export const initializeWhatsAppClient = () => {
         console.log('📱 ESCANEA ESTE CÓDIGO QR CON TU WHATSAPP 📱');
         console.log('==================================================\n');
         qrcode.generate(qr, { small: true });
+        
+        // Actualizar estado global
+        whatsappState.status = 'QR';
+        whatsappState.qr = qr;
+        whatsappState.phone = '';
     });
 
     // Evento: Autenticación exitosa
     client.on('ready', () => {
         console.log('[WhatsApp] Cliente está listo y conectado correctamente.');
+        
+        // Actualizar estado global
+        whatsappState.status = 'CONNECTED';
+        whatsappState.qr = '';
+        whatsappState.phone = client.info.wid.user;
     });
 
     // Evento: Recepción de mensajes
     client.on('message', async (msg) => {
-        // Ignoramos los mensajes propios del bot o mensajes de estado
         if (msg.from === 'status@broadcast') return;
-
-        // Evitar responder a grupos
         if (msg.from.endsWith('@g.us')) return;
 
-        // Evitar responder a mensajes antiguos/no leídos previos a encender el bot
         if (msg.timestamp < startupTime) {
             console.log(`[WhatsApp] Ignorando mensaje antiguo de ${msg.from}`);
             return;
@@ -46,29 +58,22 @@ export const initializeWhatsAppClient = () => {
         console.log(`[WhatsApp] Mensaje recibido de ${msg.from}: ${msg.body}`);
 
         try {
-            // El número del cliente que escribió el mensaje (ej: 573001234567@c.us)
             const senderPhone = msg.from.split('@')[0];
 
-            // En este entorno (whatsapp-web.js escaneado), el "bot" asume un solo número.
-            // Para mantener la arquitectura multi-tenant de nuestra prueba,
-            // enviaremos un "número de la agencia / bot" ficticio por ahora
-            // para que el router sepa a qué cliente (tenant) enrutar.
-            // En producción con WWebJS y Multi-dispositivo, usarías "msg.to".
+            // Resolvemos dinámicamente el número de teléfono del bot que está logueado
+            const botPhone = client.info?.wid?.user || "1234567890"; 
 
-            const recipientPhone = "1234567890"; // Simulamos que le escribieron a "Clínica Dental"
-
-            const responseText = await routeIncomingMessage(recipientPhone, senderPhone, msg.body);
+            // Enrutamos usando el número del bot conectado para cargar su respectivo prompt y config
+            const responseText = await routeIncomingMessage(botPhone, senderPhone, msg.body);
 
             if (responseText) {
-                // Simulación de tipeo humana y retardo antiban
                 const chat = await msg.getChat();
                 await chat.sendStateTyping();
 
-                // Retardo aleatorio de 2 a 4 segundos
+                // Retardo aleatorio de 2 a 4 segundos (antiban)
                 const delayMs = Math.floor(Math.random() * 2000) + 2000;
                 await new Promise(resolve => setTimeout(resolve, delayMs));
 
-                // Enviar la respuesta generada por Gemini de vuelta al usuario por WhatsApp
                 await msg.reply(responseText);
             }
 
@@ -81,9 +86,10 @@ export const initializeWhatsAppClient = () => {
     // Evento: Desconexión
     client.on('disconnected', (reason) => {
         console.log('[WhatsApp] Cliente desconectado:', reason);
-        // Podrías reiniciar el cliente aquí
+        whatsappState.status = 'DISCONNECTED';
+        whatsappState.qr = '';
+        whatsappState.phone = '';
     });
 
-    // Iniciar el cliente
     client.initialize();
 };
