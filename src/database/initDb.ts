@@ -44,7 +44,34 @@ const initDatabase = async () => {
         `);
         console.log("[DB Init] ✅ Tabla 'interactions' creada o ya existente.");
 
-        // 4. Semillar/Insertar Clientes Iniciales (Seed Data)
+        // 4. Crear tabla takeover_sessions (Traspaso Humano)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS takeover_sessions (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                customer_phone VARCHAR(20) NOT NULL,
+                status VARCHAR(20) DEFAULT 'active', -- 'active' (IA pausada), 'closed' (IA activa)
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'takeover_sessions' creada o ya existente.");
+
+        // 5. Crear tabla appointments (Agenda de citas interna)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS appointments (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                customer_phone VARCHAR(20) NOT NULL,
+                customer_name VARCHAR(100) NOT NULL,
+                appointment_date TIMESTAMP NOT NULL,
+                status VARCHAR(20) DEFAULT 'confirmed', -- 'confirmed', 'cancelled', 'rescheduled'
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'appointments' creada o ya existente.");
+
+        // 6. Semillar/Insertar Clientes Iniciales (Seed Data)
         const clientsToSeed = [
             {
                 id: "client_001",
