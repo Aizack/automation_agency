@@ -33,9 +33,11 @@ export const AdminDashboard: React.FC = () => {
   // Formulario nuevo cliente (Simplificado sin ID ni Prompt)
   const [formData, setFormData] = useState({
     name: '',
-    phone_number: '',
-    agent_phone: '',
   });
+  const [botCountryCode, setBotCountryCode] = useState('57');
+  const [botPhoneInput, setBotPhoneInput] = useState('');
+  const [agentCountryCode, setAgentCountryCode] = useState('57');
+  const [agentPhoneInput, setAgentPhoneInput] = useState('');
 
   const [loading, setLoading] = useState(true);
 
@@ -85,9 +87,19 @@ export const AdminDashboard: React.FC = () => {
   // Crear nuevo cliente
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone_number) {
+    if (!formData.name || !botPhoneInput) {
       alert("Por favor completa los campos obligatorios: Nombre de la Empresa y Número del Bot.");
       return;
+    }
+
+    let cleanBot = botPhoneInput.replace(/\D/g, '');
+    if (!cleanBot.startsWith(botCountryCode)) {
+      cleanBot = botCountryCode + cleanBot;
+    }
+
+    let cleanAgent = agentPhoneInput.replace(/\D/g, '');
+    if (cleanAgent && !cleanAgent.startsWith(agentCountryCode)) {
+      cleanAgent = agentCountryCode + cleanAgent;
     }
 
     try {
@@ -96,15 +108,17 @@ export const AdminDashboard: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
-          phone_number: formData.phone_number,
-          agent_phone: formData.agent_phone || undefined,
+          phone_number: cleanBot,
+          agent_phone: cleanAgent || undefined,
         }),
       });
 
       const data = await res.json();
       if (data.success) {
         setShowModal(false);
-        setFormData({ name: '', phone_number: '', agent_phone: '' });
+        setFormData({ name: '' });
+        setBotPhoneInput('');
+        setAgentPhoneInput('');
         fetchData(); // Recargar lista
       } else {
         alert(`Error: ${data.error || data.message || 'Error desconocido del servidor'}`);
@@ -385,24 +399,58 @@ export const AdminDashboard: React.FC = () => {
                 />
               </div>
               <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">Línea del Bot (Solo números, con indicativo. Ej. 573001234567)</label>
-                <input 
-                  className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
-                  placeholder="ej. 573001234567" 
-                  type="text"
-                  value={formData.phone_number}
-                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                />
+                <label className="font-label-md text-on-surface-variant ml-1">Línea del Bot</label>
+                <div className="flex gap-2">
+                  <select 
+                    value={botCountryCode}
+                    onChange={(e) => setBotCountryCode(e.target.value)}
+                    className="bg-surface-container border border-outline/30 rounded-xl px-3 py-2.5 text-on-surface focus:border-primary outline-none"
+                  >
+                    <option value="57">🇨🇴 +57</option>
+                    <option value="52">🇲🇽 +52</option>
+                    <option value="34">🇪🇸 +34</option>
+                    <option value="1">🇺🇸 +1</option>
+                    <option value="54">🇦🇷 +54</option>
+                    <option value="56">🇨🇱 +56</option>
+                    <option value="51">🇵🇪 +51</option>
+                    <option value="593">🇪🇨 +593</option>
+                    <option value="58">🇻🇪 +58</option>
+                  </select>
+                  <input 
+                    className="flex-grow bg-surface-container border border-outline/30 rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
+                    placeholder="ej. 3116718652" 
+                    type="text"
+                    value={botPhoneInput}
+                    onChange={(e) => setBotPhoneInput(e.target.value)}
+                  />
+                </div>
               </div>
               <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">Teléfono Asesor Humano (Traspaso de emergencias. Ej. 573009998888)</label>
-                <input 
-                  className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
-                  placeholder="ej. 573009998888" 
-                  type="text"
-                  value={formData.agent_phone}
-                  onChange={(e) => setFormData({ ...formData, agent_phone: e.target.value })}
-                />
+                <label className="font-label-md text-on-surface-variant ml-1">Teléfono Asesor Humano (Traspaso)</label>
+                <div className="flex gap-2">
+                  <select 
+                    value={agentCountryCode}
+                    onChange={(e) => setAgentCountryCode(e.target.value)}
+                    className="bg-surface-container border border-outline/30 rounded-xl px-3 py-2.5 text-on-surface focus:border-primary outline-none"
+                  >
+                    <option value="57">🇨🇴 +57</option>
+                    <option value="52">🇲🇽 +52</option>
+                    <option value="34">🇪🇸 +34</option>
+                    <option value="1">🇺🇸 +1</option>
+                    <option value="54">🇦🇷 +54</option>
+                    <option value="56">🇨🇱 +56</option>
+                    <option value="51">🇵🇪 +51</option>
+                    <option value="593">🇪🇨 +593</option>
+                    <option value="58">🇻🇪 +58</option>
+                  </select>
+                  <input 
+                    className="flex-grow bg-surface-container border border-outline/30 rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
+                    placeholder="ej. 3332792837" 
+                    type="text"
+                    value={agentPhoneInput}
+                    onChange={(e) => setAgentPhoneInput(e.target.value)}
+                  />
+                </div>
               </div>
               <div className="pt-4 flex gap-4">
                 <button 
