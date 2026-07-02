@@ -7,6 +7,7 @@ export interface ClientConfig {
   systemPrompt: string;
   activeTools: string[];
   status: string;      // Estado de la cuenta (active, suspended, inactive)
+  agentPhone?: string; // Teléfono del agente humano para el traspaso de chat
 }
 
 /**
@@ -22,7 +23,8 @@ export const getClientConfigByPhone = async (phone: string): Promise<ClientConfi
         phone_number AS "phoneNumber", 
         system_prompt AS "systemPrompt", 
         active_tools AS "activeTools", 
-        status 
+        status,
+        agent_phone AS "agentPhone"
        FROM clients 
        WHERE phone_number = $1 LIMIT 1`,
       [phone]

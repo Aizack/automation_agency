@@ -62,7 +62,7 @@ Es de suma importancia comprender que WhatsApp Web (QR) no es la vía oficial y 
 ### A. Riesgo de Baneo (Bloqueo de número)
 * **La Causa**: Si WhatsApp detecta que un número tiene comportamientos puramente automatizados (ej: responder en 0.1 segundos con textos idénticos o enviar spam masivo a desconocidos), bloqueará temporalmente el número.
 * **Mitigación Comercial**: Utiliza este bot **únicamente para flujos entrantes** (Inbound). Si los usuarios finales inician la conversación buscando ayuda, el riesgo de bloqueo es casi nulo. Además, calienta los números con uso humano real antes de activarlos.
-* **Mitigación Técnica**: Añadiremos en el servidor retardos en la respuesta (2-4 segundos) y activaremos el estado visual de "escribiendo..." en el chat para simular el comportamiento humano.
+* **Mitigación Técnico**: Añadiremos en el servidor retardos en la respuesta (2-4 segundos) y activaremos el estado visual de "escribiendo..." en el chat para simular el comportamiento humano.
 
 ### B. Riesgo de Estabilidad
 * **La Causa**: Si Meta actualiza el código de WhatsApp Web, la librería local puede fallar hasta que se actualice. Además, si el celular del cliente se apaga o pierde internet, la sesión de WhatsApp Web puede cerrarse.
@@ -85,3 +85,25 @@ Vender marketing digital (anuncios en Meta/Google) y automatización de IA junto
    * **Estructura Recomendada**:
      * **Soporte Diario (QR gratis)**: Los chats habituales de atención al cliente entrantes se atienden gratis mediante el QR.
      * **Difusiones (API Oficial)**: Las campañas masivas de ofertas se envían usando un número oficial de Meta Cloud API. Si el usuario responde al anuncio, la IA toma la conversación para cerrar la venta.
+
+---
+
+## 6. Agenda de Lanzamiento y Fases de Desarrollo 📅
+
+Para minimizar riesgos de baneo y optimizar el desarrollo, el roadmap está estructurado en las siguientes fases lógicas:
+
+```mermaid
+graph TD
+    F1[Fase 1: Base de Datos y Backend CRUD] --> F2[Fase 2: APIs y Visual Admin Dashboard - Google Stitch]
+    F2 --> F3[Fase 3: Pruebas de WhatsApp y QR en Vivo]
+    F3 --> F4[Fase 4: Módulos CRM, Logística y API de Meta]
+```
+
+1. **Fase 1: Base de Datos y Backend CRUD (En Desarrollo Local)**
+   * **Objetivo**: Migrar las configuraciones a PostgreSQL (`pgvector`) y estructurar el registro de métricas. Las pruebas se realizan puramente mediante simulación (webhooks mockeados) sin enlazar números de WhatsApp aún.
+2. **Fase 2: APIs del Dashboard y Prototipado Visual (Google Stitch)**
+   * **Objetivo**: Diseñar la interfaz del panel (registro de clientes, switches de tono, visualización de métricas de ROI y costos de API) usando Google Stitch y programar los endpoints de backend en Node.js para conectarlos.
+3. **Fase 3: Vinculación QR y Pruebas en Vivo**
+   * **Objetivo**: Una vez que la interfaz visual y la base de datos estén listas y conectadas, registrarás tu nuevo chip físico de pruebas y realizaremos el escaneo del código QR para probar todo el flujo en vivo.
+4. **Fase 4: Módulos de CRM (Recordatorios) y Campañas Masivas (Meta API)**
+   * **Objetivo**: Programar el cron de recordatorios automáticos de citas y configurar el envío de campañas oficiales a través de Meta para evitar baneos.

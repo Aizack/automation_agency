@@ -8,7 +8,7 @@ const initDatabase = async () => {
         await pool.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
         console.log("[DB Init] ✅ Extensión uuid-ossp lista.");
 
-        // 2. Crear tabla clients
+        // 2. Crear tabla clients (con agent_phone)
         await pool.query(`
             CREATE TABLE IF NOT EXISTS clients (
                 id VARCHAR(50) PRIMARY KEY,
@@ -17,10 +17,16 @@ const initDatabase = async () => {
                 system_prompt TEXT NOT NULL,
                 active_tools TEXT[] DEFAULT '{}',
                 status VARCHAR(20) DEFAULT 'active',
+                agent_phone VARCHAR(20),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log("[DB Init] ✅ Tabla 'clients' creada o ya existente.");
+        
+        // Ejecutar alter table por si la tabla ya existía sin la columna agent_phone
+        await pool.query(`
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS agent_phone VARCHAR(20);
+        `);
+        console.log("[DB Init] ✅ Tabla 'clients' creada y alterada con 'agent_phone'.");
 
         // 3. Crear tabla interactions (Métricas)
         await pool.query(`
@@ -45,27 +51,30 @@ const initDatabase = async () => {
                 name: "Clínica Dental Sonrisas",
                 phone_number: "1234567890",
                 system_prompt: "Eres el asistente virtual de Clínica Sonrisas. Tu objetivo es agendar citas médicas con empatía y revisar horarios.",
-                active_tools: ["agendarCita", "consultarHorarios"]
+                active_tools: ["agendarCita", "consultarHorarios"],
+                agent_phone: "573001112222" // Número del dentista humano
             },
             {
                 id: "client_002",
                 name: "Pizzería Napoli",
                 phone_number: "0987654321",
                 system_prompt: "Eres el asistente de Pizzería Napoli. Debes tomar pedidos, confirmar la dirección de envío y calcular el costo.",
-                active_tools: ["crearPedido", "consultarMenu"]
+                active_tools: ["crearPedido", "consultarMenu"],
+                agent_phone: "573003334444" // Número del pizzero humano
             }
         ];
 
         for (const client of clientsToSeed) {
             await pool.query(`
-                INSERT INTO clients (id, name, phone_number, system_prompt, active_tools, status)
-                VALUES ($1, $2, $3, $4, $5, 'active')
+                INSERT INTO clients (id, name, phone_number, system_prompt, active_tools, status, agent_phone)
+                VALUES ($1, $2, $3, $4, $5, 'active', $6)
                 ON CONFLICT (id) DO UPDATE SET
                     name = EXCLUDED.name,
                     phone_number = EXCLUDED.phone_number,
                     system_prompt = EXCLUDED.system_prompt,
-                    active_tools = EXCLUDED.active_tools;
-            `, [client.id, client.name, client.phone_number, client.system_prompt, client.active_tools]);
+                    active_tools = EXCLUDED.active_tools,
+                    agent_phone = EXCLUDED.agent_phone;
+            `, [client.id, client.name, client.phone_number, client.system_prompt, client.active_tools, client.agent_phone]);
         }
 
         console.log("[DB Init] ✅ Datos iniciales de clientes semillados correctamente.");
