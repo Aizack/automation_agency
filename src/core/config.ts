@@ -26,7 +26,7 @@ export const getClientConfigByPhone = async (phone: string): Promise<ClientConfi
         status,
         agent_phone AS "agentPhone"
        FROM clients 
-       WHERE phone_number = $1 LIMIT 1`,
+       WHERE RIGHT(phone_number, 10) = RIGHT($1, 10) LIMIT 1`,
       [phone]
     );
 

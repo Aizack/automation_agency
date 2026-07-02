@@ -156,8 +156,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   const apiCostSum = interactions.reduce((acc, curr) => acc + parseFloat(curr.api_cost || "0"), 0);
   const hoursSaved = (totalChats * 3 / 60).toFixed(1);
 
-  // Determinar el estatus del canal de WhatsApp
-  const isWaConnected = whatsappStatus.status === 'CONNECTED' && whatsappStatus.phone === clientData.phoneNumber;
+  // Determinar el estatus del canal de WhatsApp (normalizando a últimos 10 dígitos)
+  const cleanPhone = (phone: string) => phone.replace(/\D/g, '').slice(-10);
+  const isWaConnected = whatsappStatus.status === 'CONNECTED' && 
+    cleanPhone(whatsappStatus.phone) === cleanPhone(clientData.phoneNumber);
 
   return (
     <div className="min-h-screen pb-10">
