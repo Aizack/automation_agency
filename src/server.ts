@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import 'dotenv/config';
+import path from 'path';
 import { 
   createClient, 
   getClientById, 
@@ -12,6 +13,9 @@ import { pool } from './database/postgres';
 
 const app = express();
 app.use(express.json());
+
+// Servir los archivos estáticos de la aplicación React (Dashboard)
+app.use(express.static(path.join(process.cwd(), 'dashboard/dist')));
 
 // Puerto de ejecución del servidor (default: 3000)
 const PORT = process.env.PORT || 3000;
@@ -170,6 +174,13 @@ app.get('/api/metrics', async (req: Request, res: Response) => {
   }
 });
 
+
+// Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
+app.get('*', (req: Request, res: Response) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(process.cwd(), 'dashboard/dist/index.html'));
+  }
+});
 
 // Inicializar servidor de API
 app.listen(PORT, () => {

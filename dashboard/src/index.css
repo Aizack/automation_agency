@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+/* --- Configuración de tema de Tailwind CSS v4 --- */
+@theme {
+  --color-primary: #ffb4a9;
+  --color-on-primary: #690002;
+  --color-primary-container: #d93025;
+  --color-on-primary-container: #fff8f7;
+  
+  --color-secondary: #a9c7ff;
+  --color-on-secondary: #003063;
+  --color-secondary-container: #005db7;
+  --color-on-secondary-container: #c6d9ff;
+  
+  --color-tertiary: #cdc5bc;
+  --color-tertiary-container: #77726a;
+  --color-on-tertiary-container: #fff8f2;
+  
+  --color-surface: #12102b;
+  --color-surface-dim: #12102b;
+  --color-surface-bright: #383653;
+  --color-surface-container: #1e1c38;
+  --color-surface-container-low: #1a1833;
+  --color-surface-container-high: #292743;
+  --color-surface-container-highest: #33324e;
+  --color-on-surface: #e3dfff;
+  --color-on-surface-variant: #e5beb8;
+  
+  --color-outline: #ac8983;
+  --color-outline-variant: #5c403c;
+  --color-background: #12102b;
+  --color-on-background: #e3dfff;
+  
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+  
+  --font-display-lg: "Outfit", sans-serif;
+  --font-headline-lg: "Outfit", sans-serif;
+  --font-headline-md: "Outfit", sans-serif;
+  --font-body-lg: "Inter", sans-serif;
+  --font-body-md: "Inter", sans-serif;
+  --font-label-md: "Inter", sans-serif;
+  --font-label-sm: "Inter", sans-serif;
+}
+
+/* --- Estilos base y variables del tema --- */
+body {
+  background-color: #12102b;
+  color: #e3dfff;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tarjetas con efecto Glassmorphism */
+.glass-card {
+  background: rgba(30, 28, 56, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(172, 137, 131, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 180, 169, 0.3);
+  box-shadow: 0 0 20px rgba(217, 48, 37, 0.1);
+}
+
+/* Ítems activos del Sidebar */
+.sidebar-item-active {
+  background: rgba(255, 180, 169, 0.1);
+  border-left: 4px solid #ffb4a9;
+  color: #ffb4a9;
+  font-weight: 700;
+}
+
+/* Efectos de brillo / glows */
+.primary-glow {
+  box-shadow: 0 0 15px rgba(217, 48, 37, 0.4);
+}
+
+.ambient-glow-primary {
+  box-shadow: 0 0 20px rgba(217, 48, 37, 0.15);
+}
+
+.ambient-glow-secondary {
+  box-shadow: 0 0 20px rgba(169, 199, 255, 0.15);
+}
+
+/* Scrollbar personalizada */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #12102b;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #33324e;
+  border-radius: 10px;
+}
+
+/* Animación de escaneo (QR Code) */
+.scan-line {
+  height: 2px;
+  background: #a9c7ff;
+  box-shadow: 0 0 15px #a9c7ff;
+  position: absolute;
+  width: 100%;
+  animation: scan 3s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0%, 100% { top: 0; }
+  50% { top: 100%; }
+}
+
+/* Anillos de progreso SVG */
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.8s ease-in-out;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Flotado de elementos decorativos */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}

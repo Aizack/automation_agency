@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Frant by Diaz Lab - Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#f2f4f6",
+                    "secondary-fixed": "#dae2fd",
+                    "tertiary-container": "#657389",
+                    "surface-bright": "#f7f9fb",
+                    "on-primary-fixed-variant": "#93000b",
+                    "tertiary": "#4c5b70",
+                    "on-tertiary-fixed": "#0d1c2f",
+                    "secondary-container": "#dae2fd",
+                    "primary-fixed-dim": "#ffb4ab",
+                    "on-tertiary-container": "#f7f8ff",
+                    "on-error-container": "#93000a",
+                    "on-background": "#191c1e",
+                    "on-primary-container": "#fff6f5",
+                    "on-error": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "inverse-primary": "#ffb4ab",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#bec6e0",
+                    "on-surface-variant": "#5c403c",
+                    "on-tertiary-fixed-variant": "#3a485c",
+                    "inverse-surface": "#2d3133",
+                    "on-secondary-fixed-variant": "#3f465c",
+                    "tertiary-fixed-dim": "#b9c7e0",
+                    "background": "#f7f9fb",
+                    "on-surface": "#191c1e",
+                    "inverse-on-surface": "#eff1f3",
+                    "surface": "#f7f9fb",
+                    "primary-container": "#dc2626",
+                    "on-secondary-fixed": "#131b2e",
+                    "primary": "#b70011",
+                    "surface-container": "#eceef0",
+                    "error-container": "#ffdad6",
+                    "surface-variant": "#e0e3e5",
+                    "surface-container-high": "#e6e8ea",
+                    "primary-fixed": "#ffdad6",
+                    "on-secondary-container": "#5c647a",
+                    "tertiary-fixed": "#d5e3fd",
+                    "surface-dim": "#d8dadc",
+                    "error": "#ba1a1a",
+                    "secondary": "#565e74",
+                    "outline": "#916f6b",
+                    "outline-variant": "#e6bdb8",
+                    "on-primary-fixed": "#410002",
+                    "surface-tint": "#bf0715"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "container-max": "1280px",
+                    "margin-desktop": "32px",
+                    "base": "8px",
+                    "stack-md": "16px",
+                    "stack-sm": "8px",
+                    "stack-lg": "32px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Outfit"],
+                    "label-md": ["Outfit"],
+                    "body-md": ["Outfit"],
+                    "body-lg": ["Outfit"],
+                    "headline-md": ["Outfit"],
+                    "headline-lg-mobile": ["Outfit"],
+                    "display": ["Outfit"],
+                    "label-sm": ["Outfit"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f7f9fb;
+            color: #191c1e;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-glow {
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e6e8ea;
+            border-radius: 10px;
+        }
+        .sidebar-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar Component -->
+<aside class="fixed left-0 top-0 h-screen w-64 bg-surface-container dark:bg-surface-container border-r border-outline-variant dark:border-outline-variant flex flex-col z-50 sidebar-transition">
+<div class="p-stack-lg">
+<h1 class="font-headline-md text-headline-md font-extrabold text-primary dark:text-primary tracking-tight">Frant Admin</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-70">Diaz Lab Laboratory</p>
+</div>
+<nav class="flex-1 px-base space-y-2 flex flex-col overflow-y-auto custom-scrollbar">
+<!-- Active: Panel Principal -->
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-lg font-bold translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Panel Principal</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-surface-variant rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-md text-label-md">Gestión de Clientes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-surface-variant rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="font-label-md text-label-md">Flujos de IA</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-surface-variant rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-md text-label-md">Reportes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-surface-variant rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Configuración</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-surface-variant rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+<span class="font-label-md text-label-md">Soporte</span>
+</a>
+</nav>
+<div class="p-base border-t border-outline-variant">
+<button class="w-full flex items-center justify-center gap-2 py-3 bg-primary text-on-primary rounded-xl font-bold hover:brightness-110 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[20px]" data-icon="refresh">refresh</span>
+<span class="font-label-md text-label-md">Actualizar Sistema</span>
+</button>
+<a class="mt-4 flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-error transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Cerrar Sesión</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 min-h-screen flex flex-col">
+<!-- TopAppBar Component -->
+<header class="h-16 bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline-variant sticky top-0 z-40 flex items-center justify-between px-margin-desktop">
+<div class="flex items-center gap-stack-md">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">Dashboard</span>
+<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-surface-container-high rounded-full">
+<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface">Sistema Online</span>
+</div>
+</div>
+<div class="flex items-center gap-stack-lg">
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+<div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
+<div class="text-right">
+<p class="font-label-md text-label-md font-bold text-on-surface">Admin Diaz Lab</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Superusuario</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary object-cover" data-alt="A professional headshot of a corporate administrator in a bright office setting, featuring high-key lighting and a clean white background. The subject is wearing a sharp navy suit, looking directly at the camera with a confident and friendly expression. The image is captured in a minimalist style that perfectly complements a modern premium UI aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAB6kyU0LbpNDDQGAmm6kgMXsQep_LnVOqBmGWuihe4MMX51v9v5XgKJvQJnAOmBiaqwX9cyDBjVqIEmstaM0Par524n9-wb_TD5jBQinFaAnMbdvem4i4c_46aNXukUaDaJ9eLeC4Hw_-Cw-XF6WSYELJ4YsKcxc5bjRvUS2DRsSt5YFrh68PvNRj8HD2GVQ1bluMlNfJWtbBZ8EgrmDc46y91_9nA9HW16hzmIqnZW3Y-3Ij8dZvF"/>
+</div>
+</div>
+</header>
+<div class="p-margin-desktop space-y-stack-lg max-w-container-max mx-auto w-full">
+<!-- Welcome Section -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Bienvenido de nuevo, Admin</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Aquí tienes el resumen del rendimiento de tus bots hoy.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2.5 rounded-xl border border-primary text-primary font-bold hover:bg-primary/5 transition-all">
+                        Descargar Reporte
+                    </button>
+<button class="px-6 py-2.5 rounded-xl bg-primary text-on-primary font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all">
+                        Nuevo Bot
+                    </button>
+</div>
+</section>
+<!-- Metrics Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Metric 1 -->
+<div class="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(15,23,42,0.04)] border border-outline-variant/30 flex flex-col justify-between group hover:border-primary/50 transition-all">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+</div>
+<span class="font-label-sm text-label-sm text-green-600 bg-green-50 px-2 py-1 rounded">+12.5%</span>
+</div>
+<div class="mt-4">
+<p class="font-label-md text-label-md text-on-surface-variant">Total Mensajes Procesados</p>
+<h3 class="font-headline-md text-headline-md font-extrabold mt-1">1,284,092</h3>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(15,23,42,0.04)] border border-outline-variant/30 flex flex-col justify-between group hover:border-primary/50 transition-all">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</div>
+<span class="font-label-sm text-label-sm text-red-600 bg-red-50 px-2 py-1 rounded">Presupuesto</span>
+</div>
+<div class="mt-4">
+<p class="font-label-md text-label-md text-on-surface-variant">Costo Estimado API</p>
+<h3 class="font-headline-md text-headline-md font-extrabold mt-1">$428.50</h3>
+</div>
+</div>
+<!-- Metric 3 -->
+<div class="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(15,23,42,0.04)] border border-outline-variant/30 flex flex-col justify-between group hover:border-primary/50 transition-all">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+</div>
+<span class="font-label-sm text-label-sm text-green-600 bg-green-50 px-2 py-1 rounded">Optimizado</span>
+</div>
+<div class="mt-4">
+<p class="font-label-md text-label-md text-on-surface-variant">Tiempo Ahorrado</p>
+<h3 class="font-headline-md text-headline-md font-extrabold mt-1">452 Horas</h3>
+</div>
+</div>
+<!-- Metric 4 -->
+<div class="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(15,23,42,0.04)] border border-outline-variant/30 flex flex-col justify-between group hover:border-primary/50 transition-all">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+</div>
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full bg-green-500 border-2 border-white"></div>
+<div class="w-6 h-6 rounded-full bg-green-500 border-2 border-white"></div>
+<div class="w-6 h-6 rounded-full bg-slate-200 border-2 border-white"></div>
+</div>
+</div>
+<div class="mt-4">
+<p class="font-label-md text-label-md text-on-surface-variant">Líneas de WhatsApp Activas</p>
+<h3 class="font-headline-md text-headline-md font-extrabold mt-1">24 / 25</h3>
+</div>
+</div>
+</section>
+<!-- Table Section -->
+<section class="bg-white rounded-xl shadow-[0_8px_30px_rgb(15,23,42,0.04)] border border-outline-variant/30 overflow-hidden">
+<div class="p-6 border-b border-outline-variant flex items-center justify-between bg-surface-bright/50">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Gestión de Clientes Recientes</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Monitoreo de flujos y actividad humana en tiempo real</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-lg text-label-md focus:ring-2 focus:ring-primary/20 w-64 transition-all" placeholder="Buscar cliente..." type="text"/>
+</div>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-lowest">
+<th class="px-6 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Nombre del Cliente</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Nº Bot</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Agente Humano</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-center">Estado Bot</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Fecha Alta</th>
+<th class="px-6 py-4"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center font-bold text-primary">AC</div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">Automotriz Central</p>
+<p class="text-xs text-on-surface-variant">ID: FR-9021</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 font-body-md text-body-md font-medium text-on-surface">+54 11 2345 6789</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 bg-green-500 rounded-full"></div>
+<span class="font-label-md text-label-md">Lucas García</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex justify-center">
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</td>
+<td class="px-6 py-5 font-label-md text-label-md text-on-surface-variant">12 Oct 2023</td>
+<td class="px-6 py-5 text-right">
+<button class="material-symbols-outlined text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity hover:text-primary" data-icon="more_vert">more_vert</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center font-bold text-primary">IN</div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">Inmobiliaria del Norte</p>
+<p class="text-xs text-on-surface-variant">ID: FR-8842</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 font-body-md text-body-md font-medium text-on-surface">+54 11 9876 5432</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 bg-orange-400 rounded-full"></div>
+<span class="font-label-md text-label-md">Sofía Martínez</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex justify-center">
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</td>
+<td class="px-6 py-5 font-label-md text-label-md text-on-surface-variant">15 Oct 2023</td>
+<td class="px-6 py-5 text-right">
+<button class="material-symbols-outlined text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity hover:text-primary" data-icon="more_vert">more_vert</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center font-bold text-primary">SC</div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">Smart Coffee Co.</p>
+<p class="text-xs text-on-surface-variant">ID: FR-7731</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-5 font-body-md text-body-md font-medium text-on-surface">+54 11 5566 7788</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2 text-on-surface-variant italic">
+<span class="font-label-sm text-label-sm">Automático (IA)</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<div class="flex justify-center">
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</td>
+<td class="px-6 py-5 font-label-md text-label-md text-on-surface-variant">20 Oct 2023</td>
+<td class="px-6 py-5 text-right">
+<button class="material-symbols-outlined text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity hover:text-primary" data-icon="more_vert">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-6 bg-surface-bright/30 border-t border-outline-variant flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mostrando 3 de 42 clientes</span>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-on-primary font-bold text-label-sm">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-all">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Bottom Dashboard Area (Two columns) -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- Activity Feed -->
+<section class="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(15,23,42,0.04)] border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6">Actividad de Flujos</h3>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="w-2 bg-primary rounded-full"></div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">Bot de Reservas Activo</p>
+<p class="text-sm text-on-surface-variant">Smart Coffee procesó una nueva orden de café por valor de $15.50</p>
+<span class="text-xs text-on-surface-variant opacity-60">Hace 2 minutos</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-2 bg-green-500 rounded-full"></div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">Intervención Humana</p>
+<p class="text-sm text-on-surface-variant">Lucas García tomó el control del chat para Automotriz Central</p>
+<span class="text-xs text-on-surface-variant opacity-60">Hace 15 minutos</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-2 bg-slate-300 rounded-full"></div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">Sistema Actualizado</p>
+<p class="text-sm text-on-surface-variant">Nueva versión de motor de lenguaje desplegada correctamente</p>
+<span class="text-xs text-on-surface-variant opacity-60">Hace 1 hora</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Usage Chart Area (Stylized Placeholder) -->
+<section class="bg-white p-6 rounded-xl shadow-[0_8px_30px_rgb(15,23,42,0.04)] border border-outline-variant/30 flex flex-col">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface">Uso de API (24h)</h3>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 bg-primary rounded-full"></span>
+<span class="font-label-sm text-label-sm">Tokens GPT-4</span>
+</div>
+</div>
+<div class="flex-1 min-h-[200px] flex items-end gap-2 px-2 pb-2">
+<!-- Stylized Bar Chart -->
+<div class="flex-1 bg-surface-container rounded-t h-1/4 hover:bg-primary transition-all cursor-pointer"></div>
+<div class="flex-1 bg-surface-container rounded-t h-2/4 hover:bg-primary transition-all cursor-pointer"></div>
+<div class="flex-1 bg-surface-container rounded-t h-1/3 hover:bg-primary transition-all cursor-pointer"></div>
+<div class="flex-1 bg-surface-container rounded-t h-3/4 hover:bg-primary transition-all cursor-pointer"></div>
+<div class="flex-1 bg-primary rounded-t h-full"></div>
+<div class="flex-1 bg-surface-container rounded-t h-1/2 hover:bg-primary transition-all cursor-pointer"></div>
+<div class="flex-1 bg-surface-container rounded-t h-2/3 hover:bg-primary transition-all cursor-pointer"></div>
+<div class="flex-1 bg-surface-container rounded-t h-1/4 hover:bg-primary transition-all cursor-pointer"></div>
+<div class="flex-1 bg-surface-container rounded-t h-1/2 hover:bg-primary transition-all cursor-pointer"></div>
+<div class="flex-1 bg-surface-container rounded-t h-3/4 hover:bg-primary transition-all cursor-pointer"></div>
+<div class="flex-1 bg-surface-container rounded-t h-1/3 hover:bg-primary transition-all cursor-pointer"></div>
+<div class="flex-1 bg-surface-container rounded-t h-1/2 hover:bg-primary transition-all cursor-pointer"></div>
+</div>
+<div class="flex justify-between mt-2 text-[10px] text-on-surface-variant font-bold">
+<span>00:00</span>
+<span>06:00</span>
+<span>12:00</span>
+<span>18:00</span>
+<span>23:59</span>
+</div>
+</section>
+</div>
+</div>
+<footer class="mt-auto py-8 px-margin-desktop text-center border-t border-outline-variant/30">
+<p class="font-label-sm text-label-sm text-on-surface-variant">© 2024 Frant by Diaz Lab. Todos los derechos reservados.</p>
+</footer>
+</main>
+<script>
+        // Simple Micro-interaction for sidebar tabs
+        document.querySelectorAll('aside nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                // If we had routing, we'd prevent default and navigate.
+                // For this demo, just visually toggle.
+                document.querySelectorAll('aside nav a').forEach(l => {
+                    l.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-bold', 'translate-x-1');
+                    l.classList.add('text-on-surface-variant', 'hover:bg-surface-variant');
+                });
+                this.classList.add('bg-primary-container', 'text-on-primary-container', 'font-bold', 'translate-x-1');
+                this.classList.remove('text-on-surface-variant', 'hover:bg-surface-variant');
+            });
+        });
+
+        // Hover effect for table rows
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.classList.add('active-glow');
+            });
+            row.addEventListener('mouseleave', () => {
+                row.classList.remove('active-glow');
+            });
+        });
+    </script>
+</body></html>

@@ -1,5 +1,6 @@
 import 'dotenv/config'; // Inicializamos dotenv para leer las variables de entorno
 import { initializeWhatsAppClient } from './services/whatsapp';
+import './server';
 
 console.log("🚀 Agency AI Bot inicializando...");
 console.log("Generando servicio de WhatsApp...");

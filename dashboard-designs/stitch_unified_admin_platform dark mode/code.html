@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Frant | Admin Console</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Outfit:wght@600;700;800;900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#c6d9ff",
+                    "outline-variant": "#5c403c",
+                    "background": "#12102b",
+                    "on-error-container": "#ffdad6",
+                    "inverse-primary": "#bb1713",
+                    "on-surface": "#e3dfff",
+                    "surface-dim": "#12102b",
+                    "inverse-on-surface": "#2f2d4a",
+                    "surface-container-lowest": "#0c0a25",
+                    "on-tertiary-container": "#fff8f2",
+                    "outline": "#ac8983",
+                    "surface": "#12102b",
+                    "on-primary-container": "#fff8f7",
+                    "primary-container": "#d93025",
+                    "surface-container-highest": "#33324e",
+                    "secondary-container": "#005db7",
+                    "on-primary-fixed": "#410001",
+                    "secondary": "#a9c7ff",
+                    "on-tertiary-fixed": "#1e1b15",
+                    "on-secondary-fixed": "#001b3d",
+                    "on-secondary-fixed-variant": "#00468c",
+                    "inverse-surface": "#e3dfff",
+                    "on-primary": "#690002",
+                    "primary-fixed": "#ffdad5",
+                    "surface-container-low": "#1a1833",
+                    "surface-tint": "#ffb4a9",
+                    "on-tertiary": "#343029",
+                    "on-surface-variant": "#e5beb8",
+                    "secondary-fixed": "#d6e3ff",
+                    "on-primary-fixed-variant": "#930004",
+                    "error-container": "#93000a",
+                    "on-background": "#e3dfff",
+                    "error": "#ffb4ab",
+                    "secondary-fixed-dim": "#a9c7ff",
+                    "tertiary": "#cdc5bc",
+                    "tertiary-container": "#77726a",
+                    "surface-bright": "#383653",
+                    "on-secondary": "#003063",
+                    "primary-fixed-dim": "#ffb4a9",
+                    "tertiary-fixed-dim": "#cdc5bc",
+                    "surface-variant": "#33324e",
+                    "primary": "#ffb4a9",
+                    "surface-container": "#1e1c38",
+                    "on-error": "#690005",
+                    "tertiary-fixed": "#e9e1d8",
+                    "surface-container-high": "#292743",
+                    "on-tertiary-fixed-variant": "#4a463f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "margin-desktop": "40px",
+                    "container-max": "1280px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Outfit"],
+                    "headline-lg": ["Outfit"],
+                    "headline-md": ["Outfit"],
+                    "body-lg": ["Inter"],
+                    "display-lg": ["Outfit"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg": ["56px", {"lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #12102b;
+            color: #e3dfff;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(30, 28, 56, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(172, 137, 131, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 180, 169, 0.3);
+            box-shadow: 0 0 20px rgba(217, 48, 37, 0.1);
+        }
+
+        .sidebar-item-active {
+            background: rgba(255, 180, 169, 0.1);
+            border-left: 4px solid #ffb4a9;
+            color: #ffb4a9;
+            font-weight: 700;
+        }
+
+        .primary-glow {
+            box-shadow: 0 0 15px rgba(217, 48, 37, 0.4);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #12102b;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #33324e;
+            border-radius: 10px;
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md selection:bg-primary/30">
+<!-- Sidebar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline-variant/50 flex flex-col py-base px-base z-50">
+<div class="px-base py-margin-mobile mb-margin-desktop">
+<h1 class="font-headline-md text-headline-md font-black text-primary flex items-center gap-base"><span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>smart_toy</span>Frant</h1>
+<p class="text-on-surface-variant text-label-sm mt-base opacity-70">by Diaz Lab</p>
+</div>
+<nav class="flex-1 space-y-base overflow-y-auto custom-scrollbar">
+<a class="sidebar-item-active flex items-center gap-gutter p-base transition-all duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md">Overview</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-gutter p-base transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md">Clients</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-gutter p-base transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings_suggest</span>
+<span class="font-label-md">System Status</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-gutter p-base transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md">Billing</span>
+</a>
+</nav>
+<div class="mt-auto space-y-base pt-margin-mobile border-t border-outline-variant/30">
+<a class="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-gutter p-base transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md">Settings</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-gutter p-base transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-64 p-gutter max-w-container-max min-h-screen">
+<!-- Header Section -->
+<header class="flex justify-between items-end mb-margin-desktop">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-base">Dashboard Overview</h2>
+<p class="text-on-surface-variant font-body-md opacity-80">Real-time monitoring and client orchestration.</p>
+</div>
+<button class="bg-primary-container text-on-primary-container font-label-md px-margin-mobile py-base rounded-xl flex items-center gap-base primary-glow hover:opacity-90 active:scale-95 transition-all" onclick="toggleModal('clientModal')">
+<span class="material-symbols-outlined">person_add</span>
+                Create New Client
+            </button>
+</header>
+<!-- Global Metrics Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-margin-desktop">
+<!-- Metric 1 -->
+<div class="glass-card rounded-xl p-gutter relative overflow-hidden group">
+<div class="flex justify-between items-start mb-base">
+<p class="text-on-surface-variant font-label-md">Total Messages Processed</p>
+<span class="material-symbols-outlined text-primary/50">chat_bubble</span>
+</div>
+<div class="flex items-end gap-base">
+<h3 class="font-headline-lg text-headline-lg text-primary">1.2M</h3>
+<span class="text-secondary text-label-sm flex items-center gap-xs mb-base">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +12%
+                    </span>
+</div>
+<!-- Visual Bar Chart Placeholder -->
+<div class="mt-margin-mobile flex items-end gap-[2px] h-12">
+<div class="bg-primary/20 w-full h-[40%] rounded-t-sm group-hover:h-[60%] transition-all duration-500"></div>
+<div class="bg-primary/30 w-full h-[60%] rounded-t-sm group-hover:h-[40%] transition-all duration-500"></div>
+<div class="bg-primary/40 w-full h-[80%] rounded-t-sm group-hover:h-[100%] transition-all duration-500"></div>
+<div class="bg-primary/20 w-full h-[50%] rounded-t-sm group-hover:h-[30%] transition-all duration-500"></div>
+<div class="bg-primary/60 w-full h-[90%] rounded-t-sm group-hover:h-[70%] transition-all duration-500"></div>
+<div class="bg-primary/40 w-full h-[70%] rounded-t-sm group-hover:h-[90%] transition-all duration-500"></div>
+<div class="bg-primary w-full h-[100%] rounded-t-sm group-hover:h-[80%] transition-all duration-500"></div>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="glass-card rounded-xl p-gutter flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-base">
+<p class="text-on-surface-variant font-label-md">Estimated API Cost</p>
+<span class="material-symbols-outlined text-tertiary/50">attach_money</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-tertiary">$4,284.50</h3>
+</div>
+<p class="text-on-surface-variant text-label-sm mt-base opacity-60">Avg. $0.0035 per interaction</p>
+</div>
+<!-- Metric 3 -->
+<div class="glass-card rounded-xl p-gutter flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-base">
+<p class="text-on-surface-variant font-label-md">Total Time Saved</p>
+<span class="material-symbols-outlined text-secondary/50">timer</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-secondary">145.5 hrs</h3>
+</div>
+<div class="mt-base bg-secondary/10 h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[75%]"></div>
+</div>
+<p class="text-on-surface-variant text-label-sm mt-xs opacity-60">75% Efficiency increase</p>
+</div>
+<!-- Metric 4 -->
+<div class="glass-card rounded-xl p-gutter flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-base">
+<p class="text-on-surface-variant font-label-md">Active WhatsApp Lines</p>
+<span class="material-symbols-outlined text-primary/50">nest_remote_comfort_sensor</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">32 / 50</h3>
+</div>
+<div class="flex gap-base mt-base">
+<div class="w-3 h-3 rounded-full bg-secondary animate-pulse"></div>
+<span class="text-secondary text-label-sm">System Healthy</span>
+</div>
+</div>
+</div>
+<!-- Client Management Section -->
+<section class="glass-card rounded-xl overflow-hidden">
+<div class="p-gutter border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-low/50">
+<h3 class="font-headline-md text-headline-md">Client Management</h3>
+<div class="flex items-center gap-gutter">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-base top-1/2 -translate-y-1/2 text-on-surface-variant text-md">search</span>
+<input class="bg-surface-container border-outline-variant/50 border rounded-lg pl-margin-desktop pr-base py-base focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md outline-none w-64" placeholder="Search clients..." type="text"/>
+</div>
+<button class="flex items-center gap-base text-on-surface-variant hover:text-primary transition-colors font-label-md">
+<span class="material-symbols-outlined">filter_list</span>
+                        Filter
+                    </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-on-surface-variant border-b border-outline-variant/30 bg-surface-container-low/30">
+<th class="px-gutter py-base font-label-md">Client Name</th>
+<th class="px-gutter py-base font-label-md">Bot Number</th>
+<th class="px-gutter py-base font-label-md">Human Agent</th>
+<th class="px-gutter py-base font-label-md">Status</th>
+<th class="px-gutter py-base font-label-md">Date Registered</th>
+<th class="px-gutter py-base font-label-md text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-variant/20 transition-colors">
+<td class="px-gutter py-gutter">
+<div class="flex items-center gap-gutter">
+<div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">NH</div>
+<div>
+<p class="text-on-surface font-label-md">Nexus Health</p>
+<p class="text-on-surface-variant text-label-sm opacity-60">nexus_primary_bot</p>
+</div>
+</div>
+</td>
+<td class="px-gutter py-gutter text-on-surface-variant font-body-md">+44 20 7946 0958</td>
+<td class="px-gutter py-gutter">
+<div class="flex -space-x-2">
+<img alt="AI Agent" class="w-8 h-8 rounded-full border-2 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLTShiqppqYQxf6taohgwmzf7ECgfuhO6xOWatr8mrgZBS1bt5ik1j7NZj7-EVUTuV4j8JY_YFZ9E3hfHpilIurt8LarGJxFuK2A1DhHcRzoqbGv5FT5jW-_vcbBwaqXDFWCWwCX0CX46NO5vuFTPOjXGfuyBprZHawUF-pVGaoGjlYOlhHKLwslKJsYJMTZI_NwXBq2vitWgdgPHThcx4av_-oMAB0ee7yU89FA6P_vjQjUE-cJCw"/>
+<img alt="Client Manager" class="w-8 h-8 rounded-full border-2 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAu71EWjnmz5FdWZLrEV0feAxWf88CNovygkuYaZo3IOCkSym5l6z57F-GAzl5Md0vZ83c-f1UUq-MZexf6vM-A67nIXNEXEQpoohke6Mj7P0Rtqwa17Zkq7CHcAb8lEkTxV4Lql9PXNeYSTMLAMPTvE2p6v-Uj2NSL2K8Nf-iAu9QsozlyfQYyqgcXlGdY_MAlpYK66c6qsOUW5FXSoIOINfEkLAsrK0IRNrbjufx8J_pbNMyI4079"/>
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-[10px] border-2 border-surface font-bold text-on-surface-variant">+2</div>
+</div>
+</td>
+<td class="px-gutter py-gutter">
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</td>
+<td class="px-gutter py-gutter text-on-surface-variant">Oct 12, 2023</td>
+<td class="px-gutter py-gutter text-right">
+<button class="p-base hover:bg-primary/10 rounded-lg text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-variant/20 transition-colors">
+<td class="px-gutter py-gutter">
+<div class="flex items-center gap-gutter">
+<div class="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary font-bold">AL</div>
+<div>
+<p class="text-on-surface font-label-md">Apex Logistics</p>
+<p class="text-on-surface-variant text-label-sm opacity-60">apex_tracking_ai</p>
+</div>
+</div>
+</td>
+<td class="px-gutter py-gutter text-on-surface-variant font-body-md">+1 555 010 9988</td>
+<td class="px-gutter py-gutter">
+<div class="flex">
+<img alt="Consultant" class="w-8 h-8 rounded-full border-2 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBK9wjYifcMXia7GVJx23Hy7yYjO-ZWjEdCE-dlF_cYTe_yWleEuI3ECdDXUFByr8pQ350A8VI8kZ4xfQj7OxEYFIknalYPA4ncmQHazdh930LiOyUlGSImWng3zlsx2LFflnhL7c1KIQ_Boyr1BBaweoyuV1rhUohF7nMYRJWt4oyHMmVF8qXoZs4mXrKZRqdmpw_OCjei7qv3Zm5fwlo9cKvRrufcdY7IDveO0FWPuRpU3ke9nrVy"/>
+</div>
+</td>
+<td class="px-gutter py-gutter">
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</td>
+<td class="px-gutter py-gutter text-on-surface-variant">Nov 04, 2023</td>
+<td class="px-gutter py-gutter text-right">
+<button class="p-base hover:bg-primary/10 rounded-lg text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-variant/20 transition-colors">
+<td class="px-gutter py-gutter">
+<div class="flex items-center gap-gutter">
+<div class="w-10 h-10 rounded-full bg-tertiary/20 flex items-center justify-center text-tertiary font-bold">ES</div>
+<div>
+<p class="text-on-surface font-label-md">Elevate SaaS</p>
+<p class="text-on-surface-variant text-label-sm opacity-60">elevate_support</p>
+</div>
+</div>
+</td>
+<td class="px-gutter py-gutter text-on-surface-variant font-body-md">+61 2 9876 5432</td>
+<td class="px-gutter py-gutter">
+<div class="flex -space-x-2">
+<img alt="Support" class="w-8 h-8 rounded-full border-2 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYc6D5TH1KvuC2MhMmy9Yx1wmhKjAw1TzRornHGokioQK4ClG9aLR0DDZdRdDH63bOcLGVx6ekizVbqL4ioz6qiNCqg3uPMVpfAClWC69pH69SOwMfs9nJCe5qU9ETTTXUtTs72_KSPqqj9Dg4K0UeJEuEARUIuEbyG8EOzmZBMz1fumKhh0WAxOgUnMbWc1mEpGnMCTurLGgzJWMEA-QC0ZtJPCo3R88HkrvbZGd8cTRMomJG8lNg"/>
+<img alt="Support Specialist" class="w-8 h-8 rounded-full border-2 border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqfw2KLfIYypq3lYwa4KTD8oD3PO1Ib3olaCtbsnFAFD6Z0k3oObZqyC2G9SuUGEUQdDt9aq4eS5Unm8UsmqeNnbG9vg5IT_tKpgQNJC9QE0J4ZYSs947UN1dfBwBVhCSxX214dXNlB6LRV7v9hz9hjpO3zc2GwKu1quD0pc6WxVr_JvEEjJfNSfdPk1hK6xH6RQ99CGU7ZCHBDLWiBnEoPIA5QCBg2QMeOFN0KLJyenlneGdJDSnH"/>
+</div>
+</td>
+<td class="px-gutter py-gutter">
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</td>
+<td class="px-gutter py-gutter text-on-surface-variant">Jan 18, 2024</td>
+<td class="px-gutter py-gutter text-right">
+<button class="p-base hover:bg-primary/10 rounded-lg text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-gutter border-t border-outline-variant/30 flex justify-between items-center text-on-surface-variant text-label-sm">
+<p>Showing 3 of 14 clients</p>
+<div class="flex gap-base">
+<button class="p-base border border-outline-variant/30 rounded hover:bg-surface-variant/30 transition-all"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="p-base border border-outline-variant/30 rounded bg-primary-container/20 text-primary">1</button>
+<button class="p-base border border-outline-variant/30 rounded hover:bg-surface-variant/30 transition-all">2</button>
+<button class="p-base border border-outline-variant/30 rounded hover:bg-surface-variant/30 transition-all"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+</section>
+</main>
+<!-- Modal: Create New Client -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300" id="clientModal">
+<div class="glass-card w-full max-w-lg rounded-2xl p-margin-desktop shadow-2xl translate-y-10 transition-transform duration-300" id="modalContainer">
+<div class="flex justify-between items-start mb-gutter">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Register New Client</h3>
+<p class="text-on-surface-variant text-body-md opacity-70">Initialize a new AI deployment instance.</p>
+</div>
+<button class="p-base hover:bg-surface-variant rounded-full text-on-surface-variant transition-all" onclick="toggleModal('clientModal')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="space-y-gutter">
+<div class="space-y-base">
+<label class="font-label-md text-on-surface-variant ml-xs">Client/Agency Name</label>
+<input class="w-full bg-surface-container-high border-outline-variant border rounded-xl px-gutter py-gutter text-on-surface focus:border-primary outline-none transition-all" placeholder="e.g. Acme Corp" type="text"/>
+</div>
+<div class="space-y-base">
+<label class="font-label-md text-on-surface-variant ml-xs">WhatsApp Business Number</label>
+<input class="w-full bg-surface-container-high border-outline-variant border rounded-xl px-gutter py-gutter text-on-surface focus:border-primary outline-none transition-all" placeholder="+1..." type="tel"/>
+</div>
+<div class="space-y-base">
+<label class="font-label-md text-on-surface-variant ml-xs">Assign Main Bot Profile</label>
+<select class="w-full bg-surface-container-high border-outline-variant border rounded-xl px-gutter py-gutter text-on-surface focus:border-primary outline-none transition-all appearance-none">
+<option>Support Specialist v2.4</option>
+<option>Sales Closer GPT-4</option>
+<option>Logistics Tracking Agent</option>
+</select>
+</div>
+<div class="pt-gutter flex gap-gutter">
+<button class="flex-1 px-gutter py-base border border-outline-variant text-on-surface font-label-md rounded-xl hover:bg-surface-variant/30 transition-all" onclick="toggleModal('clientModal')" type="button">Cancel</button>
+<button class="flex-1 px-gutter py-base bg-primary-container text-on-primary-container font-label-md rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all" type="submit">Create Account</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Micro-Interactions Script -->
+<script>
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const container = document.getElementById('modalContainer');
+            
+            if (modal.classList.contains('opacity-0')) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                    container.classList.remove('translate-y-10');
+                }, 10);
+            } else {
+                container.classList.add('translate-y-10');
+                setTimeout(() => {
+                    modal.classList.add('opacity-0', 'pointer-events-none');
+                }, 200);
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('clientModal');
+                if (!modal.classList.contains('opacity-0')) {
+                    toggleModal('clientModal');
+                }
+            }
+        });
+
+        document.querySelectorAll('input[type="checkbox"]').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const row = this.closest('tr');
+                if (this.checked) {
+                    row.style.opacity = '1';
+                } else {
+                    row.style.opacity = '0.6';
+                }
+            });
+        });
+    </script>
+</body></html>
