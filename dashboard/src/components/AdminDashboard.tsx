@@ -34,9 +34,8 @@ export const AdminDashboard: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
   });
-  const [botCountryCode, setBotCountryCode] = useState('57');
+  const [selectedCountry, setSelectedCountry] = useState('57');
   const [botPhoneInput, setBotPhoneInput] = useState('');
-  const [agentCountryCode, setAgentCountryCode] = useState('57');
   const [agentPhoneInput, setAgentPhoneInput] = useState('');
 
   const [loading, setLoading] = useState(true);
@@ -93,13 +92,13 @@ export const AdminDashboard: React.FC = () => {
     }
 
     let cleanBot = botPhoneInput.replace(/\D/g, '');
-    if (!cleanBot.startsWith(botCountryCode)) {
-      cleanBot = botCountryCode + cleanBot;
+    if (!cleanBot.startsWith(selectedCountry)) {
+      cleanBot = selectedCountry + cleanBot;
     }
 
     let cleanAgent = agentPhoneInput.replace(/\D/g, '');
-    if (cleanAgent && !cleanAgent.startsWith(agentCountryCode)) {
-      cleanAgent = agentCountryCode + cleanAgent;
+    if (cleanAgent && !cleanAgent.startsWith(selectedCountry)) {
+      cleanAgent = selectedCountry + cleanAgent;
     }
 
     try {
@@ -399,25 +398,31 @@ export const AdminDashboard: React.FC = () => {
                 />
               </div>
               <div className="space-y-1">
+                <label className="font-label-md text-on-surface-variant ml-1">País de Operación</label>
+                <select 
+                  value={selectedCountry}
+                  onChange={(e) => setSelectedCountry(e.target.value)}
+                  className="w-full bg-surface-container border border-outline/30 rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none"
+                >
+                  <option value="57">🇨🇴 Colombia (+57)</option>
+                  <option value="52">🇲🇽 México (+52)</option>
+                  <option value="34">🇪🇸 España (+34)</option>
+                  <option value="1">🇺🇸 Estados Unidos (+1)</option>
+                  <option value="54">🇦🇷 Argentina (+54)</option>
+                  <option value="56">🇨🇱 Chile (+56)</option>
+                  <option value="51">🇵🇪 Perú (+51)</option>
+                  <option value="593">🇪🇨 Ecuador (+593)</option>
+                  <option value="58">🇻🇪 Venezuela (+58)</option>
+                </select>
+              </div>
+              <div className="space-y-1">
                 <label className="font-label-md text-on-surface-variant ml-1">Línea del Bot</label>
-                <div className="flex gap-2">
-                  <select 
-                    value={botCountryCode}
-                    onChange={(e) => setBotCountryCode(e.target.value)}
-                    className="bg-surface-container border border-outline/30 rounded-xl px-3 py-2.5 text-on-surface focus:border-primary outline-none"
-                  >
-                    <option value="57">🇨🇴 +57</option>
-                    <option value="52">🇲🇽 +52</option>
-                    <option value="34">🇪🇸 +34</option>
-                    <option value="1">🇺🇸 +1</option>
-                    <option value="54">🇦🇷 +54</option>
-                    <option value="56">🇨🇱 +56</option>
-                    <option value="51">🇵🇪 +51</option>
-                    <option value="593">🇪🇨 +593</option>
-                    <option value="58">🇻🇪 +58</option>
-                  </select>
+                <div className="flex border border-outline/30 rounded-xl bg-surface-container overflow-hidden focus-within:border-primary transition-all">
+                  <span className="bg-surface-container-high px-4 py-2.5 text-on-surface-variant font-label-md border-r border-outline/20 flex items-center select-none">
+                    +{selectedCountry}
+                  </span>
                   <input 
-                    className="flex-grow bg-surface-container border border-outline/30 rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
+                    className="flex-grow bg-transparent px-4 py-2.5 text-on-surface outline-none" 
                     placeholder="ej. 3116718652" 
                     type="text"
                     value={botPhoneInput}
@@ -427,24 +432,12 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <label className="font-label-md text-on-surface-variant ml-1">Teléfono Asesor Humano (Traspaso)</label>
-                <div className="flex gap-2">
-                  <select 
-                    value={agentCountryCode}
-                    onChange={(e) => setAgentCountryCode(e.target.value)}
-                    className="bg-surface-container border border-outline/30 rounded-xl px-3 py-2.5 text-on-surface focus:border-primary outline-none"
-                  >
-                    <option value="57">🇨🇴 +57</option>
-                    <option value="52">🇲🇽 +52</option>
-                    <option value="34">🇪🇸 +34</option>
-                    <option value="1">🇺🇸 +1</option>
-                    <option value="54">🇦🇷 +54</option>
-                    <option value="56">🇨🇱 +56</option>
-                    <option value="51">🇵🇪 +51</option>
-                    <option value="593">🇪🇨 +593</option>
-                    <option value="58">🇻🇪 +58</option>
-                  </select>
+                <div className="flex border border-outline/30 rounded-xl bg-surface-container overflow-hidden focus-within:border-primary transition-all">
+                  <span className="bg-surface-container-high px-4 py-2.5 text-on-surface-variant font-label-md border-r border-outline/20 flex items-center select-none">
+                    +{selectedCountry}
+                  </span>
                   <input 
-                    className="flex-grow bg-surface-container border border-outline/30 rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
+                    className="flex-grow bg-transparent px-4 py-2.5 text-on-surface outline-none" 
                     placeholder="ej. 3332792837" 
                     type="text"
                     value={agentPhoneInput}
