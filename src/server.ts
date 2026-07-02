@@ -176,7 +176,7 @@ app.get('/api/metrics', async (req: Request, res: Response) => {
 
 
 // Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
-app.get('*', (req: Request, res: Response) => {
+app.get(/.*/, (req: Request, res: Response) => {
   if (!req.path.startsWith('/api')) {
     res.sendFile(path.join(process.cwd(), 'dashboard/dist/index.html'));
   }
