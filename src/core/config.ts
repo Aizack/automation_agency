@@ -1,30 +1,40 @@
+import { pool } from '../database/postgres';
+
 export interface ClientConfig {
   id: string;
   name: string;
   phoneNumber: string; // El número de WhatsApp que la agencia le asignó o conectó a este cliente
   systemPrompt: string;
   activeTools: string[];
+  status: string;      // Estado de la cuenta (active, suspended, inactive)
 }
 
-// Simulamos una base de datos de configuración de clientes (Tenant Registry)
-// En producción, esto vendría de PostgreSQL.
-export const getClientConfigByPhone = (phone: string): ClientConfig | null => {
-  const clients: ClientConfig[] = [
-    {
-      id: "client_001",
-      name: "Clínica Dental Sonrisas",
-      phoneNumber: "1234567890", // Número del bot asociado a la clínica
-      systemPrompt: "Eres el asistente virtual de Clínica Sonrisas. Tu objetivo es agendar citas médicas con empatía y revisar horarios.",
-      activeTools: ["agendarCita", "consultarHorarios"]
-    },
-    {
-      id: "client_002",
-      name: "Pizzería Napoli",
-      phoneNumber: "0987654321", // Número del bot asociado a la pizzería
-      systemPrompt: "Eres el asistente de Pizzería Napoli. Debes tomar pedidos, confirmar la dirección de envío y calcular el costo.",
-      activeTools: ["crearPedido", "consultarMenu"]
-    }
-  ];
+/**
+ * Consulta la base de datos PostgreSQL para buscar la configuración del cliente
+ * asociándolo con su número de teléfono registrado.
+ */
+export const getClientConfigByPhone = async (phone: string): Promise<ClientConfig | null> => {
+  try {
+    const res = await pool.query(
+      `SELECT 
+        id, 
+        name, 
+        phone_number AS "phoneNumber", 
+        system_prompt AS "systemPrompt", 
+        active_tools AS "activeTools", 
+        status 
+       FROM clients 
+       WHERE phone_number = $1 LIMIT 1`,
+      [phone]
+    );
 
-  return clients.find(c => c.phoneNumber === phone) || null;
+    if (res.rows.length === 0) {
+      return null;
+    }
+
+    return res.rows[0] as ClientConfig;
+  } catch (error) {
+    console.error("[Config] ❌ Error buscando configuración de cliente en la base de datos:", error);
+    return null;
+  }
 };
