@@ -86,7 +86,7 @@ Para ofrecer esto como un servicio SaaS robusto, la estrategia recomendada es:
 Tras debatirlo con Isac, el servicio se ofrecerá con un esquema híbrido de conexión:
 
 1. **WhatsApp Web (QR - whatsapp-web.js)**: Será la opción estándar y de bajo costo para pequeños negocios. 
-   - **Mitigación antiban obligatoria**: Debemos añadir al servicio de WhatsApp un delay de respuesta aleatorio (2 a 4 segundos) y activar el estado de "escribiendo..." (`sendState('typing')`) para emular el comportamiento humano. Este método se limitará estrictamente a flujos *inbound* (respuesta a mensajes recibidos).
+   - **Mitigación antiban (YA IMPLEMENTADA EN EL CÓDIGO)**: He programado en `src/services/whatsapp.ts` un filtro de timestamp para ignorar mensajes previos al arranque, exclusión de chats de grupo (`@g.us`), retardo aleatorio de respuesta (2 a 4 segundos) y simulación del estado de "escribiendo..." (`chat.sendStateTyping()`). Este método se limitará estrictamente a flujos *inbound*.
 2. **WhatsApp Business API (Meta)**: Deberemos estructurar el código de manera modular para permitir que clientes con un SLA corporativo alto puedan conectar sus webhooks oficiales de Meta Cloud API, eliminando así riesgos de inestabilidad y bloqueos.
 3. **Módulo de Campañas Masivas (Broadcasts)**: 
    - **IMPORTANTE**: No se deben enviar difusiones masivas usando el canal QR gratuito, ya que el riesgo de baneo por parte de Meta es cercano al 100%.
