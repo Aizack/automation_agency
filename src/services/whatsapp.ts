@@ -113,3 +113,29 @@ export const connectWhatsApp = async () => {
         whatsappState.status = 'DISCONNECTED';
     }
 };
+
+// Cerrar sesión y desvincular dispositivo de WhatsApp
+export const logoutWhatsApp = async () => {
+    console.log("[WhatsApp] Solicitud de cierre de sesión y desvinculación recibida...");
+    if (whatsappState.status === 'CONNECTED') {
+        try {
+            await client.logout(); // Esto desvincula el dispositivo y borra la sesión local
+            console.log("[WhatsApp] Sesión de WhatsApp cerrada exitosamente.");
+        } catch (err) {
+            console.error("[WhatsApp] Error al cerrar sesión (forzando destrucción):", err);
+            try {
+                await client.destroy();
+            } catch (destroyErr) {}
+            whatsappState.status = 'DISCONNECTED';
+            whatsappState.qr = '';
+            whatsappState.phone = '';
+        }
+    } else {
+        try {
+            await client.destroy();
+        } catch (err) {}
+        whatsappState.status = 'DISCONNECTED';
+        whatsappState.qr = '';
+        whatsappState.phone = '';
+    }
+};

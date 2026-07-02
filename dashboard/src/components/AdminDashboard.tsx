@@ -128,6 +128,26 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Eliminar cliente físicamente
+  const handleDeleteClient = async (clientId: string, clientName: string) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar al cliente "${clientName}"? Esta acción borrará permanentemente sus datos y liberará su número de teléfono.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/clients/${clientId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        fetchData(); // Recargar lista
+      } else {
+        alert(`Error al eliminar: ${data.message || data.error}`);
+      }
+    } catch (error: any) {
+      console.error("[AdminDashboard] Error eliminando cliente:", error);
+      alert(`Error de red o conexión: ${error.message}`);
+    }
+  };
+
   // Filtrar clientes
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -350,8 +370,12 @@ export const AdminDashboard: React.FC = () => {
                       </a>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 hover:bg-primary/10 rounded-lg text-on-surface-variant hover:text-primary transition-all">
-                        <span className="material-symbols-outlined">more_vert</span>
+                      <button 
+                        onClick={() => handleDeleteClient(client.id, client.name)}
+                        className="p-2 hover:bg-error/15 rounded-lg text-on-surface-variant hover:text-error transition-all cursor-pointer"
+                        title="Eliminar Cliente"
+                      >
+                        <span className="material-symbols-outlined">delete</span>
                       </button>
                     </td>
                   </tr>

@@ -56,6 +56,19 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
     }
   };
 
+  // Solicitar desvinculación y cierre de sesión de WhatsApp
+  const handleDisconnectWhatsApp = async () => {
+    if (!confirm("¿Estás seguro de que deseas desvincular este dispositivo de WhatsApp? Se cerrará la sesión actual en el servidor y tendrás que escanear un nuevo código QR para volver a conectar.")) {
+      return;
+    }
+
+    try {
+      await fetch('/api/whatsapp/logout', { method: 'POST' });
+    } catch (error) {
+      console.error("[ClientDashboard] Error solicitando desvinculación:", error);
+    }
+  };
+
   // Cargar datos estáticos del Cliente (Solo al iniciar o cambiar de ID)
   useEffect(() => {
     const fetchClientInfo = async () => {
@@ -319,6 +332,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                 <span className="text-on-surface font-label-md font-mono">+{clientData.phoneNumber}</span>
               </div>
             </div>
+            {isWaConnected && (
+              <button 
+                onClick={handleDisconnectWhatsApp}
+                className="mt-2 w-full bg-error/15 text-error border border-error/20 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-error/25 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
+              >
+                <span className="material-symbols-outlined text-[16px]">logout</span>
+                Desvincular WhatsApp
+              </button>
+            )}
             {!isWaConnected && whatsappStatus.status === 'QR' && (
               <p className="text-[10.5px] text-center text-primary/80 font-medium px-2">
                 Escanea el código QR desde la opción "Dispositivos vinculados" en tu aplicación móvil de WhatsApp.

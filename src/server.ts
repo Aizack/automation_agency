@@ -10,7 +10,7 @@ import {
   updateClientStatus 
 } from './database/clientsCrud';
 import { pool } from './database/postgres';
-import { whatsappState, initializeWhatsAppClient, connectWhatsApp } from './services/whatsapp';
+import { whatsappState, initializeWhatsAppClient, connectWhatsApp, logoutWhatsApp } from './services/whatsapp';
 
 const app = express();
 app.use(express.json());
@@ -30,6 +30,15 @@ app.post('/api/whatsapp/connect', (req: Request, res: Response) => {
   try {
     connectWhatsApp();
     res.json({ success: true, message: 'Inicializando conexión de WhatsApp...' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/whatsapp/logout', async (req: Request, res: Response) => {
+  try {
+    await logoutWhatsApp();
+    res.json({ success: true, message: 'Sesión de WhatsApp cerrada correctamente' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
