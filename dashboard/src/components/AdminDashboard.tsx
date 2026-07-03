@@ -164,8 +164,22 @@ export const AdminDashboard: React.FC = () => {
       <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline/20 flex flex-col py-6 px-6 z-50">
         <div className="px-2 py-4 mb-8">
           <h1 className="font-headline-md text-headline-md font-black text-primary flex items-center gap-2">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>smart_toy</span>
-            Frant
+            <svg width="34" height="34" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+              <defs>
+                <linearGradient id="frant-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0066ff" />
+                  <stop offset="100%" stopColor="#7c3aed" />
+                </linearGradient>
+              </defs>
+              <path d="M20,10 L20,5" stroke="url(#frant-grad)" strokeWidth="2.5" strokeLinecap="round" />
+              <circle cx="20" cy="4" r="2" fill="url(#frant-grad)" />
+              <path d="M20,10 C11.7,10 5,16.2 5,23.8 C5,27.9 7,31.5 10.2,33.9 L9,38 L14,36.2 C15.8,37.1 17.8,37.6 20,37.6 C28.3,37.6 35,31.4 35,23.8 C35,16.2 28.3,10 20,10 Z" stroke="url(#frant-grad)" strokeWidth="2.5" strokeLinejoin="round" />
+              <rect x="11" y="18" width="18" height="11" rx="5.5" fill="#090d16" stroke="url(#frant-grad)" strokeWidth="0.5" />
+              <circle cx="16" cy="23.5" r="1.5" fill="#ffffff" />
+              <circle cx="24" cy="23.5" r="1.5" fill="#ffffff" />
+              <path d="M18.5,25.5 C19.2,26.5 20.8,26.5 21.5,25.5" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+            </svg>
+            <span className="bg-gradient-to-r from-[#0066ff] to-[#8b5cf6] bg-clip-text text-transparent">Frant</span>
           </h1>
           <p className="text-on-surface-variant text-label-sm mt-1 opacity-70">por Diaz Lab</p>
         </div>
