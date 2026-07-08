@@ -33,6 +33,13 @@ interface AgentContact {
   status: 'online' | 'offline';
 }
 
+interface AudioContact {
+  tag: string;
+  fileName: string;
+  size: number;
+  url: string;
+}
+
 interface ClientDashboardProps {
   clientId: string;
   onBack: () => void;
@@ -76,6 +83,75 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   const [newAgentPhone, setNewAgentPhone] = useState('');
   const [newAgentPriority, setNewAgentPriority] = useState<number>(1);
   const [loadingAgents, setLoadingAgents] = useState(false);
+
+  // Estados para gestión de audios pregrabados
+  const [audios, setAudios] = useState<AudioContact[]>([]);
+  const [newAudioTag, setNewAudioTag] = useState('');
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
+  const [loadingAudios, setLoadingAudios] = useState(false);
+
+  // Cargar audios
+  const fetchAudios = async () => {
+    try {
+      setLoadingAudios(true);
+      const res = await fetch(`/api/clients/${clientId}/audios`);
+      const json = await res.json();
+      if (json.success) {
+        setAudios(json.data || []);
+      }
+    } catch (err) {
+      console.error("Error cargando audios:", err);
+    } finally {
+      setLoadingAudios(false);
+    }
+  };
+
+  // Subir audio
+  const handleUploadAudio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAudioTag || !audioFile) return;
+
+    const formData = new FormData();
+    formData.append('etiqueta', newAudioTag.trim().toLowerCase().replace(/[^a-z0-9_]/g, ''));
+    formData.append('audio', audioFile);
+
+    setUploadingAudio(true);
+    try {
+      const res = await fetch(`/api/clients/${clientId}/audios`, {
+        method: 'POST',
+        body: formData
+      });
+      const json = await res.json();
+      if (json.success) {
+        setNewAudioTag('');
+        setAudioFile(null);
+        const fileInput = document.getElementById('audio-file-input') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        fetchAudios();
+      }
+    } catch (err) {
+      console.error("Error subiendo audio:", err);
+    } finally {
+      setUploadingAudio(false);
+    }
+  };
+
+  // Eliminar audio
+  const handleDeleteAudio = async (fileName: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar este audio?")) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/audios/${fileName}`, {
+        method: 'DELETE'
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchAudios();
+      }
+    } catch (err) {
+      console.error("Error eliminando audio:", err);
+    }
+  };
 
   // Cargar asesores del cliente
   const fetchAgents = async () => {
@@ -206,6 +282,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
     };
     fetchClientInfo();
     fetchAgents();
+    fetchAudios();
   }, [clientId]);
 
   // Polling dinámico (Cada 3 segundos) para Logs y Estado de Vinculación QR
@@ -911,6 +988,111 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                   >
                     <span className="material-symbols-outlined text-[16px]">add_circle</span>
                     Agregar a la Lista
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Gestión de Audios Pregrabados */}
+            <div className="glass-card p-6 rounded-xl mt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="material-symbols-outlined text-secondary">mic</span>
+                <h3 className="font-headline-md text-headline-md">Notas de Voz Pregrabadas (Audios)</h3>
+              </div>
+              
+              <p className="text-xs text-on-surface-variant opacity-75 mb-6">
+                Sube las notas de voz de tu negocio (ej. bienvenida, horarios, despedida) en formato MP3, WAV u OGG.
+                Frant enviará estos archivos directamente como notas de voz nativas en WhatsApp.
+              </p>
+
+              {/* Lista de audios existentes */}
+              <div className="space-y-3 mb-6">
+                {loadingAudios ? (
+                  <div className="text-center text-xs text-primary animate-pulse py-4">Cargando audios...</div>
+                ) : audios.length === 0 ? (
+                  <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
+                    Aún no has subido notas de voz pregrabadas. ¡Sube una abajo!
+                  </p>
+                ) : (
+                  <div className="bg-surface-container/30 border border-outline/10 rounded-lg overflow-hidden divide-y divide-outline/5">
+                    {audios.map((audio) => (
+                      <div key={audio.fileName} className="flex flex-col md:flex-row md:items-center justify-between p-3.5 gap-3 text-xs hover:bg-surface-container/50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <span className="material-symbols-outlined text-[20px] text-primary">audiotrack</span>
+                          <div>
+                            <p className="font-bold text-on-surface">Etiqueta: <span className="text-secondary">'{audio.tag}'</span></p>
+                            <p className="text-[10px] text-on-surface-variant opacity-70 truncate font-mono" title={audio.fileName}>
+                              {audio.fileName} ({(audio.size / 1024).toFixed(1)} KB)
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 justify-end shrink-0">
+                          {/* Reproductor de Audio Nativo HTML5 */}
+                          <audio 
+                            src={audio.url} 
+                            controls 
+                            className="h-7 w-44 md:w-52 filter dark:invert"
+                          />
+                          
+                          {/* Botón de Eliminar */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAudio(audio.fileName)}
+                            className="p-1.5 hover:bg-error/20 text-error/80 hover:text-error rounded-lg transition-colors flex items-center justify-center cursor-pointer"
+                            title="Eliminar audio"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Formulario de carga de audio */}
+              <form onSubmit={handleUploadAudio} className="bg-surface-container/20 border border-outline/5 rounded-lg p-4 space-y-4">
+                <span className="text-[11px] font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px]">upload</span>
+                  Subir Nueva Nota de Voz
+                </span>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-label-md text-label-md text-on-surface-variant">Etiqueta / Nombre del Audio</label>
+                    <input
+                      type="text"
+                      required
+                      value={newAudioTag}
+                      onChange={(e) => setNewAudioTag(e.target.value)}
+                      placeholder="Ej: bienvenida, horarios, traspaso"
+                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-label-md text-label-md text-on-surface-variant">Archivo de Audio (MP3, WAV, OGG)</label>
+                    <input
+                      type="file"
+                      id="audio-file-input"
+                      required
+                      accept="audio/*"
+                      onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={uploadingAudio || !newAudioTag || !audioFile}
+                    className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-lg font-bold text-xs hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      {uploadingAudio ? 'sync' : 'cloud_upload'}
+                    </span>
+                    {uploadingAudio ? 'Subiendo...' : 'Subir Audio'}
                   </button>
                 </div>
               </form>

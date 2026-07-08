@@ -1,10 +1,13 @@
 import { ClientConfig } from '../core/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import fs from 'fs';
+import path from 'path';
 
 import { VectorDatabase } from '../database/vectorDb';
 import { agendarCitaTool } from '../tools/agendarCita';
 import { crearPedidoTool } from '../tools/crearPedido';
 import { registrarClienteTool } from '../tools/registrarCliente';
+import { enviarAudioTool } from '../tools/enviarAudio';
 
 // Inicializamos el SDK de Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "API_KEY_MISSING");
@@ -16,12 +19,28 @@ export class AIAgent {
     this.config = config;
   }
 
-  async processMessage(userMessage: string, senderPhone: string): Promise<string> {
+  async processMessage(
+    userMessage: string, 
+    senderPhone: string,
+    sendVoiceFn?: (to: string, filePath: string) => Promise<any>
+  ): Promise<string> {
     console.log(`[Agente AI] 🤖 Procesando Gemini para cliente: ${this.config.name} (ID: ${this.config.id})`);
 
     // 1. Retrieval-Augmented Generation (RAG)
     const contextFromDrive = await VectorDatabase.searchRelevantContext(this.config.id, userMessage);
     console.log(`[Agente AI] Contexto RAG recuperado: ${contextFromDrive.length > 0 ? 'Sí' : 'Vacío'}`);
+
+    // Escanear audios locales cargados para este cliente
+    const clientMediaDir = path.join(process.cwd(), 'media', 'clients', this.config.id);
+    const availableAudios: string[] = [];
+    if (fs.existsSync(clientMediaDir)) {
+      const files = fs.readdirSync(clientMediaDir);
+      for (const file of files) {
+        const ext = path.extname(file);
+        availableAudios.push(path.basename(file, ext));
+      }
+    }
+    console.log(`[Agente AI] Audios locales disponibles para el cliente: ${availableAudios.join(', ') || 'Ninguno'}`);
 
     // 2. Preparar el Prompt del Sistema
     const fullSystemPrompt = `
@@ -34,6 +53,7 @@ export class AIAgent {
       INSTRUCCIONES IMPORTANTES:
       - Responde siempre de forma corta, directa y conversacional, ideal para WhatsApp. Escribe como si fueras un humano amable.
       - Si el usuario te proporciona datos para registrar su negocio, agendar una cita o hacer un pedido, llama a la herramienta correspondiente de inmediato.
+      ${availableAudios.length > 0 ? `- Tienes la capacidad de reproducir notas de voz del dueño del negocio. Si el usuario te saluda, o te pide un audio explicativo o de bienvenida, o consideras oportuno enviar un audio de los disponibles, utiliza la herramienta 'reproducir_audio' con la etiqueta correspondiente.` : ''}
     `;
 
     // 3. Declaración de Herramientas (Function Declarations para Gemini)
@@ -83,6 +103,25 @@ export class AIAgent {
             }
           },
           required: ["producto", "cantidad"]
+        }
+      });
+    }
+
+    // Inyección de la herramienta reproducir_audio si el cliente tiene audios disponibles
+    if (availableAudios.length > 0) {
+      declarations.push({
+        name: "reproducir_audio",
+        description: "Envía una nota de voz pregrabada del dueño del negocio al usuario. Utilízalo para responder de forma más personal y humana.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            etiqueta: { 
+              type: "STRING", 
+              description: "La etiqueta del audio a reproducir.",
+              enum: availableAudios // Solo permite llamar audios existentes en disco
+            }
+          },
+          required: ["etiqueta"]
         }
       });
     }
@@ -166,6 +205,8 @@ export class AIAgent {
                 toolResultStr = await crearPedidoTool.execute(call.args as any);
               } else if (call.name === "registrar_cliente") {
                 toolResultStr = await registrarClienteTool.execute(call.args as any);
+              } else if (call.name === "reproducir_audio") {
+                toolResultStr = await enviarAudioTool.execute(call.args as any, this.config.id, senderPhone, sendVoiceFn);
               } else {
                 toolResultStr = `Error: Herramienta '${call.name}' no reconocida.`;
               }
@@ -206,6 +247,8 @@ export class AIAgent {
           toolResponse = await agendarCitaTool.execute({ fecha: "2026-07-20", hora: "10:00 AM", nombre: "Juan" }, this.config.id, senderPhone);
         } else if (this.config.activeTools.includes("crearPedido") && userMessage.toLowerCase().includes("pedir")) {
           toolResponse = await crearPedidoTool.execute({ producto: "Pizza Grande", cantidad: 2 });
+        } else if (availableAudios.length > 0 && userMessage.toLowerCase().includes("audio")) {
+          toolResponse = await enviarAudioTool.execute({ etiqueta: availableAudios[0] }, this.config.id, senderPhone, sendVoiceFn);
         }
 
         const finalResponseText = `(SIMULACIÓN) RAG Context: "${contextFromDrive}". ${toolResponse ? ' Acción ejecutada: ' + toolResponse : ''}`;

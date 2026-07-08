@@ -1,4 +1,4 @@
-import { Client, LocalAuth } from 'whatsapp-web.js';
+import { Client, LocalAuth, MessageMedia } from 'whatsapp-web.js';
 import * as qrcode from 'qrcode-terminal';
 import { routeIncomingMessage } from '../core/router';
 import { saveLocalFile } from './localKnowledge';
@@ -160,6 +160,13 @@ export const initializeWhatsAppClient = () => {
                     if (client) {
                         const target = to.includes('@c.us') ? to : `${to}@c.us`;
                         await client.sendMessage(target, text);
+                    }
+                },
+                async (to, filePath) => {
+                    if (client) {
+                        const target = to.includes('@c.us') ? to : `${to}@c.us`;
+                        const media = MessageMedia.fromFilePath(filePath);
+                        await client.sendMessage(target, media, { sendAudioAsVoice: true });
                     }
                 }
             );

@@ -28,7 +28,8 @@ export const routeIncomingMessage = async (
   recipientPhone: string, // El número de WhatsApp del bot al que el usuario escribió (Línea del Bot)
   senderPhone: string,    // El número de WhatsApp de la persona que escribe (Cliente o Agente)
   messageText: string,
-  sendMessageFn?: (to: string, text: string) => Promise<any>
+  sendMessageFn?: (to: string, text: string) => Promise<any>,
+  sendVoiceFn?: (to: string, filePath: string) => Promise<any>
 ): Promise<string | undefined> => {
   console.log(`[Router] Nuevo mensaje recibido en la línea: ${recipientPhone} de ${senderPhone}`);
 
@@ -440,7 +441,7 @@ export const routeIncomingMessage = async (
   const agent = new AIAgent(clientConfig);
 
   // 4. Procesar el mensaje (RAG, LLM, Tools)
-  const response = await agent.processMessage(messageText, senderPhone);
+  const response = await agent.processMessage(messageText, senderPhone, sendVoiceFn);
 
   console.log(`[Router] Respuesta generada: ${response}`);
 

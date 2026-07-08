@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import 'dotenv/config';
 import path from 'path';
+import fs from 'fs';
 import multer from 'multer';
 import { google } from 'googleapis';
 import { 
@@ -27,6 +28,13 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
 app.use(express.json());
+
+// Servir la carpeta de media de forma estática
+const mediaDir = path.join(process.cwd(), 'media', 'clients');
+if (!fs.existsSync(mediaDir)) {
+  fs.mkdirSync(mediaDir, { recursive: true });
+}
+app.use('/media', express.static(path.join(process.cwd(), 'media')));
 
 // Servir los archivos estáticos de la aplicación React (Dashboard)
 app.use(express.static(path.join(process.cwd(), 'dashboard/dist')));
@@ -305,6 +313,98 @@ app.patch('/api/clients/:clientId/agents/:agentId', async (req: Request, res: Re
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// --- ENDPOINTS DE GESTIÓN DE AUDIOS PREGRABADOS ---
+
+// 7.41 Listar audios de un cliente
+app.get('/api/clients/:clientId/audios', async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId as string;
+    const clientMediaDir = path.join(process.cwd(), 'media', 'clients', clientId);
+    
+    if (!fs.existsSync(clientMediaDir)) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const files = fs.readdirSync(clientMediaDir);
+    const audioData = files.map(file => {
+      const stats = fs.statSync(path.join(clientMediaDir, file));
+      const ext = path.extname(file);
+      const tag = path.basename(file, ext);
+      return {
+        tag,
+        fileName: file,
+        size: stats.size,
+        url: `/media/clients/${clientId}/${file}`
+      };
+    });
+
+    res.json({ success: true, data: audioData });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 7.42 Subir o actualizar audio de un cliente
+app.post('/api/clients/:clientId/audios', upload.single('audio'), async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId as string;
+    const etiqueta = (req.body.etiqueta || '') as string;
+    const file = req.file;
+
+    if (!etiqueta || !file) {
+      return res.status(400).json({ success: false, error: 'Etiqueta o archivo faltante.' });
+    }
+
+    const cleanTag = etiqueta.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (!cleanTag) {
+      return res.status(400).json({ success: false, error: 'Etiqueta no válida.' });
+    }
+
+    const clientMediaDir = path.join(process.cwd(), 'media', 'clients', clientId);
+    if (!fs.existsSync(clientMediaDir)) {
+      fs.mkdirSync(clientMediaDir, { recursive: true });
+    }
+
+    const ext = path.extname(file.originalname) || '.mp3';
+    const fileName = `${cleanTag}${ext}`;
+    const filePath = path.join(clientMediaDir, fileName);
+
+    // Evitar duplicados eliminando archivos con la misma etiqueta pero diferente extensión
+    const existingFiles = fs.readdirSync(clientMediaDir);
+    for (const f of existingFiles) {
+      if (f.startsWith(`${cleanTag}.`)) {
+        fs.unlinkSync(path.join(clientMediaDir, f));
+      }
+    }
+
+    fs.writeFileSync(filePath, file.buffer);
+    console.log(`[Media Upload] 🎙️ Audio guardado para cliente ${clientId}: ${fileName}`);
+
+    res.json({ success: true, message: 'Audio subido correctamente.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 7.43 Eliminar audio de un cliente
+app.delete('/api/clients/:clientId/audios/:fileName', async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId as string;
+    const fileName = req.params.fileName as string;
+    const filePath = path.join(process.cwd(), 'media', 'clients', clientId, fileName);
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      res.json({ success: true, message: 'Audio eliminado con éxito.' });
+    } else {
+      res.status(404).json({ success: false, error: 'Archivo no encontrado.' });
+    }
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 // 7.5 Sincronizar carpeta de Google Drive e indexar vectores en pgvector
 app.post('/api/clients/:id/sync-drive', async (req: Request, res: Response) => {
