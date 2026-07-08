@@ -8,6 +8,7 @@ interface Client {
   activeTools: string[];
   status: string;
   agentPhone?: string;
+  driveFolderId?: string;
 }
 
 interface Interaction {
@@ -22,6 +23,14 @@ interface WhatsappStatus {
   status: string; // 'DISCONNECTED', 'QR', 'CONNECTED'
   qr: string;
   phone: string;
+}
+
+interface AgentContact {
+  id: string;
+  name: string;
+  phone: string;
+  priority: number;
+  status: 'online' | 'offline';
 }
 
 interface ClientDashboardProps {
@@ -44,8 +53,105 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   // Estados del Formulario de Configuración
   const [systemPrompt, setSystemPrompt] = useState('');
   const [agentPhone, setAgentPhone] = useState('');
+  const [driveFolderId, setDriveFolderId] = useState('');
   const [toneOfVoice, setToneOfVoice] = useState('Friendly');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  
+  // Estados para edición en caliente del teléfono del Bot
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [tempPhone, setTempPhone] = useState('');
+  
+  // Estados para sincronización de Drive
+  const [syncingDrive, setSyncingDrive] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  // Estados para visor y carga de archivos del cliente
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{id: string, name: string, mimeType: string}>>([]);
+  const [loadingFiles, setLoadingFiles] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+
+  // Estados para gestión de asesores humanos (escalamiento)
+  const [agents, setAgents] = useState<AgentContact[]>([]);
+  const [newAgentName, setNewAgentName] = useState('');
+  const [newAgentPhone, setNewAgentPhone] = useState('');
+  const [newAgentPriority, setNewAgentPriority] = useState<number>(1);
+  const [loadingAgents, setLoadingAgents] = useState(false);
+
+  // Cargar asesores del cliente
+  const fetchAgents = async () => {
+    try {
+      setLoadingAgents(true);
+      const res = await fetch(`/api/clients/${clientId}/agents`);
+      const json = await res.json();
+      if (json.success) {
+        setAgents(json.data || []);
+        setNewAgentPriority(json.data ? json.data.length + 1 : 1);
+      }
+    } catch (err) {
+      console.error("Error cargando asesores:", err);
+    } finally {
+      setLoadingAgents(false);
+    }
+  };
+
+  // Agregar asesor
+  const handleAddAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAgentName || !newAgentPhone) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/agents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newAgentName,
+          phone: newAgentPhone.trim(),
+          priority: newAgentPriority
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setNewAgentName('');
+        setNewAgentPhone('');
+        fetchAgents();
+      }
+    } catch (err) {
+      console.error("Error agregando asesor:", err);
+    }
+  };
+
+  // Eliminar asesor
+  const handleDeleteAgent = async (agentId: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar este asesor de la lista de escalamiento?")) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/agents/${agentId}`, {
+        method: 'DELETE'
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchAgents();
+      }
+    } catch (err) {
+      console.error("Error eliminando asesor:", err);
+    }
+  };
+
+  // Cambiar estado de disponibilidad del asesor
+  const handleToggleAgentStatus = async (agentId: string, currentStatus: 'online' | 'offline') => {
+    const nextStatus = currentStatus === 'online' ? 'offline' : 'online';
+    try {
+      const res = await fetch(`/api/clients/${clientId}/agents/${agentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus })
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchAgents();
+      }
+    } catch (err) {
+      console.error("Error actualizando estado del asesor:", err);
+    }
+  };
 
   // Solicitar arranque de conexión de WhatsApp
   const handleConnectWhatsApp = async () => {
@@ -79,6 +185,18 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           setClientData(clientJson.data);
           setSystemPrompt(clientJson.data.systemPrompt);
           setAgentPhone(clientJson.data.agentPhone || '');
+          setDriveFolderId(clientJson.data.driveFolderId || '');
+
+          if (clientJson.data.driveFolderId) {
+            setLoadingFiles(true);
+            fetch(`/api/clients/${clientId}/files`)
+              .then(res => res.json())
+              .then(json => {
+                if (json.success) setUploadedFiles(json.data || []);
+              })
+              .catch(err => console.error("Error cargando archivos:", err))
+              .finally(() => setLoadingFiles(false));
+          }
         }
       } catch (error) {
         console.error("[ClientDashboard] Error cargando cliente:", error);
@@ -87,6 +205,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
       }
     };
     fetchClientInfo();
+    fetchAgents();
   }, [clientId]);
 
   // Polling dinámico (Cada 3 segundos) para Logs y Estado de Vinculación QR
@@ -128,6 +247,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
         body: JSON.stringify({
           system_prompt: systemPrompt,
           agent_phone: agentPhone || null,
+          drive_folder_id: driveFolderId || null,
         }),
       });
 
@@ -140,10 +260,118 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
         const clientJson = await clientRes.json();
         if (clientJson.success) {
           setClientData(clientJson.data);
+          setSystemPrompt(clientJson.data.systemPrompt);
+          setAgentPhone(clientJson.data.agentPhone || '');
+          setDriveFolderId(clientJson.data.driveFolderId || '');
         }
       }
     } catch (error) {
       console.error("[ClientDashboard] Error guardando config:", error);
+    }
+  };
+
+  // Función para guardar el número de teléfono del bot de forma directa
+  const handleSavePhoneNumber = async () => {
+    if (!tempPhone) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone_number: tempPhone.replace(/\D/g, ''), // Limpiar no numéricos
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsEditingPhone(false);
+        // Recargar datos
+        const clientRes = await fetch(`/api/clients/${clientId}`);
+        const clientJson = await clientRes.json();
+        if (clientJson.success) {
+          setClientData(clientJson.data);
+        }
+      } else {
+        alert(`Error: ${data.message || data.error || 'No se pudo guardar el número'}`);
+      }
+    } catch (error: any) {
+      console.error("[ClientDashboard] Error guardando teléfono del bot:", error);
+      alert("Error de conexión al guardar el número de teléfono.");
+    }
+  };
+
+  // Cargar listado de archivos cargados desde el servidor
+  const fetchUploadedFiles = async () => {
+    if (!driveFolderId) return;
+    try {
+      setLoadingFiles(true);
+      const res = await fetch(`/api/clients/${clientId}/files`);
+      const json = await res.json();
+      if (json.success) {
+        setUploadedFiles(json.data || []);
+      }
+    } catch (error) {
+      console.error("[ClientDashboard] Error cargando lista de archivos:", error);
+    } finally {
+      setLoadingFiles(false);
+    }
+  };
+
+  // Cargar archivo a Google Drive y auto-vectorizar
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      setUploadingFile(true);
+      setSyncResult(null);
+      
+      const res = await fetch(`/api/clients/${clientId}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setSyncResult(`¡Archivo '${file.name}' cargado a Google Drive y vectorizado en pgvector con éxito!`);
+        fetchUploadedFiles(); // Recargar listado en UI
+      } else {
+        setSyncResult(`Error subiendo archivo: ${json.error || json.message}`);
+      }
+    } catch (error) {
+      console.error("[ClientDashboard] Error cargando archivo:", error);
+      setSyncResult("Error de conexión al subir el archivo.");
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  // Función para sincronizar la carpeta de Google Drive
+  const handleSyncDrive = async () => {
+    if (!driveFolderId) {
+      alert("Por favor ingresa un ID de carpeta de Google Drive primero.");
+      return;
+    }
+
+    try {
+      setSyncingDrive(true);
+      setSyncResult(null);
+      const res = await fetch(`/api/clients/${clientId}/sync-drive`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setSyncResult(data.message || "Sincronización completada con éxito.");
+      } else {
+        setSyncResult(`Error: ${data.message || data.error || 'Fallo desconocido'}`);
+      }
+    } catch (error: any) {
+      console.error("[ClientDashboard] Error en sincronización de Drive:", error);
+      setSyncResult(`Error de conexión: ${error.message || 'No se pudo conectar al servidor'}`);
+    } finally {
+      setSyncingDrive(false);
+      setTimeout(() => setSyncResult(null), 6000);
     }
   };
 
@@ -344,7 +572,45 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
               </div>
               <div className="flex justify-between items-center px-1">
                 <span className="font-label-md text-label-md text-on-surface-variant">Línea Asignada</span>
-                <span className="text-on-surface font-label-md font-mono">+{clientData.phoneNumber}</span>
+                {isEditingPhone ? (
+                  <div className="flex items-center gap-1 bg-surface-container/60 p-1 rounded border border-outline/10">
+                    <span className="text-on-surface-variant font-bold text-xs select-none">+</span>
+                    <input
+                      type="text"
+                      className="bg-transparent text-xs font-mono w-24 text-on-surface outline-none border-b border-primary/30 focus:border-primary"
+                      value={tempPhone}
+                      onChange={(e) => setTempPhone(e.target.value)}
+                    />
+                    <button 
+                      onClick={handleSavePhoneNumber}
+                      className="p-0.5 hover:bg-secondary/20 text-secondary rounded transition-colors flex items-center justify-center cursor-pointer"
+                      title="Guardar Número"
+                    >
+                      <span className="material-symbols-outlined text-[15px] font-bold">check</span>
+                    </button>
+                    <button 
+                      onClick={() => setIsEditingPhone(false)}
+                      className="p-0.5 hover:bg-error/20 text-error rounded transition-colors flex items-center justify-center cursor-pointer"
+                      title="Cancelar"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">close</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 group/phone">
+                    <span className="text-on-surface font-label-md font-mono">+{clientData.phoneNumber}</span>
+                    <button
+                      onClick={() => {
+                        setTempPhone(clientData.phoneNumber);
+                        setIsEditingPhone(true);
+                      }}
+                      className="p-1 text-on-surface-variant/40 hover:text-primary hover:bg-surface-variant/50 rounded transition-all flex items-center justify-center opacity-0 group-hover/phone:opacity-100 focus:opacity-100 cursor-pointer"
+                      title="Editar Línea"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">edit</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             {isWaConnected && (
@@ -386,6 +652,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
+                  <label className="font-label-md text-label-md text-on-surface-variant">Línea del Asesor Humano (Traspaso)</label>
+                  <input 
+                    className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface font-mono"
+                    type="text"
+                    value={agentPhone}
+                    onChange={(e) => setAgentPhone(e.target.value)}
+                    placeholder="Ej: 573009998888"
+                  />
+                </div>
+                <div className="space-y-1">
                   <label className="font-label-md text-label-md text-on-surface-variant">Tono de Voz del Bot</label>
                   <select 
                     className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface"
@@ -397,18 +673,114 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                     <option value="Casual">Casual e Informal</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="font-label-md text-label-md text-on-surface-variant">Línea del Asesor Humano (Traspaso)</label>
-                  <input 
-                    className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface font-mono"
-                    type="text"
-                    value={agentPhone}
-                    onChange={(e) => setAgentPhone(e.target.value)}
-                    placeholder="Ej: 573009998888"
-                  />
-                </div>
               </div>
-              <div className="flex justify-end pt-2 items-center gap-4">
+
+              {/* Sección RAG de Google Drive */}
+              <div className="border-t border-outline/10 pt-4 mt-6 space-y-3">
+                <h4 className="font-label-md text-label-md font-bold text-primary flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px]">cloud_sync</span>
+                  Base de Conocimientos (RAG de Google Drive)
+                </h4>
+                <p className="text-xs text-on-surface-variant opacity-75">
+                  El bot utilizará la información contenida en los archivos TXT y Google Docs de esta carpeta para responder.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="font-label-md text-label-md text-on-surface-variant">ID de Carpeta de Google Drive</label>
+                    <input 
+                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface font-mono"
+                      type="text"
+                      value={driveFolderId}
+                      onChange={(e) => setDriveFolderId(e.target.value)}
+                      placeholder="Ej: 11DhgnPTOZu8ySaaiZA4Lni9FmqB58SFr"
+                    />
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleSyncDrive}
+                      disabled={syncingDrive || !driveFolderId}
+                      className="w-full bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg font-bold text-xs hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:scale-100 cursor-pointer active:scale-95"
+                    >
+                      <span className={`material-symbols-outlined text-[16px] ${syncingDrive ? 'animate-spin' : ''}`}>
+                        {syncingDrive ? 'sync' : 'cloud_download'}
+                      </span>
+                      {syncingDrive ? 'Sincronizando...' : 'Sincronizar Drive'}
+                    </button>
+                  </div>
+                </div>
+                {syncResult && (
+                  <div className={`p-3 rounded-lg text-xs font-semibold transition-all border ${
+                    syncResult.includes('Error') 
+                      ? 'bg-error/15 text-error border-error/20' 
+                      : 'bg-secondary/15 text-secondary border-secondary/20'
+                  }`}>
+                    {syncResult}
+                  </div>
+                )}
+
+                {/* Visualizador y Carga de Archivos RAG */}
+                {driveFolderId && (
+                  <div className="bg-surface-container/30 border border-outline/10 rounded-lg p-4 space-y-3 mt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[16px] text-primary">menu_book</span>
+                        Documentos de Entrenamiento (RAG)
+                      </span>
+                      {loadingFiles && <span className="text-[10px] text-primary animate-pulse">Cargando archivos...</span>}
+                    </div>
+                    
+                    {uploadedFiles.length === 0 ? (
+                      <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
+                        Aún no has subido documentos. ¡Sube un archivo de texto o PDF para entrenar a tu bot!
+                      </p>
+                    ) : (
+                      <div className="max-h-40 overflow-y-auto divide-y divide-outline/5 pr-1 space-y-1 bg-surface-container/20 p-2 rounded-lg">
+                        {uploadedFiles.map((file) => (
+                          <div key={file.id} className="flex items-center justify-between text-xs py-1.5 first:pt-0">
+                            <div className="flex items-center gap-2 truncate pr-2">
+                              <span className="material-symbols-outlined text-[16px] text-primary/70 shrink-0">
+                                {file.mimeType.includes('folder') ? 'folder' : 'description'}
+                              </span>
+                              <span className="text-on-surface truncate font-medium" title={file.name}>{file.name}</span>
+                            </div>
+                            <span className="text-[10px] text-on-surface-variant opacity-60 shrink-0 font-mono bg-surface-container-highest px-1.5 py-0.5 rounded">
+                              {file.mimeType.includes('text/plain') 
+                                ? 'TXT' 
+                                : file.mimeType.includes('google-apps.document') 
+                                  ? 'Doc' 
+                                  : file.mimeType.includes('pdf') 
+                                    ? 'PDF' 
+                                    : 'Doc'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Zona de Carga de Archivos */}
+                    <div className="pt-1">
+                      <label className="relative flex items-center justify-center border border-dashed border-outline/30 rounded-lg p-3 hover:bg-surface-container-high/40 hover:border-primary/50 transition-all cursor-pointer text-center text-xs font-semibold text-on-surface-variant gap-2 active:scale-[0.99]">
+                        <span className="material-symbols-outlined text-[18px] text-primary">
+                          {uploadingFile ? 'sync' : 'upload_file'}
+                        </span>
+                        <span>
+                          {uploadingFile ? 'Subiendo y vectorizando...' : 'Subir archivo de entrenamiento (PDF, TXT, DOCX)'}
+                        </span>
+                        <input 
+                          type="file" 
+                          accept=".txt,.pdf,.docx" 
+                          className="hidden" 
+                          disabled={uploadingFile || syncingDrive} 
+                          onChange={handleFileUpload} 
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end pt-4 items-center gap-4">
                 {saveSuccess && (
                   <span className="text-secondary font-bold text-sm flex items-center gap-1">
                     <span className="material-symbols-outlined text-[18px]">check_circle</span>
@@ -424,6 +796,125 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                 </button>
               </div>
             </form>
+
+            {/* Gestión de Asesores Humanos */}
+            <div className="glass-card p-6 rounded-xl mt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="material-symbols-outlined text-secondary">groups</span>
+                <h3 className="font-headline-md text-headline-md">Gestión de Asesores Humanos (Cascada)</h3>
+              </div>
+              
+              <p className="text-xs text-on-surface-variant opacity-75 mb-6">
+                Registra los teléfonos y nombres de tus asesores en orden de prioridad. 
+                Si un asesor no responde en 1 minuto, Frant escalará la llamada al siguiente asesor activo de la lista.
+              </p>
+
+              {/* List of current agents */}
+              <div className="space-y-3 mb-6">
+                {loadingAgents ? (
+                  <div className="text-center text-xs text-primary animate-pulse py-4">Cargando asesores...</div>
+                ) : agents.length === 0 ? (
+                  <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
+                    Aún no has agregado asesores humanos. ¡Agrega uno abajo para habilitar el traspaso!
+                  </p>
+                ) : (
+                  <div className="bg-surface-container/30 border border-outline/10 rounded-lg overflow-hidden divide-y divide-outline/5">
+                    {agents.map((agent) => (
+                      <div key={agent.id} className="flex items-center justify-between p-3.5 text-xs hover:bg-surface-container/50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                            {agent.priority}
+                          </span>
+                          <div>
+                            <p className="font-bold text-on-surface">{agent.name}</p>
+                            <p className="text-[11px] text-on-surface-variant font-mono">+{agent.phone}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {/* Toggle Status Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleAgentStatus(agent.id, agent.status)}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
+                              agent.status === 'online'
+                                ? 'bg-secondary/15 text-secondary border-secondary/20 hover:bg-secondary/25'
+                                : 'bg-outline/15 text-on-surface-variant border-outline/20 hover:bg-outline/25'
+                            }`}
+                          >
+                            {agent.status === 'online' ? '● En Línea' : '○ Ausente'}
+                          </button>
+                          
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAgent(agent.id)}
+                            className="p-1.5 hover:bg-error/20 text-error/80 hover:text-error rounded-lg transition-colors flex items-center justify-center cursor-pointer"
+                            title="Eliminar asesor"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Add new agent form */}
+              <form onSubmit={handleAddAgent} className="bg-surface-container/20 border border-outline/5 rounded-lg p-4 space-y-4">
+                <span className="text-[11px] font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px]">person_add</span>
+                  Agregar Nuevo Asesor
+                </span>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-label-md text-label-md text-on-surface-variant">Nombre del Asesor</label>
+                    <input
+                      type="text"
+                      required
+                      value={newAgentName}
+                      onChange={(e) => setNewAgentName(e.target.value)}
+                      placeholder="Ej: Carlos"
+                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-label-md text-label-md text-on-surface-variant">Teléfono (WhatsApp)</label>
+                    <input
+                      type="text"
+                      required
+                      value={newAgentPhone}
+                      onChange={(e) => setNewAgentPhone(e.target.value)}
+                      placeholder="Ej: 573009998888"
+                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container font-mono outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-label-md text-label-md text-on-surface-variant">Prioridad (Orden)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={newAgentPriority}
+                      onChange={(e) => setNewAgentPriority(parseInt(e.target.value) || 1)}
+                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={!newAgentName || !newAgentPhone}
+                    className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-lg font-bold text-xs hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                    Agregar a la Lista
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
 
           {/* Quick Actions */}

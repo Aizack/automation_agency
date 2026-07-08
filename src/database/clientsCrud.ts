@@ -11,18 +11,28 @@ export const createClient = async (client: {
   system_prompt: string;
   active_tools?: string[];
   agent_phone?: string;
+  drive_folder_id?: string;
+  username?: string;
+  password?: string;
+  email?: string;
+  contact_name?: string;
 }): Promise<void> => {
   try {
     await pool.query(
-      `INSERT INTO clients (id, name, phone_number, system_prompt, active_tools, agent_phone, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'active')`,
+      `INSERT INTO clients (id, name, phone_number, system_prompt, active_tools, agent_phone, drive_folder_id, username, password, email, contact_name, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'active')`,
       [
         client.id,
         client.name,
         client.phone_number,
         client.system_prompt,
         client.active_tools || [],
-        client.agent_phone || null
+        client.agent_phone || null,
+        client.drive_folder_id || null,
+        client.username || null,
+        client.password || null,
+        client.email || null,
+        client.contact_name || null
       ]
     );
     console.log(`[CRUD] Client '${client.name}' (ID: ${client.id}) successfully created.`);
@@ -45,7 +55,12 @@ export const getClientById = async (id: string): Promise<ClientConfig | null> =>
         system_prompt AS "systemPrompt", 
         active_tools AS "activeTools", 
         status, 
-        agent_phone AS "agentPhone"
+        agent_phone AS "agentPhone",
+        drive_folder_id AS "driveFolderId",
+        username,
+        password,
+        email,
+        contact_name AS "contactName"
        FROM clients 
        WHERE id = $1 LIMIT 1`,
       [id]
@@ -73,6 +88,11 @@ export const updateClient = async (
     active_tools: string[];
     status: string;
     agent_phone: string;
+    drive_folder_id: string;
+    username: string;
+    password: string;
+    email: string;
+    contact_name: string;
   }>
 ): Promise<void> => {
   try {
@@ -138,7 +158,12 @@ export const listClients = async (): Promise<ClientConfig[]> => {
         system_prompt AS "systemPrompt", 
         active_tools AS "activeTools", 
         status, 
-        agent_phone AS "agentPhone"
+        agent_phone AS "agentPhone",
+        drive_folder_id AS "driveFolderId",
+        username,
+        password,
+        email,
+        contact_name AS "contactName"
        FROM clients 
        ORDER BY created_at DESC`
     );

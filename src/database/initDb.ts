@@ -8,7 +8,7 @@ const initDatabase = async () => {
         await pool.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
         console.log("[DB Init] ✅ Extensión uuid-ossp lista.");
 
-        // 2. Crear tabla clients (con agent_phone)
+        // 2. Crear tabla clients (con credenciales de acceso y drive_folder_id)
         await pool.query(`
             CREATE TABLE IF NOT EXISTS clients (
                 id VARCHAR(50) PRIMARY KEY,
@@ -18,15 +18,23 @@ const initDatabase = async () => {
                 active_tools TEXT[] DEFAULT '{}',
                 status VARCHAR(20) DEFAULT 'active',
                 agent_phone VARCHAR(20),
+                drive_folder_id VARCHAR(100),
+                username VARCHAR(50) UNIQUE,
+                password VARCHAR(100),
+                email VARCHAR(100),
+                contact_name VARCHAR(100),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
         
-        // Ejecutar alter table por si la tabla ya existía sin la columna agent_phone
-        await pool.query(`
-            ALTER TABLE clients ADD COLUMN IF NOT EXISTS agent_phone VARCHAR(20);
-        `);
-        console.log("[DB Init] ✅ Tabla 'clients' creada y alterada con 'agent_phone'.");
+        // Ejecutar alter table por si la tabla ya existía sin estas columnas
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS agent_phone VARCHAR(20);`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS drive_folder_id VARCHAR(100);`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE;`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS password VARCHAR(100);`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS email VARCHAR(100);`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS contact_name VARCHAR(100);`);
+        console.log("[DB Init] ✅ Tabla 'clients' creada y alterada con columnas de Login, agent_phone y drive_folder_id.");
 
         // 3. Crear tabla interactions (Métricas)
         await pool.query(`
@@ -51,11 +59,31 @@ const initDatabase = async () => {
                 client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
                 customer_phone VARCHAR(20) NOT NULL,
                 status VARCHAR(20) DEFAULT 'active', -- 'active' (IA pausada), 'closed' (IA activa)
+                current_agent_phone VARCHAR(20),
+                escalation_index INT DEFAULT 0,
+                assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                interacted_with_agent BOOLEAN DEFAULT FALSE,
+                customer_name VARCHAR(100) DEFAULT 'Cliente',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
         console.log("[DB Init] ✅ Tabla 'takeover_sessions' creada o ya existente.");
+
+        // 4.1 Crear tabla agent_contacts (Lista jerárquica de asesores)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS agent_contacts (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(100) NOT NULL,
+                phone VARCHAR(20) NOT NULL,
+                priority INT NOT NULL,
+                status VARCHAR(20) DEFAULT 'online', -- 'online', 'offline'
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(client_id, phone)
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'agent_contacts' creada o ya existente.");
 
         // 5. Crear tabla appointments (Agenda de citas interna)
         await pool.query(`
@@ -71,7 +99,26 @@ const initDatabase = async () => {
         `);
         console.log("[DB Init] ✅ Tabla 'appointments' creada o ya existente.");
 
-        // 6. Semillar/Insertar Clientes Iniciales (Seed Data)
+        // 6. Crear tabla vector_store (pgvector para el RAG)
+        await pool.query(`CREATE EXTENSION IF NOT EXISTS vector;`);
+        console.log("[DB Init] ✅ Extensión vector (pgvector) lista.");
+
+        // Eliminar tabla anterior para limpiar dimensiones antiguas de 768
+        await pool.query(`DROP TABLE IF EXISTS vector_store CASCADE;`);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS vector_store (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                content TEXT NOT NULL,
+                embedding vector(3072) NOT NULL,
+                metadata JSONB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'vector_store' (pgvector 3072 dimensiones) creada.");
+
+        // 7. Semillar/Insertar Clientes Iniciales (Seed Data)
         const clientsToSeed = [
             {
                 id: "client_001",

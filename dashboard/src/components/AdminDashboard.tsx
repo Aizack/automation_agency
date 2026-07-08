@@ -17,7 +17,11 @@ interface Metrics {
   totalUniqueUsers: number;
 }
 
-export const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+  onLogout?: () => void;
+}
+
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [metrics, setMetrics] = useState<Metrics>({
     totalInteractions: 0,
@@ -37,6 +41,7 @@ export const AdminDashboard: React.FC = () => {
   const [selectedCountry, setSelectedCountry] = useState('57');
   const [botPhoneInput, setBotPhoneInput] = useState('');
   const [agentPhoneInput, setAgentPhoneInput] = useState('');
+  const [driveFolderIdInput, setDriveFolderIdInput] = useState('');
 
   const [loading, setLoading] = useState(true);
 
@@ -100,7 +105,6 @@ export const AdminDashboard: React.FC = () => {
     if (cleanAgent && !cleanAgent.startsWith(selectedCountry)) {
       cleanAgent = selectedCountry + cleanAgent;
     }
-
     try {
       const res = await fetch('/api/clients', {
         method: 'POST',
@@ -109,6 +113,7 @@ export const AdminDashboard: React.FC = () => {
           name: formData.name,
           phone_number: cleanBot,
           agent_phone: cleanAgent || undefined,
+          drive_folder_id: driveFolderIdInput || undefined,
         }),
       });
 
@@ -118,6 +123,7 @@ export const AdminDashboard: React.FC = () => {
         setFormData({ name: '' });
         setBotPhoneInput('');
         setAgentPhoneInput('');
+        setDriveFolderIdInput('');
         fetchData(); // Recargar lista
       } else {
         alert(`Error: ${data.error || data.message || 'Error desconocido del servidor'}`);
@@ -206,7 +212,13 @@ export const AdminDashboard: React.FC = () => {
             <span className="material-symbols-outlined">settings</span>
             <span className="font-label-md">Configuración</span>
           </a>
-          <a className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg" href="#">
+          <a 
+            className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg cursor-pointer" 
+            onClick={(e) => {
+              e.preventDefault();
+              if (onLogout) onLogout();
+            }}
+          >
             <span className="material-symbols-outlined">logout</span>
             <span className="font-label-md">Cerrar Sesión</span>
           </a>
@@ -482,6 +494,16 @@ export const AdminDashboard: React.FC = () => {
                     onChange={(e) => setAgentPhoneInput(e.target.value)}
                   />
                 </div>
+              </div>
+              <div className="space-y-1">
+                <label className="font-label-md text-on-surface-variant ml-1">ID Carpeta Google Drive (RAG)</label>
+                <input 
+                  className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
+                  placeholder="ej. 11DhgnPTOZu8ySaaiZA4Lni9FmqB58SFr" 
+                  type="text"
+                  value={driveFolderIdInput}
+                  onChange={(e) => setDriveFolderIdInput(e.target.value)}
+                />
               </div>
               <div className="pt-4 flex gap-4">
                 <button 

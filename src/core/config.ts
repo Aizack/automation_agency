@@ -8,6 +8,11 @@ export interface ClientConfig {
   activeTools: string[];
   status: string;      // Estado de la cuenta (active, suspended, inactive)
   agentPhone?: string; // Teléfono del agente humano para el traspaso de chat
+  driveFolderId?: string; // ID de la carpeta de Google Drive compartida para el RAG
+  username?: string;
+  password?: string;
+  email?: string;
+  contactName?: string;
 }
 
 /**
@@ -24,7 +29,8 @@ export const getClientConfigByPhone = async (phone: string): Promise<ClientConfi
         system_prompt AS "systemPrompt", 
         active_tools AS "activeTools", 
         status,
-        agent_phone AS "agentPhone"
+        agent_phone AS "agentPhone",
+        drive_folder_id AS "driveFolderId"
        FROM clients 
        WHERE RIGHT(phone_number, 10) = RIGHT($1, 10) LIMIT 1`,
       [phone]
