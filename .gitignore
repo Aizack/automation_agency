@@ -3,3 +3,4 @@ node_modules/
 Api Key.txt
 .wwebjs_auth/
 .wwebjs_cache/
+*.log

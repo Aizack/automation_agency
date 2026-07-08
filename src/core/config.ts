@@ -1,3 +1,5 @@
+import { query } from '../database/connection';
+
 export interface ClientConfig {
   id: string;
   name: string;
@@ -6,25 +8,20 @@ export interface ClientConfig {
   activeTools: string[];
 }
 
-// Simulamos una base de datos de configuración de clientes (Tenant Registry)
-// En producción, esto vendría de PostgreSQL.
-export const getClientConfigByPhone = (phone: string): ClientConfig | null => {
-  const clients: ClientConfig[] = [
-    {
-      id: "client_001",
-      name: "Clínica Dental Sonrisas",
-      phoneNumber: "1234567890", // Número del bot asociado a la clínica
-      systemPrompt: "Eres el asistente virtual de Clínica Sonrisas. Tu objetivo es agendar citas médicas con empatía y revisar horarios.",
-      activeTools: ["agendarCita", "consultarHorarios"]
-    },
-    {
-      id: "client_002",
-      name: "Pizzería Napoli",
-      phoneNumber: "0987654321", // Número del bot asociado a la pizzería
-      systemPrompt: "Eres el asistente de Pizzería Napoli. Debes tomar pedidos, confirmar la dirección de envío y calcular el costo.",
-      activeTools: ["crearPedido", "consultarMenu"]
-    }
-  ];
+export const getClientConfigByPhone = async (phone: string): Promise<ClientConfig | null> => {
+  try {
+    const res = await query(
+      'SELECT id, name, phone_number as "phoneNumber", system_prompt as "systemPrompt", active_tools as "activeTools" FROM clients WHERE phone_number = $1',
+      [phone]
+    );
 
-  return clients.find(c => c.phoneNumber === phone) || null;
+    if (res.rows.length === 0) {
+      return null;
+    }
+
+    return res.rows[0] as ClientConfig;
+  } catch (error) {
+    console.error(`[Config] Error obteniendo configuración para el número ${phone}:`, error);
+    return null;
+  }
 };
