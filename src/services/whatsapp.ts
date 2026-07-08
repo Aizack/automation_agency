@@ -1,5 +1,7 @@
 import { Client, LocalAuth, MessageMedia } from 'whatsapp-web.js';
 import * as qrcode from 'qrcode-terminal';
+import fs from 'fs';
+import path from 'path';
 import { routeIncomingMessage } from '../core/router';
 import { saveLocalFile } from './localKnowledge';
 import { getClientById } from '../database/clientsCrud';
@@ -102,11 +104,86 @@ export const initializeWhatsAppClient = () => {
             }
             return;
         }
+        // --- COMANDO DE CHAT: Guardar Audio Pregrabado por Respuesta (Quoted Reply) ---
+        if (msgText.startsWith('#audio ') || msgText.startsWith('/audio ')) {
+            const session = activeWaSessions.get(senderPhone);
+            if (!session || session.expiresAt <= Date.now()) {
+                const authLink = `https://frant-test.diazlab.online/wa-auth?phone=${senderPhone}`;
+                await msg.reply(`⚠️ No tienes una sesión activa de administración.\n\nPor seguridad, inicia sesión primero en este enlace (válido por 10 minutos) antes de administrar audios:\n🔗 ${authLink}`);
+                return;
+            }
+
+            const commandParts = msgText.split(' ');
+            const tag = commandParts[1]?.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+            if (!tag) {
+                await msg.reply("❌ Error: Debes especificar una etiqueta válida. Ejemplo: `#audio bienvenida` o `/audio bienvenida`.");
+                return;
+            }
+
+            if (!msg.hasQuotedMsg) {
+                await msg.reply("❌ Error: Debes responder (hacer reply/citar) al mensaje de voz o archivo de audio que deseas guardar con este comando.");
+                return;
+            }
+
+            try {
+                const quotedMsg = await msg.getQuotedMessage();
+                if (!quotedMsg.hasMedia || (quotedMsg.type !== 'audio' && quotedMsg.type !== 'ptt')) {
+                    await msg.reply("❌ Error: El mensaje al que respondiste no es un archivo de audio ni una nota de voz.");
+                    return;
+                }
+
+                await msg.reply(`📥 Descargando nota de voz de WhatsApp para guardarla con la etiqueta "${tag}"...`);
+                const media = await quotedMsg.downloadMedia();
+
+                if (media) {
+                    const clientMediaDir = path.join(process.cwd(), 'media', 'clients', session.clientId);
+                    if (!fs.existsSync(clientMediaDir)) {
+                        fs.mkdirSync(clientMediaDir, { recursive: true });
+                    }
+
+                    // Determinar extensión adecuada
+                    let ext = '.ogg';
+                    if (media.mimetype.includes('mp3')) ext = '.mp3';
+                    else if (media.mimetype.includes('wav')) ext = '.wav';
+                    else if (media.mimetype.includes('m4a')) ext = '.m4a';
+
+                    const fileName = `${tag}${ext}`;
+                    const filePath = path.join(clientMediaDir, fileName);
+
+                    // Eliminar duplicados con la misma etiqueta
+                    const existingFiles = fs.readdirSync(clientMediaDir);
+                    for (const f of existingFiles) {
+                        if (f.startsWith(`${tag}.`)) {
+                            fs.unlinkSync(path.join(clientMediaDir, f));
+                        }
+                    }
+
+                    const buffer = Buffer.from(media.data, 'base64');
+                    fs.writeFileSync(filePath, buffer);
+
+                    console.log(`[WhatsApp Media Audio] 🎙️ Audio guardado por comando de WhatsApp para cliente ${session.clientId}: ${fileName}`);
+                    await msg.reply(`✅ ¡Nota de voz guardada exitosamente!\n\n🏷️ **Etiqueta**: "${tag}"\n📄 **Archivo**: ${fileName}\n\nTu bot de IA ahora podrá reproducir este audio automáticamente cuando el cliente lo requiera.`);
+                } else {
+                    await msg.reply("❌ Error: No se pudo descargar el archivo de audio de WhatsApp.");
+                }
+            } catch (err: any) {
+                console.error("[WhatsApp Media Audio] Error al procesar audio por comando:", err);
+                await msg.reply(`❌ Ocurrió un error al guardar el audio: ${err.message}`);
+            }
+            return;
+        }
 
         // --- INTERCEPTAR ARCHIVOS (PDF, TXT, DOCX, etc.) ---
         if (msg.hasMedia) {
             const session = activeWaSessions.get(senderPhone);
             if (session && session.expiresAt > Date.now()) {
+                // Si el archivo enviado es un audio o nota de voz
+                if (msg.type === 'audio' || msg.type === 'ptt') {
+                    await msg.reply(`🎙️ ¡Nota de voz/audio detectado!\n\nSi deseas guardarla en tu bot de IA para reproducirla automáticamente a tus clientes, responde (haz reply) a este mismo mensaje escribiendo:\n👉 \`#audio etiqueta\` (ej. \`#audio bienvenida\`)`);
+                    return;
+                }
+
                 try {
                     await msg.reply("📥 Recibiendo tu archivo, lo estoy subiendo a Google Drive e indexando en tu bot...");
                     const media = await msg.downloadMedia();
