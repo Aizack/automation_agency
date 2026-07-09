@@ -23,7 +23,7 @@ export class AIAgent {
     userMessage: string, 
     senderPhone: string,
     sendVoiceFn?: (to: string, filePath: string) => Promise<any>
-  ): Promise<string> {
+  ): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
     console.log(`[Agente AI] 🤖 Procesando Gemini para cliente: ${this.config.name} (ID: ${this.config.id})`);
 
     // 1. Retrieval-Augmented Generation (RAG)
@@ -172,11 +172,21 @@ export class AIAgent {
 
         let contents: any[] = [{ role: 'user', parts: [{ text: userMessage }] }];
         let responseText = "";
+        let accumulatedInputTokens = 0;
+        let accumulatedOutputTokens = 0;
 
         // Loop de turnos para permitir la ejecución encadenada de herramientas
         for (let turn = 0; turn < 5; turn++) {
           const result = await model.generateContent({ contents });
           const response = result.response;
+          
+          // Registrar consumo de tokens de este turno
+          const usage = response.usageMetadata;
+          if (usage) {
+            accumulatedInputTokens += usage.promptTokenCount || 0;
+            accumulatedOutputTokens += usage.candidatesTokenCount || 0;
+          }
+
           const functionCalls = response.functionCalls();
 
           // Si no hay llamadas a funciones de Gemini, terminamos el flujo con el texto generado
@@ -230,7 +240,11 @@ export class AIAgent {
           });
         }
 
-        return responseText || "Disculpa, no logré procesar tu respuesta correctamente.";
+        return {
+          text: responseText || "Disculpa, no logré procesar tu respuesta correctamente.",
+          inputTokens: accumulatedInputTokens,
+          outputTokens: accumulatedOutputTokens
+        };
 
       } else {
         // Fallback local sin API KEY para emulación
@@ -252,11 +266,19 @@ export class AIAgent {
         }
 
         const finalResponseText = `(SIMULACIÓN) RAG Context: "${contextFromDrive}". ${toolResponse ? ' Acción ejecutada: ' + toolResponse : ''}`;
-        return `[AI Response para ${this.config.name}]: ${finalResponseText}`;
+        return {
+          text: `[AI Response para ${this.config.name}]: ${finalResponseText}`,
+          inputTokens: 0,
+          outputTokens: 0
+        };
       }
     } catch (error) {
       console.error("[Agente AI] Error crítico llamando a Gemini:", error);
-      return "Lo siento, en este momento estoy experimentando problemas técnicos. Intenta más tarde.";
+      return {
+        text: "Lo siento, en este momento estoy experimentando problemas técnicos. Intenta más tarde.",
+        inputTokens: 0,
+        outputTokens: 0
+      };
     }
   }
 }

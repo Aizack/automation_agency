@@ -441,24 +441,26 @@ export const routeIncomingMessage = async (
   const agent = new AIAgent(clientConfig);
 
   // 4. Procesar el mensaje (RAG, LLM, Tools)
-  const response = await agent.processMessage(messageText, senderPhone, sendVoiceFn);
+  const agentResponse = await agent.processMessage(messageText, senderPhone, sendVoiceFn);
+  const { text: responseText, inputTokens, outputTokens } = agentResponse;
 
-  console.log(`[Router] Respuesta generada: ${response}`);
+  console.log(`[Router] Respuesta generada: ${responseText} (Prompt Tokens: ${inputTokens}, Candidate Tokens: ${outputTokens})`);
 
   // 5. Registrar Métricas de la Interacción en la Base de Datos
   try {
-    const inputTokens = 0; 
-    const outputTokens = 0; 
-    const estimatedCost = 0.000000; 
+    // Tarifas oficiales de Gemini 2.5 Flash:
+    // Input: $0.075 por 1M tokens ($0.000000075 / token)
+    // Output: $0.30 por 1M tokens ($0.000000300 / token)
+    const estimatedCost = (inputTokens * 0.000000075) + (outputTokens * 0.000000300);
 
     await pool.query(`
       INSERT INTO interactions (client_id, sender_phone, message_text, response_text, tokens_input, tokens_output, api_cost)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, [clientId, senderPhone, messageText, response, inputTokens, outputTokens, estimatedCost]);
+    `, [clientId, senderPhone, messageText, responseText, inputTokens, outputTokens, estimatedCost]);
 
   } catch (dbError) {
     console.error('[Router] Error al registrar métricas de interacción:', dbError);
   }
 
-  return response;
+  return responseText;
 };
