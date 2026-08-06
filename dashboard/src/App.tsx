@@ -20,7 +20,7 @@ function App() {
       const urlToken = params.get('token');
 
       // 0. Caso de portal de empleado o chat corporativo standalone
-      if (window.location.pathname === '/employee' || window.location.pathname === '/chat') {
+      if (window.location.pathname === '/empleados' || window.location.pathname === '/employee' || window.location.pathname === '/chat') {
         setView('employee');
         setLoading(false);
         return;
