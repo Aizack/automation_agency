@@ -171,18 +171,19 @@ export const EmployeePortal: React.FC = () => {
                 body: JSON.stringify({ phone, pin })
             });
             const json = await res.json();
-            if (json.success) {
-                localStorage.setItem('emp_token', json.token);
-                localStorage.setItem('emp_id', json.employee.id);
-                localStorage.setItem('emp_name', json.employee.name);
-                localStorage.setItem('emp_role', json.employee.role);
-                localStorage.setItem('emp_client_id', json.employee.clientId);
+            if (json.success && json.data) {
+                const empData = json.data;
+                localStorage.setItem('emp_token', empData.token);
+                localStorage.setItem('emp_id', empData.id);
+                localStorage.setItem('emp_name', empData.name);
+                localStorage.setItem('emp_role', empData.employeeRole);
+                localStorage.setItem('emp_client_id', empData.clientId);
 
-                setEmployeeToken(json.token);
-                setEmployeeId(json.employee.id);
-                setEmployeeName(json.employee.name);
-                setEmployeeRole(json.employee.role);
-                setClientId(json.employee.clientId);
+                setEmployeeToken(empData.token);
+                setEmployeeId(empData.id);
+                setEmployeeName(empData.name);
+                setEmployeeRole(empData.employeeRole);
+                setClientId(empData.clientId);
                 setIsAuthenticated(true);
             } else {
                 setErrorMsg(json.error || 'PIN o teléfono incorrecto.');
@@ -494,7 +495,7 @@ export const EmployeePortal: React.FC = () => {
     // SHIFT CONTROL ACTIONS
     const handleShiftStart = async () => {
         try {
-            const res = await fetch(`/api/employees/${employeeId}/shifts/start`, {
+            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/clock-in`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${employeeToken}` }
             });
@@ -514,7 +515,7 @@ export const EmployeePortal: React.FC = () => {
     const handleShiftEnd = async () => {
         if (!window.confirm('¿Deseas finalizar tu turno del día de hoy?')) return;
         try {
-            const res = await fetch(`/api/employees/${employeeId}/shifts/end`, {
+            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/clock-out`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${employeeToken}` }
             });
@@ -532,7 +533,7 @@ export const EmployeePortal: React.FC = () => {
 
     const handleLunchStart = async () => {
         try {
-            const res = await fetch(`/api/employees/${employeeId}/shifts/lunch-start`, {
+            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/lunch-start`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${employeeToken}` }
             });
@@ -548,7 +549,7 @@ export const EmployeePortal: React.FC = () => {
 
     const handleLunchEnd = async () => {
         try {
-            const res = await fetch(`/api/employees/${employeeId}/shifts/lunch-end`, {
+            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/lunch-end`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${employeeToken}` }
             });

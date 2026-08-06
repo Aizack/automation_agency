@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface Customer {
     id: string;
     name: string;
+    last_name?: string;
     document_type: string;
     document_number: string;
     phone: string;
@@ -40,6 +41,7 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
 
     // Form inputs
     const [custName, setCustName] = useState('');
+    const [custLastName, setCustLastName] = useState('');
     const [custDocType, setCustDocType] = useState('CC');
     const [custDocNum, setCustDocNum] = useState('');
     const [custPhone, setCustPhone] = useState('');
@@ -217,6 +219,7 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                 },
                 body: JSON.stringify({
                     name: custName,
+                    last_name: custLastName,
                     document_type: custDocType,
                     document_number: custDocNum,
                     phone: custPhone,
@@ -259,6 +262,7 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
     const openCreateModal = () => {
         setSelectedCust(null);
         setCustName('');
+        setCustLastName('');
         setCustDocType('CC');
         setCustDocNum('');
         setCustPhone('');
@@ -275,6 +279,7 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
     const openEditModal = (cust: Customer) => {
         setSelectedCust(cust);
         setCustName(cust.name);
+        setCustLastName(cust.last_name || '');
         setCustDocType(cust.document_type);
         setCustDocNum(cust.document_number);
         setCustPhone(cust.phone);
@@ -350,6 +355,7 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
     // Filter customers
     const filteredCustomers = customers.filter(cust => 
         cust.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (cust.last_name && cust.last_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
         cust.document_number.includes(searchQuery) ||
         cust.phone.includes(searchQuery)
     );
@@ -412,7 +418,7 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                                 )}
 
                                 <div>
-                                    <h3 className="font-bold text-base text-on-surface leading-tight mb-1 pr-16">{cust.name}</h3>
+                                    <h3 className="font-bold text-base text-on-surface leading-tight mb-1 pr-16">{cust.name} {cust.last_name || ''}</h3>
                                     <p className="text-[10px] font-mono text-on-surface-variant">{cust.document_type}: {cust.document_number}</p>
                                     
                                     <div className="space-y-2 mt-4 text-xs text-on-surface-variant">
@@ -470,16 +476,28 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                         )}
 
                         <form onSubmit={handleSaveCustomer} className="space-y-4 text-sm">
-                            <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Nombre Completo</label>
-                                <input 
-                                    type="text"
-                                    required
-                                    value={custName}
-                                    onChange={(e) => setCustName(e.target.value)}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
-                                    placeholder="Ej: Pedro Martínez"
-                                />
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold text-on-surface-variant">Nombre</label>
+                                    <input 
+                                        type="text"
+                                        required
+                                        value={custName}
+                                        onChange={(e) => setCustName(e.target.value)}
+                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        placeholder="Ej: Pedro"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold text-on-surface-variant">Apellido</label>
+                                    <input 
+                                        type="text"
+                                        value={custLastName}
+                                        onChange={(e) => setCustLastName(e.target.value)}
+                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        placeholder="Ej: Martínez"
+                                    />
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
@@ -683,7 +701,7 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                         {/* Profile Header */}
                         <div className="flex justify-between items-start border-b border-outline/10 pb-4 mb-4">
                             <div>
-                                <h3 className="font-bold text-xl text-on-surface">{selectedCust.name}</h3>
+                                <h3 className="font-bold text-xl text-on-surface">{selectedCust.name} {selectedCust.last_name || ''}</h3>
                                 <p className="text-xs text-on-surface-variant font-mono">{selectedCust.document_type}: {selectedCust.document_number}</p>
                             </div>
                             <div className="flex items-center gap-2">

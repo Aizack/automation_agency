@@ -193,6 +193,7 @@ const initDatabase = async () => {
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
                 name VARCHAR(100) NOT NULL,
+                last_name VARCHAR(100) DEFAULT '',
                 phone VARCHAR(20) NOT NULL,
                 role VARCHAR(30) DEFAULT 'agent', -- 'admin', 'agent'
                 department_id UUID REFERENCES business_departments(id) ON DELETE SET NULL,
@@ -219,6 +220,7 @@ const initDatabase = async () => {
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
                 name VARCHAR(100) NOT NULL,
+                last_name VARCHAR(100) DEFAULT '',
                 document_type VARCHAR(10) DEFAULT 'CC',
                 document_number VARCHAR(30) NOT NULL,
                 phone VARCHAR(20) NOT NULL,
@@ -269,6 +271,7 @@ const initDatabase = async () => {
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS basic_salary NUMERIC(12,2) DEFAULT 0.00;
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS allowances NUMERIC(12,2) DEFAULT 0.00;
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS arl_class VARCHAR(10) DEFAULT 'I';
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS last_name VARCHAR(100) DEFAULT '';
         `);
 
         // 3. Alterar tabla shift_logs (lunch)
@@ -311,6 +314,7 @@ const initDatabase = async () => {
             ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS ia_suggested_message TEXT;
             ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS campaign_id UUID REFERENCES field_visits(id) ON DELETE SET NULL;
             ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS marketing_unsubscribed BOOLEAN DEFAULT FALSE;
+            ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS last_name VARCHAR(100) DEFAULT '';
         `);
 
         // 6. Alterar invoices y productos (link campaña, costos, alarmas)

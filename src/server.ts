@@ -1701,7 +1701,7 @@ app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeC
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT e.id, e.name, e.phone, e.role, e.department_id, d.name as department_name, e.pin, e.is_active, e.created_at 
+      `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, e.pin, e.is_active, e.created_at 
        FROM employees e 
        LEFT JOIN business_departments d ON e.department_id = d.id 
        WHERE e.client_id = $1 
@@ -1717,7 +1717,7 @@ app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeC
 app.post('/api/clients/:clientId/employees', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, phone, role, department_id, pin } = req.body;
+    const { name, last_name, phone, role, department_id, pin } = req.body;
 
     if (!name || !phone) {
       return res.status(400).json({ success: false, error: 'Nombre y teléfono son requeridos.' });
@@ -1726,10 +1726,10 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
     const cleanPhone = phone.replace(/\D/g, '');
 
     const result = await pool.query(
-      `INSERT INTO employees (client_id, name, phone, role, department_id, pin, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, TRUE)
+      `INSERT INTO employees (client_id, name, last_name, phone, role, department_id, pin, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)
        RETURNING *`,
-      [clientId, name, cleanPhone, role || 'agent', department_id || null, pin || '1234']
+      [clientId, name, last_name || '', cleanPhone, role || 'agent', department_id || null, pin || '1234']
     );
 
     // Obtener nombre de departamento para la respuesta
@@ -1739,13 +1739,15 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
       if (deptRes.rows.length > 0) deptName = deptRes.rows[0].name.toLowerCase();
     }
 
+    const fullName = `${name} ${last_name || ''}`.trim();
+
     // Sincronizar con agent_contacts para el flujo de cascada y soporte
     await pool.query(
       `INSERT INTO agent_contacts (client_id, name, phone, priority, status, department, is_verified, role, pin)
        VALUES ($1, $2, $3, 1, 'offline', $4, TRUE, $5, $6)
        ON CONFLICT (client_id, phone) DO UPDATE
        SET name = $2, department = $4, role = $5, pin = $6`,
-      [clientId, name, cleanPhone, deptName, role || 'agent', pin || '1234']
+      [clientId, fullName, cleanPhone, deptName, role || 'agent', pin || '1234']
     );
 
     res.json({ success: true, employee: result.rows[0] });
@@ -1757,7 +1759,7 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
 app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, employeeId } = req.params;
-    const { name, phone, role, department_id, pin, is_active } = req.body;
+    const { name, last_name, phone, role, department_id, pin, is_active } = req.body;
 
     if (!name || !phone) {
       return res.status(400).json({ success: false, error: 'Nombre y teléfono son requeridos.' });
@@ -1767,10 +1769,10 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
 
     const result = await pool.query(
       `UPDATE employees
-       SET name = $1, phone = $2, role = $3, department_id = $4, pin = $5, is_active = $6
-       WHERE id = $7 AND client_id = $8
+       SET name = $1, last_name = $2, phone = $3, role = $4, department_id = $5, pin = $6, is_active = $7
+       WHERE id = $8 AND client_id = $9
        RETURNING *`,
-      [name, cleanPhone, role, department_id || null, pin, is_active, employeeId, clientId]
+      [name, last_name || '', cleanPhone, role, department_id || null, pin, is_active, employeeId, clientId]
     );
 
     if (result.rows.length === 0) {
@@ -1783,13 +1785,15 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
       if (deptRes.rows.length > 0) deptName = deptRes.rows[0].name.toLowerCase();
     }
 
+    const fullName = `${name} ${last_name || ''}`.trim();
+
     // Actualizar también en agent_contacts
     await pool.query(
       `INSERT INTO agent_contacts (client_id, name, phone, priority, status, department, is_verified, role, pin)
        VALUES ($1, $2, $3, 1, 'offline', $4, TRUE, $5, $6)
        ON CONFLICT (client_id, phone) DO UPDATE
        SET name = $2, department = $4, role = $5, pin = $6`,
-      [clientId, name, cleanPhone, deptName, role || 'agent', pin]
+      [clientId, fullName, cleanPhone, deptName, role || 'agent', pin]
     );
 
     res.json({ success: true, employee: result.rows[0] });
@@ -2797,7 +2801,7 @@ app.get('/api/clients/:clientId/crm-customers', authenticateToken as any, author
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, name, document_type, document_number, phone, email, address, lens_prescription, last_interaction_at, created_at 
+      `SELECT id, name, last_name, document_type, document_number, phone, email, address, lens_prescription, last_interaction_at, created_at 
        FROM crm_customers 
        WHERE client_id = $1 
        ORDER BY name ASC`,
@@ -2814,7 +2818,7 @@ app.get('/api/clients/:clientId/crm-customers/document/:documentNumber', authent
   try {
     const { clientId, documentNumber } = req.params;
     const result = await pool.query(
-      `SELECT id, name, phone, document_type, document_number, email, address, lens_prescription 
+      `SELECT id, name, last_name, phone, document_type, document_number, email, address, lens_prescription 
        FROM crm_customers 
        WHERE client_id = $1 AND document_number = $2 LIMIT 1`,
       [clientId, documentNumber]
@@ -2833,7 +2837,7 @@ app.get('/api/clients/:clientId/crm-customers/document/:documentNumber', authent
 app.post('/api/clients/:clientId/crm-customers', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, document_type, document_number, phone, email, address, lens_prescription } = req.body;
+    const { name, last_name, document_type, document_number, phone, email, address, lens_prescription } = req.body;
 
     if (!name || !document_number || !phone) {
       return res.status(400).json({ success: false, error: 'Nombre, documento y teléfono son requeridos.' });
@@ -2842,10 +2846,10 @@ app.post('/api/clients/:clientId/crm-customers', authenticateToken as any, autho
     const cleanPhone = phone.replace(/\D/g, '');
 
     const result = await pool.query(
-      `INSERT INTO crm_customers (client_id, name, document_type, document_number, phone, email, address, lens_prescription)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO crm_customers (client_id, name, last_name, document_type, document_number, phone, email, address, lens_prescription)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [clientId, name, document_type || 'CC', document_number, cleanPhone, email || null, address || null, lens_prescription || null]
+      [clientId, name, last_name || '', document_type || 'CC', document_number, cleanPhone, email || null, address || null, lens_prescription || null]
     );
 
     res.json({ success: true, customer: result.rows[0] });
@@ -2857,7 +2861,7 @@ app.post('/api/clients/:clientId/crm-customers', authenticateToken as any, autho
 app.put('/api/clients/:clientId/crm-customers/:customerId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, customerId } = req.params;
-    const { name, document_type, document_number, phone, email, address, lens_prescription } = req.body;
+    const { name, last_name, document_type, document_number, phone, email, address, lens_prescription } = req.body;
 
     if (!name || !document_number || !phone) {
       return res.status(400).json({ success: false, error: 'Nombre, documento y teléfono son requeridos.' });
@@ -2867,10 +2871,10 @@ app.put('/api/clients/:clientId/crm-customers/:customerId', authenticateToken as
 
     const result = await pool.query(
       `UPDATE crm_customers
-       SET name = $1, document_type = $2, document_number = $3, phone = $4, email = $5, address = $6, lens_prescription = $7
-       WHERE id = $8 AND client_id = $9
+       SET name = $1, last_name = $2, document_type = $3, document_number = $4, phone = $5, email = $6, address = $7, lens_prescription = $8
+       WHERE id = $9 AND client_id = $10
        RETURNING *`,
-      [name, document_type || 'CC', document_number, cleanPhone, email || null, address || null, lens_prescription || null, customerId, clientId]
+      [name, last_name || '', document_type || 'CC', document_number, cleanPhone, email || null, address || null, lens_prescription || null, customerId, clientId]
     );
 
     if (result.rows.length === 0) {

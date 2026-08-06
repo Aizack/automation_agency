@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface Employee {
     id: string;
     name: string;
+    last_name?: string;
     phone: string;
     role: string;
     department_id: string | null;
@@ -54,10 +55,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
     // Form inputs
     const [deptName, setDeptName] = useState('');
     const [empName, setEmpName] = useState('');
+    const [empLastName, setEmpLastName] = useState('');
     const [empPhone, setEmpPhone] = useState('');
     const [empRole, setEmpRole] = useState('agent');
     const [empDeptId, setEmpDeptId] = useState('');
-    const [empPin, setEmpPin] = useState('1234');
+    const [empPin, setEmpPin] = useState('');
     const [clockPin, setClockPin] = useState('');
 
     const [errorMsg, setErrorMsg] = useState('');
@@ -240,6 +242,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                 },
                 body: JSON.stringify({
                     name: empName,
+                    last_name: empLastName,
                     phone: empPhone,
                     role: empRole,
                     department_id: empDeptId || null,
@@ -280,10 +283,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
     const openCreateEmpModal = () => {
         setSelectedEmp(null);
         setEmpName('');
+        setEmpLastName('');
         setEmpPhone('');
         setEmpRole('agent');
         setEmpDeptId('');
-        setEmpPin('1234');
+        setEmpPin('');
         setErrorMsg('');
         setIsEmpOpen(true);
     };
@@ -291,6 +295,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
     const openEditEmpModal = (emp: Employee) => {
         setSelectedEmp(emp);
         setEmpName(emp.name);
+        setEmpLastName(emp.last_name || '');
         setEmpPhone(emp.phone);
         setEmpRole(emp.role);
         setEmpDeptId(emp.department_id || '');
@@ -409,7 +414,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                                 <tbody>
                                     {employees.map(emp => (
                                         <tr key={emp.id} className="border-b border-outline/5 hover:bg-surface-variant/20 transition-all">
-                                            <td className="py-3.5 px-2 font-bold text-on-surface">{emp.name}</td>
+                                            <td className="py-3.5 px-2 font-bold text-on-surface">{emp.name} {emp.last_name || ''}</td>
                                             <td className="py-3.5 px-2 font-mono">+{emp.phone}</td>
                                             <td className="py-3.5 px-2">
                                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
@@ -669,16 +674,28 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                         )}
 
                         <form onSubmit={handleCreateEmp} className="space-y-4 text-sm">
-                            <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Nombre Completo</label>
-                                <input 
-                                    type="text"
-                                    required
-                                    value={empName}
-                                    onChange={(e) => setEmpName(e.target.value)}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
-                                    placeholder="Ej: Laura Bermúdez"
-                                />
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold text-on-surface-variant">Nombre</label>
+                                    <input 
+                                        type="text"
+                                        required
+                                        value={empName}
+                                        onChange={(e) => setEmpName(e.target.value)}
+                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        placeholder="Ej: Laura"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold text-on-surface-variant">Apellido</label>
+                                    <input 
+                                        type="text"
+                                        value={empLastName}
+                                        onChange={(e) => setEmpLastName(e.target.value)}
+                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        placeholder="Ej: Bermúdez"
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-1">
@@ -730,6 +747,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                                     value={empPin}
                                     onChange={(e) => setEmpPin(e.target.value.replace(/\D/g, ''))}
                                     className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono tracking-widest text-center text-lg"
+                                    placeholder="Ej: 1234"
                                 />
                             </div>
 
@@ -761,7 +779,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-green-500">work_history</span>
-                                Registro de Turnos: {selectedEmp.name}
+                                Registro de Turnos: {selectedEmp.name} {selectedEmp.last_name || ''}
                             </h3>
                             <button 
                                 onClick={() => setIsClockOpen(false)}
@@ -882,7 +900,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                                 <div className="grid grid-cols-2 gap-4 bg-surface-container/30 p-4 rounded-xl border border-outline/5">
                                     <div>
                                         <p className="text-[10px] text-on-surface-variant uppercase font-mono">Empleado</p>
-                                        <p className="font-bold text-sm text-primary mt-0.5">{selectedEmp.name}</p>
+                                        <p className="font-bold text-sm text-primary mt-0.5">{selectedEmp.name} {selectedEmp.last_name || ''}</p>
                                         <p className="text-on-surface-variant font-mono mt-1">{selectedEmp.role.toUpperCase()}</p>
                                     </div>
                                     <div className="text-right">
