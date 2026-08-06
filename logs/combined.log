@@ -1,1 +1,13 @@
 [2026-08-06T22:16:52.921Z] [ERROR] [ALERT RAISED] Key: whatsapp_disconnected | El bot de WhatsApp se ha desconectado del dispositivo móvil. | Tenant: admin | Error: Razón dada: LOGOUT
+[2026-08-06T23:00:22.364Z] [ERROR] [ALERT RAISED] Key: express_route_error | Fallo crítico en endpoint Express: POST /api/auth/employee-login | Error: SyntaxError: Expected property name or '}' in JSON at position 1
+    at JSON.parse (<anonymous>)
+    at parse (/app/node_modules/body-parser/lib/types/json.js:91:21)
+    at /app/node_modules/body-parser/lib/read.js:162:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    at invokeCallback (/app/node_modules/raw-body/index.js:238:16)
+    at done (/app/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/app/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:524:28)
+    at IncomingMessage.emit (node:domain:489:12)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at processTicksAndRejections (node:internal/process/task_queues:82:21)

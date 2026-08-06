@@ -189,7 +189,7 @@ export const EmployeePortal: React.FC = () => {
                 setErrorMsg(json.error || 'PIN o teléfono incorrecto.');
             }
         } catch (err: any) {
-            setErrorMsg('Error de red o conexión al servidor.');
+            setErrorMsg(`Error de conexión: ${err.message || 'Error de red'}`);
         } finally {
             setLoading(false);
         }
