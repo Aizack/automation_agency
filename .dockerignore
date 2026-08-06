@@ -1,0 +1,10 @@
+node_modules
+dashboard/node_modules
+dashboard/dist
+dist
+.git
+.wwebjs_auth
+.wwebjs_cache
+media/clients
+project.tar.gz
+*.log

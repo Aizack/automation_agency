@@ -1,4 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { authFetch as fetch } from '../utils/api';
+import { SaaSErpInventory } from './SaaSErpInventory';
+import { SaaSErpInvoices } from './SaaSErpInvoices';
+import { SaaSErpAppointments } from './SaaSErpAppointments';
+import { SaaSErpEmployees } from './SaaSErpEmployees';
+import { SaaSErpCRM } from './SaaSErpCRM';
+import { SaaSErpCampaigns } from './SaaSErpCampaigns';
+import { SaaSErpMarketing } from './SaaSErpMarketing';
+import { SystemAlertsPanel } from './SystemAlertsPanel';
 
 interface Client {
   id: string;
@@ -9,6 +18,9 @@ interface Client {
   status: string;
   agentPhone?: string;
   driveFolderId?: string;
+  logo_url?: string;
+  category?: string;
+  enabledModules?: any;
 }
 
 interface Interaction {
@@ -47,8 +59,26 @@ interface ClientDashboardProps {
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBack }) => {
   const [clientData, setClientData] = useState<Client | null>(null);
+  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'agenda' | 'empleados' | 'clientes' | 'campanias' | 'marketing' | 'logs'>('resumen');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Tema Claro / Oscuro
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const initialTheme = savedTheme || 'light';
+    setTheme(initialTheme);
+    document.documentElement.setAttribute('data-theme', initialTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
 
   // Estado de WhatsApp en tiempo real
   const [whatsappStatus, setWhatsappStatus] = useState<WhatsappStatus>({
@@ -62,6 +92,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   const [agentPhone, setAgentPhone] = useState('');
   const [driveFolderId, setDriveFolderId] = useState('');
   const [toneOfVoice, setToneOfVoice] = useState('Friendly');
+  const [category, setCategory] = useState('optica');
   const [saveSuccess, setSaveSuccess] = useState(false);
   
   // Estados para edición en caliente del teléfono del Bot
@@ -232,7 +263,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   // Solicitar arranque de conexión de WhatsApp
   const handleConnectWhatsApp = async () => {
     try {
-      await fetch('/api/whatsapp/connect', { method: 'POST' });
+      await fetch(`/api/whatsapp/connect?clientId=${clientId}`, { method: 'POST' });
     } catch (error) {
       console.error("[ClientDashboard] Error solicitando conexión:", error);
     }
@@ -251,35 +282,68 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
     }
   };
 
-  // Cargar datos estáticos del Cliente (Solo al iniciar o cambiar de ID)
-  useEffect(() => {
-    const fetchClientInfo = async () => {
-      try {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    try {
+      const res = await fetch(`/api/clients/${clientId}/logo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: formData
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert('Logotipo de la empresa cargado correctamente.');
+        // Recargar info
         const clientRes = await fetch(`/api/clients/${clientId}`);
         const clientJson = await clientRes.json();
         if (clientJson.success) {
           setClientData(clientJson.data);
-          setSystemPrompt(clientJson.data.systemPrompt);
-          setAgentPhone(clientJson.data.agentPhone || '');
-          setDriveFolderId(clientJson.data.driveFolderId || '');
-
-          if (clientJson.data.driveFolderId) {
-            setLoadingFiles(true);
-            fetch(`/api/clients/${clientId}/files`)
-              .then(res => res.json())
-              .then(json => {
-                if (json.success) setUploadedFiles(json.data || []);
-              })
-              .catch(err => console.error("Error cargando archivos:", err))
-              .finally(() => setLoadingFiles(false));
-          }
         }
-      } catch (error) {
-        console.error("[ClientDashboard] Error cargando cliente:", error);
-      } finally {
-        setLoading(false);
+      } else {
+        alert(json.error || 'Error al subir logotipo.');
       }
-    };
+    } catch (err) {
+      console.error("Error uploading logo:", err);
+      alert('Error de red al subir el logotipo.');
+    }
+  };
+
+  const fetchClientInfo = async () => {
+    try {
+      const clientRes = await fetch(`/api/clients/${clientId}`);
+      const clientJson = await clientRes.json();
+      if (clientJson.success) {
+        setClientData(clientJson.data);
+        setSystemPrompt(clientJson.data.systemPrompt);
+        setAgentPhone(clientJson.data.agentPhone || '');
+        setDriveFolderId(clientJson.data.driveFolderId || '');
+        setCategory(clientJson.data.category || 'optica');
+        
+        // Cargar archivos de entrenamiento (Google Drive + Local)
+        setLoadingFiles(true);
+        const filesRes = await fetch(`/api/clients/${clientId}/files`);
+        const filesJson = await filesRes.json();
+        if (filesJson.success) {
+          setUploadedFiles(filesJson.data || []);
+        }
+      }
+    } catch (error) {
+      console.error("[ClientDashboard] Error cargando cliente:", error);
+    } finally {
+      setLoading(false);
+      setLoadingFiles(false);
+    }
+  };
+
+  // Cargar datos estáticos del Cliente (Solo al iniciar o cambiar de ID)
+  useEffect(() => {
     fetchClientInfo();
     fetchAgents();
     fetchAudios();
@@ -325,6 +389,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           system_prompt: systemPrompt,
           agent_phone: agentPhone || null,
           drive_folder_id: driveFolderId || null,
+          category: category,
         }),
       });
 
@@ -340,6 +405,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           setSystemPrompt(clientJson.data.systemPrompt);
           setAgentPhone(clientJson.data.agentPhone || '');
           setDriveFolderId(clientJson.data.driveFolderId || '');
+          setCategory(clientJson.data.category || 'optica');
         }
       }
     } catch (error) {
@@ -378,7 +444,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
 
   // Cargar listado de archivos cargados desde el servidor
   const fetchUploadedFiles = async () => {
-    if (!driveFolderId) return;
     try {
       setLoadingFiles(true);
       const res = await fetch(`/api/clients/${clientId}/files`);
@@ -480,74 +545,227 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
     cleanPhone(whatsappStatus.phone) === cleanPhone(clientData.phoneNumber);
 
   return (
-    <div className="min-h-screen pb-10">
-      {/* Top Navigation */}
-      <nav className="fixed top-0 left-0 w-full z-50 bg-surface/85 backdrop-blur-xl border-b border-outline/20 shadow-sm">
-        <div className="flex justify-between items-center h-16 px-6 max-w-7xl mx-auto">
-          <div className="flex items-center gap-2">
-            <button onClick={onBack} className="text-primary hover:text-white flex items-center gap-1 font-bold mr-4 cursor-pointer">
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-              Volver a Clientes
-            </button>
-            <svg width="24" height="24" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-              <defs>
-                <linearGradient id="frant-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#0066ff" />
-                  <stop offset="100%" stopColor="#7c3aed" />
-                </linearGradient>
-              </defs>
-              <path d="M20,10 L20,5" stroke="url(#frant-grad)" strokeWidth="2.5" strokeLinecap="round" />
-              <circle cx="20" cy="4" r="2" fill="url(#frant-grad)" />
-              <path d="M20,10 C11.7,10 5,16.2 5,23.8 C5,27.9 7,31.5 10.2,33.9 L9,38 L14,36.2 C15.8,37.1 17.8,37.6 20,37.6 C28.3,37.6 35,31.4 35,23.8 C35,16.2 28.3,10 20,10 Z" stroke="url(#frant-grad)" strokeWidth="2.5" strokeLinejoin="round" />
-              <rect x="11" y="18" width="18" height="11" rx="5.5" fill="#090d16" stroke="url(#frant-grad)" strokeWidth="0.5" />
-              <circle cx="16" cy="23.5" r="1.5" fill="#ffffff" />
-              <circle cx="24" cy="23.5" r="1.5" fill="#ffffff" />
-              <path d="M18.5,25.5 C19.2,26.5 20.8,26.5 21.5,25.5" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
-            </svg>
-            <span className="font-headline-md text-headline-md font-bold bg-gradient-to-r from-[#0066ff] to-[#8b5cf6] bg-clip-text text-transparent">Frant</span>
-            <div className="h-6 w-px bg-outline/20 mx-2"></div>
-            
-            {/* Estado dinámico del canal */}
-            {isWaConnected ? (
-              <div className="flex items-center gap-2 px-3 py-0.5 bg-secondary/10 rounded-full border border-secondary/20">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
-                </span>
-                <span className="font-label-md text-label-md text-secondary">Viculado (En Línea)</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 px-3 py-0.5 bg-error/15 rounded-full border border-error/20">
-                <span className="relative flex h-2 w-2">
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
-                </span>
-                <span className="font-label-md text-label-md text-error">Desconectado</span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="material-symbols-outlined text-on-surface-variant cursor-pointer">notifications</span>
-            <div className="flex items-center gap-2">
-              <div className="text-right">
-                <p className="font-label-md text-label-md font-bold">{clientData.name}</p>
-                <p className="text-[10px] text-on-surface-variant uppercase tracking-tighter">Panel de Control</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                {clientData.name.substring(0, 2).toUpperCase()}
-              </div>
+    <div className="flex min-h-screen bg-background text-on-surface transition-colors duration-200">
+      {/* Sidebar Navigation */}
+      <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline/20 flex flex-col py-6 px-6 z-50">
+        {/* Header/Logo Empresa */}
+        <div className="flex items-center gap-3 py-4 mb-8">
+          {clientData?.logo_url ? (
+            <img 
+              src={clientData.logo_url} 
+              alt="Logo" 
+              className="w-10 h-10 rounded-xl object-contain bg-white/5 border border-outline/10 p-0.5" 
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+              {clientData?.name.substring(0, 2).toUpperCase()}
             </div>
+          )}
+          <div className="truncate">
+            <h1 className="font-bold text-sm text-on-surface truncate leading-snug">{clientData?.name}</h1>
+            <p className="text-[9px] text-on-surface-variant font-mono uppercase tracking-widest">SaaS ERP</p>
           </div>
         </div>
-      </nav>
 
-      {/* Main Container */}
-      <main className="pt-24 px-6 max-w-7xl mx-auto">
-        <header className="mb-10">
-          <h1 className="font-display-lg text-display-lg text-on-surface mb-1">Panel de Control</h1>
-          <p className="font-body-lg text-body-lg text-on-surface-variant">{clientData.name} — Configuración y Monitoreo del Bot</p>
+        {/* Navigation Tabs */}
+        <nav className="flex-grow space-y-1.5 overflow-y-auto custom-scrollbar">
+          <button 
+            onClick={() => setActiveTab('resumen')}
+            className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+              activeTab === 'resumen' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">smart_toy</span>
+            <span className="font-bold text-xs">Agente &amp; QR</span>
+          </button>
+          
+          {clientData?.enabledModules?.inventory !== false && (
+            <button 
+              onClick={() => setActiveTab('inventario')}
+              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                activeTab === 'inventario' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+              <span className="font-bold text-xs">Inventario</span>
+            </button>
+          )}
+
+          {clientData?.enabledModules?.billing !== false && (
+            <button 
+              onClick={() => setActiveTab('facturacion')}
+              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                activeTab === 'facturacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+              <span className="font-bold text-xs">Facturas &amp; Cobros</span>
+            </button>
+          )}
+
+          {clientData?.enabledModules?.appointments !== false && (
+            <button 
+              onClick={() => setActiveTab('agenda')}
+              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                activeTab === 'agenda' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">calendar_month</span>
+              <span className="font-bold text-xs">
+                {clientData?.category === 'restaurante' ? 'Reservas de Mesa' :
+                 clientData?.category === 'optica' ? 'Citas Oftálmicas' : 'Agenda Citas'}
+              </span>
+            </button>
+          )}
+
+          {clientData?.enabledModules?.employees !== false && (
+            <button 
+              onClick={() => setActiveTab('empleados')}
+              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                activeTab === 'empleados' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">groups</span>
+              <span className="font-bold text-xs">Personal &amp; Turnos</span>
+            </button>
+          )}
+
+          {clientData?.enabledModules?.crm !== false && (
+            <button 
+              onClick={() => setActiveTab('clientes')}
+              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                activeTab === 'clientes' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">contacts</span>
+              <span className="font-bold text-xs">
+                {clientData?.category === 'optica' ? 'Pacientes (CRM)' : 'Clientes (CRM)'}
+              </span>
+            </button>
+          )}
+
+          {clientData?.enabledModules?.field_visits !== false && (
+            <button 
+              onClick={() => setActiveTab('campanias')}
+              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                activeTab === 'campanias' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">explore</span>
+              <span className="font-bold text-xs">Campañas de Campo</span>
+            </button>
+          )}
+
+          {clientData?.enabledModules?.marketing !== false && (
+            <button 
+              onClick={() => setActiveTab('marketing')}
+              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                activeTab === 'marketing' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">campaign</span>
+              <span className="font-bold text-xs">Difusión Promocional</span>
+            </button>
+          )}
+
+          <button 
+            onClick={() => setActiveTab('logs')}
+            className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+              activeTab === 'logs' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">build</span>
+            <span className="font-bold text-xs">Estado del Sistema</span>
+          </button>
+        </nav>
+
+        {/* Back / Logout footer */}
+        <div className="border-t border-outline/10 pt-4 mt-auto">
+          <button 
+            onClick={onBack}
+            className="w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans text-on-surface-variant hover:bg-surface-variant/40 bg-transparent transition-all"
+          >
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            <span className="font-bold text-xs">Regresar</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-grow pl-64 min-h-screen flex flex-col">
+        {/* Header Bar */}
+        <header className="h-16 border-b border-outline/10 flex items-center justify-between px-8 bg-surface-container/20 backdrop-blur sticky top-0 z-40">
+          <div>
+            <h2 className="font-bold text-sm text-on-surface flex items-center gap-2">
+              <span className="font-sans">
+                {activeTab === 'resumen' ? '🤖 Resumen y Agente IA' :
+                 activeTab === 'inventario' ? '📦 Inventario de Tienda' :
+                 activeTab === 'facturacion' ? '🧾 Facturación y Carteras' :
+                 activeTab === 'agenda' ? (
+                   clientData?.category === 'restaurante' ? '📅 Reservación de Mesas' :
+                   clientData?.category === 'optica' ? '📅 Citas Clínicas y Optometría' : '📅 Calendario de Citas'
+                 ) :
+                 activeTab === 'empleados' ? '👥 Gestión de Personal y Nómina' :
+                 activeTab === 'clientes' ? (
+                   clientData?.category === 'optica' ? '💼 CRM & Directorio de Pacientes' : '💼 CRM & Directorio de Clientes'
+                 ) :
+                 '⚙️ Estado del Sistema'}
+              </span>
+              
+              {/* Dynamic Connection Indicator */}
+              {activeTab === 'resumen' && (
+                isWaConnected ? (
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-green-500/10 text-green-500 text-[10px] font-bold rounded-full border border-green-500/20">
+                    Bot En Línea
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-red-500/10 text-red-500 text-[10px] font-bold rounded-full border border-red-500/20">
+                    Bot Desconectado
+                  </span>
+                )
+              )}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* Theme selector toggle */}
+            <button 
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-full bg-surface-container/50 hover:bg-surface-container border border-outline/20 flex items-center justify-center cursor-pointer transition text-on-surface"
+              title="Cambiar Tema"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                {theme === 'light' ? 'dark_mode' : 'light_mode'}
+              </span>
+            </button>
+
+            {/* Business Logo/Profile badge */}
+            <div className="flex items-center gap-2">
+              <div className="text-right hidden sm:block">
+                <p className="font-label-md text-xs font-bold text-on-surface">{clientData.name}</p>
+                <p className="text-[9px] text-on-surface-variant uppercase tracking-tighter">Panel de Gestión</p>
+              </div>
+              {clientData?.logo_url ? (
+                <img 
+                  src={clientData.logo_url} 
+                  alt="Perfil" 
+                  className="w-8 h-8 rounded-full object-contain bg-white/5 border border-outline/20 p-0.5" 
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+                  {clientData?.name.substring(0, 2).toUpperCase()}
+                </div>
+              )}
+            </div>
+          </div>
         </header>
 
-        {/* Bento Grid: Metrics & QR */}
+        {/* Content Container */}
+        <main className="flex-grow p-8">
+
+        {activeTab === 'resumen' && (
+          <>
+            {/* Bento Grid: Metrics & QR */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
           {/* ROI Metrics Cards */}
           <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -704,6 +922,30 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                 Escanea el código QR desde la opción "Dispositivos vinculados" en tu aplicación móvil de WhatsApp.
               </p>
             )}
+            {!isWaConnected && (whatsappStatus.status === 'QR' || whatsappStatus.status === 'INITIALIZING') && (
+              <div className="w-full space-y-2 mt-2">
+                <button 
+                  onClick={async () => {
+                    if (confirm("¿Deseas cancelar la conexión actual y generar un nuevo código QR?")) {
+                      try {
+                        // 1. Cerrar sesión previa y limpiar almacenamiento local
+                        await fetch('/api/whatsapp/logout', { method: 'POST' });
+                        // 2. Esperar a que Puppeteer se apague y borre los archivos
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        // 3. Arrancar una conexión nueva limpia
+                        await fetch(`/api/whatsapp/connect?clientId=${clientId}`, { method: 'POST' });
+                      } catch (err) {
+                        console.error("Error al reiniciar conexión:", err);
+                      }
+                    }
+                  }}
+                  className="w-full bg-surface-container border border-outline/30 hover:border-primary/50 text-on-surface-variant hover:text-primary px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                >
+                  <span className="material-symbols-outlined text-[16px]">refresh</span>
+                  Generar Nuevo QR
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -727,7 +969,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                   placeholder="Define cómo debe responder la IA... Ej: Eres un recepcionista amable de la Clínica Dental. Tu objetivo es agendar citas."
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-1">
                   <label className="font-label-md text-label-md text-on-surface-variant">Línea del Asesor Humano (Traspaso)</label>
                   <input 
@@ -750,41 +992,51 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                     <option value="Casual">Casual e Informal</option>
                   </select>
                 </div>
+                <div className="space-y-1">
+                  <label className="font-label-md text-label-md text-on-surface-variant">Categoría del Negocio</label>
+                  <select 
+                    className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
+                    <option value="optica">👓 Óptica / Centro Clínico</option>
+                    <option value="restaurante">🍕 Restaurante / Alimentos</option>
+                    <option value="otros">🎮 General / Videojuegos / Retail</option>
+                  </select>
+                </div>
               </div>
 
               {/* Sección RAG de Google Drive */}
               <div className="border-t border-outline/10 pt-4 mt-6 space-y-3">
                 <h4 className="font-label-md text-label-md font-bold text-primary flex items-center gap-2">
                   <span className="material-symbols-outlined text-[20px]">cloud_sync</span>
-                  Base de Conocimientos (RAG de Google Drive)
+                  Base de Conocimientos (Entrenamiento del Bot)
                 </h4>
                 <p className="text-xs text-on-surface-variant opacity-75">
-                  El bot utilizará la información contenida en los archivos TXT y Google Docs de esta carpeta para responder.
+                  El bot utiliza la información contenida en los documentos cargados para responder a tus clientes de forma precisa y contextual.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                  <div className="space-y-1 md:col-span-2">
-                    <label className="font-label-md text-label-md text-on-surface-variant">ID de Carpeta de Google Drive</label>
-                    <input 
-                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface font-mono"
-                      type="text"
-                      value={driveFolderId}
-                      onChange={(e) => setDriveFolderId(e.target.value)}
-                      placeholder="Ej: 11DhgnPTOZu8ySaaiZA4Lni9FmqB58SFr"
-                    />
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={handleSyncDrive}
-                      disabled={syncingDrive || !driveFolderId}
-                      className="w-full bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg font-bold text-xs hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:scale-100 cursor-pointer active:scale-95"
-                    >
-                      <span className={`material-symbols-outlined text-[16px] ${syncingDrive ? 'animate-spin' : ''}`}>
-                        {syncingDrive ? 'sync' : 'cloud_download'}
-                      </span>
-                      {syncingDrive ? 'Sincronizando...' : 'Sincronizar Drive'}
-                    </button>
-                  </div>
+
+                {/* ID de Carpeta de Google Drive - Oculto para el cliente por ser un campo técnico */}
+                <input 
+                  type="hidden"
+                  value={driveFolderId}
+                />
+
+                <div className="flex justify-between items-center gap-4 bg-surface-container/20 p-3 rounded-lg border border-outline/5">
+                  <span className="text-xs text-on-surface-variant">
+                    Sincroniza los archivos de tu carpeta de entrenamiento en la nube.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleSyncDrive}
+                    disabled={syncingDrive || !driveFolderId}
+                    className="bg-secondary-container text-on-secondary-container px-4 py-2.5 rounded-lg font-bold text-xs hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:scale-100 cursor-pointer active:scale-95 shrink-0"
+                  >
+                    <span className={`material-symbols-outlined text-[16px] ${syncingDrive ? 'animate-spin' : ''}`}>
+                      {syncingDrive ? 'sync' : 'cloud_download'}
+                    </span>
+                    {syncingDrive ? 'Sincronizando...' : 'Sincronizar Base de Datos'}
+                  </button>
                 </div>
                 {syncResult && (
                   <div className={`p-3 rounded-lg text-xs font-semibold transition-all border ${
@@ -796,65 +1048,63 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                   </div>
                 )}
 
-                {/* Visualizador y Carga de Archivos RAG */}
-                {driveFolderId && (
-                  <div className="bg-surface-container/30 border border-outline/10 rounded-lg p-4 space-y-3 mt-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[16px] text-primary">menu_book</span>
-                        Documentos de Entrenamiento (RAG)
-                      </span>
-                      {loadingFiles && <span className="text-[10px] text-primary animate-pulse">Cargando archivos...</span>}
-                    </div>
-                    
-                    {uploadedFiles.length === 0 ? (
-                      <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
-                        Aún no has subido documentos. ¡Sube un archivo de texto o PDF para entrenar a tu bot!
-                      </p>
-                    ) : (
-                      <div className="max-h-40 overflow-y-auto divide-y divide-outline/5 pr-1 space-y-1 bg-surface-container/20 p-2 rounded-lg">
-                        {uploadedFiles.map((file) => (
-                          <div key={file.id} className="flex items-center justify-between text-xs py-1.5 first:pt-0">
-                            <div className="flex items-center gap-2 truncate pr-2">
-                              <span className="material-symbols-outlined text-[16px] text-primary/70 shrink-0">
-                                {file.mimeType.includes('folder') ? 'folder' : 'description'}
-                              </span>
-                              <span className="text-on-surface truncate font-medium" title={file.name}>{file.name}</span>
-                            </div>
-                            <span className="text-[10px] text-on-surface-variant opacity-60 shrink-0 font-mono bg-surface-container-highest px-1.5 py-0.5 rounded">
-                              {file.mimeType.includes('text/plain') 
-                                ? 'TXT' 
-                                : file.mimeType.includes('google-apps.document') 
-                                  ? 'Doc' 
-                                  : file.mimeType.includes('pdf') 
-                                    ? 'PDF' 
-                                    : 'Doc'}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Zona de Carga de Archivos */}
-                    <div className="pt-1">
-                      <label className="relative flex items-center justify-center border border-dashed border-outline/30 rounded-lg p-3 hover:bg-surface-container-high/40 hover:border-primary/50 transition-all cursor-pointer text-center text-xs font-semibold text-on-surface-variant gap-2 active:scale-[0.99]">
-                        <span className="material-symbols-outlined text-[18px] text-primary">
-                          {uploadingFile ? 'sync' : 'upload_file'}
-                        </span>
-                        <span>
-                          {uploadingFile ? 'Subiendo y vectorizando...' : 'Subir archivo de entrenamiento (PDF, TXT, DOCX)'}
-                        </span>
-                        <input 
-                          type="file" 
-                          accept=".txt,.pdf,.docx" 
-                          className="hidden" 
-                          disabled={uploadingFile || syncingDrive} 
-                          onChange={handleFileUpload} 
-                        />
-                      </label>
-                    </div>
+                 {/* Visualizador y Carga de Archivos RAG */}
+                <div className="bg-surface-container/30 border border-outline/10 rounded-lg p-4 space-y-3 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px] text-primary">menu_book</span>
+                      Documentos de Entrenamiento (RAG)
+                    </span>
+                    {loadingFiles && <span className="text-[10px] text-primary animate-pulse">Cargando archivos...</span>}
                   </div>
-                )}
+                  
+                  {uploadedFiles.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
+                      Aún no has subido documentos. ¡Sube un archivo de texto o PDF para entrenar a tu bot!
+                    </p>
+                  ) : (
+                    <div className="max-h-40 overflow-y-auto divide-y divide-outline/5 pr-1 space-y-1 bg-surface-container/20 p-2 rounded-lg">
+                      {uploadedFiles.map((file) => (
+                        <div key={file.id} className="flex items-center justify-between text-xs py-1.5 first:pt-0">
+                          <div className="flex items-center gap-2 truncate pr-2">
+                            <span className="material-symbols-outlined text-[16px] text-primary/70 shrink-0">
+                              {file.mimeType.includes('folder') ? 'folder' : 'description'}
+                            </span>
+                            <span className="text-on-surface truncate font-medium" title={file.name}>{file.name}</span>
+                          </div>
+                          <span className="text-[10px] text-on-surface-variant opacity-60 shrink-0 font-mono bg-surface-container-highest px-1.5 py-0.5 rounded">
+                            {file.mimeType.includes('text/plain') 
+                              ? 'TXT' 
+                              : file.mimeType.includes('google-apps.document') 
+                                ? 'Doc' 
+                                : file.mimeType.includes('pdf') 
+                                  ? 'PDF' 
+                                  : 'Doc'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Zona de Carga de Archivos */}
+                  <div className="pt-1">
+                    <label className="relative flex items-center justify-center border border-dashed border-outline/30 rounded-lg p-3 hover:bg-surface-container-high/40 hover:border-primary/50 transition-all cursor-pointer text-center text-xs font-semibold text-on-surface-variant gap-2 active:scale-[0.99]">
+                      <span className="material-symbols-outlined text-[18px] text-primary">
+                        {uploadingFile ? 'sync' : 'upload_file'}
+                      </span>
+                      <span>
+                        {uploadingFile ? 'Subiendo y vectorizando...' : 'Subir archivo de entrenamiento (PDF, TXT, DOCX)'}
+                      </span>
+                      <input 
+                        type="file" 
+                        accept=".txt,.pdf,.docx" 
+                        className="hidden" 
+                        disabled={uploadingFile || syncingDrive} 
+                        onChange={handleFileUpload} 
+                      />
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <div className="flex justify-end pt-4 items-center gap-4">
@@ -1101,6 +1351,46 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
 
           {/* Quick Actions */}
           <div className="space-y-6">
+            {/* Logo Upload Card */}
+            <div className="glass-card p-6 rounded-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-secondary">image</span>
+                <h3 className="font-bold text-sm text-on-surface">Logotipo Comercial</h3>
+              </div>
+              <p className="text-xs text-on-surface-variant mb-4 font-sans leading-relaxed">
+                Sube el logotipo de tu empresa. Se mostrará en el menú lateral y en tus facturas.
+              </p>
+              <div className="flex items-center gap-4">
+                {clientData?.logo_url ? (
+                  <img 
+                    src={clientData.logo_url} 
+                    alt="Logo Empresa" 
+                    className="w-16 h-16 rounded-xl object-contain bg-white/5 border border-outline/20 p-1"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-primary/10 border border-dashed border-primary/30 flex items-center justify-center text-primary font-bold text-lg font-sans">
+                    {clientData?.name.substring(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleLogoUpload}
+                    className="hidden" 
+                    id="logo-upload-input" 
+                  />
+                  <label 
+                    htmlFor="logo-upload-input"
+                    className="px-3 py-2 bg-surface-container border border-outline/20 hover:border-primary/50 text-on-surface text-xs font-bold rounded-xl cursor-pointer transition inline-flex items-center gap-1.5 font-sans"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">upload</span>
+                    Subir Logotipo
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <div className="glass-card p-6 rounded-xl ambient-glow-secondary border-secondary/20">
               <h4 className="font-label-md text-label-md font-bold text-secondary mb-4 uppercase">Atención Requerida</h4>
               <div className="space-y-4">
@@ -1204,7 +1494,58 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
             </table>
           </div>
         </section>
+          </>
+        )}
+
+        {activeTab === 'inventario' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpInventory clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'facturacion' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpInvoices clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'agenda' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpAppointments clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'empleados' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpEmployees clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'clientes' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpCRM clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'campanias' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpCampaigns clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'marketing' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpMarketing clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'logs' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SystemAlertsPanel clientId={clientId} />
+          </div>
+        )}
       </main>
     </div>
-  );
+  </div>
+);
 };

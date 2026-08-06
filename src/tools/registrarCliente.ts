@@ -23,11 +23,15 @@ export const registrarClienteTool = {
             emailContacto: { 
                 type: "string", 
                 description: "El correo electrónico del contacto principal" 
+            },
+            categoria: {
+                type: "string",
+                description: "Categoría de la tienda/negocio: 'optica', 'restaurante', o 'otros'. Por defecto 'optica'."
             }
         },
         required: ["nombreEmpresa", "telefonoCliente", "nombreContacto"]
     },
-    execute: async (args: { nombreEmpresa: string, telefonoCliente: string, nombreContacto: string, emailContacto?: string }) => {
+    execute: async (args: { nombreEmpresa: string, telefonoCliente: string, nombreContacto: string, emailContacto?: string, categoria?: string }) => {
         console.log(`[Tool Registrar Cliente] 🚀 Iniciando onboarding de: ${args.nombreEmpresa}`);
 
         // 1. Limpieza de número de teléfono
@@ -71,9 +75,13 @@ export const registrarClienteTool = {
             agent_phone: cleanPhone,
             drive_folder_id: driveFolderId || '',
             username: username,
-            password: password,
+            password: password, // Este password autogenerado funciona como el token de activación temporal
             email: args.emailContacto || '',
-            contact_name: args.nombreContacto
+            contact_name: args.nombreContacto,
+            owner_phone: cleanPhone,
+            first_message_notified: false,
+            is_activated: false,
+            category: args.categoria || 'optica'
         });
 
         // 5. Abrir sesión de carga de WhatsApp por 10 minutos (600,000 ms)
@@ -82,16 +90,18 @@ export const registrarClienteTool = {
             expiresAt: Date.now() + 10 * 60 * 1000
         });
 
+        const activationLink = `http://localhost:3000/?view=activate-account&clientId=${clientId}&token=${password}`;
+
         console.log(`[Tool Registrar Cliente] ✅ Registro exitoso. Cliente: ${clientId}. WhatsApp Session iniciada para +${cleanPhone}`);
 
         return JSON.stringify({
             success: true,
             clientId,
             username,
-            password,
+            activationLink,
             driveFolderId,
             phoneNumber: cleanPhone,
-            message: "Registro completado con éxito. Credenciales del Dashboard generadas."
+            message: "Registro completado con éxito. Se generó un enlace seguro de activación para el Dashboard."
         });
     }
 };

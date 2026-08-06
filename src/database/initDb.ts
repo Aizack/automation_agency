@@ -23,6 +23,10 @@ const initDatabase = async () => {
                 password VARCHAR(100),
                 email VARCHAR(100),
                 contact_name VARCHAR(100),
+                owner_phone VARCHAR(20),
+                first_message_notified BOOLEAN DEFAULT FALSE,
+                is_activated BOOLEAN DEFAULT FALSE,
+                category VARCHAR(50) DEFAULT 'optica',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
@@ -34,7 +38,11 @@ const initDatabase = async () => {
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS password VARCHAR(100);`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS email VARCHAR(100);`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS contact_name VARCHAR(100);`);
-        console.log("[DB Init] ✅ Tabla 'clients' creada y alterada con columnas de Login, agent_phone y drive_folder_id.");
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS owner_phone VARCHAR(20);`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_message_notified BOOLEAN DEFAULT FALSE;`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_activated BOOLEAN DEFAULT FALSE;`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'optica';`);
+        console.log("[DB Init] ✅ Tabla 'clients' creada y alterada con columnas de Login, agent_phone, drive_folder_id, owner_phone, first_message_notified, is_activated y category.");
 
         // 3. Crear tabla interactions (Métricas)
         await pool.query(`
@@ -83,7 +91,63 @@ const initDatabase = async () => {
                 UNIQUE(client_id, phone)
             );
         `);
-        console.log("[DB Init] ✅ Tabla 'agent_contacts' creada o ya existente.");
+        // Ejecutar alter table por si la columna department no existe
+        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS department VARCHAR(30) DEFAULT 'recepcion';`);
+        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;`);
+        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'agent';`);
+        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS pin VARCHAR(4) DEFAULT '1234';`);
+        await pool.query(`ALTER TABLE takeover_sessions ADD COLUMN IF NOT EXISTS department VARCHAR(50) DEFAULT 'recepcion';`);
+        console.log("[DB Init] ✅ Tabla 'agent_contacts' creada o ya existente, alterada con columnas department, is_verified, role y pin. Tabla 'takeover_sessions' alterada con department.");
+
+        // 4.2 Crear tabla products (Inventario)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS products (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(100) NOT NULL,
+                sku VARCHAR(50),
+                description TEXT,
+                price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+                stock INT NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'products' creada o ya existente.");
+
+        // 4.3 Tabla de Facturas (Cobro de Cartera / Factura Electrónica)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS invoices (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                invoice_number VARCHAR(50) NOT NULL,
+                customer_name VARCHAR(100) NOT NULL,
+                customer_phone VARCHAR(20) NOT NULL,
+                customer_document_type VARCHAR(10) DEFAULT 'CC',
+                customer_document_number VARCHAR(30) NOT NULL,
+                customer_email VARCHAR(100) NOT NULL,
+                customer_address VARCHAR(200),
+                total_amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                due_date TIMESTAMP NOT NULL,
+                reminder_sent BOOLEAN DEFAULT FALSE,
+                overdue_sent BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(client_id, invoice_number)
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'invoices' creada o ya existente.");
+
+        // 4.4 Detalle de Factura
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS invoice_items (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+                product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                quantity INT NOT NULL DEFAULT 1,
+                price NUMERIC(10, 2) NOT NULL
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'invoice_items' creada o ya existente.");
 
         // 5. Crear tabla appointments (Agenda de citas interna)
         await pool.query(`
@@ -98,6 +162,281 @@ const initDatabase = async () => {
             );
         `);
         console.log("[DB Init] ✅ Tabla 'appointments' creada o ya existente.");
+
+        // 5.1 Crear tabla system_alerts (Alertas y Logs de Estado)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS system_alerts (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                alert_key VARCHAR(50) NOT NULL,
+                severity VARCHAR(20) NOT NULL,
+                message TEXT NOT NULL,
+                status VARCHAR(20) DEFAULT 'active', -- 'active', 'resolved'
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                resolved_at TIMESTAMP
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'system_alerts' creada o ya existente.");
+
+        // 5.2 Modificar y crear tablas de la Fase 2 (Empleados, Turnos, CRM, OTP, etc.)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS business_departments (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(50) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'business_departments' creada o ya existente.");
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS employees (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(100) NOT NULL,
+                phone VARCHAR(20) NOT NULL,
+                role VARCHAR(30) DEFAULT 'agent', -- 'admin', 'agent'
+                department_id UUID REFERENCES business_departments(id) ON DELETE SET NULL,
+                pin VARCHAR(4) DEFAULT '1234',
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'employees' creada o ya existente.");
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS shift_logs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                clock_in TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                clock_out TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'shift_logs' creada o ya existente.");
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS crm_customers (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(100) NOT NULL,
+                document_type VARCHAR(10) DEFAULT 'CC',
+                document_number VARCHAR(30) NOT NULL,
+                phone VARCHAR(20) NOT NULL,
+                email VARCHAR(100),
+                address VARCHAR(200),
+                lens_prescription TEXT,
+                last_interaction_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(client_id, document_number)
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'crm_customers' creada o ya existente.");
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS phone_verifications (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                phone VARCHAR(20) NOT NULL,
+                code VARCHAR(6) NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                verified BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'phone_verifications' creada o ya existente.");
+
+        // Modificaciones incrementales
+        await pool.query(`
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS logo_url TEXT;
+        `);
+        await pool.query(`
+            ALTER TABLE system_alerts ADD COLUMN IF NOT EXISTS client_id VARCHAR(50) REFERENCES clients(id) ON DELETE CASCADE;
+        `);
+        console.log("[DB Init] ✅ Columnas logo_url y client_id alteradas.");
+
+        // FASE 3: Modificaciones incrementales y nuevas tablas
+        console.log("[DB Init] 🔄 Inicializando tablas de la Fase 3...");
+
+        // 1. Alterar tabla clients (enabled_modules JSONB)
+        await pool.query(`
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS enabled_modules JSONB DEFAULT '{"inventory": true, "billing": true, "crm": true, "calendar": true, "employees": true, "hr": true, "deliveries": true, "whatsapp_bot": true}'::jsonb;
+        `);
+
+        // 2. Alterar tabla employees (salarial, supervisor, foto, funciones, etc.)
+        await pool.query(`
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS photo_url TEXT;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS is_supervisor BOOLEAN DEFAULT FALSE;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS work_duties TEXT;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS basic_salary NUMERIC(12,2) DEFAULT 0.00;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS allowances NUMERIC(12,2) DEFAULT 0.00;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS arl_class VARCHAR(10) DEFAULT 'I';
+        `);
+
+        // 3. Alterar tabla shift_logs (lunch)
+        await pool.query(`
+            ALTER TABLE shift_logs ADD COLUMN IF NOT EXISTS lunch_start TIMESTAMP;
+            ALTER TABLE shift_logs ADD COLUMN IF NOT EXISTS lunch_end TIMESTAMP;
+        `);
+
+        // 4. Crear tabla de Campañas / Visitas de Calle & Sitio (field_visits)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS field_visits (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+                name VARCHAR(150) NOT NULL,
+                campaign_type VARCHAR(50) DEFAULT 'sitio',
+                agreement_terms TEXT,
+                department VARCHAR(100) NOT NULL DEFAULT 'Cundinamarca',
+                municipio VARCHAR(100) NOT NULL DEFAULT 'Bogotá',
+                barrio VARCHAR(100),
+                point_of_sale VARCHAR(150) NOT NULL DEFAULT 'Principal',
+                address VARCHAR(250) NOT NULL,
+                latitude DOUBLE PRECISION,
+                longitude DOUBLE PRECISION,
+                contact_name VARCHAR(100) NOT NULL,
+                secondary_contacts JSONB DEFAULT '[]',
+                proof_photo_url TEXT,
+                visit_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                status VARCHAR(20) DEFAULT 'programada',
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // 5. Alterar crm_customers (vendedor asignado, interacciones de seguimiento y link a campaña)
+        await pool.query(`
+            ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS assigned_seller_id UUID REFERENCES employees(id) ON DELETE SET NULL;
+            ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS next_interaction_date DATE;
+            ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS suggested_action TEXT;
+            ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS ia_suggested_message TEXT;
+            ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS campaign_id UUID REFERENCES field_visits(id) ON DELETE SET NULL;
+            ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS marketing_unsubscribed BOOLEAN DEFAULT FALSE;
+        `);
+
+        // 6. Alterar invoices y productos (link campaña, costos, alarmas)
+        await pool.query(`
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS campaign_id UUID REFERENCES field_visits(id) ON DELETE SET NULL;
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10,2) DEFAULT 0.00;
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS min_stock INT DEFAULT 5;
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_name VARCHAR(100);
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_phone VARCHAR(20);
+            ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10,2) DEFAULT 0.00;
+            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS customer_document_number VARCHAR(30);
+            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS crm_customer_id UUID REFERENCES crm_customers(id) ON DELETE SET NULL;
+        `);
+
+        // 7. Crear tabla de Metas Mensuales (sales_goals)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS sales_goals (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                department_id UUID REFERENCES business_departments(id) ON DELETE CASCADE,
+                employee_id UUID REFERENCES employees(id) ON DELETE CASCADE,
+                target_amount NUMERIC(12,2) NOT NULL,
+                current_amount NUMERIC(12,2) DEFAULT 0.00,
+                month_year VARCHAR(7) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // 8. Crear tabla de Tareas del Personal (employee_tasks)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS employee_tasks (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                supervisor_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+                title VARCHAR(200) NOT NULL,
+                description TEXT,
+                due_date TIMESTAMP,
+                status VARCHAR(20) DEFAULT 'pendiente',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // 9. Crear tabla de Documentos de RRHH (hr_documents)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS hr_documents (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                doc_type VARCHAR(50) NOT NULL,
+                status VARCHAR(20) DEFAULT 'approved',
+                file_url TEXT,
+                notes TEXT,
+                start_date DATE,
+                end_date DATE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // 10. Crear tabla de Envíos / Domicilios (deliveries)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS deliveries (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                delivery_guy_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+                invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL,
+                recipient_name VARCHAR(100) NOT NULL,
+                recipient_phone VARCHAR(20) NOT NULL,
+                address VARCHAR(250) NOT NULL,
+                latitude DOUBLE PRECISION,
+                longitude DOUBLE PRECISION,
+                route_order INT DEFAULT 0,
+                status VARCHAR(20) DEFAULT 'pendiente',
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // 11. Crear tabla de Auditoría de Empleados (employee_activity_logs)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS employee_activity_logs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+                action VARCHAR(100) NOT NULL,
+                details TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // 12. Crear tablas de Campañas de Marketing y Difusiones
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS marketing_campaigns (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(100) NOT NULL,
+                base_message TEXT NOT NULL,
+                target_segment VARCHAR(50) NOT NULL,
+                status VARCHAR(20) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS marketing_logs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                campaign_id UUID NOT NULL REFERENCES marketing_campaigns(id) ON DELETE CASCADE,
+                customer_phone VARCHAR(20) NOT NULL,
+                status VARCHAR(20) DEFAULT 'sent',
+                sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // 13. Crear tabla de Mensajes del Chat Corporativo
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS corporate_chat_messages (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+                sender_name VARCHAR(100) NOT NULL,
+                message_text TEXT NOT NULL,
+                channel VARCHAR(50) DEFAULT 'general',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        console.log("[DB Init] ✅ Tablas y alteraciones de la Fase 3 completadas con éxito.");
 
         // 6. Crear tabla vector_store (pgvector para el RAG)
         await pool.query(`CREATE EXTENSION IF NOT EXISTS vector;`);
@@ -126,7 +465,8 @@ const initDatabase = async () => {
                 phone_number: "1234567890",
                 system_prompt: "Eres el asistente virtual de Clínica Sonrisas. Tu objetivo es agendar citas médicas con empatía y revisar horarios.",
                 active_tools: ["agendarCita", "consultarHorarios"],
-                agent_phone: "573001112222" // Número del dentista humano
+                agent_phone: "573001112222", // Número del dentista humano
+                category: "optica"
             },
             {
                 id: "client_002",
@@ -134,21 +474,23 @@ const initDatabase = async () => {
                 phone_number: "0987654321",
                 system_prompt: "Eres el asistente de Pizzería Napoli. Debes tomar pedidos, confirmar la dirección de envío y calcular el costo.",
                 active_tools: ["crearPedido", "consultarMenu"],
-                agent_phone: "573003334444" // Número del pizzero humano
+                agent_phone: "573003334444", // Número del pizzero humano
+                category: "restaurante"
             }
         ];
 
         for (const client of clientsToSeed) {
             await pool.query(`
-                INSERT INTO clients (id, name, phone_number, system_prompt, active_tools, status, agent_phone)
-                VALUES ($1, $2, $3, $4, $5, 'active', $6)
+                INSERT INTO clients (id, name, phone_number, system_prompt, active_tools, status, agent_phone, category)
+                VALUES ($1, $2, $3, $4, $5, 'active', $6, $7)
                 ON CONFLICT (id) DO UPDATE SET
                     name = EXCLUDED.name,
                     phone_number = EXCLUDED.phone_number,
                     system_prompt = EXCLUDED.system_prompt,
                     active_tools = EXCLUDED.active_tools,
-                    agent_phone = EXCLUDED.agent_phone;
-            `, [client.id, client.name, client.phone_number, client.system_prompt, client.active_tools, client.agent_phone]);
+                    agent_phone = EXCLUDED.agent_phone,
+                    category = EXCLUDED.category;
+            `, [client.id, client.name, client.phone_number, client.system_prompt, client.active_tools, client.agent_phone, client.category]);
         }
 
         console.log("[DB Init] ✅ Datos iniciales de clientes semillados correctamente.");

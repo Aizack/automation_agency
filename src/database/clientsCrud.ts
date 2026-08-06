@@ -16,11 +16,15 @@ export const createClient = async (client: {
   password?: string;
   email?: string;
   contact_name?: string;
+  owner_phone?: string;
+  first_message_notified?: boolean;
+  is_activated?: boolean;
+  category?: string;
 }): Promise<void> => {
   try {
     await pool.query(
-      `INSERT INTO clients (id, name, phone_number, system_prompt, active_tools, agent_phone, drive_folder_id, username, password, email, contact_name, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'active')`,
+      `INSERT INTO clients (id, name, phone_number, system_prompt, active_tools, agent_phone, drive_folder_id, username, password, email, contact_name, owner_phone, first_message_notified, is_activated, category, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'active')`,
       [
         client.id,
         client.name,
@@ -32,7 +36,11 @@ export const createClient = async (client: {
         client.username || null,
         client.password || null,
         client.email || null,
-        client.contact_name || null
+        client.contact_name || null,
+        client.owner_phone || null,
+        client.first_message_notified || false,
+        client.is_activated || false,
+        client.category || 'optica'
       ]
     );
     console.log(`[CRUD] Client '${client.name}' (ID: ${client.id}) successfully created.`);
@@ -60,7 +68,12 @@ export const getClientById = async (id: string): Promise<ClientConfig | null> =>
         username,
         password,
         email,
-        contact_name AS "contactName"
+        contact_name AS "contactName",
+        owner_phone AS "ownerPhone",
+        first_message_notified AS "firstMessageNotified",
+        is_activated AS "isActivated",
+        category,
+        enabled_modules AS "enabledModules"
        FROM clients 
        WHERE id = $1 LIMIT 1`,
       [id]
@@ -93,6 +106,9 @@ export const updateClient = async (
     password: string;
     email: string;
     contact_name: string;
+    owner_phone: string;
+    first_message_notified: boolean;
+    is_activated: boolean;
   }>
 ): Promise<void> => {
   try {
@@ -163,7 +179,12 @@ export const listClients = async (): Promise<ClientConfig[]> => {
         username,
         password,
         email,
-        contact_name AS "contactName"
+        contact_name AS "contactName",
+        owner_phone AS "ownerPhone",
+        first_message_notified AS "firstMessageNotified",
+        is_activated AS "isActivated",
+        category,
+        enabled_modules AS "enabledModules"
        FROM clients 
        ORDER BY created_at DESC`
     );

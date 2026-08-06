@@ -13,7 +13,7 @@ export const startEscalationService = (
         try {
             // Buscar sesiones de traspaso que lleven más de 1 minuto sin interacción del agente
             const sessionsRes = await pool.query(`
-                SELECT id, client_id, customer_phone, escalation_index, current_agent_phone, customer_name
+                SELECT id, client_id, customer_phone, escalation_index, current_agent_phone, customer_name, department
                 FROM takeover_sessions
                 WHERE status = 'active'
                   AND interacted_with_agent = FALSE
@@ -25,14 +25,15 @@ export const startEscalationService = (
                 const customerPhone = session.customer_phone;
                 const customerName = session.customer_name || 'Cliente';
                 const currentAgentPhone = session.current_agent_phone;
+                const dept = session.department || 'recepcion';
 
-                // Obtener todos los asesores en línea del cliente ordenados por prioridad
+                // Obtener todos los asesores en línea del cliente de ese departamento ordenados por prioridad
                 const agentsRes = await pool.query(`
                     SELECT name, phone, priority 
                     FROM agent_contacts
-                    WHERE client_id = $1 AND status = 'online'
+                    WHERE client_id = $1 AND status = 'online' AND department = $2
                     ORDER BY priority ASC
-                `, [clientId]);
+                `, [clientId, dept]);
 
                 const onlineAgents = agentsRes.rows;
 

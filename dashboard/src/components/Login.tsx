@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 
 interface LoginProps {
-  onLoginSuccess: (clientId: string, role: 'admin' | 'client') => void;
-  onAdminAccess: () => void;
+  onLoginSuccess: (clientId: string, role: 'admin' | 'client', token: string) => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onAdminAccess }) => {
+export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +29,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onAdminAccess }) =
       
       const json = await res.json();
       if (json.success) {
-        onLoginSuccess(json.data.id, json.data.role);
+        onLoginSuccess(json.data.id, json.data.role, json.data.token);
       } else {
         setError(json.error || 'Credenciales incorrectas.');
       }
@@ -113,16 +112,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onAdminAccess }) =
             )}
           </button>
         </form>
-
-        <div className="border-t border-white/5 pt-4 flex flex-col items-center gap-2">
-          <button
-            onClick={onAdminAccess}
-            className="text-xs text-[#0a5cff] font-bold hover:underline cursor-pointer flex items-center gap-1.5"
-          >
-            <span className="material-symbols-outlined text-[14px]">admin_panel_settings</span>
-            Acceder como Administrador (Consola de Agencia)
-          </button>
-        </div>
       </div>
     </div>
   );

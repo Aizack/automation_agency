@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { authFetch } from '../utils/api';
+import { SystemAlertsPanel } from './SystemAlertsPanel';
 
 interface Client {
   id: string;
@@ -19,9 +21,10 @@ interface Metrics {
 
 interface AdminDashboardProps {
   onLogout?: () => void;
+  onViewClient?: (clientId: string) => void;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onViewClient }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [metrics, setMetrics] = useState<Metrics>({
     totalInteractions: 0,
@@ -33,6 +36,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   // Buscador y Modal
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'alerts'>('overview');
+  const [activeAlerts, setActiveAlerts] = useState<any[]>([]);
+  const [activeAlertsCount, setActiveAlertsCount] = useState(0);
+  const [showAlertsModal, setShowAlertsModal] = useState(false);
 
   // Formulario nuevo cliente (Simplificado sin ID ni Prompt)
   const [formData, setFormData] = useState({
@@ -49,13 +57,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const clientsRes = await fetch('/api/clients');
+      const clientsRes = await authFetch('/api/clients');
       const clientsData = await clientsRes.json();
       if (clientsData.success) {
         setClients(clientsData.data);
       }
 
-      const metricsRes = await fetch('/api/metrics');
+      const metricsRes = await authFetch('/api/metrics');
       const metricsData = await metricsRes.json();
       if (metricsData.success && metricsData.data.summary) {
         setMetrics(metricsData.data.summary);
@@ -67,8 +75,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const fetchActiveAlerts = async () => {
+    try {
+      const res = await authFetch('/api/admin/alerts/active');
+      const data = await res.json();
+      if (data.success) {
+        setActiveAlerts(data.alerts || []);
+        setActiveAlertsCount((data.alerts || []).length);
+      }
+    } catch (err) {
+      console.error("Error loading active alerts:", err);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchActiveAlerts();
+    const interval = setInterval(fetchActiveAlerts, 20000);
+    return () => clearInterval(interval);
   }, []);
 
   // Activar / Suspender cliente
@@ -78,7 +102,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       : `/api/clients/${clientId}/activate`;
 
     try {
-      const res = await fetch(endpoint, { method: 'POST' });
+      const res = await authFetch(endpoint, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         fetchData(); // Recargar datos
@@ -106,7 +130,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       cleanAgent = selectedCountry + cleanAgent;
     }
     try {
-      const res = await fetch('/api/clients', {
+      const res = await authFetch('/api/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -141,7 +165,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
 
     try {
-      const res = await fetch(`/api/clients/${clientId}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/clients/${clientId}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         fetchData(); // Recargar lista
@@ -190,22 +214,44 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           <p className="text-on-surface-variant text-label-sm mt-1 opacity-70">por Diaz Lab</p>
         </div>
         <nav className="flex-grow space-y-2 overflow-y-auto custom-scrollbar">
-          <a className="sidebar-item-active flex items-center gap-4 p-3 rounded-lg transition-all duration-200" href="#">
-            <span className="material-symbols-outlined">dashboard</span>
+          <button 
+            className={`w-full text-left flex items-center gap-4 p-3 transition-all duration-200 rounded-lg cursor-pointer font-sans border-0 ${
+              activeTab === 'overview' 
+                ? 'bg-primary/10 text-primary sidebar-item-active' 
+                : 'text-on-surface-variant hover:bg-surface-variant/50 bg-transparent'
+            }`}
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveTab('overview');
+            }}
+          >
+            <span className="material-symbols-outlined text-[20px]">dashboard</span>
             <span className="font-label-md">Visión General</span>
-          </a>
-          <a className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg" href="#">
-            <span className="material-symbols-outlined">group</span>
-            <span className="font-label-md">Clientes</span>
-          </a>
-          <a className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg" href="#">
-            <span className="material-symbols-outlined">settings_suggest</span>
+          </button>
+          <button 
+            className="w-full text-left text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg bg-transparent border-0 cursor-pointer font-sans"
+            onClick={(e) => {
+              e.preventDefault();
+              onViewClient?.('admin');
+            }}
+          >
+            <span className="material-symbols-outlined text-[20px]">smart_toy</span>
+            <span className="font-label-md">Configurar mi Bot (Frant)</span>
+          </button>
+          <button 
+            className={`w-full text-left flex items-center gap-4 p-3 transition-all duration-200 rounded-lg cursor-pointer font-sans border-0 ${
+              activeTab === 'alerts' 
+                ? 'bg-primary/10 text-primary sidebar-item-active' 
+                : 'text-on-surface-variant hover:bg-surface-variant/50 bg-transparent'
+            }`}
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveTab('alerts');
+            }}
+          >
+            <span className="material-symbols-outlined text-[20px]">settings_suggest</span>
             <span className="font-label-md">Estado de Red</span>
-          </a>
-          <a className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg" href="#">
-            <span className="material-symbols-outlined">payments</span>
-            <span className="font-label-md">Facturación</span>
-          </a>
+          </button>
         </nav>
         <div className="mt-auto space-y-2 pt-4 border-t border-outline/20">
           <a className="text-on-surface-variant hover:bg-surface-variant/50 flex items-center gap-4 p-3 transition-all duration-200 rounded-lg" href="#">
@@ -230,19 +276,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         {/* Header Section */}
         <header className="flex justify-between items-end mb-10">
           <div>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface mb-1">Visión General</h2>
-            <p className="text-on-surface-variant font-body-md opacity-80">Monitoreo en tiempo real y orquestación de clientes.</p>
+            <h2 className="font-headline-lg text-headline-lg text-on-surface mb-1">
+              {activeTab === 'overview' ? 'Visión General' : 'Estado de Red'}
+            </h2>
+            <p className="text-on-surface-variant font-body-md opacity-80">
+              {activeTab === 'overview' 
+                ? 'Monitoreo en tiempo real y orquestación de clientes.' 
+                : 'Historial y diagnóstico de incidencias del servidor.'}
+            </p>
           </div>
-          <button 
-            className="bg-primary-container text-on-primary-container font-label-md px-4 py-2.5 rounded-xl flex items-center gap-2 primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer"
-            onClick={() => setShowModal(true)}
-          >
-            <span className="material-symbols-outlined">person_add</span>
-            Crear Nuevo Cliente
-          </button>
+          <div className="flex items-center gap-3">
+            {activeAlertsCount > 0 && (
+              <button 
+                onClick={() => setShowAlertsModal(true)}
+                className="bg-red-500/10 border border-red-500/20 text-red-400 font-label-md px-4 py-2.5 rounded-xl flex items-center gap-2 animate-pulse hover:bg-red-500/20 transition-all cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">warning</span>
+                {activeAlertsCount} Alertas Activas
+              </button>
+            )}
+            {activeTab === 'overview' && (
+              <button 
+                className="bg-primary-container text-on-primary-container font-label-md px-4 py-2.5 rounded-xl flex items-center gap-2 primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                onClick={() => setShowModal(true)}
+              >
+                <span className="material-symbols-outlined">person_add</span>
+                Crear Nuevo Cliente
+              </button>
+            )}
+          </div>
         </header>
 
-        {/* Global Metrics Grid */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Global Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {/* Metric 1 */}
           <div className="glass-card rounded-xl p-6 relative overflow-hidden group">
@@ -388,12 +455,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </label>
                     </td>
                     <td className="px-6 py-4">
-                      <a 
-                        className="text-secondary hover:text-primary transition-colors underline font-label-md" 
-                        href={`/?view=client&id=${client.id}`}
+                      <button 
+                        className="text-secondary hover:text-primary transition-colors underline font-label-md bg-transparent border-0 p-0 cursor-pointer text-left font-sans" 
+                        onClick={() => onViewClient?.(client.id)}
                       >
                         Abrir Panel de Control
-                      </a>
+                      </button>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 
@@ -418,7 +485,63 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
           </div>
         </section>
+          </>
+        )}
+
+        {activeTab === 'alerts' && (
+          <div className="glass-card p-6 rounded-2xl">
+            <SystemAlertsPanel />
+          </div>
+        )}
       </main>
+
+      {/* Modal: Active Alerts */}
+      {showAlertsModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md transition-all">
+          <div className="glass-card w-full max-w-xl rounded-2xl p-8 shadow-2xl">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="font-headline-md text-headline-md text-red-400 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[24px]">warning</span>
+                  Alertas Activas del Sistema
+                </h3>
+                <p className="text-on-surface-variant text-body-md opacity-70">Incidencias actualmente no resueltas en el servidor.</p>
+              </div>
+              <button 
+                className="p-2 hover:bg-surface-variant rounded-full text-on-surface-variant transition-all cursor-pointer"
+                onClick={() => setShowAlertsModal(false)}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar text-xs">
+              {activeAlerts.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No hay alertas activas en este momento. ¡Todo opera con normalidad!</p>
+              ) : (
+                activeAlerts.map((alert: any) => (
+                  <div key={alert.id} className="bg-red-500/5 border border-red-500/10 p-4 rounded-xl space-y-1">
+                    <div className="flex justify-between">
+                      <span className="font-bold text-white uppercase">{alert.alert_key}</span>
+                      <span className="text-gray-400 font-mono">{new Date(alert.created_at).toLocaleTimeString()}</span>
+                    </div>
+                    <p className="text-gray-300">{alert.message}</p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-6 flex justify-end">
+              <button 
+                className="px-6 py-2 bg-white/5 border border-white/10 text-on-surface font-label-md rounded-xl hover:bg-white/10 transition-all cursor-pointer" 
+                onClick={() => setShowAlertsModal(false)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal: Create New Client */}
       {showModal && (

@@ -1,6 +1,7 @@
 import { getClientConfigByPhone } from './config';
 import { AIAgent } from '../agents/base';
 import { pool } from '../database/postgres';
+import { activeWaSessions } from '../services/whatsapp';
 
 // Mapas en memoria para gestionar confirmaciones pendientes
 // 1. Confirmación del Asesor (¿Desea mandar notificación al cliente de que ya está disponible? si/no)
@@ -65,6 +66,79 @@ export const routeIncomingMessage = async (
   // ==========================================
   if (isAgent) {
     const agentName = agentData.name;
+    const isVerifiedAdmin = agentData.role === 'admin' && agentData.is_verified === true;
+
+    // Buscar si este asesor tiene una sesión de traspaso activa con algún cliente
+    const adminActiveSessionRes = await pool.query(
+      `SELECT id, customer_phone, customer_name, interacted_with_agent
+       FROM takeover_sessions 
+       WHERE client_id = $1 AND current_agent_phone = $2 AND status = 'active'
+       LIMIT 1`,
+      [clientId, senderPhone]
+    );
+    const hasActiveTakeover = adminActiveSessionRes.rows.length > 0;
+
+    // Si es un Administrador Verificado y NO está en un traspaso activo, está hablando con el bot administrativo
+    if (isVerifiedAdmin && !hasActiveTakeover) {
+      // 1. Validar si la sesión rápida está activa (20 minutos)
+      const session = activeWaSessions.get(senderPhone);
+      const isSessionActive = session && session.expiresAt > Date.now();
+
+      if (!isSessionActive) {
+        // Enlace rápido de re-autenticación por inactividad
+        return `🔒 Tu sesión administrativa se ha suspendido por inactividad. Toca este enlace rápido para reanudar con tu huella digital o PIN:\n🔗 https://app.diazlab.online/auth-fast?phone=${senderPhone}`;
+      }
+
+      // 2. Renovar la sesión por 20 minutos
+      activeWaSessions.set(senderPhone, {
+        clientId,
+        expiresAt: Date.now() + 20 * 60 * 1000
+      });
+
+      // 3. Procesar comandos de estado rápidos
+      if (cleanMessage === '/out' || cleanMessage === '/busy') {
+        await pool.query(
+          `UPDATE agent_contacts SET status = 'offline' WHERE client_id = $1 AND phone = $2`,
+          [clientId, senderPhone]
+        );
+        console.log(`[Router] 👤 Administrador ${agentName} (${senderPhone}) se puso ausente.`);
+        return `Te has puesto en modo ausente. Ya no recibirás alertas de nuevos clientes. Para ponerte disponible responde /in`;
+      }
+
+      if (cleanMessage === '/in' || cleanMessage === '/online') {
+        await pool.query(
+          `UPDATE agent_contacts SET status = 'online' WHERE client_id = $1 AND phone = $2`,
+          [clientId, senderPhone]
+        );
+        console.log(`[Router] 👤 Administrador ${agentName} (${senderPhone}) se puso en línea.`);
+        return `Te has puesto en línea. Volverás a recibir alertas de clientes en espera.`;
+      }
+
+      // 4. Instanciar el agente de IA con el prompt y las herramientas de administración
+      console.log(`[Router] 🛡️ Ejecutando comando administrativo de +${senderPhone} para ${clientConfig.name}`);
+      const adminClientConfig = {
+        ...clientConfig,
+        systemPrompt: `Eres el asistente administrativo interno de la óptica ${clientConfig.name}. Tu objetivo es ayudar al equipo de trabajo a consultar existencias de productos e inventario, buscar precios en el catálogo, ver estados de cuenta o saldos de clientes y registrar pagos reportados. Escribe siempre de forma corta, directa y profesional en español.`,
+        activeTools: [...clientConfig.activeTools, 'consultarInventario', 'consultarEstadoCuenta', 'reportarPago']
+      };
+
+      const agent = new AIAgent(adminClientConfig);
+      const agentResponse = await agent.processMessage(messageText, senderPhone, sendVoiceFn);
+      const { text: responseText, inputTokens, outputTokens } = agentResponse;
+
+      // Registrar métricas de interacción
+      try {
+        const estimatedCost = (inputTokens * 0.000000075) + (outputTokens * 0.000000300);
+        await pool.query(`
+          INSERT INTO interactions (client_id, sender_phone, message_text, response_text, tokens_input, tokens_output, api_cost)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `, [clientId, senderPhone, messageText, responseText, inputTokens, outputTokens, estimatedCost]);
+      } catch (dbError) {
+        console.error('[Router] Error al registrar métricas de interacción admin:', dbError);
+      }
+
+      return responseText;
+    }
 
     // A.1 Manejar Comandos de Estado del Asesor (/out y /in)
     if (cleanMessage === '/out' || cleanMessage === '/busy') {
@@ -363,6 +437,18 @@ export const routeIncomingMessage = async (
   if (isRequestingHuman) {
     console.log(`[Router] ⚠️ Cliente ${senderPhone} solicita atención humana. Buscando asesores disponibles.`);
 
+    // Determinar departamento necesario basándose en palabras clave
+    let targetDepartment = 'recepcion';
+    const isCartera = /\b(pago|pagar|factura|deuda|cobro|cuota|cartera|mora|vencido)\b/i.test(messageText);
+    const isRecepcion = /\b(cita|agendar|agenda|turno|calendario|fecha|recepcion|recepcionista)\b/i.test(messageText);
+    if (isCartera) {
+      targetDepartment = 'cartera';
+    } else if (isRecepcion) {
+      targetDepartment = 'recepcion';
+    }
+
+    console.log(`[Router] 🏢 Departamento destino asignado: '${targetDepartment}'`);
+
     // Obtener el nombre del cliente desde los appointments previos (si lo hay)
     let customerName = 'Cliente';
     const apptRes = await pool.query(
@@ -373,11 +459,24 @@ export const routeIncomingMessage = async (
       customerName = apptRes.rows[0].customer_name;
     }
 
-    // Buscar el primer asesor en línea del cliente
-    const onlineAgentsRes = await pool.query(
-      `SELECT name, phone FROM agent_contacts WHERE client_id = $1 AND status = 'online' ORDER BY priority ASC LIMIT 1`,
-      [clientId]
+    // Buscar el primer asesor en línea del departamento correcto
+    let onlineAgentsRes = await pool.query(
+      `SELECT name, phone FROM agent_contacts 
+       WHERE client_id = $1 AND status = 'online' AND department = $2 
+       ORDER BY priority ASC LIMIT 1`,
+      [clientId, targetDepartment]
     );
+
+    // Fallback a cualquier asesor si no hay nadie online en ese departamento
+    if (onlineAgentsRes.rows.length === 0) {
+      console.log(`[Router] ⚠️ Sin asesores en línea en '${targetDepartment}'. Buscando en cualquier departamento...`);
+      onlineAgentsRes = await pool.query(
+        `SELECT name, phone FROM agent_contacts 
+         WHERE client_id = $1 AND status = 'online' 
+         ORDER BY priority ASC LIMIT 1`,
+        [clientId]
+      );
+    }
 
     // Buscar si ya existe una sesión previa para este cliente y número
     const existingSessionRes = await pool.query(
@@ -393,21 +492,21 @@ export const routeIncomingMessage = async (
       if (hasExistingSession) {
         await pool.query(
           `UPDATE takeover_sessions 
-           SET status = 'active', current_agent_phone = $1, escalation_index = 0, assigned_at = NOW(), interacted_with_agent = FALSE, customer_name = $2, updated_at = NOW()
-           WHERE client_id = $3 AND customer_phone = $4`,
-          [firstAgent.phone, customerName, clientId, senderPhone]
+           SET status = 'active', current_agent_phone = $1, escalation_index = 0, assigned_at = NOW(), interacted_with_agent = FALSE, customer_name = $2, department = $3, updated_at = NOW()
+           WHERE client_id = $4 AND customer_phone = $5`,
+          [firstAgent.phone, customerName, targetDepartment, clientId, senderPhone]
         );
       } else {
         await pool.query(
-          `INSERT INTO takeover_sessions (client_id, customer_phone, status, current_agent_phone, escalation_index, assigned_at, interacted_with_agent, customer_name) 
-           VALUES ($1, $2, 'active', $3, 0, NOW(), FALSE, $4)`,
-          [clientId, senderPhone, firstAgent.phone, customerName]
+          `INSERT INTO takeover_sessions (client_id, customer_phone, status, current_agent_phone, escalation_index, assigned_at, interacted_with_agent, customer_name, department) 
+           VALUES ($1, $2, 'active', $3, 0, NOW(), FALSE, $4, $5)`,
+          [clientId, senderPhone, firstAgent.phone, customerName, targetDepartment]
         );
       }
 
       // Enviar alerta al primer asesor
       if (sendMessageFn) {
-        const alertMsg = `⚠️ *ALERTA:* El cliente +${senderPhone} solicita hablar con un humano.\n\nMensaje: "${messageText}"\n\n*Instrucciones del Chat:*\n• Escribe cualquier respuesta aquí para contestarle.\n• Responde */close* para cerrar el traspaso.\n• Responde */out* para ponerte ausente.`;
+        const alertMsg = `⚠️ *ALERTA [Dpto: ${targetDepartment.toUpperCase()}]:* El cliente +${senderPhone} solicita hablar con un humano.\n\nMensaje: "${messageText}"\n\n*Instrucciones del Chat:*\n• Escribe cualquier respuesta aquí para contestarle.\n• Responde */close* para cerrar el traspaso.\n• Responde */out* para ponerte ausente.`;
         await sendMessageFn(firstAgent.phone, alertMsg);
       }
 
@@ -417,15 +516,15 @@ export const routeIncomingMessage = async (
       if (hasExistingSession) {
         await pool.query(
           `UPDATE takeover_sessions 
-           SET status = 'waiting_fallback', current_agent_phone = NULL, escalation_index = -1, assigned_at = NOW(), interacted_with_agent = FALSE, customer_name = $1, updated_at = NOW()
-           WHERE client_id = $2 AND customer_phone = $3`,
-          [customerName, clientId, senderPhone]
+           SET status = 'waiting_fallback', current_agent_phone = NULL, escalation_index = -1, assigned_at = NOW(), interacted_with_agent = FALSE, customer_name = $1, department = $2, updated_at = NOW()
+           WHERE client_id = $3 AND customer_phone = $4`,
+          [customerName, targetDepartment, clientId, senderPhone]
         );
       } else {
         await pool.query(
-          `INSERT INTO takeover_sessions (client_id, customer_phone, status, current_agent_phone, escalation_index, assigned_at, interacted_with_agent, customer_name) 
-           VALUES ($1, $2, 'waiting_fallback', NULL, -1, NOW(), FALSE, $3)`,
-          [clientId, senderPhone, customerName]
+          `INSERT INTO takeover_sessions (client_id, customer_phone, status, current_agent_phone, escalation_index, assigned_at, interacted_with_agent, customer_name, department) 
+           VALUES ($1, $2, 'waiting_fallback', NULL, -1, NOW(), FALSE, $3, $4)`,
+          [clientId, senderPhone, customerName, targetDepartment]
         );
       }
 
@@ -460,6 +559,37 @@ export const routeIncomingMessage = async (
 
   } catch (dbError) {
     console.error('[Router] Error al registrar métricas de interacción:', dbError);
+  }
+
+  // 6. Si es el primer mensaje del cliente en su bot propio (no admin), enviamos el gancho de conversión al dueño
+  if (clientId !== 'admin' && !clientConfig.firstMessageNotified) {
+    try {
+      console.log(`[Router] 🎯 ¡Primer mensaje detectado para el cliente ${clientConfig.name}! Activando gancho de conversión...`);
+      
+      // Actualizar flag en DB para no volver a notificar
+      await pool.query(
+        `UPDATE clients SET first_message_notified = TRUE WHERE id = $1`,
+        [clientId]
+      );
+      
+      // Mandar el mensaje al dueño del negocio (ownerPhone)
+      const ownerPhone = clientConfig.ownerPhone || clientConfig.phoneNumber;
+      if (ownerPhone && sendMessageFn) {
+        const conversionMsg = `🎉 ¡Felicitaciones! Acabas de recibir tu primer mensaje de un cliente en tu bot de servicio. Tu agente virtual de inteligencia artificial ya respondió su primera interacción en vivo.\n\nPara continuar utilizando nuestros servicios de automatización de manera permanente y sin interrupciones, por favor elige uno de nuestros planes de suscripción:\n\n1️⃣ *Plan Básico* (Solo Texto) - $29 USD/mes\n2️⃣ *Plan Pro* (Texto + Notas de Voz) - $49 USD/mes\n3️⃣ *Plan Enterprise* (Soporte Multi-Agente + CRM) - $99 USD/mes\n\nResponde con el número de plan que prefieres para recibir tu link de suscripción rápido. ¡Gracias por confiar en nuestra agencia de automatización! 🚀`;
+        
+        // Esperamos un pequeño delay de 3 segundos para que no se encime con la respuesta del cliente
+        setTimeout(async () => {
+          try {
+            await sendMessageFn(ownerPhone, conversionMsg);
+            console.log(`[Router] ✅ Gancho de conversión enviado al dueño: ${ownerPhone}`);
+          } catch (sendErr: any) {
+            console.error('[Router] Error al enviar mensaje de conversión al dueño:', sendErr.message);
+          }
+        }, 3000);
+      }
+    } catch (err: any) {
+      console.error('[Router] Error en flujo de gancho de conversión:', err);
+    }
   }
 
   return responseText;

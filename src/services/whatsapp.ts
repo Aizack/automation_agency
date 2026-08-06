@@ -4,14 +4,17 @@ import fs from 'fs';
 import path from 'path';
 import { routeIncomingMessage } from '../core/router';
 import { saveLocalFile } from './localKnowledge';
-import { getClientById } from '../database/clientsCrud';
+import { getClientById, updateClient } from '../database/clientsCrud';
 import { fetchDocumentsFromDrive, uploadFileToFolder } from './drive';
+import { pool } from '../database/postgres';
+import { logger } from './logger';
 
 // Estado global de WhatsApp expuesto para el Dashboard
 export const whatsappState = {
     status: 'DISCONNECTED', // 'DISCONNECTED', 'QR', 'CONNECTED', 'INITIALIZING'
     qr: '',
     phone: '',
+    clientId: 'admin',
 };
 
 // Estructura de sesión de carga de archivos temporal
@@ -25,19 +28,38 @@ export const activeWaSessions = new Map<string, WhatsAppSession>();
 
 // Instancia dinámica del cliente de WhatsApp Web
 export let client: Client | null = null;
+let pendingConnectionClientId: string | null = null;
+let isReadyHandled = false;
 const startupTime = Math.floor(Date.now() / 1000);
 
-export const initializeWhatsAppClient = () => {
+export const initializeWhatsAppClient = (): Client => {
     // Si el cliente ya está instanciado, no creamos duplicados
-    if (client) return;
+    if (client) return client;
 
     console.log("[WhatsApp] Instanciando un nuevo cliente de WhatsApp Web...");
     
     client = new Client({
         authStrategy: new LocalAuth(),
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        webVersionCache: {
+            type: 'remote',
+            remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1043584437-alpha.html'
+        },
         puppeteer: {
             headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox'], // Útil para entornos Docker/Windows
+            handleSIGINT: false,   // Evita que Puppeteer mate el proceso de Node de golpe en señales de apagado
+            handleSIGTERM: false,  // Deja que nuestro Shutdown Manager maneje la destrucción limpia
+            handleSIGHUP: false,
+            protocolTimeout: 300000, // 5 minutos de espera para evitar caídas en VPS lento
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage', // Evita crashes por falta de memoria compartida /dev/shm en Linux
+                '--disable-gpu',           // Evita consumo de CPU en entornos VPS sin GPU
+                '--no-first-run',
+                '--no-zygote',
+                '--disable-extensions'
+            ]
         }
     });
 
@@ -55,14 +77,55 @@ export const initializeWhatsAppClient = () => {
     });
 
     // Evento: Autenticación exitosa (Listo)
-    client.on('ready', () => {
+    client.on('ready', async () => {
         if (!client) return;
         console.log('[WhatsApp] Cliente está listo y conectado correctamente.');
         
+        const connectedPhone = client.info.wid.user;
+        const targetClientId = pendingConnectionClientId || 'admin';
+
         // Actualizar estado global
         whatsappState.status = 'CONNECTED';
         whatsappState.qr = '';
-        whatsappState.phone = client.info.wid.user;
+        whatsappState.phone = connectedPhone;
+        whatsappState.clientId = targetClientId;
+
+        // Evitar reconexiones duplicadas si la sesión ya fue gestionada
+        if (isReadyHandled) {
+            console.log('[WhatsApp] Ready re-disparado (recarga interna), omitiendo vinculación repetida.');
+            return;
+        }
+        isReadyHandled = true;
+
+        // Resolver la alerta de desconexión si existía
+        logger.resolveAlert('whatsapp_disconnected', `El bot de WhatsApp se vinculó correctamente al número +${connectedPhone} y se encuentra en línea.`, targetClientId);
+
+        // Vinculamos la línea conectada en la DB (por defecto al cliente 'admin' si inició por auto-boot)
+        try {
+            console.log(`[WhatsApp] Vinculando línea conectada (+${connectedPhone}) al cliente ID: ${targetClientId}`);
+            
+            // 1. Obtener la info del cliente primero
+            const clientData = await getClientById(targetClientId);
+            if (clientData) {
+                // 2. Actualizar el campo phone_number a la línea recién conectada
+                await updateClient(targetClientId, {
+                    phone_number: connectedPhone
+                });
+                console.log(`[WhatsApp] ✅ Base de datos actualizada: phone_number = ${connectedPhone} para cliente ${targetClientId}`);
+
+                // 3. Mandar mensaje de confirmación al dueño a su teléfono personal (owner_phone)
+                const ownerPhone = clientData.ownerPhone || clientData.phoneNumber; // Fallback
+                if (ownerPhone) {
+                    const target = ownerPhone.includes('@c.us') ? ownerPhone : `${ownerPhone}@c.us`;
+                    await client.sendMessage(target, `🎉 ¡Excelente, tu bot de WhatsApp ya está vinculado y listo para trabajar!\n\nEscribe al número del bot (+${connectedPhone}) para vivir la experiencia y probar su comportamiento.`);
+                    console.log(`[WhatsApp] Mensaje de bienvenida enviado al dueño: ${ownerPhone}`);
+                }
+            }
+        } catch (err: any) {
+            console.error("[WhatsApp] Error al vincular número de WhatsApp en ready:", err);
+        } finally {
+            pendingConnectionClientId = null;
+        }
     });
 
     // Evento: Recepción de mensajes
@@ -70,6 +133,12 @@ export const initializeWhatsAppClient = () => {
         if (!client) return;
         if (msg.from === 'status@broadcast') return;
         if (msg.from.endsWith('@g.us')) return;
+
+        // Ignorar mensajes con cuerpo vacío o metadatos de sincronización de WhatsApp (Bug de LID)
+        if (!msg.body || !msg.body.trim()) {
+            console.log(`[WhatsApp] Ignorando mensaje vacío o metadato de ${msg.from}`);
+            return;
+        }
 
         if (msg.timestamp < startupTime) {
             console.log(`[WhatsApp] Ignorando mensaje antiguo de ${msg.from}`);
@@ -80,6 +149,22 @@ export const initializeWhatsAppClient = () => {
 
         const senderPhone = msg.from.split('@')[0];
         const msgText = msg.body.toLowerCase().trim();
+
+        // --- INTERCEPTOR DE OPT-OUT DE MARKETING ---
+        if (msgText === 'salir' || msgText === 'parar' || msgText === 'cancelar suscripcion' || msgText === 'cancelar suscripción') {
+            const unsubRes = await pool.query(
+                `UPDATE crm_customers 
+                 SET marketing_unsubscribed = TRUE 
+                 WHERE phone = $1 OR phone = $2
+                 RETURNING name`,
+                [senderPhone, senderPhone.replace(/^57/, '')] // Soporta prefijo de país Colombia
+            );
+            if (unsubRes.rows.length > 0) {
+                console.log(`[Marketing Opt-Out] 🔕 Cliente +${senderPhone} (${unsubRes.rows[0].name}) se ha dado de baja de la publicidad.`);
+                await msg.reply("🔕 Te hemos dado de baja de nuestra lista de difusión. No recibirás más mensajes promocionales de nuestra parte.");
+                return;
+            }
+        }
 
         // --- COMANDO DE CHAT: Cerrar Sesión ---
         if (msgText === 'cerrar sesion' || msgText === 'cerrar sesión') {
@@ -249,8 +334,13 @@ export const initializeWhatsAppClient = () => {
             );
 
             if (responseText) {
-                const chat = await msg.getChat();
-                await chat.sendStateTyping();
+                // Mostrar "escribiendo..." de forma segura para evitar caídas en IDs especiales (ej. @lid)
+                try {
+                    const chat = await msg.getChat();
+                    await chat.sendStateTyping();
+                } catch (typingErr) {
+                    console.warn("[WhatsApp] No se pudo mostrar el estado 'escribiendo...', continuando con el envío:", typingErr);
+                }
 
                 // Retardo aleatorio de 2 a 4 segundos (antiban)
                 const delayMs = Math.floor(Math.random() * 2000) + 2000;
@@ -268,10 +358,29 @@ export const initializeWhatsAppClient = () => {
 
     // Evento: Desconexión
     client.on('disconnected', async (reason) => {
-        console.log('[WhatsApp] Cliente desconectado:', reason);
+        console.log('[WhatsApp] Cliente desconectado. Razón:', reason);
         whatsappState.status = 'DISCONNECTED';
         whatsappState.qr = '';
         whatsappState.phone = '';
+        isReadyHandled = false;
+
+        // Registrar la desconexión del bot
+        logger.raiseAlert('whatsapp_disconnected', 'red', 'El bot de WhatsApp se ha desconectado del dispositivo móvil.', `Razón dada: ${reason}`, whatsappState.clientId);
+
+        // Limpiar archivos locales si ocurrió desvinculación explícita (LOGOUT)
+        if (reason === 'LOGOUT') {
+            console.log("[WhatsApp] Limpiando archivos de sesión local por LOGOUT...");
+            const sessionPath = path.join(process.cwd(), '.wwebjs_auth');
+            if (fs.existsSync(sessionPath)) {
+                try {
+                    fs.rmSync(sessionPath, { recursive: true, force: true });
+                    console.log("[WhatsApp] ✅ Carpeta de sesión eliminada.");
+                } catch (rmErr) {
+                    console.error("[WhatsApp] Error al eliminar carpeta de sesión:", rmErr);
+                }
+            }
+        }
+
         try {
             if (client) {
                 await client.destroy();
@@ -283,33 +392,42 @@ export const initializeWhatsAppClient = () => {
         }
     });
 
-    // Auto-inicializar el cliente al iniciar el servidor (reconecta sesión guardada localmente)
-    console.log("[WhatsApp] Iniciando auto-conexión del cliente...");
-    client.initialize().catch(err => {
-        console.error("[WhatsApp] Error en auto-inicialización de WhatsApp:", err);
-    });
+    return client;
 };
 
 // Conectar WhatsApp bajo demanda
-export const connectWhatsApp = async () => {
+export const connectWhatsApp = async (clientId?: string) => {
     if (whatsappState.status === 'CONNECTED' || whatsappState.status === 'QR' || whatsappState.status === 'INITIALIZING') {
         return;
     }
+    pendingConnectionClientId = clientId || null;
     whatsappState.status = 'INITIALIZING';
     whatsappState.qr = '';
     whatsappState.phone = '';
-    console.log("[WhatsApp] Inicializando conexión a petición del usuario...");
+    console.log(`[WhatsApp] Inicializando conexión a petición del usuario para clientId: ${clientId || 'Ninguno'}...`);
     
+    // Destruir cliente anterior si existe para evitar conflictos de múltiples llamadas a initialize()
+    if (client) {
+        try {
+            console.log("[WhatsApp] Destruyendo cliente de WhatsApp previo antes de reconectar...");
+            await client.destroy();
+        } catch (err) {
+            console.error("[WhatsApp] Error destruyendo cliente previo:", err);
+        }
+        client = null;
+    }
+
     // Nos aseguramos de instanciar un cliente limpio y registrar sus escuchadores
-    initializeWhatsAppClient();
+    const activeClient = initializeWhatsAppClient();
 
     try {
-        if (client) {
-            await client.initialize();
-        }
-    } catch (err) {
+        await activeClient.initialize();
+    } catch (err: any) {
         console.error("[WhatsApp] Error al inicializar cliente:", err);
         whatsappState.status = 'DISCONNECTED';
+        client = null;
+        // Registrar error de inicialización
+        logger.raiseAlert('whatsapp_initialization_error', 'red', 'Fallo al arrancar el cliente Puppeteer de WhatsApp.', err?.stack || String(err), pendingConnectionClientId || 'admin');
     }
 };
 
