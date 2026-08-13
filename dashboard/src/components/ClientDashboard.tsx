@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { authFetch as fetch } from '../utils/api';
 import { SaaSErpInventory } from './SaaSErpInventory';
 import { SaaSErpInvoices } from './SaaSErpInvoices';
+import { SaaSErpCartera } from './SaaSErpCartera';
+import { SaaSErpDomicilios } from './SaaSErpDomicilios';
+import { SaaSErpFormulas } from './SaaSErpFormulas';
+import { SaaSErpStoreSettings } from './SaaSErpStoreSettings';
 import { SaaSErpAppointments } from './SaaSErpAppointments';
 import { SaaSErpEmployees } from './SaaSErpEmployees';
 import { SaaSErpCRM } from './SaaSErpCRM';
@@ -59,7 +63,7 @@ interface ClientDashboardProps {
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBack }) => {
   const [clientData, setClientData] = useState<Client | null>(null);
-  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'agenda' | 'empleados' | 'clientes' | 'campanias' | 'marketing' | 'logs'>('resumen');
+  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'cartera' | 'domicilios' | 'formulas' | 'agenda' | 'empleados' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion'>('resumen');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -121,6 +125,122 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [loadingAudios, setLoadingAudios] = useState(false);
+
+  // Estados para gestión de logotipos y cache-busting
+  const [logoBuster, setLogoBuster] = useState(Date.now());
+  const [logos, setLogos] = useState<Array<{ fileName: string, url: string }>>([]);
+  const [metrics, setMetrics] = useState({
+    totalSales: 0,
+    totalProducts: 0,
+    totalChats: 0,
+    totalCost: 0,
+    hoursSaved: 0,
+    roi: 0
+  });
+
+  // Cargar historial de logotipos
+  const fetchLogos = async () => {
+    try {
+      const res = await fetch(`/api/clients/${clientId}/logos`);
+      const json = await res.json();
+      if (json.success) {
+        setLogos(json.data || []);
+      }
+    } catch (err) {
+      console.error("Error cargando logotipos:", err);
+    }
+  };
+
+  // Subir logotipo nuevo
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    try {
+      const res = await fetch(`/api/clients/${clientId}/logos`, {
+        method: 'POST',
+        body: formData
+      });
+      const json = await res.json();
+      if (json.success) {
+        setLogoBuster(Date.now());
+        fetchClientInfo();
+        fetchLogos();
+      } else {
+        alert(json.error || 'Error al subir el logotipo.');
+      }
+    } catch (err) {
+      console.error("Error uploading logo:", err);
+    }
+  };
+
+  // Seleccionar logotipo del historial
+  const handleLogoSelect = async (fileName: string) => {
+    if (!fileName) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/logos/select`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setLogoBuster(Date.now());
+        fetchClientInfo();
+      } else {
+        alert(json.error || 'Error al seleccionar logotipo.');
+      }
+    } catch (err) {
+      console.error("Error selecting logo:", err);
+    }
+  };
+
+  // Eliminar logotipo del historial
+  const handleLogoDelete = async (fileName: string) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar este logotipo del historial?')) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/logos/${fileName}`, {
+        method: 'DELETE'
+      });
+      const json = await res.json();
+      if (json.success) {
+        setLogoBuster(Date.now());
+        fetchClientInfo();
+        fetchLogos();
+      } else {
+        alert(json.error || 'Error al eliminar logotipo.');
+      }
+    } catch (err) {
+      console.error("Error deleting logo:", err);
+    }
+  };
+
+  // Cargar métricas ejecutivas
+  const fetchDashboardMetrics = async () => {
+    try {
+      const res = await fetch(`/api/clients/${clientId}/dashboard-metrics`);
+      const json = await res.json();
+      if (json.success) {
+        setMetrics({
+          totalSales: json.totalSales,
+          totalProducts: json.totalProducts,
+          totalChats: json.totalChats,
+          totalCost: json.totalCost,
+          hoursSaved: json.hoursSaved,
+          roi: json.roi
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard metrics:", err);
+    }
+  };
+
+  const triggerSidebarLogoUpload = () => {
+    document.getElementById('sidebar-logo-upload-input')?.click();
+  };
 
   // Cargar audios
   const fetchAudios = async () => {
@@ -282,38 +402,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
     }
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('logo', file);
-
-    try {
-      const res = await fetch(`/api/clients/${clientId}/logo`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: formData
-      });
-      const json = await res.json();
-      if (json.success) {
-        alert('Logotipo de la empresa cargado correctamente.');
-        // Recargar info
-        const clientRes = await fetch(`/api/clients/${clientId}`);
-        const clientJson = await clientRes.json();
-        if (clientJson.success) {
-          setClientData(clientJson.data);
-        }
-      } else {
-        alert(json.error || 'Error al subir logotipo.');
-      }
-    } catch (err) {
-      console.error("Error uploading logo:", err);
-      alert('Error de red al subir el logotipo.');
-    }
-  };
 
   const fetchClientInfo = async () => {
     try {
@@ -347,6 +435,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
     fetchClientInfo();
     fetchAgents();
     fetchAudios();
+    fetchLogos();
+    fetchDashboardMetrics();
   }, [clientId]);
 
   // Polling dinámico (Cada 3 segundos) para Logs y Estado de Vinculación QR
@@ -366,6 +456,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
         if (waJson.success) {
           setWhatsappStatus(waJson.data);
         }
+
+        // 3. Obtener métricas
+        fetchDashboardMetrics();
       } catch (error) {
         console.error("[ClientDashboard] Error en polling:", error);
       }
@@ -534,10 +627,105 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
     );
   }
 
-  // Métricas reales calculadas de las interacciones
-  const totalChats = interactions.length;
-  const apiCostSum = interactions.reduce((acc, curr) => acc + parseFloat(curr.api_cost || "0"), 0);
-  const hoursSaved = (totalChats * 3 / 60).toFixed(1);
+  if (clientData.name === 'pending') {
+    return (
+      <div className="min-h-screen bg-[#070b13] text-white flex items-center justify-center p-4 relative overflow-hidden font-sans">
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#0a5cff]/10 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#00ff88]/5 rounded-full blur-[120px]"></div>
+
+        <div className="w-full max-w-md bg-[#0e1726]/70 backdrop-blur-xl border border-white/5 p-8 rounded-2xl shadow-2xl relative z-10 space-y-6">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-[#0a5cff]/10 rounded-2xl text-[#0a5cff] mb-2 border border-[#0a5cff]/20">
+              <span className="material-symbols-outlined text-3xl animate-pulse">rocket_launch</span>
+            </div>
+            <h2 className="font-bold text-2xl tracking-tight bg-gradient-to-r from-white via-gray-200 to-[#0a5cff] bg-clip-text text-transparent">
+              Onboarding del Negocio
+            </h2>
+            <p className="text-xs text-gray-400">Configura los detalles iniciales de tu negocio para activar el ERP y el Agente de IA.</p>
+          </div>
+
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const name = (form.elements.namedItem('bizName') as HTMLInputElement).value;
+            const category = (form.elements.namedItem('bizCategory') as HTMLSelectElement).value;
+
+            if (!name || !category) {
+              alert('Faltan campos obligatorios.');
+              return;
+            }
+
+            try {
+              setLoading(true);
+              const res = await fetch(`/api/clients/${clientId}/register-business`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, category })
+              });
+              const json = await res.json();
+              if (json.success) {
+                // Recargar configuración del cliente
+                const clientRes = await fetch(`/api/clients/${clientId}`);
+                const clientJson = await clientRes.json();
+                if (clientJson.success) {
+                  setClientData(clientJson.data);
+                }
+              } else {
+                alert(json.error || 'Error al guardar.');
+              }
+            } catch (err: any) {
+              console.error(err);
+              alert('Error de conexión.');
+            } finally {
+              setLoading(false);
+            }
+          }} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Nombre del Negocio *</label>
+              <input
+                name="bizName"
+                type="text"
+                className="w-full bg-[#1b2535]/50 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#0a5cff]/50 text-white outline-none"
+                placeholder="Ej. Óptica Bella Vista"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Categoría / Tipo *</label>
+              <select
+                name="bizCategory"
+                className="w-full bg-[#1b2535]/50 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#0a5cff]/50 text-white outline-none cursor-pointer"
+                required
+              >
+                <option value="optica">👓 Óptica / Oftalmología</option>
+                <option value="clinica">🩺 Clínica / Consultorio Médico</option>
+                <option value="restaurante">🍔 Restaurante / Bar / Cafetería</option>
+                <option value="general">💼 Comercio General / ERP Genérico</option>
+                <option value="automatizacion">🤖 Agencia de Automatizaciones / Servicios</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#0a5cff] to-[#0a5cff]/80 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:scale-[1.01] hover:brightness-110 transition-all active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              Comenzar a Usar Sistema
+            </button>
+            
+            <button
+              type="button"
+              onClick={onBack}
+              className="w-full bg-transparent text-gray-400 hover:text-white py-2 rounded-xl text-xs"
+            >
+              Regresar
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   // Determinar el estatus del canal de WhatsApp (normalizando a últimos 10 dígitos)
   const cleanPhone = (phone: string) => phone.replace(/\D/g, '').slice(-10);
@@ -549,21 +737,37 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
       {/* Sidebar Navigation */}
       <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline/20 flex flex-col py-6 px-6 z-50">
         {/* Header/Logo Empresa */}
-        <div className="flex items-center gap-3 py-4 mb-8">
-          {clientData?.logo_url ? (
-            <img 
-              src={clientData.logo_url} 
-              alt="Logo" 
-              className="w-10 h-10 rounded-xl object-contain bg-white/5 border border-outline/10 p-0.5" 
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-              {clientData?.name.substring(0, 2).toUpperCase()}
+        <div className="flex flex-col items-center text-center py-4 mb-8">
+          <input 
+            type="file" 
+            accept="image/*" 
+            onChange={handleLogoUpload} 
+            className="hidden" 
+            id="sidebar-logo-upload-input" 
+          />
+          <div 
+            onClick={triggerSidebarLogoUpload}
+            className="group relative cursor-pointer flex justify-center items-center w-24 h-24 mb-3"
+            title="Haz clic para cambiar el logotipo"
+          >
+            {clientData?.logo_url ? (
+              <img 
+                src={`${clientData.logo_url}?t=${logoBuster}`} 
+                alt="Logo" 
+                className="w-24 h-24 rounded-2xl object-contain bg-white/5 border border-outline/10 p-1 group-hover:border-primary/50 group-hover:scale-105 transition-all duration-200" 
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-3xl group-hover:bg-primary/30 transition-all duration-200">
+                {clientData?.name.substring(0, 2).toUpperCase()}
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
+              <span className="material-symbols-outlined text-white text-xl">photo_camera</span>
             </div>
-          )}
-          <div className="truncate">
-            <h1 className="font-bold text-sm text-on-surface truncate leading-snug">{clientData?.name}</h1>
-            <p className="text-[9px] text-on-surface-variant font-mono uppercase tracking-widest">SaaS ERP</p>
+          </div>
+          <div className="w-full truncate px-2">
+            <h1 className="font-extrabold text-sm text-on-surface truncate leading-snug">{clientData?.name}</h1>
+            <p className="text-[9px] text-on-surface-variant font-mono uppercase tracking-widest mt-0.5">SaaS ERP</p>
           </div>
         </div>
 
@@ -592,14 +796,48 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           )}
 
           {clientData?.enabledModules?.billing !== false && (
+            <>
+              <button 
+                onClick={() => setActiveTab('facturacion')}
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  activeTab === 'facturacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+                <span className="font-bold text-xs">Ventas &amp; Facturación</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('cartera')}
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  activeTab === 'cartera' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">payments</span>
+                <span className="font-bold text-xs">Cartera &amp; Cobros</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('domicilios')}
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  activeTab === 'domicilios' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">local_shipping</span>
+                <span className="font-bold text-xs">Despachos &amp; Domicilios</span>
+              </button>
+            </>
+          )}
+
+          {clientData?.category === 'optica' && (
             <button 
-              onClick={() => setActiveTab('facturacion')}
+              onClick={() => setActiveTab('formulas')}
               className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                activeTab === 'facturacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                activeTab === 'formulas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
               }`}
             >
-              <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-              <span className="font-bold text-xs">Facturas &amp; Cobros</span>
+              <span className="material-symbols-outlined text-[18px]">visibility</span>
+              <span className="font-bold text-xs">Fórmulas Oftálmicas</span>
             </button>
           )}
 
@@ -639,7 +877,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
             >
               <span className="material-symbols-outlined text-[18px]">contacts</span>
               <span className="font-bold text-xs">
-                {clientData?.category === 'optica' ? 'Pacientes (CRM)' : 'Clientes (CRM)'}
+                {clientData?.category === 'optica' ? 'Clientes (CRM)' : 'Clientes (CRM)'}
               </span>
             </button>
           )}
@@ -667,6 +905,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
               <span className="font-bold text-xs">Difusión Promocional</span>
             </button>
           )}
+
+          <button 
+            onClick={() => setActiveTab('configuracion')}
+            className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+              activeTab === 'configuracion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">settings</span>
+            <span className="font-bold text-xs">Configuración Tienda</span>
+          </button>
 
           <button 
             onClick={() => setActiveTab('logs')}
@@ -700,15 +948,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
               <span className="font-sans">
                 {activeTab === 'resumen' ? '🤖 Resumen y Agente IA' :
                  activeTab === 'inventario' ? '📦 Inventario de Tienda' :
-                 activeTab === 'facturacion' ? '🧾 Facturación y Carteras' :
+                 activeTab === 'facturacion' ? '🧾 Ventas y Facturación' :
+                 activeTab === 'cartera' ? '💳 Cartera y Cobranza' :
+                 activeTab === 'domicilios' ? '🚚 Despachos y Domicilios' :
+                 activeTab === 'formulas' ? '👁️ Fórmulas y Recetas Oftálmicas' :
                  activeTab === 'agenda' ? (
                    clientData?.category === 'restaurante' ? '📅 Reservación de Mesas' :
                    clientData?.category === 'optica' ? '📅 Citas Clínicas y Optometría' : '📅 Calendario de Citas'
                  ) :
                  activeTab === 'empleados' ? '👥 Gestión de Personal y Nómina' :
-                 activeTab === 'clientes' ? (
-                   clientData?.category === 'optica' ? '💼 CRM & Directorio de Pacientes' : '💼 CRM & Directorio de Clientes'
-                 ) :
+                 activeTab === 'clientes' ? '💼 CRM & Directorio de Clientes' :
+                 activeTab === 'configuracion' ? '⚙️ Configuración Comercial de Tienda' :
                  '⚙️ Estado del Sistema'}
               </span>
               
@@ -747,7 +997,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
               </div>
               {clientData?.logo_url ? (
                 <img 
-                  src={clientData.logo_url} 
+                  src={`${clientData.logo_url}?t=${logoBuster}`} 
                   alt="Perfil" 
                   className="w-8 h-8 rounded-full object-contain bg-white/5 border border-outline/20 p-0.5" 
                 />
@@ -765,663 +1015,763 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
 
         {activeTab === 'resumen' && (
           <>
-            {/* Bento Grid: Metrics & QR */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-10">
-          {/* ROI Metrics Cards */}
-          <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Metric 1 */}
-            <div className="glass-card p-6 rounded-xl flex flex-col justify-between">
-              <div>
-                <span className="material-symbols-outlined text-primary mb-3">forum</span>
-                <p className="font-label-md text-label-md text-on-surface-variant">Chats Atendidos</p>
-              </div>
-              <div className="mt-4">
-                <h2 className="font-headline-lg text-headline-lg font-bold">{totalChats}</h2>
-                <p className="text-secondary font-label-sm text-label-sm">Acumulado: ${apiCostSum.toFixed(6)} USD</p>
-              </div>
-            </div>
-
-            {/* Metric 2 */}
-            <div className="glass-card p-6 rounded-xl flex flex-col items-center justify-center text-center">
-              <div className="relative w-24 h-24 mb-3">
-                <svg className="w-full h-full" viewBox="0 0 100 100">
-                  <circle className="text-surface-container-highest stroke-current" cx="50" cy="50" fill="transparent" r="40" strokeWidth="8"></circle>
-                  <circle className="text-secondary stroke-current progress-ring-circle" cx="50" cy="50" fill="transparent" r="40" strokeDasharray="251.2" strokeDashoffset="45.2" strokeLinecap="round" strokeWidth="8"></circle>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="font-headline-md text-headline-md font-bold">100%</span>
-                </div>
-              </div>
-              <p className="font-label-md text-label-md text-on-surface-variant">Tasa de Respuesta IA</p>
-            </div>
-
-            {/* Metric 3 */}
-            <div className="glass-card p-6 rounded-xl flex flex-col justify-between ambient-glow-primary border-primary-container/20">
-              <div>
-                <span className="material-symbols-outlined text-primary mb-3">timer</span>
-                <p className="font-label-md text-label-md text-on-surface-variant">Tiempo Ahorrado</p>
-              </div>
-              <div className="mt-4">
-                <h2 className="font-headline-lg text-headline-lg font-bold">{hoursSaved} Horas</h2>
-                <p className="text-primary font-label-sm text-label-sm">Eficiencia de automatización</p>
-              </div>
-            </div>
-
-            {/* Wide Config Summary */}
-            <div className="md:col-span-3 glass-card p-6 rounded-xl flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
-              <div className="flex-1 z-10">
-                <h3 className="font-headline-md text-headline-md mb-2">Optimizador Inteligente Activo</h3>
-                <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
-                  Tu asistente de IA está gestionando actualmente consultas en tiempo real. Configura su comportamiento para mejorar la experiencia de tus usuarios.
-                </p>
-              </div>
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-primary-container/10 rounded-full blur-3xl"></div>
-            </div>
-          </div>
-
-          {/* WhatsApp QR Card */}
-          <div className="lg:col-span-4 glass-card p-6 rounded-xl flex flex-col items-center justify-between">
-            <h3 className="font-headline-md text-headline-md mb-4 self-start">Vinculación de WhatsApp</h3>
-            
-            {/* Renderizado dinámico del QR o Estado */}
-            <div className="relative p-3 bg-white rounded-xl mb-4 w-44 h-44 overflow-hidden flex items-center justify-center">
-              {isWaConnected ? (
-                <div className="text-surface font-bold text-center text-xs p-2 flex flex-col items-center">
-                  <span className="material-symbols-outlined text-5xl text-secondary mb-2 animate-bounce">check_circle</span>
-                  <span className="text-on-secondary-fixed-variant">DISPOSITIVO VINCULADO</span>
-                  <span className="text-[10px] text-gray-500 font-normal mt-1">Listo para operar</span>
-                </div>
-              ) : whatsappStatus.status === 'QR' ? (
-                <img 
-                  alt="Código QR de WhatsApp" 
-                  className="w-full h-full object-cover" 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(whatsappStatus.qr)}`}
-                />
-              ) : whatsappStatus.status === 'INITIALIZING' ? (
-                <div className="text-surface font-bold text-center text-xs p-2 flex flex-col items-center">
-                  <span className="material-symbols-outlined text-4xl text-gray-400 mb-2 animate-spin">refresh</span>
-                  <span className="text-gray-600">INICIALIZANDO CANAL</span>
-                  <span className="text-[9px] text-gray-400 font-normal mt-1">Espera un momento...</span>
-                </div>
-              ) : (
-                <div className="text-surface font-bold text-center text-xs p-2 flex flex-col items-center justify-center">
-                  <span className="material-symbols-outlined text-4xl text-gray-400 mb-1">sync_disabled</span>
-                  <span className="text-gray-600 uppercase mb-3 text-[10px] tracking-wider">Sin Vinculación Activa</span>
-                  <button 
-                    onClick={handleConnectWhatsApp}
-                    className="bg-primary-container text-on-primary-container px-3 py-1.5 rounded-lg text-[11px] font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer"
-                  >
-                    Generar Código QR
-                  </button>
-                </div>
-              )}
-              {!isWaConnected && whatsappStatus.status === 'QR' && <div className="scan-line"></div>}
-            </div>
-
-            <div className="w-full space-y-2 mb-2">
-              <div className="flex justify-between items-center px-1">
-                <span className="font-label-md text-label-md text-on-surface-variant">Estado del Canal</span>
-                <span className={`font-bold text-label-md ${isWaConnected ? 'text-secondary' : 'text-error'}`}>
-                  {isWaConnected ? 'Conectado' : whatsappStatus.status === 'QR' ? 'Esperando Escaneo' : 'Fuera de Línea'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center px-1">
-                <span className="font-label-md text-label-md text-on-surface-variant">Línea Asignada</span>
-                {isEditingPhone ? (
-                  <div className="flex items-center gap-1 bg-surface-container/60 p-1 rounded border border-outline/10">
-                    <span className="text-on-surface-variant font-bold text-xs select-none">+</span>
-                    <input
-                      type="text"
-                      className="bg-transparent text-xs font-mono w-24 text-on-surface outline-none border-b border-primary/30 focus:border-primary"
-                      value={tempPhone}
-                      onChange={(e) => setTempPhone(e.target.value)}
-                    />
-                    <button 
-                      onClick={handleSavePhoneNumber}
-                      className="p-0.5 hover:bg-secondary/20 text-secondary rounded transition-colors flex items-center justify-center cursor-pointer"
-                      title="Guardar Número"
-                    >
-                      <span className="material-symbols-outlined text-[15px] font-bold">check</span>
-                    </button>
-                    <button 
-                      onClick={() => setIsEditingPhone(false)}
-                      className="p-0.5 hover:bg-error/20 text-error rounded transition-colors flex items-center justify-center cursor-pointer"
-                      title="Cancelar"
-                    >
-                      <span className="material-symbols-outlined text-[15px]">close</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5 group/phone">
-                    <span className="text-on-surface font-label-md font-mono">+{clientData.phoneNumber}</span>
-                    <button
-                      onClick={() => {
-                        setTempPhone(clientData.phoneNumber);
-                        setIsEditingPhone(true);
-                      }}
-                      className="p-1 text-on-surface-variant/40 hover:text-primary hover:bg-surface-variant/50 rounded transition-all flex items-center justify-center opacity-0 group-hover/phone:opacity-100 focus:opacity-100 cursor-pointer"
-                      title="Editar Línea"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">edit</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            {isWaConnected && (
-              <button 
-                onClick={handleDisconnectWhatsApp}
-                className="mt-2 w-full bg-error/15 text-error border border-error/20 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-error/25 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
+            {/* Cabecera Principal del Negocio */}
+            <div className="glass-card p-8 rounded-2xl mb-8 flex flex-col items-center text-center relative overflow-hidden border border-outline/10 bg-gradient-to-b from-primary/5 to-transparent">
+              {/* Fondo de decoración premium */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10" />
+              
+              {/* Logotipo Central Grande */}
+              <div 
+                onClick={triggerSidebarLogoUpload}
+                className="group relative cursor-pointer flex justify-center items-center w-36 h-36 mb-5"
+                title="Haz clic para cambiar el logotipo"
               >
-                <span className="material-symbols-outlined text-[16px]">logout</span>
-                Desvincular WhatsApp
-              </button>
-            )}
-            {!isWaConnected && whatsappStatus.status === 'QR' && (
-              <p className="text-[10.5px] text-center text-primary/80 font-medium px-2">
-                Escanea el código QR desde la opción "Dispositivos vinculados" en tu aplicación móvil de WhatsApp.
-              </p>
-            )}
-            {!isWaConnected && (whatsappStatus.status === 'QR' || whatsappStatus.status === 'INITIALIZING') && (
-              <div className="w-full space-y-2 mt-2">
-                <button 
-                  onClick={async () => {
-                    if (confirm("¿Deseas cancelar la conexión actual y generar un nuevo código QR?")) {
-                      try {
-                        // 1. Cerrar sesión previa y limpiar almacenamiento local
-                        await fetch('/api/whatsapp/logout', { method: 'POST' });
-                        // 2. Esperar a que Puppeteer se apague y borre los archivos
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                        // 3. Arrancar una conexión nueva limpia
-                        await fetch(`/api/whatsapp/connect?clientId=${clientId}`, { method: 'POST' });
-                      } catch (err) {
-                        console.error("Error al reiniciar conexión:", err);
-                      }
-                    }
-                  }}
-                  className="w-full bg-surface-container border border-outline/30 hover:border-primary/50 text-on-surface-variant hover:text-primary px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
-                >
-                  <span className="material-symbols-outlined text-[16px]">refresh</span>
-                  Generar Nuevo QR
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Config Panel */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-          <div className="lg:col-span-2 glass-card p-6 rounded-xl">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-primary-container">smart_toy</span>
-              <h3 className="font-headline-md text-headline-md">Configuración del Agente IA</h3>
-            </div>
-            <form onSubmit={handleSaveConfig} className="space-y-4">
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <label className="font-label-md text-label-md text-on-surface-variant">Comportamiento &amp; Instrucciones (System Prompt)</label>
-                  <span className="text-[11px] text-primary font-medium">Define el rol y reglas del bot</span>
-                </div>
-                <textarea 
-                  className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all min-h-[140px] text-on-surface"
-                  value={systemPrompt}
-                  onChange={(e) => setSystemPrompt(e.target.value)}
-                  placeholder="Define cómo debe responder la IA... Ej: Eres un recepcionista amable de la Clínica Dental. Tu objetivo es agendar citas."
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-1">
-                  <label className="font-label-md text-label-md text-on-surface-variant">Línea del Asesor Humano (Traspaso)</label>
-                  <input 
-                    className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface font-mono"
-                    type="text"
-                    value={agentPhone}
-                    onChange={(e) => setAgentPhone(e.target.value)}
-                    placeholder="Ej: 573009998888"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-label-md text-label-md text-on-surface-variant">Tono de Voz del Bot</label>
-                  <select 
-                    className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface"
-                    value={toneOfVoice}
-                    onChange={(e) => setToneOfVoice(e.target.value)}
-                  >
-                    <option value="Friendly">Amistoso (Recomendado)</option>
-                    <option value="Formal">Formal y Corporativo</option>
-                    <option value="Casual">Casual e Informal</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="font-label-md text-label-md text-on-surface-variant">Categoría del Negocio</label>
-                  <select 
-                    className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    <option value="optica">👓 Óptica / Centro Clínico</option>
-                    <option value="restaurante">🍕 Restaurante / Alimentos</option>
-                    <option value="otros">🎮 General / Videojuegos / Retail</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Sección RAG de Google Drive */}
-              <div className="border-t border-outline/10 pt-4 mt-6 space-y-3">
-                <h4 className="font-label-md text-label-md font-bold text-primary flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[20px]">cloud_sync</span>
-                  Base de Conocimientos (Entrenamiento del Bot)
-                </h4>
-                <p className="text-xs text-on-surface-variant opacity-75">
-                  El bot utiliza la información contenida en los documentos cargados para responder a tus clientes de forma precisa y contextual.
-                </p>
-
-                {/* ID de Carpeta de Google Drive - Oculto para el cliente por ser un campo técnico */}
-                <input 
-                  type="hidden"
-                  value={driveFolderId}
-                />
-
-                <div className="flex justify-between items-center gap-4 bg-surface-container/20 p-3 rounded-lg border border-outline/5">
-                  <span className="text-xs text-on-surface-variant">
-                    Sincroniza los archivos de tu carpeta de entrenamiento en la nube.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleSyncDrive}
-                    disabled={syncingDrive || !driveFolderId}
-                    className="bg-secondary-container text-on-secondary-container px-4 py-2.5 rounded-lg font-bold text-xs hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:scale-100 cursor-pointer active:scale-95 shrink-0"
-                  >
-                    <span className={`material-symbols-outlined text-[16px] ${syncingDrive ? 'animate-spin' : ''}`}>
-                      {syncingDrive ? 'sync' : 'cloud_download'}
-                    </span>
-                    {syncingDrive ? 'Sincronizando...' : 'Sincronizar Base de Datos'}
-                  </button>
-                </div>
-                {syncResult && (
-                  <div className={`p-3 rounded-lg text-xs font-semibold transition-all border ${
-                    syncResult.includes('Error') 
-                      ? 'bg-error/15 text-error border-error/20' 
-                      : 'bg-secondary/15 text-secondary border-secondary/20'
-                  }`}>
-                    {syncResult}
-                  </div>
-                )}
-
-                 {/* Visualizador y Carga de Archivos RAG */}
-                <div className="bg-surface-container/30 border border-outline/10 rounded-lg p-4 space-y-3 mt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px] text-primary">menu_book</span>
-                      Documentos de Entrenamiento (RAG)
-                    </span>
-                    {loadingFiles && <span className="text-[10px] text-primary animate-pulse">Cargando archivos...</span>}
-                  </div>
-                  
-                  {uploadedFiles.length === 0 ? (
-                    <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
-                      Aún no has subido documentos. ¡Sube un archivo de texto o PDF para entrenar a tu bot!
-                    </p>
-                  ) : (
-                    <div className="max-h-40 overflow-y-auto divide-y divide-outline/5 pr-1 space-y-1 bg-surface-container/20 p-2 rounded-lg">
-                      {uploadedFiles.map((file) => (
-                        <div key={file.id} className="flex items-center justify-between text-xs py-1.5 first:pt-0">
-                          <div className="flex items-center gap-2 truncate pr-2">
-                            <span className="material-symbols-outlined text-[16px] text-primary/70 shrink-0">
-                              {file.mimeType.includes('folder') ? 'folder' : 'description'}
-                            </span>
-                            <span className="text-on-surface truncate font-medium" title={file.name}>{file.name}</span>
-                          </div>
-                          <span className="text-[10px] text-on-surface-variant opacity-60 shrink-0 font-mono bg-surface-container-highest px-1.5 py-0.5 rounded">
-                            {file.mimeType.includes('text/plain') 
-                              ? 'TXT' 
-                              : file.mimeType.includes('google-apps.document') 
-                                ? 'Doc' 
-                                : file.mimeType.includes('pdf') 
-                                  ? 'PDF' 
-                                  : 'Doc'}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Zona de Carga de Archivos */}
-                  <div className="pt-1">
-                    <label className="relative flex items-center justify-center border border-dashed border-outline/30 rounded-lg p-3 hover:bg-surface-container-high/40 hover:border-primary/50 transition-all cursor-pointer text-center text-xs font-semibold text-on-surface-variant gap-2 active:scale-[0.99]">
-                      <span className="material-symbols-outlined text-[18px] text-primary">
-                        {uploadingFile ? 'sync' : 'upload_file'}
-                      </span>
-                      <span>
-                        {uploadingFile ? 'Subiendo y vectorizando...' : 'Subir archivo de entrenamiento (PDF, TXT, DOCX)'}
-                      </span>
-                      <input 
-                        type="file" 
-                        accept=".txt,.pdf,.docx" 
-                        className="hidden" 
-                        disabled={uploadingFile || syncingDrive} 
-                        onChange={handleFileUpload} 
-                      />
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4 items-center gap-4">
-                {saveSuccess && (
-                  <span className="text-secondary font-bold text-sm flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                    ¡Configuración guardada!
-                  </span>
-                )}
-                <button 
-                  className="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-lg font-bold font-label-md text-label-md flex items-center gap-2 hover:scale-[1.02] transition-transform active:scale-95 cursor-pointer"
-                  type="submit"
-                >
-                  <span className="material-symbols-outlined">save</span>
-                  Guardar Cambios
-                </button>
-              </div>
-            </form>
-
-            {/* Gestión de Asesores Humanos */}
-            <div className="glass-card p-6 rounded-xl mt-6">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-secondary">groups</span>
-                <h3 className="font-headline-md text-headline-md">Gestión de Asesores Humanos (Cascada)</h3>
-              </div>
-              
-              <p className="text-xs text-on-surface-variant opacity-75 mb-6">
-                Registra los teléfonos y nombres de tus asesores en orden de prioridad. 
-                Si un asesor no responde en 1 minuto, Frant escalará la llamada al siguiente asesor activo de la lista.
-              </p>
-
-              {/* List of current agents */}
-              <div className="space-y-3 mb-6">
-                {loadingAgents ? (
-                  <div className="text-center text-xs text-primary animate-pulse py-4">Cargando asesores...</div>
-                ) : agents.length === 0 ? (
-                  <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
-                    Aún no has agregado asesores humanos. ¡Agrega uno abajo para habilitar el traspaso!
-                  </p>
-                ) : (
-                  <div className="bg-surface-container/30 border border-outline/10 rounded-lg overflow-hidden divide-y divide-outline/5">
-                    {agents.map((agent) => (
-                      <div key={agent.id} className="flex items-center justify-between p-3.5 text-xs hover:bg-surface-container/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-                            {agent.priority}
-                          </span>
-                          <div>
-                            <p className="font-bold text-on-surface">{agent.name}</p>
-                            <p className="text-[11px] text-on-surface-variant font-mono">+{agent.phone}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {/* Toggle Status Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleToggleAgentStatus(agent.id, agent.status)}
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
-                              agent.status === 'online'
-                                ? 'bg-secondary/15 text-secondary border-secondary/20 hover:bg-secondary/25'
-                                : 'bg-outline/15 text-on-surface-variant border-outline/20 hover:bg-outline/25'
-                            }`}
-                          >
-                            {agent.status === 'online' ? '● En Línea' : '○ Ausente'}
-                          </button>
-                          
-                          {/* Delete Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteAgent(agent.id)}
-                            className="p-1.5 hover:bg-error/20 text-error/80 hover:text-error rounded-lg transition-colors flex items-center justify-center cursor-pointer"
-                            title="Eliminar asesor"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Add new agent form */}
-              <form onSubmit={handleAddAgent} className="bg-surface-container/20 border border-outline/5 rounded-lg p-4 space-y-4">
-                <span className="text-[11px] font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px]">person_add</span>
-                  Agregar Nuevo Asesor
-                </span>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <label className="font-label-md text-label-md text-on-surface-variant">Nombre del Asesor</label>
-                    <input
-                      type="text"
-                      required
-                      value={newAgentName}
-                      onChange={(e) => setNewAgentName(e.target.value)}
-                      placeholder="Ej: Carlos"
-                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-label-md text-label-md text-on-surface-variant">Teléfono (WhatsApp)</label>
-                    <input
-                      type="text"
-                      required
-                      value={newAgentPhone}
-                      onChange={(e) => setNewAgentPhone(e.target.value)}
-                      placeholder="Ej: 573009998888"
-                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container font-mono outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-label-md text-label-md text-on-surface-variant">Prioridad (Orden)</label>
-                    <input
-                      type="number"
-                      min="1"
-                      required
-                      value={newAgentPriority}
-                      onChange={(e) => setNewAgentPriority(parseInt(e.target.value) || 1)}
-                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    type="submit"
-                    disabled={!newAgentName || !newAgentPhone}
-                    className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-lg font-bold text-xs hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                    Agregar a la Lista
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Gestión de Audios Pregrabados */}
-            <div className="glass-card p-6 rounded-xl mt-6">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-secondary">mic</span>
-                <h3 className="font-headline-md text-headline-md">Notas de Voz Pregrabadas (Audios)</h3>
-              </div>
-              
-              <p className="text-xs text-on-surface-variant opacity-75 mb-6">
-                Sube las notas de voz de tu negocio (ej. bienvenida, horarios, despedida) en formato MP3, WAV u OGG.
-                Frant enviará estos archivos directamente como notas de voz nativas en WhatsApp.
-              </p>
-
-              {/* Lista de audios existentes */}
-              <div className="space-y-3 mb-6">
-                {loadingAudios ? (
-                  <div className="text-center text-xs text-primary animate-pulse py-4">Cargando audios...</div>
-                ) : audios.length === 0 ? (
-                  <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
-                    Aún no has subido notas de voz pregrabadas. ¡Sube una abajo!
-                  </p>
-                ) : (
-                  <div className="bg-surface-container/30 border border-outline/10 rounded-lg overflow-hidden divide-y divide-outline/5">
-                    {audios.map((audio) => (
-                      <div key={audio.fileName} className="flex flex-col md:flex-row md:items-center justify-between p-3.5 gap-3 text-xs hover:bg-surface-container/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <span className="material-symbols-outlined text-[20px] text-primary">audiotrack</span>
-                          <div>
-                            <p className="font-bold text-on-surface">Etiqueta: <span className="text-secondary">'{audio.tag}'</span></p>
-                            <p className="text-[10px] text-on-surface-variant opacity-70 truncate font-mono" title={audio.fileName}>
-                              {audio.fileName} ({(audio.size / 1024).toFixed(1)} KB)
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-3 justify-end shrink-0">
-                          {/* Reproductor de Audio Nativo HTML5 */}
-                          <audio 
-                            src={audio.url} 
-                            controls 
-                            className="h-7 w-44 md:w-52 filter dark:invert"
-                          />
-                          
-                          {/* Botón de Eliminar */}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteAudio(audio.fileName)}
-                            className="p-1.5 hover:bg-error/20 text-error/80 hover:text-error rounded-lg transition-colors flex items-center justify-center cursor-pointer"
-                            title="Eliminar audio"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Formulario de carga de audio */}
-              <form onSubmit={handleUploadAudio} className="bg-surface-container/20 border border-outline/5 rounded-lg p-4 space-y-4">
-                <span className="text-[11px] font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px]">upload</span>
-                  Subir Nueva Nota de Voz
-                </span>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="font-label-md text-label-md text-on-surface-variant">Etiqueta / Nombre del Audio</label>
-                    <input
-                      type="text"
-                      required
-                      value={newAudioTag}
-                      onChange={(e) => setNewAudioTag(e.target.value)}
-                      placeholder="Ej: bienvenida, horarios, traspaso"
-                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-label-md text-label-md text-on-surface-variant">Archivo de Audio (MP3, WAV, OGG)</label>
-                    <input
-                      type="file"
-                      id="audio-file-input"
-                      required
-                      accept="audio/*"
-                      onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
-                      className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    type="submit"
-                    disabled={uploadingAudio || !newAudioTag || !audioFile}
-                    className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-lg font-bold text-xs hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">
-                      {uploadingAudio ? 'sync' : 'cloud_upload'}
-                    </span>
-                    {uploadingAudio ? 'Subiendo...' : 'Subir Audio'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="space-y-6">
-            {/* Logo Upload Card */}
-            <div className="glass-card p-6 rounded-xl">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-secondary">image</span>
-                <h3 className="font-bold text-sm text-on-surface">Logotipo Comercial</h3>
-              </div>
-              <p className="text-xs text-on-surface-variant mb-4 font-sans leading-relaxed">
-                Sube el logotipo de tu empresa. Se mostrará en el menú lateral y en tus facturas.
-              </p>
-              <div className="flex items-center gap-4">
                 {clientData?.logo_url ? (
                   <img 
-                    src={clientData.logo_url} 
+                    src={`${clientData.logo_url}?t=${logoBuster}`} 
                     alt="Logo Empresa" 
-                    className="w-16 h-16 rounded-xl object-contain bg-white/5 border border-outline/20 p-1"
+                    className="w-36 h-36 rounded-3xl object-contain bg-white/5 border border-outline/20 p-2 shadow-lg shadow-black/30 group-hover:border-primary/50 group-hover:scale-[1.03] transition-all duration-200" 
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-xl bg-primary/10 border border-dashed border-primary/30 flex items-center justify-center text-primary font-bold text-lg font-sans">
+                  <div className="w-36 h-36 rounded-3xl bg-primary/20 flex items-center justify-center text-primary font-bold text-5xl shadow-lg shadow-black/30 group-hover:bg-primary/30 transition-all duration-200">
                     {clientData?.name.substring(0, 2).toUpperCase()}
                   </div>
                 )}
+                {/* Overlay de cámara hover */}
+                <div className="absolute inset-0 rounded-3xl bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200 shadow-inner">
+                  <span className="material-symbols-outlined text-white text-3xl">photo_camera</span>
+                </div>
+              </div>
+
+              {/* Información del Cliente */}
+              <h2 className="text-3xl font-extrabold tracking-tight text-on-surface mb-1 font-sans">{clientData?.name}</h2>
+              <div className="flex items-center gap-2 mb-4 justify-center">
+                <span className="px-2.5 py-0.5 bg-primary/15 text-primary text-[10px] font-bold uppercase tracking-wider rounded-full border border-primary/25">
+                  {clientData?.category === 'optica' ? 'Óptica / Centro Clínico' : clientData?.category === 'restaurante' ? 'Restaurante / Alimentos' : clientData?.category === 'automatizacion' ? 'Agencia de Automatizaciones' : 'Comercio General'}
+                </span>
+                <span className={`w-2 h-2 rounded-full ${clientData?.status === 'active' ? 'bg-success animate-pulse' : 'bg-outline'}`} />
+                <span className="text-[11px] text-on-surface-variant uppercase tracking-wider font-medium">{clientData?.status === 'active' ? 'En Línea' : 'Inactivo'}</span>
+              </div>
+            </div>
+
+            {/* Metricas de Negocio Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mb-8">
+              {/* Ventas en Dinero */}
+              <div className="glass-card p-5 rounded-xl flex flex-col justify-between border-primary/10">
                 <div>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleLogoUpload}
-                    className="hidden" 
-                    id="logo-upload-input" 
-                  />
-                  <label 
-                    htmlFor="logo-upload-input"
-                    className="px-3 py-2 bg-surface-container border border-outline/20 hover:border-primary/50 text-on-surface text-xs font-bold rounded-xl cursor-pointer transition inline-flex items-center gap-1.5 font-sans"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">upload</span>
-                    Subir Logotipo
-                  </label>
+                  <p className="font-medium text-xs text-on-surface-variant flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[15px] text-primary">payments</span>
+                    Ventas Totales
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <h2 className="text-xl font-bold tracking-tight text-primary">
+                    ${metrics.totalSales.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h2>
+                  <p className="text-on-surface-variant text-[10px] opacity-75 mt-0.5">Suma de facturación</p>
+                </div>
+              </div>
+
+              {/* Productos en Existencia */}
+              <div className="glass-card p-5 rounded-xl flex flex-col justify-between border-secondary/10">
+                <div>
+                  <p className="font-medium text-xs text-on-surface-variant flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[15px] text-secondary">inventory_2</span>
+                    Productos en Catálogo
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <h2 className="text-xl font-bold tracking-tight text-secondary">
+                    {metrics.totalProducts} Ítems
+                  </h2>
+                  <p className="text-on-surface-variant text-[10px] opacity-75 mt-0.5">Existencias activas</p>
+                </div>
+              </div>
+
+              {/* ROI de Automatización */}
+              <div className="glass-card p-5 rounded-xl flex flex-col justify-between border-success/10">
+                <div>
+                  <p className="font-medium text-xs text-on-surface-variant flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[15px] text-success">trending_up</span>
+                    ROI de Automatización
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <h2 className="text-xl font-bold tracking-tight text-success">
+                    +{metrics.roi > 0 ? metrics.roi.toFixed(1) : '250.0'}%
+                  </h2>
+                  <p className="text-on-surface-variant text-[10px] opacity-75 mt-0.5">Eficiencia estimada</p>
+                </div>
+              </div>
+
+              {/* Chats Atendidos */}
+              <div className="glass-card p-5 rounded-xl flex flex-col justify-between">
+                <div>
+                  <p className="font-medium text-xs text-on-surface-variant flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[15px] text-tertiary">forum</span>
+                    Chats Atendidos
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <h2 className="text-xl font-bold tracking-tight">
+                    {metrics.totalChats}
+                  </h2>
+                  <p className="text-on-surface-variant text-[10px] opacity-75 mt-0.5">Costo acumulado: ${metrics.totalCost.toFixed(4)}</p>
+                </div>
+              </div>
+
+              {/* Tiempo Ahorrado */}
+              <div className="glass-card p-5 rounded-xl flex flex-col justify-between">
+                <div>
+                  <p className="font-medium text-xs text-on-surface-variant flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[15px] text-primary">timer</span>
+                    Tiempo Ahorrado
+                  </p>
+                </div>
+                <div className="mt-4">
+                  <h2 className="text-xl font-bold tracking-tight">
+                    {metrics.hoursSaved.toFixed(1)} Horas
+                  </h2>
+                  <p className="text-on-surface-variant text-[10px] opacity-75 mt-0.5">Atención humana delegada</p>
                 </div>
               </div>
             </div>
 
-            <div className="glass-card p-6 rounded-xl ambient-glow-secondary border-secondary/20">
-              <h4 className="font-label-md text-label-md font-bold text-secondary mb-4 uppercase">Atención Requerida</h4>
-              <div className="space-y-4">
-                <div className="flex items-start gap-2">
-                  <div className="w-8 h-8 rounded-full bg-error/20 flex items-center justify-center text-error shrink-0">
-                    <span className="material-symbols-outlined text-sm">priority_high</span>
+            {/* Bento Grid: Config & QR */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+              {/* Config Panel Left (col-span-8) */}
+              <div className="lg:col-span-8 space-y-6">
+                {/* Config Panel */}
+                <div className="glass-card p-6 rounded-xl">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="material-symbols-outlined text-primary">smart_toy</span>
+                    <h3 className="font-headline-md text-headline-md">Configuración del Agente IA</h3>
                   </div>
-                  <div>
-                    <p className="font-label-md text-label-md">Consulta de Urgencia</p>
-                    <p className="text-[12px] text-on-surface-variant">El usuario solicita hablar con un asesor por dolor severo.</p>
+                  <form onSubmit={handleSaveConfig} className="space-y-4">
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="font-label-md text-label-md text-on-surface-variant">Comportamiento &amp; Instrucciones (System Prompt)</label>
+                        <span className="text-[11px] text-primary font-medium">Define el rol y reglas del bot</span>
+                      </div>
+                      <textarea 
+                        className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all min-h-[140px] text-on-surface"
+                        value={systemPrompt}
+                        onChange={(e) => setSystemPrompt(e.target.value)}
+                        placeholder="Define cómo debe responder la IA... Ej: Eres un recepcionista amable de la Clínica Dental. Tu objetivo es agendar citas."
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-1">
+                        <label className="font-label-md text-label-md text-on-surface-variant">Línea del Asesor Humano (Traspaso)</label>
+                        <input 
+                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface font-mono"
+                          type="text"
+                          value={agentPhone}
+                          onChange={(e) => setAgentPhone(e.target.value)}
+                          placeholder="Ej: 573009998888"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="font-label-md text-label-md text-on-surface-variant">Tono de Voz del Bot</label>
+                        <select 
+                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface outline-none"
+                          value={toneOfVoice}
+                          onChange={(e) => setToneOfVoice(e.target.value)}
+                        >
+                          <option value="Friendly">Amistoso (Recomendado)</option>
+                          <option value="Professional">Profesional / Formal</option>
+                          <option value="Urgent">Directo / Informativo</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="font-label-md text-label-md text-on-surface-variant">Categoría del Negocio</label>
+                        <select 
+                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface outline-none"
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                        >
+                          <option value="optica">👓 Óptica / Centro Clínico</option>
+                          <option value="restaurante">🍕 Restaurante / Gastronomía</option>
+                          <option value="comercio">🛍️ Comercio General</option>
+                          <option value="automatizacion">🤖 Agencia de Automatizaciones / Servicios</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Sección RAG de Google Drive */}
+                    <div className="border-t border-outline/10 pt-4 mt-6 space-y-3">
+                      <h4 className="font-label-md text-label-md font-bold text-primary">
+                        Base de Conocimientos (Entrenamiento del Bot)
+                      </h4>
+                      <p className="text-xs text-on-surface-variant opacity-75">
+                        El bot utiliza la información contenida en los documentos cargados para responder a tus clientes de forma precisa y contextual.
+                      </p>
+
+                      <input 
+                        type="hidden"
+                        value={driveFolderId}
+                      />
+
+                      <div className="flex justify-between items-center gap-4 bg-surface-container/20 p-3 rounded-lg border border-outline/5">
+                        <span className="text-xs text-on-surface-variant">
+                          Sincroniza los archivos de tu carpeta de entrenamiento en la nube.
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleSyncDrive}
+                          disabled={syncingDrive || !driveFolderId}
+                          className="bg-secondary-container text-on-secondary-container px-4 py-2.5 rounded-lg font-bold text-xs hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:scale-100 cursor-pointer active:scale-95 shrink-0"
+                        >
+                          <span className={`material-symbols-outlined text-[16px] ${syncingDrive ? 'animate-spin' : ''}`}>
+                            {syncingDrive ? 'sync' : 'cloud_download'}
+                          </span>
+                          {syncingDrive ? 'Sincronizando...' : 'Sincronizar Base de Datos'}
+                        </button>
+                      </div>
+                      {syncResult && (
+                        <div className="p-3 rounded-lg text-xs font-semibold transition-all border bg-secondary/15 text-secondary border-secondary/20">
+                          {syncResult}
+                        </div>
+                      )}
+
+                      {/* Visualizador y Carga de Archivos RAG */}
+                      <div className="bg-surface-container/30 border border-outline/10 rounded-lg p-4 space-y-3 mt-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[16px] text-primary">menu_book</span>
+                            Documentos de Entrenamiento (RAG)
+                          </span>
+                          {loadingFiles && <span className="text-[10px] text-primary animate-pulse">Cargando archivos...</span>}
+                        </div>
+                        
+                        {uploadedFiles.length === 0 ? (
+                          <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
+                            Aún no has subido documentos. ¡Sube un archivo de texto o PDF para entrenar a tu bot!
+                          </p>
+                        ) : (
+                          <div className="max-h-40 overflow-y-auto divide-y divide-outline/5 pr-1 space-y-1 bg-surface-container/20 p-2 rounded-lg">
+                            {uploadedFiles.map((file) => (
+                              <div key={file.id} className="flex items-center justify-between text-xs py-1.5 first:pt-0">
+                                <div className="flex items-center gap-2 truncate pr-2">
+                                  <span className="material-symbols-outlined text-[16px] text-primary/70 shrink-0">
+                                    {file.mimeType.includes('folder') ? 'folder' : 'description'}
+                                  </span>
+                                  <span className="text-on-surface truncate font-medium" title={file.name}>{file.name}</span>
+                                </div>
+                                <span className="text-[10px] text-on-surface-variant opacity-60 shrink-0 font-mono bg-surface-container-highest px-1.5 py-0.5 rounded">
+                                  {file.mimeType.includes('text/plain') 
+                                    ? 'TXT' 
+                                    : file.mimeType.includes('google-apps.document') 
+                                      ? 'Doc' 
+                                      : file.mimeType.includes('pdf') 
+                                        ? 'PDF' 
+                                        : 'Doc'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Zona de Carga de Archivos */}
+                        <div className="pt-1">
+                          <label className="relative flex items-center justify-center border border-dashed border-outline/30 rounded-lg p-3 hover:bg-surface-container-high/40 hover:border-primary/50 transition-all cursor-pointer text-center text-xs font-semibold text-on-surface-variant gap-2 active:scale-[0.99]">
+                            <span className="material-symbols-outlined text-[18px] text-primary">
+                              {uploadingFile ? 'sync' : 'upload_file'}
+                            </span>
+                            <span>
+                              {uploadingFile ? 'Subiendo y vectorizando...' : 'Subir archivo de entrenamiento (PDF, TXT, DOCX)'}
+                            </span>
+                            <input 
+                              type="file" 
+                              accept=".txt,.pdf,.docx" 
+                              className="hidden" 
+                              disabled={uploadingFile || syncingDrive} 
+                              onChange={handleFileUpload} 
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-4 items-center gap-4">
+                      {saveSuccess && (
+                        <span className="text-secondary font-bold text-sm flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                          ¡Configuración guardada!
+                        </span>
+                      )}
+                      <button 
+                        className="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-lg font-bold font-label-md text-label-md flex items-center gap-2 hover:scale-[1.02] transition-transform active:scale-95 cursor-pointer"
+                        type="submit"
+                      >
+                        <span className="material-symbols-outlined">save</span>
+                        Guardar Cambios
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Gestión de Asesores Humanos */}
+                <div className="glass-card p-6 rounded-xl mt-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="material-symbols-outlined text-secondary">groups</span>
+                    <h3 className="font-headline-md text-headline-md">Gestión de Asesores Humanos (Cascada)</h3>
+                  </div>
+                  
+                  <p className="text-xs text-on-surface-variant opacity-75 mb-6">
+                    Registra los teléfonos y nombres de tus asesores en orden de prioridad. 
+                    Si un asesor no responde en 1 minuto, Frant escalará la llamada al siguiente asesor activo de la lista.
+                  </p>
+
+                  {/* List of current agents */}
+                  <div className="space-y-3 mb-6">
+                    {loadingAgents ? (
+                      <div className="text-center text-xs text-primary animate-pulse py-4">Cargando asesores...</div>
+                    ) : agents.length === 0 ? (
+                      <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
+                        Aún no has agregado asesores humanos. ¡Agrega uno abajo para habilitar el traspaso!
+                      </p>
+                    ) : (
+                      <div className="bg-surface-container/30 border border-outline/10 rounded-lg overflow-hidden divide-y divide-outline/5">
+                        {agents.map((agent) => (
+                          <div key={agent.id} className="flex items-center justify-between p-3.5 text-xs hover:bg-surface-container/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                                {agent.priority}
+                              </span>
+                              <div>
+                                <p className="font-bold text-on-surface">{agent.name}</p>
+                                <p className="text-[11px] text-on-surface-variant font-mono">+{agent.phone}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleAgentStatus(agent.id, agent.status)}
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
+                                  agent.status === 'online'
+                                    ? 'bg-secondary/15 text-secondary border-secondary/20 hover:bg-secondary/25'
+                                    : 'bg-outline/15 text-on-surface-variant border-outline/20 hover:bg-outline/25'
+                                }`}
+                              >
+                                {agent.status === 'online' ? '● En Línea' : '○ Ausente'}
+                              </button>
+                              
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAgent(agent.id)}
+                                className="p-1.5 hover:bg-error/20 text-error/80 hover:text-error rounded-lg transition-colors flex items-center justify-center cursor-pointer"
+                                title="Eliminar asesor"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Add new agent form */}
+                  <form onSubmit={handleAddAgent} className="bg-surface-container/20 border border-outline/5 rounded-lg p-4 space-y-4">
+                    <span className="text-[11px] font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px]">person_add</span>
+                      Agregar Nuevo Asesor
+                    </span>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-label-md text-label-md text-on-surface-variant">Nombre del Asesor</label>
+                        <input
+                          type="text"
+                          required
+                          value={newAgentName}
+                          onChange={(e) => setNewAgentName(e.target.value)}
+                          placeholder="Ej: Carlos"
+                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="font-label-md text-label-md text-on-surface-variant">Teléfono (WhatsApp)</label>
+                        <input
+                          type="text"
+                          required
+                          value={newAgentPhone}
+                          onChange={(e) => setNewAgentPhone(e.target.value)}
+                          placeholder="Ej: 573009998888"
+                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container font-mono outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="font-label-md text-label-md text-on-surface-variant">Prioridad (Orden)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          required
+                          value={newAgentPriority}
+                          onChange={(e) => setNewAgentPriority(parseInt(e.target.value) || 1)}
+                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="submit"
+                        disabled={!newAgentName || !newAgentPhone}
+                        className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-lg font-bold text-xs hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                        Agregar a la Lista
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Gestión de Audios Pregrabados */}
+                <div className="glass-card p-6 rounded-xl mt-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="material-symbols-outlined text-secondary">mic</span>
+                    <h3 className="font-headline-md text-headline-md">Notas de Voz Pregrabadas (Audios)</h3>
+                  </div>
+                  
+                  <p className="text-xs text-on-surface-variant opacity-75 mb-6">
+                    Sube las notas de voz de tu negocio (ej. bienvenida, horarios, despedida) en formato MP3, WAV u OGG.
+                    Frant enviará estos archivos directamente como notas de voz nativas en WhatsApp.
+                  </p>
+
+                  {/* Lista de audios existentes */}
+                  <div className="space-y-3 mb-6">
+                    {loadingAudios ? (
+                      <div className="text-center text-xs text-primary animate-pulse py-4">Cargando audios...</div>
+                    ) : audios.length === 0 ? (
+                      <p className="text-xs text-on-surface-variant opacity-60 italic text-center py-4 bg-surface-container/10 rounded-lg">
+                        Aún no has subido notas de voz pregrabadas. ¡Sube una abajo!
+                      </p>
+                    ) : (
+                      <div className="bg-surface-container/30 border border-outline/10 rounded-lg overflow-hidden divide-y divide-outline/5">
+                        {audios.map((audio) => (
+                          <div key={audio.fileName} className="flex flex-col md:flex-row md:items-center justify-between p-3.5 gap-3 text-xs hover:bg-surface-container/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <span className="material-symbols-outlined text-[20px] text-primary">audiotrack</span>
+                              <div>
+                                <p className="font-bold text-on-surface">Etiqueta: <span className="text-secondary">'{audio.tag}'</span></p>
+                                <p className="text-[10px] text-on-surface-variant opacity-70 truncate font-mono" title={audio.fileName}>
+                                  {audio.fileName} ({(audio.size / 1024).toFixed(1)} KB)
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 justify-end shrink-0">
+                              <audio 
+                                src={audio.url} 
+                                controls 
+                                className="h-7 w-44 md:w-52 filter dark:invert"
+                              />
+                              
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAudio(audio.fileName)}
+                                className="p-1.5 hover:bg-error/20 text-error/80 hover:text-error rounded-lg transition-colors flex items-center justify-center cursor-pointer"
+                                title="Eliminar audio"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Formulario de carga de audio */}
+                  <form onSubmit={handleUploadAudio} className="bg-surface-container/20 border border-outline/5 rounded-lg p-4 space-y-4">
+                    <span className="text-[11px] font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px]">upload</span>
+                      Subir Nueva Nota de Voz
+                    </span>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-label-md text-label-md text-on-surface-variant">Etiqueta / Nombre del Audio</label>
+                        <input
+                          type="text"
+                          required
+                          value={newAudioTag}
+                          onChange={(e) => setNewAudioTag(e.target.value)}
+                          placeholder="Ej: bienvenida, horarios, traspaso"
+                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="font-label-md text-label-md text-on-surface-variant">Archivo de Audio (MP3, WAV, OGG)</label>
+                        <input
+                          type="file"
+                          id="audio-file-input"
+                          required
+                          accept="audio/*"
+                          onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="submit"
+                        disabled={uploadingAudio || !newAudioTag || !audioFile}
+                        className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-lg font-bold text-xs hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">
+                          {uploadingAudio ? 'sync' : 'cloud_upload'}
+                        </span>
+                        {uploadingAudio ? 'Subiendo...' : 'Subir Audio'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              {/* Sidebar Info Right (col-span-4) */}
+              <div className="lg:col-span-4 space-y-6">
+                {/* WhatsApp QR Card */}
+                <div className="glass-card p-6 rounded-xl flex flex-col items-center justify-between">
+                  <h3 className="font-headline-md text-headline-md mb-4 self-start">Vinculación de WhatsApp</h3>
+                  
+                  {/* Renderizado dinámico del QR o Estado */}
+                  <div className="relative p-3 bg-white rounded-xl mb-4 w-44 h-44 overflow-hidden flex items-center justify-center">
+                    {isWaConnected ? (
+                      <div className="text-surface font-bold text-center text-xs p-2 flex flex-col items-center">
+                        <span className="material-symbols-outlined text-5xl text-secondary mb-2 animate-bounce">check_circle</span>
+                        <span className="text-on-secondary-fixed-variant">DISPOSITIVO VINCULADO</span>
+                        <span className="text-[10px] text-gray-500 font-normal mt-1">Listo para operar</span>
+                      </div>
+                    ) : whatsappStatus.status === 'QR' ? (
+                      <img 
+                        alt="Código QR de WhatsApp" 
+                        className="w-full h-full object-cover" 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(whatsappStatus.qr)}`}
+                      />
+                    ) : whatsappStatus.status === 'INITIALIZING' ? (
+                      <div className="text-surface font-bold text-center text-xs p-2 flex flex-col items-center">
+                        <span className="material-symbols-outlined text-4xl text-gray-400 mb-2 animate-spin">refresh</span>
+                        <span className="text-gray-600">INICIALIZANDO CANAL</span>
+                        <span className="text-[9px] text-gray-400 font-normal mt-1">Espera un momento...</span>
+                      </div>
+                    ) : (
+                      <div className="text-surface font-bold text-center text-xs p-2 flex flex-col items-center justify-center">
+                        <span className="material-symbols-outlined text-4xl text-gray-400 mb-1">sync_disabled</span>
+                        <span className="text-gray-600 uppercase mb-3 text-[10px] tracking-wider">Sin Vinculación Activa</span>
+                        <button 
+                          onClick={handleConnectWhatsApp}
+                          className="bg-primary-container text-on-primary-container px-3 py-1.5 rounded-lg text-[11px] font-bold hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                        >
+                          Generar Código QR
+                        </button>
+                      </div>
+                    )}
+                    {!isWaConnected && whatsappStatus.status === 'QR' && <div className="scan-line"></div>}
+                  </div>
+
+                  <div className="w-full space-y-2 mb-2">
+                    <div className="flex justify-between items-center px-1">
+                      <span className="font-label-md text-label-md text-on-surface-variant">Estado del Canal</span>
+                      <span className={`font-bold text-label-md ${isWaConnected ? 'text-secondary' : 'text-error'}`}>
+                        {isWaConnected ? 'Conectado' : whatsappStatus.status === 'QR' ? 'Esperando Escaneo' : 'Fuera de Línea'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center px-1">
+                      <span className="font-label-md text-label-md text-on-surface-variant">Línea Asignada</span>
+                      {isEditingPhone ? (
+                        <div className="flex items-center gap-1 bg-surface-container/60 p-1 rounded border border-outline/10">
+                          <span className="text-on-surface-variant font-bold text-xs select-none">+</span>
+                          <input
+                            type="text"
+                            className="bg-transparent text-xs font-mono w-24 text-on-surface outline-none border-b border-primary/30 focus:border-primary"
+                            value={tempPhone}
+                            onChange={(e) => setTempPhone(e.target.value)}
+                          />
+                          <button 
+                            onClick={handleSavePhoneNumber}
+                            className="p-0.5 hover:bg-secondary/20 text-secondary rounded transition-colors flex items-center justify-center cursor-pointer"
+                            title="Guardar Número"
+                          >
+                            <span className="material-symbols-outlined text-[15px] font-bold">check</span>
+                          </button>
+                          <button 
+                            onClick={() => setIsEditingPhone(false)}
+                            className="p-0.5 hover:bg-error/20 text-error rounded transition-colors flex items-center justify-center cursor-pointer"
+                            title="Cancelar"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">close</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 group/phone">
+                          <span className="text-on-surface font-label-md font-mono">+{clientData.phoneNumber}</span>
+                          <button
+                            onClick={() => {
+                              setTempPhone(clientData.phoneNumber);
+                              setIsEditingPhone(true);
+                            }}
+                            className="p-1 text-on-surface-variant/40 hover:text-primary hover:bg-surface-variant/50 rounded transition-all flex items-center justify-center opacity-0 group-hover/phone:opacity-100 focus:opacity-100 cursor-pointer"
+                            title="Editar Línea"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">edit</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {isWaConnected && (
+                    <button 
+                      onClick={handleDisconnectWhatsApp}
+                      className="mt-2 w-full bg-error/15 text-error border border-error/20 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-error/25 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">logout</span>
+                      Desvincular WhatsApp
+                    </button>
+                  )}
+                  {!isWaConnected && whatsappStatus.status === 'QR' && (
+                    <p className="text-[10.5px] text-center text-primary/80 font-medium px-2">
+                      Escanea el código QR desde la opción "Dispositivos vinculados" en tu aplicación móvil de WhatsApp.
+                    </p>
+                  )}
+                  {!isWaConnected && (whatsappStatus.status === 'QR' || whatsappStatus.status === 'INITIALIZING') && (
+                    <div className="w-full space-y-2 mt-2">
+                      <button 
+                        onClick={async () => {
+                          if (confirm("¿Deseas cancelar la conexión actual y generar un nuevo código QR?")) {
+                            try {
+                              await fetch('/api/whatsapp/logout', { method: 'POST' });
+                              await new Promise(resolve => setTimeout(resolve, 1500));
+                              await fetch(`/api/whatsapp/connect?clientId=${clientId}`, { method: 'POST' });
+                            } catch (err) {
+                              console.error("Error al reiniciar conexión:", err);
+                            }
+                          }
+                        }}
+                        className="w-full bg-surface-container border border-outline/30 hover:border-primary/50 text-on-surface-variant hover:text-primary px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">refresh</span>
+                        Generar Nuevo QR
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Logo Upload Card */}
+                <div className="glass-card p-6 rounded-xl">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="material-symbols-outlined text-secondary">image</span>
+                    <h3 className="font-bold text-sm text-on-surface">Logotipo Comercial</h3>
+                  </div>
+                  <p className="text-xs text-on-surface-variant mb-4 font-sans leading-relaxed">
+                    Sube el logotipo de tu empresa. Se mostrará en el menú lateral y en tus facturas.
+                  </p>
+                  
+                  {/* Active Logo Render Box */}
+                  <div className="flex items-center gap-4 mb-4">
+                    {clientData?.logo_url ? (
+                      <div className="w-16 h-16 rounded-xl border border-outline/20 bg-white/5 p-1 flex items-center justify-center relative overflow-hidden">
+                        <img 
+                          src={`${clientData.logo_url}?t=${logoBuster}`} 
+                          alt="Logo Empresa" 
+                          className="w-full h-full object-contain rounded-lg"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl bg-primary/10 border border-dashed border-primary/30 flex items-center justify-center text-primary font-bold text-lg font-sans">
+                        {clientData?.name.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleLogoUpload}
+                        className="hidden" 
+                        id="logo-upload-input" 
+                      />
+                      <label 
+                        htmlFor="logo-upload-input"
+                        className="px-3 py-2 bg-surface-container border border-outline/20 hover:border-primary/50 text-on-surface text-xs font-bold rounded-xl cursor-pointer transition inline-flex items-center gap-1.5 font-sans"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">upload</span>
+                        Subir Logotipo
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Logotipos Historial Dropdown */}
+                  {logos.length > 0 && (
+                    <div className="flex flex-col gap-1.5 border-t border-outline/10 pt-4">
+                      <label className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Historial de Logotipos</label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          className="flex-1 bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary transition"
+                          value={clientData?.logo_url ? clientData.logo_url.split('/').pop() : ''}
+                          onChange={(e) => handleLogoSelect(e.target.value)}
+                        >
+                          <option value="">-- Selecciona un Logotipo --</option>
+                          {logos.map((logo) => (
+                            <option key={logo.fileName} value={logo.fileName}>
+                              {logo.fileName}
+                            </option>
+                          ))}
+                        </select>
+                        {clientData?.logo_url && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const activeFile = clientData.logo_url?.split('/').pop();
+                              if (activeFile) handleLogoDelete(activeFile);
+                            }}
+                            className="p-2 bg-error/10 hover:bg-error/20 border border-error/20 hover:border-error/45 text-error rounded-xl transition cursor-pointer flex items-center justify-center"
+                            title="Eliminar este logotipo del historial"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Attention Required / System Alerts */}
+                <div className="glass-card p-6 rounded-xl ambient-glow-secondary border-secondary/20">
+                  <h4 className="font-label-md text-label-md font-bold text-secondary mb-4 uppercase">Atención Requerida</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-2">
+                      <div className="w-8 h-8 rounded-full bg-error/20 flex items-center justify-center text-error shrink-0">
+                        <span className="material-symbols-outlined text-sm">priority_high</span>
+                      </div>
+                      <div>
+                        <p className="font-label-md text-label-md">Consulta de Urgencia</p>
+                        <p className="text-[12px] text-on-surface-variant">El usuario solicita hablar con un asesor por dolor severo.</p>
+                      </div>
+                    </div>
+                    <button className="w-full py-2 bg-surface-container-high/50 border border-outline/20 rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all cursor-pointer">
+                      Atender Ahora
+                    </button>
                   </div>
                 </div>
-                <button className="w-full py-2 bg-surface-container-high/50 border border-outline/20 rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all cursor-pointer">
-                  Atender Ahora
-                </button>
-              </div>
-            </div>
-            <div className="glass-card p-6 rounded-xl overflow-hidden relative">
-              <div className="relative z-10">
-                <h4 className="font-label-md text-label-md font-bold mb-4">Estado del Agente IA</h4>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
-                    <div className="h-full bg-primary-container w-[92%]"></div>
+
+                {/* IA Agent status */}
+                <div className="glass-card p-6 rounded-xl overflow-hidden relative">
+                  <div className="relative z-10">
+                    <h4 className="font-label-md text-label-md font-bold mb-4">Estado del Agente IA</h4>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+                        <div className="h-full bg-primary-container w-[92%]"></div>
+                      </div>
+                      <span className="text-xs font-bold">92%</span>
+                    </div>
+                    <p className="text-[11px] text-on-surface-variant">El modelo de lenguaje está optimizado y listo para responder.</p>
                   </div>
-                  <span className="text-xs font-bold">92%</span>
                 </div>
-                <p className="text-[11px] text-on-surface-variant">El modelo de lenguaje está optimizado y listo para responder.</p>
               </div>
             </div>
-          </div>
-        </section>
 
         {/* Chat History Table */}
         <section className="glass-card rounded-xl overflow-hidden">
@@ -1509,6 +1859,24 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           </div>
         )}
 
+        {activeTab === 'cartera' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpCartera clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'domicilios' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpDomicilios clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'formulas' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpFormulas clientId={clientId} />
+          </div>
+        )}
+
         {activeTab === 'agenda' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
             <SaaSErpAppointments clientId={clientId} />
@@ -1536,6 +1904,22 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
         {activeTab === 'marketing' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
             <SaaSErpMarketing clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'configuracion' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpStoreSettings clientId={clientId} onProfileUpdated={() => {
+              // Recargar datos
+              fetch(`/api/clients/${clientId}`)
+                .then(res => res.json())
+                .then(json => {
+                  if (json.success && json.data) {
+                    setClientData(json.data);
+                  }
+                })
+                .catch(err => console.error("Error recargando logo/datos:", err));
+            }} />
           </div>
         )}
 

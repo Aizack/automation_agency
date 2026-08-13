@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Visit {
     id: string;
@@ -39,6 +40,8 @@ export const SaaSErpCampaigns: React.FC<SaaSErpCampaignsProps> = ({ clientId }) 
     const [errorMsg, setErrorMsg] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [companies, setCompanies] = useState<any[]>([]);
+    const [showPointOfSaleSuggestions, setShowPointOfSaleSuggestions] = useState(false);
 
     // Form states
     const [name, setName] = useState('');
@@ -62,16 +65,22 @@ export const SaaSErpCampaigns: React.FC<SaaSErpCampaignsProps> = ({ clientId }) 
         try {
             setLoading(true);
             const headers = { 'Authorization': `Bearer ${token}` };
-            const [visitsRes, empRes] = await Promise.all([
+            const [visitsRes, empRes, crmRes] = await Promise.all([
                 fetch(`/api/clients/${clientId}/field-visits`, { headers }),
-                fetch(`/api/clients/${clientId}/employees`, { headers })
+                fetch(`/api/clients/${clientId}/employees`, { headers }),
+                fetch(`/api/clients/${clientId}/crm-customers`, { headers })
             ]);
 
             const visitsJson = await visitsRes.json();
             const empJson = await empRes.json();
+            const crmJson = await crmRes.json();
 
             if (visitsJson.success) setVisits(visitsJson.visits || []);
             if (empJson.success) setEmployees(empJson.employees || []);
+            if (crmJson.success) {
+                const comp = (crmJson.customers || []).filter((c: any) => c.customer_type === 'empresa');
+                setCompanies(comp);
+            }
         } catch (err) {
             console.error("Error loading field visits data:", err);
         } finally {
@@ -247,13 +256,22 @@ export const SaaSErpCampaigns: React.FC<SaaSErpCampaignsProps> = ({ clientId }) 
                     <h2 className="text-xl font-bold text-on-surface">Campañas de Campo y Visitas</h2>
                     <p className="text-xs text-on-surface-variant">Programa y gestiona las campañas puerta a puerta (Calle) o ventas directas en convenios institucionales (Sitio).</p>
                 </div>
-                <button
-                    onClick={() => { setErrorMsg(''); setIsCreateOpen(true); }}
-                    className="px-4 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition"
-                >
-                    <span className="material-symbols-outlined text-[16px]">add_location_alt</span>
-                    Programar Campaña
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={loadData}
+                        className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow"
+                        title="Refrescar Campañas"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">refresh</span>
+                    </button>
+                    <button
+                        onClick={() => { setErrorMsg(''); setIsCreateOpen(true); }}
+                        className="px-4 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">add_location_alt</span>
+                        Programar Campaña
+                    </button>
+                </div>
             </div>
 
             {/* Quick Metrics */}
@@ -410,8 +428,8 @@ export const SaaSErpCampaigns: React.FC<SaaSErpCampaignsProps> = ({ clientId }) 
             )}
 
             {/* CREATE CAMPAIGN MODAL */}
-            {isCreateOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isCreateOpen && createPortal(
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
                     <div className="glass-card max-w-lg w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Programar Nueva Campaña</h3>
@@ -506,15 +524,57 @@ export const SaaSErpCampaigns: React.FC<SaaSErpCampaignsProps> = ({ clientId }) 
                                     />
                                 </div>
 
-                                <div className="space-y-1">
-                                    <label className="block text-[10px] font-bold text-on-surface-variant uppercase">Punto de Venta / Locación</label>
+                                <div className="space-y-1 relative">
+                                    <label className="block text-[10px] font-bold text-on-surface-variant uppercase">Punto de Venta / Locación (Empresa CRM)</label>
                                     <input
                                         type="text"
                                         value={pointOfSale}
-                                        onChange={(e) => setPointOfSale(e.target.value)}
+                                        onChange={(e) => {
+                                            setPointOfSale(e.target.value);
+                                            setShowPointOfSaleSuggestions(true);
+                                        }}
+                                        onFocus={() => setShowPointOfSaleSuggestions(true)}
                                         className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
-                                        placeholder="Ej: Colegio San Carlos, Parroquia..."
+                                        placeholder="Busca o escribe una empresa..."
                                     />
+                                    {showPointOfSaleSuggestions && (
+                                        <div className="absolute left-0 right-0 top-full mt-1 bg-surface-container-high border border-outline/20 rounded-xl shadow-2xl max-h-40 overflow-y-auto z-[99999] custom-scrollbar text-xs">
+                                            <div className="p-2 border-b border-outline/5 flex justify-between items-center bg-surface-container-high-hover">
+                                                <span className="font-bold text-[9px] uppercase tracking-wider text-on-surface-variant">Sugerencias CRM</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPointOfSaleSuggestions(false)}
+                                                    className="text-primary hover:text-primary-container text-[10px] font-bold bg-transparent border-0 cursor-pointer"
+                                                >
+                                                    Cerrar
+                                                </button>
+                                            </div>
+                                            {companies.filter(c => 
+                                                c.name.toLowerCase().includes(pointOfSale.toLowerCase())
+                                            ).length === 0 ? (
+                                                <div className="p-3 text-on-surface-variant/70 italic">
+                                                    No se encontraron empresas.
+                                                </div>
+                                            ) : (
+                                                companies.filter(c => 
+                                                    c.name.toLowerCase().includes(pointOfSale.toLowerCase())
+                                                ).map(comp => (
+                                                    <div 
+                                                        key={comp.id}
+                                                        onClick={() => {
+                                                            setPointOfSale(comp.name);
+                                                            if (comp.address) setAddress(comp.address);
+                                                            setShowPointOfSaleSuggestions(false);
+                                                        }}
+                                                        className="p-3 hover:bg-surface-variant/40 cursor-pointer border-b border-outline/5 text-on-surface flex flex-col"
+                                                    >
+                                                        <span className="font-bold">{comp.name}</span>
+                                                        {comp.address && <span className="text-[10px] text-on-surface-variant">{comp.address}</span>}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -628,7 +688,8 @@ export const SaaSErpCampaigns: React.FC<SaaSErpCampaignsProps> = ({ clientId }) 
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

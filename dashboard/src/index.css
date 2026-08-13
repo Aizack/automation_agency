@@ -1,75 +1,122 @@
 @import "tailwindcss";
 
-/* --- Paleta de colores e interruptor de temas Claro/Oscuro --- */
+/* --- Paleta Minimalista Ocre & Gris Neutro (#0d0d0d + #d3d3d3 + Ocre #d8a24e) --- */
 :root {
-  /* Light Mode (Predeterminado) */
-  --bg-color: #f8fafc;
-  --text-color: #0f172a;
-  --text-muted: #64748b;
+  /* Default / Dark Mode (Gris Oscuro #0d0d0d, Texto #d3d3d3, Acento Ocre #d8a24e) */
+  --bg-color: #0d0d0d;
+  --text-color: #d3d3d3;
+  --text-muted: #9e9e9e;
   
-  --primary-color: #0066ff;
-  --primary-container: #e0f2fe;
-  --on-primary-container: #0369a1;
+  --primary-color: #d8a24e; /* Ocre cálido de la imagen */
+  --primary-container: #2a2012;
+  --on-primary-container: #f7e7ce;
 
-  --surface-val: #ffffff;
-  --surface-dim-val: #f1f5f9;
-  --surface-bright-val: #ffffff;
-  --surface-container-val: #f8fafc;
-  --surface-container-low-val: #ffffff;
-  --surface-container-high-val: #e2e8f0;
-  --surface-container-highest-val: #cbd5e1;
+  --secondary-color: #d8a24e;
+  --on-secondary: #0d0d0d;
+  --secondary-container: #2a2012;
+  --on-secondary-container: #f7e7ce;
+
+  --surface-val: #141414;
+  --surface-dim-val: #0d0d0d;
+  --surface-bright-val: #222222;
+  --surface-container-val: #181818;
+  --surface-container-low-val: #121212;
+  --surface-container-high-val: #1e1e1e;
+  --surface-container-highest-val: #262626;
   
-  --on-surface-val: #0f172a;
-  --on-surface-variant-val: #475569;
-  --outline-color: #cbd5e1;
-  --outline-variant-color: #e2e8f0;
+  --on-surface-val: #d3d3d3;
+  --on-surface-variant-val: #9e9e9e;
+  --outline-color: rgba(255, 255, 255, 0.08);
+  --outline-variant-color: rgba(255, 255, 255, 0.04);
 
-  --card-bg: rgba(255, 255, 255, 0.75);
-  --card-border: rgba(148, 163, 184, 0.2);
+  --card-bg: rgba(20, 20, 20, 0.8);
+  --card-border: rgba(255, 255, 255, 0.08);
+
+  --font-family-sans: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
 }
 
 [data-theme='dark'] {
-  /* Dark Mode (Activado) */
-  --bg-color: #090d16;
-  --text-color: #f1f5f9;
-  --text-muted: #cbd5e1;
+  /* Dark Mode (Gris Oscuro #0d0d0d sin tinte azul, Texto #d3d3d3, Acento Ocre #d8a24e) */
+  --bg-color: #0d0d0d;
+  --text-color: #d3d3d3;
+  --text-muted: #9e9e9e;
 
-  --primary-color: #0066ff;
-  --primary-container: #0050c7;
-  --on-primary-container: #f0f6ff;
+  --primary-color: #d8a24e;
+  --primary-container: #2a2012;
+  --on-primary-container: #f7e7ce;
 
-  --surface-val: #090d16;
-  --surface-dim-val: #090d16;
-  --surface-bright-val: #1f293d;
-  --surface-container-val: #121724;
-  --surface-container-low-val: #0f131f;
-  --surface-container-high-val: #171e2e;
-  --surface-container-highest-val: #1e273a;
+  --secondary-color: #d8a24e;
+  --on-secondary: #0d0d0d;
+  --secondary-container: #2a2012;
+  --on-secondary-container: #f7e7ce;
 
-  --on-surface-val: #f1f5f9;
-  --on-surface-variant-val: #cbd5e1;
-  --outline-color: #334155;
-  --outline-variant-color: #1e293b;
+  --surface-val: #141414;
+  --surface-dim-val: #0d0d0d;
+  --surface-bright-val: #222222;
+  --surface-container-val: #181818;
+  --surface-container-low-val: #121212;
+  --surface-container-high-val: #1e1e1e;
+  --surface-container-highest-val: #262626;
 
-  --card-bg: rgba(18, 23, 36, 0.45);
-  --card-border: rgba(51, 65, 85, 0.3);
+  --on-surface-val: #d3d3d3;
+  --on-surface-variant-val: #9e9e9e;
+  --outline-color: rgba(255, 255, 255, 0.08);
+  --outline-variant-color: rgba(255, 255, 255, 0.04);
+
+  --card-bg: rgba(20, 20, 20, 0.8);
+  --card-border: rgba(255, 255, 255, 0.08);
+
+  --font-family-sans: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
 }
 
-/* --- Configuración de tema de Tailwind CSS v4 con la Paleta Diaz Lab --- */
+[data-theme='light'] {
+  /* Light Mode (Fondo Gris Claro #d3d3d3) */
+  --bg-color: #d3d3d3;
+  --text-color: #121212;
+  --text-muted: #4e4e4e;
+
+  --primary-color: #b88230;
+  --primary-container: #f4e8d3;
+  --on-primary-container: #4a320a;
+
+  --secondary-color: #b88230;
+  --on-secondary: #ffffff;
+  --secondary-container: #f4e8d3;
+  --on-secondary-container: #4a320a;
+
+  --surface-val: #e5e5e5;
+  --surface-dim-val: #d0d0d0;
+  --surface-bright-val: #f0f0f0;
+  --surface-container-val: #e0e0e0;
+  --surface-container-low-val: #e8e8e8;
+  --surface-container-high-val: #cccccc;
+  --surface-container-highest-val: #b8b8b8;
+
+  --on-surface-val: #121212;
+  --on-surface-variant-val: #4e4e4e;
+  --outline-color: rgba(0, 0, 0, 0.1);
+  --outline-variant-color: rgba(0, 0, 0, 0.05);
+
+  --card-bg: rgba(240, 240, 240, 0.85);
+  --card-border: rgba(0, 0, 0, 0.1);
+
+  --font-family-sans: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* --- Configuración de tema de Tailwind CSS v4 --- */
 @theme {
   --color-primary: var(--primary-color);
-  --color-on-primary: #ffffff;
+  --color-on-primary: #0d0d0d;
   --color-primary-container: var(--primary-container);
   --color-on-primary-container: var(--on-primary-container);
   
-  --color-secondary: #8b5cf6;
-  --color-on-secondary: #ffffff;
-  --color-secondary-container: #6d28d9;
-  --color-on-secondary-container: #f5f3ff;
-  
-  --color-tertiary: #00f2fe;
-  --color-tertiary-container: #164e63;
-  --color-on-tertiary-container: #ecfeff;
+  --color-secondary: var(--secondary-color);
+  --color-on-secondary: #0d0d0d;
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
   
   --color-surface: var(--surface-val);
   --color-surface-dim: var(--surface-dim-val);
@@ -86,18 +133,8 @@
   --color-background: var(--bg-color);
   --color-on-background: var(--on-surface-val);
   
-  --color-error: #ffb4ab;
-  --color-on-error: #690005;
-  --color-error-container: #93000a;
-  --color-on-error-container: #ffdad6;
-  
-  --font-display-lg: "Outfit", sans-serif;
-  --font-headline-lg: "Outfit", sans-serif;
-  --font-headline-md: "Outfit", sans-serif;
-  --font-body-lg: "Inter", sans-serif;
-  --font-body-md: "Inter", sans-serif;
-  --font-label-md: "Inter", sans-serif;
-  --font-label-sm: "Inter", sans-serif;
+  --font-sans: var(--font-family-sans);
+  --font-display: var(--font-family-display);
 }
 
 /* --- Estilos base y variables del tema --- */
@@ -106,87 +143,52 @@ body {
   color: var(--text-color);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Tarjetas con efecto Glassmorphism azul/púrpura */
+h1, h2, h3, h4, h5, h6, .font-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--text-color);
+  letter-spacing: -0.01em;
+}
+
+/* Tarjetas Minimalistas Sobrias */
 .glass-card {
   background: var(--card-bg);
   backdrop-filter: blur(12px);
   border: 1px solid var(--card-border);
   color: var(--text-color);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 14px;
+  transition: all 0.2s ease;
 }
 
 .glass-card:hover {
-  border-color: rgba(0, 102, 255, 0.4);
-  box-shadow: 0 0 20px rgba(0, 102, 255, 0.15);
+  border-color: rgba(216, 162, 78, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
-/* Ítems activos del Sidebar en azul de Diaz Lab */
+/* Ítems activos del Sidebar */
 .sidebar-item-active {
-  background: rgba(0, 102, 255, 0.1);
-  border-left: 4px solid #0066ff;
-  color: #0066ff;
-  font-weight: 700;
+  background: rgba(216, 162, 78, 0.12);
+  border-left: 3px solid #d8a24e;
+  color: #d8a24e;
+  font-weight: 600;
 }
 
-/* Efectos de brillo / glows */
-.primary-glow {
-  box-shadow: 0 0 15px rgba(0, 102, 255, 0.45);
-}
-
-.ambient-glow-primary {
-  box-shadow: 0 0 20px rgba(0, 102, 255, 0.2);
-}
-
-.ambient-glow-secondary {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
-}
-
-/* Scrollbar personalizada */
+/* Scrollbar sutil */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #090d16;
+  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #1e273a;
+  background: var(--surface-container-high-val);
   border-radius: 10px;
-}
-
-/* Animación de escaneo (QR Code) en color cian */
-.scan-line {
-  height: 2px;
-  background: #00f2fe;
-  box-shadow: 0 0 15px #00f2fe;
-  position: absolute;
-  width: 100%;
-  animation: scan 3s ease-in-out infinite;
-}
-
-@keyframes scan {
-  0%, 100% { top: 0; }
-  50% { top: 100%; }
-}
-
-/* Anillos de progreso SVG */
-.progress-ring-circle {
-  transition: stroke-dashoffset 0.8s ease-in-out;
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
-}
-
-/* Flotado de elementos decorativos */
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
 }

@@ -3,8 +3,13 @@ import React, { useState, useEffect } from 'react';
 interface Task {
     id: string;
     task_description: string;
-    status: 'pending' | 'completed';
+    title: string;
+    description: string | null;
+    status: string; // e.g. pendiente, en proceso, terminado / completed
+    created_by_name?: string;
     created_at: string;
+    due_date?: string | null;
+    task_type?: string;
 }
 
 interface DocRequest {
@@ -37,11 +42,38 @@ export const EmployeePortal: React.FC = () => {
     const [shiftTimer, setShiftTimer] = useState('00:00:00');
     const [tasks, setTasks] = useState<Task[]>([]);
     const [requests, setRequests] = useState<DocRequest[]>([]);
+
+    // States for task detail modal and updates
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [taskUpdates, setTaskUpdates] = useState<any[]>([]);
+    const [loadingUpdates, setLoadingUpdates] = useState(false);
+    const [newReportText, setNewReportText] = useState('');
+    const [newSelectedStatus, setNewSelectedStatus] = useState<string>('');
+    const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+    // States for employee creating own tasks / visits
+    const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+    const [taskFormTitle, setTaskFormTitle] = useState('');
+    const [taskFormDesc, setTaskFormDesc] = useState('');
+    const [taskFormType, setTaskFormType] = useState<'tarea' | 'visita'>('tarea');
+    const [taskFormDueDate, setTaskFormDueDate] = useState('');
+    const [taskFormDueTime, setTaskFormDueTime] = useState('');
+    const [crmSearchQuery, setCrmSearchQuery] = useState('');
+    const [crmCustomers, setCrmCustomers] = useState<any[]>([]);
+    const [selectedCrmCustomerId, setSelectedCrmCustomerId] = useState<string>('');
+    const [showCrmSuggestions, setShowCrmSuggestions] = useState(false);
     const [activeTab, setActiveTab] = useState<'turnos' | 'tareas' | 'solicitudes' | 'chat' | 'campanias'>('turnos');
 
     // Timer Interval ref
     const [timerActive, setTimerActive] = useState(false);
     const [shiftStartTimestamp, setShiftStartTimestamp] = useState<number | null>(null);
+    const [myShifts, setMyShifts] = useState<any[]>([]);
+
+    // Lunch Timer States
+    const [lunchTimer, setLunchTimer] = useState('00:00:00');
+    const [lunchStartTimestamp, setLunchStartTimestamp] = useState<number | null>(null);
+    const [lunchTimerActive, setLunchTimerActive] = useState(false);
+    const [workModality, setWorkModality] = useState<'presencial' | 'remoto'>('presencial');
 
     // Form States
     const [docType, setDocType] = useState('vacaciones');
@@ -82,6 +114,30 @@ export const EmployeePortal: React.FC = () => {
     const [chatInput, setChatInput] = useState('');
     const [chatChannel, setChatChannel] = useState('general');
     const [chatLoading, setChatLoading] = useState(false);
+    const [employees, setEmployees] = useState<any[]>([]);
+
+    const fetchEmployees = async () => {
+        const storedToken = localStorage.getItem('emp_token') || employeeToken;
+        const storedClientId = localStorage.getItem('emp_client_id') || clientId;
+        if (!storedClientId || !storedToken) return;
+        try {
+            const res = await fetch(`/api/clients/${storedClientId}/employees`, {
+                headers: { 'Authorization': `Bearer ${storedToken}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setEmployees(json.employees || []);
+            }
+        } catch (err) {
+            console.error("Error loading employees list in EmployeePortal chat:", err);
+        }
+    };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchEmployees();
+        }
+    }, [isAuthenticated, clientId, employeeToken]);
 
     // check localstorage session
     useEffect(() => {
@@ -114,6 +170,8 @@ export const EmployeePortal: React.FC = () => {
             fetchTasks();
             fetchRequests();
             fetchVisits();
+            fetchActiveShiftStatus();
+            fetchCrmCustomers();
             if (activeTab === 'chat') {
                 fetchChatMessages();
             }
@@ -140,6 +198,82 @@ export const EmployeePortal: React.FC = () => {
             if (interval) clearInterval(interval);
         };
     }, [timerActive, shiftStartTimestamp]);
+
+    // Lunch Timer effect
+    useEffect(() => {
+        let interval: any = null;
+        if (lunchTimerActive && lunchStartTimestamp) {
+            interval = setInterval(() => {
+                const elapsedMs = Date.now() - lunchStartTimestamp;
+                const secs = Math.floor((elapsedMs / 1000) % 60);
+                const mins = Math.floor((elapsedMs / (1000 * 60)) % 60);
+                const hours = Math.floor((elapsedMs / (1000 * 60 * 60)) % 24);
+                setLunchTimer(
+                    `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+                );
+            }, 1000);
+        } else {
+            setLunchTimer('00:00:00');
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [lunchTimerActive, lunchStartTimestamp]);
+
+    // Auto-sync Active Shift Status with Backend
+    const fetchActiveShiftStatus = async () => {
+        if (!clientId || !employeeId || !employeeToken) return;
+        try {
+            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/shifts`, {
+                headers: { 'Authorization': `Bearer ${employeeToken}` }
+            });
+            const json = await res.json();
+            if (json.success && json.shifts) {
+                setMyShifts(json.shifts);
+                if (json.shifts.length > 0) {
+                    const latestShift = json.shifts[0];
+                    if (!latestShift.clock_out) {
+                        // Shift is active!
+                        const clockInTs = new Date(latestShift.clock_in).getTime();
+                        setShiftStartTimestamp(clockInTs);
+                        
+                        if (latestShift.lunch_start && !latestShift.lunch_end) {
+                            // In lunch!
+                            setShiftStatus('lunch');
+                            const lunchStartTs = new Date(latestShift.lunch_start).getTime();
+                            setLunchStartTimestamp(lunchStartTs);
+                            setLunchTimerActive(true);
+                            setTimerActive(false);
+                        } else {
+                            // Working!
+                            setShiftStatus('working');
+                            setTimerActive(true);
+                            setLunchTimerActive(false);
+                            if (latestShift.lunch_start && latestShift.lunch_end) {
+                                const elapsedMs = new Date(latestShift.lunch_end).getTime() - new Date(latestShift.lunch_start).getTime();
+                                const secs = Math.floor((elapsedMs / 1000) % 60);
+                                const mins = Math.floor((elapsedMs / (1000 * 60)) % 60);
+                                const hours = Math.floor((elapsedMs / (1000 * 60 * 60)) % 24);
+                                setLunchTimer(
+                                    `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+                                );
+                            }
+                        }
+                    } else {
+                        setShiftStatus('finished');
+                        setTimerActive(false);
+                        setLunchTimerActive(false);
+                    }
+                } else {
+                    setShiftStatus('no_started');
+                    setTimerActive(false);
+                    setLunchTimerActive(false);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching active shift status:", err);
+        }
+    };
 
     // Polling for new chat messages
     useEffect(() => {
@@ -224,24 +358,127 @@ export const EmployeePortal: React.FC = () => {
         }
     };
 
-    // TOGGLE TASK STATUS
-    const handleToggleTask = async (taskId: string, currentStatus: string) => {
+    // FETCH TASK UPDATES
+    const fetchTaskUpdates = async (taskId: string) => {
         try {
-            const nextStatus = currentStatus === 'completed' ? 'pending' : 'completed';
-            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/tasks/${taskId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${employeeToken}`
-                },
-                body: JSON.stringify({ status: nextStatus })
+            setLoadingUpdates(true);
+            const headers = { 'Authorization': `Bearer ${employeeToken}` };
+            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/tasks/${taskId}/updates`, { headers });
+            const json = await res.json();
+            if (json.success) {
+                setTaskUpdates(json.updates || []);
+            }
+        } catch (err) {
+            console.error("Error fetching task updates:", err);
+        } finally {
+            setLoadingUpdates(false);
+        }
+    };
+
+    // SUBMIT TASK UPDATE & REPORT
+    const handleSubmitTaskUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedTask || !newReportText.trim() || !newSelectedStatus) return;
+
+        try {
+            setIsSubmittingReport(true);
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${employeeToken}`
+            };
+            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/tasks/${selectedTask.id}/updates`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    new_status: newSelectedStatus,
+                    report_text: newReportText,
+                    created_by_name: employeeName
+                })
             });
             const json = await res.json();
             if (json.success) {
+                setNewReportText('');
+                // update selected task locally
+                setSelectedTask({
+                    ...selectedTask,
+                    status: newSelectedStatus
+                });
+                // reload task updates history
+                fetchTaskUpdates(selectedTask.id);
+                // reload general tasks list
                 fetchTasks();
+            } else {
+                alert(json.error || 'Error al guardar reporte.');
             }
         } catch (err) {
-            console.error("Error updating task status:", err);
+            console.error("Error saving task report:", err);
+            alert("Error de conexión al guardar el reporte.");
+        } finally {
+            setIsSubmittingReport(false);
+        }
+    };
+
+    // FETCH CRM CUSTOMERS FOR VISITS
+    const fetchCrmCustomers = async () => {
+        try {
+            const headers = { 'Authorization': `Bearer ${employeeToken}` };
+            const res = await fetch(`/api/clients/${clientId}/crm-customers`, { headers });
+            const json = await res.json();
+            if (json.success) {
+                setCrmCustomers(json.customers || []);
+            }
+        } catch (err) {
+            console.error("Error loading CRM customers:", err);
+        }
+    };
+
+    // CREATE EMPLOYEE OWN TASK OR VISIT
+    const handleCreateEmployeeOwnTask = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!taskFormTitle.trim()) return;
+
+        try {
+            setIsSubmittingReport(true);
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${employeeToken}`
+            };
+            
+            const dueDateTime = (taskFormDueDate && taskFormDueTime) 
+                ? `${taskFormDueDate}T${taskFormDueTime}` 
+                : (taskFormDueDate || null);
+
+            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/tasks`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    title: taskFormTitle,
+                    description: taskFormDesc,
+                    due_date: dueDateTime,
+                    created_by_name: employeeName,
+                    task_type: taskFormType,
+                    target_customer_id: taskFormType === 'visita' ? selectedCrmCustomerId : null
+                })
+            });
+            const json = await res.json();
+            if (json.success) {
+                setIsCreateTaskOpen(false);
+                setTaskFormTitle('');
+                setTaskFormDesc('');
+                setTaskFormType('tarea');
+                setTaskFormDueDate('');
+                setTaskFormDueTime('');
+                setCrmSearchQuery('');
+                setSelectedCrmCustomerId('');
+                fetchTasks();
+            } else {
+                alert(json.error || 'Error al crear la tarea/visita.');
+            }
+        } catch (err) {
+            console.error("Error creating employee task:", err);
+            alert("Error de conexión al crear la tarea/visita.");
+        } finally {
+            setIsSubmittingReport(false);
         }
     };
 
@@ -506,6 +743,8 @@ export const EmployeePortal: React.FC = () => {
                 setShiftStartTimestamp(ts);
                 setTimerActive(true);
                 setShiftStatus('working');
+                setLunchTimerActive(false);
+                fetchActiveShiftStatus();
             }
         } catch (err) {
             console.error("Error starting shift:", err);
@@ -523,8 +762,10 @@ export const EmployeePortal: React.FC = () => {
             if (json.success) {
                 localStorage.removeItem('shift_start_ts');
                 setTimerActive(false);
+                setLunchTimerActive(false);
                 setShiftStartTimestamp(null);
                 setShiftStatus('finished');
+                fetchActiveShiftStatus();
             }
         } catch (err) {
             console.error("Error ending shift:", err);
@@ -541,6 +782,10 @@ export const EmployeePortal: React.FC = () => {
             if (json.success) {
                 setShiftStatus('lunch');
                 setTimerActive(false);
+                const startTs = Date.now();
+                setLunchStartTimestamp(startTs);
+                setLunchTimerActive(true);
+                fetchActiveShiftStatus();
             }
         } catch (err) {
             console.error("Error starting lunch:", err);
@@ -556,12 +801,22 @@ export const EmployeePortal: React.FC = () => {
             const json = await res.json();
             if (json.success) {
                 setShiftStatus('working');
-                // Ajustar acumulado
                 setTimerActive(true);
+                setLunchTimerActive(false);
+                fetchActiveShiftStatus();
             }
         } catch (err) {
             console.error("Error ending lunch:", err);
         }
+    };
+
+    const getTargetChannelName = (val: string) => {
+        if (val.startsWith('emp_')) {
+            const targetEmpId = val.split('_')[1];
+            const sorted = [employeeId, targetEmpId].sort();
+            return `direct_${sorted[0]}_${sorted[1]}`;
+        }
+        return val;
     };
 
     // FETCH CHAT MESSAGES
@@ -571,7 +826,8 @@ export const EmployeePortal: React.FC = () => {
                 ? `&since=${encodeURIComponent(chatMessages[chatMessages.length - 1].created_at)}`
                 : '';
             
-            const res = await fetch(`/api/clients/${clientId}/chats/messages?channel=${chatChannel}${sinceQuery}`, {
+            const resolvedChannel = getTargetChannelName(chatChannel);
+            const res = await fetch(`/api/clients/${clientId}/chats/messages?channel=${resolvedChannel}${sinceQuery}`, {
                 headers: { 'Authorization': `Bearer ${employeeToken}` }
             });
             const json = await res.json();
@@ -596,6 +852,7 @@ export const EmployeePortal: React.FC = () => {
 
         try {
             setChatLoading(true);
+            const resolvedChannel = getTargetChannelName(chatChannel);
             const res = await fetch(`/api/clients/${clientId}/chats/messages`, {
                 method: 'POST',
                 headers: {
@@ -606,7 +863,7 @@ export const EmployeePortal: React.FC = () => {
                     employee_id: employeeId,
                     sender_name: employeeName,
                     message_text: chatInput,
-                    channel: chatChannel
+                    channel: resolvedChannel
                 })
             });
             const json = await res.json();
@@ -679,159 +936,407 @@ export const EmployeePortal: React.FC = () => {
         );
     }
 
+    const getTaskStatusInfo = (task: any) => {
+        const isCompleted = task.status === 'completed' || task.status === 'terminado';
+        const isOverdue = !isCompleted && task.due_date && new Date(task.due_date) < new Date();
+        
+        if (isCompleted) {
+            return {
+                label: 'Terminado',
+                bgColor: 'bg-green-500/10 border-green-500/20 text-green-500',
+                badgeColor: 'bg-green-500',
+                textColor: 'text-green-500'
+            };
+        }
+        if (isOverdue) {
+            return {
+                label: 'Atrasado',
+                bgColor: 'bg-red-500/10 border-red-500/20 text-red-500',
+                badgeColor: 'bg-red-500',
+                textColor: 'text-red-500 animate-pulse'
+            };
+        }
+        if (task.status === 'en proceso' || task.status === 'en_proceso') {
+            return {
+                label: 'En Proceso',
+                bgColor: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500',
+                badgeColor: 'bg-yellow-500',
+                textColor: 'text-yellow-500'
+            };
+        }
+        // Default is pendiente
+        return {
+            label: 'Pendiente',
+            bgColor: 'bg-blue-500/10 border-blue-500/20 text-blue-500',
+            badgeColor: 'bg-blue-500',
+            textColor: 'text-blue-500'
+        };
+    };
+
     // MAIN DASHBOARD PORTAL
     return (
-        <div className="min-h-screen bg-[#070b13] text-white font-sans flex flex-col">
-            {/* Header Navbar */}
-            <header className="bg-surface-container-low/20 backdrop-blur-md border-b border-outline/10 p-4 sticky top-0 z-30 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-[24px]">badge</span>
-                    <div>
-                        <h1 className="font-black text-sm">{employeeName}</h1>
-                        <p className="text-[10px] text-on-surface-variant font-mono uppercase">Rol: {employeeRole}</p>
+        <div className="min-h-screen bg-[#0d0d0d] text-on-surface font-sans flex flex-col md:flex-row">
+            {/* Sidebar Navigation (Visible on Desktop) */}
+            <aside className="hidden md:flex md:flex-col md:w-64 bg-[#0d0d0d] border-r border-outline/10 p-6 flex-shrink-0 justify-between">
+                <div className="space-y-8">
+                    {/* User profile card */}
+                    <div className="flex items-center gap-3 border-b border-outline/10 pb-6">
+                        <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                            {employeeName[0]?.toUpperCase() || 'E'}
+                        </div>
+                        <div>
+                            <h2 className="font-semibold text-xs text-on-surface truncate max-w-[150px]">{employeeName}</h2>
+                            <p className="text-[10px] text-on-surface-variant/70 font-mono uppercase truncate max-w-[150px]">Rol: {employeeRole}</p>
+                        </div>
                     </div>
+
+                    {/* Nav links */}
+                    <nav className="flex flex-col gap-1.5">
+                        <button 
+                            onClick={() => setActiveTab('turnos')}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                activeTab === 'turnos' 
+                                    ? 'bg-white/5 text-on-surface sidebar-item-active font-medium' 
+                                    : 'bg-transparent text-on-surface-variant/80 hover:bg-white/5 hover:text-on-surface font-normal'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[15px] opacity-70">schedule</span>
+                            Mi Jornada
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('tareas')}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                activeTab === 'tareas' 
+                                    ? 'bg-white/5 text-on-surface sidebar-item-active font-medium' 
+                                    : 'bg-transparent text-on-surface-variant/80 hover:bg-white/5 hover:text-on-surface font-normal'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[15px] opacity-70">task_alt</span>
+                            Mis Tareas
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('solicitudes')}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                activeTab === 'solicitudes' 
+                                    ? 'bg-white/5 text-on-surface sidebar-item-active font-medium' 
+                                    : 'bg-transparent text-on-surface-variant/80 hover:bg-white/5 hover:text-on-surface font-normal'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[15px] opacity-70">assignment</span>
+                            Mis Solicitudes
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('campanias')}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                activeTab === 'campanias' 
+                                    ? 'bg-white/5 text-on-surface sidebar-item-active font-medium' 
+                                    : 'bg-transparent text-on-surface-variant/80 hover:bg-white/5 hover:text-on-surface font-normal'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[15px] opacity-70">explore</span>
+                            Mis Visitas
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('chat')}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                activeTab === 'chat' 
+                                    ? 'bg-white/5 text-on-surface sidebar-item-active font-medium' 
+                                    : 'bg-transparent text-on-surface-variant/80 hover:bg-white/5 hover:text-on-surface font-normal'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[15px] opacity-70">smart_toy</span>
+                            Chat IA
+                        </button>
+                    </nav>
                 </div>
+
+                {/* Logout button at bottom of sidebar */}
                 <button 
                     onClick={handleLogout}
-                    className="flex items-center gap-1.5 px-3 py-1.5 border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-xl cursor-pointer text-xs font-bold transition bg-transparent"
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 border border-outline/20 hover:border-error/30 hover:bg-error/10 text-on-surface-variant hover:text-error rounded-xl cursor-pointer text-xs font-medium transition w-full bg-transparent"
                 >
-                    <span className="material-symbols-outlined text-[16px]">logout</span>
-                    Salir
+                    <span className="material-symbols-outlined text-[15px]">logout</span>
+                    Cerrar Sesión
                 </button>
-            </header>
+            </aside>
 
-            {/* Portal Tab Navigation */}
-            <nav className="bg-surface-container-high/20 border-b border-outline/10 flex justify-around p-1 select-none">
-                <button 
-                    onClick={() => setActiveTab('turnos')}
-                    className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
-                        activeTab === 'turnos' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
-                    }`}
-                >
-                    <span className="material-symbols-outlined">schedule</span>
-                    Jornada
-                </button>
-                <button 
-                    onClick={() => setActiveTab('tareas')}
-                    className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
-                        activeTab === 'tareas' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
-                    }`}
-                >
-                    <span className="material-symbols-outlined">task_alt</span>
-                    Tareas
-                </button>
-                <button 
-                    onClick={() => setActiveTab('solicitudes')}
-                    className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
-                        activeTab === 'solicitudes' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
-                    }`}
-                >
-                    <span className="material-symbols-outlined">assignment</span>
-                    RRHH
-                </button>
-                <button 
-                    onClick={() => setActiveTab('campanias')}
-                    className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
-                        activeTab === 'campanias' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
-                    }`}
-                >
-                    <span className="material-symbols-outlined">explore</span>
-                    Visitas
-                </button>
-                <button 
-                    onClick={() => setActiveTab('chat')}
-                    className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
-                        activeTab === 'chat' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
-                    }`}
-                >
-                    <span className="material-symbols-outlined">smart_toy</span>
-                    Chat IA
-                </button>
-            </nav>
-
-            {/* Main Content Area */}
-            <main className="flex-grow p-4 md:p-6 overflow-y-auto max-w-xl mx-auto w-full">
-                
-                {/* TAB 1: TURNOS & ELAPSED TIMER */}
-                {activeTab === 'turnos' && (
-                    <div className="space-y-6">
-                        {/* Clock / Timer Widget */}
-                        <div className="glass-card p-6 rounded-3xl text-center border border-outline/10 shadow-xl relative overflow-hidden bg-gradient-to-b from-surface-container/20 to-surface-container-high/40">
-                            <span className="text-[10px] text-primary uppercase font-mono tracking-wider font-bold">Tiempo Acumulado</span>
-                            <div className="text-4xl font-black font-mono tracking-wider my-3 text-white">
-                                {shiftTimer}
-                            </div>
-                            
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-white/5 border border-outline/10 text-on-surface-variant">
-                                <span className={`w-2.5 h-2.5 rounded-full ${
-                                    shiftStatus === 'working' ? 'bg-green-500 animate-ping' :
-                                    shiftStatus === 'lunch' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'
-                                }`}></span>
-                                <span className="capitalize">
-                                    {shiftStatus === 'no_started' ? 'Turno No Iniciado' :
-                                     shiftStatus === 'working' ? 'Trabajando / En Turno' :
-                                     shiftStatus === 'lunch' ? 'En Almuerzo / Descanso' : 'Turno Finalizado'}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Shift Controls Grid */}
-                        <div className="grid grid-cols-2 gap-3.5">
-                            {shiftStatus === 'no_started' && (
-                                <button 
-                                    onClick={handleShiftStart}
-                                    className="col-span-2 bg-green-600 hover:bg-green-700 text-white p-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 cursor-pointer shadow transition"
-                                >
-                                    <span className="material-symbols-outlined">play_arrow</span>
-                                    INICIAR TURNO
-                                </button>
-                            )}
-
-                            {shiftStatus === 'working' && (
-                                <>
-                                    <button 
-                                        onClick={handleLunchStart}
-                                        className="bg-amber-600 hover:bg-amber-700 text-white p-4 rounded-2xl font-black text-sm flex flex-col items-center justify-center gap-1.5 cursor-pointer transition"
-                                    >
-                                        <span className="material-symbols-outlined text-[24px]">coffee</span>
-                                        ALMUERZO / DESCANSO
-                                    </button>
-                                    <button 
-                                        onClick={handleShiftEnd}
-                                        className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-2xl font-black text-sm flex flex-col items-center justify-center gap-1.5 cursor-pointer transition"
-                                    >
-                                        <span className="material-symbols-outlined text-[24px]">stop</span>
-                                        FINALIZAR TURNO
-                                    </button>
-                                </>
-                            )}
-
-                            {shiftStatus === 'lunch' && (
-                                <button 
-                                    onClick={handleLunchEnd}
-                                    className="col-span-2 bg-green-600 hover:bg-green-700 text-white p-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 cursor-pointer shadow transition"
-                                >
-                                    <span className="material-symbols-outlined">restart_alt</span>
-                                    RETOMAR TRABAJO
-                                </button>
-                            )}
-
-                            {shiftStatus === 'finished' && (
-                                <div className="col-span-2 glass-card p-6 text-center text-sm text-green-500 font-bold border border-green-500/20 bg-green-500/5">
-                                    ✅ ¡Jornada completada exitosamente! Que tengas un excelente día de descanso.
-                                </div>
-                            )}
+            {/* Mobile/Flexible layout container */}
+            <div className="flex-grow flex flex-col min-h-screen">
+                {/* Header Navbar (Visible on Mobile) */}
+                <header className="md:hidden bg-surface-container-low/20 backdrop-blur-md border-b border-outline/10 p-4 sticky top-0 z-30 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-[24px]">badge</span>
+                        <div>
+                            <h1 className="font-black text-sm">{employeeName}</h1>
+                            <p className="text-[10px] text-on-surface-variant font-mono uppercase">Rol: {employeeRole}</p>
                         </div>
                     </div>
-                )}
+                    <button 
+                        onClick={handleLogout}
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-xl cursor-pointer text-xs font-bold transition bg-transparent"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">logout</span>
+                        Salir
+                    </button>
+                </header>
+
+                {/* Mobile Tab Navigation (Visible on Mobile) */}
+                <nav className="md:hidden bg-surface-container-high/20 border-b border-outline/10 flex justify-around p-1 select-none">
+                    <button 
+                        onClick={() => setActiveTab('turnos')}
+                        className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                            activeTab === 'turnos' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined">schedule</span>
+                        Jornada
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('tareas')}
+                        className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                            activeTab === 'tareas' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined">task_alt</span>
+                        Tareas
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('solicitudes')}
+                        className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                            activeTab === 'solicitudes' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined">assignment</span>
+                        RRHH
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('campanias')}
+                        className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                            activeTab === 'campanias' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined">explore</span>
+                        Visitas
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('chat')}
+                        className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                            activeTab === 'chat' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined">smart_toy</span>
+                        Chat IA
+                    </button>
+                </nav>
+
+                {/* Main Content Area */}
+                <main className="flex-grow p-4 md:p-6 overflow-y-auto max-w-xl mx-auto w-full relative">
+
+                    
+                    {/* TAB 1: TURNOS & ELAPSED TIMER */}
+                    {activeTab === 'turnos' && (
+                        <div className="space-y-6">
+                            {/* Clock / Timer Widget */}
+                            <div className="glass-card p-6 rounded-3xl text-center border border-outline/10 shadow-xl relative overflow-hidden bg-gradient-to-b from-surface-container/20 to-surface-container-high/40">
+                                <span className="text-[10px] text-primary uppercase font-mono tracking-wider font-bold">
+                                    {shiftStatus === 'lunch' ? 'Tiempo de Almuerzo (Activo)' : 'Tiempo de Jornada'}
+                                </span>
+                                <div className="text-4xl font-black font-mono tracking-wider my-3 text-white">
+                                    {shiftStatus === 'lunch' ? lunchTimer : shiftTimer}
+                                </div>
+                                
+                                {shiftStatus === 'lunch' && (
+                                    <p className="text-xs text-on-surface-variant mb-3 font-mono">
+                                        Jornada acumulada (pausada): {shiftTimer}
+                                    </p>
+                                )}
+
+                                {shiftStatus === 'working' && lunchTimer !== '00:00:00' && (
+                                    <p className="text-xs text-on-surface-variant mb-3 font-mono">
+                                        Último descanso: {lunchTimer}
+                                    </p>
+                                )}
+                                
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-white/5 border border-outline/10 text-on-surface-variant">
+                                    <span className={`w-2.5 h-2.5 rounded-full ${
+                                        shiftStatus === 'working' ? 'bg-green-500 animate-ping' :
+                                        shiftStatus === 'lunch' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'
+                                    }`}></span>
+                                    <span className="capitalize">
+                                        {shiftStatus === 'no_started' ? 'Turno No Iniciado' :
+                                         shiftStatus === 'working' ? 'Trabajando / En Turno' :
+                                         shiftStatus === 'lunch' ? 'En Almuerzo / Descanso' : 'Turno Finalizado'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Selector de Modalidad (Solo si no ha iniciado turno o si está en turno) */}
+                            {shiftStatus !== 'finished' && (
+                                <div className="bg-surface-container/20 border border-outline/10 p-4 rounded-2xl">
+                                    <span className="block text-[10px] text-on-surface-variant uppercase font-mono tracking-wider font-bold mb-3 text-center">
+                                        Modalidad de Trabajo
+                                    </span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button 
+                                            type="button"
+                                            disabled={shiftStatus !== 'no_started'}
+                                            onClick={() => setWorkModality('presencial')}
+                                            className={`py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition ${
+                                                workModality === 'presencial'
+                                                    ? 'bg-primary border-primary text-on-primary'
+                                                    : 'bg-transparent border-outline/20 text-on-surface-variant hover:border-primary/50'
+                                            } ${shiftStatus !== 'no_started' ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">domain</span>
+                                            Presencial
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            disabled={shiftStatus !== 'no_started'}
+                                            onClick={() => setWorkModality('remoto')}
+                                            className={`py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition ${
+                                                workModality === 'remoto'
+                                                    ? 'bg-primary border-primary text-on-primary'
+                                                    : 'bg-transparent border-outline/20 text-on-surface-variant hover:border-primary/50'
+                                            } ${shiftStatus !== 'no_started' ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">home</span>
+                                            Remoto
+                                        </button>
+                                    </div>
+                                    {shiftStatus !== 'no_started' && (
+                                        <p className="text-[10px] text-on-surface-variant/60 text-center mt-2">
+                                            Modalidad fijada al iniciar el turno ({workModality === 'presencial' ? 'Presencial' : 'Remoto'}).
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Shift Controls Grid */}
+                            <div className="grid grid-cols-2 gap-3.5">
+                                {shiftStatus === 'no_started' && (
+                                    <button 
+                                        onClick={handleShiftStart}
+                                        className="col-span-2 bg-primary hover:opacity-90 text-on-primary p-3.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">play_arrow</span>
+                                        INICIAR TURNO
+                                    </button>
+                                )}
+
+                                {shiftStatus === 'working' && (
+                                    <>
+                                        <button 
+                                            onClick={handleLunchStart}
+                                            className="bg-surface-container border border-outline/20 hover:bg-surface-container-high text-on-surface p-3.5 rounded-xl font-semibold text-xs flex flex-col items-center justify-center gap-1 cursor-pointer transition"
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">coffee</span>
+                                            ALMUERZO / DESCANSO
+                                        </button>
+                                        <button 
+                                            onClick={handleShiftEnd}
+                                            className="bg-error/20 border border-error/30 hover:bg-error/30 text-error p-3.5 rounded-xl font-semibold text-xs flex flex-col items-center justify-center gap-1 cursor-pointer transition"
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">stop</span>
+                                            FINALIZAR TURNO
+                                        </button>
+                                    </>
+                                )}
+
+                                {shiftStatus === 'lunch' && (
+                                    <button 
+                                        onClick={handleLunchEnd}
+                                        className="col-span-2 bg-primary hover:opacity-90 text-on-primary p-3.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                                        RETOMAR TRABAJO
+                                    </button>
+                                )}
+
+                                {shiftStatus === 'finished' && (
+                                    <div className="col-span-2 glass-card p-4 text-center text-xs text-primary font-medium border border-primary/20 bg-primary/5">
+                                        ✅ ¡Jornada completada exitosamente! Que tengas un excelente día de descanso.
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Mis Registros Recientes */}
+                            <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl mt-4">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h4 className="font-bold text-xs text-on-surface">Mis Registros Recientes</h4>
+                                    <button 
+                                        type="button"
+                                        onClick={fetchActiveShiftStatus} 
+                                        className="w-6 h-6 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-lg flex items-center justify-center border border-outline/10 cursor-pointer transition"
+                                        title="Refrescar jornada"
+                                    >
+                                        <span className="material-symbols-outlined text-[13px]">refresh</span>
+                                    </button>
+                                </div>
+                                {myShifts.length === 0 ? (
+                                    <p className="text-[11px] text-on-surface-variant/60 text-center py-4">No tienes marcaciones registradas recientemente.</p>
+                                ) : (
+                                    <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+                                        {myShifts.slice(0, 5).map(s => {
+                                            const date = new Date(s.clock_in);
+                                            const outDate = s.clock_out ? new Date(s.clock_out) : null;
+                                            return (
+                                                <div key={s.id} className="flex justify-between items-center bg-surface-container/50 border border-outline/5 p-3 rounded-xl text-xs">
+                                                    <div>
+                                                        <p className="font-bold text-on-surface">
+                                                            {date.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                                        </p>
+                                                        <p className="text-[10px] text-on-surface-variant/80 font-mono mt-0.5">
+                                                            Entrada: {date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })} 
+                                                            {outDate && ` | Salida: ${outDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}`}
+                                                        </p>
+                                                    </div>
+                                                    <span className="font-bold text-primary font-mono">
+                                                        {Number(s.hours_worked || 0).toFixed(2)} hrs
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                 {/* TAB 2: TAREAS ASIGNADAS */}
                 {activeTab === 'tareas' && (
                     <div className="space-y-4">
                         <div className="flex justify-between items-center mb-2">
-                            <h3 className="font-bold text-base text-on-surface">Mis Tareas Pendientes</h3>
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-bold text-base text-on-surface">Mis Tareas Pendientes</h3>
+                                <button 
+                                    type="button"
+                                    onClick={fetchTasks} 
+                                    className="w-6 h-6 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-lg flex items-center justify-center border border-outline/10 cursor-pointer transition"
+                                    title="Refrescar tareas"
+                                >
+                                    <span className="material-symbols-outlined text-[13px]">refresh</span>
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={() => {
+                                        setIsCreateTaskOpen(true);
+                                        setTaskFormType('tarea');
+                                        setTaskFormTitle('');
+                                        setTaskFormDesc('');
+                                        setTaskFormDueDate('');
+                                        setTaskFormDueTime('');
+                                        setCrmSearchQuery('');
+                                        setSelectedCrmCustomerId('');
+                                    }} 
+                                    className="px-2.5 py-1 bg-primary hover:bg-primary-container text-white text-[10px] font-bold rounded-lg border-0 cursor-pointer flex items-center gap-1 transition shadow"
+                                >
+                                    <span className="material-symbols-outlined text-[12px]">add</span>
+                                    Nueva Tarea
+                                </button>
+                            </div>
                             <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold">
-                                {tasks.filter(t => t.status === 'pending').length} por hacer
+                                {tasks.filter(t => t.status === 'pendiente' || t.status === 'pending' || t.status === 'en proceso' || t.status === 'en_proceso').length} activas
                             </span>
                         </div>
 
@@ -841,29 +1346,61 @@ export const EmployeePortal: React.FC = () => {
                             </div>
                         ) : (
                             <div className="space-y-2">
-                                {tasks.map((task) => (
-                                    <div 
-                                        key={task.id}
-                                        onClick={() => handleToggleTask(task.id, task.status)}
-                                        className={`p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition hover:border-primary/50 ${
-                                            task.status === 'completed' ? 'bg-green-500/5 border-green-500/20 text-on-surface-variant/70' : 'bg-surface-container/20 border-outline/10 text-on-surface'
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className={`material-symbols-outlined text-[20px] ${
-                                                task.status === 'completed' ? 'text-green-500' : 'text-on-surface-variant'
-                                            }`}>
-                                                {task.status === 'completed' ? 'check_box' : 'check_box_outline_blank'}
-                                            </span>
-                                            <span className={`text-xs ${task.status === 'completed' ? 'line-through' : 'font-medium'}`}>
-                                                {task.task_description}
+                                {tasks.map((task) => {
+                                    const statusInfo = getTaskStatusInfo(task);
+                                    return (
+                                        <div 
+                                            key={task.id}
+                                            onClick={() => {
+                                                setSelectedTask(task);
+                                                setNewSelectedStatus(task.status || 'pendiente');
+                                                fetchTaskUpdates(task.id);
+                                            }}
+                                            className="p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition hover:border-primary/50 bg-surface-container/20 border-outline/10 text-on-surface"
+                                        >
+                                            <div className="flex items-center gap-3 flex-grow">
+                                                <span className={`w-3 h-3 rounded-full shrink-0 ${statusInfo.badgeColor}`} />
+                                                
+                                                <div className="text-left">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <p className="text-xs font-bold">
+                                                            {task.title}
+                                                        </p>
+                                                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${statusInfo.bgColor}`}>
+                                                            {statusInfo.label}
+                                                        </span>
+                                                        {task.task_type === 'visita' && (
+                                                            <span className="px-2 py-0.5 rounded-full text-[8px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                                                Visita
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {task.description && (
+                                                        <p className="text-[10px] text-on-surface-variant/80 mt-0.5">
+                                                            {task.description}
+                                                        </p>
+                                                    )}
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        {task.created_by_name && (
+                                                            <p className="text-[9px] text-primary/80 font-mono">
+                                                                Por: {task.created_by_name}
+                                                            </p>
+                                                        )}
+                                                        {task.due_date && (
+                                                            <p className="text-[9px] text-orange-400 font-mono flex items-center gap-1">
+                                                                <span className="material-symbols-outlined text-[10px]">schedule</span>
+                                                                Límite: {new Date(task.due_date).toLocaleString('es-CO')}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span className="text-[9px] text-on-surface-variant/60 font-mono shrink-0 ml-2">
+                                                {new Date(task.created_at).toLocaleDateString('es-CO')}
                                             </span>
                                         </div>
-                                        <span className="text-[9px] text-on-surface-variant/60 font-mono">
-                                            {new Date(task.created_at).toLocaleDateString('es-CO')}
-                                        </span>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -977,7 +1514,17 @@ export const EmployeePortal: React.FC = () => {
 
                         {/* Historial de Solicitudes */}
                         <div className="space-y-3">
-                            <h3 className="font-bold text-sm text-on-surface">Historial de Solicitudes</h3>
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-bold text-sm text-on-surface">Historial de Solicitudes</h3>
+                                <button 
+                                    type="button"
+                                    onClick={fetchRequests} 
+                                    className="w-6 h-6 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-lg flex items-center justify-center border border-outline/10 cursor-pointer transition"
+                                    title="Refrescar solicitudes"
+                                >
+                                    <span className="material-symbols-outlined text-[13px]">refresh</span>
+                                </button>
+                            </div>
                             {requests.length === 0 ? (
                                 <p className="text-xs text-on-surface-variant italic">No has presentado solicitudes todavía.</p>
                             ) : (
@@ -1015,13 +1562,24 @@ export const EmployeePortal: React.FC = () => {
                                 <h3 className="font-bold text-sm text-on-surface">Mis Campañas de Campo</h3>
                                 <p className="text-[10px] text-on-surface-variant">Revisa tus asignaciones puerta a puerta o en punto físico y sube fotos de check-out.</p>
                             </div>
-                            <button
-                                onClick={() => { setVError(''); setVSuccess(''); setIsVCreateOpen(true); }}
-                                className="px-3.5 py-2 bg-primary hover:bg-primary-container text-white text-[10px] font-bold rounded-xl border-0 cursor-pointer flex items-center gap-1.5 transition shadow"
-                            >
-                                <span className="material-symbols-outlined text-[14px]">add_location</span>
-                                Nueva
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={fetchVisits}
+                                    className="w-8 h-8 bg-surface-container hover:bg-surface-variant text-on-surface border border-outline/10 cursor-pointer flex items-center justify-center transition rounded-xl"
+                                    title="Refrescar campañas"
+                                >
+                                    <span className="material-symbols-outlined text-[15px]">refresh</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => { setVError(''); setVSuccess(''); setIsVCreateOpen(true); }}
+                                    className="px-3.5 py-2 bg-primary hover:bg-primary-container text-white text-[10px] font-bold rounded-xl border-0 cursor-pointer flex items-center gap-1.5 transition shadow"
+                                >
+                                    <span className="material-symbols-outlined text-[14px]">add_location</span>
+                                    Nueva
+                                </button>
+                            </div>
                         </div>
 
                         {vSuccess && (
@@ -1352,6 +1910,14 @@ export const EmployeePortal: React.FC = () => {
                                     <option value="ventas">💰 Canal Ventas</option>
                                     <option value="soporte">🔧 Canal Soporte</option>
                                     <option value="asistente">🤖 Consultar Asistente IA</option>
+                                    {employees
+                                        .filter(emp => emp.id !== employeeId)
+                                        .map(emp => (
+                                            <option key={emp.id} value={`emp_${emp.id}`}>
+                                                💬 Chat: {emp.name} {emp.last_name || ''}
+                                            </option>
+                                        ))
+                                    }
                                 </select>
                             </div>
                             <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-mono font-bold animate-pulse">
@@ -1413,7 +1979,303 @@ export const EmployeePortal: React.FC = () => {
                         </form>
                     </div>
                 )}
+
+                {/* TASK DETAIL / UPDATE FORM MODAL */}
+                {selectedTask && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
+                        <div className="glass-card max-w-md w-full rounded-2xl p-6 shadow-2xl animate-float max-h-[90vh] overflow-y-auto custom-scrollbar text-xs">
+                            <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
+                                <div>
+                                    <h4 className="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[18px] text-primary">task</span>
+                                        Detalle de Tarea
+                                    </h4>
+                                    {selectedTask.task_type === 'visita' && (
+                                        <span className="px-2 py-0.5 rounded-full text-[8px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 mt-1 inline-block">
+                                            Tipo: Visita Médica/Comercial
+                                        </span>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => setSelectedTask(null)}
+                                    className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">close</span>
+                                </button>
+                            </div>
+
+                            {/* Task Information */}
+                            <div className="space-y-3 bg-surface-container/20 p-4 rounded-xl border border-outline/5 mb-4">
+                                <div>
+                                    <span className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider block">Título</span>
+                                    <span className="text-on-surface font-semibold text-xs">{selectedTask.title}</span>
+                                </div>
+                                {selectedTask.description && (
+                                    <div>
+                                        <span className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider block">Instrucciones / Descripción</span>
+                                        <p className="text-on-surface/90 text-xs whitespace-pre-line leading-relaxed">{selectedTask.description}</p>
+                                    </div>
+                                )}
+                                <div className="grid grid-cols-2 gap-2 border-t border-outline/5 pt-2">
+                                    <div>
+                                        <span className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider block">Asignado Por</span>
+                                        <span className="text-on-surface font-mono">{selectedTask.created_by_name || 'Administrador'}</span>
+                                    </div>
+                                    {selectedTask.due_date && (
+                                        <div>
+                                            <span className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider block">Fecha Límite</span>
+                                            <span className="text-orange-400 font-bold">{new Date(selectedTask.due_date).toLocaleString('es-CO')}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Status Change & Update Submission */}
+                            <form onSubmit={handleSubmitTaskUpdate} className="space-y-3 border-t border-outline/10 pt-4 mb-4">
+                                <h5 className="font-bold text-xs text-primary uppercase tracking-wider">Reportar Avance</h5>
+                                
+                                <div className="space-y-1">
+                                    <label className="block font-bold text-[10px] text-on-surface-variant uppercase">Nuevo Estado</label>
+                                    <select
+                                        value={newSelectedStatus}
+                                        onChange={(e) => setNewSelectedStatus(e.target.value)}
+                                        className="w-full bg-surface-container border border-outline/25 p-2 rounded-xl text-on-surface outline-none cursor-pointer"
+                                    >
+                                        <option value="pendiente">Pendiente</option>
+                                        <option value="en proceso">En Proceso</option>
+                                        <option value="terminado">Terminado</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="block font-bold text-[10px] text-on-surface-variant uppercase">¿Qué avance o reporte realizaste? (Obligatorio)</label>
+                                    <textarea
+                                        required
+                                        rows={2}
+                                        value={newReportText}
+                                        onChange={(e) => setNewReportText(e.target.value)}
+                                        className="w-full bg-surface-container border border-outline/25 p-2 rounded-xl text-on-surface outline-none resize-none"
+                                        placeholder="Escribe detalladamente qué hiciste..."
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingReport}
+                                    className="w-full py-2 bg-primary hover:bg-primary-container text-white font-bold rounded-xl cursor-pointer transition shadow disabled:opacity-50"
+                                >
+                                    {isSubmittingReport ? 'Guardando reporte...' : 'Guardar Reporte y Estado'}
+                                </button>
+                            </form>
+
+                            {/* Task Updates Logs / History */}
+                            <div className="space-y-3 border-t border-outline/10 pt-4">
+                                <h5 className="font-bold text-xs text-on-surface-variant uppercase tracking-wider flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[16px]">history</span>
+                                    Historial de Reportes ({taskUpdates.length})
+                                </h5>
+                                
+                                {loadingUpdates ? (
+                                    <p className="italic text-on-surface-variant py-2 animate-pulse">Cargando bitácora...</p>
+                                ) : taskUpdates.length === 0 ? (
+                                    <p className="italic text-on-surface-variant/70 py-2">No se han ingresado reportes sobre esta tarea.</p>
+                                ) : (
+                                    <div className="space-y-3 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                                        {taskUpdates.map((upd) => (
+                                            <div key={upd.id} className="p-3 bg-white/5 rounded-xl border border-outline/5 space-y-1">
+                                                <div className="flex justify-between items-center text-[10px]">
+                                                    <span className="font-bold text-primary font-mono">{upd.created_by_name}</span>
+                                                    <span className="text-on-surface-variant/60 font-mono">
+                                                        {new Date(upd.created_at).toLocaleString('es-CO')}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[11px] text-on-surface/90 font-sans leading-relaxed">{upd.report_text}</p>
+                                                <div className="flex items-center gap-1.5 text-[9px] text-on-surface-variant font-mono mt-1">
+                                                    <span>Estado:</span>
+                                                    <span className="line-through">{upd.old_status || 'desconocido'}</span>
+                                                    <span className="material-symbols-outlined text-[10px]">arrow_right_alt</span>
+                                                    <span className="text-primary font-bold">{upd.new_status}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* CREATE TAREA / VISITA FORM MODAL */}
+                {isCreateTaskOpen && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
+                        <div className="glass-card max-w-sm w-full rounded-2xl p-6 shadow-2xl animate-float max-h-[90vh] overflow-y-auto custom-scrollbar text-xs">
+                            <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
+                                <h4 className="font-bold text-sm text-on-surface flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[18px] text-primary">add_circle</span>
+                                    Programar Tarea / Visita
+                                </h4>
+                                <button
+                                    onClick={() => setIsCreateTaskOpen(false)}
+                                    className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">close</span>
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleCreateEmployeeOwnTask} className="space-y-4 text-xs">
+                                {/* Tipo: Tarea o Visita */}
+                                <div className="space-y-1">
+                                    <label className="block font-bold text-[10px] text-on-surface-variant uppercase">Tipo de Actividad</label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setTaskFormType('tarea')}
+                                            className={`flex-grow py-2 border rounded-xl font-bold text-xs cursor-pointer transition ${
+                                                taskFormType === 'tarea' ? 'bg-primary border-primary text-on-primary shadow' : 'bg-transparent border-outline/20 text-on-surface-variant hover:border-primary/50'
+                                            }`}
+                                        >
+                                            Tarea Común
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setTaskFormType('visita')}
+                                            className={`flex-grow py-2 border rounded-xl font-bold text-xs cursor-pointer transition ${
+                                                taskFormType === 'visita' ? 'bg-primary border-primary text-on-primary shadow' : 'bg-transparent border-outline/20 text-on-surface-variant hover:border-primary/50'
+                                            }`}
+                                        >
+                                            Visita (CRM)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Título */}
+                                <div className="space-y-1">
+                                    <label className="block font-bold text-[10px] text-on-surface-variant uppercase">Título de la Actividad</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={taskFormTitle}
+                                        onChange={(e) => setTaskFormTitle(e.target.value)}
+                                        className="w-full bg-surface-container border border-outline/25 p-2 rounded-xl text-on-surface outline-none"
+                                        placeholder={taskFormType === 'visita' ? "Ej: Visita de inspección visual" : "Ej: Archivar reportes diarios"}
+                                    />
+                                </div>
+
+                                {/* Si es visita, buscador predictivo del CRM */}
+                                {taskFormType === 'visita' && (
+                                    <div className="space-y-1 relative">
+                                        <label className="block font-bold text-[10px] text-on-surface-variant uppercase">Buscar Cliente / Empresa en CRM</label>
+                                        <input
+                                            type="text"
+                                            required={!selectedCrmCustomerId}
+                                            value={crmSearchQuery}
+                                            onChange={(e) => {
+                                                setCrmSearchQuery(e.target.value);
+                                                setShowCrmSuggestions(true);
+                                            }}
+                                            onFocus={() => setShowCrmSuggestions(true)}
+                                            className="w-full bg-surface-container border border-outline/25 p-2 rounded-xl text-on-surface outline-none"
+                                            placeholder="Escribe nombre o NIT/Cédula..."
+                                        />
+                                        {showCrmSuggestions && (
+                                            <div className="absolute left-0 right-0 top-full mt-1 bg-surface-container-high border border-outline/20 rounded-xl shadow-2xl max-h-40 overflow-y-auto z-[99999] custom-scrollbar text-xs">
+                                                <div className="p-2 border-b border-outline/5 flex justify-between items-center bg-surface-container-high-hover">
+                                                    <span className="font-bold text-[9px] uppercase tracking-wider text-on-surface-variant">Contactos/Empresas CRM</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowCrmSuggestions(false)}
+                                                        className="text-primary hover:text-primary-container text-[10px] font-bold bg-transparent border-0 cursor-pointer"
+                                                    >
+                                                        Cerrar
+                                                    </button>
+                                                </div>
+                                                {crmCustomers.filter(c => 
+                                                    c.name.toLowerCase().includes(crmSearchQuery.toLowerCase()) ||
+                                                    (c.last_name && c.last_name.toLowerCase().includes(crmSearchQuery.toLowerCase())) ||
+                                                    c.document_number.includes(crmSearchQuery)
+                                                ).length === 0 ? (
+                                                    <div className="p-3 text-on-surface-variant/70 italic">
+                                                        No se encontraron clientes/empresas.
+                                                    </div>
+                                                ) : (
+                                                    crmCustomers.filter(c => 
+                                                        c.name.toLowerCase().includes(crmSearchQuery.toLowerCase()) ||
+                                                        (c.last_name && c.last_name.toLowerCase().includes(crmSearchQuery.toLowerCase())) ||
+                                                        c.document_number.includes(crmSearchQuery)
+                                                    ).map(cust => (
+                                                        <div 
+                                                            key={cust.id}
+                                                            onClick={() => {
+                                                                setSelectedCrmCustomerId(cust.id);
+                                                                setCrmSearchQuery(`${cust.name} ${cust.last_name || ''} (${cust.document_number})`);
+                                                                if (taskFormTitle === '') {
+                                                                    setTaskFormTitle(`Visita a: ${cust.name} ${cust.last_name || ''}`);
+                                                                }
+                                                                setShowCrmSuggestions(false);
+                                                            }}
+                                                            className="p-3 hover:bg-surface-variant/40 cursor-pointer border-b border-outline/5 text-on-surface flex flex-col"
+                                                        >
+                                                            <span className="font-bold">{cust.name} {cust.last_name || ''}</span>
+                                                            <span className="text-[10px] text-on-surface-variant font-mono">
+                                                                {cust.customer_type === 'empresa' ? 'Empresa / NIT' : 'Persona / CC'}: {cust.document_number}
+                                                            </span>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Descripción */}
+                                <div className="space-y-1">
+                                    <label className="block font-bold text-[10px] text-on-surface-variant uppercase">Descripción / Detalles</label>
+                                    <textarea
+                                        rows={2}
+                                        value={taskFormDesc}
+                                        onChange={(e) => setTaskFormDesc(e.target.value)}
+                                        className="w-full bg-surface-container border border-outline/25 p-2 rounded-xl text-on-surface outline-none resize-none"
+                                        placeholder="Detalles sobre lo que se realizará..."
+                                    />
+                                </div>
+
+                                {/* Fecha y hora límite */}
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                        <label className="block font-bold text-[10px] text-on-surface-variant uppercase">Fecha Límite</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={taskFormDueDate}
+                                            onChange={(e) => setTaskFormDueDate(e.target.value)}
+                                            className="w-full bg-surface-container border border-outline/25 p-2 rounded-xl text-on-surface outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="block font-bold text-[10px] text-on-surface-variant uppercase">Hora Límite</label>
+                                        <input
+                                            type="time"
+                                            required
+                                            value={taskFormDueTime}
+                                            onChange={(e) => setTaskFormDueTime(e.target.value)}
+                                            className="w-full bg-surface-container border border-outline/25 p-2 rounded-xl text-on-surface outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingReport}
+                                    className="w-full py-2 bg-primary hover:bg-primary-container text-white font-bold rounded-xl cursor-pointer transition shadow disabled:opacity-50 mt-2"
+                                >
+                                    {isSubmittingReport ? 'Programando...' : 'Programar Actividad'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
+    </div>
     );
 };

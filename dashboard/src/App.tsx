@@ -63,12 +63,23 @@ function App() {
         if (json.success) {
           const user = json.data;
           localStorage.setItem('session_role', user.role);
+          localStorage.setItem('session_name', user.name || '');
           
           if (user.role === 'admin') {
-            setView('admin');
+            const savedView = localStorage.getItem('current_view');
+            const savedClientId = localStorage.getItem('current_client_id');
+            if (savedView === 'client' && savedClientId) {
+              setClientId(savedClientId);
+              setView('client');
+            } else {
+              setView('admin');
+              localStorage.setItem('current_view', 'admin');
+            }
           } else {
             setClientId(user.id);
             setView('client');
+            localStorage.setItem('current_view', 'client');
+            localStorage.setItem('current_client_id', user.id);
           }
           
           // Limpiar cualquier residuo visual en la barra de direcciones
@@ -79,6 +90,8 @@ function App() {
           // Token inválido/expirado
           localStorage.removeItem('auth_token');
           localStorage.removeItem('session_role');
+          localStorage.removeItem('current_view');
+          localStorage.removeItem('current_client_id');
           setView('login');
           window.history.pushState({}, '', '/');
         }
@@ -86,6 +99,8 @@ function App() {
         console.error("[Auth App] Error validando sesión:", err);
         localStorage.removeItem('auth_token');
         localStorage.removeItem('session_role');
+        localStorage.removeItem('current_view');
+        localStorage.removeItem('current_client_id');
         setView('login');
         window.history.pushState({}, '', '/');
       } finally {
@@ -101,9 +116,13 @@ function App() {
     localStorage.setItem('session_role', role);
     if (role === 'admin') {
       setView('admin');
+      localStorage.setItem('current_view', 'admin');
+      localStorage.removeItem('current_client_id');
     } else {
       setClientId(id);
       setView('client');
+      localStorage.setItem('current_view', 'client');
+      localStorage.setItem('current_client_id', id);
     }
     // Forzar limpieza visual de la barra de direcciones
     window.history.pushState({}, '', '/');
@@ -112,6 +131,11 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('session_role');
+    localStorage.removeItem('session_name');
+    localStorage.removeItem('current_view');
+    localStorage.removeItem('current_client_id');
+    localStorage.removeItem('client_active_tab');
+    localStorage.removeItem('admin_active_tab');
     setView('login');
     window.history.pushState({}, '', '/');
   };
@@ -120,6 +144,9 @@ function App() {
     const sessionRole = localStorage.getItem('session_role');
     if (sessionRole === 'admin') {
       setView('admin');
+      localStorage.setItem('current_view', 'admin');
+      localStorage.removeItem('current_client_id');
+      localStorage.removeItem('client_active_tab');
     } else {
       handleLogout();
     }
@@ -171,6 +198,8 @@ function App() {
         onViewClient={(id) => {
           setClientId(id);
           setView('client');
+          localStorage.setItem('current_view', 'client');
+          localStorage.setItem('current_client_id', id);
         }} 
       />
     );

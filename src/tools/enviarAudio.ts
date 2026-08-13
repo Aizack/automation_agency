@@ -26,7 +26,7 @@ export const enviarAudioTool = {
         
         console.log(`[Tool Reproducir Audio] 🎙️ Buscando audio '${cleanTag}' para el cliente '${targetClientId}'...`);
         
-        const clientMediaDir = path.join(process.cwd(), 'media', 'clients', targetClientId);
+        const clientMediaDir = path.join(process.cwd(), 'media', 'clients', targetClientId, 'audios');
         if (!fs.existsSync(clientMediaDir)) {
             throw new Error(`La carpeta de audios para el cliente ${targetClientId} no existe.`);
         }

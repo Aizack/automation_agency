@@ -2,30 +2,205 @@ import React, { useState, useEffect, useRef } from 'react';
 
 interface Product {
     id: string;
+    client_id: string;
     name: string;
     sku: string | null;
     description: string | null;
     price: string;
     stock: number;
+    cost_price: string;
+    min_stock?: number;
+    supplier_name: string | null;
+    supplier_phone: string | null;
+    brand: string | null;
+    material: string | null;
+    style: string | null;
+    color: string | null;
+    promo_discount: string;
     created_at: string;
 }
 
 interface SaaSErpInventoryProps {
     clientId: string;
+    category?: string;
 }
 
-export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId }) => {
+// Code 39 Character encoding table
+const code39Map: Record<string, string> = {
+    '0': '101001101101', '1': '110100101011', '2': '101100101011', '3': '110110010101',
+    '4': '101001101011', '5': '110100110101', '6': '101100110101', '7': '101001011011',
+    '8': '110100101101', '9': '101100101101', 'A': '110101001011', 'B': '101101001011',
+    'C': '110110100101', 'D': '101011001011', 'E': '110101100101', 'F': '101101100101',
+    'G': '101010011011', 'H': '110101001101', 'I': '101101001101', 'J': '101011001101',
+    'K': '110101010011', 'L': '101101010011', 'M': '110110101001', 'N': '101011010011',
+    'O': '110101101001', 'P': '101101101001', 'Q': '101010110011', 'R': '110101011001',
+    'S': '101101011001', 'T': '101011011001', 'U': '110010101011', 'V': '100110101011',
+    'W': '110011010101', 'X': '100101101011', 'Y': '110010110101', 'Z': '100110110101',
+    '-': '100101011011', '.': '110010101101', ' ': '100110101101', '*': '100101101101'
+};
+
+const BarcodeSVG: React.FC<{ value: string; size?: 'sm' | 'md' }> = ({ value, size = 'md' }) => {
+    const cleanValue = (value || '').toUpperCase().replace(/[^0-9A-Z\-.\s]/g, '');
+    if (!cleanValue) return null;
+    const fullText = `*${cleanValue}*`;
+    let pattern = '';
+    for (let char of fullText) {
+        pattern += (code39Map[char] || code39Map[' ']) + '0';
+    }
+    const barWidth = size === 'sm' ? 0.9 : 1.5;
+    const height = size === 'sm' ? 20 : 40;
+    const width = pattern.length * barWidth;
+    return (
+        <div className="flex flex-col items-center gap-0.5 my-1">
+            <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="bg-white p-0.5 rounded">
+                {pattern.split('').map((bit, idx) => {
+                    if (bit === '1') {
+                        return (
+                            <rect
+                                key={idx}
+                                x={idx * barWidth}
+                                y={0}
+                                width={barWidth}
+                                height={height}
+                                fill="#000000"
+                            />
+                        );
+                    }
+                    return null;
+                })}
+            </svg>
+            <span className="text-[8px] font-mono tracking-widest text-on-surface-variant uppercase">{cleanValue}</span>
+        </div>
+    );
+};
+
+const frameMaterials = [
+    'Plástico inyectado',
+    'Pasta',
+    'Acetato',
+    'TR-90',
+    'Acero',
+    'Metal',
+    'Titanio',
+    'Madera',
+    'Fibra de carbono'
+];
+
+const frameStyles = [
+    'Aviador',
+    'Wayfarer',
+    'Redondo',
+    'Clubmaster',
+    'Cat Eye',
+    'Ovalado',
+    'Rectangular',
+    'Hexagonal',
+    'Pantos'
+];
+
+interface ColorOption {
+    name: string;
+    value: string;
+    preview: string;
+}
+
+const colorOptions: ColorOption[] = [
+    { name: 'Negro', value: 'Negro', preview: '#000000' },
+    { name: 'Carey (Animal Print)', value: 'Carey', preview: 'repeating-linear-gradient(45deg, #1f1107, #1f1107 4px, #8c5827 4px, #8c5827 8px)' },
+    { name: 'Havana', value: 'Havana', preview: 'linear-gradient(135deg, #2b180d 0%, #a66a38 50%, #2b180d 100%)' },
+    { name: 'Dorado', value: 'Dorado', preview: '#d4af37' },
+    { name: 'Plateado', value: 'Plateado', preview: '#c0c0c0' },
+    { name: 'Café / Marrón', value: 'Cafe', preview: '#5c4033' },
+    { name: 'Azul Marino', value: 'Azul Marino', preview: '#000080' },
+    { name: 'Rosado', value: 'Rosado', preview: '#ffc0cb' },
+    { name: 'Transparente', value: 'Transparente', preview: 'linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 40%, rgba(255,0,0,0.6) 45%, rgba(255,0,0,0.6) 55%, rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1) 100%)' },
+    { name: 'Gris', value: 'Gris', preview: '#808080' },
+    { name: 'Rojo', value: 'Rojo', preview: '#ff0000' }
+];
+
+const getColorPreview = (name: string): string => {
+    const opt = colorOptions.find(o => o.value.toLowerCase() === (name || '').toLowerCase() || o.name.toLowerCase() === (name || '').toLowerCase());
+    return opt ? opt.preview : '#808080';
+};
+
+// Sub-componente para edición inline de promociones
+const PromoDiscountRow: React.FC<{
+    prod: Product;
+    formatPrice: (v: string) => string;
+    onSave: (prod: Product, val: number) => void;
+    category?: string;
+}> = ({ prod, formatPrice, onSave, category = 'optica' }) => {
+    const [pct, setPct] = useState(prod.promo_discount ? parseFloat(prod.promo_discount) : 0);
+    const priceNum = parseFloat(prod.price);
+    const promoPrice = priceNum * (1 - pct / 100);
+
+    return (
+        <tr className="hover:bg-surface-container/30 transition-colors">
+            <td className="p-4">
+                <p className="font-semibold text-on-surface text-sm">{prod.name}</p>
+                <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[10px] text-on-surface-variant">
+                    {prod.sku && <span className="font-mono bg-surface-container px-1 py-0.5 rounded">SKU: {prod.sku}</span>}
+                    {category === 'optica' && prod.brand && <span>• Marca: {prod.brand}</span>}
+                    {category === 'optica' && prod.color && <span>• Color: {prod.color}</span>}
+                </div>
+            </td>
+            <td className="p-4 font-semibold text-on-surface">
+                {formatPrice(prod.price)}
+            </td>
+            <td className="p-4">
+                <div className="flex items-center gap-1.5 max-w-[120px]">
+                    <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={pct}
+                        onChange={(e) => setPct(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                        className="bg-surface-container border border-outline/20 rounded-lg p-1.5 w-16 text-center text-xs font-semibold text-on-surface focus:border-primary outline-none"
+                    />
+                    <span className="text-xs text-on-surface-variant">%</span>
+                </div>
+            </td>
+            <td className="p-4">
+                <div className="flex flex-col">
+                    <span className="font-bold text-primary text-sm">{formatPrice(promoPrice.toString())}</span>
+                    {pct > 0 && <span className="text-[10px] text-green-400 font-medium">Ahorras: {formatPrice((priceNum - promoPrice).toString())}</span>}
+                </div>
+            </td>
+            <td className="p-4 text-right">
+                <button
+                    type="button"
+                    onClick={() => onSave(prod, pct)}
+                    disabled={parseFloat(prod.promo_discount || '0') === pct}
+                    className="bg-primary disabled:bg-surface-container-high/65 disabled:text-on-surface-variant/40 hover:opacity-90 text-on-primary text-[11px] font-bold py-1.5 px-3.5 rounded-lg flex items-center gap-1 transition cursor-pointer ml-auto border-0"
+                >
+                    <span className="material-symbols-outlined text-[14px]">save</span>
+                    {parseFloat(prod.promo_discount || '0') === pct ? 'Guardado' : 'Guardar'}
+                </button>
+            </td>
+        </tr>
+    );
+};
+
+export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, category = 'optica' }) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [activeTab, setActiveTab] = useState<'catalog' | 'promotions'>('catalog');
 
     // Form fields
     const [name, setName] = useState('');
     const [sku, setSku] = useState('');
     const [description, setDescription] = useState('');
-    const [price, setPrice] = useState(0);
-    const [stock, setStock] = useState(0);
+    const [price, setPrice] = useState<number | ''>('');
+    const [costPrice, setCostPrice] = useState<number | ''>('');
+    const [stock, setStock] = useState<number | ''>('');
+    const [minStock, setMinStock] = useState<number | ''>(5);
+    const [brand, setBrand] = useState('');
+    const [material, setMaterial] = useState('');
+    const [style, setStyle] = useState('');
+    const [color, setColor] = useState('');
+    const [promoDiscount, setPromoDiscount] = useState<number | ''>('');
 
     // Search and filter states
     const [searchTerm, setSearchTerm] = useState('');
@@ -63,11 +238,27 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId }) 
         if (!loading && searchInputRef.current) {
             searchInputRef.current.focus();
         }
-    }, [loading, isFormOpen]);
+    }, [loading, isFormOpen, activeTab]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const body = { name, sku, description, price, stock };
+        // Generate automatic SKU if left blank
+        const finalSku = sku.trim() || 'OP' + Math.floor(100000 + Math.random() * 900000);
+        
+        const body = { 
+            name, 
+            sku: finalSku, 
+            description, 
+            price: price === '' ? 0 : price, 
+            stock: stock === '' ? 0 : stock,
+            min_stock: minStock === '' ? 5 : minStock,
+            cost_price: costPrice === '' ? 0 : costPrice,
+            brand: brand.trim() || null,
+            material: material || null,
+            style: style || null,
+            color: color || null,
+            promo_discount: promoDiscount === '' ? 0 : promoDiscount
+        };
 
         try {
             const url = editingProduct 
@@ -93,6 +284,43 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId }) 
             }
         } catch (err) {
             alert('Error al guardar el producto.');
+        }
+    };
+
+    const handleUpdatePromoDiscount = async (prod: Product, val: number) => {
+        const cleanDiscount = Math.max(0, Math.min(100, val));
+        const body = {
+            name: prod.name,
+            sku: prod.sku,
+            description: prod.description,
+            price: parseFloat(prod.price),
+            stock: prod.stock,
+            cost_price: parseFloat(prod.cost_price || '0'),
+            brand: prod.brand,
+            material: prod.material,
+            style: prod.style,
+            color: prod.color,
+            promo_discount: cleanDiscount
+        };
+
+        try {
+            const res = await fetch(`/api/clients/${clientId}/products/${prod.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Update local state smoothly
+                setProducts(products.map(p => p.id === prod.id ? { ...p, promo_discount: cleanDiscount.toString() } : p));
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (err) {
+            alert('Error al guardar promoción.');
         }
     };
 
@@ -155,7 +383,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId }) 
         setSku(prod.sku || '');
         setDescription(prod.description || '');
         setPrice(parseFloat(prod.price));
+        setCostPrice(prod.cost_price ? parseFloat(prod.cost_price) : 0);
         setStock(prod.stock);
+        setMinStock(prod.min_stock !== undefined ? prod.min_stock : 5);
+        setBrand(prod.brand || '');
+        setMaterial(prod.material || '');
+        setStyle(prod.style || '');
+        setColor(prod.color || '');
+        setPromoDiscount(prod.promo_discount ? parseFloat(prod.promo_discount) : 0);
         setIsFormOpen(true);
     };
 
@@ -164,8 +399,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId }) 
         setName('');
         setSku('');
         setDescription('');
-        setPrice(0);
-        setStock(0);
+        setPrice('');
+        setCostPrice('');
+        setStock('');
+        setMinStock(5);
+        setBrand('');
+        setMaterial('');
+        setStyle('');
+        setColor('');
+        setPromoDiscount('');
         setIsFormOpen(false);
     };
 
@@ -180,7 +422,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId }) 
         if (!match) return true;
         return (
             prod.name.toLowerCase().includes(match) ||
-            (prod.sku && prod.sku.toLowerCase().includes(match))
+            (prod.sku && prod.sku.toLowerCase().includes(match)) ||
+            (prod.brand && prod.brand.toLowerCase().includes(match)) ||
+            (prod.material && prod.material.toLowerCase().includes(match)) ||
+            (prod.style && prod.style.toLowerCase().includes(match)) ||
+            (prod.color && prod.color.toLowerCase().includes(match))
         );
     });
 
@@ -189,50 +435,84 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId }) 
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-bold">Catálogo de Inventario</h2>
-                    <p className="text-xs text-gray-400 font-medium">Administra los productos, lentes y monturas. Lee SKU de barra en foco.</p>
+                    <h2 className="text-xl font-bold">Inventario y Promociones</h2>
+                    <p className="text-xs text-gray-400 font-medium font-sans">Administra los productos, precios de costo, venta y descuentos.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        onChange={handleImportCSV} 
-                        className="hidden" 
-                        accept=".csv" 
-                    />
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={importing}
-                        className="bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                        <span className="material-symbols-outlined text-[16px]">publish</span>
-                        {importing ? 'Importando...' : 'Importar CSV'}
-                    </button>
-                    <button
-                        onClick={() => { resetForm(); setIsFormOpen(true); }}
-                        className="bg-[#0a5cff] hover:bg-[#0047d4] text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                        <span className="material-symbols-outlined text-[16px]">add</span>
-                        Agregar Producto
-                    </button>
-                </div>
+                {activeTab === 'catalog' && (
+                    <div className="flex items-center gap-3">
+                        <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            onChange={handleImportCSV} 
+                            className="hidden" 
+                            accept=".csv" 
+                        />
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={importing}
+                            className="bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            <span className="material-symbols-outlined text-[16px]">publish</span>
+                            {importing ? 'Importando...' : 'Importar CSV'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={fetchProducts}
+                            className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow shrink-0"
+                            title="Refrescar catálogo"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">refresh</span>
+                        </button>
+                        <button
+                            onClick={() => { resetForm(); setIsFormOpen(true); }}
+                            className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer border-0"
+                        >
+                            <span className="material-symbols-outlined text-[16px]">add</span>
+                            Agregar Producto
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Banners feedback */}
             {importSuccessMsg && (
-                <div className="bg-green-500/10 border border-green-500/20 text-green-500 text-xs p-3 rounded-xl font-bold">
+                <div className="bg-primary/10 border border-primary/20 text-primary text-xs p-3 rounded-xl font-medium">
                     ✅ {importSuccessMsg}
                 </div>
             )}
             {importErrorMsg && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl font-bold">
+                <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl font-medium">
                     ⚠️ {importErrorMsg}
                 </div>
             )}
 
+            {/* Tabs selection */}
+            <div className="flex border-b border-outline/10">
+                <button
+                    onClick={() => { setActiveTab('catalog'); setIsFormOpen(false); }}
+                    className={`pb-3 px-6 text-sm font-semibold border-b-2 cursor-pointer transition border-0 bg-transparent ${
+                        activeTab === 'catalog'
+                            ? 'border-primary text-primary font-bold'
+                            : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                    }`}
+                >
+                    Catálogo de Inventario
+                </button>
+                <button
+                    onClick={() => { setActiveTab('promotions'); setIsFormOpen(false); }}
+                    className={`pb-3 px-6 text-sm font-semibold border-b-2 cursor-pointer transition border-0 bg-transparent ${
+                        activeTab === 'promotions'
+                            ? 'border-primary text-primary font-bold'
+                            : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                    }`}
+                >
+                    Descuentos por Promoción %
+                </button>
+            </div>
+
             {/* Barcode-focused Search Bar */}
             <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant/70 pointer-events-none">
                     <span className="material-symbols-outlined text-[18px]">barcode_scanner</span>
                 </span>
                 <input 
@@ -240,148 +520,360 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId }) 
                     ref={searchInputRef}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Buscador por código de barras SKU o nombre..."
-                    className="w-full bg-[#0d1527]/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-[#0a5cff] outline-none transition"
+                    placeholder={category === 'optica' 
+                        ? "Buscador por código de barras SKU, nombre, marca o material..." 
+                        : "Buscador por código de barras, nombre o descripción..."}
+                    className="w-full bg-surface-container border border-outline/20 rounded-xl py-3 pl-10 pr-4 text-sm text-on-surface focus:border-primary outline-none transition"
                 />
                 {searchTerm && (
                     <button 
                         onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 border-0 bg-transparent text-gray-400 cursor-pointer hover:text-white"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 border-0 bg-transparent text-on-surface-variant cursor-pointer hover:text-on-surface"
                     >
                         <span className="material-symbols-outlined text-[16px]">close</span>
                     </button>
                 )}
             </div>
 
-            {isFormOpen && (
-                <div className="bg-[#0d1527] border border-white/10 rounded-2xl p-6 space-y-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">
-                        {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
-                    </h3>
-                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs text-gray-400 font-medium">Nombre del Producto *</label>
-                            <input 
-                                type="text"
-                                className="bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:border-[#0a5cff] outline-none transition"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs text-gray-400 font-medium">SKU / Código Único</label>
-                            <input 
-                                type="text"
-                                className="bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:border-[#0a5cff] outline-none transition"
-                                value={sku}
-                                onChange={(e) => setSku(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs text-gray-400 font-medium">Precio de Venta (COP) *</label>
-                            <input 
-                                type="number"
-                                className="bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:border-[#0a5cff] outline-none transition"
-                                value={price}
-                                onChange={(e) => setPrice(parseFloat(e.target.value))}
-                                required
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs text-gray-400 font-medium">Stock en Existencias *</label>
-                            <input 
-                                type="number"
-                                className="bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:border-[#0a5cff] outline-none transition"
-                                value={stock}
-                                onChange={(e) => setStock(parseInt(e.target.value))}
-                                required
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1.5 md:col-span-2">
-                            <label className="text-xs text-gray-400 font-medium">Descripción</label>
-                            <textarea 
-                                className="bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:border-[#0a5cff] outline-none transition min-h-[80px]"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                            />
-                        </div>
-                        <div className="md:col-span-2 flex justify-end gap-3 pt-2">
-                            <button
-                                type="button"
-                                onClick={resetForm}
-                                className="bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold py-2 px-4 rounded-xl transition cursor-pointer text-white"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="submit"
-                                className="bg-[#0a5cff] hover:bg-[#0047d4] text-white text-xs font-bold py-2 px-4 rounded-xl transition cursor-pointer"
-                            >
-                                {editingProduct ? 'Actualizar' : 'Guardar'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
-            {loading ? (
-                <div className="flex justify-center py-10">
-                    <div className="w-8 h-8 border-2 border-[#0a5cff] border-t-transparent rounded-full animate-spin"></div>
-                </div>
-            ) : filteredProducts.length === 0 ? (
-                <div className="bg-[#090d16] border border-white/5 p-12 text-center rounded-2xl">
-                    <p className="text-sm text-gray-500">No hay productos que coincidan con la búsqueda.</p>
-                </div>
-            ) : (
-                <div className="bg-[#0d1527]/50 border border-white/10 rounded-2xl overflow-hidden">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-white/5 border-b border-white/10 text-xs text-gray-400 uppercase font-bold">
-                                <th className="p-4">Producto</th>
-                                <th className="p-4">SKU</th>
-                                <th className="p-4">Precio</th>
-                                <th className="p-4">Stock</th>
-                                <th className="p-4 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5 text-sm">
-                            {filteredProducts.map((prod) => (
-                                <tr key={prod.id} className="hover:bg-white/5 transition-colors">
-                                    <td className="p-4">
-                                        <p className="font-bold text-white">{prod.name}</p>
-                                        {prod.description && <p className="text-xs text-gray-400 mt-0.5">{prod.description}</p>}
-                                    </td>
-                                    <td className="p-4 font-mono text-xs text-white">{prod.sku || '-'}</td>
-                                    <td className="p-4 font-semibold text-white">{formatPrice(prod.price)}</td>
-                                    <td className="p-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${prod.stock < 5 ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
-                                            {prod.stock} uds
-                                        </span>
-                                    </td>
-                                    <td className="p-4 text-right">
-                                        <div className="flex justify-end gap-1.5">
-                                            <button 
-                                                onClick={() => openEdit(prod)}
-                                                className="p-1.5 hover:bg-[#0a5cff]/20 text-[#0a5cff] rounded transition cursor-pointer border-0 bg-transparent"
-                                                title="Editar"
-                                            >
-                                                <span className="material-symbols-outlined text-[16px]">edit</span>
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDelete(prod.id)}
-                                                className="p-1.5 hover:bg-red-500/20 text-red-400 rounded transition cursor-pointer border-0 bg-transparent"
-                                                title="Eliminar"
-                                            >
-                                                <span className="material-symbols-outlined text-[16px]">delete</span>
-                                            </button>
+            {/* Render Tab Contents */}
+            {activeTab === 'catalog' ? (
+                <>
+                    {isFormOpen && (
+                        <div className="glass-card p-6 space-y-4">
+                            <h3 className="text-sm font-semibold tracking-tight text-on-surface">
+                                {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+                            </h3>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-medium">Nombre del Producto *</label>
+                                        <input 
+                                            type="text"
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            placeholder="Ej: Gafa rosada"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-medium">SKU / Código Único (En blanco para autogenerar)</label>
+                                        <input 
+                                            type="text"
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                            value={sku}
+                                            onChange={(e) => setSku(e.target.value)}
+                                            placeholder="Autogenerado si está vacío"
+                                        />
+                                    </div>
+                                    {category === 'optica' && (
+                                        <>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs text-on-surface-variant font-medium">Marca</label>
+                                                <input 
+                                                    type="text"
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                    value={brand}
+                                                    onChange={(e) => setBrand(e.target.value)}
+                                                    placeholder="Ej: Ray-Ban"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs text-on-surface-variant font-medium">Material</label>
+                                                <select 
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                    value={material}
+                                                    onChange={(e) => setMaterial(e.target.value)}
+                                                >
+                                                    <option value="" className="bg-surface-container">-- Selecciona Material --</option>
+                                                    {frameMaterials.map(m => (
+                                                        <option key={m} value={m} className="bg-surface-container">{m}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs text-on-surface-variant font-medium">Estilo</label>
+                                                <select 
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                    value={style}
+                                                    onChange={(e) => setStyle(e.target.value)}
+                                                >
+                                                    <option value="" className="bg-surface-container">-- Selecciona Estilo --</option>
+                                                    {frameStyles.map(s => (
+                                                        <option key={s} value={s} className="bg-surface-container">{s}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </>
+                                    )}
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-medium">Precio de Costo (COP)</label>
+                                        <input 
+                                            type="number"
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                            value={costPrice}
+                                            onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                                            onFocus={(e) => e.target.select()}
+                                            placeholder="Ej: 80000"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-medium">Precio de Venta (COP) *</label>
+                                        <input 
+                                            type="number"
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                            value={price}
+                                            onChange={(e) => setPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                                            onFocus={(e) => e.target.select()}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-medium">Stock en Existencias *</label>
+                                        <input 
+                                            type="number"
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                            value={stock}
+                                            onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
+                                            onFocus={(e) => e.target.select()}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-medium">Stock Mínimo (Alerta de Alarma) *</label>
+                                        <input 
+                                            type="number"
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                            value={minStock}
+                                            onChange={(e) => setMinStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
+                                            onFocus={(e) => e.target.select()}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-medium">Descuento de la casa (%)</label>
+                                        <input 
+                                            type="number"
+                                            min={0}
+                                            max={100}
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                            value={promoDiscount}
+                                            onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                                            onFocus={(e) => e.target.select()}
+                                        />
+                                    </div>
+                                    {category === 'optica' && (
+                                        <div className="flex flex-col gap-1.5 md:col-span-2">
+                                            <label className="text-xs text-on-surface-variant font-medium">Color de la Montura</label>
+                                            <div className="flex flex-wrap gap-2 mt-1">
+                                                {colorOptions.map(c => (
+                                                    <button
+                                                        key={c.value}
+                                                        type="button"
+                                                        onClick={() => setColor(c.value)}
+                                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs cursor-pointer transition ${
+                                                            color === c.value 
+                                                                ? 'bg-primary/10 border-primary text-primary font-semibold' 
+                                                                : 'bg-surface-container border-outline/10 text-on-surface-variant hover:border-outline/30'
+                                                        }`}
+                                                    >
+                                                        <span 
+                                                            className="w-3.5 h-3.5 rounded-full border border-white/20 inline-block" 
+                                                            style={{ background: c.preview }} 
+                                                        />
+                                                        {c.name}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                    )}
+                                    <div className="flex flex-col gap-1.5 md:col-span-2">
+                                        <label className="text-xs text-on-surface-variant font-medium">Descripción</label>
+                                        <textarea 
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition min-h-[60px]"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Barcode Display at the bottom of form */}
+                                {(sku || (editingProduct && editingProduct.sku)) && (
+                                    <div className="flex flex-col items-center justify-center p-4 bg-surface-container/30 border border-outline/10 rounded-xl mt-2">
+                                        <span className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider mb-1">Código de Barras Generado</span>
+                                        <BarcodeSVG value={sku || editingProduct?.sku || ''} />
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={resetForm}
+                                        className="bg-surface-container border border-outline/20 hover:bg-surface-container-high text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer text-on-surface border-0"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer border-0"
+                                    >
+                                        {editingProduct ? 'Actualizar' : 'Guardar'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {loading ? (
+                        <div className="flex justify-center py-10">
+                            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    ) : filteredProducts.length === 0 ? (
+                        <div className="glass-card p-12 text-center">
+                            <p className="text-sm text-on-surface-variant">No hay productos que coincidan con la búsqueda.</p>
+                        </div>
+                    ) : (
+                        <div className="glass-card overflow-hidden">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-surface-container/50 border-b border-outline/10 text-xs text-on-surface-variant uppercase font-semibold">
+                                        <th className="p-4">Producto</th>
+                                        <th className="p-4">Código de Barras / SKU</th>
+                                        <th className="p-4">Costo</th>
+                                        <th className="p-4">Precio Venta</th>
+                                        <th className="p-4">Stock</th>
+                                        <th className="p-4 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-outline/10 text-sm">
+                                    {filteredProducts.map((prod) => (
+                                        <tr key={prod.id} className="hover:bg-surface-container/30 transition-colors">
+                                            <td 
+                                                className="p-4 cursor-pointer" 
+                                                onClick={() => openEdit(prod)}
+                                            >
+                                                <div className="flex flex-col">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-semibold text-on-surface text-sm">{prod.name}</p>
+                                                        {parseFloat(prod.promo_discount || '0') > 0 && (
+                                                            <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                                                -{parseFloat(prod.promo_discount)}% Promoción
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {prod.description && <p className="text-xs text-on-surface-variant mt-0.5">{prod.description}</p>}
+                                                    {category === 'optica' && (
+                                                        <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[10px] text-on-surface-variant">
+                                                            {prod.brand && <span className="bg-surface-container border border-outline/10 px-1.5 py-0.5 rounded">Marca: {prod.brand}</span>}
+                                                            {prod.material && <span className="bg-surface-container border border-outline/10 px-1.5 py-0.5 rounded">Material: {prod.material}</span>}
+                                                            {prod.style && <span className="bg-surface-container border border-outline/10 px-1.5 py-0.5 rounded">Estilo: {prod.style}</span>}
+                                                            {prod.color && (
+                                                                <span className="bg-surface-container border border-outline/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                                    Color: 
+                                                                    <span 
+                                                                        className="w-2.5 h-2.5 rounded-full border border-white/20 inline-block"
+                                                                        style={{ background: getColorPreview(prod.color) }}
+                                                                    />
+                                                                    {prod.color}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td 
+                                                className="p-4 cursor-pointer"
+                                                onClick={() => openEdit(prod)}
+                                            >
+                                                {prod.sku ? (
+                                                    <BarcodeSVG value={prod.sku} size="sm" />
+                                                ) : (
+                                                    <span className="text-xs text-on-surface-variant/50 font-mono">-</span>
+                                                )}
+                                            </td>
+                                            <td 
+                                                className="p-4 font-mono text-xs text-on-surface-variant cursor-pointer"
+                                                onClick={() => openEdit(prod)}
+                                            >
+                                                {prod.cost_price ? formatPrice(prod.cost_price) : '$0'}
+                                            </td>
+                                            <td 
+                                                className="p-4 font-semibold text-on-surface cursor-pointer"
+                                                onClick={() => openEdit(prod)}
+                                            >
+                                                {formatPrice(prod.price)}
+                                            </td>
+                                            <td 
+                                                className="p-4 cursor-pointer"
+                                                onClick={() => openEdit(prod)}
+                                            >
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${prod.stock < 5 ? 'bg-red-500/10 text-red-400' : 'bg-primary/10 text-primary'}`}>
+                                                    {prod.stock} uds
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-right">
+                                                <div className="flex justify-end gap-1.5">
+                                                    <button 
+                                                        onClick={() => openEdit(prod)}
+                                                        className="p-1.5 hover:bg-primary/10 text-primary rounded transition cursor-pointer border-0 bg-transparent"
+                                                        title="Editar"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDelete(prod.id)}
+                                                        className="p-1.5 hover:bg-red-500/20 text-red-400 rounded transition cursor-pointer border-0 bg-transparent"
+                                                        title="Eliminar"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </>
+            ) : (
+                /* promotions tab contents */
+                <>
+                    {loading ? (
+                        <div className="flex justify-center py-10">
+                            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    ) : filteredProducts.length === 0 ? (
+                        <div className="glass-card p-12 text-center">
+                            <p className="text-sm text-on-surface-variant">No hay productos disponibles para configurar promociones.</p>
+                        </div>
+                    ) : (
+                        <div className="glass-card overflow-hidden">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-surface-container/50 border-b border-outline/10 text-xs text-on-surface-variant uppercase font-semibold">
+                                        <th className="p-4">Producto</th>
+                                        <th className="p-4">Precio de Lista</th>
+                                        <th className="p-4">% Descuento Promo</th>
+                                        <th className="p-4">Precio con Promo</th>
+                                        <th className="p-4 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-outline/10 text-sm">
+                                    {filteredProducts.map((prod) => (
+                                        <PromoDiscountRow 
+                                            key={prod.id} 
+                                            prod={prod} 
+                                            formatPrice={formatPrice} 
+                                            onSave={handleUpdatePromoDiscount} 
+                                            category={category}
+                                        />
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

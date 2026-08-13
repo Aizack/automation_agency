@@ -222,7 +222,7 @@ export const initializeWhatsAppClient = (): Client => {
                 const media = await quotedMsg.downloadMedia();
 
                 if (media) {
-                    const clientMediaDir = path.join(process.cwd(), 'media', 'clients', session.clientId);
+                    const clientMediaDir = path.join(process.cwd(), 'media', 'clients', session.clientId, 'audios');
                     if (!fs.existsSync(clientMediaDir)) {
                         fs.mkdirSync(clientMediaDir, { recursive: true });
                     }

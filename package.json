@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "dev": "nodemon -L --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "dev:api": "nodemon -L --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts",
     "build:frontend": "npm run build --prefix dashboard",
     "start:ui": "npm run build:frontend && npm run start",
     "start:api": "ts-node src/server.ts",

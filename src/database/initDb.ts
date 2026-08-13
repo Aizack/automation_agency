@@ -131,6 +131,9 @@ const initDatabase = async () => {
                 due_date TIMESTAMP NOT NULL,
                 reminder_sent BOOLEAN DEFAULT FALSE,
                 overdue_sent BOOLEAN DEFAULT FALSE,
+                payment_method VARCHAR(50) DEFAULT 'contado',
+                installments_count INT DEFAULT 1,
+                installment_frequency VARCHAR(50),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(client_id, invoice_number)
             );
@@ -324,9 +327,16 @@ const initDatabase = async () => {
             ALTER TABLE products ADD COLUMN IF NOT EXISTS min_stock INT DEFAULT 5;
             ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_name VARCHAR(100);
             ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_phone VARCHAR(20);
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS brand VARCHAR(100);
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS material VARCHAR(100);
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS style VARCHAR(100);
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS color VARCHAR(100);
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS promo_discount NUMERIC(5,2) DEFAULT 0.00;
             ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10,2) DEFAULT 0.00;
             ALTER TABLE appointments ADD COLUMN IF NOT EXISTS customer_document_number VARCHAR(30);
             ALTER TABLE appointments ADD COLUMN IF NOT EXISTS crm_customer_id UUID REFERENCES crm_customers(id) ON DELETE SET NULL;
+            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS visit_reason VARCHAR(50) DEFAULT 'examen_vista';
+            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS visit_reason_details TEXT;
         `);
 
         // 7. Crear tabla de Metas Mensuales (sales_goals)
@@ -354,6 +364,25 @@ const initDatabase = async () => {
                 description TEXT,
                 due_date TIMESTAMP,
                 status VARCHAR(20) DEFAULT 'pendiente',
+                created_by_name VARCHAR(100) DEFAULT 'Administrador',
+                task_type VARCHAR(20) DEFAULT 'tarea',
+                target_customer_id UUID REFERENCES crm_customers(id) ON DELETE SET NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            ALTER TABLE employee_tasks ADD COLUMN IF NOT EXISTS created_by_name VARCHAR(100) DEFAULT 'Administrador';
+            ALTER TABLE employee_tasks ADD COLUMN IF NOT EXISTS task_type VARCHAR(20) DEFAULT 'tarea';
+            ALTER TABLE employee_tasks ADD COLUMN IF NOT EXISTS target_customer_id UUID REFERENCES crm_customers(id) ON DELETE SET NULL;
+        `);
+
+        // 8b. Crear tabla de Reportes/Actualizaciones de Tareas (employee_task_updates)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS employee_task_updates (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                task_id UUID NOT NULL REFERENCES employee_tasks(id) ON DELETE CASCADE,
+                old_status VARCHAR(20),
+                new_status VARCHAR(20) NOT NULL,
+                report_text TEXT NOT NULL,
+                created_by_name VARCHAR(100),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
@@ -498,6 +527,69 @@ const initDatabase = async () => {
         }
 
         console.log("[DB Init] ✅ Datos iniciales de clientes semillados correctamente.");
+
+        // --- MIGRACIONES FASE 4: FACTURACIÓN COMPLETA, CARTERA Y LOGÍSTICA ---
+        console.log("[DB Init] 🔄 Inicializando tablas y columnas de la Fase 4...");
+        
+        await pool.query(`
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS nit VARCHAR(50);
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS address VARCHAR(255);
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS invoice_footer TEXT;
+        `);
+
+        await pool.query(`
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_method VARCHAR(20) DEFAULT 'local';
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC(10, 2) DEFAULT 0.00;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_address TEXT;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_date TIMESTAMP;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_status VARCHAR(20) DEFAULT 'pending';
+        `);
+
+        await pool.query(`
+            ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS birth_date DATE;
+            ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS customer_type VARCHAR(20) DEFAULT 'persona';
+        `);
+
+        await pool.query(`
+            ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_name VARCHAR(150);
+            ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_type VARCHAR(50) DEFAULT 'inventory';
+            ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS lens_design VARCHAR(100);
+            ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS lens_material VARCHAR(100);
+            ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS lens_treatment VARCHAR(100);
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS invoice_installments (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                invoice_id UUID REFERENCES invoices(id) ON DELETE CASCADE,
+                installment_number INT NOT NULL,
+                due_date TIMESTAMP NOT NULL,
+                amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                paid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+                paid_at TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS formulas (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) REFERENCES clients(id) ON DELETE CASCADE,
+                customer_id UUID REFERENCES crm_customers(id) ON DELETE CASCADE,
+                od_sphere VARCHAR(15),
+                od_cylinder VARCHAR(15),
+                od_axis VARCHAR(15),
+                od_addition VARCHAR(15),
+                oi_sphere VARCHAR(15),
+                oi_cylinder VARCHAR(15),
+                oi_axis VARCHAR(15),
+                oi_addition VARCHAR(15),
+                dp_distance VARCHAR(15),
+                height VARCHAR(15),
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        `);
+        console.log("[DB Init] ✅ Tablas y columnas de la Fase 4 creadas o verificadas con éxito.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 
     } catch (error) {

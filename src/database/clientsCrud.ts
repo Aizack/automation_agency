@@ -7,7 +7,7 @@ import { ClientConfig } from '../core/config';
 export const createClient = async (client: {
   id: string;
   name: string;
-  phone_number: string;
+  phone_number?: string | null;
   system_prompt: string;
   active_tools?: string[];
   agent_phone?: string;
@@ -28,7 +28,7 @@ export const createClient = async (client: {
       [
         client.id,
         client.name,
-        client.phone_number,
+        client.phone_number || null,
         client.system_prompt,
         client.active_tools || [],
         client.agent_phone || null,
@@ -73,7 +73,11 @@ export const getClientById = async (id: string): Promise<ClientConfig | null> =>
         first_message_notified AS "firstMessageNotified",
         is_activated AS "isActivated",
         category,
-        enabled_modules AS "enabledModules"
+        enabled_modules AS "enabledModules",
+        logo_url,
+        nit,
+        address,
+        invoice_footer AS "invoiceFooter"
        FROM clients 
        WHERE id = $1 LIMIT 1`,
       [id]
@@ -184,7 +188,8 @@ export const listClients = async (): Promise<ClientConfig[]> => {
         first_message_notified AS "firstMessageNotified",
         is_activated AS "isActivated",
         category,
-        enabled_modules AS "enabledModules"
+        enabled_modules AS "enabledModules",
+        logo_url
        FROM clients 
        ORDER BY created_at DESC`
     );

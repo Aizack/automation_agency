@@ -24,13 +24,16 @@ interface Shift {
     clock_in: string;
     clock_out: string | null;
     hours_worked: number;
+    lunch_start?: string | null;
+    lunch_end?: string | null;
 }
 
 interface SaaSErpEmployeesProps {
     clientId: string;
+    viewMode?: 'personal' | 'turnos';
 }
 
-export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) => {
+export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, viewMode }) => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [loading, setLoading] = useState(true);
@@ -38,10 +41,21 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
     // Modals
     const [isDeptOpen, setIsDeptOpen] = useState(false);
     const [isEmpOpen, setIsEmpOpen] = useState(false);
-    const [isClockOpen, setIsClockOpen] = useState(false);
     const [selectedEmp, setSelectedEmp] = useState<Employee | null>(null);
     const [empShifts, setEmpShifts] = useState<Shift[]>([]);
     const [shiftsLoading, setShiftsLoading] = useState(false);
+    
+    // Detail Modal states
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [selectedEmpDetail, setSelectedEmpDetail] = useState<Employee | null>(null);
+    const [empTasks, setEmpTasks] = useState<any[]>([]);
+    const [tasksLoading, setTasksLoading] = useState(false);
+    const [newTaskTitle, setNewTaskTitle] = useState('');
+    const [newTaskDesc, setNewTaskDesc] = useState('');
+    const [newTaskDueDate, setNewTaskDueDate] = useState('');
+    const [newTaskDueTime, setNewTaskDueTime] = useState('');
+    const [newTaskCreator, setNewTaskCreator] = useState('');
+    const [detailTab, setDetailTab] = useState<'info' | 'shifts' | 'tasks'>('info');
 
     // Payroll states
     const [isPayrollOpen, setIsPayrollOpen] = useState(false);
@@ -60,12 +74,70 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
     const [empRole, setEmpRole] = useState('agent');
     const [empDeptId, setEmpDeptId] = useState('');
     const [empPin, setEmpPin] = useState('');
-    const [clockPin, setClockPin] = useState('');
 
     const [errorMsg, setErrorMsg] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
 
+    // Turnos Panel states
+    const [activeView, setActiveView] = useState<'list' | 'shifts'>(viewMode === 'turnos' ? 'shifts' : 'list');
+    const [selectedEmpForShifts, setSelectedEmpForShifts] = useState<Employee | null>(null);
+    const [shiftsTab, setShiftsTab] = useState<'hoy' | 'historial'>('hoy');
+    const [shiftsSubTab, setShiftsSubTab] = useState<'semana' | 'mes' | 'todos'>('semana');
+    const [todayShifts, setTodayShifts] = useState<any[]>([]);
+    const [todayShiftsLoading, setTodayShiftsLoading] = useState(false);
+    const [selectedMonthFilter, setSelectedMonthFilter] = useState<number | null>(null);
+
     const token = localStorage.getItem('auth_token');
+
+    const fetchTodayShifts = async () => {
+        try {
+            setTodayShiftsLoading(true);
+            const res = await fetch(`/api/clients/${clientId}/shifts/today`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setTodayShifts(json.shifts || []);
+            }
+        } catch (err) {
+            console.error("Error loading today shifts:", err);
+        } finally {
+            setTodayShiftsLoading(false);
+        }
+    };
+
+    const selectEmployeeForShifts = (emp: Employee) => {
+        setSelectedEmpForShifts(emp);
+        setShiftsTab('historial');
+        setShiftsSubTab('semana');
+        setSelectedMonthFilter(null);
+        loadShifts(emp.id);
+    };
+
+    const getDatesOfCurrentWeek = () => {
+        const now = new Date();
+        const currentDay = now.getDay(); // 0 = Sun, 1 = Mon...
+        const distance = currentDay === 0 ? -6 : 1 - currentDay; // Distance to Monday
+        const monday = new Date(now);
+        monday.setDate(now.getDate() + distance);
+        monday.setHours(0, 0, 0, 0);
+        
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+            const day = new Date(monday);
+            day.setDate(monday.getDate() + i);
+            days.push(day);
+        }
+        return days;
+    };
+
+    const getHoursForDate = (date: Date) => {
+        const dayShifts = empShifts.filter(s => {
+            const clockInDate = new Date(s.clock_in);
+            return clockInDate.toDateString() === date.toDateString();
+        });
+        return dayShifts.reduce((acc, curr) => acc + Number(curr.hours_worked || 0), 0);
+    };
 
     const fetchData = async () => {
         try {
@@ -169,6 +241,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
     useEffect(() => {
         fetchData();
         fetchHrDocs();
+        fetchTodayShifts();
     }, [clientId]);
 
     const handleCreateDept = async (e: React.FormEvent) => {
@@ -304,15 +377,6 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
         setIsEmpOpen(true);
     };
 
-    // Timesheet shifts modal
-    const openClockModal = async (emp: Employee) => {
-        setSelectedEmp(emp);
-        setClockPin('');
-        setErrorMsg('');
-        setIsClockOpen(true);
-        loadShifts(emp.id);
-    };
-
     const loadShifts = async (empId: string) => {
         try {
             setShiftsLoading(true);
@@ -330,61 +394,580 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
         }
     };
 
-    const handleClockAction = async (action: 'in' | 'out') => {
-        if (!selectedEmp) return;
-        if (clockPin !== selectedEmp.pin) {
-            setErrorMsg('PIN de seguridad incorrecto.');
-            return;
-        }
-
+    const loadTasks = async (empId: string) => {
         try {
-            setActionLoading(true);
-            setErrorMsg('');
-            const res = await fetch(`/api/clients/${clientId}/employees/${selectedEmp.id}/clock-${action}`, {
-                method: 'POST',
+            setTasksLoading(true);
+            const res = await fetch(`/api/clients/${clientId}/employees/${empId}/tasks`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const json = await res.json();
             if (json.success) {
-                setClockPin('');
-                loadShifts(selectedEmp.id);
-            } else {
-                setErrorMsg(json.error || `Error al marcar ${action === 'in' ? 'entrada' : 'salida'}.`);
+                setEmpTasks(json.tasks || []);
             }
-        } catch (err: any) {
-            setErrorMsg(err.message || 'Error de conexión.');
+        } catch (err) {
+            console.error("Error loading employee tasks:", err);
+        } finally {
+            setTasksLoading(false);
+        }
+    };
+
+    const handleAssignTask = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedEmpDetail || !newTaskTitle.trim()) return;
+
+        try {
+            setActionLoading(true);
+            const res = await fetch(`/api/clients/${clientId}/employees/${selectedEmpDetail.id}/tasks`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    title: newTaskTitle,
+                    description: newTaskDesc,
+                    due_date: (newTaskDueDate && newTaskDueTime) ? `${newTaskDueDate}T${newTaskDueTime}` : (newTaskDueDate || null),
+                    created_by_name: newTaskCreator.trim() || 'Administrador'
+                })
+            });
+            const json = await res.json();
+            if (json.success) {
+                setNewTaskTitle('');
+                setNewTaskDesc('');
+                setNewTaskDueDate('');
+                setNewTaskDueTime('');
+                setNewTaskCreator(localStorage.getItem('session_name') || '');
+                loadTasks(selectedEmpDetail.id);
+            } else {
+                alert(json.error || 'Error al asignar la tarea.');
+            }
+        } catch (err) {
+            console.error("Error assigning task:", err);
+            alert("Error de conexión al asignar tarea.");
         } finally {
             setActionLoading(false);
         }
     };
 
-    // Calculate aggregated adoption stats
-    const activeShiftsCount = empShifts.filter(s => !s.clock_out).length;
-    const totalHours = empShifts.reduce((acc, curr) => acc + Number(curr.hours_worked || 0), 0);
+    const handleOpenDetail = (emp: Employee) => {
+        setSelectedEmpDetail(emp);
+        loadShifts(emp.id);
+        loadTasks(emp.id);
+        setNewTaskTitle('');
+        setNewTaskDesc('');
+        setNewTaskDueDate('');
+        setNewTaskCreator(localStorage.getItem('session_name') || '');
+        setDetailTab('info');
+        setIsDetailOpen(true);
+    };
+
+    const renderShiftsPanel = () => {
+        return (
+            <div className="space-y-6">
+                {/* Header of Shifts View */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container/20 border border-outline/10 p-5 rounded-2xl">
+                    <div>
+                        <h3 className="font-bold text-lg text-on-surface flex items-center gap-2">
+                            <span className="material-symbols-outlined text-green-500">work_history</span>
+                            Control de Asistencia y Turnos
+                        </h3>
+                        <p className="text-xs text-on-surface-variant">Monitorea en tiempo real los registros de entrada, almuerzos, salidas y puntualidad.</p>
+                    </div>
+                    {viewMode !== 'turnos' && (
+                        <button 
+                            onClick={() => { setActiveView('list'); setSelectedEmpForShifts(null); }}
+                            className="px-4 py-2 border border-outline/20 hover:bg-surface-variant/20 text-on-surface text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition"
+                        >
+                            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                            Volver a Lista
+                        </button>
+                    )}
+                </div>
+
+                {/* Tabs for Shifts View */}
+                <div className="flex border-b border-outline/10 gap-4 text-xs font-bold">
+                    <button 
+                        onClick={() => { setShiftsTab('hoy'); fetchTodayShifts(); }}
+                        className={`pb-3 cursor-pointer transition-all border-b-2 px-1 ${
+                            shiftsTab === 'hoy' ? 'border-primary text-primary font-black' : 'border-transparent text-on-surface-variant/70 hover:text-on-surface'
+                        }`}
+                    >
+                        Asistencia de Hoy
+                    </button>
+                    <button 
+                        onClick={() => { setShiftsTab('historial'); }}
+                        className={`pb-3 cursor-pointer transition-all border-b-2 px-1 ${
+                            shiftsTab === 'historial' ? 'border-primary text-primary font-black' : 'border-transparent text-on-surface-variant/70 hover:text-on-surface'
+                        }`}
+                    >
+                        Historial de Fichajes
+                    </button>
+                </div>
+
+                {/* ASISTENCIA DE HOY TAB */}
+                {shiftsTab === 'hoy' && (
+                    <div className="space-y-6">
+                        {/* Summary indicators */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="bg-surface-container/40 border border-outline/10 p-4 rounded-xl flex justify-between items-center">
+                                <div>
+                                    <p className="text-[10px] text-on-surface-variant uppercase font-mono font-bold">Fichajes de Hoy</p>
+                                    <p className="text-xl font-black text-on-surface mt-1">{todayShifts.length}</p>
+                                </div>
+                                <span className="material-symbols-outlined text-primary text-[28px] opacity-70">badge</span>
+                            </div>
+                            <div className="bg-surface-container/40 border border-outline/10 p-4 rounded-xl flex justify-between items-center">
+                                <div>
+                                    <p className="text-[10px] text-on-surface-variant uppercase font-mono font-bold">En Turno Activo</p>
+                                    <p className="text-xl font-black text-green-500 mt-1">{todayShifts.filter(s => !s.clock_out).length}</p>
+                                </div>
+                                <span className="material-symbols-outlined text-green-500 text-[28px] opacity-70">play_circle</span>
+                            </div>
+                            <div className="bg-surface-container/40 border border-outline/10 p-4 rounded-xl flex justify-between items-center">
+                                <div>
+                                    <p className="text-[10px] text-on-surface-variant uppercase font-mono font-bold">Retardos (Tarde)</p>
+                                    <p className="text-xl font-black text-orange-500 mt-1">
+                                        {todayShifts.filter(s => {
+                                            const date = new Date(s.clock_in);
+                                            const hour = date.getHours();
+                                            const min = date.getMinutes();
+                                            return hour > 8 || (hour === 8 && min > 15);
+                                        }).length}
+                                    </p>
+                                </div>
+                                <span className="material-symbols-outlined text-orange-500 text-[28px] opacity-70">schedule</span>
+                            </div>
+                        </div>
+
+                        {/* Today Shifts List */}
+                        <div className="bg-surface-container/30 border border-outline/10 rounded-2xl p-6 overflow-x-auto">
+                            <h4 className="font-bold text-sm text-on-surface mb-4">Ingresos y Salidas del Día</h4>
+                            {todayShiftsLoading ? (
+                                <div className="flex justify-center py-12">
+                                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            ) : todayShifts.length === 0 ? (
+                                <p className="text-xs text-on-surface-variant/60 py-6 text-center">Nadie ha fichado el día de hoy todavía.</p>
+                            ) : (
+                                <table className="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr className="text-on-surface-variant/70 border-b border-outline/10 font-bold">
+                                            <th className="py-2.5 px-2">Empleado</th>
+                                            <th className="py-2.5 px-2">Hora Entrada</th>
+                                            <th className="py-2.5 px-2">Hora Salida</th>
+                                            <th className="py-2.5 px-2">Almuerzo</th>
+                                            <th className="py-2.5 px-2">Puntualidad</th>
+                                            <th className="py-2.5 px-2">Horas</th>
+                                            <th className="py-2.5 px-2 text-right">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {todayShifts.map(s => {
+                                            const inDate = new Date(s.clock_in);
+                                            const inHour = inDate.getHours();
+                                            const inMin = inDate.getMinutes();
+                                            const isLate = inHour > 8 || (inHour === 8 && inMin > 15);
+                                            
+                                            let lunchTimeStr = '--';
+                                            if (s.lunch_start) {
+                                                if (s.lunch_end) {
+                                                    const diffMins = Math.floor((new Date(s.lunch_end).getTime() - new Date(s.lunch_start).getTime()) / 60000);
+                                                    lunchTimeStr = `${diffMins} min`;
+                                                } else {
+                                                    lunchTimeStr = 'Almorzando';
+                                                }
+                                            }
+
+                                            return (
+                                                <tr key={s.id} className="border-b border-outline/5 hover:bg-surface-variant/20 transition-all">
+                                                    <td className="py-3 px-2 font-bold text-on-surface">
+                                                        {s.employee_name} {s.employee_last_name || ''}
+                                                    </td>
+                                                    <td className="py-3 px-2 font-mono">
+                                                        {inDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                    </td>
+                                                    <td className="py-3 px-2 font-mono">
+                                                        {s.clock_out ? (
+                                                            new Date(s.clock_out).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
+                                                        ) : (
+                                                            s.lunch_start && !s.lunch_end ? (
+                                                                <span className="text-amber-500 font-bold">En Almuerzo</span>
+                                                            ) : (
+                                                                <span className="text-green-500 font-bold">Activo</span>
+                                                            )
+                                                        )}
+                                                    </td>
+                                                    <td className="py-3 px-2 text-on-surface-variant/80 font-mono">
+                                                        {lunchTimeStr === 'Almorzando' ? (
+                                                            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-pulse">Almorzando</span>
+                                                        ) : (
+                                                            lunchTimeStr
+                                                        )}
+                                                    </td>
+                                                    <td className="py-3 px-2">
+                                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                                            isLate ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                                        }`}>
+                                                            {isLate ? 'Tarde' : 'A Tiempo'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-2 font-mono font-bold text-primary">
+                                                        {Number(s.hours_worked || 0).toFixed(2)} hrs
+                                                    </td>
+                                                    <td className="py-3 px-2 text-right">
+                                                        <button 
+                                                            onClick={() => {
+                                                                const emp = employees.find(e => e.id === s.employee_id);
+                                                                if (emp) selectEmployeeForShifts(emp);
+                                                            }}
+                                                            className="px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary border-0 rounded text-[10px] font-bold cursor-pointer transition"
+                                                        >
+                                                            Ver Historial
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* HISTORIAL GENERAL TAB */}
+                {shiftsTab === 'historial' && (
+                    <div className="space-y-6">
+                        {/* Employee Selector Dropdown */}
+                        <div className="bg-surface-container/40 border border-outline/10 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-on-surface-variant">Seleccionar Empleado</label>
+                                <select 
+                                    value={selectedEmpForShifts?.id || ''}
+                                    onChange={(e) => {
+                                        const emp = employees.find(x => x.id === e.target.value);
+                                        if (emp) selectEmployeeForShifts(emp);
+                                    }}
+                                    className="bg-surface border border-outline/20 p-2.5 rounded-xl text-xs text-on-surface outline-none focus:border-primary cursor-pointer w-full md:w-64"
+                                >
+                                    <option value="">-- Selecciona un Empleado --</option>
+                                    {employees.map(e => (
+                                        <option key={e.id} value={e.id}>{e.name} {e.last_name || ''}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {selectedEmpForShifts && (
+                                <div className="flex gap-4 items-center bg-surface-container/50 border border-outline/10 p-3 rounded-xl">
+                                    <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold text-sm font-display">
+                                        {selectedEmpForShifts.name[0]}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-xs text-on-surface">{selectedEmpForShifts.name} {selectedEmpForShifts.last_name || ''}</h4>
+                                        <p className="text-[10px] text-on-surface-variant font-mono capitalize">{selectedEmpForShifts.role} | +{selectedEmpForShifts.phone}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {selectedEmpForShifts ? (
+                            <div className="space-y-6">
+                                {/* Sub-tabs: Semana, Mes, Todos */}
+                                <div className="flex border-b border-outline/5 gap-4 text-xs font-bold">
+                                    <button 
+                                        onClick={() => setShiftsSubTab('semana')}
+                                        className={`pb-2.5 cursor-pointer transition-all border-b-2 px-1 ${
+                                            shiftsSubTab === 'semana' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant/70 hover:text-on-surface'
+                                        }`}
+                                    >
+                                        Semana Actual
+                                    </button>
+                                    <button 
+                                        onClick={() => setShiftsSubTab('mes')}
+                                        className={`pb-2.5 cursor-pointer transition-all border-b-2 px-1 ${
+                                            shiftsSubTab === 'mes' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant/70 hover:text-on-surface'
+                                        }`}
+                                    >
+                                        Mes Actual
+                                    </button>
+                                    <button 
+                                        onClick={() => setShiftsSubTab('todos')}
+                                        className={`pb-2.5 cursor-pointer transition-all border-b-2 px-1 ${
+                                            shiftsSubTab === 'todos' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant/70 hover:text-on-surface'
+                                        }`}
+                                    >
+                                        Todos los Meses
+                                    </button>
+                                </div>
+
+                                {/* SUBTAB: SEMANA ACTUAL */}
+                                {shiftsSubTab === 'semana' && (
+                                    <div className="space-y-6">
+                                        {/* Weekly Cards Grid (Reference Image 1) */}
+                                        <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-2xl">
+                                            <h4 className="font-bold text-xs text-on-surface mb-4">Grilla de Horas de la Semana</h4>
+                                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-outline/5 pb-4 mb-4">
+                                                <div className="flex flex-wrap gap-2.5">
+                                                    {getDatesOfCurrentWeek().map((date, idx) => {
+                                                        const hours = getHoursForDate(date);
+                                                        const weekdayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                                                        
+                                                        let boxClass = 'bg-surface-container-high/40 text-on-surface-variant/50 border-outline/5';
+                                                        if (hours > 0) {
+                                                            boxClass = hours >= 8 
+                                                                ? 'bg-green-600 text-white font-bold border-green-700 shadow-sm' 
+                                                                : 'bg-amber-500 text-white font-bold border-amber-600 shadow-sm';
+                                                        }
+
+                                                        return (
+                                                            <div key={idx} className="flex flex-col items-center gap-1">
+                                                                <span className="text-[10px] text-on-surface-variant/80 font-bold">{weekdayNames[date.getDay()]}</span>
+                                                                <div className={`w-16 h-12 rounded-xl flex items-center justify-center text-xs border transition ${boxClass}`}>
+                                                                    {hours > 0 ? `${hours.toFixed(1)}h` : '--'}
+                                                                </div>
+                                                                <span className="text-[8px] text-on-surface-variant/50 font-mono">{date.getDate()}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                <div className="flex gap-6 items-center text-xs bg-surface-container/50 p-4 rounded-xl border border-outline/10">
+                                                    <div>
+                                                        <p className="text-[9px] uppercase font-mono font-bold text-on-surface-variant">Registrado / Esperado</p>
+                                                        <p className="text-sm font-black text-on-surface mt-0.5">
+                                                            {getDatesOfCurrentWeek().reduce((acc, curr) => acc + getHoursForDate(curr), 0).toFixed(1)}h / 40h
+                                                        </p>
+                                                    </div>
+                                                    <div className="w-[1px] h-8 bg-outline/20" />
+                                                    <div>
+                                                        <p className="text-[9px] uppercase font-mono font-bold text-on-surface-variant">Extras / Compensadas</p>
+                                                        <p className="text-sm font-black text-primary mt-0.5">
+                                                            {(() => {
+                                                                const total = getDatesOfCurrentWeek().reduce((acc, curr) => acc + getHoursForDate(curr), 0);
+                                                                return total > 40 ? (total - 40).toFixed(1) : '0';
+                                                            })()}h / 0h
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* SUBTAB: MES ACTUAL */}
+                                {shiftsSubTab === 'mes' && (
+                                    <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-2xl">
+                                        <h4 className="font-bold text-xs text-on-surface mb-4">Fichajes del Mes Actual</h4>
+                                        {shiftsLoading ? (
+                                            <div className="flex justify-center py-8">
+                                                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                            </div>
+                                        ) : empShifts.filter(s => {
+                                            const clockIn = new Date(s.clock_in);
+                                            const now = new Date();
+                                            return clockIn.getMonth() === now.getMonth() && clockIn.getFullYear() === now.getFullYear();
+                                        }).length === 0 ? (
+                                            <p className="text-xs text-on-surface-variant/60 py-6 text-center">No hay marcaciones este mes.</p>
+                                        ) : (
+                                            <table className="w-full text-left text-xs border-collapse">
+                                                <thead>
+                                                    <tr className="text-on-surface-variant/70 border-b border-outline/10 font-bold">
+                                                        <th className="py-2.5 px-2">Fecha</th>
+                                                        <th className="py-2.5 px-2">Hora Entrada</th>
+                                                        <th className="py-2.5 px-2">Hora Salida</th>
+                                                        <th className="py-2.5 px-2">Horas Almuerzo</th>
+                                                        <th className="py-2.5 px-2">Total Efectivo</th>
+                                                        <th className="py-2.5 px-2 text-right">Balance</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {empShifts.filter(s => {
+                                                        const clockIn = new Date(s.clock_in);
+                                                        const now = new Date();
+                                                        return clockIn.getMonth() === now.getMonth() && clockIn.getFullYear() === now.getFullYear();
+                                                    }).map(s => {
+                                                        const date = new Date(s.clock_in);
+                                                        const outDate = s.clock_out ? new Date(s.clock_out) : null;
+                                                        
+                                                        let lunchMin = 0;
+                                                        if (s.lunch_start && s.lunch_end) {
+                                                            lunchMin = Math.floor((new Date(s.lunch_end).getTime() - new Date(s.lunch_start).getTime()) / 60000);
+                                                        }
+
+                                                        const netHours = Number(s.hours_worked || 0);
+                                                        const balance = netHours - 8; // Basado en jornada de 8h
+                                                        const balanceStr = balance >= 0 ? `+${balance.toFixed(2)}` : `${balance.toFixed(2)}`;
+
+                                                        return (
+                                                            <tr key={s.id} className="border-b border-outline/5 hover:bg-surface-variant/20 transition-all">
+                                                                <td className="py-3 px-2 font-bold text-on-surface">
+                                                                    {date.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                                                </td>
+                                                                <td className="py-3 px-2 font-mono">
+                                                                    {date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                                </td>
+                                                                <td className="py-3 px-2 font-mono text-on-surface-variant">
+                                                                    {outDate ? outDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : <span className="text-green-500 font-bold">Activo</span>}
+                                                                </td>
+                                                                <td className="py-3 px-2 font-mono text-on-surface-variant">
+                                                                    {lunchMin > 0 ? `${lunchMin} mins` : '--'}
+                                                                </td>
+                                                                <td className="py-3 px-2 font-mono font-bold text-primary">
+                                                                    {netHours.toFixed(2)} hrs
+                                                                </td>
+                                                                <td className={`py-3 px-2 font-mono text-right font-bold ${balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                                    {balanceStr}h
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    }).reverse()}
+                                                </tbody>
+                                            </table>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* SUBTAB: TODOS LOS MESES */}
+                                {shiftsSubTab === 'todos' && (
+                                    <div className="space-y-6">
+                                        {/* Months Select Grid */}
+                                        <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl">
+                                            <h4 className="font-bold text-xs text-on-surface mb-3">Filtrar por Mes</h4>
+                                            <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                                                {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map((mName, mIdx) => (
+                                                    <button 
+                                                        key={mIdx}
+                                                        onClick={() => setSelectedMonthFilter(selectedMonthFilter === mIdx ? null : mIdx)}
+                                                        className={`py-2 text-[10px] font-bold rounded-lg border transition cursor-pointer ${
+                                                            selectedMonthFilter === mIdx 
+                                                                ? 'bg-primary border-primary text-white' 
+                                                                : 'bg-surface-container-high/40 border-outline/20 text-on-surface-variant hover:border-primary/50'
+                                                        }`}
+                                                    >
+                                                        {mName.slice(0, 3)}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Historical List */}
+                                        <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-2xl">
+                                            <h4 className="font-bold text-xs text-on-surface mb-4">
+                                                {selectedMonthFilter !== null 
+                                                    ? `Marcaciones de ${['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][selectedMonthFilter]}` 
+                                                    : 'Todos los Fichajes'}
+                                            </h4>
+                                            {shiftsLoading ? (
+                                                <div className="flex justify-center py-8">
+                                                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                                </div>
+                                            ) : empShifts.filter(s => {
+                                                if (selectedMonthFilter === null) return true;
+                                                const clockIn = new Date(s.clock_in);
+                                                return clockIn.getMonth() === selectedMonthFilter;
+                                            }).length === 0 ? (
+                                                <p className="text-xs text-on-surface-variant/60 py-6 text-center">No hay marcaciones para este período.</p>
+                                            ) : (
+                                                <table className="w-full text-left text-xs border-collapse">
+                                                    <thead>
+                                                        <tr className="text-on-surface-variant/70 border-b border-outline/10 font-bold">
+                                                            <th className="py-2.5 px-2">Fecha</th>
+                                                            <th className="py-2.5 px-2">Hora Entrada</th>
+                                                            <th className="py-2.5 px-2">Hora Salida</th>
+                                                            <th className="py-2.5 px-2">Lunch</th>
+                                                            <th className="py-2.5 px-2 text-right">Horas Totales</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {empShifts.filter(s => {
+                                                            if (selectedMonthFilter === null) return true;
+                                                            const clockIn = new Date(s.clock_in);
+                                                            return clockIn.getMonth() === selectedMonthFilter;
+                                                        }).map(s => {
+                                                            const date = new Date(s.clock_in);
+                                                            const outDate = s.clock_out ? new Date(s.clock_out) : null;
+                                                            let lunchMin = 0;
+                                                            if (s.lunch_start && s.lunch_end) {
+                                                                lunchMin = Math.floor((new Date(s.lunch_end).getTime() - new Date(s.lunch_start).getTime()) / 60000);
+                                                            }
+                                                            return (
+                                                                <tr key={s.id} className="border-b border-outline/5 hover:bg-surface-variant/20 transition-all">
+                                                                    <td className="py-3 px-2 font-bold text-on-surface">
+                                                                        {date.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                    </td>
+                                                                    <td className="py-3 px-2 font-mono">
+                                                                        {date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                                                    </td>
+                                                                    <td className="py-3 px-2 font-mono text-on-surface-variant">
+                                                                        {outDate ? outDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : <span className="text-green-500 font-bold">Activo</span>}
+                                                                    </td>
+                                                                    <td className="py-3 px-2 font-mono text-on-surface-variant">
+                                                                        {lunchMin > 0 ? `${lunchMin} min` : '--'}
+                                                                    </td>
+                                                                    <td className="py-3 px-2 font-mono font-bold text-primary text-right">
+                                                                        {Number(s.hours_worked || 0).toFixed(2)} hrs
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <p className="text-xs text-on-surface-variant/60 py-12 text-center bg-surface-container/10 rounded-2xl border border-dashed border-outline/20">
+                                Selecciona un empleado de la lista para ver su historial detallado de fichajes semanales y mensuales.
+                            </p>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className="space-y-6 text-on-surface">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-bold text-on-surface">Gestión de Empleados y Nómina</h2>
-                    <p className="text-xs text-on-surface-variant">Registra departamentos, crea asesores de atención y controla turnos de trabajo con marcación.</p>
+                    <h2 className="text-xl font-bold text-on-surface">
+                        {viewMode === 'turnos' ? 'Control de Asistencia y Turnos' : 'Gestión de Personal y Nómina'}
+                    </h2>
+                    <p className="text-xs text-on-surface-variant">
+                        {viewMode === 'turnos' 
+                            ? 'Monitorea en tiempo real los registros de entrada, almuerzos, salidas y puntualidad.' 
+                            : 'Registra departamentos, crea asesores de atención y liquida nóminas LatAm.'}
+                    </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button 
-                        onClick={() => { setErrorMsg(''); setDeptName(''); setIsDeptOpen(true); }}
-                        className="px-4 py-2 border border-outline/20 hover:bg-surface-variant/20 text-on-surface text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition"
-                    >
-                        <span className="material-symbols-outlined text-[16px]">domain</span>
-                        Departamentos
-                    </button>
-                    <button 
-                        onClick={openCreateEmpModal}
-                        className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition"
-                    >
-                        <span className="material-symbols-outlined text-[16px]">person_add</span>
-                        Nuevo Empleado
-                    </button>
+                    {viewMode !== 'turnos' && (
+                        <>
+                            <button 
+                                onClick={() => { setErrorMsg(''); setDeptName(''); setIsDeptOpen(true); }}
+                                className="px-4 py-2 border border-outline/20 hover:bg-surface-variant/20 text-on-surface text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">domain</span>
+                                Departamentos
+                            </button>
+                            <button 
+                                onClick={() => { fetchData(); fetchHrDocs(); fetchTodayShifts(); }}
+                                className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow"
+                                title="Refrescar Empleados"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">refresh</span>
+                            </button>
+                            <button 
+                                onClick={openCreateEmpModal}
+                                className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">person_add</span>
+                                Nuevo Empleado
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -392,7 +975,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                 <div className="flex justify-center py-20">
                     <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 </div>
-            ) : (
+            ) : activeView === 'list' ? (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Employees list table */}
                     <div className="lg:col-span-8 bg-surface-container/30 border border-outline/10 rounded-2xl p-6 overflow-x-auto">
@@ -414,7 +997,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                                 <tbody>
                                     {employees.map(emp => (
                                         <tr key={emp.id} className="border-b border-outline/5 hover:bg-surface-variant/20 transition-all">
-                                            <td className="py-3.5 px-2 font-bold text-on-surface">{emp.name} {emp.last_name || ''}</td>
+                                            <td className="py-3.5 px-2 font-bold text-on-surface cursor-pointer hover:text-primary hover:underline" onClick={() => handleOpenDetail(emp)}>{emp.name} {emp.last_name || ''}</td>
                                             <td className="py-3.5 px-2 font-mono">+{emp.phone}</td>
                                             <td className="py-3.5 px-2">
                                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
@@ -427,10 +1010,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                                             <td className="py-3.5 px-2 font-mono">••••</td>
                                             <td className="py-3.5 px-2 text-right space-x-1.5">
                                                 <button 
-                                                    onClick={() => openClockModal(emp)}
+                                                    onClick={() => handleOpenDetail(emp)}
                                                     className="px-2.5 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 border-0 rounded-lg text-[10px] font-bold cursor-pointer transition"
                                                 >
-                                                    Turnos
+                                                    Ficha/Turnos
                                                 </button>
                                                 <button 
                                                     onClick={() => openPayrollModal(emp)}
@@ -496,6 +1079,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                         </div>
                     </div>
                 </div>
+            ) : (
+                renderShiftsPanel()
             )}
 
             {/* HR Solicitudes & Incapacidades Panel */}
@@ -768,102 +1353,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
-
-            {/* EMPLOYEE WORK LOGS (CLOCKED SHIFTS) MODAL */}
-            {isClockOpen && selectedEmp && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="glass-card max-w-lg w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
-                            <h3 className="font-bold text-lg text-on-surface flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-green-500">work_history</span>
-                                Registro de Turnos: {selectedEmp.name} {selectedEmp.last_name || ''}
-                            </h3>
-                            <button 
-                                onClick={() => setIsClockOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
-                            >
-                                <span className="material-symbols-outlined text-[20px]">close</span>
-                            </button>
-                        </div>
-
-                        {errorMsg && (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl mb-4 font-bold">
-                                ⚠️ {errorMsg}
-                            </div>
-                        )}
-
-                        {/* Fast Clock Form (Simulates Physical Tablet/Kiosk checkout) */}
-                        <div className="bg-surface-container/20 border border-outline/5 p-4 rounded-xl mb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <label className="block text-[10px] font-bold text-on-surface-variant uppercase font-mono">PIN del Empleado</label>
-                                <input 
-                                    type="password"
-                                    maxLength={4}
-                                    value={clockPin}
-                                    onChange={(e) => setClockPin(e.target.value.replace(/\D/g, ''))}
-                                    className="bg-surface border border-outline/20 px-3 py-2 rounded-xl text-on-surface font-mono tracking-widest text-center text-sm outline-none focus:border-primary w-24"
-                                    placeholder="••••"
-                                />
-                            </div>
-                            <div className="flex gap-3 w-full md:w-auto">
-                                <button 
-                                    onClick={() => handleClockAction('in')}
-                                    disabled={actionLoading}
-                                    className="flex-grow md:flex-none px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1 cursor-pointer transition shadow"
-                                >
-                                    <span className="material-symbols-outlined text-[16px]">login</span>
-                                    Entrada
-                                </button>
-                                <button 
-                                    onClick={() => handleClockAction('out')}
-                                    disabled={actionLoading}
-                                    className="flex-grow md:flex-none px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1 cursor-pointer transition shadow"
-                                >
-                                    <span className="material-symbols-outlined text-[16px]">logout</span>
-                                    Salida
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Summary metrics for this employee */}
-                        <div className="flex justify-between items-center mb-4 text-xs font-bold bg-primary/5 p-3 rounded-xl border border-primary/10">
-                            <span className="text-on-surface-variant">Turnos Activos: <span className="text-green-500">{activeShiftsCount}</span></span>
-                            <span className="text-on-surface-variant">Horas Totales: <span className="text-primary">{totalHours.toFixed(2)} Hrs</span></span>
-                        </div>
-
-                        {/* Shifts listing grid */}
-                        <div className="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar">
-                            <h4 className="text-xs font-bold text-on-surface-variant mb-2">Turnos Recientes</h4>
-                            {shiftsLoading ? (
-                                <div className="flex justify-center py-6">
-                                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                                </div>
-                            ) : empShifts.length === 0 ? (
-                                <p className="text-xs text-on-surface-variant/60 py-3 text-center">No hay registros de marcación para este empleado.</p>
-                            ) : (
-                                empShifts.map(s => (
-                                    <div key={s.id} className="flex justify-between items-center bg-surface-container/30 border border-outline/5 p-3 rounded-xl text-xs">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-1">
-                                                <span className="material-symbols-outlined text-green-500 text-[14px]">login</span>
-                                                <span className="font-bold">{new Date(s.clock_in).toLocaleString('es-CO')}</span>
-                                            </div>
-                                            <div className="flex items-center gap-1 text-on-surface-variant">
-                                                <span className="material-symbols-outlined text-orange-500 text-[14px]">logout</span>
-                                                <span>{s.clock_out ? new Date(s.clock_out).toLocaleString('es-CO') : <span className="text-green-500 font-bold">Activo</span>}</span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="font-bold text-primary font-mono">{Number(s.hours_worked || 0).toFixed(2)} Hrs</p>
-                                            <p className="text-[9px] text-on-surface-variant">Horas Trabajadas</p>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                         {/* Clock modal removed, functionality integrated into Assistance & Turnos subview */}
                     </div>
                 </div>
             )}
@@ -1029,6 +1519,258 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId }) 
                                 </div>
                             </div>
                         ) : null}
+                    </div>
+                </div>
+            )}
+
+            {/* EMP DETAIL MODAL */}
+            {isDetailOpen && selectedEmpDetail && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="glass-card max-w-2xl w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float max-h-[90vh] flex flex-col">
+                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
+                            <div>
+                                <h3 className="font-bold text-lg text-on-surface">Ficha del Empleado</h3>
+                                <p className="text-xs text-on-surface-variant">{selectedEmpDetail.name} {selectedEmpDetail.last_name || ''}</p>
+                            </div>
+                            <button 
+                                onClick={() => setIsDetailOpen(false)}
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        {/* Modal Navigation Tabs */}
+                        <div className="flex bg-surface-container/50 p-1 rounded-xl border border-outline/10 text-xs mb-4">
+                            <button 
+                                type="button"
+                                onClick={() => setDetailTab('info')}
+                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'info' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                            >
+                                Información General
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={() => setDetailTab('shifts')}
+                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'shifts' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                            >
+                                Registro de Turnos
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={() => setDetailTab('tasks')}
+                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'tasks' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                            >
+                                Tareas Asignadas ({empTasks.length})
+                            </button>
+                        </div>
+
+                        {/* Scrollable Content Area */}
+                        <div className="flex-grow overflow-y-auto pr-1 space-y-4 custom-scrollbar">
+                            
+                            {/* Tab 1: Info */}
+                            {detailTab === 'info' && (
+                                <div className="space-y-4 text-xs">
+                                    <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-xl border border-outline/5">
+                                        <div>
+                                            <span className="text-on-surface-variant block mb-1">Nombre Completo:</span>
+                                            <strong className="text-on-surface text-sm">{selectedEmpDetail.name} {selectedEmpDetail.last_name || ''}</strong>
+                                        </div>
+                                        <div>
+                                            <span className="text-on-surface-variant block mb-1">WhatsApp / Teléfono:</span>
+                                            <strong className="text-on-surface text-sm">+{selectedEmpDetail.phone}</strong>
+                                        </div>
+                                        <div>
+                                            <span className="text-on-surface-variant block mb-1">Rol / Cargo:</span>
+                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold inline-block mt-0.5 uppercase ${
+                                                selectedEmpDetail.role === 'admin' ? 'bg-secondary/15 text-secondary' : 'bg-primary/10 text-primary'
+                                            }`}>
+                                                {selectedEmpDetail.role}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="text-on-surface-variant block mb-1">Departamento:</span>
+                                            <strong className="text-on-surface text-sm">{selectedEmpDetail.department_name || 'Sin Asignar'}</strong>
+                                        </div>
+                                        <div>
+                                            <span className="text-on-surface-variant block mb-1">PIN Marcación Rápida:</span>
+                                            <strong className="text-on-surface font-mono text-sm tracking-widest">{selectedEmpDetail.pin}</strong>
+                                        </div>
+                                        <div>
+                                            <span className="text-on-surface-variant block mb-1">Fecha Registro:</span>
+                                            <span className="text-on-surface">{new Date(selectedEmpDetail.created_at).toLocaleDateString('es-CO')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Tab 2: Shifts */}
+                            {detailTab === 'shifts' && (
+                                <div className="space-y-3">
+                                    <h4 className="font-bold text-xs text-on-surface border-b border-outline/5 pb-1">Historial Reciente de Turnos</h4>
+                                    {shiftsLoading ? (
+                                        <p className="text-xs text-on-surface-variant italic py-2 animate-pulse">Cargando turnos de asistencia...</p>
+                                    ) : empShifts.length === 0 ? (
+                                        <p className="text-xs text-on-surface-variant/70 italic py-2">No se registran turnos o marcaciones de entrada/salida para este empleado.</p>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left text-xs border-collapse">
+                                                <thead>
+                                                    <tr className="border-b border-outline/10 text-on-surface-variant uppercase font-bold text-[10px]">
+                                                        <th className="py-2 px-1">Fecha</th>
+                                                        <th className="py-2 px-1">Entrada</th>
+                                                        <th className="py-2 px-1">Almuerzo</th>
+                                                        <th className="py-2 px-1">Salida</th>
+                                                        <th className="py-2 px-1 text-right">Horas</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {empShifts.slice(0, 10).map((shift: any) => {
+                                                        const inTime = shift.clock_in ? new Date(shift.clock_in).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '---';
+                                                        const lunchStart = shift.lunch_start ? new Date(shift.lunch_start).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '';
+                                                        const lunchEnd = shift.lunch_end ? new Date(shift.lunch_end).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '';
+                                                        const outTime = shift.clock_out ? new Date(shift.clock_out).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '---';
+                                                        const totalHours = shift.total_hours ? parseFloat(shift.total_hours).toFixed(2) + ' Hrs' : 'Activo';
+                                                        
+                                                        const lunchStr = lunchStart 
+                                                            ? `${lunchStart} - ${lunchEnd || 'En curso'}`
+                                                            : '---';
+
+                                                        return (
+                                                            <tr key={shift.id} className="border-b border-outline/5 hover:bg-white/5">
+                                                                <td className="py-2 px-1 font-mono text-[10px]">{new Date(shift.created_at).toLocaleDateString('es-CO')}</td>
+                                                                <td className="py-2 px-1 text-primary">{inTime}</td>
+                                                                <td className="py-2 px-1 text-on-surface-variant/80">{lunchStr}</td>
+                                                                <td className="py-2 px-1 text-secondary">{outTime}</td>
+                                                                <td className="py-2 px-1 text-right font-mono font-bold text-green-500">{totalHours}</td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Tab 3: Tasks */}
+                            {detailTab === 'tasks' && (
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <h4 className="font-bold text-xs text-on-surface border-b border-outline/5 pb-1">Asignar Nueva Tarea</h4>
+                                        <form onSubmit={handleAssignTask} className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white/5 p-4 rounded-xl border border-outline/5 text-xs">
+                                            <div className="space-y-1">
+                                                <label className="font-bold text-[10px] text-on-surface-variant uppercase">Título de la Tarea</label>
+                                                <input 
+                                                    type="text"
+                                                    required
+                                                    value={newTaskTitle}
+                                                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                                                    className="w-full bg-surface-container border border-outline/10 p-2 rounded-lg text-on-surface outline-none"
+                                                    placeholder="Ej: Archivar facturas pendientes"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="font-bold text-[10px] text-on-surface-variant uppercase">Asignado Por (Tu Nombre)</label>
+                                                <input 
+                                                    type="text"
+                                                    disabled
+                                                    value={newTaskCreator}
+                                                    className="w-full bg-surface-container border border-outline/10 p-2 rounded-lg text-on-surface outline-none opacity-60 cursor-not-allowed"
+                                                    placeholder="Ej: Supervisor Carlos (Admin)"
+                                                />
+                                            </div>
+                                            <div className="space-y-1 md:col-span-2">
+                                                <label className="font-bold text-[10px] text-on-surface-variant uppercase">Descripción / Instrucciones</label>
+                                                <textarea 
+                                                    rows={2}
+                                                    value={newTaskDesc}
+                                                    onChange={(e) => setNewTaskDesc(e.target.value)}
+                                                    className="w-full bg-surface-container border border-outline/10 p-2 rounded-lg text-on-surface outline-none resize-none"
+                                                    placeholder="Escribe detalles o instrucciones claras para el empleado..."
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 md:col-span-2">
+                                                <div className="space-y-1">
+                                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Fecha Límite</label>
+                                                    <input 
+                                                        type="date"
+                                                        required
+                                                        value={newTaskDueDate}
+                                                        onChange={(e) => setNewTaskDueDate(e.target.value)}
+                                                        className="w-full bg-surface-container border border-outline/10 p-2 rounded-lg text-on-surface outline-none"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Hora Límite</label>
+                                                    <input 
+                                                        type="time"
+                                                        required
+                                                        value={newTaskDueTime}
+                                                        onChange={(e) => setNewTaskDueTime(e.target.value)}
+                                                        className="w-full bg-surface-container border border-outline/10 p-2 rounded-lg text-on-surface outline-none"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-end md:col-span-2 mt-1">
+                                                <button
+                                                    type="submit"
+                                                    disabled={actionLoading}
+                                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white font-bold rounded-lg cursor-pointer transition shadow"
+                                                >
+                                                    {actionLoading ? 'Guardando...' : 'Asignar Tarea'}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <h4 className="font-bold text-xs text-on-surface border-b border-outline/5 pb-1">Historial de Tareas</h4>
+                                        {tasksLoading ? (
+                                            <p className="text-xs text-on-surface-variant italic py-2 animate-pulse">Cargando tareas...</p>
+                                        ) : empTasks.length === 0 ? (
+                                            <p className="text-xs text-on-surface-variant/70 italic py-2">No hay tareas asignadas a este empleado.</p>
+                                        ) : (
+                                            <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                                                {empTasks.map((tsk: any) => (
+                                                    <div key={tsk.id} className="p-3 bg-surface-container/20 border border-outline/5 rounded-xl space-y-1.5 text-xs text-left">
+                                                        <div className="flex justify-between items-start">
+                                                            <span className="font-bold text-on-surface">{tsk.title}</span>
+                                                            <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
+                                                                tsk.status === 'pendiente' ? 'bg-amber-500/15 text-amber-500' : 'bg-green-500/10 text-green-500'
+                                                            }`}>
+                                                                {tsk.status}
+                                                            </span>
+                                                        </div>
+                                                        {tsk.description && (
+                                                            <p className="text-on-surface-variant text-[11px] leading-relaxed">
+                                                                {tsk.description}
+                                                            </p>
+                                                        )}
+                                                        <div className="flex justify-between text-[10px] text-on-surface-variant/70 font-mono border-t border-outline/5 pt-1.5 mt-1.5">
+                                                            <span>Por: <strong>{tsk.created_by_name || 'Admin'}</strong></span>
+                                                            <span>Fecha: {new Date(tsk.created_at).toLocaleDateString('es-CO')}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="border-t border-outline/10 pt-4 mt-4 flex justify-end">
+                            <button 
+                                type="button"
+                                onClick={() => setIsDetailOpen(false)}
+                                className="px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold rounded-xl cursor-pointer transition"
+                            >
+                                Cerrar Ficha
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

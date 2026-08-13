@@ -37,19 +37,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'alerts'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'alerts'>(() => {
+    const saved = localStorage.getItem('admin_active_tab');
+    return (saved as any) || 'overview';
+  });
   const [activeAlerts, setActiveAlerts] = useState<any[]>([]);
   const [activeAlertsCount, setActiveAlertsCount] = useState(0);
   const [showAlertsModal, setShowAlertsModal] = useState(false);
 
-  // Formulario nuevo cliente (Simplificado sin ID ni Prompt)
+  // Formulario nuevo cliente (Con credenciales de acceso para el dueño)
   const [formData, setFormData] = useState({
     name: '',
+    username: '',
+    password: '',
+    ownerPhone: '',
+    email: '',
+    contactName: '',
   });
-  const [selectedCountry, setSelectedCountry] = useState('57');
-  const [botPhoneInput, setBotPhoneInput] = useState('');
-  const [agentPhoneInput, setAgentPhoneInput] = useState('');
-  const [driveFolderIdInput, setDriveFolderIdInput] = useState('');
+  const [categoryInput, setCategoryInput] = useState<'optica' | 'clinica' | 'restaurante' | 'general' | 'automatizacion'>('optica');
 
   const [loading, setLoading] = useState(true);
 
@@ -95,6 +100,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('admin_active_tab', activeTab);
+  }, [activeTab]);
+
   // Activar / Suspender cliente
   const handleToggleStatus = async (clientId: string, currentStatus: string) => {
     const endpoint = currentStatus === 'active' 
@@ -115,39 +124,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
   // Crear nuevo cliente
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !botPhoneInput) {
-      alert("Por favor completa los campos obligatorios: Nombre de la Empresa y Número del Bot.");
+    if (!formData.name || !formData.username || !formData.password || !formData.contactName) {
+      alert("Por favor completa los campos obligatorios: Nombre, Administrador, Usuario y Contraseña.");
       return;
     }
 
-    let cleanBot = botPhoneInput.replace(/\D/g, '');
-    if (!cleanBot.startsWith(selectedCountry)) {
-      cleanBot = selectedCountry + cleanBot;
-    }
-
-    let cleanAgent = agentPhoneInput.replace(/\D/g, '');
-    if (cleanAgent && !cleanAgent.startsWith(selectedCountry)) {
-      cleanAgent = selectedCountry + cleanAgent;
-    }
     try {
       const res = await authFetch('/api/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
-          phone_number: cleanBot,
-          agent_phone: cleanAgent || undefined,
-          drive_folder_id: driveFolderIdInput || undefined,
+          category: categoryInput,
+          username: formData.username,
+          password: formData.password,
+          owner_phone: formData.ownerPhone,
+          email: formData.email,
+          contact_name: formData.contactName
         }),
       });
 
       const data = await res.json();
       if (data.success) {
         setShowModal(false);
-        setFormData({ name: '' });
-        setBotPhoneInput('');
-        setAgentPhoneInput('');
-        setDriveFolderIdInput('');
+        setFormData({
+          name: '',
+          username: '',
+          password: '',
+          ownerPhone: '',
+          email: '',
+          contactName: '',
+        });
+        setCategoryInput('optica');
         fetchData(); // Recargar lista
       } else {
         alert(`Error: ${data.error || data.message || 'Error desconocido del servidor'}`);
@@ -559,74 +567,92 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
-            <form onSubmit={handleCreateClient} className="space-y-4">
+            <form onSubmit={handleCreateClient} className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
               <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">Nombre de la Empresa</label>
+                <label className="font-label-md text-on-surface-variant ml-1">Nombre de la Empresa *</label>
                 <input 
                   className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
                   placeholder="ej. Clínica Odontológica de Colombia" 
                   type="text"
+                  required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
+              
               <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">País de Operación</label>
-                <select 
-                  value={selectedCountry}
-                  onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="w-full bg-surface-container border border-outline/30 rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none"
-                >
-                  <option value="57">🇨🇴 Colombia (+57)</option>
-                  <option value="52">🇲🇽 México (+52)</option>
-                  <option value="34">🇪🇸 España (+34)</option>
-                  <option value="1">🇺🇸 Estados Unidos (+1)</option>
-                  <option value="54">🇦🇷 Argentina (+54)</option>
-                  <option value="56">🇨🇱 Chile (+56)</option>
-                  <option value="51">🇵🇪 Perú (+51)</option>
-                  <option value="593">🇪🇨 Ecuador (+593)</option>
-                  <option value="58">🇻🇪 Venezuela (+58)</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">Línea del Bot</label>
-                <div className="flex border border-outline/30 rounded-xl bg-surface-container overflow-hidden focus-within:border-primary transition-all">
-                  <span className="bg-surface-container-high px-4 py-2.5 text-on-surface-variant font-label-md border-r border-outline/20 flex items-center select-none">
-                    +{selectedCountry}
-                  </span>
-                  <input 
-                    className="flex-grow bg-transparent px-4 py-2.5 text-on-surface outline-none" 
-                    placeholder="ej. 3116718652" 
-                    type="text"
-                    value={botPhoneInput}
-                    onChange={(e) => setBotPhoneInput(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">Teléfono Asesor Humano (Traspaso)</label>
-                <div className="flex border border-outline/30 rounded-xl bg-surface-container overflow-hidden focus-within:border-primary transition-all">
-                  <span className="bg-surface-container-high px-4 py-2.5 text-on-surface-variant font-label-md border-r border-outline/20 flex items-center select-none">
-                    +{selectedCountry}
-                  </span>
-                  <input 
-                    className="flex-grow bg-transparent px-4 py-2.5 text-on-surface outline-none" 
-                    placeholder="ej. 3332792837" 
-                    type="text"
-                    value={agentPhoneInput}
-                    onChange={(e) => setAgentPhoneInput(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="font-label-md text-on-surface-variant ml-1">ID Carpeta Google Drive (RAG)</label>
+                <label className="font-label-md text-on-surface-variant ml-1">Nombre del Administrador / Contacto *</label>
                 <input 
                   className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
-                  placeholder="ej. 11DhgnPTOZu8ySaaiZA4Lni9FmqB58SFr" 
+                  placeholder="ej. Juan Pérez" 
                   type="text"
-                  value={driveFolderIdInput}
-                  onChange={(e) => setDriveFolderIdInput(e.target.value)}
+                  required
+                  value={formData.contactName}
+                  onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="font-label-md text-on-surface-variant ml-1">Usuario Admin *</label>
+                  <input 
+                    className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
+                    placeholder="ej. juanperez" 
+                    type="text"
+                    required
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-label-md text-on-surface-variant ml-1">Contraseña *</label>
+                  <input 
+                    className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
+                    placeholder="Contraseña" 
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="font-label-md text-on-surface-variant ml-1">Teléfono Propietario</label>
+                  <input 
+                    className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
+                    placeholder="ej. 573001234567" 
+                    type="text"
+                    value={formData.ownerPhone}
+                    onChange={(e) => setFormData({ ...formData, ownerPhone: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-label-md text-on-surface-variant ml-1">Correo Electrónico</label>
+                  <input 
+                    className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all" 
+                    placeholder="ej. juan@empresa.com" 
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-label-md text-on-surface-variant ml-1">Tipo de Negocio</label>
+                <select 
+                  value={categoryInput}
+                  onChange={(e) => setCategoryInput(e.target.value as any)}
+                  className="w-full bg-surface-container border border-outline/30 rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none cursor-pointer"
+                >
+                  <option value="optica">👓 Óptica / Oftalmología</option>
+                  <option value="clinica">🩺 Clínica / Consultorio Médico</option>
+                  <option value="restaurante">🍔 Restaurante / Bar / Cafetería</option>
+                  <option value="general">💼 Comercio General / ERP Genérico</option>
+                  <option value="automatizacion">🤖 Agencia de Automatizaciones / Servicios</option>
+                </select>
               </div>
               <div className="pt-4 flex gap-4">
                 <button 

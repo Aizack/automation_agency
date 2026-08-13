@@ -18,6 +18,10 @@ export interface ClientConfig {
   isActivated?: boolean;
   category?: string;
   enabledModules?: any;
+  logo_url?: string;
+  nit?: string;
+  address?: string;
+  invoiceFooter?: string;
 }
 
 /**
@@ -40,7 +44,11 @@ export const getClientConfigByPhone = async (phone: string): Promise<ClientConfi
         first_message_notified AS "firstMessageNotified",
         is_activated AS "isActivated",
         category,
-        enabled_modules AS "enabledModules"
+        enabled_modules AS "enabledModules",
+        logo_url,
+        nit,
+        address,
+        invoice_footer AS "invoiceFooter"
        FROM clients 
        WHERE RIGHT(phone_number, 10) = RIGHT($1, 10) LIMIT 1`,
       [phone]
@@ -76,7 +84,11 @@ export const getClientConfigById = async (id: string): Promise<ClientConfig | nu
         first_message_notified AS "firstMessageNotified",
         is_activated AS "isActivated",
         category,
-        enabled_modules AS "enabledModules"
+        enabled_modules AS "enabledModules",
+        logo_url,
+        nit,
+        address,
+        invoice_footer AS "invoiceFooter"
        FROM clients 
        WHERE id = $1 LIMIT 1`,
       [id]

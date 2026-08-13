@@ -144,13 +144,14 @@ app.post('/api/clients', authenticateToken as any, requireRole(['admin']) as any
       username,
       password,
       email,
-      contact_name 
+      contact_name,
+      category
     } = req.body;
 
-    if (!name || !phone_number) {
+    if (!name) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Faltan campos obligatorios: name, phone_number' 
+        message: 'Faltan campos obligatorios: name' 
       });
     }
 
@@ -171,15 +172,17 @@ app.post('/api/clients', authenticateToken as any, requireRole(['admin']) as any
     await createClient({ 
       id: clientId, 
       name, 
-      phone_number, 
+      phone_number: phone_number || null, 
       system_prompt: finalPrompt, 
       active_tools: active_tools || [], 
-      agent_phone,
+      agent_phone: agent_phone || null,
       drive_folder_id: finalDriveFolderId,
       username: username || null,
       password: password || null,
       email: email || null,
-      contact_name: contact_name || null
+      contact_name: contact_name || null,
+      is_activated: true,
+      category: category || 'optica'
     });
 
     res.status(201).json({ 
@@ -345,10 +348,28 @@ app.patch('/api/clients/:clientId/agents/:agentId', authenticateToken as any, au
 app.get('/api/clients/:clientId/audios', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const clientId = req.params.clientId as string;
-    const clientMediaDir = path.join(process.cwd(), 'media', 'clients', clientId);
+    const parentDir = path.join(process.cwd(), 'media', 'clients', clientId);
+    const clientMediaDir = path.join(parentDir, 'audios');
     
+    // Crear directorio de audios si no existe
     if (!fs.existsSync(clientMediaDir)) {
-      return res.json({ success: true, data: [] });
+      fs.mkdirSync(clientMediaDir, { recursive: true });
+    }
+
+    // Migración automática: Mover audios de la carpeta padre a la subcarpeta /audios/
+    if (fs.existsSync(parentDir)) {
+      const parentFiles = fs.readdirSync(parentDir);
+      for (const file of parentFiles) {
+        const fullPath = path.join(parentDir, file);
+        const stats = fs.statSync(fullPath);
+        if (stats.isFile()) {
+          const ext = path.extname(file).toLowerCase();
+          if (['.mp3', '.ogg', '.wav', '.m4a'].includes(ext) && !file.toLowerCase().startsWith('logo')) {
+            fs.renameSync(fullPath, path.join(clientMediaDir, file));
+            console.log(`[Media Migration] Migrado audio anterior ${file} a la subcarpeta /audios/`);
+          }
+        }
+      }
     }
 
     const files = fs.readdirSync(clientMediaDir);
@@ -360,7 +381,7 @@ app.get('/api/clients/:clientId/audios', authenticateToken as any, authorizeClie
         tag,
         fileName: file,
         size: stats.size,
-        url: `/media/clients/${clientId}/${file}`
+        url: `/media/clients/${clientId}/audios/${file}`
       };
     });
 
@@ -386,7 +407,7 @@ app.post('/api/clients/:clientId/audios', authenticateToken as any, authorizeCli
       return res.status(400).json({ success: false, error: 'Etiqueta no válida.' });
     }
 
-    const clientMediaDir = path.join(process.cwd(), 'media', 'clients', clientId);
+    const clientMediaDir = path.join(process.cwd(), 'media', 'clients', clientId, 'audios');
     if (!fs.existsSync(clientMediaDir)) {
       fs.mkdirSync(clientMediaDir, { recursive: true });
     }
@@ -417,7 +438,7 @@ app.delete('/api/clients/:clientId/audios/:fileName', authenticateToken as any, 
   try {
     const clientId = req.params.clientId as string;
     const fileName = req.params.fileName as string;
-    const filePath = path.join(process.cwd(), 'media', 'clients', clientId, fileName);
+    const filePath = path.join(process.cwd(), 'media', 'clients', clientId, 'audios', fileName);
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
@@ -457,6 +478,107 @@ app.post('/api/clients/:id/sync-drive', authenticateToken as any, authorizeClien
   } catch (error: any) {
     console.error(`[API] Error al sincronizar Drive del cliente ${req.params.id}:`, error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Registro público de inquilinos (tiendas)
+app.post('/api/auth/register-client', async (req: Request, res: Response) => {
+  try {
+    const { contact_name, username, password, phone_number, email } = req.body;
+
+    if (!contact_name || !username || !password || !phone_number) {
+      return res.status(400).json({ success: false, error: 'Faltan campos obligatorios para el registro.' });
+    }
+
+    const cleanPhone = phone_number.replace(/\D/g, '');
+
+    // Verificar si el usuario ya existe
+    const userCheck = await pool.query("SELECT id FROM clients WHERE username = $1 LIMIT 1", [username]);
+    if (userCheck.rows.length > 0) {
+      return res.status(400).json({ success: false, error: 'El nombre de usuario ya está registrado.' });
+    }
+
+    // Verificar si el teléfono ya existe
+    const phoneCheck = await pool.query("SELECT id FROM clients WHERE phone_number = $1 LIMIT 1", [cleanPhone]);
+    if (phoneCheck.rows.length > 0) {
+      return res.status(400).json({ success: false, error: 'El número de teléfono ya está registrado.' });
+    }
+
+    const clientId = 'client_' + Math.random().toString(36).substring(2, 10);
+    
+    // Crear el inquilino en estado 'pending' (onboarding incompleto)
+    await pool.query(`
+      INSERT INTO clients (
+        id, name, phone_number, system_prompt, status, 
+        username, password, email, contact_name, is_activated, category
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    `, [
+      clientId,
+      'pending', // Se configurará en el onboarding
+      cleanPhone,
+      'Eres un asistente de IA.',
+      'active',
+      username,
+      password,
+      email || null,
+      contact_name,
+      true, // Auto-activado
+      'optica' // Categoría por defecto
+    ]);
+
+    res.json({ success: true, message: 'Registro exitoso. Inicia sesión para registrar tu negocio.', data: { clientId } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Onboarding de negocio para inquilinos nuevos
+app.post('/api/clients/:clientId/register-business', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { name, category } = req.body;
+
+    if (!name || !category) {
+      return res.status(400).json({ success: false, error: 'Falta nombre o categoría del negocio.' });
+    }
+
+    // Generar la carpeta de Google Drive automáticamente
+    let driveFolderId = null;
+    try {
+      driveFolderId = await createClientFolder(name);
+    } catch (driveErr: any) {
+      console.error(`[Onboarding] ⚠️ No se pudo crear la carpeta de Google Drive:`, driveErr.message);
+    }
+
+    const systemPrompt = `Eres un asistente de IA amable y servicial para la empresa ${name}.`;
+
+    await pool.query(`
+      UPDATE clients 
+      SET name = $1, category = $2, drive_folder_id = $3, system_prompt = $4
+      WHERE id = $5
+    `, [name, category, driveFolderId, systemPrompt, clientId]);
+
+    res.json({ success: true, message: 'Negocio registrado e inicializado con éxito.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Actualizar perfil comercial y tributario de la tienda
+app.put('/api/clients/:clientId/profile-settings', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { nit, address, phone_number, email, invoice_footer } = req.body;
+
+    await pool.query(`
+      UPDATE clients 
+      SET nit = $1, address = $2, phone_number = $3, email = $4, invoice_footer = $5
+      WHERE id = $6
+    `, [nit || null, address || null, phone_number || null, email || null, invoice_footer || null, clientId]);
+
+    res.json({ success: true, message: 'Configuración comercial de la tienda guardada con éxito.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -1124,12 +1246,12 @@ app.post('/api/payments/webhook', async (req: Request, res: Response) => {
 
 
 // --- SAAS ERP: PRODUCTOS / INVENTARIO ---
-// Obtener todos los productos (con columnas de costo y alarmas de stock)
+// Obtener todos los productos (con columnas de costo, alarmas de stock y descuentos promocionales)
 app.get('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, created_at 
+      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, created_at 
        FROM products 
        WHERE client_id = $1 
        ORDER BY created_at DESC`,
@@ -1146,7 +1268,7 @@ app.get('/api/clients/:clientId/products/sku/:sku', authenticateToken as any, au
   try {
     const { clientId, sku } = req.params;
     const result = await pool.query(
-      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone 
+      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount 
        FROM products 
        WHERE client_id = $1 AND sku = $2 LIMIT 1`,
       [clientId, sku]
@@ -1166,7 +1288,7 @@ app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, a
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, name, sku, stock, min_stock, supplier_name, supplier_phone 
+      `SELECT id, name, sku, stock, min_stock, supplier_name, supplier_phone, promo_discount 
        FROM products 
        WHERE client_id = $1 AND stock <= min_stock 
        ORDER BY stock ASC`,
@@ -1182,7 +1304,7 @@ app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, a
 app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
@@ -1190,12 +1312,13 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 
     const result = await pool.query(
       `INSERT INTO products (
-         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, created_at`,
+         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, created_at`,
       [
         clientId, name, sku || null, description || null, price, stock, 
-        cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null
+        cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null,
+        brand || null, material || null, style || null, color || null, promo_discount || 0.00
       ]
     );
 
@@ -1209,7 +1332,7 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, productId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
@@ -1218,12 +1341,14 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
     const result = await pool.query(
       `UPDATE products 
        SET name = $1, sku = $2, description = $3, price = $4, stock = $5, 
-           cost_price = $6, min_stock = $7, supplier_name = $8, supplier_phone = $9
-       WHERE client_id = $10 AND id = $11 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, created_at`,
+           cost_price = $6, min_stock = $7, supplier_name = $8, supplier_phone = $9,
+           brand = $10, material = $11, style = $12, color = $13, promo_discount = $14
+       WHERE client_id = $15 AND id = $16 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, created_at`,
       [
         name, sku || null, description || null, price, stock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null, 
+        brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         clientId, productId
       ]
     );
@@ -1232,7 +1357,26 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
       return res.status(404).json({ success: false, error: 'Producto no encontrado.' });
     }
 
-    res.json({ success: true, product: result.rows[0] });
+    const updatedProd = result.rows[0];
+    if (updatedProd.stock > updatedProd.min_stock) {
+      // Resolver alerta si existía activa
+      await logger.resolveAlert(
+        `stock_low_${productId}`, 
+        `El stock del producto "${updatedProd.name}" se ha restablecido a ${updatedProd.stock} unidades (Mínimo: ${updatedProd.min_stock}).`, 
+        clientId as string
+      );
+    } else {
+      // Si el stock configurado sigue siendo crítico, levantar/actualizar alerta
+      await logger.raiseAlert(
+        `stock_low_${productId}`, 
+        'orange', 
+        `El producto "${updatedProd.name}" tiene stock crítico de ${updatedProd.stock} unidades (Mínimo: ${updatedProd.min_stock}).`,
+        `ID: ${productId} | Stock actual: ${updatedProd.stock} | Mínimo: ${updatedProd.min_stock}`,
+        clientId as string
+      );
+    }
+
+    res.json({ success: true, product: updatedProd });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1378,7 +1522,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, reminder_sent, overdue_sent, created_at 
+      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, reminder_sent, overdue_sent, payment_method, installments_count, installment_frequency, created_at 
        FROM invoices 
        WHERE client_id = $1 
        ORDER BY created_at DESC`,
@@ -1404,7 +1548,15 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
       customerEmail, 
       customerAddress, 
       totalAmount, 
-      dueDate, 
+      dueDate,
+      paymentMethod,
+      installmentsCount,
+      installmentFrequency,
+      abono, // Abono inicial
+      deliveryMethod, // 'local' o 'domicilio'
+      deliveryFee,
+      deliveryAddress,
+      deliveryDate,
       items 
     } = req.body;
 
@@ -1412,11 +1564,60 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
       return res.status(400).json({ success: false, error: 'Campos obligatorios incompletos.' });
     }
 
+    const initialAbono = parseFloat(abono) || 0;
+    const cleanTotal = parseFloat(totalAmount) || 0;
+    const cleanDeliveryFee = parseFloat(deliveryFee) || 0;
+    const cleanInstallmentsCount = installmentsCount !== undefined ? parseInt(installmentsCount) : 1;
+
+    // Calcular estado inicial de la factura
+    let initialStatus = 'pending';
+    if (paymentMethod === 'contado' || paymentMethod === 'tarjeta') {
+      initialStatus = 'paid';
+    } else if (paymentMethod === 'cuotas') {
+      if (initialAbono >= cleanTotal) {
+        initialStatus = 'paid';
+      }
+    }
+
+    // 0. Registrar/Asegurar cliente en el CRM si no existe por documento
+    if (customerDocumentNumber) {
+      const crmCheck = await dbClient.query(`
+        SELECT id FROM crm_customers WHERE client_id = $1 AND document_number = $2
+      `, [clientId, customerDocumentNumber]);
+
+      if (crmCheck.rows.length === 0) {
+        const nameParts = customerName.trim().split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        await dbClient.query(`
+          INSERT INTO crm_customers (client_id, name, last_name, document_type, document_number, phone, email, address)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `, [
+          clientId,
+          firstName,
+          lastName,
+          customerDocumentType || 'CC',
+          customerDocumentNumber,
+          customerPhone,
+          customerEmail || null,
+          customerAddress || null
+        ]);
+        console.log(`[CRM Auto-Enroll] ✅ Cliente ${customerName} registrado en CRM automáticamente.`);
+      }
+    }
+
     // 1. Insertar Factura
     const invoiceResult = await dbClient.query(`
-      INSERT INTO invoices (client_id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending', $10)
-      RETURNING id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, created_at
+      INSERT INTO invoices (
+        client_id, invoice_number, customer_name, customer_phone, 
+        customer_document_type, customer_document_number, customer_email, 
+        customer_address, total_amount, status, due_date, 
+        payment_method, installments_count, installment_frequency,
+        delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+      RETURNING id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, created_at
     `, [
       clientId, 
       invoiceNumber, 
@@ -1426,24 +1627,102 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
       customerDocumentNumber, 
       customerEmail, 
       customerAddress || null, 
-      totalAmount, 
-      dueDate
+      cleanTotal, 
+      initialStatus, 
+      dueDate,
+      paymentMethod || 'contado',
+      cleanInstallmentsCount,
+      installmentFrequency || null,
+      deliveryMethod || 'local',
+      cleanDeliveryFee,
+      deliveryAddress || customerAddress || null,
+      deliveryDate || null,
+      deliveryMethod === 'domicilio' ? 'pending' : 'entregado'
     ]);
 
     const invoice = invoiceResult.rows[0];
 
-    // 2. Insertar Items si vienen definidos
+    // 2. Si el pago es financiado (por cuotas), generar el plan de cuotas dinámico
+    if (paymentMethod === 'cuotas') {
+      // Registrar abono inicial si aplica (Cuota #0, ya pagada)
+      if (initialAbono > 0) {
+        await dbClient.query(`
+          INSERT INTO invoice_installments (invoice_id, installment_number, due_date, amount, status, paid_amount, paid_at)
+          VALUES ($1, 0, NOW(), $2, 'paid', $2, NOW())
+        `, [invoice.id, initialAbono]);
+      }
+
+      // Dividir saldo restante en cuotas
+      const remainingAmount = cleanTotal - initialAbono;
+      if (remainingAmount > 0 && cleanInstallmentsCount > 0) {
+        const baseAmount = Math.round((remainingAmount / cleanInstallmentsCount) * 100) / 100;
+        
+        for (let i = 1; i <= cleanInstallmentsCount; i++) {
+          const installmentDate = new Date();
+          if (installmentFrequency === 'semanal') {
+            installmentDate.setDate(installmentDate.getDate() + i * 7);
+          } else if (installmentFrequency === 'quincenal') {
+            installmentDate.setDate(installmentDate.getDate() + i * 15);
+          } else { // mensual
+            installmentDate.setMonth(installmentDate.getMonth() + i);
+          }
+
+          // Ajustar decimales de redondeo en la última cuota
+          const installmentAmount = (i === cleanInstallmentsCount) 
+            ? Math.round((remainingAmount - (baseAmount * (cleanInstallmentsCount - 1))) * 100) / 100 
+            : baseAmount;
+
+          await dbClient.query(`
+            INSERT INTO invoice_installments (invoice_id, installment_number, due_date, amount, status, paid_amount)
+            VALUES ($1, $2, $3, $4, 'pending', 0.00)
+          `, [invoice.id, i, installmentDate, installmentAmount]);
+        }
+      }
+    }
+
+    // 3. Insertar Items
     if (items && Array.isArray(items)) {
       for (const item of items) {
         await dbClient.query(`
-          INSERT INTO invoice_items (invoice_id, product_id, quantity, price)
-          VALUES ($1, $2, $3, $4)
-        `, [invoice.id, item.productId, item.quantity || 1, item.price]);
+          INSERT INTO invoice_items (
+            invoice_id, product_id, quantity, price, 
+            product_name, product_type, lens_design, lens_material, lens_treatment
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `, [
+          invoice.id, 
+          item.productType === 'lens' ? null : item.productId, 
+          item.quantity || 1, 
+          item.price,
+          item.productName || null,
+          item.productType || 'inventory',
+          item.lensDesign || null,
+          item.lensMaterial || null,
+          item.lensTreatment || null
+        ]);
 
-        // Descontar stock del producto
-        await dbClient.query(`
-          UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2 AND client_id = $3
-        `, [item.quantity || 1, item.productId, clientId]);
+        // Solo descontar stock si es un producto físico del inventario
+        if (item.productType !== 'lens' && item.productId) {
+          const prodUpdateRes = await dbClient.query(`
+            UPDATE products 
+            SET stock = GREATEST(0, stock - $1) 
+            WHERE id = $2 AND client_id = $3
+            RETURNING name, stock, min_stock
+          `, [item.quantity || 1, item.productId, clientId]);
+
+          if (prodUpdateRes.rows.length > 0) {
+            const { name: prodName, stock: newStock, min_stock: minStock } = prodUpdateRes.rows[0];
+            if (newStock <= minStock) {
+              await logger.raiseAlert(
+                `stock_low_${item.productId}`, 
+                'orange', 
+                `El producto "${prodName}" tiene stock crítico de ${newStock} unidades (Mínimo: ${minStock}).`,
+                `ID: ${item.productId} | Stock actual: ${newStock} | Mínimo: ${minStock}`,
+                clientId as string
+              );
+            }
+          }
+        }
       }
     }
 
@@ -1514,7 +1793,354 @@ app.put('/api/clients/:clientId/invoices/:invoiceId/pay', authenticateToken as a
       return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
     }
 
+    // Marcar todas las cuotas asociadas como pagadas
+    await pool.query(
+      `UPDATE invoice_installments SET status = 'paid', paid_amount = amount, paid_at = NOW() WHERE invoice_id = $1`,
+      [invoiceId]
+    );
+
     res.json({ success: true, message: 'Factura pagada exitosamente.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Obtener detalles completos de una factura (con items y cuotas)
+app.get('/api/clients/:clientId/invoices/:invoiceId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    
+    // Consultar factura
+    const invRes = await pool.query(
+      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, created_at
+       FROM invoices
+       WHERE client_id = $1 AND id = $2`,
+      [clientId, invoiceId]
+    );
+
+    if (invRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
+    }
+    const invoice = invRes.rows[0];
+
+    // Consultar items
+    const itemsRes = await pool.query(
+      `SELECT ii.id, ii.product_id, ii.quantity, ii.price, ii.product_name, ii.product_type, ii.lens_design, ii.lens_material, ii.lens_treatment, p.name as inventory_name
+       FROM invoice_items ii
+       LEFT JOIN products p ON ii.product_id = p.id
+       WHERE ii.invoice_id = $1`,
+      [invoiceId]
+    );
+
+    // Consultar cuotas si aplica
+    const instRes = await pool.query(
+      `SELECT id, installment_number, due_date, amount, status, paid_amount, paid_at
+       FROM invoice_installments
+       WHERE invoice_id = $1
+       ORDER BY installment_number ASC`,
+      [invoiceId]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        ...invoice,
+        items: itemsRes.rows,
+        installments: instRes.rows
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Actualizar información de logística de entrega (domicilios)
+app.patch('/api/clients/:clientId/invoices/:invoiceId/delivery', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    const { deliveryMethod, deliveryFee, deliveryAddress, deliveryDate, deliveryStatus } = req.body;
+
+    const result = await pool.query(
+      `UPDATE invoices
+       SET delivery_method = COALESCE($1, delivery_method),
+           delivery_fee = COALESCE($2, delivery_fee),
+           delivery_address = COALESCE($3, delivery_address),
+           delivery_date = COALESCE($4, delivery_date),
+           delivery_status = COALESCE($5, delivery_status),
+           updated_at = NOW()
+       WHERE client_id = $6 AND id = $7
+       RETURNING id, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status`,
+      [
+        deliveryMethod || null,
+        deliveryFee !== undefined ? parseFloat(deliveryFee) : null,
+        deliveryAddress || null,
+        deliveryDate || null,
+        deliveryStatus || null,
+        clientId,
+        invoiceId
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
+    }
+
+    res.json({ success: true, message: 'Información de despacho actualizada con éxito.', data: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Obtener cuotas de una factura
+app.get('/api/clients/:clientId/invoices/:invoiceId/installments', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { invoiceId } = req.params;
+    const result = await pool.query(
+      `SELECT id, installment_number, due_date, amount, status, paid_amount, paid_at 
+       FROM invoice_installments 
+       WHERE invoice_id = $1 
+       ORDER BY installment_number ASC`,
+      [invoiceId]
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Registrar abono o acción negociable sobre una cuota específica
+app.put('/api/clients/:clientId/invoices/:invoiceId/installments/:installmentId/pay', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  const dbClient = await pool.connect();
+  try {
+    const { invoiceId, installmentId } = req.params;
+    const { amount, actionType } = req.body; // actionType: 'pay' | 'refinance' | 'accumulate'
+
+    await dbClient.query('BEGIN');
+
+    // Obtener cuota actual
+    const instRes = await dbClient.query(
+      `SELECT id, installment_number, amount, paid_amount, status FROM invoice_installments WHERE id = $1 AND invoice_id = $2`,
+      [installmentId, invoiceId]
+    );
+    if (instRes.rows.length === 0) {
+      throw new Error('Cuota no encontrada.');
+    }
+    const inst = instRes.rows[0];
+
+    const currentAmount = parseFloat(inst.amount);
+    const currentPaid = parseFloat(inst.paid_amount);
+    const pendingAmount = currentAmount - currentPaid;
+
+    if (actionType === 'refinance') {
+      // Alargar plazo: crear una nueva cuota al final de la línea temporal
+      const maxNumRes = await dbClient.query(
+        `SELECT MAX(installment_number) as max_num, MAX(due_date) as max_date FROM invoice_installments WHERE invoice_id = $1`,
+        [invoiceId]
+      );
+      const nextNum = (maxNumRes.rows[0].max_num || 0) + 1;
+      const lastDate = new Date(maxNumRes.rows[0].max_date || new Date());
+      
+      const invRes = await dbClient.query(`SELECT installment_frequency FROM invoices WHERE id = $1`, [invoiceId]);
+      const freq = invRes.rows[0].installment_frequency || 'mensual';
+      const nextDate = new Date(lastDate);
+      if (freq === 'quincenal') {
+        nextDate.setDate(nextDate.getDate() + 15);
+      } else if (freq === 'semanal') {
+        nextDate.setDate(nextDate.getDate() + 7);
+      } else {
+        nextDate.setMonth(nextDate.getMonth() + 1);
+      }
+
+      // Crear nueva cuota
+      await dbClient.query(
+        `INSERT INTO invoice_installments (invoice_id, installment_number, due_date, amount, status, paid_amount)
+         VALUES ($1, $2, $3, $4, 'pending', 0.00)`,
+        [invoiceId, nextNum, nextDate, pendingAmount]
+      );
+
+      // Marcar la actual como pagada (refinanciada)
+      await dbClient.query(
+        `UPDATE invoice_installments 
+         SET status = 'paid', paid_amount = amount, paid_at = NOW() 
+         WHERE id = $1`,
+        [installmentId]
+      );
+    } else if (actionType === 'accumulate') {
+      // Acumulativa: sumar la deuda pendiente a la siguiente cuota
+      const nextInstRes = await dbClient.query(
+        `SELECT id, amount FROM invoice_installments 
+         WHERE invoice_id = $1 AND installment_number > $2 AND status = 'pending' 
+         ORDER BY installment_number ASC LIMIT 1`,
+        [invoiceId, inst.installment_number]
+      );
+
+      if (nextInstRes.rows.length > 0) {
+        const nextInst = nextInstRes.rows[0];
+        const nextNewAmount = parseFloat(nextInst.amount) + pendingAmount;
+        
+        await dbClient.query(
+          `UPDATE invoice_installments SET amount = $1 WHERE id = $2`,
+          [nextNewAmount, nextInst.id]
+        );
+
+        await dbClient.query(
+          `UPDATE invoice_installments 
+           SET status = 'paid', paid_amount = amount, paid_at = NOW() 
+           WHERE id = $1`,
+          [installmentId]
+        );
+      } else {
+        // Fallback: alargar plazo si no hay una cuota siguiente
+        const nextNum = inst.installment_number + 1;
+        const lastDate = new Date();
+        lastDate.setMonth(lastDate.getMonth() + 1);
+        
+        await dbClient.query(
+          `INSERT INTO invoice_installments (invoice_id, installment_number, due_date, amount, status, paid_amount)
+           VALUES ($1, $2, $3, $4, 'pending', 0.00)`,
+          [invoiceId, nextNum, lastDate, pendingAmount]
+        );
+        await dbClient.query(
+          `UPDATE invoice_installments SET status = 'paid', paid_amount = amount, paid_at = NOW() WHERE id = $1`,
+          [installmentId]
+        );
+      }
+    } else {
+      // Pago normal o abono
+      const payVal = parseFloat(amount) || 0;
+      const totalPaid = currentPaid + payVal;
+      const isFullyPaid = totalPaid >= currentAmount;
+
+      await dbClient.query(
+        `UPDATE invoice_installments 
+         SET paid_amount = $1, status = $2, paid_at = $3
+         WHERE id = $4`,
+        [totalPaid, isFullyPaid ? 'paid' : 'pending', isFullyPaid ? new Date() : null, installmentId]
+      );
+    }
+
+    // Verificar si quedan cuotas pendientes en total
+    const checkAllRes = await dbClient.query(
+      `SELECT COUNT(id) as pending_count FROM invoice_installments WHERE invoice_id = $1 AND status = 'pending'`,
+      [invoiceId]
+    );
+    const pendingCount = parseInt(checkAllRes.rows[0].pending_count);
+
+    if (pendingCount === 0) {
+      await dbClient.query(
+        `UPDATE invoices SET status = 'paid', updated_at = NOW() WHERE id = $1`,
+        [invoiceId]
+      );
+    } else {
+      await dbClient.query(
+        `UPDATE invoices SET status = 'pending', updated_at = NOW() WHERE id = $1`,
+        [invoiceId]
+      );
+    }
+
+    await dbClient.query('COMMIT');
+    res.json({ success: true, message: 'Transacción sobre cuota registrada con éxito.' });
+  } catch (err: any) {
+    await dbClient.query('ROLLBACK');
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    dbClient.release();
+  }
+});
+
+// --- SAAS OPTICA: FÓRMULAS Y RECETAS OFTÁLMICAS ---
+// Obtener historial de fórmulas del cliente
+app.get('/api/clients/:clientId/formulas', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { customerId } = req.query;
+
+    let query = `
+      SELECT f.id, f.customer_id, c.name as customer_name, c.last_name as customer_last_name, 
+             c.document_number as customer_document_number, c.phone as customer_phone, 
+             f.od_sphere, f.od_cylinder, f.od_axis, f.od_addition, 
+             f.oi_sphere, f.oi_cylinder, f.oi_axis, f.oi_addition, 
+             f.dp_distance, f.height, f.notes, f.created_at 
+      FROM formulas f 
+      JOIN crm_customers c ON f.customer_id = c.id 
+      WHERE f.client_id = $1
+    `;
+    const params: any[] = [clientId];
+
+    if (customerId) {
+      query += ` AND f.customer_id = $2`;
+      params.push(customerId);
+    }
+
+    query += ` ORDER BY f.created_at DESC`;
+
+    const result = await pool.query(query, params);
+    res.json({ success: true, formulas: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Guardar nueva fórmula oftálmica
+app.post('/api/clients/:clientId/formulas', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { 
+      customerId, 
+      odSphere, odCylinder, odAxis, odAddition, 
+      oiSphere, oiCylinder, oiAxis, oiAddition, 
+      dpDistance, height, notes 
+    } = req.body;
+
+    if (!customerId) {
+      return res.status(400).json({ success: false, error: 'Falta seleccionar el cliente.' });
+    }
+
+    const result = await pool.query(`
+      INSERT INTO formulas (
+        client_id, customer_id, 
+        od_sphere, od_cylinder, od_axis, od_addition, 
+        oi_sphere, oi_cylinder, oi_axis, oi_addition, 
+        dp_distance, height, notes
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING id, created_at
+    `, [
+      clientId, 
+      customerId, 
+      odSphere || null, 
+      odCylinder || null, 
+      odAxis || null, 
+      odAddition || null, 
+      oiSphere || null, 
+      oiCylinder || null, 
+      oiAxis || null, 
+      oiAddition || null, 
+      dpDistance || null, 
+      height || null, 
+      notes || null
+    ]);
+
+    res.status(201).json({ success: true, message: 'Fórmula guardada exitosamente.', data: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Eliminar una fórmula
+app.delete('/api/clients/:clientId/formulas/:formulaId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, formulaId } = req.params;
+    const result = await pool.query(
+      `DELETE FROM formulas WHERE client_id = $1 AND id = $2 RETURNING id`,
+      [clientId, formulaId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Fórmula no encontrada.' });
+    }
+
+    res.json({ success: true, message: 'Fórmula eliminada exitosamente.' });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1526,18 +2152,24 @@ app.get('/api/clients/:clientId/appointments', authenticateToken as any, authori
     const { clientId } = req.params;
     const { date } = req.query; // Formato YYYY-MM-DD
 
-    let query = `SELECT id, customer_name, customer_phone, customer_document_number, crm_customer_id, appointment_date, status, created_at 
-                 FROM appointments 
-                 WHERE client_id = $1`;
+    let query = `
+      SELECT a.id, a.customer_name, a.customer_phone, a.customer_document_number, a.crm_customer_id, 
+             to_char(a.appointment_date, 'YYYY-MM-DD"T"HH24:MI:SS') as appointment_date, 
+             a.status, a.visit_reason, a.visit_reason_details, a.created_at,
+             c.name as crm_first_name, c.last_name as crm_last_name
+      FROM appointments a
+      LEFT JOIN crm_customers c ON a.crm_customer_id = c.id
+      WHERE a.client_id = $1
+    `;
     const params: any[] = [clientId];
 
     const dateStr = typeof date === 'string' ? date : undefined;
     if (dateStr) {
-      query += ` AND DATE(appointment_date) = $2`;
+      query += ` AND DATE(a.appointment_date) = $2`;
       params.push(dateStr);
     }
 
-    query += ` ORDER BY appointment_date ASC`;
+    query += ` ORDER BY a.appointment_date ASC`;
 
     const result = await pool.query(query, params);
     res.json({ success: true, appointments: result.rows });
@@ -1551,55 +2183,93 @@ app.get('/api/clients/:clientId/appointments', authenticateToken as any, authori
 app.post('/api/clients/:clientId/appointments', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { customer_document_number, customer_name, customer_phone, appointment_date } = req.body;
+    const { 
+      customer_document_number, 
+      customer_name, 
+      customer_phone, 
+      appointment_date, 
+      visit_reason, 
+      visit_reason_details,
+      crm_customer_id
+    } = req.body;
 
     if (!appointment_date || !customer_document_number) {
       return res.status(400).json({ success: false, error: 'Fecha de cita y número de documento (cédula) son requeridos.' });
     }
 
-    // 1. Buscar si el cliente ya existe en el CRM
-    const customerRes = await pool.query(
-      `SELECT id, name, phone FROM crm_customers WHERE client_id = $1 AND document_number = $2 LIMIT 1`,
-      [clientId, customer_document_number]
-    );
-
     let finalName = customer_name;
     let finalPhone = customer_phone;
-    let crmCustomerId = null;
+    let crmCustomerId = crm_customer_id || null;
 
-    if (customerRes.rows.length > 0) {
-      const customer = customerRes.rows[0];
-      finalName = customer.name;
-      finalPhone = customer.phone;
-      crmCustomerId = customer.id;
-    } else {
-      // Si no existe, y nos pasaron nombre y celular, crearlo automáticamente
-      if (customer_name && customer_phone) {
-        const cleanPhone = customer_phone.replace(/\D/g, '');
-        const newCustomerRes = await pool.query(
-          `INSERT INTO crm_customers (client_id, name, document_number, phone)
-           VALUES ($1, $2, $3, $4)
-           RETURNING id, name, phone`,
-          [clientId, customer_name, customer_document_number, cleanPhone]
-        );
-        const newCust = newCustomerRes.rows[0];
-        finalName = newCust.name;
-        finalPhone = newCust.phone;
-        crmCustomerId = newCust.id;
+    if (!crmCustomerId) {
+      // 1. Buscar si el cliente ya existe en el CRM
+      const customerRes = await pool.query(
+        `SELECT id, name, last_name, phone FROM crm_customers WHERE client_id = $1 AND document_number = $2 LIMIT 1`,
+        [clientId, customer_document_number]
+      );
+
+      if (customerRes.rows.length > 0) {
+        const customer = customerRes.rows[0];
+        finalName = customer.last_name ? `${customer.name} ${customer.last_name}` : customer.name;
+        finalPhone = customer.phone;
+        crmCustomerId = customer.id;
       } else {
-        return res.status(404).json({ 
-          success: false, 
-          error: 'Cliente no registrado. Por favor, proporciona el Nombre y Teléfono para darlo de alta en el sistema.' 
-        });
+        // Si no existe, y nos pasaron nombre y celular, crearlo automáticamente
+        if (customer_name && customer_phone) {
+          const cleanPhone = customer_phone.replace(/\D/g, '');
+          // Intentar separar el nombre ingresado en nombre y apellido de forma simple
+          const nameParts = customer_name.trim().split(' ');
+          const name = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+
+          const newCustomerRes = await pool.query(
+            `INSERT INTO crm_customers (client_id, name, last_name, document_number, phone)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id, name, last_name, phone`,
+            [clientId, name, lastName, customer_document_number, cleanPhone]
+          );
+          const newCust = newCustomerRes.rows[0];
+          finalName = newCust.last_name ? `${newCust.name} ${newCust.last_name}` : newCust.name;
+          finalPhone = newCust.phone;
+          crmCustomerId = newCust.id;
+        } else {
+          return res.status(404).json({ 
+            success: false, 
+            error: 'Cliente no registrado. Por favor, proporciona el Nombre y Teléfono para darlo de alta en el sistema.' 
+          });
+        }
+      }
+    } else {
+      // Obtener datos del CRM por ID
+      const customerRes = await pool.query(
+        `SELECT name, last_name, phone FROM crm_customers WHERE id = $1 LIMIT 1`,
+        [crmCustomerId]
+      );
+      if (customerRes.rows.length > 0) {
+        const customer = customerRes.rows[0];
+        finalName = customer.last_name ? `${customer.name} ${customer.last_name}` : customer.name;
+        finalPhone = customer.phone;
       }
     }
 
     // 2. Insertar la cita
     const result = await pool.query(
-      `INSERT INTO appointments (client_id, customer_name, customer_phone, appointment_date, status, customer_document_number, crm_customer_id)
-       VALUES ($1, $2, $3, $4, 'confirmed', $5, $6)
-       RETURNING *`,
-      [clientId, finalName, finalPhone, appointment_date, customer_document_number, crmCustomerId]
+      `INSERT INTO appointments (
+        client_id, customer_name, customer_phone, appointment_date, status, 
+        customer_document_number, crm_customer_id, visit_reason, visit_reason_details
+      )
+      VALUES ($1, $2, $3, $4, 'confirmed', $5, $6, $7, $8)
+      RETURNING id, customer_name, customer_phone, to_char(appointment_date, 'YYYY-MM-DD"T"HH24:MI:SS') as appointment_date, status, customer_document_number, crm_customer_id, visit_reason, visit_reason_details`,
+      [
+        clientId, 
+        finalName, 
+        finalPhone, 
+        appointment_date, 
+        customer_document_number, 
+        crmCustomerId, 
+        visit_reason || 'examen_vista', 
+        visit_reason_details || null
+      ]
     );
 
     res.json({ success: true, appointment: result.rows[0] });
@@ -1613,17 +2283,19 @@ app.post('/api/clients/:clientId/appointments', authenticateToken as any, author
 app.put('/api/clients/:clientId/appointments/:appointmentId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, appointmentId } = req.params;
-    const { customer_name, customer_phone, appointment_date, status } = req.body;
+    const { customer_name, customer_phone, appointment_date, status, visit_reason, visit_reason_details } = req.body;
 
     const result = await pool.query(
       `UPDATE appointments 
        SET customer_name = COALESCE($1, customer_name), 
            customer_phone = COALESCE($2, customer_phone), 
            appointment_date = COALESCE($3, appointment_date),
-           status = COALESCE($4, status)
-       WHERE id = $5 AND client_id = $6
-       RETURNING *`,
-      [customer_name, customer_phone, appointment_date, status, appointmentId, clientId]
+           status = COALESCE($4, status),
+           visit_reason = COALESCE($5, visit_reason),
+           visit_reason_details = COALESCE($6, visit_reason_details)
+       WHERE id = $7 AND client_id = $8
+       RETURNING id, customer_name, customer_phone, to_char(appointment_date, 'YYYY-MM-DD"T"HH24:MI:SS') as appointment_date, status, customer_document_number, crm_customer_id, visit_reason, visit_reason_details`,
+      [customer_name, customer_phone, appointment_date, status, visit_reason, visit_reason_details, appointmentId, clientId]
     );
 
     if (result.rows.length === 0) {
@@ -1659,10 +2331,25 @@ app.delete('/api/clients/:clientId/appointments/:appointmentId', authenticateTok
 app.get('/api/clients/:clientId/departments', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const result = await pool.query(
+    let result = await pool.query(
       `SELECT id, name, created_at FROM business_departments WHERE client_id = $1 ORDER BY name ASC`,
       [clientId]
     );
+    
+    if (result.rows.length === 0) {
+      const defaultDepts = ['RRHH', 'Contabilidad', 'Recepción', 'Ventas', 'Logística', 'Optometría'];
+      for (const dept of defaultDepts) {
+        await pool.query(
+          `INSERT INTO business_departments (client_id, name) VALUES ($1, $2)`,
+          [clientId, dept]
+        );
+      }
+      result = await pool.query(
+        `SELECT id, name, created_at FROM business_departments WHERE client_id = $1 ORDER BY name ASC`,
+        [clientId]
+      );
+    }
+    
     res.json({ success: true, departments: result.rows });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -1822,14 +2509,34 @@ app.delete('/api/clients/:clientId/employees/:employeeId', authenticateToken as 
 });
 
 // --- SAAS ERP: CONTROL DE TURNOS (MARCACIÓN / NÓMINA) ---
+// Obtener todos los turnos del cliente para el día de hoy (Asistencia de Hoy)
+app.get('/api/clients/:clientId/shifts/today', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const result = await pool.query(
+      `SELECT s.id, s.employee_id, e.name as employee_name, e.last_name as employee_last_name, s.clock_in, s.clock_out, s.lunch_start, s.lunch_end,
+              EXTRACT(EPOCH FROM (COALESCE(s.clock_out, NOW()) - s.clock_in))/3600 as hours_worked
+       FROM shift_logs s
+       JOIN employees e ON s.employee_id = e.id
+       WHERE s.client_id = $1 AND (s.clock_in >= CURRENT_DATE OR s.clock_out IS NULL)
+       ORDER BY s.clock_in DESC`,
+      [clientId]
+    );
+    res.json({ success: true, shifts: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Obtener historial de turnos de un empleado específico
 app.get('/api/clients/:clientId/employees/:employeeId/shifts', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { employeeId } = req.params;
     const result = await pool.query(
-      `SELECT id, clock_in, clock_out, EXTRACT(EPOCH FROM (COALESCE(clock_out, NOW()) - clock_in))/3600 as hours_worked
+      `SELECT id, clock_in, clock_out, lunch_start, lunch_end, EXTRACT(EPOCH FROM (COALESCE(clock_out, NOW()) - clock_in))/3600 as hours_worked
        FROM shift_logs 
        WHERE employee_id = $1 
-       ORDER BY clock_in DESC LIMIT 50`,
+       ORDER BY clock_in DESC LIMIT 100`,
       [employeeId]
     );
     res.json({ success: true, shifts: result.rows });
@@ -2099,6 +2806,171 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
     });
   } catch (err: any) {
     console.error("[Payroll Summary API] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Obtener tareas de un empleado (incluyendo campañas de campo asignadas como visitas)
+app.get('/api/clients/:clientId/employees/:employeeId/tasks', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, employeeId } = req.params;
+
+    // 1. Obtener tareas comunes y visitas autogestionadas
+    const tasksResult = await pool.query(
+      `SELECT t.id, t.title, t.description, t.due_date, t.status, t.created_by_name, t.created_at, t.task_type, t.target_customer_id, c.name as customer_name, c.last_name as customer_last_name 
+       FROM employee_tasks t
+       LEFT JOIN crm_customers c ON t.target_customer_id = c.id
+       WHERE t.client_id = $1 AND t.employee_id = $2 
+       ORDER BY t.created_at DESC`,
+      [clientId, employeeId]
+    );
+
+    // 2. Obtener campañas de campo (field_visits) de este empleado
+    const visitsResult = await pool.query(
+      `SELECT id, name, point_of_sale, address, visit_date, status, created_at 
+       FROM field_visits 
+       WHERE client_id = $1 AND employee_id = $2`,
+      [clientId, employeeId]
+    );
+
+    // Map campañas a formato tarea
+    const visitTasks = visitsResult.rows.map(v => ({
+      id: v.id,
+      title: `Campaña: ${v.name}`,
+      description: `Punto de Venta: ${v.point_of_sale} - Dirección: ${v.address}`,
+      due_date: v.visit_date,
+      status: v.status === 'programada' ? 'pendiente' : (v.status === 'en_progreso' ? 'en proceso' : 'terminado'),
+      created_by_name: 'Administrador',
+      created_at: v.created_at || v.visit_date,
+      task_type: 'visita',
+      is_campaign: true
+    }));
+
+    // Combinar y ordenar cronológicamente
+    const combinedTasks = [...tasksResult.rows, ...visitTasks].sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    res.json({ success: true, tasks: combinedTasks });
+  } catch (err: any) {
+    console.error("[Get Tasks API] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Asignar tarea a un empleado
+app.post('/api/clients/:clientId/employees/:employeeId/tasks', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, employeeId } = req.params;
+    const { title, description, due_date, created_by_name, task_type, target_customer_id } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ success: false, error: 'El título de la tarea es requerido.' });
+    }
+
+    const creatorName = created_by_name || (req as any).user?.username || 'Administrador';
+
+    const result = await pool.query(
+      `INSERT INTO employee_tasks (client_id, employee_id, title, description, due_date, status, created_by_name, task_type, target_customer_id)
+       VALUES ($1, $2, $3, $4, $5, 'pendiente', $6, $7, $8)
+       RETURNING *`,
+      [clientId, employeeId, title, description || null, due_date || null, creatorName, task_type || 'tarea', target_customer_id || null]
+    );
+
+    res.json({ success: true, task: result.rows[0] });
+  } catch (err: any) {
+    console.error("[Post Task API] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Obtener actualizaciones/reportes de una tarea
+app.get('/api/clients/:clientId/employees/:employeeId/tasks/:taskId/updates', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const result = await pool.query(
+      `SELECT id, task_id, old_status, new_status, report_text, created_by_name, created_at 
+       FROM employee_task_updates 
+       WHERE task_id = $1 
+       ORDER BY created_at DESC`,
+      [taskId]
+    );
+    res.json({ success: true, updates: result.rows });
+  } catch (err: any) {
+    console.error("[Get Task Updates API] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Agregar actualización/reporte de una tarea (y cambiar su estado)
+app.post('/api/clients/:clientId/employees/:employeeId/tasks/:taskId/updates', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, employeeId, taskId } = req.params;
+    const { new_status, report_text, created_by_name } = req.body;
+
+    if (!new_status || !report_text) {
+      return res.status(400).json({ success: false, error: 'El estado nuevo y el texto de actualización son requeridos.' });
+    }
+
+    const creatorName = created_by_name || (req as any).user?.username || 'Empleado';
+
+    // A. Verificar si es una campaña de campo (field_visit)
+    const visitCheck = await pool.query(
+      `SELECT id, status FROM field_visits WHERE id = $1 AND client_id = $2 AND employee_id = $3`,
+      [taskId, clientId, employeeId]
+    );
+
+    if (visitCheck.rows.length > 0) {
+      const oldStatus = visitCheck.rows[0].status;
+      const mappedOldStatus = oldStatus === 'completada' ? 'terminado' : (oldStatus === 'en_progreso' ? 'en proceso' : 'pendiente');
+      
+      // 1. Registrar actualización
+      const updateResult = await pool.query(
+        `INSERT INTO employee_task_updates (task_id, old_status, new_status, report_text, created_by_name)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING *`,
+        [taskId, mappedOldStatus, new_status, report_text, creatorName]
+      );
+
+      // 2. Mapear status y actualizar en field_visits
+      const campaignStatus = new_status === 'terminado' ? 'completada' : (new_status === 'en proceso' ? 'en_progreso' : 'programada');
+      await pool.query(
+        `UPDATE field_visits SET status = $1 WHERE id = $2`,
+        [campaignStatus, taskId]
+      );
+
+      return res.json({ success: true, update: updateResult.rows[0] });
+    }
+
+    // B. Si no es campaña, es una tarea común
+    const taskResult = await pool.query(
+      `SELECT status FROM employee_tasks WHERE id = $1 AND client_id = $2 AND employee_id = $3`,
+      [taskId, clientId, employeeId]
+    );
+
+    if (taskResult.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Tarea o campaña no encontrada.' });
+    }
+
+    const oldStatus = taskResult.rows[0].status;
+
+    // 1. Insertar actualización
+    const updateResult = await pool.query(
+      `INSERT INTO employee_task_updates (task_id, old_status, new_status, report_text, created_by_name)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [taskId, oldStatus, new_status, report_text, creatorName]
+    );
+
+    // 2. Actualizar estado de la tarea en employee_tasks
+    await pool.query(
+      `UPDATE employee_tasks SET status = $1 WHERE id = $2`,
+      [new_status, taskId]
+    );
+
+    res.json({ success: true, update: updateResult.rows[0] });
+  } catch (err: any) {
+    console.error("[Post Task Update API] Error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -2801,7 +3673,7 @@ app.get('/api/clients/:clientId/crm-customers', authenticateToken as any, author
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, name, last_name, document_type, document_number, phone, email, address, lens_prescription, last_interaction_at, created_at 
+      `SELECT id, name, last_name, document_type, document_number, phone, email, address, lens_prescription, last_interaction_at, created_at, customer_type 
        FROM crm_customers 
        WHERE client_id = $1 
        ORDER BY name ASC`,
@@ -2818,7 +3690,7 @@ app.get('/api/clients/:clientId/crm-customers/document/:documentNumber', authent
   try {
     const { clientId, documentNumber } = req.params;
     const result = await pool.query(
-      `SELECT id, name, last_name, phone, document_type, document_number, email, address, lens_prescription 
+      `SELECT id, name, last_name, phone, document_type, document_number, email, address, lens_prescription, customer_type 
        FROM crm_customers 
        WHERE client_id = $1 AND document_number = $2 LIMIT 1`,
       [clientId, documentNumber]
@@ -2837,7 +3709,7 @@ app.get('/api/clients/:clientId/crm-customers/document/:documentNumber', authent
 app.post('/api/clients/:clientId/crm-customers', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, last_name, document_type, document_number, phone, email, address, lens_prescription } = req.body;
+    const { name, last_name, document_type, document_number, phone, email, address, lens_prescription, customer_type } = req.body;
 
     if (!name || !document_number || !phone) {
       return res.status(400).json({ success: false, error: 'Nombre, documento y teléfono son requeridos.' });
@@ -2846,10 +3718,10 @@ app.post('/api/clients/:clientId/crm-customers', authenticateToken as any, autho
     const cleanPhone = phone.replace(/\D/g, '');
 
     const result = await pool.query(
-      `INSERT INTO crm_customers (client_id, name, last_name, document_type, document_number, phone, email, address, lens_prescription)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO crm_customers (client_id, name, last_name, document_type, document_number, phone, email, address, lens_prescription, customer_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [clientId, name, last_name || '', document_type || 'CC', document_number, cleanPhone, email || null, address || null, lens_prescription || null]
+      [clientId, name, last_name || '', document_type || 'CC', document_number, cleanPhone, email || null, address || null, lens_prescription || null, customer_type || 'persona']
     );
 
     res.json({ success: true, customer: result.rows[0] });
@@ -2861,7 +3733,7 @@ app.post('/api/clients/:clientId/crm-customers', authenticateToken as any, autho
 app.put('/api/clients/:clientId/crm-customers/:customerId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, customerId } = req.params;
-    const { name, last_name, document_type, document_number, phone, email, address, lens_prescription } = req.body;
+    const { name, last_name, document_type, document_number, phone, email, address, lens_prescription, customer_type } = req.body;
 
     if (!name || !document_number || !phone) {
       return res.status(400).json({ success: false, error: 'Nombre, documento y teléfono son requeridos.' });
@@ -2871,10 +3743,10 @@ app.put('/api/clients/:clientId/crm-customers/:customerId', authenticateToken as
 
     const result = await pool.query(
       `UPDATE crm_customers
-       SET name = $1, last_name = $2, document_type = $3, document_number = $4, phone = $5, email = $6, address = $7, lens_prescription = $8
-       WHERE id = $9 AND client_id = $10
+       SET name = $1, last_name = $2, document_type = $3, document_number = $4, phone = $5, email = $6, address = $7, lens_prescription = $8, customer_type = $9
+       WHERE id = $10 AND client_id = $11
        RETURNING *`,
-      [name, last_name || '', document_type || 'CC', document_number, cleanPhone, email || null, address || null, lens_prescription || null, customerId, clientId]
+      [name, last_name || '', document_type || 'CC', document_number, cleanPhone, email || null, address || null, lens_prescription || null, customer_type || 'persona', customerId, clientId]
     );
 
     if (result.rows.length === 0) {
@@ -2965,7 +3837,86 @@ app.post('/api/auth/verify-otp', async (req: Request, res: Response) => {
   }
 });
 
-// --- SAAS ERP: SUBIDA DEL LOGO COMERCIAL ---
+// --- SAAS ERP: GESTIÓN DE LOGOTIPOS HISTORIAL (MÚLTIPLES LOGOS) ---
+
+// Listar logotipos cargados de un cliente
+app.get('/api/clients/:clientId/logos', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId as string;
+    const parentDir = path.join(process.cwd(), 'media', 'clients', clientId);
+    const logosDir = path.join(parentDir, 'logos');
+
+    if (!fs.existsSync(logosDir)) {
+      fs.mkdirSync(logosDir, { recursive: true });
+    }
+
+    // Migración automática del logo legado del directorio raíz
+    if (fs.existsSync(parentDir)) {
+      const files = fs.readdirSync(parentDir);
+      for (const file of files) {
+        if (file.toLowerCase().startsWith('logo.') || file.toLowerCase().startsWith('logo_legacy.')) {
+          const oldPath = path.join(parentDir, file);
+          const ext = path.extname(file) || '.png';
+          const newName = `logo_legacy${ext}`;
+          const newPath = path.join(logosDir, newName);
+          
+          if (fs.existsSync(oldPath)) {
+            fs.renameSync(oldPath, newPath);
+            const newUrl = `/media/clients/${clientId}/logos/${newName}`;
+            await pool.query(`UPDATE clients SET logo_url = $1 WHERE id = $2`, [newUrl, clientId]);
+            console.log(`[Logo Migration] Logotipo migrado a subcarpeta: ${newName}`);
+          }
+        }
+      }
+    }
+
+    const files = fs.readdirSync(logosDir);
+    const logos = files.map(file => ({
+      fileName: file,
+      url: `/media/clients/${clientId}/logos/${file}`
+    }));
+
+    res.json({ success: true, logos });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Subir nuevo logotipo e insertarlo en el historial
+app.post('/api/clients/:clientId/logos', authenticateToken as any, authorizeClientAccess as any, upload.single('logo'), async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId as string;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ success: false, error: 'Archivo de logotipo faltante.' });
+    }
+
+    const logosDir = path.join(process.cwd(), 'media', 'clients', clientId, 'logos');
+    if (!fs.existsSync(logosDir)) {
+      fs.mkdirSync(logosDir, { recursive: true });
+    }
+
+    const ext = path.extname(file.originalname) || '.png';
+    const timestamp = Date.now();
+    const fileName = `logo_${timestamp}${ext}`;
+    const filePath = path.join(logosDir, fileName);
+
+    // Guardar archivo en la subcarpeta logos
+    fs.writeFileSync(filePath, file.buffer);
+    const logoUrl = `/media/clients/${clientId}/logos/${fileName}`;
+
+    // Actualizar el logotipo activo en la tabla clients
+    await pool.query(`UPDATE clients SET logo_url = $1 WHERE id = $2`, [logoUrl, clientId]);
+
+    console.log(`[Media Upload] 🖼️ Logotipo nuevo subbido e indexado en historial: ${logoUrl}`);
+    res.json({ success: true, logoUrl });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Compatibilidad anterior para la subida de logotipo
 app.post('/api/clients/:clientId/logo', authenticateToken as any, authorizeClientAccess as any, upload.single('logo'), async (req: Request, res: Response) => {
   try {
     const clientId = req.params.clientId as string;
@@ -2975,24 +3926,71 @@ app.post('/api/clients/:clientId/logo', authenticateToken as any, authorizeClien
       return res.status(400).json({ success: false, error: 'Archivo de logotipo faltante.' });
     }
 
-    const clientMediaDir = path.join(process.cwd(), 'media', 'clients', clientId);
-    if (!fs.existsSync(clientMediaDir)) {
-      fs.mkdirSync(clientMediaDir, { recursive: true });
+    const logosDir = path.join(process.cwd(), 'media', 'clients', clientId, 'logos');
+    if (!fs.existsSync(logosDir)) {
+      fs.mkdirSync(logosDir, { recursive: true });
     }
 
     const ext = path.extname(file.originalname) || '.png';
-    const fileName = `logo${ext}`;
-    const filePath = path.join(clientMediaDir, fileName);
+    const timestamp = Date.now();
+    const fileName = `logo_${timestamp}${ext}`;
+    const filePath = path.join(logosDir, fileName);
 
-    // Guardar archivo
     fs.writeFileSync(filePath, file.buffer);
-    const logoUrl = `/media/clients/${clientId}/${fileName}`;
+    const logoUrl = `/media/clients/${clientId}/logos/${fileName}`;
 
-    // Actualizar URL en tabla clients
     await pool.query(`UPDATE clients SET logo_url = $1 WHERE id = $2`, [logoUrl, clientId]);
 
-    console.log(`[Media Upload] 🖼️ Logotipo subido para cliente ${clientId}: ${logoUrl}`);
+    console.log(`[Media Upload Compatibility] 🖼️ Logotipo subido vía legacy /logo: ${logoUrl}`);
     res.json({ success: true, logoUrl });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Seleccionar logotipo del historial
+app.post('/api/clients/:clientId/logos/select', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId as string;
+    const { fileName } = req.body;
+
+    if (!fileName) {
+      return res.status(400).json({ success: false, error: 'Nombre de archivo faltante.' });
+    }
+
+    const logoUrl = `/media/clients/${clientId}/logos/${fileName}`;
+    await pool.query(`UPDATE clients SET logo_url = $1 WHERE id = $2`, [logoUrl, clientId]);
+
+    res.json({ success: true, logoUrl });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Eliminar un logotipo del historial
+app.delete('/api/clients/:clientId/logos/:fileName', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId as string;
+    const fileName = req.params.fileName as string;
+    const filePath = path.join(process.cwd(), 'media', 'clients', clientId, 'logos', fileName);
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+
+      // Si el logo eliminado era el que estaba activo en la base de datos, asignar el último disponible o null
+      const logosDir = path.dirname(filePath);
+      const remainingFiles = fs.readdirSync(logosDir);
+      let newLogoUrl: string | null = null;
+
+      if (remainingFiles.length > 0) {
+        newLogoUrl = `/media/clients/${clientId}/logos/${remainingFiles[remainingFiles.length - 1]}`;
+      }
+
+      await pool.query(`UPDATE clients SET logo_url = $1 WHERE id = $2`, [newLogoUrl, clientId]);
+      res.json({ success: true, message: 'Logotipo eliminado con éxito.', newLogoUrl });
+    } else {
+      res.status(404).json({ success: false, error: 'Archivo no encontrado.' });
+    }
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -3011,6 +4009,54 @@ app.get('/api/clients/:clientId/alerts/history', authenticateToken as any, autho
       [clientId]
     );
     res.json({ success: true, alerts: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- SAAS ERP: MÉTRICAS EJECUTIVAS PARA EL RESUMEN DEL DASHBOARD ---
+app.get('/api/clients/:clientId/dashboard-metrics', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const clientId = req.params.clientId as string;
+
+    // 1. Suma de ventas totales
+    const salesRes = await pool.query(
+      `SELECT COALESCE(SUM(total_amount), 0) as "totalSales" FROM invoices WHERE client_id = $1`,
+      [clientId]
+    );
+    const totalSales = parseFloat(salesRes.rows[0].totalSales);
+
+    // 2. Total de productos
+    const productsRes = await pool.query(
+      `SELECT COUNT(*) as "totalProducts" FROM products WHERE client_id = $1`,
+      [clientId]
+    );
+    const totalProducts = parseInt(productsRes.rows[0].totalProducts);
+
+    // 3. Chats e interacciones
+    const chatsRes = await pool.query(
+      `SELECT COUNT(*) as "totalChats", COALESCE(SUM(CAST(api_cost AS numeric)), 0) as "totalCost" FROM interactions WHERE client_id = $1`,
+      [clientId]
+    );
+    const totalChats = parseInt(chatsRes.rows[0].totalChats);
+    const totalCost = parseFloat(chatsRes.rows[0].totalCost);
+
+    // 4. ROI estimado y Ahorro de tiempo
+    // Estimación: Cada chat ahorra 3 minutos (0.05 horas) de trabajo humano.
+    // Estimación de costo de mano de obra delegada: $12 USD / hora.
+    const hoursSaved = totalChats * 0.05;
+    const estimatedSavings = hoursSaved * 12; // Ahorro en USD
+    const roi = totalCost > 0 ? ((estimatedSavings - totalCost) / totalCost) * 100 : 0;
+
+    res.json({
+      success: true,
+      totalSales,
+      totalProducts,
+      totalChats,
+      totalCost,
+      hoursSaved,
+      roi
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -3213,6 +4259,101 @@ export const server = app.listen(PORT, () => {
   console.log(`🚀 [Servidor API] Servidor Express activo en el puerto ${PORT}`);
   console.log(`📊 Endpoints CRUD de Clientes disponibles en: http://localhost:${PORT}/api/clients`);
   console.log(`📈 Estadísticas de Métricas y Costos en: http://localhost:${PORT}/api/metrics`);
+
+  // Asegurar que las columnas e incrementos de BD existan
+  (async () => {
+    try {
+      await pool.query(`ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;`);
+      console.log("[DB Migration] ✅ Columna 'phone_number' alterada con éxito (permite NULL).");
+
+      await pool.query(`
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10,2) DEFAULT 0.00;
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS min_stock INT DEFAULT 5;
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_name VARCHAR(100);
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_phone VARCHAR(20);
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS brand VARCHAR(100);
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS material VARCHAR(100);
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS style VARCHAR(100);
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS color VARCHAR(100);
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS promo_discount NUMERIC(5,2) DEFAULT 0.00;
+      `);
+      console.log("[DB Migration] ✅ Columnas del inventario (products) alteradas con éxito.");
+
+      // Migraciones de facturación y perfil comercial
+      await pool.query(`
+        ALTER TABLE clients ADD COLUMN IF NOT EXISTS nit VARCHAR(50);
+        ALTER TABLE clients ADD COLUMN IF NOT EXISTS address VARCHAR(255);
+        ALTER TABLE clients ADD COLUMN IF NOT EXISTS invoice_footer TEXT;
+
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) DEFAULT 'contado';
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS installments_count INT DEFAULT 1;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS installment_frequency VARCHAR(50);
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_method VARCHAR(20) DEFAULT 'local';
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC(10, 2) DEFAULT 0.00;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_address TEXT;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_date TIMESTAMP;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_status VARCHAR(20) DEFAULT 'pending';
+
+        ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS birth_date DATE;
+        ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS customer_type VARCHAR(20) DEFAULT 'persona';
+
+        ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_name VARCHAR(150);
+        ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_type VARCHAR(50) DEFAULT 'inventory';
+        ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS lens_design VARCHAR(100);
+        ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS lens_material VARCHAR(100);
+        ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS lens_treatment VARCHAR(100);
+
+        CREATE TABLE IF NOT EXISTS invoice_installments (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            invoice_id UUID REFERENCES invoices(id) ON DELETE CASCADE,
+            installment_number INT NOT NULL,
+            due_date TIMESTAMP NOT NULL,
+            amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            paid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+            paid_at TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS formulas (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id VARCHAR(50) REFERENCES clients(id) ON DELETE CASCADE,
+            customer_id UUID REFERENCES crm_customers(id) ON DELETE CASCADE,
+            od_sphere VARCHAR(15),
+            od_cylinder VARCHAR(15),
+            od_axis VARCHAR(15),
+            od_addition VARCHAR(15),
+            oi_sphere VARCHAR(15),
+            oi_cylinder VARCHAR(15),
+            oi_axis VARCHAR(15),
+            oi_addition VARCHAR(15),
+            dp_distance VARCHAR(15),
+            height VARCHAR(15),
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        );
+
+        ALTER TABLE appointments ADD COLUMN IF NOT EXISTS visit_reason VARCHAR(50) DEFAULT 'examen_vista';
+        ALTER TABLE appointments ADD COLUMN IF NOT EXISTS visit_reason_details TEXT;
+        ALTER TABLE employee_tasks ADD COLUMN IF NOT EXISTS created_by_name VARCHAR(100) DEFAULT 'Administrador';
+        ALTER TABLE employee_tasks ADD COLUMN IF NOT EXISTS task_type VARCHAR(20) DEFAULT 'tarea';
+        ALTER TABLE employee_tasks ADD COLUMN IF NOT EXISTS target_customer_id UUID REFERENCES crm_customers(id) ON DELETE SET NULL;
+
+        CREATE TABLE IF NOT EXISTS employee_task_updates (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            task_id UUID NOT NULL REFERENCES employee_tasks(id) ON DELETE CASCADE,
+            old_status VARCHAR(20),
+            new_status VARCHAR(20) NOT NULL,
+            report_text TEXT NOT NULL,
+            created_by_name VARCHAR(100),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log("[DB Migration] ✅ Columnas y tablas de la Fase 4 (Cartera/Logística/Perfil) inicializadas con éxito.");
+    } catch (err: any) {
+      console.error("[DB Migration] ⚠️ Error aplicando migraciones de arranque de la Fase 4:", err.message);
+    }
+  })();
   
   // Inicializamos el receptor de eventos de WhatsApp al arrancar y auto-conectamos
   const activeClient = initializeWhatsAppClient();

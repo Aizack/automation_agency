@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Customer {
     id: string;
@@ -12,6 +13,7 @@ interface Customer {
     lens_prescription: string | null;
     last_interaction_at: string | null;
     created_at: string;
+    customer_type?: 'persona' | 'empresa';
 }
 
 interface Invoice {
@@ -33,13 +35,17 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [crmTab, setCrmTab] = useState<'personas' | 'empresas'>('personas');
 
     // Modal state
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [selectedCust, setSelectedCust] = useState<Customer | null>(null);
+    const [custFormulas, setCustFormulas] = useState<any[]>([]);
+    const [loadingFormulas, setLoadingFormulas] = useState(false);
 
     // Form inputs
+    const [custType, setCustType] = useState<'persona' | 'empresa'>('persona');
     const [custName, setCustName] = useState('');
     const [custLastName, setCustLastName] = useState('');
     const [custDocType, setCustDocType] = useState('CC');
@@ -219,13 +225,14 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                 },
                 body: JSON.stringify({
                     name: custName,
-                    last_name: custLastName,
-                    document_type: custDocType,
+                    last_name: custType === 'empresa' ? '' : custLastName,
+                    document_type: custType === 'empresa' ? 'NIT' : custDocType,
                     document_number: custDocNum,
                     phone: custPhone,
                     email: custEmail || null,
                     address: custAddress || null,
-                    lens_prescription: lensPrescriptionValue || null
+                    lens_prescription: lensPrescriptionValue || null,
+                    customer_type: custType
                 })
             });
             const json = await res.json();
@@ -261,9 +268,11 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
 
     const openCreateModal = () => {
         setSelectedCust(null);
+        const initialType = crmTab === 'empresas' ? 'empresa' : 'persona';
+        setCustType(initialType);
         setCustName('');
         setCustLastName('');
-        setCustDocType('CC');
+        setCustDocType(initialType === 'empresa' ? 'NIT' : 'CC');
         setCustDocNum('');
         setCustPhone('');
         setCustEmail('');
@@ -278,6 +287,7 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
 
     const openEditModal = (cust: Customer) => {
         setSelectedCust(cust);
+        setCustType(cust.customer_type || 'persona');
         setCustName(cust.name);
         setCustLastName(cust.last_name || '');
         setCustDocType(cust.document_type);
@@ -327,9 +337,21 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
         setIsCreateOpen(true);
     };
 
-    const openProfileModal = (cust: Customer) => {
+    const openProfileModal = async (cust: Customer) => {
         setSelectedCust(cust);
         setIsProfileOpen(true);
+        setLoadingFormulas(true);
+        try {
+            const res = await fetch(`/api/clients/${clientId}/formulas?customerId=${cust.id}`);
+            const json = await res.json();
+            if (json.success) {
+                setCustFormulas(json.formulas || []);
+            }
+        } catch (err) {
+            console.error("Error fetching patient formulas history:", err);
+        } finally {
+            setLoadingFormulas(false);
+        }
     };
 
     // Calculate dynamic follow-up warning (6 months of inactivity)
@@ -353,12 +375,18 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
     };
 
     // Filter customers
-    const filteredCustomers = customers.filter(cust => 
-        cust.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (cust.last_name && cust.last_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        cust.document_number.includes(searchQuery) ||
-        cust.phone.includes(searchQuery)
-    );
+    const filteredCustomers = customers.filter(cust => {
+        const matchesTab = crmTab === 'empresas' 
+            ? cust.customer_type === 'empresa' 
+            : (!cust.customer_type || cust.customer_type === 'persona');
+            
+        if (!matchesTab) return false;
+        
+        return cust.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (cust.last_name && cust.last_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            cust.document_number.includes(searchQuery) ||
+            cust.phone.includes(searchQuery);
+    });
 
     return (
         <div className="space-y-6 text-on-surface">
@@ -368,12 +396,47 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                     <h2 className="text-xl font-bold text-on-surface">Directorio de Clientes (CRM)</h2>
                     <p className="text-xs text-on-surface-variant">Registra historias clínicas, prescripción de lentes y audita deudas de pacientes.</p>
                 </div>
-                <button 
-                    onClick={openCreateModal}
-                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition"
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={fetchData}
+                        className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow"
+                        title="Refrescar CRM"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">refresh</span>
+                    </button>
+                    <button 
+                        onClick={openCreateModal}
+                        className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">add</span>
+                        {crmTab === 'empresas' ? 'Nueva Empresa' : 'Nuevo Cliente'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Tabs Selector */}
+            <div className="flex border-b border-outline/10 gap-2 select-none">
+                <button
+                    type="button"
+                    onClick={() => setCrmTab('personas')}
+                    className={`px-4 py-2 text-xs font-bold border-0 border-b-2 cursor-pointer transition-all bg-transparent ${
+                        crmTab === 'personas'
+                            ? 'border-primary text-primary font-black'
+                            : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                    }`}
                 >
-                    <span className="material-symbols-outlined text-[16px]">add</span>
-                    Nuevo Cliente
+                    Personas ({customers.filter(c => !c.customer_type || c.customer_type === 'persona').length})
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setCrmTab('empresas')}
+                    className={`px-4 py-2 text-xs font-bold border-0 border-b-2 cursor-pointer transition-all bg-transparent ${
+                        crmTab === 'empresas'
+                            ? 'border-primary text-primary font-black'
+                            : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                    }`}
+                >
+                    Empresas ({customers.filter(c => c.customer_type === 'empresa').length})
                 </button>
             </div>
 
@@ -454,12 +517,14 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
             )}
 
             {/* CREATE / EDIT CLIENT FORM MODAL */}
-            {isCreateOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="glass-card max-w-lg w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
+            {isCreateOpen && createPortal(
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+                    <div className="glass-card max-w-lg w-full rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">
-                                {selectedCust ? 'Editar Información' : 'Registrar Cliente Nuevo'}
+                                {selectedCust 
+                                    ? (custType === 'empresa' ? 'Editar Empresa' : 'Editar Cliente') 
+                                    : (custType === 'empresa' ? 'Registrar Nueva Empresa' : 'Registrar Nuevo Cliente')}
                             </h3>
                             <button 
                                 onClick={() => setIsCreateOpen(false)}
@@ -476,55 +541,75 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                         )}
 
                         <form onSubmit={handleSaveCustomer} className="space-y-4 text-sm">
+
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Nombre</label>
+                                <div className={`space-y-1 ${custType === 'empresa' ? 'col-span-2' : ''}`}>
+                                    <label className="block text-xs font-bold text-on-surface-variant">
+                                        {custType === 'empresa' ? 'Nombre de la Empresa' : 'Nombre'}
+                                    </label>
                                     <input 
                                         type="text"
                                         required
                                         value={custName}
                                         onChange={(e) => setCustName(e.target.value)}
                                         className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
-                                        placeholder="Ej: Pedro"
+                                        placeholder={custType === 'empresa' ? 'Ej: Óptica Santa Fe' : 'Ej: Pedro'}
                                     />
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Apellido</label>
-                                    <input 
-                                        type="text"
-                                        value={custLastName}
-                                        onChange={(e) => setCustLastName(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
-                                        placeholder="Ej: Martínez"
-                                    />
-                                </div>
+                                {custType !== 'empresa' && (
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-bold text-on-surface-variant">Apellido</label>
+                                        <input 
+                                            type="text"
+                                            value={custLastName}
+                                            onChange={(e) => setCustLastName(e.target.value)}
+                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                            placeholder="Ej: Martínez"
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
-                                <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Documento</label>
-                                    <select 
-                                        value={custDocType}
-                                        onChange={(e) => setCustDocType(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none cursor-pointer"
-                                    >
-                                        <option value="CC">Cédula de C. (CC)</option>
-                                        <option value="NIT">NIT (Empresa)</option>
-                                        <option value="CE">Cédula Extranjera (CE)</option>
-                                    </select>
-                                </div>
+                                {custType !== 'empresa' ? (
+                                    <>
+                                        <div className="space-y-1">
+                                            <label className="block text-xs font-bold text-on-surface-variant">Documento</label>
+                                            <select 
+                                                value={custDocType}
+                                                onChange={(e) => setCustDocType(e.target.value)}
+                                                className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none cursor-pointer"
+                                            >
+                                                <option value="CC">Cédula (CC)</option>
+                                                <option value="CE">Cédula Ext. (CE)</option>
+                                            </select>
+                                        </div>
 
-                                <div className="col-span-2 space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Número de Identificación</label>
-                                    <input 
-                                        type="text"
-                                        required
-                                        value={custDocNum}
-                                        onChange={(e) => setCustDocNum(e.target.value.replace(/\D/g, ''))}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono"
-                                        placeholder="Ej: 1020400800"
-                                    />
-                                </div>
+                                        <div className="col-span-2 space-y-1">
+                                            <label className="block text-xs font-bold text-on-surface-variant">Número de Identificación</label>
+                                            <input 
+                                                type="text"
+                                                required
+                                                value={custDocNum}
+                                                onChange={(e) => setCustDocNum(e.target.value.replace(/\D/g, ''))}
+                                                className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono"
+                                                placeholder="Ej: 1020400800"
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="col-span-3 space-y-1">
+                                        <label className="block text-xs font-bold text-on-surface-variant">NIT / Identificación de la Empresa</label>
+                                        <input 
+                                            type="text"
+                                            required
+                                            value={custDocNum}
+                                            onChange={(e) => setCustDocNum(e.target.value.replace(/\D/g, ''))}
+                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono"
+                                            placeholder="Ej: 900500100"
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -563,7 +648,7 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                                 />
                             </div>
 
-                            {category === 'optica' ? (
+                             {category === 'optica' && custType !== 'empresa' ? (
                                 <div className="space-y-4 border-t border-outline/10 pt-4">
                                     <h4 className="font-bold text-xs text-primary flex items-center gap-1.5 uppercase tracking-wider">
                                         <span className="material-symbols-outlined text-[16px]">visibility</span>
@@ -691,12 +776,13 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* DETAILED PROFILE & HISTORIES MODAL */}
-            {isProfileOpen && selectedCust && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isProfileOpen && selectedCust && createPortal(
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
                     <div className="glass-card max-w-2xl w-full rounded-2xl overflow-hidden p-6 shadow-2xl flex flex-col max-h-[85vh]">
                         {/* Profile Header */}
                         <div className="flex justify-between items-start border-b border-outline/10 pb-4 mb-4">
@@ -767,6 +853,49 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                                 </div>
                             </div>
 
+                            {/* Historial de Exámenes Clínicos para Ópticas */}
+                            {category === 'optica' && (
+                                <div className="space-y-3">
+                                    <h4 className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline/5 pb-1">Historial de Exámenes Clínicos</h4>
+                                    {loadingFormulas ? (
+                                        <p className="text-xs text-on-surface-variant italic py-1 animate-pulse">Cargando historial clínico...</p>
+                                    ) : custFormulas.length === 0 ? (
+                                        <p className="text-on-surface-variant/60 italic py-2">No se registran exámenes en el historial clínico.</p>
+                                    ) : (
+                                        <div className="space-y-3 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                                            {custFormulas.map(form => (
+                                                <div key={form.id} className="p-3 bg-surface-container/20 border border-outline/5 rounded-xl space-y-2 text-xs">
+                                                    <div className="flex justify-between items-center text-[10px] text-primary font-bold">
+                                                        <span>📋 Examen del {new Date(form.created_at).toLocaleDateString('es-CO')}</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                                                        <div className="p-1.5 bg-surface-container-high/40 rounded">
+                                                             <span className="font-bold text-on-surface-variant">OD (Ojo Derecho):</span>
+                                                             <div className="font-mono text-[10px] mt-0.5">
+                                                                 Esf: {form.od_sphere || '0.00'} | Cil: {form.od_cylinder || '0.00'} | Eje: {form.od_axis || '0'}° {form.od_addition ? `| Ad: ${form.od_addition}` : ''}
+                                                             </div>
+                                                        </div>
+                                                        <div className="p-1.5 bg-surface-container-high/40 rounded">
+                                                             <span className="font-bold text-on-surface-variant">OI (Ojo Izquierdo):</span>
+                                                             <div className="font-mono text-[10px] mt-0.5">
+                                                                 Esf: {form.oi_sphere || '0.00'} | Cil: {form.oi_cylinder || '0.00'} | Eje: {form.oi_axis || '0'}° {form.oi_addition ? `| Ad: ${form.oi_addition}` : ''}
+                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    {(form.dp_distance || form.height || form.notes) && (
+                                                         <div className="text-[10px] text-on-surface-variant leading-relaxed border-t border-outline/5 pt-1.5">
+                                                             {form.dp_distance && <span><strong>DP:</strong> {form.dp_distance} mm </span>}
+                                                             {form.height && <span><strong>Alt:</strong> {form.height} mm </span>}
+                                                             {form.notes && <p className="mt-1 italic">"{form.notes}"</p>}
+                                                         </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Billing & Debt link information */}
                             <div className="space-y-3">
                                 <h4 className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline/5 pb-1">Historial de Facturación</h4>
@@ -812,7 +941,8 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
