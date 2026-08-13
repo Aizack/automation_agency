@@ -208,6 +208,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
     const [importErrorMsg, setImportErrorMsg] = useState('');
     const [importing, setImporting] = useState(false);
 
+    // Barcode Printing States
+    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+    const [printProduct, setPrintProduct] = useState<Product | null>(null);
+    const [printQuantity, setPrintQuantity] = useState(1);
+    const [isRefillPrompt, setIsRefillPrompt] = useState(false);
+
     const searchInputRef = useRef<HTMLInputElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const token = localStorage.getItem('auth_token');
@@ -277,6 +283,24 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
             const data = await res.json();
 
             if (data.success) {
+                if (editingProduct) {
+                    const oldStock = editingProduct.stock;
+                    const newStock = parseInt(body.stock.toString());
+                    if (newStock > oldStock) {
+                        const addedStock = newStock - oldStock;
+                        const updatedProduct: Product = { 
+                            ...editingProduct, 
+                            ...body, 
+                            price: body.price.toString(),
+                            cost_price: body.cost_price.toString(),
+                            promo_discount: body.promo_discount.toString(),
+                            stock: newStock 
+                        };
+                        setTimeout(() => {
+                            openPrintModal(updatedProduct, addedStock);
+                        }, 300);
+                    }
+                }
                 fetchProducts();
                 resetForm();
             } else {
@@ -375,6 +399,126 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
             setImporting(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
+    };
+
+    const openPrintModal = (prod: Product, defaultQty: number = 1) => {
+        setPrintProduct(prod);
+        setPrintQuantity(defaultQty);
+        setIsRefillPrompt(defaultQty > 1);
+        setIsPrintModalOpen(true);
+    };
+
+    const handlePrintBarcodes = () => {
+        if (!printProduct || !printProduct.sku) return;
+        
+        const qty = parseInt(printQuantity.toString()) || 1;
+        const cleanValue = printProduct.sku.toUpperCase().replace(/[^0-9A-Z\-.\s]/g, '');
+        const fullText = `*${cleanValue}*`;
+        let pattern = '';
+        for (let char of fullText) {
+            pattern += (code39Map[char] || code39Map[' ']) + '0';
+        }
+        
+        const barWidth = 1.5;
+        const height = 40;
+        const width = pattern.length * barWidth;
+        
+        let svgContent = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="background:white;padding:2px;border-radius:4px;">`;
+        pattern.split('').forEach((bit, idx) => {
+            if (bit === '1') {
+                svgContent += `<rect x="${idx * barWidth}" y="0" width="${barWidth}" height="${height}" fill="#000000" />`;
+            }
+        });
+        svgContent += `</svg>`;
+        
+        let labelsHtml = '';
+        const priceFormatted = formatPrice(printProduct.price);
+        
+        for (let i = 0; i < qty; i++) {
+            labelsHtml += `
+                <div class="label">
+                    <div class="product-name">${printProduct.name}</div>
+                    \${svgContent}
+                    <div class="barcode-text">${cleanValue}</div>
+                    <div class="price">${priceFormatted}</div>
+                </div>
+            `;
+        }
+        
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permite las ventanas emergentes (popups) para poder imprimir.');
+            return;
+        }
+        
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Imprimir Códigos de Barras - \${printProduct.name}</title>
+                <style>
+                    @page {
+                        size: 50mm 30mm;
+                        margin: 0;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 0;
+                        background: white;
+                        color: black;
+                        font-family: 'Courier New', Courier, monospace;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .label {
+                        width: 50mm;
+                        height: 30mm;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        box-sizing: border-box;
+                        padding: 2mm;
+                        page-break-inside: avoid;
+                        page-break-after: always;
+                    }
+                    .product-name {
+                        font-size: 9px;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        margin-bottom: 2px;
+                        text-align: center;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        width: 46mm;
+                    }
+                    .barcode-text {
+                        font-size: 8px;
+                        letter-spacing: 2px;
+                        margin-top: 2px;
+                        margin-bottom: 2px;
+                    }
+                    .price {
+                        font-size: 10px;
+                        font-weight: bold;
+                        margin-top: 1px;
+                    }
+                </style>
+            </head>
+            <body>
+                \${labelsHtml}
+                <script>
+                    window.onload = function() {
+                        window.focus();
+                        window.print();
+                        setTimeout(function() { window.close(); }, 500);
+                    };
+                </script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        setIsPrintModalOpen(false);
     };
 
     const openEdit = (prod: Product) => {
@@ -783,7 +927,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                             </td>
                                             <td 
                                                 className="p-4 cursor-pointer"
-                                                onClick={() => openEdit(prod)}
+                                                onClick={() => prod.sku && openPrintModal(prod)}
+                                                title={prod.sku ? "Haga clic para imprimir etiquetas" : undefined}
                                             >
                                                 {prod.sku ? (
                                                     <BarcodeSVG value={prod.sku} size="sm" />
@@ -813,6 +958,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                             </td>
                                             <td className="p-4 text-right">
                                                 <div className="flex justify-end gap-1.5">
+                                                    {prod.sku && (
+                                                        <button 
+                                                            onClick={() => openPrintModal(prod)}
+                                                            className="p-1.5 hover:bg-secondary/10 text-secondary rounded transition cursor-pointer border-0 bg-transparent"
+                                                            title="Imprimir Código de Barras"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[16px]">print</span>
+                                                        </button>
+                                                    )}
                                                     <button 
                                                         onClick={() => openEdit(prod)}
                                                         className="p-1.5 hover:bg-primary/10 text-primary rounded transition cursor-pointer border-0 bg-transparent"
@@ -874,6 +1028,114 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                         </div>
                     )}
                 </>
+            )}
+
+            {/* Modal de Impresión de Códigos de Barras */}
+            {isPrintModalOpen && printProduct && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 className="font-bold text-base text-on-surface">
+                                    {isRefillPrompt ? '📦 Impresión por Reabastecimiento' : '🖨️ Imprimir Código de Barras'}
+                                </h3>
+                                <p className="text-xs text-on-surface-variant opacity-75 mt-1">
+                                    {printProduct.name}
+                                </p>
+                            </div>
+                            <button 
+                                onClick={() => setIsPrintModalOpen(false)}
+                                className="p-1 hover:bg-surface-container-highest rounded-full border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        {isRefillPrompt ? (
+                            <div className="bg-primary/10 border border-primary/20 p-3 rounded-xl mb-4 text-xs text-on-surface-variant leading-relaxed">
+                                <strong className="text-primary">¡Reabastecimiento detectado!</strong> Se han añadido nuevas unidades al stock. ¿Cuántas etiquetas de códigos de barras deseas imprimir para esta tanda?
+                            </div>
+                        ) : (
+                            <p className="text-xs text-on-surface-variant mb-4 leading-relaxed">
+                                Elige cuántas etiquetas autoadhesivas deseas generar para tu impresora térmica (Tamaño estándar 50mm x 30mm).
+                            </p>
+                        )}
+
+                        <div className="space-y-4">
+                            <div className="bg-surface-container p-3 rounded-xl border border-outline/5 flex items-center gap-3">
+                                <div className="flex-grow">
+                                    <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Código SKU</p>
+                                    <p className="text-sm font-mono text-on-surface font-semibold mt-0.5">{printProduct.sku}</p>
+                                </div>
+                                <div className="w-px h-8 bg-outline/10" />
+                                <div>
+                                    <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Precio de Venta</p>
+                                    <p className="text-sm text-on-surface font-bold mt-0.5">{formatPrice(printProduct.price)}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-on-surface-variant uppercase ml-1">Cantidad a Imprimir</label>
+                                <div className="flex gap-2">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setPrintQuantity(1)}
+                                        className={`flex-1 py-2 px-3 border rounded-xl text-xs font-bold transition cursor-pointer ${printQuantity === 1 ? 'bg-primary/15 border-primary text-primary' : 'bg-transparent border-outline/20 text-on-surface hover:bg-surface-container'}`}
+                                    >
+                                        1 Copia (Prueba)
+                                    </button>
+                                    {isRefillPrompt && (
+                                        <button 
+                                            type="button"
+                                            onClick={() => setPrintQuantity(printQuantity)}
+                                            className={`flex-1 py-2 px-3 border rounded-xl text-xs font-bold transition cursor-pointer bg-primary/15 border-primary text-primary`}
+                                        >
+                                            {printQuantity} Copias (Refill)
+                                        </button>
+                                    )}
+                                    <button 
+                                        type="button"
+                                        onClick={() => setPrintQuantity(printProduct.stock)}
+                                        className={`flex-1 py-2 px-3 border rounded-xl text-xs font-bold transition cursor-pointer ${printQuantity === printProduct.stock ? 'bg-primary/15 border-primary text-primary' : 'bg-transparent border-outline/20 text-on-surface hover:bg-surface-container'}`}
+                                    >
+                                        Stock Completo ({printProduct.stock})
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-on-surface-variant uppercase ml-1">Cantidad Personalizada</label>
+                                <div className="flex items-center gap-2">
+                                    <input 
+                                        type="number" 
+                                        min="1" 
+                                        max="500"
+                                        value={printQuantity}
+                                        onChange={(e) => setPrintQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                        className="bg-surface-container border border-outline/20 p-2 rounded-xl text-sm font-semibold text-on-surface outline-none w-28 text-center"
+                                    />
+                                    <span className="text-xs text-on-surface-variant opacity-60 font-sans">etiquetas autoadhesivas</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-6 border-t border-outline/5 mt-6">
+                            <button 
+                                onClick={() => setIsPrintModalOpen(false)}
+                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-xl transition cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={handlePrintBarcodes}
+                                className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">print</span>
+                                Confirmar e Imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
