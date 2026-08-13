@@ -4,6 +4,8 @@ import { SaaSErpInventory } from './SaaSErpInventory';
 import { SaaSErpInvoices } from './SaaSErpInvoices';
 import { SaaSErpCartera } from './SaaSErpCartera';
 import { SaaSErpDomicilios } from './SaaSErpDomicilios';
+import { SaaSErpSuppliers } from './SaaSErpSuppliers';
+import { SaaSErpPurchaseOrders } from './SaaSErpPurchaseOrders';
 import { SaaSErpFormulas } from './SaaSErpFormulas';
 import { SaaSErpStoreSettings } from './SaaSErpStoreSettings';
 import { SaaSErpAppointments } from './SaaSErpAppointments';
@@ -64,6 +66,7 @@ interface ClientDashboardProps {
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBack }) => {
   const [clientData, setClientData] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'cartera' | 'domicilios' | 'formulas' | 'agenda' | 'empleados' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion'>('resumen');
+  const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -1835,8 +1838,54 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
         )}
 
         {activeTab === 'inventario' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
-            <SaaSErpInventory clientId={clientId} />
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex flex-wrap gap-2 p-1 bg-surface-container-high rounded-xl border border-outline/10 self-start inline-flex">
+              <button 
+                onClick={() => setInventorySubTab('catalog')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border-0 ${
+                  inventorySubTab === 'catalog' 
+                    ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' 
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">inventory_2</span>
+                Catálogo de Inventario
+              </button>
+              <button 
+                onClick={() => setInventorySubTab('purchase-orders')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border-0 ${
+                  inventorySubTab === 'purchase-orders' 
+                    ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' 
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                Órdenes de Compra
+              </button>
+              <button 
+                onClick={() => setInventorySubTab('suppliers')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border-0 ${
+                  inventorySubTab === 'suppliers' 
+                    ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' 
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">contact_page</span>
+                Proveedores y Categorías
+              </button>
+            </div>
+
+            <div className="glass-card p-6 rounded-2xl border border-outline/10">
+              {inventorySubTab === 'catalog' && (
+                <SaaSErpInventory clientId={clientId} category={category} />
+              )}
+              {inventorySubTab === 'purchase-orders' && (
+                <SaaSErpPurchaseOrders clientId={clientId} />
+              )}
+              {inventorySubTab === 'suppliers' && (
+                <SaaSErpSuppliers clientId={clientId} />
+              )}
+            </div>
           </div>
         )}
 

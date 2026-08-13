@@ -589,6 +589,65 @@ const initDatabase = async () => {
                 created_at TIMESTAMP DEFAULT NOW()
             );
         `);
+
+        // ----------------- FASE 5: Proveedores, Categorías y Compras -----------------
+        console.log("[DB Init] 🔄 Inicializando tablas de la Fase 5 (Proveedores y Compras)...");
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS product_categories (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(client_id, name)
+            );
+
+            CREATE TABLE IF NOT EXISTS suppliers (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(100) NOT NULL,
+                phone VARCHAR(20),
+                email VARCHAR(100),
+                address VARCHAR(200),
+                contact_name VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS supplier_categories (
+                supplier_id UUID REFERENCES suppliers(id) ON DELETE CASCADE,
+                category_id UUID REFERENCES product_categories(id) ON DELETE CASCADE,
+                PRIMARY KEY(supplier_id, category_id)
+            );
+
+            CREATE TABLE IF NOT EXISTS purchase_orders (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                supplier_id UUID REFERENCES suppliers(id) ON DELETE SET NULL,
+                order_number VARCHAR(50) NOT NULL,
+                status VARCHAR(20) DEFAULT 'pending',
+                total_amount NUMERIC(12, 2) DEFAULT 0.00,
+                delivery_method VARCHAR(50) DEFAULT 'envio_tienda',
+                carrier_name VARCHAR(100),
+                tracking_number VARCHAR(100),
+                shipping_cost NUMERIC(10, 2) DEFAULT 0.00,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                received_at TIMESTAMP,
+                UNIQUE(client_id, order_number)
+            );
+
+            CREATE TABLE IF NOT EXISTS purchase_order_items (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                purchase_order_id UUID REFERENCES purchase_orders(id) ON DELETE CASCADE,
+                product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+                quantity INT NOT NULL,
+                cost_price NUMERIC(10, 2) NOT NULL
+            );
+        `);
+
+        await pool.query(`
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES product_categories(id) ON DELETE SET NULL;
+        `);
+        console.log("[DB Init] ✅ Tablas y alteraciones de la Fase 5 completadas con éxito.");
         console.log("[DB Init] ✅ Tablas y columnas de la Fase 4 creadas o verificadas con éxito.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 

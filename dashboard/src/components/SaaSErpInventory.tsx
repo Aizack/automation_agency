@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { printBarcodes } from '../utils/barcodePrinter';
 
 interface Product {
     id: string;
@@ -17,6 +18,7 @@ interface Product {
     style: string | null;
     color: string | null;
     promo_discount: string;
+    category_id?: string | null;
     created_at: string;
 }
 
@@ -214,6 +216,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
     const [printQuantity, setPrintQuantity] = useState(1);
     const [isRefillPrompt, setIsRefillPrompt] = useState(false);
 
+    // Categories and Refill States
+    const [categories, setCategories] = useState<any[]>([]);
+    const [categoryId, setCategoryId] = useState('');
+    const [refillProduct, setRefillProduct] = useState<Product | null>(null);
+    const [refillQuantity, setRefillQuantity] = useState<number | ''>('');
+    const [isRefillModalOpen, setIsRefillModalOpen] = useState(false);
+    const [printAfterRefill, setPrintAfterRefill] = useState(true);
+
     const searchInputRef = useRef<HTMLInputElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const token = localStorage.getItem('auth_token');
@@ -235,8 +245,23 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
         }
     };
 
+    const fetchCategories = async () => {
+        try {
+            const res = await fetch(`/api/clients/${clientId}/categories`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setCategories(json.categories || []);
+            }
+        } catch (err) {
+            console.error("Error loading categories:", err);
+        }
+    };
+
     useEffect(() => {
         fetchProducts();
+        fetchCategories();
     }, [clientId]);
 
     // Barcode Autofocus hook: ensures search input remains focused for physical scanning guns
@@ -263,7 +288,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
             material: material || null,
             style: style || null,
             color: color || null,
-            promo_discount: promoDiscount === '' ? 0 : promoDiscount
+            promo_discount: promoDiscount === '' ? 0 : promoDiscount,
+            category_id: categoryId || null
         };
 
         try {
@@ -294,6 +320,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                             price: body.price.toString(),
                             cost_price: body.cost_price.toString(),
                             promo_discount: body.promo_discount.toString(),
+                            category_id: body.category_id,
                             stock: newStock 
                         };
                         setTimeout(() => {
@@ -410,114 +437,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
 
     const handlePrintBarcodes = () => {
         if (!printProduct || !printProduct.sku) return;
-        
-        const qty = parseInt(printQuantity.toString()) || 1;
-        const cleanValue = printProduct.sku.toUpperCase().replace(/[^0-9A-Z\-.\s]/g, '');
-        const fullText = `*${cleanValue}*`;
-        let pattern = '';
-        for (let char of fullText) {
-            pattern += (code39Map[char] || code39Map[' ']) + '0';
-        }
-        
-        const barWidth = 1.5;
-        const height = 40;
-        const width = pattern.length * barWidth;
-        
-        let svgContent = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="background:white;padding:2px;border-radius:4px;">`;
-        pattern.split('').forEach((bit, idx) => {
-            if (bit === '1') {
-                svgContent += `<rect x="${idx * barWidth}" y="0" width="${barWidth}" height="${height}" fill="#000000" />`;
-            }
-        });
-        svgContent += `</svg>`;
-        
-        let labelsHtml = '';
-        const priceFormatted = formatPrice(printProduct.price);
-        
-        for (let i = 0; i < qty; i++) {
-            labelsHtml += `
-                <div class="label">
-                    <div class="product-name">${printProduct.name}</div>
-                    \${svgContent}
-                    <div class="barcode-text">${cleanValue}</div>
-                    <div class="price">${priceFormatted}</div>
-                </div>
-            `;
-        }
-        
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            alert('Por favor, permite las ventanas emergentes (popups) para poder imprimir.');
-            return;
-        }
-        
-        printWindow.document.write(`
-            <html>
-            <head>
-                <title>Imprimir Códigos de Barras - \${printProduct.name}</title>
-                <style>
-                    @page {
-                        size: 50mm 30mm;
-                        margin: 0;
-                    }
-                    body {
-                        margin: 0;
-                        padding: 0;
-                        background: white;
-                        color: black;
-                        font-family: 'Courier New', Courier, monospace;
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
-                    }
-                    .label {
-                        width: 50mm;
-                        height: 30mm;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        box-sizing: border-box;
-                        padding: 2mm;
-                        page-break-inside: avoid;
-                        page-break-after: always;
-                    }
-                    .product-name {
-                        font-size: 9px;
-                        font-weight: bold;
-                        text-transform: uppercase;
-                        margin-bottom: 2px;
-                        text-align: center;
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        width: 46mm;
-                    }
-                    .barcode-text {
-                        font-size: 8px;
-                        letter-spacing: 2px;
-                        margin-top: 2px;
-                        margin-bottom: 2px;
-                    }
-                    .price {
-                        font-size: 10px;
-                        font-weight: bold;
-                        margin-top: 1px;
-                    }
-                </style>
-            </head>
-            <body>
-                \${labelsHtml}
-                <script>
-                    window.onload = function() {
-                        window.focus();
-                        window.print();
-                        setTimeout(function() { window.close(); }, 500);
-                    };
-                </script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
+        printBarcodes([{
+            name: printProduct.name,
+            sku: printProduct.sku,
+            price: printProduct.price,
+            quantity: parseInt(printQuantity.toString()) || 1
+        }]);
         setIsPrintModalOpen(false);
     };
 
@@ -535,6 +460,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
         setStyle(prod.style || '');
         setColor(prod.color || '');
         setPromoDiscount(prod.promo_discount ? parseFloat(prod.promo_discount) : 0);
+        setCategoryId(prod.category_id || '');
         setIsFormOpen(true);
     };
 
@@ -552,7 +478,73 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
         setStyle('');
         setColor('');
         setPromoDiscount('');
+        setCategoryId('');
         setIsFormOpen(false);
+    };
+
+    const openRefillModal = (prod: Product) => {
+        setRefillProduct(prod);
+        setRefillQuantity('');
+        setPrintAfterRefill(true);
+        setIsRefillModalOpen(true);
+    };
+
+    const handleSaveRefill = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!refillProduct || !refillQuantity || refillQuantity <= 0) return;
+
+        const addedQty = parseInt(refillQuantity.toString());
+        const currentStock = refillProduct.stock || 0;
+        const newStock = currentStock + addedQty;
+
+        const body = {
+            name: refillProduct.name,
+            sku: refillProduct.sku || null,
+            description: refillProduct.description || null,
+            price: refillProduct.price,
+            stock: newStock,
+            cost_price: refillProduct.cost_price || 0,
+            min_stock: refillProduct.min_stock || 5,
+            supplier_name: refillProduct.supplier_name || null,
+            supplier_phone: refillProduct.supplier_phone || null,
+            brand: refillProduct.brand || null,
+            material: refillProduct.material || null,
+            style: refillProduct.style || null,
+            color: refillProduct.color || null,
+            promo_discount: refillProduct.promo_discount || 0,
+            category_id: refillProduct.category_id || null
+        };
+
+        try {
+            const res = await fetch(`/api/clients/${clientId}/products/${refillProduct.id}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(body)
+            });
+            const json = await res.json();
+            if (json.success) {
+                setIsRefillModalOpen(false);
+                fetchProducts();
+                
+                if (printAfterRefill) {
+                    setTimeout(() => {
+                        printBarcodes([{
+                            name: refillProduct.name,
+                            sku: refillProduct.sku || '',
+                            price: refillProduct.price,
+                            quantity: addedQty
+                        }]);
+                    }, 300);
+                }
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (err) {
+            alert('Error al rellenar inventario.');
+        }
     };
 
     const formatPrice = (val: string) => {
@@ -709,6 +701,19 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                             onChange={(e) => setSku(e.target.value)}
                                             placeholder="Autogenerado si está vacío"
                                         />
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-medium">Categoría del Producto</label>
+                                        <select 
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                            value={categoryId}
+                                            onChange={(e) => setCategoryId(e.target.value)}
+                                        >
+                                            <option value="" className="bg-surface-container">-- Ninguna / General --</option>
+                                            {categories.map((cat: any) => (
+                                                <option key={cat.id} value={cat.id} className="bg-surface-container">{cat.name}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                     {category === 'optica' && (
                                         <>
@@ -952,12 +957,25 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                 className="p-4 cursor-pointer"
                                                 onClick={() => openEdit(prod)}
                                             >
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${prod.stock < 5 ? 'bg-red-500/10 text-red-400' : 'bg-primary/10 text-primary'}`}>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                    prod.stock <= (prod.min_stock !== undefined ? prod.min_stock : 5)
+                                                        ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                                        : prod.stock <= (prod.min_stock !== undefined ? prod.min_stock : 5) * 2
+                                                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                                            : 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                                }`}>
                                                     {prod.stock} uds
                                                 </span>
                                             </td>
                                             <td className="p-4 text-right">
                                                 <div className="flex justify-end gap-1.5">
+                                                    <button 
+                                                        onClick={() => openRefillModal(prod)}
+                                                        className="p-1.5 hover:bg-green-500/10 text-green-400 rounded transition cursor-pointer border-0 bg-transparent"
+                                                        title="Rellenar Stock (Refill)"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">add_box</span>
+                                                    </button>
                                                     {prod.sku && (
                                                         <button 
                                                             onClick={() => openPrintModal(prod)}
@@ -1135,6 +1153,72 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+            {/* Modal de Reabastecimiento Rápido (Refill) */}
+            {isRefillModalOpen && refillProduct && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <form onSubmit={handleSaveRefill} className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in space-y-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-bold text-base text-on-surface flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-green-400">add_box</span>
+                                Rellenar Inventario
+                            </h3>
+                            <button 
+                                type="button"
+                                onClick={() => setIsRefillModalOpen(false)}
+                                className="p-1 hover:bg-surface-container-highest rounded-full border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        <div className="bg-surface-container p-3 rounded-xl border border-outline/5 text-xs space-y-1">
+                            <p className="text-on-surface font-semibold">{refillProduct.name}</p>
+                            <p className="text-on-surface-variant opacity-75 font-mono">SKU: {refillProduct.sku || 'N/A'}</p>
+                            <p className="text-on-surface-variant opacity-75">Stock Actual: <strong className="text-on-surface">{refillProduct.stock} uds</strong> (Mínimo: {refillProduct.min_stock !== undefined ? refillProduct.min_stock : 5} uds)</p>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-bold text-on-surface-variant uppercase ml-1">Cantidad a ingresar *</label>
+                            <input 
+                                type="number" 
+                                required
+                                min="1"
+                                placeholder="Ej: 50"
+                                value={refillQuantity}
+                                onChange={(e) => setRefillQuantity(e.target.value === '' ? '' : parseInt(e.target.value))}
+                                className="bg-surface-container border border-outline/20 p-3 rounded-xl text-sm font-semibold text-on-surface outline-none w-full"
+                            />
+                        </div>
+
+                        <label className="flex items-center gap-2 cursor-pointer select-none py-1 ml-1 text-xs text-on-surface-variant">
+                            <input 
+                                type="checkbox" 
+                                checked={printAfterRefill} 
+                                onChange={(e) => setPrintAfterRefill(e.target.checked)}
+                                className="accent-primary w-4 h-4 rounded"
+                            />
+                            <span>Imprimir códigos de barra para estas nuevas unidades</span>
+                        </label>
+
+                        <div className="flex justify-end gap-3 pt-4 border-t border-outline/5 mt-4">
+                            <button 
+                                type="button"
+                                onClick={() => setIsRefillModalOpen(false)}
+                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-xl transition cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                type="submit"
+                                className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">done</span>
+                                Confirmar Refill
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
         </div>

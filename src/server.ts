@@ -1251,7 +1251,7 @@ app.get('/api/clients/:clientId/products', authenticateToken as any, authorizeCl
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, created_at 
+      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, created_at 
        FROM products 
        WHERE client_id = $1 
        ORDER BY created_at DESC`,
@@ -1304,7 +1304,7 @@ app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, a
 app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
@@ -1312,13 +1312,14 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 
     const result = await pool.query(
       `INSERT INTO products (
-         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, created_at`,
+         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, created_at`,
       [
         clientId, name, sku || null, description || null, price, stock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null,
-        brand || null, material || null, style || null, color || null, promo_discount || 0.00
+        brand || null, material || null, style || null, color || null, promo_discount || 0.00,
+        category_id || null
       ]
     );
 
@@ -1332,7 +1333,7 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, productId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
@@ -1342,14 +1343,15 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
       `UPDATE products 
        SET name = $1, sku = $2, description = $3, price = $4, stock = $5, 
            cost_price = $6, min_stock = $7, supplier_name = $8, supplier_phone = $9,
-           brand = $10, material = $11, style = $12, color = $13, promo_discount = $14
-       WHERE client_id = $15 AND id = $16 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, created_at`,
+           brand = $10, material = $11, style = $12, color = $13, promo_discount = $14,
+           category_id = $15
+       WHERE client_id = $16 AND id = $17 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, created_at`,
       [
         name, sku || null, description || null, price, stock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null, 
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
-        clientId, productId
+        category_id || null, clientId, productId
       ]
     );
 
@@ -1514,6 +1516,354 @@ app.delete('/api/clients/:clientId/products/:productId', authenticateToken as an
     res.json({ success: true, message: 'Producto eliminado exitosamente.' });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- SAAS ERP: CATEGORÍAS DE PRODUCTOS ---
+app.get('/api/clients/:clientId/categories', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const result = await pool.query(
+      `SELECT id, name, created_at FROM product_categories WHERE client_id = $1 ORDER BY name ASC`,
+      [clientId]
+    );
+    res.json({ success: true, categories: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/clients/:clientId/categories', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, error: 'El nombre de la categoría es requerido.' });
+    }
+    const result = await pool.query(
+      `INSERT INTO product_categories (client_id, name) VALUES ($1, $2) RETURNING id, name, created_at`,
+      [clientId, name.trim()]
+    );
+    res.json({ success: true, category: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/clients/:clientId/categories/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, id } = req.params;
+    const result = await pool.query(
+      `DELETE FROM product_categories WHERE client_id = $1 AND id = $2 RETURNING id`,
+      [clientId, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Categoría no encontrada.' });
+    }
+    res.json({ success: true, message: 'Categoría eliminada exitosamente.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- SAAS ERP: PROVEEDORES ---
+app.get('/api/clients/:clientId/suppliers', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const result = await pool.query(
+      `SELECT s.id, s.name, s.phone, s.email, s.address, s.contact_name, s.created_at,
+              COALESCE(
+                json_agg(
+                  json_build_object('id', pc.id, 'name', pc.name)
+                ) FILTER (WHERE pc.id IS NOT NULL), 
+                '[]'
+              ) as categories
+       FROM suppliers s
+       LEFT JOIN supplier_categories sc ON s.id = sc.supplier_id
+       LEFT JOIN product_categories pc ON sc.category_id = pc.id
+       WHERE s.client_id = $1
+       GROUP BY s.id
+       ORDER BY s.name ASC`,
+      [clientId]
+    );
+    res.json({ success: true, suppliers: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/clients/:clientId/suppliers', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  const dbClient = await pool.connect();
+  try {
+    await dbClient.query('BEGIN');
+    const { clientId } = req.params;
+    const { name, phone, email, address, contact_name, category_ids } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, error: 'El nombre del proveedor es requerido.' });
+    }
+
+    const supplierResult = await dbClient.query(
+      `INSERT INTO suppliers (client_id, name, phone, email, address, contact_name)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, phone, email, address, contact_name, created_at`,
+      [clientId, name.trim(), phone || null, email || null, address || null, contact_name || null]
+    );
+    const newSupplier = supplierResult.rows[0];
+
+    if (category_ids && Array.isArray(category_ids) && category_ids.length > 0) {
+      for (const catId of category_ids) {
+        await dbClient.query(
+          `INSERT INTO supplier_categories (supplier_id, category_id) VALUES ($1, $2)`,
+          [newSupplier.id, catId]
+        );
+      }
+    }
+
+    await dbClient.query('COMMIT');
+    res.json({ success: true, supplier: newSupplier });
+  } catch (err: any) {
+    await dbClient.query('ROLLBACK');
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    dbClient.release();
+  }
+});
+
+app.put('/api/clients/:clientId/suppliers/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  const dbClient = await pool.connect();
+  try {
+    await dbClient.query('BEGIN');
+    const { clientId, id } = req.params;
+    const { name, phone, email, address, contact_name, category_ids } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, error: 'El nombre del proveedor es requerido.' });
+    }
+
+    const supplierResult = await dbClient.query(
+      `UPDATE suppliers 
+       SET name = $1, phone = $2, email = $3, address = $4, contact_name = $5
+       WHERE client_id = $6 AND id = $7
+       RETURNING id, name, phone, email, address, contact_name, created_at`,
+      [name.trim(), phone || null, email || null, address || null, contact_name || null, clientId, id]
+    );
+
+    if (supplierResult.rows.length === 0) {
+      await dbClient.query('ROLLBACK');
+      return res.status(404).json({ success: false, error: 'Proveedor no encontrado.' });
+    }
+
+    await dbClient.query(`DELETE FROM supplier_categories WHERE supplier_id = $1`, [id]);
+
+    if (category_ids && Array.isArray(category_ids) && category_ids.length > 0) {
+      for (const catId of category_ids) {
+        await dbClient.query(
+          `INSERT INTO supplier_categories (supplier_id, category_id) VALUES ($1, $2)`,
+          [id, catId]
+        );
+      }
+    }
+
+    await dbClient.query('COMMIT');
+    res.json({ success: true, supplier: supplierResult.rows[0] });
+  } catch (err: any) {
+    await dbClient.query('ROLLBACK');
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    dbClient.release();
+  }
+});
+
+app.delete('/api/clients/:clientId/suppliers/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, id } = req.params;
+    const result = await pool.query(
+      `DELETE FROM suppliers WHERE client_id = $1 AND id = $2 RETURNING id`,
+      [clientId, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Proveedor no encontrado.' });
+    }
+    res.json({ success: true, message: 'Proveedor eliminado exitosamente.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- SAAS ERP: ÓRDENES DE COMPRA ---
+app.get('/api/clients/:clientId/purchase-orders', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const result = await pool.query(
+      `SELECT po.id, po.order_number, po.status, po.total_amount, po.delivery_method, 
+              po.carrier_name, po.tracking_number, po.shipping_cost, po.notes, po.created_at, po.received_at,
+              s.name as supplier_name, s.phone as supplier_phone,
+              COALESCE(
+                json_agg(
+                  json_build_object(
+                    'id', poi.id, 
+                    'product_id', poi.product_id,
+                    'product_name', p.name,
+                    'sku', p.sku,
+                    'quantity', poi.quantity, 
+                    'cost_price', poi.cost_price
+                  )
+                ) FILTER (WHERE poi.id IS NOT NULL),
+                '[]'
+              ) as items
+       FROM purchase_orders po
+       LEFT JOIN suppliers s ON po.supplier_id = s.id
+       LEFT JOIN purchase_order_items poi ON po.id = poi.purchase_order_id
+       LEFT JOIN products p ON poi.product_id = p.id
+       WHERE po.client_id = $1
+       GROUP BY po.id, s.name, s.phone
+       ORDER BY po.created_at DESC`,
+      [clientId]
+    );
+    res.json({ success: true, purchaseOrders: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/clients/:clientId/purchase-orders', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  const dbClient = await pool.connect();
+  try {
+    await dbClient.query('BEGIN');
+    const { clientId } = req.params;
+    const { supplier_id, order_number, delivery_method, carrier_name, tracking_number, shipping_cost, notes, items } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, error: 'La orden debe tener al menos un producto.' });
+    }
+
+    const finalOrderNumber = order_number?.trim() || 'OC-' + Math.floor(1000 + Math.random() * 9000);
+    let totalAmount = 0;
+    
+    // Validar ítems e incrementar total
+    for (const item of items) {
+      if (!item.product_id || !item.quantity || item.quantity <= 0 || !item.cost_price || item.cost_price < 0) {
+        await dbClient.query('ROLLBACK');
+        return res.status(400).json({ success: false, error: 'Cada ítem debe incluir product_id, cantidad > 0 y costo >= 0.' });
+      }
+      totalAmount += parseInt(item.quantity) * parseFloat(item.cost_price);
+    }
+
+    const poResult = await dbClient.query(
+      `INSERT INTO purchase_orders (
+         client_id, supplier_id, order_number, status, total_amount, 
+         delivery_method, carrier_name, tracking_number, shipping_cost, notes
+       ) VALUES ($1, $2, $3, 'pending', $4, $5, $6, $7, $8, $9)
+       RETURNING id, order_number, status, total_amount, created_at`,
+      [
+        clientId, supplier_id || null, finalOrderNumber, totalAmount, 
+        delivery_method || 'envio_tienda', carrier_name || null, 
+        tracking_number || null, shipping_cost || 0.00, notes || null
+      ]
+    );
+    const newOrder = poResult.rows[0];
+
+    for (const item of items) {
+      await dbClient.query(
+        `INSERT INTO purchase_order_items (purchase_order_id, product_id, quantity, cost_price)
+         VALUES ($1, $2, $3, $4)`,
+        [newOrder.id, item.product_id, item.quantity, item.cost_price]
+      );
+    }
+
+    await dbClient.query('COMMIT');
+    res.json({ success: true, purchaseOrder: newOrder });
+  } catch (err: any) {
+    await dbClient.query('ROLLBACK');
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    dbClient.release();
+  }
+});
+
+app.post('/api/clients/:clientId/purchase-orders/:orderId/receive', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  const dbClient = await pool.connect();
+  try {
+    await dbClient.query('BEGIN');
+    const { clientId, orderId } = req.params;
+
+    // Obtener orden de compra
+    const poCheck = await dbClient.query(
+      `SELECT id, status, shipping_cost FROM purchase_orders WHERE client_id = $1 AND id = $2`,
+      [clientId, orderId]
+    );
+
+    if (poCheck.rows.length === 0) {
+      await dbClient.query('ROLLBACK');
+      return res.status(404).json({ success: false, error: 'Orden de compra no encontrada.' });
+    }
+
+    const order = poCheck.rows[0];
+    if (order.status === 'received') {
+      await dbClient.query('ROLLBACK');
+      return res.status(400).json({ success: false, error: 'Esta orden de compra ya fue recibida.' });
+    }
+
+    // Obtener ítems
+    const itemsResult = await dbClient.query(
+      `SELECT product_id, quantity, cost_price FROM purchase_order_items WHERE purchase_order_id = $1`,
+      [orderId]
+    );
+    const items = itemsResult.rows;
+
+    const totalUnits = items.reduce((acc, curr) => acc + curr.quantity, 0);
+    const extraCostPerUnit = totalUnits > 0 ? parseFloat((parseFloat(order.shipping_cost || '0') / totalUnits).toFixed(2)) : 0;
+
+    const productsReceived: any[] = [];
+
+    // Incrementar stock y actualizar precio de costo
+    for (const item of items) {
+      const finalCostPrice = parseFloat(item.cost_price) + extraCostPerUnit;
+
+      const pResult = await dbClient.query(
+        `UPDATE products 
+         SET stock = stock + $1, cost_price = $2
+         WHERE client_id = $3 AND id = $4
+         RETURNING id, name, sku, stock, min_stock, price`,
+        [item.quantity, finalCostPrice, clientId, item.product_id]
+      );
+      
+      if (pResult.rows.length > 0) {
+        const prod = pResult.rows[0];
+        productsReceived.push({
+          id: prod.id,
+          name: prod.name,
+          sku: prod.sku,
+          price: prod.price,
+          quantity: item.quantity,
+          new_stock: prod.stock
+        });
+
+        // Resolver alerta de stock crítico si existía activa
+        if (prod.stock > (prod.min_stock || 5)) {
+          await logger.resolveAlert(
+            `stock_low_${prod.id}`, 
+            `El stock del producto "${prod.name}" se ha restablecido a ${prod.stock} unidades tras recepción de compra.`, 
+            clientId as string
+          );
+        }
+      }
+    }
+
+    // Actualizar estado de la orden
+    await dbClient.query(
+      `UPDATE purchase_orders 
+       SET status = 'received', received_at = CURRENT_TIMESTAMP
+       WHERE id = $1`,
+      [orderId]
+    );
+
+    await dbClient.query('COMMIT');
+    res.json({ success: true, message: 'Mercancía recibida e inventario actualizado.', products: productsReceived });
+  } catch (err: any) {
+    await dbClient.query('ROLLBACK');
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    dbClient.release();
   }
 });
 
