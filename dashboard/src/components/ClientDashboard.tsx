@@ -944,36 +944,23 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
         {/* Header Bar */}
         <header className="h-16 border-b border-outline/10 flex items-center justify-between px-8 bg-surface-container/20 backdrop-blur sticky top-0 z-40">
           <div>
-            <h2 className="font-bold text-sm text-on-surface flex items-center gap-2">
+            <h2 className="font-extrabold text-base sm:text-lg text-on-surface flex items-center gap-2">
               <span className="font-sans">
-                {activeTab === 'resumen' ? '🤖 Resumen y Agente IA' :
-                 activeTab === 'inventario' ? '📦 Inventario de Tienda' :
-                 activeTab === 'facturacion' ? '🧾 Ventas y Facturación' :
-                 activeTab === 'cartera' ? '💳 Cartera y Cobranza' :
-                 activeTab === 'domicilios' ? '🚚 Despachos y Domicilios' :
-                 activeTab === 'formulas' ? '👁️ Fórmulas y Recetas Oftálmicas' :
+                {activeTab === 'resumen' ? 'Resumen y Agente IA' :
+                 activeTab === 'inventario' ? 'Inventario de Tienda' :
+                 activeTab === 'facturacion' ? 'Ventas y Facturación' :
+                 activeTab === 'cartera' ? 'Cartera y Cobranza' :
+                 activeTab === 'domicilios' ? 'Despachos y Domicilios' :
+                 activeTab === 'formulas' ? 'Fórmulas y Recetas Oftálmicas' :
                  activeTab === 'agenda' ? (
-                   clientData?.category === 'restaurante' ? '📅 Reservación de Mesas' :
-                   clientData?.category === 'optica' ? '📅 Citas Clínicas y Optometría' : '📅 Calendario de Citas'
+                   clientData?.category === 'restaurante' ? 'Reservación de Mesas' :
+                   clientData?.category === 'optica' ? 'Citas Clínicas y Optometría' : 'Calendario de Citas'
                  ) :
-                 activeTab === 'empleados' ? '👥 Gestión de Personal y Nómina' :
-                 activeTab === 'clientes' ? '💼 CRM & Directorio de Clientes' :
-                 activeTab === 'configuracion' ? '⚙️ Configuración Comercial de Tienda' :
-                 '⚙️ Estado del Sistema'}
+                 activeTab === 'empleados' ? 'Gestión de Personal y Nómina' :
+                 activeTab === 'clientes' ? 'CRM & Directorio de Clientes' :
+                 activeTab === 'configuracion' ? 'Configuración Comercial de Tienda' :
+                 'Estado del Sistema'}
               </span>
-              
-              {/* Dynamic Connection Indicator */}
-              {activeTab === 'resumen' && (
-                isWaConnected ? (
-                  <span className="flex items-center gap-1 px-2 py-0.5 bg-green-500/10 text-green-500 text-[10px] font-bold rounded-full border border-green-500/20">
-                    Bot En Línea
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 px-2 py-0.5 bg-red-500/10 text-red-500 text-[10px] font-bold rounded-full border border-red-500/20">
-                    Bot Desconectado
-                  </span>
-                )
-              )}
             </h2>
           </div>
 
