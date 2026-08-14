@@ -1571,7 +1571,7 @@ app.get('/api/clients/:clientId/suppliers', authenticateToken as any, authorizeC
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT s.id, s.name, s.phone, s.email, s.address, s.contact_name, s.created_at,
+      `SELECT s.id, s.name, s.phone, s.email, s.address, s.contact_name, s.is_laboratory, s.created_at,
               COALESCE(
                 json_agg(
                   json_build_object('id', pc.id, 'name', pc.name)
@@ -1597,16 +1597,16 @@ app.post('/api/clients/:clientId/suppliers', authenticateToken as any, authorize
   try {
     await dbClient.query('BEGIN');
     const { clientId } = req.params;
-    const { name, phone, email, address, contact_name, category_ids } = req.body;
+    const { name, phone, email, address, contact_name, is_laboratory, category_ids } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, error: 'El nombre del proveedor es requerido.' });
     }
 
     const supplierResult = await dbClient.query(
-      `INSERT INTO suppliers (client_id, name, phone, email, address, contact_name)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, name, phone, email, address, contact_name, created_at`,
-      [clientId, name.trim(), phone || null, email || null, address || null, contact_name || null]
+      `INSERT INTO suppliers (client_id, name, phone, email, address, contact_name, is_laboratory)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, name, phone, email, address, contact_name, is_laboratory, created_at`,
+      [clientId, name.trim(), phone || null, email || null, address || null, contact_name || null, is_laboratory === true]
     );
     const newSupplier = supplierResult.rows[0];
 
@@ -1634,17 +1634,17 @@ app.put('/api/clients/:clientId/suppliers/:id', authenticateToken as any, author
   try {
     await dbClient.query('BEGIN');
     const { clientId, id } = req.params;
-    const { name, phone, email, address, contact_name, category_ids } = req.body;
+    const { name, phone, email, address, contact_name, is_laboratory, category_ids } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, error: 'El nombre del proveedor es requerido.' });
     }
 
     const supplierResult = await dbClient.query(
       `UPDATE suppliers 
-       SET name = $1, phone = $2, email = $3, address = $4, contact_name = $5
-       WHERE client_id = $6 AND id = $7
-       RETURNING id, name, phone, email, address, contact_name, created_at`,
-      [name.trim(), phone || null, email || null, address || null, contact_name || null, clientId, id]
+       SET name = $1, phone = $2, email = $3, address = $4, contact_name = $5, is_laboratory = $6
+       WHERE client_id = $7 AND id = $8
+       RETURNING id, name, phone, email, address, contact_name, is_laboratory, created_at`,
+      [name.trim(), phone || null, email || null, address || null, contact_name || null, is_laboratory === true, clientId, id]
     );
 
     if (supplierResult.rows.length === 0) {
@@ -2050,6 +2050,45 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
           item.lensMaterial || null,
           item.lensTreatment || null
         ]);
+
+        if (item.productType === 'lens') {
+          // Obtener el ID del cliente en CRM
+          const crmCustRes = await dbClient.query(`
+            SELECT id FROM crm_customers 
+            WHERE client_id = $1 AND document_number = $2
+            LIMIT 1
+          `, [clientId, customerDocumentNumber]);
+          const customerId = crmCustRes.rows[0]?.id || null;
+
+          if (customerId) {
+            // Obtener la última fórmula clínica activa del paciente
+            const formulaRes = await dbClient.query(`
+              SELECT id FROM formulas 
+              WHERE client_id = $1 AND customer_id = $2 
+              ORDER BY created_at DESC LIMIT 1
+            `, [clientId, customerId]);
+            const formulaId = formulaRes.rows[0]?.id || null;
+
+            // Insertar la orden de laboratorio en estado pending
+            await dbClient.query(`
+              INSERT INTO lab_jobs (
+                client_id, customer_id, formula_id, invoice_id,
+                product_name, lens_design, lens_material, lens_treatment,
+                job_value, status
+              )
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0.00, 'pending')
+            `, [
+              clientId,
+              customerId,
+              formulaId,
+              invoice.id,
+              item.productName || 'Lente Formulada',
+              item.lensDesign || null,
+              item.lensMaterial || null,
+              item.lensTreatment || null
+            ]);
+          }
+        }
 
         // Solo descontar stock si es un producto físico del inventario
         if (item.productType !== 'lens' && item.productId) {
@@ -2738,7 +2777,9 @@ app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeC
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, e.pin, e.is_active, e.created_at 
+      `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, e.pin, e.is_active, e.created_at,
+              e.hire_date, e.basic_salary, e.payment_type, e.pay_period, e.cutoff_day_1, e.cutoff_day_2, e.pay_day_1, e.pay_day_2,
+              e.vacation_days_accumulated, e.hourly_rate, e.employment_status, e.activity_status, e.payment_method, e.bank_name, e.bank_account_number
        FROM employees e 
        LEFT JOIN business_departments d ON e.department_id = d.id 
        WHERE e.client_id = $1 
@@ -2754,7 +2795,13 @@ app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeC
 app.post('/api/clients/:clientId/employees', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, last_name, phone, role, department_id, pin } = req.body;
+    const { 
+      name, last_name, phone, role, department_id, pin,
+      hire_date, basic_salary, payment_type, pay_period,
+      cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
+      vacation_days_accumulated, hourly_rate, employment_status,
+      activity_status, payment_method, bank_name, bank_account_number
+    } = req.body;
 
     if (!name || !phone) {
       return res.status(400).json({ success: false, error: 'Nombre y teléfono son requeridos.' });
@@ -2763,10 +2810,22 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
     const cleanPhone = phone.replace(/\D/g, '');
 
     const result = await pool.query(
-      `INSERT INTO employees (client_id, name, last_name, phone, role, department_id, pin, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)
+      `INSERT INTO employees (
+         client_id, name, last_name, phone, role, department_id, pin, is_active,
+         hire_date, basic_salary, payment_type, pay_period,
+         cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
+         vacation_days_accumulated, hourly_rate, employment_status,
+         activity_status, payment_method, bank_name, bank_account_number
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
        RETURNING *`,
-      [clientId, name, last_name || '', cleanPhone, role || 'agent', department_id || null, pin || '1234']
+      [
+        clientId, name, last_name || '', cleanPhone, role || 'agent', department_id || null, pin || '1234',
+        hire_date || null, parseFloat(basic_salary) || 0.00, payment_type || 'fixed_monthly', pay_period || 'mensual',
+        parseInt(cutoff_day_1) || 15, parseInt(cutoff_day_2) || 30, parseInt(pay_day_1) || 15, parseInt(pay_day_2) || 30,
+        parseFloat(vacation_days_accumulated) || 0.00, parseFloat(hourly_rate) || 0.00, employment_status || 'vinculado',
+        activity_status || 'activo', payment_method || 'cash', bank_name || null, bank_account_number || null
+      ]
     );
 
     // Obtener nombre de departamento para la respuesta
@@ -2796,7 +2855,13 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
 app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, employeeId } = req.params;
-    const { name, last_name, phone, role, department_id, pin, is_active } = req.body;
+    const { 
+      name, last_name, phone, role, department_id, pin, is_active,
+      hire_date, basic_salary, payment_type, pay_period,
+      cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
+      vacation_days_accumulated, hourly_rate, employment_status,
+      activity_status, payment_method, bank_name, bank_account_number
+    } = req.body;
 
     if (!name || !phone) {
       return res.status(400).json({ success: false, error: 'Nombre y teléfono son requeridos.' });
@@ -2806,10 +2871,21 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
 
     const result = await pool.query(
       `UPDATE employees
-       SET name = $1, last_name = $2, phone = $3, role = $4, department_id = $5, pin = $6, is_active = $7
-       WHERE id = $8 AND client_id = $9
+       SET name = $1, last_name = $2, phone = $3, role = $4, department_id = $5, pin = $6, is_active = $7,
+           hire_date = $8, basic_salary = $9, payment_type = $10, pay_period = $11,
+           cutoff_day_1 = $12, cutoff_day_2 = $13, pay_day_1 = $14, pay_day_2 = $15,
+           vacation_days_accumulated = $16, hourly_rate = $17, employment_status = $18,
+           activity_status = $19, payment_method = $20, bank_name = $21, bank_account_number = $22
+       WHERE id = $23 AND client_id = $24
        RETURNING *`,
-      [name, last_name || '', cleanPhone, role, department_id || null, pin, is_active, employeeId, clientId]
+      [
+        name, last_name || '', cleanPhone, role, department_id || null, pin, is_active,
+        hire_date || null, parseFloat(basic_salary) || 0.00, payment_type || 'fixed_monthly', pay_period || 'mensual',
+        parseInt(cutoff_day_1) || 15, parseInt(cutoff_day_2) || 30, parseInt(pay_day_1) || 15, parseInt(pay_day_2) || 30,
+        parseFloat(vacation_days_accumulated) || 0.00, parseFloat(hourly_rate) || 0.00, employment_status || 'vinculado',
+        activity_status || 'activo', payment_method || 'cash', bank_name || null, bank_account_number || null,
+        employeeId, clientId
+      ]
     );
 
     if (result.rows.length === 0) {
@@ -2998,7 +3074,9 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
 
     // 1. Obtener la información contractual del empleado
     const empRes = await pool.query(
-      `SELECT name, role, basic_salary, allowances, arl_class FROM employees WHERE id = $1 AND client_id = $2`,
+      `SELECT name, role, basic_salary, allowances, arl_class, payment_type, hourly_rate, pay_period,
+              cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2, vacation_days_accumulated
+       FROM employees WHERE id = $1 AND client_id = $2`,
       [employeeId, clientId]
     );
 
@@ -3007,6 +3085,8 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
     }
 
     const emp = empRes.rows[0];
+    const isHourly = emp.payment_type === 'hourly';
+    const rawHourlyRate = parseFloat(emp.hourly_rate || '0');
     const basicSalary = parseFloat(emp.basic_salary || '0');
     const allowances = parseFloat(emp.allowances || '0');
     const arlClass = emp.arl_class || 'I';
@@ -3073,9 +3153,9 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
     });
 
     // 3. Tarifas y Recargos de Nómina (240 horas laborables estándar en el mes)
-    const hourlyRate = basicSalary / 240;
+    const hourlyRate = isHourly ? rawHourlyRate : (basicSalary / 240);
+    const basicEarned = isHourly ? (totalHours * hourlyRate) : basicSalary;
 
-    const basicEarned = totalHours * hourlyRate;
     const extraEarned = extraHours * hourlyRate * 0.25; // Extra diurno +25%
     const nightEarned = nightHours * hourlyRate * 0.35; // Recargo nocturno +35%
     const sundayEarned = sundayHours * hourlyRate * 0.75; // Recargo dominical +75%
@@ -3085,7 +3165,21 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
     // Deducciones de Empleado (Salud 4%, Pensión 4%)
     const employeeHealthDeduction = grossSalary * 0.04;
     const employeePensionDeduction = grossSalary * 0.04;
-    const netSalaryToPay = grossSalary - employeeHealthDeduction - employeePensionDeduction;
+    
+    // 4. Obtener anticipos confirmados de este mes
+    const advRes = await pool.query(
+      `SELECT COALESCE(SUM(amount), 0) as total_advances 
+       FROM employee_advances 
+       WHERE employee_id = $1 AND client_id = $2 
+         AND status = 'delivered' 
+         AND confirmed_by_admin = TRUE 
+         AND confirmed_by_employee = TRUE
+         AND TO_CHAR(delivered_at, 'YYYY-MM') = $3`,
+      [employeeId, clientId, month_year]
+    );
+    const totalAdvancesDeduction = parseFloat(advRes.rows[0]?.total_advances || '0');
+
+    const netSalaryToPay = grossSalary - employeeHealthDeduction - employeePensionDeduction - totalAdvancesDeduction;
 
     // Aportes Patronales (Costos de Contabilidad de la Tienda)
     // Exoneración en Colombia: < 10 SMMLV (aprox. $14M COP), exento de Salud (8.5%), Sena (2%) e ICBF (3%)
@@ -3116,6 +3210,13 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
         employeeName: emp.name,
         role: emp.role,
         monthYear: month_year,
+        paymentType: emp.payment_type,
+        payPeriod: emp.pay_period,
+        cutoffDay1: emp.cutoff_day_1,
+        cutoffDay2: emp.cutoff_day_2,
+        payDay1: emp.pay_day_1,
+        payDay2: emp.pay_day_2,
+        vacationDaysAccumulated: parseFloat(emp.vacation_days_accumulated || '0'),
         metrics: {
           totalHoursWorked: parseFloat(totalHours.toFixed(2)),
           extraHours: parseFloat(extraHours.toFixed(2)),
@@ -3135,7 +3236,8 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
         deductions: {
           health: parseFloat(employeeHealthDeduction.toFixed(2)),
           pension: parseFloat(employeePensionDeduction.toFixed(2)),
-          totalDeductions: parseFloat((employeeHealthDeduction + employeePensionDeduction).toFixed(2))
+          advances: totalAdvancesDeduction,
+          totalDeductions: parseFloat((employeeHealthDeduction + employeePensionDeduction + totalAdvancesDeduction).toFixed(2))
         },
         netSalary: parseFloat(netSalaryToPay.toFixed(2)),
         employerCosts: {
@@ -4580,6 +4682,193 @@ app.get('/api/admin/alerts/history', authenticateToken as any, async (req: Reque
        LIMIT 100`
     );
     res.json({ success: true, alerts: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- SAAS ERP: TRABAJOS DE LABORATORIO ---
+app.get('/api/clients/:clientId/lab-jobs', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const result = await pool.query(`
+      SELECT j.*, 
+             c.name as customer_name, c.last_name as customer_last_name, c.phone as customer_phone, c.document_number as customer_document_number,
+             s.name as supplier_name,
+             f.od_sphere, f.od_cylinder, f.od_axis, f.od_addition,
+             f.oi_sphere, f.oi_cylinder, f.oi_axis, f.oi_addition,
+             f.dp_distance, f.height
+      FROM lab_jobs j
+      JOIN crm_customers c ON j.customer_id = c.id
+      LEFT JOIN suppliers s ON j.supplier_id = s.id
+      LEFT JOIN formulas f ON j.formula_id = f.id
+      WHERE j.client_id = $1
+      ORDER BY j.created_at DESC
+    `, [clientId]);
+    res.json({ success: true, labJobs: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/clients/:clientId/lab-jobs', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { customerId, formulaId, supplierId, invoiceId, productName, lensDesign, lensMaterial, lensTreatment, jobValue, status, notes } = req.body;
+    
+    const result = await pool.query(`
+      INSERT INTO lab_jobs (
+        client_id, customer_id, formula_id, supplier_id, invoice_id, 
+        product_name, lens_design, lens_material, lens_treatment, 
+        job_value, status, notes, sent_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+      RETURNING *
+    `, [
+      clientId, customerId, formulaId || null, supplierId || null, invoiceId || null,
+      productName || 'Lente Formulada', lensDesign || null, lensMaterial || null, lensTreatment || null,
+      parseFloat(jobValue) || 0, status || 'sent', notes || ''
+    ]);
+    res.json({ success: true, labJob: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put('/api/clients/:clientId/lab-jobs/:jobId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, jobId } = req.params;
+    const { supplierId, jobValue, status, notes } = req.body;
+    
+    const cleanValue = parseFloat(jobValue) || 0;
+    
+    let updateQuery = `
+      UPDATE lab_jobs 
+      SET supplier_id = $1, job_value = $2, status = $3, notes = $4
+    `;
+    const params = [supplierId || null, cleanValue, status, notes || null];
+    
+    if (status === 'sent') {
+      updateQuery += `, sent_at = COALESCE(sent_at, NOW())`;
+    } else if (status === 'received') {
+      updateQuery += `, received_at = COALESCE(received_at, NOW())`;
+    } else if (status === 'delivered') {
+      updateQuery += `, delivered_at = COALESCE(delivered_at, NOW())`;
+    }
+    
+    updateQuery += ` WHERE id = $5 AND client_id = $6 RETURNING *`;
+    params.push(jobId, clientId);
+    
+    const result = await pool.query(updateQuery, params);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Trabajo de laboratorio no encontrado.' });
+    }
+    res.json({ success: true, labJob: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/clients/:clientId/lab-jobs/:jobId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, jobId } = req.params;
+    await pool.query(`DELETE FROM lab_jobs WHERE id = $1 AND client_id = $2`, [jobId, clientId]);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- SAAS ERP: ANTICIPOS DE SALARIO ---
+app.get('/api/clients/:clientId/employee-advances', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { employeeId } = req.query;
+    
+    let query = `
+      SELECT a.*, e.name as employee_name, e.last_name as employee_last_name, e.phone as employee_phone
+      FROM employee_advances a
+      JOIN employees e ON a.employee_id = e.id
+      WHERE a.client_id = $1
+    `;
+    const params = [clientId];
+    
+    if (employeeId) {
+      query += ` AND a.employee_id = $2`;
+      params.push(employeeId as string);
+    }
+    
+    query += ` ORDER BY a.created_at DESC`;
+    
+    const result = await pool.query(query, params);
+    res.json({ success: true, advances: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/clients/:clientId/employee-advances', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { employeeId, amount, requestedDate, notes, status } = req.body;
+    
+    const result = await pool.query(`
+      INSERT INTO employee_advances (client_id, employee_id, amount, requested_date, notes, status)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+    `, [clientId, employeeId, parseFloat(amount) || 0, requestedDate || new Date(), notes || '', status || 'pending']);
+    
+    res.json({ success: true, advance: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put('/api/clients/:clientId/employee-advances/:advanceId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, advanceId } = req.params;
+    const { status, adminNotes, paymentMethod, bankName, confirmedByAdmin, confirmedByEmployee } = req.body;
+    
+    let updateQuery = `
+      UPDATE employee_advances 
+      SET status = $1, 
+          admin_notes = COALESCE($2, admin_notes), 
+          payment_method = COALESCE($3, payment_method), 
+          bank_name = COALESCE($4, bank_name),
+          confirmed_by_admin = COALESCE($5, confirmed_by_admin),
+          confirmed_by_employee = COALESCE($6, confirmed_by_employee)
+    `;
+    const params = [
+      status, 
+      adminNotes !== undefined ? adminNotes : null, 
+      paymentMethod !== undefined ? paymentMethod : null, 
+      bankName !== undefined ? bankName : null,
+      confirmedByAdmin !== undefined ? confirmedByAdmin : null,
+      confirmedByEmployee !== undefined ? confirmedByEmployee : null
+    ];
+    
+    if (status === 'delivered') {
+      updateQuery += `, delivered_at = COALESCE(delivered_at, NOW())`;
+    }
+    
+    updateQuery += ` WHERE id = $7 AND client_id = $8 RETURNING *`;
+    params.push(advanceId, clientId);
+    
+    const result = await pool.query(updateQuery, params);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Anticipo no encontrado.' });
+    }
+    res.json({ success: true, advance: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/clients/:clientId/employee-advances/:advanceId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, advanceId } = req.params;
+    await pool.query(`DELETE FROM employee_advances WHERE id = $1 AND client_id = $2`, [advanceId, clientId]);
+    res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

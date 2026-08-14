@@ -648,6 +648,79 @@ const initDatabase = async () => {
             ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES product_categories(id) ON DELETE SET NULL;
         `);
         console.log("[DB Init] ✅ Tablas y alteraciones de la Fase 5 completadas con éxito.");
+
+        // --- MIGRACIONES DE LA FASE DE LABS & NÓMINA ---
+        console.log("[DB Init] 🔄 Inicializando tablas y columnas de Laboratorios, Nómina y Anticipos...");
+
+        // A. Corrección de restricción en invoice_items (Bug D)
+        await pool.query(`
+            ALTER TABLE invoice_items ALTER COLUMN product_id DROP NOT NULL;
+        `);
+
+        // B. Alteraciones de proveedores y empleados
+        await pool.query(`
+            ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS is_laboratory BOOLEAN DEFAULT FALSE;
+            
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS hire_date DATE;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS base_salary NUMERIC(10, 2) DEFAULT 0.00;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS payment_type VARCHAR(20) DEFAULT 'fixed_monthly';
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS pay_period VARCHAR(20) DEFAULT 'mensual';
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS cutoff_day_1 INT DEFAULT 15;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS cutoff_day_2 INT DEFAULT 30;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS pay_day_1 INT DEFAULT 15;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS pay_day_2 INT DEFAULT 30;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS vacation_days_accumulated NUMERIC(5, 2) DEFAULT 0.00;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS hourly_rate NUMERIC(10, 2) DEFAULT 0.00;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS employment_status VARCHAR(20) DEFAULT 'vinculado';
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS activity_status VARCHAR(20) DEFAULT 'activo';
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20) DEFAULT 'cash';
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS bank_name VARCHAR(50);
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS bank_account_number VARCHAR(100);
+        `);
+
+        // C. Crear tabla lab_jobs
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS lab_jobs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                customer_id UUID NOT NULL REFERENCES crm_customers(id) ON DELETE CASCADE,
+                formula_id UUID REFERENCES formulas(id) ON DELETE SET NULL,
+                supplier_id UUID REFERENCES suppliers(id) ON DELETE CASCADE,
+                invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL,
+                product_name VARCHAR(150),
+                lens_design VARCHAR(100),
+                lens_material VARCHAR(100),
+                lens_treatment VARCHAR(100),
+                job_value NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                notes TEXT,
+                sent_at TIMESTAMP,
+                received_at TIMESTAMP,
+                delivered_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // D. Crear tabla employee_advances
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS employee_advances (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+                requested_date DATE NOT NULL,
+                status VARCHAR(20) DEFAULT 'pending',
+                notes TEXT,
+                admin_notes TEXT,
+                payment_method VARCHAR(20) DEFAULT 'cash',
+                bank_name VARCHAR(50),
+                confirmed_by_admin BOOLEAN DEFAULT FALSE,
+                confirmed_by_employee BOOLEAN DEFAULT FALSE,
+                delivered_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("[DB Init] ✅ Tablas y alteraciones de Laboratorios, Nómina y Anticipos completadas con éxito.");
         console.log("[DB Init] ✅ Tablas y columnas de la Fase 4 creadas o verificadas con éxito.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 

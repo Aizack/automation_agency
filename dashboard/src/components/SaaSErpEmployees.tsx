@@ -11,6 +11,19 @@ interface Employee {
     pin: string;
     is_active: boolean;
     created_at: string;
+    hire_date?: string | null;
+    basic_salary?: number;
+    payment_type?: 'fixed' | 'hourly';
+    pay_period?: 'quincenal' | 'mensual';
+    cutoff_days?: string | null;
+    pay_days?: string | null;
+    vacation_days_accumulated?: number;
+    hourly_rate?: number;
+    employment_status?: 'linked' | 'unlinked';
+    activity_status?: 'active' | 'inactive';
+    payment_method?: 'cash' | 'transfer';
+    bank_name?: string | null;
+    bank_account_number?: string | null;
 }
 
 interface Department {
@@ -38,6 +51,33 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
     const [departments, setDepartments] = useState<Department[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Salary advances states
+    const [allAdvances, setAllAdvances] = useState<any[]>([]);
+    const [loadingAdvances, setLoadingAdvances] = useState(false);
+    
+    // Approval process states
+    const [processingAdv, setProcessingAdv] = useState<any | null>(null);
+    const [adminNotes, setAdminNotes] = useState('');
+    const [advActionType, setAdvActionType] = useState<'approve' | 'deliver' | 'reject'>('approve');
+    const [deliveryMethod, setDeliveryMethod] = useState<'cash' | 'transfer'>('cash');
+    const [deliveryBank, setDeliveryBank] = useState('');
+
+    // Contractual edit states
+    const [contrHireDate, setContrHireDate] = useState('');
+    const [contrBasicSalary, setContrBasicSalary] = useState('');
+    const [contrPaymentType, setContrPaymentType] = useState<'fixed' | 'hourly'>('fixed');
+    const [contrPayPeriod, setContrPayPeriod] = useState<'quincenal' | 'mensual'>('mensual');
+    const [contrCutoffDays, setContrCutoffDays] = useState('');
+    const [contrPayDays, setContrPayDays] = useState('');
+    const [contrVacations, setContrVacations] = useState('');
+    const [contrHourlyRate, setContrHourlyRate] = useState('');
+    const [contrEmpStatus, setContrEmpStatus] = useState<'linked' | 'unlinked'>('linked');
+    const [contrActStatus, setContrActStatus] = useState<'active' | 'inactive'>('active');
+    const [contrPaymentMethod, setContrPaymentMethod] = useState<'cash' | 'transfer'>('cash');
+    const [contrBankName, setContrBankName] = useState('');
+    const [contrBankAccount, setContrBankAccount] = useState('');
+    const [savingContract, setSavingContract] = useState(false);
+
     // Modals
     const [isDeptOpen, setIsDeptOpen] = useState(false);
     const [isEmpOpen, setIsEmpOpen] = useState(false);
@@ -55,7 +95,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
     const [newTaskDueDate, setNewTaskDueDate] = useState('');
     const [newTaskDueTime, setNewTaskDueTime] = useState('');
     const [newTaskCreator, setNewTaskCreator] = useState('');
-    const [detailTab, setDetailTab] = useState<'info' | 'shifts' | 'tasks'>('info');
+    const [detailTab, setDetailTab] = useState<'info' | 'shifts' | 'tasks' | 'contrato'>('info');
 
     // Payroll states
     const [isPayrollOpen, setIsPayrollOpen] = useState(false);
@@ -79,7 +119,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
     const [actionLoading, setActionLoading] = useState(false);
 
     // Turnos Panel states
-    const [activeView, setActiveView] = useState<'list' | 'shifts'>(viewMode === 'turnos' ? 'shifts' : 'list');
+    const [activeView, setActiveView] = useState<'list' | 'shifts' | 'advances'>(viewMode === 'turnos' ? 'shifts' : 'list');
     const [selectedEmpForShifts, setSelectedEmpForShifts] = useState<Employee | null>(null);
     const [shiftsTab, setShiftsTab] = useState<'hoy' | 'historial'>('hoy');
     const [shiftsSubTab, setShiftsSubTab] = useState<'semana' | 'mes' | 'todos'>('semana');
@@ -178,6 +218,113 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         }
     };
 
+    const fetchAllAdvances = async () => {
+        try {
+            setLoadingAdvances(true);
+            const res = await fetch(`/api/clients/${clientId}/employee-advances`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setAllAdvances(json.advances || []);
+            }
+        } catch (err) {
+            console.error("Error loading advances:", err);
+        } finally {
+            setLoadingAdvances(false);
+        }
+    };
+
+    const handleProcessAdvance = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!processingAdv) return;
+
+        let payload: any = {
+            adminNotes: adminNotes.trim(),
+        };
+
+        if (advActionType === 'approve') {
+            payload.status = 'in_process';
+        } else if (advActionType === 'reject') {
+            payload.status = 'rejected';
+        } else if (advActionType === 'deliver') {
+            payload.status = 'delivered';
+            payload.confirmedByAdmin = true;
+            payload.paymentMethod = deliveryMethod;
+            payload.bankName = deliveryMethod === 'transfer' ? deliveryBank : null;
+        }
+
+        try {
+            const res = await fetch(`/api/clients/${clientId}/employee-advances/${processingAdv.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (json.success) {
+                setProcessingAdv(null);
+                setAdminNotes('');
+                setDeliveryBank('');
+                fetchAllAdvances();
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (err) {
+            alert('Error al procesar el anticipo.');
+        }
+    };
+
+    const handleSaveContractInfo = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedEmpDetail) return;
+        try {
+            setSavingContract(true);
+            const res = await fetch(`/api/clients/${clientId}/employees/${selectedEmpDetail.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    name: selectedEmpDetail.name,
+                    phone: selectedEmpDetail.phone,
+                    role: selectedEmpDetail.role,
+                    department_id: selectedEmpDetail.department_id,
+                    pin: selectedEmpDetail.pin,
+                    is_active: contrActStatus === 'active',
+                    hire_date: contrHireDate || null,
+                    basic_salary: contrBasicSalary ? parseFloat(contrBasicSalary) : 0,
+                    payment_type: contrPaymentType,
+                    pay_period: contrPayPeriod,
+                    cutoff_days: contrCutoffDays || null,
+                    pay_days: contrPayDays || null,
+                    vacation_days_accumulated: contrVacations ? parseFloat(contrVacations) : 0,
+                    hourly_rate: contrHourlyRate ? parseFloat(contrHourlyRate) : 0,
+                    employment_status: contrEmpStatus,
+                    activity_status: contrActStatus,
+                    payment_method: contrPaymentMethod,
+                    bank_name: contrBankName || null,
+                    bank_account_number: contrBankAccount || null
+                })
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert('¡Configuración contractual guardada con éxito!');
+                fetchData();
+                setIsDetailOpen(false);
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (err) {
+            alert('Error al guardar contrato.');
+        } finally {
+            setSavingContract(false);
+        }
+    };
+
     const openPayrollModal = async (emp: Employee) => {
         setSelectedEmp(emp);
         setIsPayrollOpen(true);
@@ -211,14 +358,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ status: nextStatus, notes })
+                body: JSON.stringify({ status: nextStatus, adminNotes: notes })
             });
             const json = await res.json();
             if (json.success) {
                 fetchHrDocs();
             }
         } catch (err) {
-            console.error("Error updating document:", err);
+            console.error(err);
         }
     };
 
@@ -242,6 +389,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         fetchData();
         fetchHrDocs();
         fetchTodayShifts();
+        fetchAllAdvances();
     }, [clientId]);
 
     const handleCreateDept = async (e: React.FormEvent) => {
@@ -458,6 +606,21 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         setNewTaskDueDate('');
         setNewTaskCreator(localStorage.getItem('session_name') || '');
         setDetailTab('info');
+        
+        setContrHireDate(emp.hire_date || '');
+        setContrBasicSalary(emp.basic_salary?.toString() || '');
+        setContrPaymentType(emp.payment_type || 'fixed');
+        setContrPayPeriod(emp.pay_period || 'mensual');
+        setContrCutoffDays(emp.cutoff_days || '15,30');
+        setContrPayDays(emp.pay_days || '15,30');
+        setContrVacations(emp.vacation_days_accumulated?.toString() || '0');
+        setContrHourlyRate(emp.hourly_rate?.toString() || '');
+        setContrEmpStatus(emp.employment_status || 'linked');
+        setContrActStatus(emp.activity_status || 'active');
+        setContrPaymentMethod(emp.payment_method || 'cash');
+        setContrBankName(emp.bank_name || '');
+        setContrBankAccount(emp.bank_account_number || '');
+
         setIsDetailOpen(true);
     };
 
@@ -928,6 +1091,195 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         );
     };
 
+    const renderAdvancesPanel = () => {
+        return (
+            <div className="space-y-6 text-left">
+                <div className="bg-surface-container/30 border border-outline/10 rounded-2xl p-6">
+                    <h3 className="font-bold text-sm text-on-surface mb-4">Gestión de Anticipos y Adelantos de Nómina</h3>
+                    {loadingAdvances ? (
+                        <div className="text-center py-12 text-xs text-on-surface-variant animate-pulse">Cargando anticipos...</div>
+                    ) : allAdvances.length === 0 ? (
+                        <div className="text-center py-12 text-xs text-on-surface-variant italic">No hay solicitudes de anticipo registradas.</div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {allAdvances.map(adv => (
+                                <div key={adv.id} className="glass-card p-4 rounded-xl border border-outline/5 space-y-3 text-xs flex flex-col justify-between">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <h4 className="font-bold text-on-surface text-sm">{adv.employee_name} {adv.employee_last_name || ''}</h4>
+                                                <p className="text-[10px] text-on-surface-variant font-mono capitalize">{adv.employee_role}</p>
+                                            </div>
+                                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider ${
+                                                adv.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
+                                                adv.status === 'in_process' ? 'bg-blue-500/10 text-blue-500' :
+                                                adv.status === 'delivered' ? 'bg-green-500/10 text-green-500' :
+                                                'bg-red-500/10 text-red-500'
+                                            }`}>
+                                                {adv.status === 'pending' ? 'Pendiente' :
+                                                 adv.status === 'in_process' ? 'En Proceso' :
+                                                 adv.status === 'delivered' ? 'Entregado' : 'Rechazado'}
+                                            </span>
+                                        </div>
+
+                                        <div className="p-3 bg-surface-container/20 border border-outline/5 rounded-lg space-y-1">
+                                            <div className="flex justify-between font-mono font-bold text-on-surface">
+                                                <span>Monto:</span>
+                                                <span>${Number(adv.amount).toLocaleString('es-CO')}</span>
+                                            </div>
+                                            <p className="text-[10px] text-on-surface-variant">Requerido: {new Date(adv.requested_date).toLocaleDateString('es-CO')}</p>
+                                            {adv.notes && (
+                                                <p className="text-[10px] text-on-surface-variant italic">"{adv.notes}"</p>
+                                            )}
+                                        </div>
+
+                                        {adv.admin_notes && (
+                                            <div className="text-[10px] text-on-surface-variant bg-blue-500/5 p-2 rounded border border-blue-500/10">
+                                                <strong>Mensaje Admin:</strong> "{adv.admin_notes}"
+                                            </div>
+                                        )}
+
+                                        {adv.status === 'delivered' && (
+                                            <div className="text-[10px] text-on-surface-variant font-mono space-y-0.5 pt-1.5 border-t border-outline/5">
+                                                <p>Método: <span className="capitalize">{adv.payment_method === 'cash' ? 'Efectivo' : `Transferencia (${adv.bank_name || 'N/A'})`}</span></p>
+                                                {adv.delivered_at && <p>Fecha Entrega: {new Date(adv.delivered_at).toLocaleDateString('es-CO')}</p>}
+                                                <div className="pt-2 border-t border-outline/5 flex justify-between text-[9px]">
+                                                    <span>Recibo Admin: {adv.confirmed_by_admin ? '✅ Firmado' : '❌ Pendiente'}</span>
+                                                    <span>Recibo Empleado: {adv.confirmed_by_employee ? '✅ Firmado' : '❌ Pendiente'}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Action buttons */}
+                                    <div className="pt-2 border-t border-outline/5 flex flex-wrap gap-2">
+                                        {adv.status === 'pending' && (
+                                            <>
+                                                <button 
+                                                    onClick={() => {
+                                                        setProcessingAdv(adv);
+                                                        setAdvActionType('approve');
+                                                        setAdminNotes('');
+                                                    }}
+                                                    className="flex-1 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 font-bold rounded-lg border-0 transition cursor-pointer text-[10px]"
+                                                >
+                                                    Aprobar (En Proceso)
+                                                </button>
+                                                <button 
+                                                    onClick={() => {
+                                                        setProcessingAdv(adv);
+                                                        setAdvActionType('reject');
+                                                        setAdminNotes('');
+                                                    }}
+                                                    className="py-1.5 px-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold rounded-lg border-0 transition cursor-pointer text-[10px]"
+                                                >
+                                                    Rechazar
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {adv.status === 'in_process' && (
+                                            <button 
+                                                onClick={() => {
+                                                    setProcessingAdv(adv);
+                                                    setAdvActionType('deliver');
+                                                    setAdminNotes(adv.admin_notes || '');
+                                                    setDeliveryMethod('cash');
+                                                    setDeliveryBank('');
+                                                }}
+                                                className="w-full py-1.5 bg-green-500 text-white font-bold rounded-lg border-0 transition cursor-pointer text-[10px] uppercase tracking-wider hover:opacity-90"
+                                            >
+                                                Registrar Entrega / Desembolso
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Modal de Procesamiento de Anticipo */}
+                {processingAdv && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <form onSubmit={handleProcessAdvance} className="bg-surface border border-outline/10 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
+                            <h3 className="font-bold text-sm text-on-surface">
+                                {advActionType === 'approve' && 'Aprobar Anticipo'}
+                                {advActionType === 'reject' && 'Rechazar Anticipo'}
+                                {advActionType === 'deliver' && 'Registrar Desembolso de Anticipo'}
+                            </h3>
+                            <p className="text-xs text-on-surface-variant">
+                                Colaborador: <strong>{processingAdv.employee_name} {processingAdv.employee_last_name}</strong> | Monto: <strong>${Number(processingAdv.amount).toLocaleString('es-CO')}</strong>
+                            </p>
+
+                            <div className="space-y-3">
+                                {advActionType === 'deliver' && (
+                                    <>
+                                        <div className="flex flex-col gap-1">
+                                            <label className="text-xs text-on-surface-variant font-medium">Método de Desembolso *</label>
+                                            <select 
+                                                value={deliveryMethod}
+                                                onChange={(e: any) => setDeliveryMethod(e.target.value)}
+                                                className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none cursor-pointer"
+                                            >
+                                                <option value="cash">Efectivo</option>
+                                                <option value="transfer">Transferencia Bancaria / App</option>
+                                            </select>
+                                        </div>
+
+                                        {deliveryMethod === 'transfer' && (
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-xs text-on-surface-variant font-medium">Banco / Canal (Nequi, Daviplata, Bancolombia, etc) *</label>
+                                                <input 
+                                                    type="text"
+                                                    required
+                                                    value={deliveryBank}
+                                                    onChange={(e) => setDeliveryBank(e.target.value)}
+                                                    placeholder="Ej: Nequi"
+                                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                                                />
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-xs text-on-surface-variant font-medium">
+                                        {advActionType === 'approve' && 'Mensaje para el trabajador (ej: "puedes retirar en la tarde")'}
+                                        {advActionType === 'reject' && 'Motivo del Rechazo'}
+                                        {advActionType === 'deliver' && 'Notas de la transacción'}
+                                    </label>
+                                    <textarea 
+                                        value={adminNotes}
+                                        onChange={(e) => setAdminNotes(e.target.value)}
+                                        placeholder="Escribe comentarios..."
+                                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none h-20 resize-none w-full"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button 
+                                    type="button"
+                                    onClick={() => setProcessingAdv(null)}
+                                    className="px-4 py-2 border border-outline/20 text-on-surface rounded-xl hover:bg-surface-container text-xs cursor-pointer bg-transparent"
+                                >
+                                    Cancelar
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className="px-5 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold cursor-pointer border-0 hover:opacity-90 transition shadow"
+                                >
+                                    Confirmar Acción
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="space-y-6 text-on-surface">
             {/* Header */}
@@ -971,10 +1323,56 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                 </div>
             </div>
 
+            {viewMode !== 'turnos' && (
+                <div className="flex border-b border-outline/10 gap-6 mb-4">
+                    <button
+                        onClick={() => setActiveView('list')}
+                        className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
+                            activeView === 'list' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
+                        }`}
+                    >
+                        Colaboradores & Nómina
+                        {activeView === 'list' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
+                        )}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setActiveView('shifts');
+                            setSelectedEmpForShifts(null);
+                        }}
+                        className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
+                            activeView === 'shifts' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
+                        }`}
+                    >
+                        Monitoreo de Turnos
+                        {activeView === 'shifts' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
+                        )}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setActiveView('advances');
+                            fetchAllAdvances();
+                        }}
+                        className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
+                            activeView === 'advances' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
+                        }`}
+                    >
+                        Solicitudes de Anticipos
+                        {activeView === 'advances' && (
+                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
+                        )}
+                    </button>
+                </div>
+            )}
+
             {loading ? (
                 <div className="flex justify-center py-20">
                     <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 </div>
+            ) : activeView === 'advances' ? (
+                renderAdvancesPanel()
             ) : activeView === 'list' ? (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Employees list table */}
@@ -1541,27 +1939,34 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                         </div>
 
                         {/* Modal Navigation Tabs */}
-                        <div className="flex bg-surface-container/50 p-1 rounded-xl border border-outline/10 text-xs mb-4">
+                        <div className="flex bg-surface-container/50 p-1 rounded-xl border border-outline/10 text-[10px] mb-4 gap-1">
                             <button 
                                 type="button"
                                 onClick={() => setDetailTab('info')}
-                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'info' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'info' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
                             >
                                 Información General
                             </button>
                             <button 
                                 type="button"
                                 onClick={() => setDetailTab('shifts')}
-                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'shifts' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'shifts' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
                             >
-                                Registro de Turnos
+                                Asistencia
                             </button>
                             <button 
                                 type="button"
                                 onClick={() => setDetailTab('tasks')}
-                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'tasks' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'tasks' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
                             >
-                                Tareas Asignadas ({empTasks.length})
+                                Tareas ({empTasks.length})
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={() => setDetailTab('contrato')}
+                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'contrato' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
+                            >
+                                Nómina & Contrato
                             </button>
                         </div>
 
@@ -1757,6 +2162,186 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                         )}
                                     </div>
                                 </div>
+                            )}
+
+                            {detailTab === 'contrato' && (
+                                <form onSubmit={handleSaveContractInfo} className="space-y-4 text-xs text-left">
+                                    <div className="bg-white/5 p-4 rounded-xl border border-outline/5 space-y-4">
+                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider">Condiciones Contractuales</h4>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Fecha de Contratación</label>
+                                                <input 
+                                                    type="date" 
+                                                    value={contrHireDate} 
+                                                    onChange={(e) => setContrHireDate(e.target.value)}
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Días Vacaciones Acumulados</label>
+                                                <input 
+                                                    type="number" 
+                                                    step="0.1"
+                                                    value={contrVacations} 
+                                                    onChange={(e) => setContrVacations(e.target.value)}
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Estado Vinculación</label>
+                                                <select 
+                                                    value={contrEmpStatus} 
+                                                    onChange={(e: any) => setContrEmpStatus(e.target.value)}
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                >
+                                                    <option value="linked">Vinculado (Activo)</option>
+                                                    <option value="unlinked">Desvinculado (Despedido/Retirado)</option>
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Estado Actividad</label>
+                                                <select 
+                                                    value={contrActStatus} 
+                                                    onChange={(e: any) => setContrActStatus(e.target.value)}
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                >
+                                                    <option value="active">Activo (Laborando)</option>
+                                                    <option value="inactive">Inactivo (Vacaciones/Permiso/Incapacidad)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white/5 p-4 rounded-xl border border-outline/5 space-y-4">
+                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider">Esquema de Pago y Salario</h4>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Tipo de Salario</label>
+                                                <select 
+                                                    value={contrPaymentType} 
+                                                    onChange={(e: any) => setContrPaymentType(e.target.value)}
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                >
+                                                    <option value="fixed">Fijo Mensual</option>
+                                                    <option value="hourly">Pago por Horas</option>
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Periodicidad de Pago</label>
+                                                <select 
+                                                    value={contrPayPeriod} 
+                                                    onChange={(e: any) => setContrPayPeriod(e.target.value)}
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                >
+                                                    <option value="quincenal">Quincenal</option>
+                                                    <option value="mensual">Mensual</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {contrPaymentType === 'fixed' ? (
+                                                <div className="flex flex-col gap-1 col-span-2">
+                                                    <label className="text-[10px] text-on-surface-variant font-medium">Salario Mensual ($ COP)</label>
+                                                    <input 
+                                                        type="number" 
+                                                        value={contrBasicSalary} 
+                                                        onChange={(e) => setContrBasicSalary(e.target.value)}
+                                                        placeholder="Ej: 1300000"
+                                                        className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none w-full font-mono"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col gap-1 col-span-2">
+                                                    <label className="text-[10px] text-on-surface-variant font-medium">Pago por Hora ($ COP)</label>
+                                                    <input 
+                                                        type="number" 
+                                                        value={contrHourlyRate} 
+                                                        onChange={(e) => setContrHourlyRate(e.target.value)}
+                                                        placeholder="Ej: 15000"
+                                                        className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none w-full font-mono"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Fechas de Corte (ej: 15,30)</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={contrCutoffDays} 
+                                                    onChange={(e) => setContrCutoffDays(e.target.value)}
+                                                    placeholder="Ej: 15,30"
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Fechas de Pago (ej: 15,30)</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={contrPayDays} 
+                                                    onChange={(e) => setContrPayDays(e.target.value)}
+                                                    placeholder="Ej: 15,30"
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white/5 p-4 rounded-xl border border-outline/5 space-y-4">
+                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider">Medio de Recepción de Pago</h4>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Medio</label>
+                                                <select 
+                                                    value={contrPaymentMethod} 
+                                                    onChange={(e: any) => setContrPaymentMethod(e.target.value)}
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                >
+                                                    <option value="cash">Efectivo</option>
+                                                    <option value="transfer">Transferencia</option>
+                                                </select>
+                                            </div>
+                                            {contrPaymentMethod === 'transfer' && (
+                                                <>
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[10px] text-on-surface-variant font-medium">Banco / Canal</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={contrBankName} 
+                                                            onChange={(e) => setContrBankName(e.target.value)}
+                                                            placeholder="Ej: Nequi"
+                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[10px] text-on-surface-variant font-medium">Número Cuenta</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={contrBankAccount} 
+                                                            onChange={(e) => setContrBankAccount(e.target.value)}
+                                                            placeholder="Ej: 3001234567"
+                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono"
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        type="submit" 
+                                        disabled={savingContract}
+                                        className="w-full py-2.5 bg-primary text-on-primary font-bold text-xs rounded-xl hover:opacity-90 active:scale-95 transition cursor-pointer border-0 shadow"
+                                    >
+                                        {savingContract ? 'Guardando Contrato...' : 'Guardar Configuración de Nómina'}
+                                    </button>
+                                </form>
                             )}
 
                         </div>

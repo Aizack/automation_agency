@@ -14,6 +14,7 @@ interface Supplier {
     email: string | null;
     address: string | null;
     contact_name: string | null;
+    is_laboratory: boolean;
     categories: Array<{ id: string; name: string }>;
     created_at: string;
 }
@@ -39,7 +40,13 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
     const [supplierEmail, setSupplierEmail] = useState('');
     const [supplierAddress, setSupplierAddress] = useState('');
     const [supplierContact, setSupplierContact] = useState('');
+    const [supplierIsLab, setSupplierIsLab] = useState(false);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    
+    // Laboratory jobs view states
+    const [selectedLabForJobs, setSelectedLabForJobs] = useState<Supplier | null>(null);
+    const [labJobsForSelected, setLabJobsForSelected] = useState<any[]>([]);
+    const [loadingSelectedJobs, setLoadingSelectedJobs] = useState(false);
     
     // Category Form
     const [categoryName, setCategoryName] = useState('');
@@ -70,6 +77,23 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
         }
     };
 
+    const fetchJobsForLab = async (supplierId: string) => {
+        try {
+            setLoadingSelectedJobs(true);
+            const res = await fetch(`/api/clients/${clientId}/lab-jobs?supplierId=${supplierId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setLabJobsForSelected(json.labJobs || []);
+            }
+        } catch (err) {
+            console.error("Error loading lab jobs for supplier:", err);
+        } finally {
+            setLoadingSelectedJobs(false);
+        }
+    };
+
     useEffect(() => {
         fetchData();
     }, [clientId]);
@@ -82,6 +106,7 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
             setSupplierEmail(sup.email || '');
             setSupplierAddress(sup.address || '');
             setSupplierContact(sup.contact_name || '');
+            setSupplierIsLab(!!sup.is_laboratory);
             setSelectedCategories(sup.categories.map(c => c.id));
         } else {
             setEditingSupplier(null);
@@ -90,6 +115,7 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
             setSupplierEmail('');
             setSupplierAddress('');
             setSupplierContact('');
+            setSupplierIsLab(false);
             setSelectedCategories([]);
         }
         setIsSupplierModalOpen(true);
@@ -105,6 +131,7 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
             email: supplierEmail.trim() || null,
             address: supplierAddress.trim() || null,
             contact_name: supplierContact.trim() || null,
+            is_laboratory: supplierIsLab,
             category_ids: selectedCategories
         };
 
@@ -247,7 +274,12 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
                             <div>
                                 <div className="flex justify-between items-start mb-3">
                                     <div>
-                                        <h4 className="font-bold text-sm text-on-surface">{sup.name}</h4>
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="font-bold text-sm text-on-surface">{sup.name}</h4>
+                                            {sup.is_laboratory && (
+                                                <span className="px-2.5 py-0.5 rounded-full text-[8px] font-bold bg-primary/10 text-primary uppercase tracking-wider">Laboratorio</span>
+                                            )}
+                                        </div>
                                         {sup.contact_name && (
                                             <p className="text-xs text-on-surface-variant opacity-70 mt-0.5 flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-[12px]">person</span>
@@ -291,6 +323,18 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
                                             <span className="material-symbols-outlined text-[14px]">location_on</span>
                                             {sup.address}
                                         </p>
+                                    )}
+                                    {sup.is_laboratory && (
+                                        <button 
+                                            onClick={() => {
+                                                setSelectedLabForJobs(sup);
+                                                fetchJobsForLab(sup.id);
+                                            }}
+                                            className="mt-3 w-full py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider rounded-xl transition border-0 cursor-pointer flex items-center justify-center gap-1.5"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">science</span>
+                                            Ver Trabajos Asignados
+                                        </button>
                                     )}
                                 </div>
                             </div>
@@ -380,6 +424,17 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
                                     className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-sm focus:border-primary text-on-surface outline-none transition"
                                 />
                             </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 py-2">
+                            <input 
+                                type="checkbox" 
+                                id="is_laboratory"
+                                checked={supplierIsLab}
+                                onChange={(e) => setSupplierIsLab(e.target.checked)}
+                                className="w-4 h-4 text-primary bg-surface-container border-outline/20 rounded cursor-pointer"
+                            />
+                            <label htmlFor="is_laboratory" className="text-xs text-on-surface font-medium cursor-pointer">Este proveedor es un Laboratorio / Taller (Lentes formuladas)</label>
                         </div>
 
                         <div className="space-y-2">
@@ -482,6 +537,78 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
                                 type="button"
                                 onClick={() => setIsCategoryModalOpen(false)}
                                 className="px-4 py-2 bg-surface-container border border-outline/20 text-on-surface text-xs font-bold rounded-xl transition cursor-pointer"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {selectedLabForJobs && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-surface border border-outline/10 p-6 rounded-2xl w-full max-w-lg shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-2 shrink-0">
+                            <div>
+                                <h3 className="font-bold text-sm text-on-surface">Trabajos Asignados</h3>
+                                <p className="text-xs text-on-surface-variant">Laboratorio: {selectedLabForJobs.name}</p>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setSelectedLabForJobs(null);
+                                    setLabJobsForSelected([]);
+                                }}
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        <div className="flex-grow overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+                            {loadingSelectedJobs ? (
+                                <p className="text-xs text-on-surface-variant italic py-6 text-center animate-pulse">Cargando trabajos...</p>
+                            ) : labJobsForSelected.length === 0 ? (
+                                <p className="text-xs text-on-surface-variant/60 italic py-6 text-center">Este laboratorio no tiene trabajos de lentes asignados.</p>
+                            ) : (
+                                labJobsForSelected.map(job => (
+                                    <div key={job.id} className="p-3.5 bg-surface-container/20 border border-outline/5 rounded-xl text-xs space-y-2 text-left">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="font-bold text-on-surface text-xs">{job.customer_name} {job.customer_last_name}</h4>
+                                                <p className="text-[9px] text-on-surface-variant">{new Date(job.created_at).toLocaleDateString('es-CO')}</p>
+                                            </div>
+                                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider ${
+                                                job.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
+                                                job.status === 'sent' ? 'bg-blue-500/10 text-blue-500' :
+                                                job.status === 'received' ? 'bg-green-500/10 text-green-500' :
+                                                'bg-emerald-500/20 text-emerald-500'
+                                            }`}>
+                                                {job.status === 'pending' ? 'Pendiente' :
+                                                 job.status === 'sent' ? 'En Taller' :
+                                                 job.status === 'received' ? 'Listo en Tienda' : 'Entregado'}
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 p-2 bg-surface-container/30 rounded-lg text-[9px] font-mono leading-tight">
+                                            <div>Lente: <strong>{job.product_name}</strong></div>
+                                            <div>Costo: <strong>${Number(job.job_value || 0).toLocaleString('es-CO')}</strong></div>
+                                            {job.lens_design && <div className="col-span-2">Diseño: <strong>{job.lens_design}</strong></div>}
+                                        </div>
+                                        {job.notes && (
+                                            <p className="text-[9px] text-on-surface-variant/70 italic bg-surface-container/10 p-1.5 rounded">
+                                                "{job.notes}"
+                                            </p>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="flex justify-end pt-2 border-t border-outline/5 shrink-0">
+                            <button 
+                                onClick={() => {
+                                    setSelectedLabForJobs(null);
+                                    setLabJobsForSelected([]);
+                                }}
+                                className="px-4 py-2 border border-outline/20 text-on-surface rounded-xl hover:bg-surface-container text-xs cursor-pointer bg-transparent"
                             >
                                 Cerrar
                             </button>

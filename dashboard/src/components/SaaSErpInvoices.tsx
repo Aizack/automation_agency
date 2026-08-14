@@ -71,7 +71,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
     
     // Condiciones de Pago
     const [paymentMethod, setPaymentMethod] = useState<'contado' | 'tarjeta' | 'cuotas'>('contado');
-    const [installmentsCount, setInstallmentsCount] = useState<number>(1);
+    const [installmentsCount, setInstallmentsCount] = useState<number | string>(1);
     const [installmentFrequency, setInstallmentFrequency] = useState<'semanal' | 'quincenal' | 'mensual'>('mensual');
     const [abono, setAbono] = useState('0'); // Abono inicial
     const [dueDate, setDueDate] = useState('');
@@ -150,13 +150,14 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
     // Calcular fecha de vencimiento según la frecuencia elegida
     useEffect(() => {
         if (paymentMethod === 'cuotas') {
+            const count = typeof installmentsCount === 'string' ? (parseInt(installmentsCount, 10) || 0) : installmentsCount;
             const date = new Date();
             if (installmentFrequency === 'semanal') {
-                date.setDate(date.getDate() + installmentsCount * 7);
+                date.setDate(date.getDate() + count * 7);
             } else if (installmentFrequency === 'quincenal') {
-                date.setDate(date.getDate() + installmentsCount * 15);
+                date.setDate(date.getDate() + count * 15);
             } else {
-                date.setMonth(date.getMonth() + installmentsCount);
+                date.setMonth(date.getMonth() + count);
             }
             setDueDate(date.toISOString().split('T')[0]);
         } else {
@@ -266,7 +267,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             totalAmount,
             dueDate,
             paymentMethod,
-            installmentsCount: paymentMethod === 'cuotas' ? installmentsCount : 1,
+            installmentsCount: paymentMethod === 'cuotas' ? (parseInt(String(installmentsCount)) || 1) : 1,
             installmentFrequency: paymentMethod === 'cuotas' ? installmentFrequency : null,
             abono: paymentMethod === 'cuotas' ? parseFloat(abono) || 0 : 0,
             deliveryMethod,
@@ -748,7 +749,14 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                                 type="number" 
                                                 className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" 
                                                 value={installmentsCount} 
-                                                onChange={(e) => setInstallmentsCount(Math.max(1, parseInt(e.target.value) || 1))}
+                                                onChange={(e) => {
+                                                     const val = e.target.value;
+                                                     if (val === '') {
+                                                         setInstallmentsCount('');
+                                                     } else {
+                                                         setInstallmentsCount(Math.max(1, parseInt(val) || 1));
+                                                     }
+                                                 }}
                                                 min="1"
                                                 required
                                             />

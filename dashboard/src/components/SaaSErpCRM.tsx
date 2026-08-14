@@ -43,6 +43,10 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
     const [selectedCust, setSelectedCust] = useState<Customer | null>(null);
     const [custFormulas, setCustFormulas] = useState<any[]>([]);
     const [loadingFormulas, setLoadingFormulas] = useState(false);
+    const [custAppointments, setCustAppointments] = useState<any[]>([]);
+    const [loadingAppointments, setLoadingAppointments] = useState(false);
+    const [custLabJobs, setCustLabJobs] = useState<any[]>([]);
+    const [loadingLabJobs, setLoadingLabJobs] = useState(false);
 
     // Form inputs
     const [custType, setCustType] = useState<'persona' | 'empresa'>('persona');
@@ -341,6 +345,9 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
         setSelectedCust(cust);
         setIsProfileOpen(true);
         setLoadingFormulas(true);
+        setLoadingAppointments(true);
+        setLoadingLabJobs(true);
+        
         try {
             const res = await fetch(`/api/clients/${clientId}/formulas?customerId=${cust.id}`);
             const json = await res.json();
@@ -351,6 +358,36 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
             console.error("Error fetching patient formulas history:", err);
         } finally {
             setLoadingFormulas(false);
+        }
+
+        try {
+            const res = await fetch(`/api/clients/${clientId}/appointments`);
+            const json = await res.json();
+            if (json.success) {
+                const filteredApps = (json.appointments || []).filter((app: any) => 
+                    app.crm_customer_id === cust.id || 
+                    (app.customer_document_number && app.customer_document_number === cust.document_number) ||
+                    (app.customer_phone && app.customer_phone === cust.phone)
+                );
+                setCustAppointments(filteredApps);
+            }
+        } catch (err) {
+            console.error("Error fetching patient appointments:", err);
+        } finally {
+            setLoadingAppointments(false);
+        }
+
+        try {
+            const res = await fetch(`/api/clients/${clientId}/lab-jobs`);
+            const json = await res.json();
+            if (json.success) {
+                const filteredJobs = (json.labJobs || []).filter((job: any) => job.customer_id === cust.id);
+                setCustLabJobs(filteredJobs);
+            }
+        } catch (err) {
+            console.error("Error fetching patient lab jobs:", err);
+        } finally {
+            setLoadingLabJobs(false);
         }
     };
 
@@ -889,6 +926,78 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                                                              {form.notes && <p className="mt-1 italic">"{form.notes}"</p>}
                                                          </div>
                                                     )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Historial de Citas Agendadas (Bug B) */}
+                            <div className="space-y-3">
+                                <h4 className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline/5 pb-1">Historial de Citas</h4>
+                                {loadingAppointments ? (
+                                    <p className="text-xs text-on-surface-variant italic py-1 animate-pulse">Cargando historial de citas...</p>
+                                ) : custAppointments.length === 0 ? (
+                                    <p className="text-on-surface-variant/60 italic py-2">No se registran citas en la agenda para este paciente.</p>
+                                ) : (
+                                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                        {custAppointments.map(app => (
+                                            <div key={app.id} className="flex justify-between items-center p-3 bg-surface-container/20 border border-outline/5 rounded-xl text-xs">
+                                                <div>
+                                                    <p className="font-bold text-on-surface">📅 {new Date(app.appointment_date).toLocaleDateString('es-CO')} - {new Date(app.appointment_date).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</p>
+                                                    <p className="text-[10px] text-on-surface-variant mt-0.5">Motivo: {app.visit_reason || 'Sin especificar'} {app.visit_reason_details ? `(${app.visit_reason_details})` : ''}</p>
+                                                </div>
+                                                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                                    app.status === 'confirmed' ? 'bg-green-500/10 text-green-500' :
+                                                    app.status === 'canceled' ? 'bg-red-500/10 text-red-500' :
+                                                    app.status === 'attended' ? 'bg-blue-500/10 text-blue-500' :
+                                                    'bg-yellow-500/10 text-yellow-500'
+                                                }`}>
+                                                    {app.status === 'confirmed' ? 'Confirmada' :
+                                                     app.status === 'canceled' ? 'Cancelada' :
+                                                     app.status === 'attended' ? 'Atendida' : 'Pendiente'}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Trabajos de Laboratorio (Lentes) */}
+                            {category === 'optica' && (
+                                <div className="space-y-3">
+                                    <h4 className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline/5 pb-1">Trabajos de Laboratorio (Lentes)</h4>
+                                    {loadingLabJobs ? (
+                                        <p className="text-xs text-on-surface-variant italic py-1 animate-pulse">Cargando órdenes de laboratorio...</p>
+                                    ) : custLabJobs.length === 0 ? (
+                                        <p className="text-on-surface-variant/60 italic py-2">No se registran trabajos de taller para este paciente.</p>
+                                    ) : (
+                                        <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                            {custLabJobs.map(job => (
+                                                <div key={job.id} className="p-3 bg-surface-container/20 border border-outline/5 rounded-xl space-y-1.5 text-xs">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-bold text-on-surface">🔬 {job.product_name || 'Lente Formulada'}</span>
+                                                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider ${
+                                                            job.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
+                                                            job.status === 'sent' ? 'bg-blue-500/10 text-blue-500' :
+                                                            job.status === 'received' ? 'bg-green-500/10 text-green-500' :
+                                                            job.status === 'delivered' ? 'bg-emerald-500/20 text-emerald-500' :
+                                                            'bg-red-500/10 text-red-500'
+                                                        }`}>
+                                                            {job.status === 'pending' ? 'Pendiente' :
+                                                             job.status === 'sent' ? 'En Laboratorio' :
+                                                             job.status === 'received' ? 'En Tienda' :
+                                                             job.status === 'delivered' ? 'Entregado' : 'Cancelado'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-[10px] text-on-surface-variant font-mono">
+                                                        Diseño: {job.lens_design || 'N/A'} | Material: {job.lens_material || 'N/A'} | Tratamiento: {job.lens_treatment || 'N/A'}
+                                                    </div>
+                                                    <div className="text-[10px] text-on-surface-variant flex justify-between border-t border-outline/5 pt-1.5">
+                                                        <span>Lab: {job.supplier_name || 'Sin asignar'}</span>
+                                                        {job.delivered_at && <span>Entregado: {new Date(job.delivered_at).toLocaleDateString('es-CO')}</span>}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>

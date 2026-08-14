@@ -62,7 +62,7 @@ export const EmployeePortal: React.FC = () => {
     const [crmCustomers, setCrmCustomers] = useState<any[]>([]);
     const [selectedCrmCustomerId, setSelectedCrmCustomerId] = useState<string>('');
     const [showCrmSuggestions, setShowCrmSuggestions] = useState(false);
-    const [activeTab, setActiveTab] = useState<'turnos' | 'tareas' | 'solicitudes' | 'chat' | 'campanias'>('turnos');
+    const [activeTab, setActiveTab] = useState<'turnos' | 'tareas' | 'solicitudes' | 'chat' | 'campanias' | 'finanzas'>('turnos');
 
     // Timer Interval ref
     const [timerActive, setTimerActive] = useState(false);
@@ -115,6 +115,100 @@ export const EmployeePortal: React.FC = () => {
     const [chatChannel, setChatChannel] = useState('general');
     const [chatLoading, setChatLoading] = useState(false);
     const [employees, setEmployees] = useState<any[]>([]);
+
+    // Salary Advances States
+    const [myAdvances, setMyAdvances] = useState<any[]>([]);
+    const [advLoading, setAdvLoading] = useState(false);
+    const [advAmount, setAdvAmount] = useState('');
+    const [advDate, setAdvDate] = useState('');
+    const [advNotes, setAdvNotes] = useState('');
+
+    const fetchMyAdvances = async () => {
+        const storedToken = localStorage.getItem('emp_token') || employeeToken;
+        const storedClientId = localStorage.getItem('emp_client_id') || clientId;
+        const storedEmpId = localStorage.getItem('emp_id') || employeeId;
+        if (!storedClientId || !storedToken || !storedEmpId) return;
+        try {
+            setAdvLoading(true);
+            const res = await fetch(`/api/clients/${storedClientId}/employee-advances?employeeId=${storedEmpId}`, {
+                headers: { 'Authorization': `Bearer ${storedToken}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setMyAdvances(json.advances || []);
+            }
+        } catch (err) {
+            console.error("Error loading employee advances:", err);
+        } finally {
+            setAdvLoading(false);
+        }
+    };
+
+    const handleRequestAdvance = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const storedToken = localStorage.getItem('emp_token') || employeeToken;
+        const storedClientId = localStorage.getItem('emp_client_id') || clientId;
+        const storedEmpId = localStorage.getItem('emp_id') || employeeId;
+        if (!storedClientId || !storedToken || !storedEmpId || !advAmount) return;
+
+        try {
+            const res = await fetch(`/api/clients/${storedClientId}/employee-advances`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${storedToken}`
+                },
+                body: JSON.stringify({
+                    employeeId: storedEmpId,
+                    amount: advAmount,
+                    requestedDate: advDate || new Date().toISOString().split('T')[0],
+                    notes: advNotes,
+                    status: 'pending'
+                })
+            });
+            const json = await res.json();
+            if (json.success) {
+                setAdvAmount('');
+                setAdvDate('');
+                setAdvNotes('');
+                fetchMyAdvances();
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (err) {
+            alert('Error al solicitar anticipo.');
+        }
+    };
+
+    const handleConfirmAdvanceDelivery = async (advanceId: string) => {
+        const storedToken = localStorage.getItem('emp_token') || employeeToken;
+        const storedClientId = localStorage.getItem('emp_client_id') || clientId;
+        if (!storedClientId || !storedToken) return;
+
+        if (!confirm('¿Confirmas que has recibido el dinero de este anticipo?')) return;
+
+        try {
+            const res = await fetch(`/api/clients/${storedClientId}/employee-advances/${advanceId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${storedToken}`
+                },
+                body: JSON.stringify({
+                    confirmedByEmployee: true,
+                    status: 'delivered'
+                })
+            });
+            const json = await res.json();
+            if (json.success) {
+                fetchMyAdvances();
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (err) {
+            alert('Error al confirmar recibido.');
+        }
+    };
 
     const fetchEmployees = async () => {
         const storedToken = localStorage.getItem('emp_token') || employeeToken;
@@ -287,6 +381,12 @@ export const EmployeePortal: React.FC = () => {
             if (chatInterval) clearInterval(chatInterval);
         };
     }, [isAuthenticated, activeTab, chatChannel]);
+
+    useEffect(() => {
+        if (isAuthenticated && activeTab === 'finanzas') {
+            fetchMyAdvances();
+        }
+    }, [isAuthenticated, activeTab, clientId, employeeToken]);
 
     // LOGIN ACTION
     const handleLogin = async (e: React.FormEvent) => {
@@ -1047,6 +1147,17 @@ export const EmployeePortal: React.FC = () => {
                             <span className="material-symbols-outlined text-[15px] opacity-70">smart_toy</span>
                             Chat IA
                         </button>
+                        <button 
+                            onClick={() => setActiveTab('finanzas')}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                activeTab === 'finanzas' 
+                                    ? 'bg-white/5 text-on-surface sidebar-item-active font-medium' 
+                                    : 'bg-transparent text-on-surface-variant/80 hover:bg-white/5 hover:text-on-surface font-normal'
+                             }`}
+                        >
+                             <span className="material-symbols-outlined text-[15px] opacity-70">payments</span>
+                             Mi Nómina & Anticipos
+                        </button>
                     </nav>
                 </div>
 
@@ -1126,6 +1237,15 @@ export const EmployeePortal: React.FC = () => {
                     >
                         <span className="material-symbols-outlined">smart_toy</span>
                         Chat IA
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('finanzas')}
+                        className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                            activeTab === 'finanzas' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined">payments</span>
+                        Nómina
                     </button>
                 </nav>
 
@@ -1977,6 +2097,154 @@ export const EmployeePortal: React.FC = () => {
                                 <span className="material-symbols-outlined text-[20px]">send</span>
                             </button>
                         </form>
+                    </div>
+                )}
+
+                {/* TAB 5: MI NÓMINA & ANTICIPOS */}
+                {activeTab === 'finanzas' && (
+                    <div className="space-y-6">
+                        {/* 1. Resumen contractual */}
+                        <div className="glass-card p-5 rounded-2xl border border-outline/10 space-y-4 text-left">
+                            <h3 className="font-bold text-xs uppercase tracking-wider text-primary">Mi Contrato & Condiciones</h3>
+                            {(() => {
+                                const me = employees.find(e => e.id === employeeId);
+                                if (!me) return <p className="text-xs text-on-surface-variant italic">Cargando detalles contractuales...</p>;
+                                return (
+                                    <div className="grid grid-cols-2 gap-4 text-xs">
+                                        <div className="space-y-1.5">
+                                            <p className="text-on-surface-variant">Fecha de Contratación:</p>
+                                            <p className="font-bold text-on-surface">{me.hire_date ? new Date(me.hire_date).toLocaleDateString('es-CO') : 'No registrada'}</p>
+                                            
+                                            <p className="text-on-surface-variant mt-2">Salario Base:</p>
+                                            <p className="font-bold text-on-surface">
+                                                {me.payment_type === 'hourly' 
+                                                    ? `$${Number(me.hourly_rate || 0).toLocaleString('es-CO')} / Hora`
+                                                    : `$${Number(me.basic_salary || 0).toLocaleString('es-CO')} / Mensual`}
+                                            </p>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <p className="text-on-surface-variant">Días Vacaciones Acumulados:</p>
+                                            <p className="font-bold text-green-500">{Number(me.vacation_days_accumulated || 0).toFixed(1)} días</p>
+
+                                            <p className="text-on-surface-variant mt-2">Frecuencia & Método de Pago:</p>
+                                            <p className="font-bold text-on-surface capitalize">
+                                                {me.pay_period || 'Mensual'} - {me.payment_method === 'cash' ? 'Efectivo' : `Transferencia (${me.bank_name || 'N/A'})`}
+                                            </p>
+                                        </div>
+                                        <div className="col-span-2 border-t border-outline/5 pt-2 flex justify-between text-[10px] text-on-surface-variant">
+                                            <span>Estado Vinculación: <strong className="uppercase">{me.employment_status || 'Vinculado'}</strong></span>
+                                            <span>Estado Actividad: <strong className="uppercase">{me.activity_status || 'Activo'}</strong></span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+
+                        {/* 2. Solicitar Anticipo Form */}
+                        <div className="glass-card p-5 rounded-2xl border border-outline/10 space-y-4 text-left">
+                            <h3 className="font-bold text-xs uppercase tracking-wider text-primary">Solicitar Anticipo</h3>
+                            <form onSubmit={handleRequestAdvance} className="space-y-3.5">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] text-on-surface-variant font-medium">Monto a solicitar ($ COP) *</label>
+                                        <input 
+                                            type="number" 
+                                            required
+                                            value={advAmount}
+                                            onChange={(e) => setAdvAmount(e.target.value)}
+                                            placeholder="Ej: 150000"
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary w-full"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] text-on-surface-variant font-medium">Fecha Requerida *</label>
+                                        <input 
+                                            type="date" 
+                                            required
+                                            value={advDate}
+                                            onChange={(e) => setAdvDate(e.target.value)}
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary w-full"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[10px] text-on-surface-variant font-medium">Motivo / Notas adicionales</label>
+                                    <textarea 
+                                        value={advNotes}
+                                        onChange={(e) => setAdvNotes(e.target.value)}
+                                        placeholder="Ej: Para cubrir transporte o medicamentos"
+                                        className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none h-16 resize-none w-full"
+                                    />
+                                </div>
+                                <button 
+                                    type="submit"
+                                    className="w-full py-2.5 bg-primary text-on-primary font-bold text-xs rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer border-0"
+                                >
+                                    Enviar Solicitud
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* 3. Historial de Anticipos */}
+                        <div className="glass-card p-5 rounded-2xl border border-outline/10 space-y-4 text-left">
+                            <h3 className="font-bold text-xs uppercase tracking-wider text-primary">Historial de Anticipos</h3>
+                            {advLoading ? (
+                                <p className="text-xs text-on-surface-variant italic py-4 text-center">Cargando historial...</p>
+                            ) : myAdvances.length === 0 ? (
+                                <p className="text-xs text-on-surface-variant/60 italic py-4 text-center">No registras solicitudes de anticipo.</p>
+                            ) : (
+                                <div className="space-y-3 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
+                                    {myAdvances.map(adv => (
+                                        <div key={adv.id} className="p-3 bg-surface-container/20 border border-outline/5 rounded-xl space-y-2 text-xs">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-bold text-on-surface text-[13px] font-mono">${Number(adv.amount).toLocaleString('es-CO')}</span>
+                                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider ${
+                                                    adv.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
+                                                    adv.status === 'in_process' ? 'bg-blue-500/10 text-blue-500' :
+                                                    adv.status === 'delivered' ? 'bg-green-500/10 text-green-500' :
+                                                    'bg-red-500/10 text-red-500'
+                                                }`}>
+                                                    {adv.status === 'pending' ? 'Pendiente' :
+                                                     adv.status === 'in_process' ? 'En Proceso' :
+                                                     adv.status === 'delivered' ? 'Entregado' : 'Rechazado'}
+                                                </span>
+                                            </div>
+                                            <div className="text-[10px] text-on-surface-variant space-y-0.5 font-sans">
+                                                <p>Fecha Solicitud: {new Date(adv.requested_date).toLocaleDateString('es-CO')}</p>
+                                                {adv.notes && <p className="italic">Motivo: "{adv.notes}"</p>}
+                                                {adv.admin_notes && (
+                                                    <p className="text-blue-400 font-medium">Nota Admin: "{adv.admin_notes}"</p>
+                                                )}
+                                                {adv.status === 'delivered' && (
+                                                    <p className="text-green-500">
+                                                        Vía: {adv.payment_method === 'cash' ? 'Efectivo' : `Transferencia (${adv.bank_name || 'N/A'})`}
+                                                        {adv.delivered_at && ` | Entregado: ${new Date(adv.delivered_at).toLocaleDateString('es-CO')}`}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* Doble Firma / Confirmación de Empleado */}
+                                            {adv.status === 'delivered' && (
+                                                <div className="pt-2 border-t border-outline/5 flex items-center justify-between gap-2 font-mono text-[9px] text-on-surface-variant">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span>Firma Admin: {adv.confirmed_by_admin ? '✅ Firmado' : '❌ Pendiente'}</span>
+                                                        <span>Firma Empleado: {adv.confirmed_by_employee ? '✅ Firmado' : '❌ Pendiente'}</span>
+                                                    </div>
+                                                    {!adv.confirmed_by_employee && (
+                                                        <button 
+                                                            onClick={() => handleConfirmAdvanceDelivery(adv.id)}
+                                                            className="px-3 py-1 bg-green-500 text-white text-[9px] font-bold uppercase rounded-lg border-0 hover:bg-green-600 transition cursor-pointer"
+                                                        >
+                                                            Firma Recibido
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
