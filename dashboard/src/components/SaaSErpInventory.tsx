@@ -76,29 +76,7 @@ const BarcodeSVG: React.FC<{ value: string; size?: 'sm' | 'md' }> = ({ value, si
     );
 };
 
-const frameMaterials = [
-    'Plástico inyectado',
-    'Pasta',
-    'Acetato',
-    'TR-90',
-    'Acero',
-    'Metal',
-    'Titanio',
-    'Madera',
-    'Fibra de carbono'
-];
 
-const frameStyles = [
-    'Aviador',
-    'Wayfarer',
-    'Redondo',
-    'Clubmaster',
-    'Cat Eye',
-    'Ovalado',
-    'Rectangular',
-    'Hexagonal',
-    'Pantos'
-];
 
 interface ColorOption {
     name: string;
@@ -123,6 +101,36 @@ const colorOptions: ColorOption[] = [
 const getColorPreview = (name: string): string => {
     const opt = colorOptions.find(o => o.value.toLowerCase() === (name || '').toLowerCase() || o.name.toLowerCase() === (name || '').toLowerCase());
     return opt ? opt.preview : '#808080';
+};
+
+// Sub-componente para edición inline de promociones
+const FieldWrapper: React.FC<{ 
+    fieldId: string;
+    label: string;
+    hidden?: boolean;
+    onToggleHidden?: (fieldId: string) => void;
+    children: React.ReactNode;
+}> = ({ fieldId, label, hidden = false, onToggleHidden, children }) => {
+    if (hidden) return null;
+    
+    return (
+        <div className="flex flex-col gap-1.5 relative group">
+            <div className="flex items-center justify-between gap-2">
+                <label className="text-xs text-on-surface-variant font-medium">{label}</label>
+                {onToggleHidden && (
+                    <button
+                        type="button"
+                        onClick={() => onToggleHidden(fieldId)}
+                        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-500/20 text-red-400 rounded transition cursor-pointer border-0 bg-transparent text-xs transition"
+                        title="Remover este campo"
+                    >
+                        <span className="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                )}
+            </div>
+            {children}
+        </div>
+    );
 };
 
 // Sub-componente para edición inline de promociones
@@ -186,9 +194,12 @@ const PromoDiscountRow: React.FC<{
 export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, category = 'optica' }) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [addProductStep, setAddProductStep] = useState<'closed' | 'open'>('closed');
+    const isFormOpen = addProductStep !== 'closed';
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [activeTab, setActiveTab] = useState<'catalog' | 'promotions'>('catalog');
+    const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set());
+    const [showCreateCategoryPrompt, setShowCreateCategoryPrompt] = useState(false);
 
     // Form fields
     const [name, setName] = useState('');
@@ -203,6 +214,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
     const [style, setStyle] = useState('');
     const [color, setColor] = useState('');
     const [promoDiscount, setPromoDiscount] = useState<number | ''>('');
+    const [customAttrs, setCustomAttrs] = useState<any>({});
 
     // Search and filter states
     const [searchTerm, setSearchTerm] = useState('');
@@ -223,6 +235,16 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
     const [refillQuantity, setRefillQuantity] = useState<number | ''>('');
     const [isRefillModalOpen, setIsRefillModalOpen] = useState(false);
     const [printAfterRefill, setPrintAfterRefill] = useState(true);
+
+    const [dynamicColorOptions, setDynamicColorOptions] = useState<ColorOption[]>(() => {
+        const stored = localStorage.getItem(`custom_colors_${clientId}`);
+        const parsed = stored ? JSON.parse(stored) : [];
+        return [...colorOptions, ...parsed];
+    });
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [showNewColorPrompt, setShowNewColorPrompt] = useState(false);
+    const [newColorName, setNewColorName] = useState('');
+    const [newColorHex, setNewColorHex] = useState('#3b82f6');
 
     const searchInputRef = useRef<HTMLInputElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -259,6 +281,72 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
         }
     };
 
+    const handleAddCustomColor = () => {
+        if (!newColorName.trim()) return;
+        const colorName = newColorName.trim();
+        const exists = dynamicColorOptions.some(c => c.name.toLowerCase() === colorName.toLowerCase());
+        if (exists) {
+            alert('Este color ya existe en la lista.');
+            return;
+        }
+
+        const newOption: ColorOption = {
+            name: colorName,
+            value: colorName,
+            preview: newColorHex
+        };
+
+        const stored = localStorage.getItem(`custom_colors_${clientId}`);
+        const parsed = stored ? JSON.parse(stored) : [];
+        const nextCustomColors = [...parsed, newOption];
+        localStorage.setItem(`custom_colors_${clientId}`, JSON.stringify(nextCustomColors));
+
+        setDynamicColorOptions([...colorOptions, ...nextCustomColors]);
+        setColor(colorName);
+        setNewColorName('');
+        setShowNewColorPrompt(false);
+    };
+
+    const handleSelectCategory = (catId: string) => {
+        setCategoryId(catId);
+        setHiddenFields(new Set());
+    };
+
+    const handleCreateCategory = async () => {
+        if (!newCategoryName.trim()) return;
+        try {
+            const res = await fetch(`/api/clients/${clientId}/categories`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ name: newCategoryName })
+            });
+            const json = await res.json();
+            if (json.success) {
+                await fetchCategories();
+                setCategoryId(json.category.id.toString());
+                setNewCategoryName('');
+                setShowCreateCategoryPrompt(false);
+            } else {
+                alert(json.error || 'Error al crear la categoría.');
+            }
+        } catch (err: any) {
+            alert('Error de conexión al crear categoría: ' + err.message);
+        }
+    };
+
+    const toggleFieldHidden = (fieldName: string) => {
+        const newHidden = new Set(hiddenFields);
+        if (newHidden.has(fieldName)) {
+            newHidden.delete(fieldName);
+        } else {
+            newHidden.add(fieldName);
+        }
+        setHiddenFields(newHidden);
+    };
+
     useEffect(() => {
         fetchProducts();
         fetchCategories();
@@ -289,7 +377,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
             style: style || null,
             color: color || null,
             promo_discount: promoDiscount === '' ? 0 : promoDiscount,
-            category_id: categoryId || null
+            category_id: categoryId || null,
+            attributes: customAttrs
         };
 
         try {
@@ -329,7 +418,23 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                     }
                 }
                 fetchProducts();
-                resetForm();
+                if (editingProduct) {
+                    resetForm();
+                } else {
+                    setName('');
+                    setSku('');
+                    setDescription('');
+                    setPrice('');
+                    setCostPrice('');
+                    setStock('');
+                    setBrand('');
+                    setMaterial('');
+                    setStyle('');
+                    setColor('');
+                    setPromoDiscount('');
+                    setCustomAttrs({});
+                    alert('Producto guardado con éxito. El formulario continúa activo para seguir registrando bajo esta categoría.');
+                }
             } else {
                 alert(`Error: ${data.error}`);
             }
@@ -461,7 +566,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
         setColor(prod.color || '');
         setPromoDiscount(prod.promo_discount ? parseFloat(prod.promo_discount) : 0);
         setCategoryId(prod.category_id || '');
-        setIsFormOpen(true);
+        setCustomAttrs((prod as any).attributes || {});
+        setAddProductStep('open');
+        setHiddenFields(new Set());
     };
 
     const resetForm = () => {
@@ -479,7 +586,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
         setColor('');
         setPromoDiscount('');
         setCategoryId('');
-        setIsFormOpen(false);
+        setCustomAttrs({});
+        setHiddenFields(new Set());
+        setAddProductStep('closed');
     };
 
     const openRefillModal = (prod: Product) => {
@@ -600,7 +709,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                             <span className="material-symbols-outlined text-[18px]">refresh</span>
                         </button>
                         <button
-                            onClick={() => { resetForm(); setIsFormOpen(true); }}
+                            onClick={() => { resetForm(); setAddProductStep('open'); }}
                             className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer border-0"
                         >
                             <span className="material-symbols-outlined text-[16px]">add</span>
@@ -625,7 +734,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
             {/* Tabs selection */}
             <div className="flex border-b border-outline/10">
                 <button
-                    onClick={() => { setActiveTab('catalog'); setIsFormOpen(false); }}
+                    onClick={() => { setActiveTab('catalog'); setAddProductStep('closed'); }}
                     className={`pb-3 px-6 text-sm font-semibold border-b-2 cursor-pointer transition border-0 bg-transparent ${
                         activeTab === 'catalog'
                             ? 'border-primary text-primary font-bold'
@@ -635,7 +744,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                     Catálogo de Inventario
                 </button>
                 <button
-                    onClick={() => { setActiveTab('promotions'); setIsFormOpen(false); }}
+                    onClick={() => { setActiveTab('promotions'); setAddProductStep('closed'); }}
                     className={`pb-3 px-6 text-sm font-semibold border-b-2 cursor-pointer transition border-0 bg-transparent ${
                         activeTab === 'promotions'
                             ? 'border-primary text-primary font-bold'
@@ -674,6 +783,102 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
             {/* Render Tab Contents */}
             {activeTab === 'catalog' ? (
                 <>
+                    {/* Selector de Categoría - Fuera del Formulario */}
+                    {isFormOpen && (
+                        <div className="bg-surface-container-high border border-outline/10 p-4 rounded-2xl space-y-3">
+                            <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary text-[18px]">category</span>
+                                <label className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Categoría del Producto</label>
+                            </div>
+                            <div className="flex gap-2 items-end">
+                                <select 
+                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition flex-grow"
+                                    value={categoryId}
+                                    onChange={(e) => {
+                                        if (e.target.value === 'new') {
+                                            setShowCreateCategoryPrompt(true);
+                                        } else {
+                                            handleSelectCategory(e.target.value);
+                                        }
+                                    }}
+                                >
+                                    <option value="" className="bg-surface-container">-- Selecciona una categoría --</option>
+                                    {categories.map((cat: any) => (
+                                        <option key={cat.id} value={cat.id} className="bg-surface-container">{cat.name}</option>
+                                    ))}
+                                    <option value="new" className="bg-primary text-on-primary">+ Crear nueva categoría</option>
+                                </select>
+                                {categoryId && (
+                                    <button 
+                                        type="button"
+                                        onClick={() => { setCategoryId(''); setHiddenFields(new Set()); }}
+                                        className="p-2.5 hover:bg-red-500/20 text-red-400 rounded-lg transition cursor-pointer border border-red-500/30 bg-transparent text-xs"
+                                        title="Limpiar selección"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">close</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Rápido para Crear Nueva Categoría */}
+                    {showCreateCategoryPrompt && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-bold text-base text-on-surface flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-primary text-[20px]">add_box</span>
+                                        Nueva Categoría
+                                    </h3>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setShowCreateCategoryPrompt(false)}
+                                        className="p-1 hover:bg-surface-container-highest rounded-full border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
+                                    >
+                                        <span className="material-symbols-outlined text-[20px]">close</span>
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-xs text-on-surface-variant font-bold uppercase">Nombre</label>
+                                    <input 
+                                        type="text"
+                                        value={newCategoryName}
+                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                        placeholder="Ej: Monturas, Lentes, Estuches..."
+                                        className="bg-surface-container border border-outline/20 rounded-lg p-2.5 text-xs focus:border-primary text-on-surface outline-none transition"
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                handleCreateCategory();
+                                            }
+                                        }}
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-3 border-t border-outline/5">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setShowCreateCategoryPrompt(false)}
+                                        className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-lg transition cursor-pointer"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        onClick={handleCreateCategory}
+                                        disabled={!newCategoryName.trim()}
+                                        className="px-4 py-2 bg-primary hover:opacity-90 disabled:opacity-50 text-on-primary text-xs font-bold rounded-lg transition cursor-pointer border-0 flex items-center gap-1.5"
+                                    >
+                                        <span className="material-symbols-outlined text-[14px]">add</span>
+                                        Crear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {isFormOpen && (
                         <div className="glass-card p-6 space-y-4">
                             <h3 className="text-sm font-semibold tracking-tight text-on-surface">
@@ -715,46 +920,313 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                             ))}
                                         </select>
                                     </div>
-                                    {category === 'optica' && (
-                                        <>
-                                            <div className="flex flex-col gap-1.5">
-                                                <label className="text-xs text-on-surface-variant font-medium">Marca</label>
-                                                <input 
-                                                    type="text"
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                    value={brand}
-                                                    onChange={(e) => setBrand(e.target.value)}
-                                                    placeholder="Ej: Ray-Ban"
-                                                />
-                                            </div>
-                                            <div className="flex flex-col gap-1.5">
-                                                <label className="text-xs text-on-surface-variant font-medium">Material</label>
-                                                <select 
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                    value={material}
-                                                    onChange={(e) => setMaterial(e.target.value)}
+                                    {(() => {
+                                        const selectedCat = categories.find((cat: any) => cat.id.toString() === categoryId.toString());
+                                        const selectedCatName = selectedCat ? selectedCat.name.toLowerCase().trim() : '';
+                                        const catLower = selectedCatName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+                                        const handleAttrChange = (key: string, val: any) => {
+                                            setCustomAttrs((prev: any) => ({ ...prev, [key]: val }));
+                                        };
+
+                                        return (
+                                            <>
+                                                {/* Brand is general, so we keep it */}
+                                                <FieldWrapper 
+                                                    fieldId="brand" 
+                                                    label="Marca / Fabricante"
+                                                    hidden={hiddenFields.has('brand')}
+                                                    onToggleHidden={toggleFieldHidden}
                                                 >
-                                                    <option value="" className="bg-surface-container">-- Selecciona Material --</option>
-                                                    {frameMaterials.map(m => (
-                                                        <option key={m} value={m} className="bg-surface-container">{m}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div className="flex flex-col gap-1.5">
-                                                <label className="text-xs text-on-surface-variant font-medium">Estilo</label>
-                                                <select 
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                    value={style}
-                                                    onChange={(e) => setStyle(e.target.value)}
-                                                >
-                                                    <option value="" className="bg-surface-container">-- Selecciona Estilo --</option>
-                                                    {frameStyles.map(s => (
-                                                        <option key={s} value={s} className="bg-surface-container">{s}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </>
-                                    )}
+                                                    <input 
+                                                        type="text"
+                                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                        value={brand}
+                                                        onChange={(e) => setBrand(e.target.value)}
+                                                        placeholder="Ej: Ray-Ban, Alcon, Bausch + Lomb"
+                                                    />
+                                                </FieldWrapper>
+
+                                                {/* 1. MONTURAS */}
+                                                {catLower.includes('montura') && (
+                                                    <>
+                                                        {!hiddenFields.has('material-frame') && (
+                                                            <FieldWrapper 
+                                                                fieldId="material-frame" 
+                                                                label="Material de la Montura"
+                                                                hidden={false}
+                                                                onToggleHidden={toggleFieldHidden}
+                                                                children={
+                                                                    <select 
+                                                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                        value={customAttrs.material || ''}
+                                                                        onChange={(e) => handleAttrChange('material', e.target.value)}
+                                                                    >
+                                                                        <option value="">-- Seleccione Material --</option>
+                                                                        <option value="Acetato">Acetato</option>
+                                                                        <option value="Metal">Metal</option>
+                                                                        <option value="Titanio">Titanio</option>
+                                                                        <option value="TR-90">TR-90</option>
+                                                                        <option value="Madera">Madera / Orgánico</option>
+                                                                    </select>
+                                                                }
+                                                            />
+                                                        )}
+                                                        {!hiddenFields.has('style-frame') && (
+                                                            <FieldWrapper 
+                                                                fieldId="style-frame" 
+                                                                label="Estilo de Montura"
+                                                                hidden={false}
+                                                                onToggleHidden={toggleFieldHidden}
+                                                                children={
+                                                                    <select 
+                                                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                        value={customAttrs.style || ''}
+                                                                        onChange={(e) => handleAttrChange('style', e.target.value)}
+                                                                    >
+                                                                        <option value="">-- Seleccione Estilo --</option>
+                                                                        <option value="Completa">Aro Completo</option>
+                                                                        <option value="Semi-flotante">Ranurada / Semi-flotante</option>
+                                                                        <option value="Flotante">Tres Piezas / Flotante</option>
+                                                                    </select>
+                                                                }
+                                                            />
+                                                        )}
+                                                        {!hiddenFields.has('shape') && (
+                                                            <FieldWrapper 
+                                                                fieldId="shape" 
+                                                                label="Forma del Lente"
+                                                                hidden={false}
+                                                                onToggleHidden={toggleFieldHidden}
+                                                                children={
+                                                                    <select 
+                                                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                        value={customAttrs.shape || ''}
+                                                                        onChange={(e) => handleAttrChange('shape', e.target.value)}
+                                                                    >
+                                                                        <option value="">-- Seleccione Forma --</option>
+                                                                        <option value="Aviador">Aviador</option>
+                                                                        <option value="Redonda">Redonda</option>
+                                                                        <option value="Cuadrada">Cuadrada</option>
+                                                                        <option value="Rectangular">Rectangular</option>
+                                                                        <option value="Gato">Cat-Eye / Gato</option>
+                                                                        <option value="Pantalla">Pantalla / Máscara</option>
+                                                                    </select>
+                                                                }
+                                                            />
+                                                        )}
+                                                        {!hiddenFields.has('dimensions') && (
+                                                            <FieldWrapper 
+                                                                fieldId="dimensions" 
+                                                                label="Medidas (Aro - Puente - Varilla)"
+                                                                hidden={false}
+                                                                onToggleHidden={toggleFieldHidden}
+                                                                children={
+                                                                    <input 
+                                                                        type="text"
+                                                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                        value={customAttrs.dimensions || ''}
+                                                                        onChange={(e) => handleAttrChange('dimensions', e.target.value)}
+                                                                        placeholder="Ej: 52-18-140"
+                                                                    />
+                                                                }
+                                                            />
+                                                        )}
+                                                    </>
+                                                )}
+
+                                                {/* 2. LENTES OFTÁLMICOS */}
+                                                {catLower.includes('lente') && !catLower.includes('contacto') && (
+                                                    <>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de Diseño</label>
+                                                            <select 
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.design || ''}
+                                                                onChange={(e) => handleAttrChange('design', e.target.value)}
+                                                            >
+                                                                <option value="">-- Seleccione Diseño --</option>
+                                                                <option value="Monofocal">Monofocal</option>
+                                                                <option value="Bifocal">Bifocal</option>
+                                                                <option value="Progresivo">Progresivo</option>
+                                                                <option value="Ocupacional">Ocupacional</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Material del Cristal</label>
+                                                            <select 
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.material || ''}
+                                                                onChange={(e) => handleAttrChange('material', e.target.value)}
+                                                            >
+                                                                <option value="">-- Seleccione Material --</option>
+                                                                <option value="CR-39">CR-39 (Estándar)</option>
+                                                                <option value="Policarbonato">Policarbonato (Resistente)</option>
+                                                                <option value="Alto Indice 1.67">Alto Índice 1.67 (Delgado)</option>
+                                                                <option value="Alto Indice 1.74">Alto Índice 1.74 (Extra Delgado)</option>
+                                                                <option value="Trivex">Trivex</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5 col-span-1 md:col-span-2">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Tratamiento / Filtro</label>
+                                                            <select 
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.treatment || ''}
+                                                                onChange={(e) => handleAttrChange('treatment', e.target.value)}
+                                                            >
+                                                                <option value="">-- Seleccione Tratamiento --</option>
+                                                                <option value="Antirreflejo">Antirreflejo Convencional</option>
+                                                                <option value="Filtro Azul">Filtro de Luz Azul / Blue Protect</option>
+                                                                <option value="Fotocromatico">Fotocromático (Transitions)</option>
+                                                                <option value="Fotocromatico + Filtro Azul">Fotocromático + Filtro Azul</option>
+                                                                <option value="Polarizado">Polarizado</option>
+                                                            </select>
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                {/* 3. LENTES DE CONTACTO */}
+                                                {catLower.includes('contacto') && (
+                                                    <>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de Reemplazo</label>
+                                                            <select 
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.replacement || ''}
+                                                                onChange={(e) => handleAttrChange('replacement', e.target.value)}
+                                                            >
+                                                                <option value="">-- Seleccione --</option>
+                                                                <option value="Diario">Diario</option>
+                                                                <option value="Quincenal">Quincenal</option>
+                                                                <option value="Mensual">Mensual</option>
+                                                                <option value="Anual">Anual</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Diseño / Aplicación</label>
+                                                            <select 
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.design || ''}
+                                                                onChange={(e) => handleAttrChange('design', e.target.value)}
+                                                            >
+                                                                <option value="">-- Seleccione --</option>
+                                                                <option value="Esferico">Esférico (Miopía/Hipermetropía)</option>
+                                                                <option value="Torico">Tórico (Astigmatismo)</option>
+                                                                <option value="Multifocal">Multifocal (Presbicia)</option>
+                                                                <option value="Cosmetico">Cosmético / Color</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Curva Base (BC)</label>
+                                                            <input 
+                                                                type="text"
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.baseCurve || ''}
+                                                                onChange={(e) => handleAttrChange('baseCurve', e.target.value)}
+                                                                placeholder="Ej: 8.6"
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Diámetro (DIA)</label>
+                                                            <input 
+                                                                type="text"
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.diameter || ''}
+                                                                onChange={(e) => handleAttrChange('diameter', e.target.value)}
+                                                                placeholder="Ej: 14.2"
+                                                            />
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                {/* 4. ESTUCHES */}
+                                                {catLower.includes('estuche') && (
+                                                    <>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de Estuche</label>
+                                                            <select 
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.type || ''}
+                                                                onChange={(e) => handleAttrChange('type', e.target.value)}
+                                                            >
+                                                                <option value="">-- Seleccione --</option>
+                                                                <option value="Rigido">Rígido / Antigolpes</option>
+                                                                <option value="Semi-rigido">Semi-rígido</option>
+                                                                <option value="Blando">Blando / Tipo Bolsa</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Material Externo</label>
+                                                            <input 
+                                                                type="text"
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.material || ''}
+                                                                onChange={(e) => handleAttrChange('material', e.target.value)}
+                                                                placeholder="Ej: Cuero sintético, Metal"
+                                                            />
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                {/* 5. LÍQUIDOS LIMPIA LENTES */}
+                                                {catLower.includes('liquido') && (
+                                                    <>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Capacidad / Volumen</label>
+                                                            <input 
+                                                                type="text"
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.volume || ''}
+                                                                onChange={(e) => handleAttrChange('volume', e.target.value)}
+                                                                placeholder="Ej: 60 ml, 2 Oz"
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Presentación</label>
+                                                            <select 
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.packaging || ''}
+                                                                onChange={(e) => handleAttrChange('packaging', e.target.value)}
+                                                            >
+                                                                <option value="">-- Seleccione --</option>
+                                                                <option value="Atomizador">Atomizador / Spray</option>
+                                                                <option value="Gotero">Gotero</option>
+                                                            </select>
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                {/* 6. PAÑOS MICROFIBRA */}
+                                                {catLower.includes('pano') && (
+                                                    <>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Dimensiones</label>
+                                                            <input 
+                                                                type="text"
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.dimensions || ''}
+                                                                onChange={(e) => handleAttrChange('dimensions', e.target.value)}
+                                                                placeholder="Ej: 15x15 cm"
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de Personalización</label>
+                                                            <select 
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={customAttrs.design || ''}
+                                                                onChange={(e) => handleAttrChange('design', e.target.value)}
+                                                            >
+                                                                <option value="">-- Seleccione --</option>
+                                                                <option value="Unicolor">Unicolor básico</option>
+                                                                <option value="Estampado">Estampado / Con diseños</option>
+                                                                <option value="Logo Tienda">Con logo de la óptica</option>
+                                                            </select>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                     <div className="flex flex-col gap-1.5">
                                         <label className="text-xs text-on-surface-variant font-medium">Precio de Costo (COP)</label>
                                         <input 
@@ -811,39 +1283,59 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                             onFocus={(e) => e.target.select()}
                                         />
                                     </div>
-                                    {category === 'optica' && (
-                                        <div className="flex flex-col gap-1.5 md:col-span-2">
-                                            <label className="text-xs text-on-surface-variant font-medium">Color de la Montura</label>
-                                            <div className="flex flex-wrap gap-2 mt-1">
-                                                {colorOptions.map(c => (
-                                                    <button
-                                                        key={c.value}
+                                    {category === 'optica' && !hiddenFields.has('color') && (
+                                        <FieldWrapper 
+                                            fieldId="color" 
+                                            label="Color de la Montura"
+                                            hidden={false}
+                                            onToggleHidden={toggleFieldHidden}
+                                            children={
+                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                    {dynamicColorOptions.map(c => (
+                                                        <button
+                                                            key={c.value}
+                                                            type="button"
+                                                            onClick={() => setColor(c.value)}
+                                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs cursor-pointer transition ${
+                                                                color === c.value 
+                                                                    ? 'bg-primary/10 border-primary text-primary font-semibold' 
+                                                                    : 'bg-surface-container border-outline/10 text-on-surface-variant hover:border-outline/30'
+                                                            }`}
+                                                        >
+                                                            <span 
+                                                                className="w-3.5 h-3.5 rounded-full border border-white/20 inline-block" 
+                                                                style={{ background: c.preview }} 
+                                                            />
+                                                            {c.name}
+                                                        </button>
+                                                    ))}
+                                                    <button 
                                                         type="button"
-                                                        onClick={() => setColor(c.value)}
-                                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs cursor-pointer transition ${
-                                                            color === c.value 
-                                                                ? 'bg-primary/10 border-primary text-primary font-semibold' 
-                                                                : 'bg-surface-container border-outline/10 text-on-surface-variant hover:border-outline/30'
-                                                        }`}
+                                                        onClick={() => setShowNewColorPrompt(true)}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-primary/50 hover:border-primary text-primary text-xs font-semibold cursor-pointer transition bg-primary/5 hover:bg-primary/10"
                                                     >
-                                                        <span 
-                                                            className="w-3.5 h-3.5 rounded-full border border-white/20 inline-block" 
-                                                            style={{ background: c.preview }} 
-                                                        />
-                                                        {c.name}
+                                                        <span className="material-symbols-outlined text-[14px]">add</span>
+                                                        Agregar Color
                                                     </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                    <div className="flex flex-col gap-1.5 md:col-span-2">
-                                        <label className="text-xs text-on-surface-variant font-medium">Descripción</label>
-                                        <textarea 
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition min-h-[60px]"
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
+                                                </div>
+                                            }
                                         />
-                                    </div>
+                                    )}
+                                    {!hiddenFields.has('description') && (
+                                        <FieldWrapper 
+                                            fieldId="description" 
+                                            label="Descripción"
+                                            hidden={false}
+                                            onToggleHidden={toggleFieldHidden}
+                                            children={
+                                                <textarea 
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition min-h-[60px]"
+                                                    value={description}
+                                                    onChange={(e) => setDescription(e.target.value)}
+                                                />
+                                            }
+                                        />
+                                    )}
                                 </div>
 
                                 {/* Barcode Display at the bottom of form */}
@@ -854,20 +1346,59 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                     </div>
                                 )}
 
-                                <div className="flex justify-end gap-3 pt-2">
+                                {/*upsell custom form request*/}
+                                <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl space-y-2 text-center my-3">
+                                    <p className="text-[11px] text-on-surface-variant font-medium">¿Necesitas campos adicionales o un esquema de inventario a tu medida?</p>
+                                    <a 
+                                        href="https://wa.me/573007137887?text=Hola%20Aizack%20Agency,%20deseo%20solicitar%20un%20formulario%20personalizado%20para%20el%20inventario%20de%20mi%20óptica."
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 text-xs text-primary font-bold hover:underline"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">contact_support</span>
+                                        Solicitar formulario personalizado
+                                    </a>
+                                </div>
+
+                                <div className="flex justify-between items-center gap-3 pt-4 border-t border-outline/5">
                                     <button
                                         type="button"
-                                        onClick={resetForm}
+                                        onClick={() => {
+                                            setName('');
+                                            setSku('');
+                                            setDescription('');
+                                            setPrice('');
+                                            setCostPrice('');
+                                            setStock('');
+                                            setBrand('');
+                                            setMaterial('');
+                                            setStyle('');
+                                            setColor('');
+                                            setPromoDiscount('');
+                                            setCustomAttrs({});
+                                            setHiddenFields(new Set());
+                                        }}
                                         className="bg-surface-container border border-outline/20 hover:bg-surface-container-high text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer text-on-surface border-0"
                                     >
-                                        Cancelar
+                                        Limpiar
                                     </button>
-                                    <button
-                                        type="submit"
-                                        className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer border-0"
-                                    >
-                                        {editingProduct ? 'Actualizar' : 'Guardar'}
-                                    </button>
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={resetForm}
+                                            className="bg-surface-container/50 border border-outline/20 hover:bg-surface-container-high text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer text-on-surface border-0 flex items-center gap-1.5"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">close</span>
+                                            Terminar
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer border-0 flex items-center gap-1.5"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">save</span>
+                                            {editingProduct ? 'Actualizar' : 'Guardar'}
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -1046,6 +1577,97 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                         </div>
                     )}
                 </>
+            )}
+
+            {/* Modal para Agregar Color Nuevo */}
+            {showNewColorPrompt && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in space-y-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-bold text-base text-on-surface flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-primary text-[20px]">palette</span>
+                                Agregar Color Nuevo
+                            </h3>
+                            <button 
+                                type="button"
+                                onClick={() => setShowNewColorPrompt(false)}
+                                className="p-1 hover:bg-surface-container-highest rounded-full border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs text-on-surface-variant font-bold uppercase">Nombre del Color</label>
+                                <input 
+                                    type="text"
+                                    value={newColorName}
+                                    onChange={(e) => setNewColorName(e.target.value)}
+                                    placeholder="Ej: Azul Océano, Púrpura Metalizado"
+                                    className="bg-surface-container border border-outline/20 rounded-lg p-2.5 text-xs focus:border-primary text-on-surface outline-none transition"
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                            handleAddCustomColor();
+                                        }
+                                    }}
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs text-on-surface-variant font-bold uppercase">Código de Color (Hex)</label>
+                                <div className="flex gap-2 items-center">
+                                    <input 
+                                        type="color"
+                                        value={newColorHex}
+                                        onChange={(e) => setNewColorHex(e.target.value)}
+                                        className="w-12 h-10 rounded-lg cursor-pointer border border-outline/20"
+                                    />
+                                    <input 
+                                        type="text"
+                                        value={newColorHex}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                                                setNewColorHex(val);
+                                            }
+                                        }}
+                                        placeholder="#3b82f6"
+                                        className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs font-mono focus:border-primary text-on-surface outline-none transition flex-grow"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 p-3 bg-surface-container/30 rounded-lg border border-outline/10">
+                                <span className="text-xs text-on-surface-variant font-medium">Vista previa:</span>
+                                <span 
+                                    className="w-6 h-6 rounded-lg border-2 border-white/30"
+                                    style={{ backgroundColor: newColorHex }}
+                                />
+                                <span className="text-xs text-on-surface-variant">{newColorName || 'Tu color'}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-3 border-t border-outline/5">
+                            <button 
+                                type="button"
+                                onClick={() => setShowNewColorPrompt(false)}
+                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-lg transition cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={handleAddCustomColor}
+                                disabled={!newColorName.trim()}
+                                className="px-4 py-2 bg-primary hover:opacity-90 disabled:opacity-50 text-on-primary text-xs font-bold rounded-lg transition cursor-pointer border-0 flex items-center gap-1.5"
+                            >
+                                <span className="material-symbols-outlined text-[14px]">add</span>
+                                Agregar Color
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Modal de Impresión de Códigos de Barras */}
