@@ -1,15 +1,84 @@
-export const code39Map: Record<string, string> = {
-    '0': '101001101101', '1': '110100101011', '2': '101100101011', '3': '110110010101',
-    '4': '101001101011', '5': '110100110101', '6': '101100110101', '7': '101001011011',
-    '8': '110100101101', '9': '101100101101', 'A': '110101001011', 'B': '101101001011',
-    'C': '110110100101', 'D': '101011001011', 'E': '110101100101', 'F': '101101100101',
-    'G': '101010011011', 'H': '110101001101', 'I': '101101001101', 'J': '101011001101',
-    'K': '110101010011', 'L': '101101010011', 'M': '110110101001', 'N': '101011010011',
-    'O': '110101101001', 'P': '101101101001', 'Q': '101010110011', 'R': '110101011001',
-    'S': '101101011001', 'T': '101011011001', 'U': '110010101011', 'V': '100110101011',
-    'W': '110011010101', 'X': '100101101011', 'Y': '110010110101', 'Z': '100110110101',
-    '-': '100101011011', '.': '110010101101', ' ': '100110101101', '*': '100101101101'
+﻿import JsBarcode from 'jsbarcode';
+
+const renderCode128Svg = (value: string, width = 1.8, height = 42): string => {
+    const cleanValue = (value || '').toUpperCase().replace(/[^0-9A-Z\-\.\s]/g, '').trim();
+    if (!cleanValue) {
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="140" height="42" viewBox="0 0 140 42"></svg>';
+    }
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', `${height}`);
+    svg.setAttribute('viewBox', `0 0 ${Math.max(140, cleanValue.length * 11)} ${height}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+    JsBarcode(svg, cleanValue, {
+        format: 'CODE128',
+        displayValue: false,
+        width,
+        height,
+        margin: 4,
+        background: '#ffffff',
+        lineColor: '#000000',
+        fontSize: 12,
+        textMargin: 0
+    });
+
+    return svg.outerHTML;
 };
+
+export type LabelProfileId = 'two-column' | 'single-column' | 'pos';
+
+export interface LabelPrintSettings {
+    id: LabelProfileId;
+    name: string;
+    pageWidthMm: number;
+    rowHeightMm: number;
+    pageOrientation?: 'portrait' | 'landscape';
+    columns: number;
+    stickerWidthMm: number;
+    stickerGapMm: number;
+    paddingMm: number;
+}
+
+export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = {
+    'two-column': {
+        id: 'two-column',
+        name: '2 Columnas - Óptica / Joyería',
+        pageWidthMm: 65.5,
+        rowHeightMm: 15,
+        pageOrientation: 'portrait',
+        columns: 2,
+        stickerWidthMm: 30.75,
+        stickerGapMm: 2.5,
+        paddingMm: 1.5
+    },
+    'single-column': {
+        id: 'single-column',
+        name: '1 Columna - Estándar',
+        pageWidthMm: 50,
+        rowHeightMm: 30,
+        pageOrientation: 'portrait',
+        columns: 1,
+        stickerWidthMm: 50,
+        stickerGapMm: 0,
+        paddingMm: 2
+    },
+    pos: {
+        id: 'pos',
+        name: 'Tirilla Continua / POS 80mm',
+        pageWidthMm: 80,
+        rowHeightMm: 22,
+        pageOrientation: 'portrait',
+        columns: 1,
+        stickerWidthMm: 80,
+        stickerGapMm: 0,
+        paddingMm: 1.5
+    }
+};
+
+export const DEFAULT_LABEL_PRINT_SETTINGS = LABEL_PRINT_PROFILES['two-column'];
 
 export const formatPrice = (p: number | string) => {
     const num = typeof p === 'string' ? parseFloat(p) : p;
@@ -21,25 +90,7 @@ export const formatPrice = (p: number | string) => {
 };
 
 export const generateBarcodeSvg = (sku: string): string => {
-    const cleanValue = sku.toUpperCase().replace(/[^0-9A-Z\-.\s]/g, '');
-    const fullText = `*${cleanValue}*`;
-    let pattern = '';
-    for (let char of fullText) {
-        pattern += (code39Map[char] || code39Map[' ']) + '0';
-    }
-    
-    const barWidth = 1.5;
-    const height = 40;
-    const width = pattern.length * barWidth;
-    
-    let svgContent = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="background:white;padding:2px;border-radius:4px;">`;
-    pattern.split('').forEach((bit, idx) => {
-        if (bit === '1') {
-            svgContent += `<rect x="${idx * barWidth}" y="0" width="${barWidth}" height="${height}" fill="#000000" />`;
-        }
-    });
-    svgContent += `</svg>`;
-    return svgContent;
+    return renderCode128Svg(sku, 1.8, 42);
 };
 
 export interface PrintItem {
@@ -49,97 +100,215 @@ export interface PrintItem {
     quantity: number;
 }
 
-export const printBarcodes = (items: PrintItem[]) => {
-    if (!items || items.length === 0) return;
-    
-    let labelsHtml = '';
-    
+const normalizePrintItems = (items: PrintItem[], columns: number) => {
+    const flattened: PrintItem[] = [];
+
     items.forEach(item => {
-        const svg = generateBarcodeSvg(item.sku);
-        const priceFormatted = formatPrice(item.price);
-        const cleanSku = item.sku.toUpperCase().replace(/[^0-9A-Z\-.\s]/g, '');
-        
-        for (let i = 0; i < item.quantity; i++) {
-            labelsHtml += `
-                <div class="label">
-                    <div class="product-name">${item.name}</div>
-                    ${svg}
-                    <div class="barcode-text">${cleanSku}</div>
-                    <div class="price">${priceFormatted}</div>
-                </div>
-            `;
+        const copies = Math.max(1, Number(item.quantity) || 1);
+        for (let i = 0; i < copies; i += 1) {
+            flattened.push({ ...item, quantity: 1 });
         }
     });
-    
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-        alert('Por favor, permite las ventanas emergentes (popups) para poder imprimir.');
-        return;
+
+    const grouped: PrintItem[][] = [];
+    for (let index = 0; index < flattened.length; index += columns) {
+        const row = flattened.slice(index, index + columns);
+        if (row.length < columns) {
+            while (row.length < columns) {
+                row.push({
+                    name: '',
+                    sku: '',
+                    price: 0,
+                    quantity: 0
+                });
+            }
+        }
+        grouped.push(row);
     }
-    
-    printWindow.document.write(`
+
+    return grouped;
+};
+
+export const buildBarcodePrintHtml = (
+    items: PrintItem[],
+    settings: LabelPrintSettings = DEFAULT_LABEL_PRINT_SETTINGS,
+    autoPrint: boolean = true
+) => {
+    if (!items || items.length === 0) return '';
+
+    const rowGroups = normalizePrintItems(items, settings.columns);
+    const rowsHtml = rowGroups.map((row) => {
+        const rowCells = row.map((item) => {
+            const isEmpty = !item.sku && !item.name;
+            if (isEmpty) {
+                return `
+                    <div class="label-cell empty" style="width:${settings.stickerWidthMm}mm;height:${settings.rowHeightMm - 2}mm;flex:0 0 ${settings.stickerWidthMm}mm;visibility:hidden;">
+                        <div class="label-inner"></div>
+                    </div>
+                `;
+            }
+
+            const cleanSku = (item.sku || '').toUpperCase().replace(/[^0-9A-Z\-\.\s]/g, '');
+            const priceFormatted = formatPrice(item.price);
+            const svg = generateBarcodeSvg(item.sku || '');
+            const safeName = (item.name || 'Producto').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            return `
+                <div class="label-cell" style="width:${settings.stickerWidthMm}mm;height:${settings.rowHeightMm - 2}mm;flex:0 0 ${settings.stickerWidthMm}mm;">
+                    <div class="label-inner">
+                        <div class="product-name">${safeName}</div>
+                        <div class="barcode-wrap">${svg}</div>
+                        <div class="barcode-text">${cleanSku}</div>
+                        <div class="price">${priceFormatted}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `<div class="label-row">${rowCells}</div>`;
+    }).join('');
+
+    return `
         <html>
         <head>
             <title>Imprimir Códigos de Barras</title>
             <style>
                 @page {
-                    size: 50mm 30mm;
+                    size: ${settings.pageWidthMm}mm auto;
                     margin: 0;
+                    marks: none;
+                    bleed: 0;
                 }
-                body {
+                * { box-sizing: border-box; }
+                html, body {
                     margin: 0;
                     padding: 0;
+                    width: ${settings.pageWidthMm}mm;
                     background: white;
                     color: black;
                     font-family: 'Courier New', Courier, monospace;
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
+                    overflow: hidden;
                 }
-                .label {
-                    width: 50mm;
-                    height: 30mm;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
+                body {
+                    display: block;
+                    transform: none !important;
+                    zoom: 1 !important;
+                }
+                .label-row {
+                    width: 65.5mm;
+                    height: 15mm;
+                    display: grid;
+                    grid-template-columns: 31.5mm 31.5mm;
+                    column-gap: 2.5mm;
                     box-sizing: border-box;
-                    padding: 2mm;
-                    page-break-after: always;
+                    margin: 0 auto;
+                    overflow: hidden;
+                    page-break-after: auto;
+                    break-after: auto;
+                }
+                .label-cell {
+                    width: 31.5mm;
+                    height: 15mm;
+                    display: block;
+                    box-sizing: border-box;
+                    padding: 0.5mm;
+                    overflow: hidden;
+                    margin: 0;
+                }
+                .label-inner {
+                    width: 100%;
+                    height: 100%;
+                    display: grid;
+                    grid-template-rows: auto 5.5mm auto;
+                    align-items: center;
+                    justify-items: center;
+                    text-align: center;
                     overflow: hidden;
                 }
                 .product-name {
-                    font-size: 8px;
+                    font-size: 6px;
                     font-weight: bold;
-                    margin-bottom: 2px;
-                    text-align: center;
+                    line-height: 1.05;
+                    max-width: 29.5mm;
+                    width: 100%;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
-                    width: 100%;
-                }
-                .barcode-text {
-                    font-size: 8px;
-                    letter-spacing: 2px;
-                    margin-top: 2px;
                     text-align: center;
+                    margin: 0;
                 }
+                .barcode-wrap {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    max-width: 29mm;
+                    height: 6.5mm;
+                    overflow: hidden;
+                }
+                .barcode-wrap svg {
+                    display: block;
+                    width: 100%;
+                    max-width: 29mm;
+                    height: 6.5mm !important;
+                    object-fit: contain;
+                }
+                .barcode-text,
                 .price {
-                    font-size: 9px;
+                    font-size: 6px;
+                    line-height: 1;
                     font-weight: bold;
-                    margin-top: 1px;
+                    text-align: center;
+                    white-space: nowrap;
+                    margin: 0;
                 }
             </style>
         </head>
         <body>
-            ${labelsHtml}
-            <script>
-                window.onload = function() {
-                    window.print();
-                    setTimeout(function() { window.close(); }, 500);
-                };
-            </script>
+            ${rowsHtml}
+            ${autoPrint ? `
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() { window.close(); }, 800);
+                    };
+                </script>
+            ` : ''}
         </body>
         </html>
-    `);
+    `;
+};
+
+export const printBarcodes = (items: PrintItem[], settings: LabelPrintSettings = DEFAULT_LABEL_PRINT_SETTINGS) => {
+    if (!items || items.length === 0) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        alert('Por favor, permite las ventanas emergentes (popups) para poder imprimir.');
+        return;
+    }
+
+    const html = buildBarcodePrintHtml(items, settings, true);
+    if (!html) return;
+
+    printWindow.document.write(html);
     printWindow.document.close();
+};
+
+export const previewBarcodes = (items: PrintItem[], settings: LabelPrintSettings = DEFAULT_LABEL_PRINT_SETTINGS) => {
+    if (!items || items.length === 0) return;
+
+    const previewWindow = window.open('', '_blank');
+    if (!previewWindow) {
+        alert('Por favor, permite las ventanas emergentes (popups) para poder abrir la vista previa.');
+        return;
+    }
+
+    const html = buildBarcodePrintHtml(items, settings, false);
+    if (!html) return;
+
+    previewWindow.document.write(html);
+    previewWindow.document.close();
 };

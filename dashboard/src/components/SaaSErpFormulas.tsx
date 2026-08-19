@@ -12,6 +12,10 @@ interface Customer {
   document_number: string;
   phone: string;
   email: string | null;
+  document_type?: string;
+  address?: string | null;
+  customer_type?: 'persona' | 'empresa';
+  lens_prescription: string | null;
 }
 
 interface Formula {
@@ -73,11 +77,15 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
   const [odCylinder, setOdCylinder] = useState('');
   const [odAxis, setOdAxis] = useState('');
   const [odAddition, setOdAddition] = useState('');
+  const [odPrism, setOdPrism] = useState('');
+  const [odAv, setOdAv] = useState('');
   
   const [oiSphere, setOiSphere] = useState('');
   const [oiCylinder, setOiCylinder] = useState('');
   const [oiAxis, setOiAxis] = useState('');
   const [oiAddition, setOiAddition] = useState('');
+  const [oiPrism, setOiPrism] = useState('');
+  const [oiAv, setOiAv] = useState('');
   
   const [dpDistance, setDpDistance] = useState('');
   const [height, setHeight] = useState('');
@@ -87,6 +95,17 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const toLocalDateInputValue = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const [agendaDate, setAgendaDate] = useState<string>(toLocalDateInputValue(new Date()));
+  const [agendaAppointments, setAgendaAppointments] = useState<any[]>([]);
+  const [loadingAgendaAppointments, setLoadingAgendaAppointments] = useState(false);
 
   // Cargar lista de clientes para el buscador
   const fetchCustomers = async () => {
@@ -136,7 +155,12 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
     fetchCustomers();
     fetchLaboratories();
     fetchLabJobs();
+    fetchAgendaAppointments(agendaDate);
   }, [clientId]);
+
+  useEffect(() => {
+    fetchAgendaAppointments(agendaDate);
+  }, [agendaDate]);
 
   // Cargar historial de fórmulas de un cliente seleccionado
   const fetchCustomerFormulas = async (custId: string) => {
@@ -154,10 +178,105 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
     }
   };
 
+  const fetchAgendaAppointments = async (selectedDate = agendaDate) => {
+    setLoadingAgendaAppointments(true);
+    try {
+      const res = await fetch(`/api/clients/${clientId}/appointments?date=${selectedDate}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (json.success) {
+        setAgendaAppointments(json.appointments || []);
+      }
+    } catch (err) {
+      console.error('Error fetching agenda appointments:', err);
+    } finally {
+      setLoadingAgendaAppointments(false);
+    }
+  };
+
+  const updateAgendaAppointmentStatus = async (appointmentId: string, status: 'completed' | 'cancelled' | 'no_show') => {
+    try {
+      const res = await fetch(`/api/clients/${clientId}/appointments/${appointmentId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        fetchAgendaAppointments();
+        return;
+      }
+
+      alert(json.error || 'No se pudo actualizar el estado de la cita.');
+    } catch (err: any) {
+      console.error('Error updating appointment status:', err);
+      alert(err.message || 'Error al actualizar el estado de la cita.');
+    }
+  };
+
   const handleSelectCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
+    loadCurrentPrescription(customer.lens_prescription);
     fetchCustomerFormulas(customer.id);
     setSearchQuery('');
+  };
+
+  const handleAgendaPatientSelect = (appointment: any) => {
+    const candidate = customers.find((customer) => {
+      if (appointment.crm_customer_id && customer.id === appointment.crm_customer_id) return true;
+      if (customer.phone && appointment.customer_phone && customer.phone === appointment.customer_phone) return true;
+      if (customer.document_number && appointment.customer_document_number && customer.document_number === appointment.customer_document_number) return true;
+      return false;
+    });
+
+    if (candidate) {
+      handleSelectCustomer(candidate);
+      return;
+    }
+
+    const fallbackCustomer: Customer = {
+      id: appointment.crm_customer_id || appointment.id,
+      name: appointment.customer_name.split(' ')[0] || 'Paciente',
+      last_name: appointment.customer_name.split(' ').slice(1).join(' ') || '',
+      document_number: appointment.customer_document_number || '',
+      phone: appointment.customer_phone || '',
+      email: null,
+      lens_prescription: null
+    };
+
+    setSelectedCustomer(fallbackCustomer);
+    setSearchQuery(appointment.customer_name);
+    setFormulasHistory([]);
+  };
+
+  const loadCurrentPrescription = (prescription: string | null) => {
+    try {
+      const parsed = prescription ? JSON.parse(prescription) : {};
+      setOdSphere(parsed.od?.esf || '');
+      setOdCylinder(parsed.od?.cil || '');
+      setOdAxis(parsed.od?.eje || '');
+      setOdAddition(parsed.od?.adi || '');
+      setOdPrism(parsed.od?.prism || '');
+      setOdAv(parsed.od?.av || '');
+      setOiSphere(parsed.oi?.esf || '');
+      setOiCylinder(parsed.oi?.cil || '');
+      setOiAxis(parsed.oi?.eje || '');
+      setOiAddition(parsed.oi?.adi || '');
+      setOiPrism(parsed.oi?.prism || '');
+      setOiAv(parsed.oi?.av || '');
+      setDpDistance(parsed.dp || '');
+    } catch {
+      setOdSphere(''); setOdCylinder(''); setOdAxis(''); setOdAddition('');
+      setOdPrism(''); setOdAv('');
+      setOiSphere(''); setOiCylinder(''); setOiAxis(''); setOiAddition('');
+      setOiPrism(''); setOiAv('');
+      setDpDistance('');
+    }
   };
 
   const handleSaveFormula = async (e: React.FormEvent) => {
@@ -168,9 +287,24 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
     }
     setSaving(true);
     try {
-      const res = await fetch(`/api/clients/${clientId}/formulas`, {
+      const currentPrescription = JSON.stringify({
+        od: {
+          esf: odSphere, cil: odCylinder, eje: odAxis, adi: odAddition,
+          prism: odPrism, av: odAv
+        },
+        oi: {
+          esf: oiSphere, cil: oiCylinder, eje: oiAxis, adi: oiAddition,
+          prism: oiPrism, av: oiAv
+        },
+        dp: dpDistance
+      });
+
+      const historyRes = await fetch(`/api/clients/${clientId}/formulas`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           customerId: selectedCustomer.id,
           odSphere, odCylinder, odAxis, odAddition,
@@ -178,21 +312,48 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
           dpDistance, height, notes
         })
       });
-      const json = await res.json();
-      if (json.success) {
-        setSaveSuccess(true);
-        // Limpiar inputs
-        setOdSphere(''); setOdCylinder(''); setOdAxis(''); setOdAddition('');
-        setOiSphere(''); setOiCylinder(''); setOiAxis(''); setOiAddition('');
-        setDpDistance(''); setHeight(''); setNotes('');
-        // Recargar historial
-        fetchCustomerFormulas(selectedCustomer.id);
-        setTimeout(() => setSaveSuccess(false), 2000);
-      } else {
-        alert(json.error || 'Error al guardar la fórmula.');
+      
+      if (!historyRes.ok) {
+        const errorText = await historyRes.text();
+        console.error(`[Formula History Save] HTTP ${historyRes.status}:`, errorText);
+        alert(`Error del servidor (${historyRes.status}). Verifica la consola.`);
+        return;
       }
-    } catch (err) {
-      alert('Error de conexión.');
+
+      const historyJson = await historyRes.json();
+      if (historyJson.success) {
+        const profileRes = await fetch(`/api/clients/${clientId}/crm-customers/${selectedCustomer.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({
+            name: selectedCustomer.name,
+            last_name: selectedCustomer.last_name || '',
+            document_type: selectedCustomer.document_type || 'CC',
+            document_number: selectedCustomer.document_number,
+            phone: selectedCustomer.phone,
+            email: selectedCustomer.email,
+            address: selectedCustomer.address || null,
+            customer_type: selectedCustomer.customer_type || 'persona',
+            lens_prescription: currentPrescription
+          })
+        });
+        const profileJson = await profileRes.json();
+        if (!profileRes.ok || !profileJson.success) {
+          throw new Error(profileJson.error || 'No se pudo actualizar la fórmula vigente del perfil.');
+        }
+
+        setSelectedCustomer(profileJson.customer);
+        setSaveSuccess(true);
+        setTimeout(() => {
+          fetchCustomerFormulas(selectedCustomer.id);
+          setSaveSuccess(false);
+        }, 500);
+      } else {
+        alert(historyJson.error || 'Error al guardar la fórmula.');
+      }
+    } catch (err: any) {
+      console.error('[Formula Save Error]:', err);
+      alert('Error de conexión: ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -309,6 +470,15 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
                     </button>
                   )}
 
+                  {colStatus === 'assigned' && (
+                    <button 
+                      onClick={() => handleUpdateLabJob(job.id, { status: 'sent' })}
+                      className="w-full py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 font-bold text-[9px] uppercase tracking-wider rounded-lg border-0 transition cursor-pointer"
+                    >
+                      Enviar a Laboratorio
+                    </button>
+                  )}
+
                   {colStatus === 'sent' && (
                     <button 
                       onClick={() => handleUpdateLabJob(job.id, { status: 'received' })}
@@ -345,14 +515,16 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
     }
 
     const pending = labJobs.filter(j => j.status === 'pending');
+    const assigned = labJobs.filter(j => j.status === 'assigned');
     const sent = labJobs.filter(j => j.status === 'sent');
     const received = labJobs.filter(j => j.status === 'received');
     const delivered = labJobs.filter(j => j.status === 'delivered');
 
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
           {renderLabJobColumn("Por Asignar", pending, "pending")}
+          {renderLabJobColumn("Laboratorio Asignado", assigned, "assigned")}
           {renderLabJobColumn("En Laboratorio", sent, "sent")}
           {renderLabJobColumn("Recibidos en Tienda", received, "received")}
           {renderLabJobColumn("Entregados", delivered, "delivered")}
@@ -418,12 +590,12 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
                       supplierId: selectedLabId,
                       jobValue: assignJobValue,
                       notes: assignJobNotes,
-                      status: 'sent'
+                      status: 'assigned'
                     });
                   }}
                   className="px-5 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold cursor-pointer border-0 hover:opacity-90 transition"
                 >
-                  Confirmar y Enviar
+                  Confirmar Asignación
                 </button>
               </div>
             </div>
@@ -442,6 +614,135 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
             Registro clínico de refracción óptica y prescripción de lentes.
           </p>
         </div>
+      </div>
+
+      <div className="glass-card p-5 rounded-2xl border border-outline/10 space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Agenda de Citas</p>
+            <h4 className="font-bold text-base text-on-surface">Citas del día</h4>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAgendaDate((prev) => {
+                const next = new Date(`${prev}T12:00:00`);
+                next.setDate(next.getDate() - 1);
+                return toLocalDateInputValue(next);
+              })}
+              className="px-2.5 py-1.5 rounded-lg border border-outline/20 bg-transparent text-xs text-on-surface hover:bg-surface-container cursor-pointer"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => setAgendaDate(toLocalDateInputValue(new Date()))}
+              className="px-2.5 py-1.5 rounded-lg border border-outline/20 bg-transparent text-xs text-on-surface hover:bg-surface-container cursor-pointer"
+            >
+              Hoy
+            </button>
+            <button
+              type="button"
+              onClick={() => setAgendaDate((prev) => {
+                const next = new Date(`${prev}T12:00:00`);
+                next.setDate(next.getDate() + 1);
+                return toLocalDateInputValue(next);
+              })}
+              className="px-2.5 py-1.5 rounded-lg border border-outline/20 bg-transparent text-xs text-on-surface hover:bg-surface-container cursor-pointer"
+            >
+              Siguiente
+            </button>
+            <input
+              type="date"
+              value={agendaDate}
+              onChange={(e) => setAgendaDate(e.target.value)}
+              className="rounded-lg border border-outline/20 bg-surface-container text-xs text-on-surface px-2 py-1.5 outline-none"
+            />
+          </div>
+        </div>
+
+        {loadingAgendaAppointments ? (
+          <div className="py-6 text-center text-xs text-on-surface-variant">Cargando agenda...</div>
+        ) : agendaAppointments.length === 0 ? (
+          <div className="py-6 text-center text-xs text-on-surface-variant border border-dashed border-outline/20 rounded-xl">
+            No hay citas programadas para este día.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {agendaAppointments.map((appointment) => {
+              const appointmentTime = appointment.appointment_date ? appointment.appointment_date.split('T')[1]?.slice(0, 5) : '00:00';
+              const isCompleted = appointment.status === 'completed';
+              const isCancelled = appointment.status === 'cancelled';
+              const isNoShow = appointment.status === 'no_show';
+
+              return (
+                <div
+                  key={appointment.id}
+                  className="rounded-2xl border border-outline/10 bg-surface-container/50 p-4 space-y-3 hover:border-primary/30 transition cursor-pointer"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleAgendaPatientSelect(appointment)}
+                      className="text-left flex-1 cursor-pointer bg-transparent border-0 p-0"
+                    >
+                      <div className="font-bold text-sm text-on-surface">
+                        {appointment.customer_name || 'Paciente'}
+                      </div>
+                      <div className="text-[11px] text-on-surface-variant mt-1">
+                        {appointmentTime} · {appointment.customer_phone || 'Sin teléfono'}
+                      </div>
+                    </button>
+
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                      isCompleted ? 'bg-green-500/10 text-green-500' :
+                      isCancelled ? 'bg-red-500/10 text-red-500' :
+                      isNoShow ? 'bg-amber-500/10 text-amber-500' :
+                      'bg-primary/10 text-primary'
+                    }`}>
+                      {appointment.status === 'scheduled' ? 'Programada' :
+                       appointment.status === 'completed' ? 'Completada' :
+                       appointment.status === 'cancelled' ? 'Cancelada' :
+                       appointment.status === 'no_show' ? 'No asistió' : appointment.status}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 text-[11px] text-on-surface-variant">
+                    <div><strong>Motivo:</strong> {appointment.visit_reason || 'Consulta'}</div>
+                    {appointment.visit_reason_details && (
+                      <div className="italic text-on-surface-variant/80">{appointment.visit_reason_details}</div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-outline/10">
+                    <button
+                      type="button"
+                      onClick={() => updateAgendaAppointmentStatus(appointment.id, 'completed')}
+                      className="px-2 py-1 text-[10px] rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 cursor-pointer border-0"
+                    >
+                      Completa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateAgendaAppointmentStatus(appointment.id, 'cancelled')}
+                      className="px-2 py-1 text-[10px] rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 cursor-pointer border-0"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateAgendaAppointmentStatus(appointment.id, 'no_show')}
+                      className="px-2 py-1 text-[10px] rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 cursor-pointer border-0"
+                    >
+                      No asistió
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="flex border-b border-outline/10 gap-6">
@@ -558,7 +859,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
                   {/* Ojo Derecho */}
                   <div className="space-y-2">
                     <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Ojo Derecho (O.D.)</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                       <input 
                         type="text" placeholder="Esfera (ESF)" value={odSphere} onChange={(e) => setOdSphere(e.target.value)}
                         className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none"
@@ -575,13 +876,21 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
                         type="text" placeholder="Adición (ADD)" value={odAddition} onChange={(e) => setOdAddition(e.target.value)}
                         className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none"
                       />
+                      <input 
+                        type="text" placeholder="Prisma" value={odPrism} onChange={(e) => setOdPrism(e.target.value)}
+                        className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none"
+                      />
+                      <input 
+                        type="text" placeholder="AV (Agudeza)" value={odAv} onChange={(e) => setOdAv(e.target.value)}
+                        className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none"
+                      />
                     </div>
                   </div>
 
                   {/* Ojo Izquierdo */}
                   <div className="space-y-2">
                     <p className="text-[10px] font-bold text-secondary uppercase tracking-wider">Ojo Izquierdo (O.I.)</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                       <input 
                         type="text" placeholder="Esfera (ESF)" value={oiSphere} onChange={(e) => setOiSphere(e.target.value)}
                         className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none"
@@ -596,6 +905,14 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId }) => {
                       />
                       <input 
                         type="text" placeholder="Adición (ADD)" value={oiAddition} onChange={(e) => setOiAddition(e.target.value)}
+                        className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none"
+                      />
+                      <input 
+                        type="text" placeholder="Prisma" value={oiPrism} onChange={(e) => setOiPrism(e.target.value)}
+                        className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none"
+                      />
+                      <input 
+                        type="text" placeholder="AV (Agudeza)" value={oiAv} onChange={(e) => setOiAv(e.target.value)}
                         className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none"
                       />
                     </div>

@@ -29,6 +29,7 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId }) => {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'date' | 'distance'>('distance');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const fetchDeliveries = async () => {
     try {
@@ -117,6 +118,17 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId }) => {
     }
   };
 
+  const handleCopyAddress = async (address: string, invoiceId: string) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopiedId(invoiceId);
+      setTimeout(() => setCopiedId(null), 1200);
+    } catch (err) {
+      console.error('Error copying address:', err);
+      alert('No se pudo copiar la dirección.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-outline/10 pb-4 gap-4">
@@ -199,9 +211,19 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId }) => {
                 </div>
 
                 <div className="space-y-2.5 text-xs border-t border-b border-outline/5 py-3 my-3">
-                  <div className="flex gap-2">
-                    <span className="material-symbols-outlined text-primary text-[16px] shrink-0">pin_drop</span>
-                    <span className="text-on-surface-variant leading-tight">{dev.delivery_address || dev.customer_address}</span>
+                  <div className="flex gap-2 items-start justify-between">
+                    <div className="flex gap-2 min-w-0 flex-1">
+                      <span className="material-symbols-outlined text-primary text-[16px] shrink-0">pin_drop</span>
+                      <span className="text-on-surface-variant leading-tight break-words">{dev.delivery_address || dev.customer_address}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyAddress(dev.delivery_address || dev.customer_address, dev.id)}
+                      className="ml-2 shrink-0 px-2 py-1 rounded-lg border border-outline/10 bg-surface-container-high/30 text-[9px] font-bold text-on-surface-variant hover:text-on-surface cursor-pointer transition"
+                      title="Copiar dirección"
+                    >
+                      {copiedId === dev.id ? 'Copiado' : 'Copiar'}
+                    </button>
                   </div>
                   
                   <div className="flex justify-between items-center text-[11px]">

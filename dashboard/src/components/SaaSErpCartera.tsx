@@ -171,7 +171,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId }) => {
                   <h5 className="font-bold text-sm text-on-surface mt-1 truncate">{inv.customer_name}</h5>
                   <div className="flex justify-between items-end mt-2 pt-2 border-t border-outline/5">
                     <span className="text-[10px] text-on-surface-variant">{inv.installments_count} cuotas ({inv.installment_frequency})</span>
-                    <span className="font-extrabold text-xs text-[#00ff88]">${parseFloat(inv.total_amount).toLocaleString('es-CO')}</span>
+                    <span className="text-xs text-on-surface-variant">Tot: ${parseFloat(inv.total_amount).toLocaleString('es-CO')}</span>
                   </div>
                 </div>
               ))}
@@ -190,9 +190,21 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId }) => {
                     Cliente: <strong>{selectedInvoice.customer_name}</strong> | Documento: {selectedInvoice.customer_document_number}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-on-surface-variant uppercase font-bold">Total Financiado</p>
-                  <p className="font-extrabold text-lg text-primary">${parseFloat(selectedInvoice.total_amount).toLocaleString('es-CO')}</p>
+                <div className="text-right space-y-1">
+                  <p className="text-[10px] text-on-surface-variant uppercase font-bold">Total Facturado</p>
+                  <p className="font-extrabold text-sm text-on-surface">${parseFloat(selectedInvoice.total_amount).toLocaleString('es-CO')}</p>
+                  {loadingInstallments === false && installments.length > 0 && (
+                    <>
+                      <p className="text-[10px] text-on-surface-variant uppercase font-bold mt-2">Abono Inicial</p>
+                      <p className="font-bold text-sm text-green-500">${installments.find(i => i.installment_number === 0)?.amount || '0'}</p>
+                      <p className="text-[10px] text-on-surface-variant uppercase font-bold mt-2">Saldo Pendiente</p>
+                      <p className="font-extrabold text-lg text-primary">${(
+                        installments
+                          .filter(i => i.installment_number > 0)
+                          .reduce((sum, i) => sum + (parseFloat(i.amount) - parseFloat(i.paid_amount)), 0)
+                      ).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </>
+                  )}
                 </div>
               </div>
 

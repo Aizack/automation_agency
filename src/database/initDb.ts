@@ -1,6 +1,13 @@
 import { pool } from './postgres';
 
-const initDatabase = async () => {
+let initDatabasePromise: Promise<void> | null = null;
+
+export const initDatabase = async () => {
+  if (initDatabasePromise) {
+    return initDatabasePromise;
+  }
+
+  initDatabasePromise = (async () => {
     console.log("[DB Init] 🔄 Inicializando base de datos en PostgreSQL...");
 
     try {
@@ -159,12 +166,88 @@ const initDatabase = async () => {
                 client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
                 customer_phone VARCHAR(20) NOT NULL,
                 customer_name VARCHAR(100) NOT NULL,
-                appointment_date TIMESTAMP NOT NULL,
-                status VARCHAR(20) DEFAULT 'confirmed', -- 'confirmed', 'cancelled', 'rescheduled'
+                customer_document_number VARCHAR(30),
+                crm_customer_id UUID REFERENCES crm_customers(id) ON DELETE SET NULL,
+                appointment_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+                status VARCHAR(20) NOT NULL DEFAULT 'scheduled',
+                visit_reason VARCHAR(50) DEFAULT 'examen_vista',
+                visit_reason_details TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
         console.log("[DB Init] ✅ Tabla 'appointments' creada o ya existente.");
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS appointment_settings (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                slot_duration_minutes INT NOT NULL DEFAULT 30,
+                opening_time TIME NOT NULL DEFAULT '08:00:00',
+                closing_time TIME NOT NULL DEFAULT '18:00:00',
+                working_days INT[] NOT NULL DEFAULT ARRAY[1,2,3,4,5],
+                time_zone VARCHAR(50) DEFAULT 'America/Bogota',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(client_id)
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'appointment_settings' creada o ya existente.");
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS appointment_schedule_blocks (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                block_type VARCHAR(20) NOT NULL CHECK (block_type IN ('day', 'slot')),
+                target_date DATE,
+                day_of_week INT CHECK (day_of_week BETWEEN 0 AND 6),
+                start_time TIME,
+                end_time TIME,
+                reason TEXT NOT NULL DEFAULT 'Bloqueado por administración',
+                is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                created_by VARCHAR(100) DEFAULT 'admin',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CHECK (
+                    (block_type = 'day' AND target_date IS NOT NULL AND start_time IS NULL AND end_time IS NULL)
+                    OR
+                    (block_type = 'slot' AND target_date IS NOT NULL AND start_time IS NOT NULL AND end_time IS NOT NULL)
+                    OR
+                    (block_type = 'slot' AND target_date IS NULL AND day_of_week IS NOT NULL AND start_time IS NOT NULL AND end_time IS NOT NULL)
+                )
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'appointment_schedule_blocks' creada o ya existente.");
+
+        await pool.query(`
+            ALTER TABLE appointments
+              ALTER COLUMN status SET DEFAULT 'scheduled';
+        `);
+
+        await pool.query(`
+            UPDATE appointments
+            SET status = 'scheduled'
+            WHERE status IS NULL OR status NOT IN ('scheduled', 'completed', 'cancelled', 'no_show');
+        `);
+
+        await pool.query(`
+            ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointments_status_check;
+            ALTER TABLE appointments
+              ADD CONSTRAINT appointments_status_check
+              CHECK (status IN ('scheduled', 'completed', 'cancelled', 'no_show'));
+        `);
+
+        await pool.query(`
+            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS customer_document_number VARCHAR(30);
+            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS crm_customer_id UUID REFERENCES crm_customers(id) ON DELETE SET NULL;
+            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS visit_reason VARCHAR(50) DEFAULT 'examen_vista';
+            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS visit_reason_details TEXT;
+        `);
+
+        await pool.query(`
+            INSERT INTO appointment_settings (client_id, slot_duration_minutes, opening_time, closing_time, working_days)
+            SELECT id, 30, '08:00:00', '18:00:00', ARRAY[1,2,3,4,5]
+            FROM clients
+            ON CONFLICT (client_id) DO NOTHING;
+        `);
 
         // 5.1 Crear tabla system_alerts (Alertas y Logs de Estado)
         await pool.query(`
@@ -175,10 +258,23 @@ const initDatabase = async () => {
                 message TEXT NOT NULL,
                 status VARCHAR(20) DEFAULT 'active', -- 'active', 'resolved'
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                resolved_at TIMESTAMP
+                resolved_at TIMESTAMP,
+                resolved_by VARCHAR(100),
+                resolution_notes TEXT,
+                snooze_until TIMESTAMP,
+                reopen_count INT DEFAULT 0,
+                severity_level INT DEFAULT 1
             );
         `);
         console.log("[DB Init] ✅ Tabla 'system_alerts' creada o ya existente.");
+
+        // Agregar columnas si no existen
+        await pool.query(`ALTER TABLE system_alerts ADD COLUMN IF NOT EXISTS resolved_by VARCHAR(100);`);
+        await pool.query(`ALTER TABLE system_alerts ADD COLUMN IF NOT EXISTS resolution_notes TEXT;`);
+        await pool.query(`ALTER TABLE system_alerts ADD COLUMN IF NOT EXISTS snooze_until TIMESTAMP;`);
+        await pool.query(`ALTER TABLE system_alerts ADD COLUMN IF NOT EXISTS reopen_count INT DEFAULT 0;`);
+        await pool.query(`ALTER TABLE system_alerts ADD COLUMN IF NOT EXISTS severity_level INT DEFAULT 1;`);
+        console.log("[DB Init] ✅ Columnas añadidas a 'system_alerts'.");
 
         // 5.2 Modificar y crear tablas de la Fase 2 (Empleados, Turnos, CRM, OTP, etc.)
         await pool.query(`
@@ -643,9 +739,9 @@ const initDatabase = async () => {
                 cost_price NUMERIC(10, 2) NOT NULL
             );
         `);
-
         await pool.query(`
             ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES product_categories(id) ON DELETE SET NULL;
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS attributes JSONB DEFAULT '{}'::jsonb;
         `);
         console.log("[DB Init] ✅ Tablas y alteraciones de la Fase 5 completadas con éxito.");
 
@@ -671,11 +767,14 @@ const initDatabase = async () => {
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS pay_day_2 INT DEFAULT 30;
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS vacation_days_accumulated NUMERIC(5, 2) DEFAULT 0.00;
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS hourly_rate NUMERIC(10, 2) DEFAULT 0.00;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS transport_allowance NUMERIC(12, 2) DEFAULT 0.00;
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS employment_status VARCHAR(20) DEFAULT 'vinculado';
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS activity_status VARCHAR(20) DEFAULT 'activo';
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20) DEFAULT 'cash';
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS bank_name VARCHAR(50);
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS bank_account_number VARCHAR(100);
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS contract_type VARCHAR(50) DEFAULT 'indefinido';
+            ALTER TABLE hr_documents ADD COLUMN IF NOT EXISTS admin_notes TEXT;
         `);
 
         // C. Crear tabla lab_jobs
@@ -726,11 +825,9 @@ const initDatabase = async () => {
 
     } catch (error) {
         console.error("[DB Init] ❌ Error inicializando base de datos:", error);
-    } finally {
-        // Cerrar el pool para que el script termine de ejecutarse en terminal
-        await pool.end();
-        console.log("[DB Init] 🔌 Conexiones de inicialización cerradas.");
+        throw error;
     }
-};
+  })();
 
-initDatabase();
+  return initDatabasePromise;
+};

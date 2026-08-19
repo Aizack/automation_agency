@@ -65,13 +65,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
     // Contractual edit states
     const [contrHireDate, setContrHireDate] = useState('');
     const [contrBasicSalary, setContrBasicSalary] = useState('');
+    const [contrTransportAllowance, setContrTransportAllowance] = useState('');
     const [contrPaymentType, setContrPaymentType] = useState<'fixed' | 'hourly'>('fixed');
     const [contrPayPeriod, setContrPayPeriod] = useState<'quincenal' | 'mensual'>('mensual');
     const [contrCutoffDays, setContrCutoffDays] = useState('');
     const [contrPayDays, setContrPayDays] = useState('');
     const [contrVacations, setContrVacations] = useState('');
-    const [contrHourlyRate, setContrHourlyRate] = useState('');
     const [contrEmpStatus, setContrEmpStatus] = useState<'linked' | 'unlinked'>('linked');
+    const [contrContractType, setContrContractType] = useState<string>('indefinido');
     const [contrActStatus, setContrActStatus] = useState<'active' | 'inactive'>('active');
     const [contrPaymentMethod, setContrPaymentMethod] = useState<'cash' | 'transfer'>('cash');
     const [contrBankName, setContrBankName] = useState('');
@@ -95,7 +96,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
     const [newTaskDueDate, setNewTaskDueDate] = useState('');
     const [newTaskDueTime, setNewTaskDueTime] = useState('');
     const [newTaskCreator, setNewTaskCreator] = useState('');
-    const [detailTab, setDetailTab] = useState<'info' | 'shifts' | 'tasks' | 'contrato'>('info');
+    const [detailTab, setDetailTab] = useState<'info' | 'shifts' | 'tasks' | 'contrato' | 'permisos'>('info');
 
     // Payroll states
     const [isPayrollOpen, setIsPayrollOpen] = useState(false);
@@ -106,6 +107,16 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
     const [hrDocs, setHrDocs] = useState<any[]>([]);
     const [hrDocsLoading, setHrDocsLoading] = useState(false);
 
+    // HR Admin registration states
+    const [isAdminDocOpen, setIsAdminDocOpen] = useState(false);
+    const [adminDocEmpId, setAdminDocEmpId] = useState('');
+    const [adminDocType, setAdminDocType] = useState<'vacaciones' | 'permiso' | 'incapacidad'>('permiso');
+    const [adminDocStartDate, setAdminDocStartDate] = useState('');
+    const [adminDocEndDate, setAdminDocEndDate] = useState('');
+    const [adminDocReturnDate, setAdminDocReturnDate] = useState('');
+    const [adminDocNotes, setAdminDocNotes] = useState('');
+    const [adminDocStatus, setAdminDocStatus] = useState<'pending' | 'approved' | 'negotiating'>('approved');
+
     // Form inputs
     const [deptName, setDeptName] = useState('');
     const [empName, setEmpName] = useState('');
@@ -114,6 +125,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
     const [empRole, setEmpRole] = useState('agent');
     const [empDeptId, setEmpDeptId] = useState('');
     const [empPin, setEmpPin] = useState('');
+    const [empCode, setEmpCode] = useState('');
+
+    const [docFilterQuery, setDocFilterQuery] = useState('');
+    const [docFilterMonth, setDocFilterMonth] = useState('');
+    const [docFilterYear, setDocFilterYear] = useState('');
 
     const [errorMsg, setErrorMsg] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
@@ -297,13 +313,15 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                     is_active: contrActStatus === 'active',
                     hire_date: contrHireDate || null,
                     basic_salary: contrBasicSalary ? parseFloat(contrBasicSalary) : 0,
+                    transport_allowance: contrTransportAllowance ? parseFloat(contrTransportAllowance) : 0,
                     payment_type: contrPaymentType,
                     pay_period: contrPayPeriod,
                     cutoff_days: contrCutoffDays || null,
                     pay_days: contrPayDays || null,
                     vacation_days_accumulated: contrVacations ? parseFloat(contrVacations) : 0,
-                    hourly_rate: contrHourlyRate ? parseFloat(contrHourlyRate) : 0,
+                    hourly_rate: contrBasicSalary ? (parseFloat(contrBasicSalary) / 240) : 0,
                     employment_status: contrEmpStatus,
+                    contract_type: contrContractType,
                     activity_status: contrActStatus,
                     payment_method: contrPaymentMethod,
                     bank_name: contrBankName || null,
@@ -332,7 +350,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         setPayrollSummary(null);
         setErrorMsg('');
         try {
-            const res = await fetch(`/api/clients/${clientId}/employees/${emp.id}/payroll-summary`, {
+            const currentMonthYear = new Date().toISOString().slice(0, 7); // e.g. "2026-08"
+            const res = await fetch(`/api/clients/${clientId}/employees/${emp.id}/payroll-summary?month_year=${currentMonthYear}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const json = await res.json();
@@ -348,7 +367,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         }
     };
 
-    const handleUpdateDocStatus = async (docId: string, nextStatus: 'approved' | 'rejected') => {
+    const handleUpdateDocStatus = async (docId: string, nextStatus: 'approved' | 'rejected' | 'negotiating') => {
         const notes = window.prompt('Notas de respuesta al empleado (opcional):', '');
         if (notes === null) return;
         try {
@@ -358,14 +377,65 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ status: nextStatus, adminNotes: notes })
+                body: JSON.stringify({ status: nextStatus, admin_notes: notes })
             });
             const json = await res.json();
             if (json.success) {
                 fetchHrDocs();
+                fetchData();
             }
         } catch (err) {
             console.error(err);
+        }
+    };
+
+    const handleCreateAdminDoc = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!adminDocEmpId || !adminDocStartDate || !adminDocNotes) {
+            alert('Por favor selecciona un empleado, fecha de inicio y escribe una justificación.');
+            return;
+        }
+
+        try {
+            setActionLoading(true);
+            const res = await fetch(`/api/clients/${clientId}/hr-documents`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    employee_id: adminDocEmpId,
+                    doc_type: adminDocType,
+                    status: adminDocStatus,
+                    notes: adminDocNotes,
+                    start_date: adminDocStartDate,
+                    end_date: adminDocEndDate || null,
+                    return_date: adminDocReturnDate || null,
+                    admin_notes: 'Registrado directamente por Gestión Humana.'
+                })
+            });
+            const json = await res.json();
+            if (json.success) {
+                if (adminDocStatus === 'approved') {
+                    fetchData();
+                }
+                setIsAdminDocOpen(false);
+                setAdminDocEmpId('');
+                setAdminDocStartDate('');
+                setAdminDocEndDate('');
+                setAdminDocReturnDate('');
+                setAdminDocNotes('');
+                setAdminDocStatus('approved');
+                fetchHrDocs();
+                alert('Solicitud/Ausencia registrada correctamente.');
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (err: any) {
+            alert(`Error de red: ${err.message}`);
+        } finally {
+            setActionLoading(false);
         }
     };
 
@@ -383,6 +453,42 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         } catch (err) {
             console.error("Error deleting document:", err);
         }
+    };
+
+    const formatDateOnly = (dateStr: string) => {
+        if (!dateStr) return '';
+        const part = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+        const parts = part.split('-');
+        if (parts.length === 3) {
+            return `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`;
+        }
+        return new Date(dateStr).toLocaleDateString('es-CO');
+    };
+
+
+
+    const checkOverlap = (currentDoc: any) => {
+        if (!currentDoc.start_date || !currentDoc.end_date || !currentDoc.department_id) return null;
+        
+        const curStart = new Date(currentDoc.start_date).getTime();
+        const curEnd = new Date(currentDoc.end_date).getTime();
+        
+        const overlaps = hrDocs.filter((doc: any) => {
+            if (doc.id === currentDoc.id) return false;
+            if (doc.department_id !== currentDoc.department_id) return false;
+            if (doc.status === 'rejected') return false;
+            if (!doc.start_date || !doc.end_date) return false;
+            
+            const docStart = new Date(doc.start_date).getTime();
+            const docEnd = new Date(doc.end_date).getTime();
+            
+            return (curStart <= docEnd && docStart <= curEnd);
+        });
+        
+        if (overlaps.length > 0) {
+            return overlaps.map((o: any) => o.employee_name).join(', ');
+        }
+        return null;
     };
 
     useEffect(() => {
@@ -468,6 +574,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                     role: empRole,
                     department_id: empDeptId || null,
                     pin: empPin,
+                    employee_code: empCode || null,
                     is_active: true
                 })
             });
@@ -479,14 +586,15 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                 setErrorMsg(json.error || 'Error al guardar empleado.');
             }
         } catch (err: any) {
-            setErrorMsg(err.message || 'Error de conexión.');
+            console.error("Error creating/editing employee:", err);
+            setErrorMsg('Error de red al guardar colaborador.');
         } finally {
             setActionLoading(false);
         }
     };
 
     const handleDeleteEmp = async (id: string, name: string) => {
-        if (!window.confirm(`¿Estás seguro de eliminar el empleado "${name}"?`)) return;
+        if (!window.confirm(`¿Deseas eliminar permanentemente al colaborador ${name}?`)) return;
         try {
             const res = await fetch(`/api/clients/${clientId}/employees/${id}`, {
                 method: 'DELETE',
@@ -509,6 +617,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         setEmpRole('agent');
         setEmpDeptId('');
         setEmpPin('');
+        setEmpCode('');
         setErrorMsg('');
         setIsEmpOpen(true);
     };
@@ -521,6 +630,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         setEmpRole(emp.role);
         setEmpDeptId(emp.department_id || '');
         setEmpPin(emp.pin);
+        setEmpCode((emp as any).employee_code || '');
         setErrorMsg('');
         setIsEmpOpen(true);
     };
@@ -607,15 +717,18 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         setNewTaskCreator(localStorage.getItem('session_name') || '');
         setDetailTab('info');
         
-        setContrHireDate(emp.hire_date || '');
-        setContrBasicSalary(emp.basic_salary?.toString() || '');
+        setContrHireDate(emp.hire_date ? emp.hire_date.split('T')[0] : '');
+        const rawSalary = emp.basic_salary ? Math.round(parseFloat(emp.basic_salary.toString())).toString() : '';
+        const rawAllowance = (emp as any).transport_allowance ? Math.round(parseFloat((emp as any).transport_allowance.toString())).toString() : '';
+        setContrBasicSalary(rawSalary === '0' ? '' : rawSalary);
+        setContrTransportAllowance(rawAllowance === '0' ? '' : rawAllowance);
         setContrPaymentType(emp.payment_type || 'fixed');
         setContrPayPeriod(emp.pay_period || 'mensual');
         setContrCutoffDays(emp.cutoff_days || '15,30');
         setContrPayDays(emp.pay_days || '15,30');
         setContrVacations(emp.vacation_days_accumulated?.toString() || '0');
-        setContrHourlyRate(emp.hourly_rate?.toString() || '');
         setContrEmpStatus(emp.employment_status || 'linked');
+        setContrContractType((emp as any).contract_type || 'indefinido');
         setContrActStatus(emp.activity_status || 'active');
         setContrPaymentMethod(emp.payment_method || 'cash');
         setContrBankName(emp.bank_name || '');
@@ -1280,6 +1393,27 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         );
     };
 
+    const filteredHrDocs = hrDocs.filter((doc: any) => {
+        if (docFilterQuery) {
+            const query = docFilterQuery.toLowerCase();
+            const nameMatch = doc.employee_name?.toLowerCase().includes(query);
+            const phoneMatch = doc.employee_phone?.toLowerCase().includes(query);
+            const codeMatch = doc.employee_code?.toLowerCase().includes(query);
+            if (!nameMatch && !phoneMatch && !codeMatch) return false;
+        }
+        if (docFilterMonth) {
+            if (!doc.start_date) return false;
+            const month = doc.start_date.split('-')[1];
+            if (month !== docFilterMonth) return false;
+        }
+        if (docFilterYear) {
+            if (!doc.start_date) return false;
+            const year = doc.start_date.split('-')[0];
+            if (year !== docFilterYear) return false;
+        }
+        return true;
+    });
+
     return (
         <div className="space-y-6 text-on-surface">
             {/* Header */}
@@ -1488,9 +1622,73 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                         <h3 className="font-bold text-sm text-on-surface">Solicitudes y Permisos de Personal (RRHH)</h3>
                         <p className="text-[10px] text-on-surface-variant">Revisa, aprueba o rechaza solicitudes de vacaciones, permisos e incapacidades médicas cargadas por los empleados.</p>
                     </div>
-                    <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold">
-                        {hrDocs.filter(d => d.status === 'pending').length} Pendientes
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setIsAdminDocOpen(true)}
+                            className="px-3 py-1.5 bg-primary hover:bg-primary-container text-white text-[10px] font-bold rounded-lg cursor-pointer transition shadow border-0 flex items-center gap-1"
+                        >
+                            <span className="material-symbols-outlined text-[14px]">add_circle</span>
+                            Registrar Ausencia / Permiso
+                        </button>
+                        <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold">
+                            {hrDocs.filter(d => d.status === 'pending').length} Pendientes
+                        </span>
+                    </div>
+                </div>
+
+                {/* Filtros de Solicitudes */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/5 p-3 rounded-xl border border-outline/5 mb-4 text-xs">
+                    <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-on-surface-variant uppercase">Buscar Colaborador</label>
+                        <div className="relative flex items-center">
+                            <span className="material-symbols-outlined absolute left-3 text-on-surface-variant/60 text-[16px]">search</span>
+                            <input 
+                                type="text"
+                                placeholder="Nombre, celular o No. de empleado..."
+                                value={docFilterQuery}
+                                onChange={(e) => setDocFilterQuery(e.target.value)}
+                                className="w-full bg-surface-container-high/40 border border-outline/10 pl-9 pr-3 py-2 rounded-xl text-on-surface outline-none focus:border-primary text-xs"
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-on-surface-variant uppercase">Mes</label>
+                        <select
+                            value={docFilterMonth}
+                            onChange={(e) => setDocFilterMonth(e.target.value)}
+                            className="w-full bg-surface-container-high/40 border border-outline/10 p-2 rounded-xl text-on-surface outline-none cursor-pointer text-xs"
+                        >
+                            <option value="">-- Todos los Meses --</option>
+                            <option value="01">Enero</option>
+                            <option value="02">Febrero</option>
+                            <option value="03">Marzo</option>
+                            <option value="04">Abril</option>
+                            <option value="05">Mayo</option>
+                            <option value="06">Junio</option>
+                            <option value="07">Julio</option>
+                            <option value="08">Agosto</option>
+                            <option value="09">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-on-surface-variant uppercase">Año</label>
+                        <select
+                            value={docFilterYear}
+                            onChange={(e) => setDocFilterYear(e.target.value)}
+                            className="w-full bg-surface-container-high/40 border border-outline/10 p-2 rounded-xl text-on-surface outline-none cursor-pointer text-xs"
+                        >
+                            <option value="">-- Todos los Años --</option>
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                        </select>
+                    </div>
                 </div>
 
                 {hrDocsLoading ? (
@@ -1499,9 +1697,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                     </div>
                 ) : hrDocs.length === 0 ? (
                     <p className="text-xs text-on-surface-variant/60 py-6 text-center italic">No hay solicitudes pendientes o registradas en el sistema.</p>
+                ) : filteredHrDocs.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant/60 py-6 text-center italic">No se encontraron solicitudes que coincidan con los filtros.</p>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {hrDocs.map((doc: any) => (
+                        {filteredHrDocs.map((doc: any) => (
                             <div key={doc.id} className="p-4 bg-surface-container/20 border border-outline/10 rounded-xl space-y-3">
                                 <div className="flex justify-between items-start">
                                     <div>
@@ -1510,18 +1710,28 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                     </div>
                                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
                                         doc.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
+                                        doc.status === 'negotiating' ? 'bg-purple-500/10 text-purple-500' :
                                         doc.status === 'approved' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
                                     }`}>
-                                        {doc.status}
+                                        {doc.status === 'negotiating' ? 'En Negociación' : doc.status}
                                     </span>
                                 </div>
 
                                 <div className="text-xs space-y-1.5">
                                     <div className="flex justify-between text-[10px] text-on-surface-variant">
                                         <span>Tipo: <strong className="text-primary capitalize">{doc.doc_type.replace('_', ' ')}</strong></span>
-                                        <span>Rango: <strong>{new Date(doc.start_date).toLocaleDateString('es-CO')} {doc.end_date ? `- ${new Date(doc.end_date).toLocaleDateString('es-CO')}` : ''}</strong></span>
+                                        <span>Depto: <strong>{doc.department_name || 'Sin asignar'}</strong></span>
+                                    </div>
+                                    <div className="flex justify-between text-[10px] text-on-surface-variant">
+                                        <span>Rango: <strong>{formatDateOnly(doc.start_date)}{doc.end_date ? ` al ${formatDateOnly(doc.end_date)}` : ''}{doc.return_date ? ` (Regresa: ${formatDateOnly(doc.return_date)})` : ''}</strong></span>
                                     </div>
                                     <p className="text-on-surface-variant font-medium bg-white/5 p-2 rounded-lg italic">"{doc.notes || doc.reason}"</p>
+                                    {doc.admin_notes && (
+                                        <div className="bg-surface-container-high/40 p-2 rounded-lg border border-outline/5 text-[10px] text-on-surface">
+                                            <span className="font-bold text-primary block mb-0.5">Respuesta de Gestión Humana:</span>
+                                            {doc.admin_notes}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {doc.file_url && (
@@ -1538,13 +1748,34 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                     </div>
                                 )}
 
-                                {doc.status === 'pending' && (
+                                {(() => {
+                                    const overlaps = checkOverlap(doc);
+                                    if (overlaps) {
+                                        return (
+                                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] p-2.5 rounded-xl font-medium mt-2 flex items-start gap-1.5 animate-pulse">
+                                                <span className="material-symbols-outlined text-[14px] mt-0.5">warning</span>
+                                                <div>
+                                                    <strong>Traslape de Fechas:</strong> Coincide con vacaciones/permisos de: {overlaps} ({doc.department_name || 'mismo departamento'})
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+
+                                {(doc.status === 'pending' || doc.status === 'negotiating') && (
                                     <div className="flex gap-2 justify-end pt-2 border-t border-outline/5">
                                         <button 
                                             onClick={() => handleUpdateDocStatus(doc.id, 'rejected')}
                                             className="px-2.5 py-1.5 border border-red-500/30 text-red-500 hover:bg-red-500/5 text-[10px] font-bold rounded-lg cursor-pointer transition bg-transparent"
                                         >
                                             Rechazar
+                                        </button>
+                                        <button 
+                                            onClick={() => handleUpdateDocStatus(doc.id, 'negotiating')}
+                                            className="px-2.5 py-1.5 border border-purple-500/30 text-purple-500 hover:bg-purple-500/5 text-[10px] font-bold rounded-lg cursor-pointer transition bg-transparent"
+                                        >
+                                            Negociar
                                         </button>
                                         <button 
                                             onClick={() => handleUpdateDocStatus(doc.id, 'approved')}
@@ -1555,7 +1786,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                     </div>
                                 )}
 
-                                {doc.status !== 'pending' && (
+                                {doc.status !== 'pending' && doc.status !== 'negotiating' && (
                                     <div className="flex justify-between items-center pt-2 border-t border-outline/5 text-[9px] text-on-surface-variant/60 font-mono">
                                         <span>Gestionado</span>
                                         <button 
@@ -1630,6 +1861,144 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                 ))
                             )}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* REGISTER ABSENCE/PERMIT MODAL */}
+            {isAdminDocOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
+                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
+                            <h3 className="font-bold text-lg text-on-surface">Registrar Ausencia o Permiso</h3>
+                            <button 
+                                onClick={() => setIsAdminDocOpen(false)}
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreateAdminDoc} className="space-y-4 text-xs text-left">
+                            <div className="space-y-1">
+                                <label className="font-bold text-[10px] text-on-surface-variant uppercase">Colaborador</label>
+                                <select
+                                    value={adminDocEmpId}
+                                    onChange={(e) => setAdminDocEmpId(e.target.value)}
+                                    required
+                                    className="w-full bg-surface-container border border-outline/10 p-2.5 rounded-xl text-xs text-on-surface outline-none cursor-pointer"
+                                >
+                                    <option value="">-- Seleccionar Empleado --</option>
+                                    {employees.map(emp => (
+                                        <option key={emp.id} value={emp.id}>{emp.name} {emp.last_name || ''}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Tipo de Registro</label>
+                                    <select
+                                        value={adminDocType}
+                                        onChange={(e) => setAdminDocType(e.target.value as any)}
+                                        className="w-full bg-surface-container border border-outline/10 p-2.5 rounded-xl text-xs text-on-surface outline-none cursor-pointer"
+                                    >
+                                        <option value="permiso">Permiso / Licencia</option>
+                                        <option value="vacaciones">Vacaciones</option>
+                                        <option value="incapacidad">Incapacidad Médica</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Estado Inicial</label>
+                                    <select
+                                        value={adminDocStatus}
+                                        onChange={(e) => setAdminDocStatus(e.target.value as any)}
+                                        className="w-full bg-surface-container border border-outline/10 p-2.5 rounded-xl text-xs text-on-surface outline-none cursor-pointer"
+                                    >
+                                        <option value="approved">Aprobado inmediatamente</option>
+                                        <option value="pending">Pendiente</option>
+                                        <option value="negotiating">En Negociación</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="space-y-1">
+                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Fecha Inicio</label>
+                                    <input 
+                                        type="date"
+                                        required
+                                        value={adminDocStartDate}
+                                        onChange={(e) => setAdminDocStartDate(e.target.value)}
+                                        onClick={(e) => {
+                                            try {
+                                                (e.target as any).showPicker();
+                                            } catch (err) {}
+                                        }}
+                                        className="w-full bg-surface-container border border-outline/10 p-2 rounded-xl text-on-surface outline-none text-xs cursor-pointer"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Último Día</label>
+                                    <input 
+                                        type="date"
+                                        required
+                                        value={adminDocEndDate}
+                                        onChange={(e) => setAdminDocEndDate(e.target.value)}
+                                        onClick={(e) => {
+                                            try {
+                                                (e.target as any).showPicker();
+                                            } catch (err) {}
+                                        }}
+                                        className="w-full bg-surface-container border border-outline/10 p-2 rounded-xl text-on-surface outline-none text-xs cursor-pointer"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Regreso a Labores</label>
+                                    <input 
+                                        type="date"
+                                        required
+                                        value={adminDocReturnDate}
+                                        onChange={(e) => setAdminDocReturnDate(e.target.value)}
+                                        onClick={(e) => {
+                                            try {
+                                                (e.target as any).showPicker();
+                                            } catch (err) {}
+                                        }}
+                                        className="w-full bg-surface-container border border-outline/10 p-2 rounded-xl text-on-surface outline-none text-xs cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="font-bold text-[10px] text-on-surface-variant uppercase">Justificación / Motivo</label>
+                                <textarea
+                                    value={adminDocNotes}
+                                    onChange={(e) => setAdminDocNotes(e.target.value)}
+                                    placeholder="Detalla el motivo de la ausencia, licencia o incapacidad..."
+                                    required
+                                    className="w-full bg-surface-container border border-outline/10 p-2.5 rounded-xl text-xs text-on-surface outline-none h-20 resize-none animate-pulse-once"
+                                />
+                            </div>
+
+                            <div className="flex gap-2 justify-end pt-2 border-t border-outline/5">
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsAdminDocOpen(false)}
+                                    className="px-4 py-2 border border-outline/20 text-on-surface-variant hover:bg-surface-variant/20 text-xs font-bold rounded-lg cursor-pointer transition bg-transparent"
+                                >
+                                    Cancelar
+                                </button>
+                                <button 
+                                    type="submit"
+                                    disabled={actionLoading}
+                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-lg cursor-pointer transition border-0 shadow"
+                                >
+                                    {actionLoading ? 'Registrando...' : 'Registrar'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
@@ -1721,17 +2090,29 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                 </select>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">PIN de Seguridad (Fichaje)</label>
-                                <input 
-                                    type="password"
-                                    maxLength={4}
-                                    required
-                                    value={empPin}
-                                    onChange={(e) => setEmpPin(e.target.value.replace(/\D/g, ''))}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono tracking-widest text-center text-lg"
-                                    placeholder="Ej: 1234"
-                                />
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold text-on-surface-variant">PIN de Seguridad (Fichaje)</label>
+                                    <input 
+                                        type="password"
+                                        maxLength={4}
+                                        required
+                                        value={empPin}
+                                        onChange={(e) => setEmpPin(e.target.value.replace(/\D/g, ''))}
+                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono tracking-widest text-center text-lg"
+                                        placeholder="Ej: 1234"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold text-on-surface-variant">Código / No. Empleado</label>
+                                    <input 
+                                        type="text"
+                                        value={empCode}
+                                        onChange={(e) => setEmpCode(e.target.value)}
+                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono text-center text-lg font-bold"
+                                        placeholder="Ej: EMP-001"
+                                    />
+                                </div>
                             </div>
 
                             <div className="flex gap-3 justify-end pt-4 border-t border-outline/10">
@@ -1822,9 +2203,21 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                     <h4 className="font-bold text-on-surface border-b border-outline/5 pb-1">2. Detalle de Devengados (Ingresos)</h4>
                                     <div className="space-y-1.5 bg-white/5 p-3 rounded-xl border border-outline/5">
                                         <div className="flex justify-between py-1">
-                                            <span>Sueldo Neto de Horas Ordinarias</span>
+                                            <span>Sueldo de Horas Ordinarias</span>
                                             <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.base_payment)} COP</span>
                                         </div>
+                                        {payrollSummary.transport_allowance > 0 && (
+                                            <div className="flex justify-between py-1 border-t border-white/5">
+                                                <span>Auxilio de Transporte de Ley</span>
+                                                <span className="font-mono text-primary">+${new Intl.NumberFormat('es-CO').format(payrollSummary.transport_allowance)} COP</span>
+                                            </div>
+                                        )}
+                                        {payrollSummary.extra_hours_surcharge > 0 && (
+                                            <div className="flex justify-between py-1 border-t border-white/5">
+                                                <span>Horas Extras Diurnas (+25%)</span>
+                                                <span className="font-mono text-primary">+${new Intl.NumberFormat('es-CO').format(payrollSummary.extra_hours_surcharge)} COP</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between py-1 border-t border-white/5">
                                             <span>Recargos Nocturnos Liquidados (+35%)</span>
                                             <span className="font-mono text-primary">+${new Intl.NumberFormat('es-CO').format(payrollSummary.night_surcharge)} COP</span>
@@ -1852,6 +2245,12 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                             <span>Aporte a Pensión Obligatoria (4%)</span>
                                             <span className="font-mono text-red-500">-${new Intl.NumberFormat('es-CO').format(payrollSummary.deductions.pension)} COP</span>
                                         </div>
+                                        {payrollSummary.deductions.advances > 0 && (
+                                            <div className="flex justify-between py-1 border-t border-white/5">
+                                                <span>Deducción por Anticipos Recibidos</span>
+                                                <span className="font-mono text-red-500">-${new Intl.NumberFormat('es-CO').format(payrollSummary.deductions.advances)} COP</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between py-1.5 border-t border-white/5 font-bold text-sm text-on-surface">
                                             <span>Total Deducciones</span>
                                             <span className="font-mono text-red-500">-${new Intl.NumberFormat('es-CO').format(payrollSummary.total_deductions)} COP</span>
@@ -1861,41 +2260,67 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
 
                                 {/* Provisions and Employer taxes */}
                                 <div className="space-y-2">
-                                    <h4 className="font-bold text-on-surface border-b border-outline/5 pb-1">4. Costos Adicionales de Empresa (Provisiones &amp; ARL)</h4>
+                                    <h4 className="font-bold text-on-surface border-b border-outline/5 pb-1">4. Costos Adicionales de Empresa (Seguridad Social &amp; Parafiscales &amp; Provisiones)</h4>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-white/5 p-3 rounded-xl border border-outline/5 space-y-1">
-                                            <p className="font-bold text-[10px] text-on-surface-variant uppercase mb-1">Aportes Patronales (Empresa)</p>
+                                        <div className="bg-white/5 p-3 rounded-xl border border-outline/5 space-y-1.5">
+                                            <p className="font-bold text-[10px] text-on-surface-variant uppercase mb-1">Seguridad Social &amp; Parafiscales</p>
                                             <div className="flex justify-between py-0.5 text-[10px]">
                                                 <span>Pensión (12%)</span>
                                                 <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.employer_contributions.pension)}</span>
                                             </div>
                                             <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
-                                                <span>Salud (8.5%): {payrollSummary.employer_contributions.exonerated_health_sena ? <span className="text-green-500 font-bold">Exonerado</span> : ''}</span>
-                                                <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.employer_contributions.health)}</span>
+                                                <span>Salud (8.5%)</span>
+                                                <span className="font-mono">
+                                                    {payrollSummary.employer_contributions.exonerated_health_sena ? <span className="text-green-500 font-bold">Exonerado (Art. 114-1 ET)</span> : `$${new Intl.NumberFormat('es-CO').format(payrollSummary.employer_contributions.health)}`}
+                                                </span>
                                             </div>
                                             <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
-                                                <span>ARL ({payrollSummary.employer_contributions.arl_percentage}% - Riesgo I)</span>
+                                                <span>ARL ({payrollSummary.employer_contributions.arl_percentage?.toFixed(3)}%)</span>
                                                 <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.employer_contributions.arl)}</span>
+                                            </div>
+                                            <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
+                                                <span>Caja Compensación (4%)</span>
+                                                <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.employer_contributions.caja_compensacion)}</span>
+                                            </div>
+                                            <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
+                                                <span>SENA (2%)</span>
+                                                <span className="font-mono">
+                                                    {payrollSummary.employer_contributions.exonerated_health_sena ? <span className="text-green-500 font-bold">Exonerado</span> : `$${new Intl.NumberFormat('es-CO').format(payrollSummary.employer_contributions.sena)}`}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
+                                                <span>ICBF (3%)</span>
+                                                <span className="font-mono">
+                                                    {payrollSummary.employer_contributions.exonerated_health_sena ? <span className="text-green-500 font-bold">Exonerado</span> : `$${new Intl.NumberFormat('es-CO').format(payrollSummary.employer_contributions.icbf)}`}
+                                                </span>
                                             </div>
                                         </div>
 
-                                        <div className="bg-white/5 p-3 rounded-xl border border-outline/5 space-y-1">
-                                            <p className="font-bold text-[10px] text-on-surface-variant uppercase mb-1">Provisiones Prestacionales (Ley)</p>
-                                            <div className="flex justify-between py-0.5 text-[10px]">
-                                                <span>Prima de Servicios (8.33%)</span>
-                                                <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.provisions.prima)}</span>
+                                        <div className="bg-white/5 p-3 rounded-xl border border-outline/5 space-y-1.5 flex flex-col justify-between">
+                                            <div>
+                                                <p className="font-bold text-[10px] text-on-surface-variant uppercase mb-1">Provisiones Prestacionales (Ley)</p>
+                                                <div className="flex justify-between py-0.5 text-[10px]">
+                                                    <span>Prima de Servicios (8.33%)</span>
+                                                    <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.provisions.prima)}</span>
+                                                </div>
+                                                <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
+                                                    <span>Cesantías (8.33%)</span>
+                                                    <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.provisions.cesantias)}</span>
+                                                </div>
+                                                <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
+                                                    <span>Int. Cesantías (12% Cesantías)</span>
+                                                    <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.provisions.intereses_cesantias)}</span>
+                                                </div>
+                                                <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
+                                                    <span>Vacaciones (4.17%)</span>
+                                                    <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.provisions.vacaciones)}</span>
+                                                </div>
                                             </div>
-                                            <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
-                                                <span>Cesantías (8.33%)</span>
-                                                <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.provisions.cesantias)}</span>
-                                            </div>
-                                            <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
-                                                <span>Int. Cesantías (1% mensual)</span>
-                                                <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.provisions.intereses_cesantias)}</span>
-                                            </div>
-                                            <div className="flex justify-between py-0.5 text-[10px] border-t border-white/5">
-                                                <span>Vacaciones (4.17%)</span>
-                                                <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.provisions.vacaciones)}</span>
+                                            <div className="border-t border-outline/10 pt-2 text-[10px] text-on-surface-variant/80">
+                                                <p className="flex justify-between font-bold">
+                                                    <span>Total Costo Empresa:</span>
+                                                    <span className="font-mono text-primary">${new Intl.NumberFormat('es-CO').format(payrollSummary.totalEmployerCost)}</span>
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -1968,6 +2393,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                             >
                                 Nómina & Contrato
                             </button>
+                            <button 
+                                type="button"
+                                onClick={() => setDetailTab('permisos')}
+                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'permisos' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
+                            >
+                                Permisos & Licencias
+                            </button>
                         </div>
 
                         {/* Scrollable Content Area */}
@@ -2000,6 +2432,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                         <div>
                                             <span className="text-on-surface-variant block mb-1">PIN Marcación Rápida:</span>
                                             <strong className="text-on-surface font-mono text-sm tracking-widest">{selectedEmpDetail.pin}</strong>
+                                        </div>
+                                        <div>
+                                            <span className="text-on-surface-variant block mb-1">Código de Empleado:</span>
+                                            <strong className="text-on-surface font-mono text-sm">{(selectedEmpDetail as any).employee_code || 'Sin Asignar'}</strong>
                                         </div>
                                         <div>
                                             <span className="text-on-surface-variant block mb-1">Fecha Registro:</span>
@@ -2171,22 +2607,63 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="flex flex-col gap-1">
                                                 <label className="text-[10px] text-on-surface-variant font-medium">Fecha de Contratación</label>
-                                                <input 
-                                                    type="date" 
-                                                    value={contrHireDate} 
-                                                    onChange={(e) => setContrHireDate(e.target.value)}
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none"
-                                                />
+                                                <div className="flex gap-1.5 items-center">
+                                                    <input 
+                                                        type="date" 
+                                                        id="hire-date-input"
+                                                        value={contrHireDate} 
+                                                        onChange={(e) => setContrHireDate(e.target.value)}
+                                                        onClick={(e) => {
+                                                            try {
+                                                                (e.target as any).showPicker();
+                                                            } catch (err) {}
+                                                        }}
+                                                        className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none flex-grow cursor-pointer"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            try {
+                                                                const el = document.getElementById('hire-date-input');
+                                                                if (el) (el as any).showPicker();
+                                                            } catch (err) {}
+                                                        }}
+                                                        className="px-2 py-2 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl text-[10px] font-bold cursor-pointer transition whitespace-nowrap"
+                                                    >
+                                                        Seleccionar
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Días Vacaciones Acumulados</label>
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Días Vacaciones Acumulados (Ley Colombiana)</label>
                                                 <input 
-                                                    type="number" 
-                                                    step="0.1"
+                                                    type="text" 
+                                                    readOnly
+                                                    disabled
                                                     value={contrVacations} 
-                                                    onChange={(e) => setContrVacations(e.target.value)}
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none"
+                                                    className="bg-surface-container/50 border border-outline/20 rounded-xl p-2 text-xs text-on-surface-variant/80 outline-none cursor-not-allowed font-medium"
+                                                    title="Cálculo automático: (Días laborados * 15) / 360 - Días de vacaciones ya tomados y aprobados"
                                                 />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="flex flex-col gap-1 col-span-2">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Tipo de Contrato</label>
+                                                <select 
+                                                    value={contrContractType} 
+                                                    onChange={(e: any) => setContrContractType(e.target.value)}
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                >
+                                                    <option value="indefinido">Término Indefinido</option>
+                                                    <option value="fijo">Término Fijo</option>
+                                                    <option value="obra_labor">Obra o Labor</option>
+                                                    <option value="servicios">Prestación de Servicios</option>
+                                                    <option value="aprendizaje">Aprendizaje (SENA)</option>
+                                                </select>
+                                                <span className="text-[9px] text-on-surface-variant/70 italic mt-0.5">
+                                                    * Nota: Prestación de Servicios no aplica provisiones ni aux. transporte. Aprendizaje solo aplica Salud y ARL patronal.
+                                                </span>
                                             </div>
                                         </div>
 
@@ -2244,29 +2721,52 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
-                                            {contrPaymentType === 'fixed' ? (
-                                                <div className="flex flex-col gap-1 col-span-2">
-                                                    <label className="text-[10px] text-on-surface-variant font-medium">Salario Mensual ($ COP)</label>
-                                                    <input 
-                                                        type="number" 
-                                                        value={contrBasicSalary} 
-                                                        onChange={(e) => setContrBasicSalary(e.target.value)}
-                                                        placeholder="Ej: 1300000"
-                                                        className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none w-full font-mono"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col gap-1 col-span-2">
-                                                    <label className="text-[10px] text-on-surface-variant font-medium">Pago por Hora ($ COP)</label>
-                                                    <input 
-                                                        type="number" 
-                                                        value={contrHourlyRate} 
-                                                        onChange={(e) => setContrHourlyRate(e.target.value)}
-                                                        placeholder="Ej: 15000"
-                                                        className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none w-full font-mono"
-                                                    />
-                                                </div>
-                                            )}
+                                            <div className="flex flex-col gap-1 col-span-2">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Salario Base Mensual ($ COP)</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={contrBasicSalary} 
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setContrBasicSalary(val);
+                                                    }}
+                                                    onFocus={(e) => {
+                                                        if (e.target.value === '0' || e.target.value === '0.00' || contrBasicSalary === '0' || contrBasicSalary === '0.00') {
+                                                            setContrBasicSalary('');
+                                                        }
+                                                    }}
+                                                    placeholder="Ej: 1750905"
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none w-full font-mono font-bold text-primary"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Auxilio de Transporte ($ COP)</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={contrTransportAllowance} 
+                                                    onChange={(e) => setContrTransportAllowance(e.target.value)}
+                                                    onFocus={(e) => {
+                                                        if (e.target.value === '0' || e.target.value === '0.00' || contrTransportAllowance === '0' || contrTransportAllowance === '0.00') {
+                                                            setContrTransportAllowance('');
+                                                        }
+                                                    }}
+                                                    placeholder="Ej: 249095"
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none w-full font-mono"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-medium">Valor Hora (Fórmula de Ley)</label>
+                                                <input 
+                                                    type="text" 
+                                                    readOnly 
+                                                    value={contrBasicSalary ? `$${Number(parseFloat(contrBasicSalary) / 240).toLocaleString('es-CO', {maximumFractionDigits: 2})}` : '$0'}
+                                                    className="bg-surface-container/40 border border-outline/10 text-on-surface-variant rounded-xl p-2 text-xs outline-none w-full font-mono cursor-not-allowed font-bold"
+                                                />
+                                                <span className="text-[9px] text-on-surface-variant/70 italic mt-0.5">Calculado: Salario / 240 Hrs</span>
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
@@ -2311,13 +2811,33 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                                 <>
                                                     <div className="flex flex-col gap-1">
                                                         <label className="text-[10px] text-on-surface-variant font-medium">Banco / Canal</label>
-                                                        <input 
-                                                            type="text" 
+                                                        <select 
                                                             value={contrBankName} 
                                                             onChange={(e) => setContrBankName(e.target.value)}
-                                                            placeholder="Ej: Nequi"
-                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none"
-                                                        />
+                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                        >
+                                                            <option value="">Seleccione Banco...</option>
+                                                            <option value="Bancolombia">Bancolombia</option>
+                                                            <option value="Nequi">Nequi</option>
+                                                            <option value="Daviplata">Daviplata</option>
+                                                            <option value="Davivienda">Davivienda</option>
+                                                            <option value="Banco de Bogotá">Banco de Bogotá</option>
+                                                            <option value="BBVA">BBVA</option>
+                                                            <option value="Banco de Occidente">Banco de Occidente</option>
+                                                            <option value="Banco Popular">Banco Popular</option>
+                                                            <option value="Banco Caja Social">Banco Caja Social</option>
+                                                            <option value="Banco Agrario">Banco Agrario</option>
+                                                            <option value="Scotiabank Colpatria">Scotiabank Colpatria</option>
+                                                            <option value="Lulo Bank">Lulo Bank</option>
+                                                            <option value="Nubank">Nubank</option>
+                                                            <option value="RappiPay">RappiPay</option>
+                                                            <option value="Banco Falabella">Banco Falabella</option>
+                                                            <option value="GNB Sudameris">GNB Sudameris</option>
+                                                            <option value="Banco Pichincha">Banco Pichincha</option>
+                                                            <option value="Banco AV Villas">Banco AV Villas</option>
+                                                            <option value="Coomeva">Coomeva</option>
+                                                            <option value="Banco W">Banco W</option>
+                                                        </select>
                                                     </div>
                                                     <div className="flex flex-col gap-1">
                                                         <label className="text-[10px] text-on-surface-variant font-medium">Número Cuenta</label>
@@ -2342,6 +2862,59 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                         {savingContract ? 'Guardando Contrato...' : 'Guardar Configuración de Nómina'}
                                     </button>
                                 </form>
+                            )}
+
+                            {/* Tab 5: Permisos */}
+                            {detailTab === 'permisos' && (
+                                <div className="space-y-4 text-xs text-left">
+                                    <h4 className="font-bold text-xs text-primary uppercase tracking-wider">Historial de Permisos y Vacaciones</h4>
+                                    {(() => {
+                                        const empDocs = hrDocs.filter((d: any) => d.employee_id === selectedEmpDetail.id);
+                                        if (empDocs.length === 0) {
+                                            return <p className="text-xs text-on-surface-variant/60 italic text-center py-4">No hay permisos ni vacaciones registrados para este colaborador.</p>;
+                                        }
+                                        return (
+                                            <div className="space-y-3">
+                                                {empDocs.map((doc: any) => (
+                                                    <div key={doc.id} className="p-4 bg-white/5 border border-outline/10 rounded-2xl space-y-2">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="font-bold text-primary capitalize text-xs">{doc.doc_type.replace('_', ' ')}</span>
+                                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                                                doc.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
+                                                                doc.status === 'approved' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                                                            }`}>
+                                                                {doc.status.toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2 bg-white/5 p-2 rounded-xl text-[10px] text-on-surface-variant font-mono">
+                                                            <div>
+                                                                <span className="block text-[8px] uppercase font-bold text-on-surface-variant/60">Inicio</span>
+                                                                {formatDateOnly(doc.start_date)}
+                                                            </div>
+                                                            <div>
+                                                                <span className="block text-[8px] uppercase font-bold text-on-surface-variant/60">Último Día</span>
+                                                                {doc.end_date ? formatDateOnly(doc.end_date) : 'N/A'}
+                                                            </div>
+                                                            <div>
+                                                                <span className="block text-[8px] uppercase font-bold text-on-surface-variant/60">Regreso</span>
+                                                                {doc.return_date ? formatDateOnly(doc.return_date) : 'N/A'}
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-xs text-on-surface-variant/90 leading-relaxed bg-white/5 p-2 rounded-xl">
+                                                            <strong>Justificación:</strong> "{doc.notes || doc.reason || 'Sin justificación'}"
+                                                        </p>
+                                                        {doc.admin_notes && (
+                                                            <div className="bg-surface-container-high/40 p-2.5 rounded-xl border border-outline/5 text-[10px] text-on-surface">
+                                                                <span className="font-bold text-primary block mb-0.5">Respuesta de Gestión Humana:</span>
+                                                                {doc.admin_notes}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
                             )}
 
                         </div>

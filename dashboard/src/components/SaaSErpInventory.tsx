@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { printBarcodes } from '../utils/barcodePrinter';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import JsBarcode from 'jsbarcode';
+import { printBarcodes, previewBarcodes, LABEL_PRINT_PROFILES, DEFAULT_LABEL_PRINT_SETTINGS, type LabelProfileId } from '../utils/barcodePrinter';
 
 interface Product {
     id: string;
@@ -27,57 +28,45 @@ interface SaaSErpInventoryProps {
     category?: string;
 }
 
-// Code 39 Character encoding table
-const code39Map: Record<string, string> = {
-    '0': '101001101101', '1': '110100101011', '2': '101100101011', '3': '110110010101',
-    '4': '101001101011', '5': '110100110101', '6': '101100110101', '7': '101001011011',
-    '8': '110100101101', '9': '101100101101', 'A': '110101001011', 'B': '101101001011',
-    'C': '110110100101', 'D': '101011001011', 'E': '110101100101', 'F': '101101100101',
-    'G': '101010011011', 'H': '110101001101', 'I': '101101001101', 'J': '101011001101',
-    'K': '110101010011', 'L': '101101010011', 'M': '110110101001', 'N': '101011010011',
-    'O': '110101101001', 'P': '101101101001', 'Q': '101010110011', 'R': '110101011001',
-    'S': '101101011001', 'T': '101011011001', 'U': '110010101011', 'V': '100110101011',
-    'W': '110011010101', 'X': '100101101011', 'Y': '110010110101', 'Z': '100110110101',
-    '-': '100101011011', '.': '110010101101', ' ': '100110101101', '*': '100101101101'
-};
 
 const BarcodeSVG: React.FC<{ value: string; size?: 'sm' | 'md' }> = ({ value, size = 'md' }) => {
-    const cleanValue = (value || '').toUpperCase().replace(/[^0-9A-Z\-.\s]/g, '');
+    const cleanValue = (value || '').toUpperCase().replace(/[^0-9A-Z\-\.\s]/g, '').trim();
     if (!cleanValue) return null;
-    const fullText = `*${cleanValue}*`;
-    let pattern = '';
-    for (let char of fullText) {
-        pattern += (code39Map[char] || code39Map[' ']) + '0';
-    }
-    const barWidth = size === 'sm' ? 0.9 : 1.5;
-    const height = size === 'sm' ? 20 : 40;
-    const width = pattern.length * barWidth;
+
+    const svgRef = useRef<SVGSVGElement | null>(null);
+
+    useEffect(() => {
+        const svgNode = svgRef.current;
+        if (!svgNode) return;
+
+        svgNode.innerHTML = '';
+        JsBarcode(svgNode, cleanValue, {
+            format: 'CODE128',
+            displayValue: false,
+            width: size === 'sm' ? 1.2 : 1.6,
+            height: size === 'sm' ? 22 : 40,
+            margin: 4,
+            background: '#ffffff',
+            lineColor: '#000000',
+            fontSize: 12,
+            textMargin: 0
+        });
+    }, [cleanValue, size]);
+
     return (
         <div className="flex flex-col items-center gap-0.5 my-1">
-            <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="bg-white p-0.5 rounded">
-                {pattern.split('').map((bit, idx) => {
-                    if (bit === '1') {
-                        return (
-                            <rect
-                                key={idx}
-                                x={idx * barWidth}
-                                y={0}
-                                width={barWidth}
-                                height={height}
-                                fill="#000000"
-                            />
-                        );
-                    }
-                    return null;
-                })}
-            </svg>
+            <svg
+                ref={svgRef}
+                width={size === 'sm' ? 120 : 170}
+                height={size === 'sm' ? 24 : 44}
+                viewBox={size === 'sm' ? '0 0 120 24' : '0 0 170 44'}
+                className="bg-white p-0.5 rounded"
+                aria-label={`Código de barras ${cleanValue}`}
+            />
             <span className="text-[8px] font-mono tracking-widest text-on-surface-variant uppercase">{cleanValue}</span>
         </div>
     );
 };
-
-
-
 interface ColorOption {
     name: string;
     value: string;
@@ -90,7 +79,7 @@ const colorOptions: ColorOption[] = [
     { name: 'Havana', value: 'Havana', preview: 'linear-gradient(135deg, #2b180d 0%, #a66a38 50%, #2b180d 100%)' },
     { name: 'Dorado', value: 'Dorado', preview: '#d4af37' },
     { name: 'Plateado', value: 'Plateado', preview: '#c0c0c0' },
-    { name: 'Café / Marrón', value: 'Cafe', preview: '#5c4033' },
+    { name: 'CafÃ© / MarrÃ³n', value: 'Cafe', preview: '#5c4033' },
     { name: 'Azul Marino', value: 'Azul Marino', preview: '#000080' },
     { name: 'Rosado', value: 'Rosado', preview: '#ffc0cb' },
     { name: 'Transparente', value: 'Transparente', preview: 'linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 40%, rgba(255,0,0,0.6) 45%, rgba(255,0,0,0.6) 55%, rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1) 100%)' },
@@ -103,7 +92,7 @@ const getColorPreview = (name: string): string => {
     return opt ? opt.preview : '#808080';
 };
 
-// Sub-componente para edición inline de promociones
+// Sub-componente para ediciÃ³n inline de promociones
 const FieldWrapper: React.FC<{ 
     fieldId: string;
     label: string;
@@ -133,7 +122,7 @@ const FieldWrapper: React.FC<{
     );
 };
 
-// Sub-componente para edición inline de promociones
+// Sub-componente para ediciÃ³n inline de promociones
 const PromoDiscountRow: React.FC<{
     prod: Product;
     formatPrice: (v: string) => string;
@@ -150,8 +139,8 @@ const PromoDiscountRow: React.FC<{
                 <p className="font-semibold text-on-surface text-sm">{prod.name}</p>
                 <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[10px] text-on-surface-variant">
                     {prod.sku && <span className="font-mono bg-surface-container px-1 py-0.5 rounded">SKU: {prod.sku}</span>}
-                    {category === 'optica' && prod.brand && <span>• Marca: {prod.brand}</span>}
-                    {category === 'optica' && prod.color && <span>• Color: {prod.color}</span>}
+                    {category === 'optica' && prod.brand && <span>â€¢ Marca: {prod.brand}</span>}
+                    {category === 'optica' && prod.color && <span>â€¢ Color: {prod.color}</span>}
                 </div>
             </td>
             <td className="p-4 font-semibold text-on-surface">
@@ -200,6 +189,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
     const [activeTab, setActiveTab] = useState<'catalog' | 'promotions'>('catalog');
     const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set());
     const [showCreateCategoryPrompt, setShowCreateCategoryPrompt] = useState(false);
+    const [printProfileId, setPrintProfileId] = useState<LabelProfileId>('two-column');
 
     // Form fields
     const [name, setName] = useState('');
@@ -330,10 +320,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                 setNewCategoryName('');
                 setShowCreateCategoryPrompt(false);
             } else {
-                alert(json.error || 'Error al crear la categoría.');
+                alert(json.error || 'Error al crear la categorÃ­a.');
             }
         } catch (err: any) {
-            alert('Error de conexión al crear categoría: ' + err.message);
+            alert('Error de conexiÃ³n al crear categorÃ­a: ' + err.message);
         }
     };
 
@@ -433,7 +423,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                     setColor('');
                     setPromoDiscount('');
                     setCustomAttrs({});
-                    alert('Producto guardado con éxito. El formulario continúa activo para seguir registrando bajo esta categoría.');
+                    alert('Producto guardado con Ã©xito. El formulario continÃºa activo para seguir registrando bajo esta categorÃ­a.');
                 }
             } else {
                 alert(`Error: ${data.error}`);
@@ -476,12 +466,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                 alert(`Error: ${data.error}`);
             }
         } catch (err) {
-            alert('Error al guardar promoción.');
+            alert('Error al guardar promociÃ³n.');
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+        if (!confirm('Â¿EstÃ¡s seguro de eliminar este producto?')) return;
         try {
             const res = await fetch(`/api/clients/${clientId}/products/${id}`, {
                 method: 'DELETE',
@@ -526,7 +516,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                 setImportErrorMsg(json.error || 'Error al importar archivo CSV.');
             }
         } catch (err) {
-            setImportErrorMsg('Error de conexión al enviar el archivo.');
+            setImportErrorMsg('Error de conexiÃ³n al enviar el archivo.');
         } finally {
             setImporting(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -536,18 +526,20 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
     const openPrintModal = (prod: Product, defaultQty: number = 1) => {
         setPrintProduct(prod);
         setPrintQuantity(defaultQty);
+        setPrintProfileId('two-column');
         setIsRefillPrompt(defaultQty > 1);
         setIsPrintModalOpen(true);
     };
 
     const handlePrintBarcodes = () => {
         if (!printProduct || !printProduct.sku) return;
+        const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
         printBarcodes([{
             name: printProduct.name,
             sku: printProduct.sku,
             price: printProduct.price,
             quantity: parseInt(printQuantity.toString()) || 1
-        }]);
+        }], selectedSettings);
         setIsPrintModalOpen(false);
     };
 
@@ -704,7 +696,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                             type="button"
                             onClick={fetchProducts}
                             className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow shrink-0"
-                            title="Refrescar catálogo"
+                            title="Refrescar catÃ¡logo"
                         >
                             <span className="material-symbols-outlined text-[18px]">refresh</span>
                         </button>
@@ -722,12 +714,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
             {/* Banners feedback */}
             {importSuccessMsg && (
                 <div className="bg-primary/10 border border-primary/20 text-primary text-xs p-3 rounded-xl font-medium">
-                    ✅ {importSuccessMsg}
+                    âœ… {importSuccessMsg}
                 </div>
             )}
             {importErrorMsg && (
                 <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl font-medium">
-                    ⚠️ {importErrorMsg}
+                    âš ï¸ {importErrorMsg}
                 </div>
             )}
 
@@ -741,7 +733,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                             : 'border-transparent text-on-surface-variant hover:text-on-surface'
                     }`}
                 >
-                    Catálogo de Inventario
+                    CatÃ¡logo de Inventario
                 </button>
                 <button
                     onClick={() => { setActiveTab('promotions'); setAddProductStep('closed'); }}
@@ -751,7 +743,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                             : 'border-transparent text-on-surface-variant hover:text-on-surface'
                     }`}
                 >
-                    Descuentos por Promoción %
+                    Descuentos por PromociÃ³n %
                 </button>
             </div>
 
@@ -766,8 +758,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={category === 'optica' 
-                        ? "Buscador por código de barras SKU, nombre, marca o material..." 
-                        : "Buscador por código de barras, nombre o descripción..."}
+                        ? "Buscador por cÃ³digo de barras SKU, nombre, marca o material..." 
+                        : "Buscador por cÃ³digo de barras, nombre o descripciÃ³n..."}
                     className="w-full bg-surface-container border border-outline/20 rounded-xl py-3 pl-10 pr-4 text-sm text-on-surface focus:border-primary outline-none transition"
                 />
                 {searchTerm && (
@@ -783,12 +775,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
             {/* Render Tab Contents */}
             {activeTab === 'catalog' ? (
                 <>
-                    {/* Selector de Categoría - Fuera del Formulario */}
+                    {/* Selector de CategorÃ­a - Fuera del Formulario */}
                     {isFormOpen && (
                         <div className="bg-surface-container-high border border-outline/10 p-4 rounded-2xl space-y-3">
                             <div className="flex items-center gap-2">
                                 <span className="material-symbols-outlined text-primary text-[18px]">category</span>
-                                <label className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Categoría del Producto</label>
+                                <label className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">CategorÃ­a del Producto</label>
                             </div>
                             <div className="flex gap-2 items-end">
                                 <select 
@@ -802,18 +794,18 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                         }
                                     }}
                                 >
-                                    <option value="" className="bg-surface-container">-- Selecciona una categoría --</option>
+                                    <option value="" className="bg-surface-container">-- Selecciona una categorÃ­a --</option>
                                     {categories.map((cat: any) => (
                                         <option key={cat.id} value={cat.id} className="bg-surface-container">{cat.name}</option>
                                     ))}
-                                    <option value="new" className="bg-primary text-on-primary">+ Crear nueva categoría</option>
+                                    <option value="new" className="bg-primary text-on-primary">+ Crear nueva categorÃ­a</option>
                                 </select>
                                 {categoryId && (
                                     <button 
                                         type="button"
                                         onClick={() => { setCategoryId(''); setHiddenFields(new Set()); }}
                                         className="p-2.5 hover:bg-red-500/20 text-red-400 rounded-lg transition cursor-pointer border border-red-500/30 bg-transparent text-xs"
-                                        title="Limpiar selección"
+                                        title="Limpiar selecciÃ³n"
                                     >
                                         <span className="material-symbols-outlined text-[16px]">close</span>
                                     </button>
@@ -822,14 +814,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                         </div>
                     )}
 
-                    {/* Modal Rápido para Crear Nueva Categoría */}
+                    {/* Modal RÃ¡pido para Crear Nueva CategorÃ­a */}
                     {showCreateCategoryPrompt && (
                         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                             <div className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in space-y-4">
                                 <div className="flex justify-between items-center">
                                     <h3 className="font-bold text-base text-on-surface flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-primary text-[20px]">add_box</span>
-                                        Nueva Categoría
+                                        Nueva CategorÃ­a
                                     </h3>
                                     <button 
                                         type="button"
@@ -898,28 +890,16 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                         />
                                     </div>
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium">SKU / Código Único (En blanco para autogenerar)</label>
+                                        <label className="text-xs text-on-surface-variant font-medium">SKU / CÃ³digo Ãšnico (En blanco para autogenerar)</label>
                                         <input 
                                             type="text"
                                             className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
                                             value={sku}
                                             onChange={(e) => setSku(e.target.value)}
-                                            placeholder="Autogenerado si está vacío"
+                                            placeholder="Autogenerado si estÃ¡ vacÃ­o"
                                         />
                                     </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium">Categoría del Producto</label>
-                                        <select 
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                            value={categoryId}
-                                            onChange={(e) => setCategoryId(e.target.value)}
-                                        >
-                                            <option value="" className="bg-surface-container">-- Ninguna / General --</option>
-                                            {categories.map((cat: any) => (
-                                                <option key={cat.id} value={cat.id} className="bg-surface-container">{cat.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+
                                     {(() => {
                                         const selectedCat = categories.find((cat: any) => cat.id.toString() === categoryId.toString());
                                         const selectedCatName = selectedCat ? selectedCat.name.toLowerCase().trim() : '';
@@ -967,7 +947,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                                         <option value="Metal">Metal</option>
                                                                         <option value="Titanio">Titanio</option>
                                                                         <option value="TR-90">TR-90</option>
-                                                                        <option value="Madera">Madera / Orgánico</option>
+                                                                        <option value="Madera">Madera / OrgÃ¡nico</option>
                                                                     </select>
                                                                 }
                                                             />
@@ -1010,7 +990,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                                         <option value="Cuadrada">Cuadrada</option>
                                                                         <option value="Rectangular">Rectangular</option>
                                                                         <option value="Gato">Cat-Eye / Gato</option>
-                                                                        <option value="Pantalla">Pantalla / Máscara</option>
+                                                                        <option value="Pantalla">Pantalla / MÃ¡scara</option>
                                                                     </select>
                                                                 }
                                                             />
@@ -1035,17 +1015,17 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                     </>
                                                 )}
 
-                                                {/* 2. LENTES OFTÁLMICOS */}
+                                                {/* 2. LENTES OFTÃLMICOS */}
                                                 {catLower.includes('lente') && !catLower.includes('contacto') && (
                                                     <>
                                                         <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de Diseño</label>
+                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de DiseÃ±o</label>
                                                             <select 
                                                                 className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
                                                                 value={customAttrs.design || ''}
                                                                 onChange={(e) => handleAttrChange('design', e.target.value)}
                                                             >
-                                                                <option value="">-- Seleccione Diseño --</option>
+                                                                <option value="">-- Seleccione DiseÃ±o --</option>
                                                                 <option value="Monofocal">Monofocal</option>
                                                                 <option value="Bifocal">Bifocal</option>
                                                                 <option value="Progresivo">Progresivo</option>
@@ -1060,10 +1040,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                                 onChange={(e) => handleAttrChange('material', e.target.value)}
                                                             >
                                                                 <option value="">-- Seleccione Material --</option>
-                                                                <option value="CR-39">CR-39 (Estándar)</option>
+                                                                <option value="CR-39">CR-39 (EstÃ¡ndar)</option>
                                                                 <option value="Policarbonato">Policarbonato (Resistente)</option>
-                                                                <option value="Alto Indice 1.67">Alto Índice 1.67 (Delgado)</option>
-                                                                <option value="Alto Indice 1.74">Alto Índice 1.74 (Extra Delgado)</option>
+                                                                <option value="Alto Indice 1.67">Alto Ãndice 1.67 (Delgado)</option>
+                                                                <option value="Alto Indice 1.74">Alto Ãndice 1.74 (Extra Delgado)</option>
                                                                 <option value="Trivex">Trivex</option>
                                                             </select>
                                                         </div>
@@ -1077,8 +1057,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                                 <option value="">-- Seleccione Tratamiento --</option>
                                                                 <option value="Antirreflejo">Antirreflejo Convencional</option>
                                                                 <option value="Filtro Azul">Filtro de Luz Azul / Blue Protect</option>
-                                                                <option value="Fotocromatico">Fotocromático (Transitions)</option>
-                                                                <option value="Fotocromatico + Filtro Azul">Fotocromático + Filtro Azul</option>
+                                                                <option value="Fotocromatico">FotocromÃ¡tico (Transitions)</option>
+                                                                <option value="Fotocromatico + Filtro Azul">FotocromÃ¡tico + Filtro Azul</option>
                                                                 <option value="Polarizado">Polarizado</option>
                                                             </select>
                                                         </div>
@@ -1103,17 +1083,17 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                             </select>
                                                         </div>
                                                         <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Diseño / Aplicación</label>
+                                                            <label className="text-xs text-on-surface-variant font-medium">DiseÃ±o / AplicaciÃ³n</label>
                                                             <select 
                                                                 className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
                                                                 value={customAttrs.design || ''}
                                                                 onChange={(e) => handleAttrChange('design', e.target.value)}
                                                             >
                                                                 <option value="">-- Seleccione --</option>
-                                                                <option value="Esferico">Esférico (Miopía/Hipermetropía)</option>
-                                                                <option value="Torico">Tórico (Astigmatismo)</option>
+                                                                <option value="Esferico">EsfÃ©rico (MiopÃ­a/HipermetropÃ­a)</option>
+                                                                <option value="Torico">TÃ³rico (Astigmatismo)</option>
                                                                 <option value="Multifocal">Multifocal (Presbicia)</option>
-                                                                <option value="Cosmetico">Cosmético / Color</option>
+                                                                <option value="Cosmetico">CosmÃ©tico / Color</option>
                                                             </select>
                                                         </div>
                                                         <div className="flex flex-col gap-1.5">
@@ -1127,7 +1107,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                             />
                                                         </div>
                                                         <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Diámetro (DIA)</label>
+                                                            <label className="text-xs text-on-surface-variant font-medium">DiÃ¡metro (DIA)</label>
                                                             <input 
                                                                 type="text"
                                                                 className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
@@ -1150,8 +1130,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                                 onChange={(e) => handleAttrChange('type', e.target.value)}
                                                             >
                                                                 <option value="">-- Seleccione --</option>
-                                                                <option value="Rigido">Rígido / Antigolpes</option>
-                                                                <option value="Semi-rigido">Semi-rígido</option>
+                                                                <option value="Rigido">RÃ­gido / Antigolpes</option>
+                                                                <option value="Semi-rigido">Semi-rÃ­gido</option>
                                                                 <option value="Blando">Blando / Tipo Bolsa</option>
                                                             </select>
                                                         </div>
@@ -1162,13 +1142,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                                 className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
                                                                 value={customAttrs.material || ''}
                                                                 onChange={(e) => handleAttrChange('material', e.target.value)}
-                                                                placeholder="Ej: Cuero sintético, Metal"
+                                                                placeholder="Ej: Cuero sintÃ©tico, Metal"
                                                             />
                                                         </div>
                                                     </>
                                                 )}
 
-                                                {/* 5. LÍQUIDOS LIMPIA LENTES */}
+                                                {/* 5. LÃQUIDOS LIMPIA LENTES */}
                                                 {catLower.includes('liquido') && (
                                                     <>
                                                         <div className="flex flex-col gap-1.5">
@@ -1182,7 +1162,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                             />
                                                         </div>
                                                         <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Presentación</label>
+                                                            <label className="text-xs text-on-surface-variant font-medium">PresentaciÃ³n</label>
                                                             <select 
                                                                 className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
                                                                 value={customAttrs.packaging || ''}
@@ -1196,7 +1176,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                     </>
                                                 )}
 
-                                                {/* 6. PAÑOS MICROFIBRA */}
+                                                {/* 6. PAÃ‘OS MICROFIBRA */}
                                                 {catLower.includes('pano') && (
                                                     <>
                                                         <div className="flex flex-col gap-1.5">
@@ -1210,16 +1190,16 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                             />
                                                         </div>
                                                         <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de Personalización</label>
+                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de PersonalizaciÃ³n</label>
                                                             <select 
                                                                 className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
                                                                 value={customAttrs.design || ''}
                                                                 onChange={(e) => handleAttrChange('design', e.target.value)}
                                                             >
                                                                 <option value="">-- Seleccione --</option>
-                                                                <option value="Unicolor">Unicolor básico</option>
-                                                                <option value="Estampado">Estampado / Con diseños</option>
-                                                                <option value="Logo Tienda">Con logo de la óptica</option>
+                                                                <option value="Unicolor">Unicolor bÃ¡sico</option>
+                                                                <option value="Estampado">Estampado / Con diseÃ±os</option>
+                                                                <option value="Logo Tienda">Con logo de la Ã³ptica</option>
                                                             </select>
                                                         </div>
                                                     </>
@@ -1261,7 +1241,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                         />
                                     </div>
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium">Stock Mínimo (Alerta de Alarma) *</label>
+                                        <label className="text-xs text-on-surface-variant font-medium">Stock MÃ­nimo (Alerta de Alarma) *</label>
                                         <input 
                                             type="number"
                                             className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
@@ -1324,7 +1304,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                     {!hiddenFields.has('description') && (
                                         <FieldWrapper 
                                             fieldId="description" 
-                                            label="Descripción"
+                                            label="DescripciÃ³n"
                                             hidden={false}
                                             onToggleHidden={toggleFieldHidden}
                                             children={
@@ -1341,16 +1321,16 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                 {/* Barcode Display at the bottom of form */}
                                 {(sku || (editingProduct && editingProduct.sku)) && (
                                     <div className="flex flex-col items-center justify-center p-4 bg-surface-container/30 border border-outline/10 rounded-xl mt-2">
-                                        <span className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider mb-1">Código de Barras Generado</span>
+                                        <span className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider mb-1">CÃ³digo de Barras Generado</span>
                                         <BarcodeSVG value={sku || editingProduct?.sku || ''} />
                                     </div>
                                 )}
 
                                 {/*upsell custom form request*/}
                                 <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl space-y-2 text-center my-3">
-                                    <p className="text-[11px] text-on-surface-variant font-medium">¿Necesitas campos adicionales o un esquema de inventario a tu medida?</p>
+                                    <p className="text-[11px] text-on-surface-variant font-medium">Â¿Necesitas campos adicionales o un esquema de inventario a tu medida?</p>
                                     <a 
-                                        href="https://wa.me/573007137887?text=Hola%20Aizack%20Agency,%20deseo%20solicitar%20un%20formulario%20personalizado%20para%20el%20inventario%20de%20mi%20óptica."
+                                        href="https://wa.me/573007137887?text=Hola%20Aizack%20Agency,%20deseo%20solicitar%20un%20formulario%20personalizado%20para%20el%20inventario%20de%20mi%20Ã³ptica."
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1.5 text-xs text-primary font-bold hover:underline"
@@ -1410,7 +1390,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                         </div>
                     ) : filteredProducts.length === 0 ? (
                         <div className="glass-card p-12 text-center">
-                            <p className="text-sm text-on-surface-variant">No hay productos que coincidan con la búsqueda.</p>
+                            <p className="text-sm text-on-surface-variant">No hay productos que coincidan con la bÃºsqueda.</p>
                         </div>
                     ) : (
                         <div className="glass-card overflow-hidden">
@@ -1418,7 +1398,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                 <thead>
                                     <tr className="bg-surface-container/50 border-b border-outline/10 text-xs text-on-surface-variant uppercase font-semibold">
                                         <th className="p-4">Producto</th>
-                                        <th className="p-4">Código de Barras / SKU</th>
+                                        <th className="p-4">CÃ³digo de Barras / SKU</th>
                                         <th className="p-4">Costo</th>
                                         <th className="p-4">Precio Venta</th>
                                         <th className="p-4">Stock</th>
@@ -1437,7 +1417,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                         <p className="font-semibold text-on-surface text-sm">{prod.name}</p>
                                                         {parseFloat(prod.promo_discount || '0') > 0 && (
                                                             <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                                                                -{parseFloat(prod.promo_discount)}% Promoción
+                                                                -{parseFloat(prod.promo_discount)}% PromociÃ³n
                                                             </span>
                                                         )}
                                                     </div>
@@ -1511,7 +1491,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                         <button 
                                                             onClick={() => openPrintModal(prod)}
                                                             className="p-1.5 hover:bg-secondary/10 text-secondary rounded transition cursor-pointer border-0 bg-transparent"
-                                                            title="Imprimir Código de Barras"
+                                                            title="Imprimir CÃ³digo de Barras"
                                                         >
                                                             <span className="material-symbols-outlined text-[16px]">print</span>
                                                         </button>
@@ -1604,7 +1584,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                     type="text"
                                     value={newColorName}
                                     onChange={(e) => setNewColorName(e.target.value)}
-                                    placeholder="Ej: Azul Océano, Púrpura Metalizado"
+                                    placeholder="Ej: Azul OcÃ©ano, PÃºrpura Metalizado"
                                     className="bg-surface-container border border-outline/20 rounded-lg p-2.5 text-xs focus:border-primary text-on-surface outline-none transition"
                                     onKeyPress={(e) => {
                                         if (e.key === 'Enter') {
@@ -1615,7 +1595,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-on-surface-variant font-bold uppercase">Código de Color (Hex)</label>
+                                <label className="text-xs text-on-surface-variant font-bold uppercase">CÃ³digo de Color (Hex)</label>
                                 <div className="flex gap-2 items-center">
                                     <input 
                                         type="color"
@@ -1670,14 +1650,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                 </div>
             )}
 
-            {/* Modal de Impresión de Códigos de Barras */}
+            {/* Modal de ImpresiÃ³n de CÃ³digos de Barras */}
             {isPrintModalOpen && printProduct && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in">
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h3 className="font-bold text-base text-on-surface">
-                                    {isRefillPrompt ? '📦 Impresión por Reabastecimiento' : '🖨️ Imprimir Código de Barras'}
+                                    {isRefillPrompt ? 'ðŸ“¦ ImpresiÃ³n por Reabastecimiento' : 'ðŸ–¨ï¸ Imprimir CÃ³digo de Barras'}
                                 </h3>
                                 <p className="text-xs text-on-surface-variant opacity-75 mt-1">
                                     {printProduct.name}
@@ -1693,18 +1673,18 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
 
                         {isRefillPrompt ? (
                             <div className="bg-primary/10 border border-primary/20 p-3 rounded-xl mb-4 text-xs text-on-surface-variant leading-relaxed">
-                                <strong className="text-primary">¡Reabastecimiento detectado!</strong> Se han añadido nuevas unidades al stock. ¿Cuántas etiquetas de códigos de barras deseas imprimir para esta tanda?
+                                <strong className="text-primary">Â¡Reabastecimiento detectado!</strong> Se han aÃ±adido nuevas unidades al stock. Â¿CuÃ¡ntas etiquetas de cÃ³digos de barras deseas imprimir para esta tanda?
                             </div>
                         ) : (
                             <p className="text-xs text-on-surface-variant mb-4 leading-relaxed">
-                                Elige cuántas etiquetas autoadhesivas deseas generar para tu impresora térmica (Tamaño estándar 50mm x 30mm).
+                                Elige cuÃ¡ntas etiquetas autoadhesivas deseas generar para tu impresora tÃ©rmica (TamaÃ±o estÃ¡ndar 50mm x 30mm).
                             </p>
                         )}
 
                         <div className="space-y-4">
                             <div className="bg-surface-container p-3 rounded-xl border border-outline/5 flex items-center gap-3">
                                 <div className="flex-grow">
-                                    <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Código SKU</p>
+                                    <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">CÃ³digo SKU</p>
                                     <p className="text-sm font-mono text-on-surface font-semibold mt-0.5">{printProduct.sku}</p>
                                 </div>
                                 <div className="w-px h-8 bg-outline/10" />
@@ -1712,6 +1692,21 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                     <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Precio de Venta</p>
                                     <p className="text-sm text-on-surface font-bold mt-0.5">{formatPrice(printProduct.price)}</p>
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-on-surface-variant uppercase ml-1">Tipo de Etiqueta</label>
+                                <select
+                                    value={printProfileId}
+                                    onChange={(e) => setPrintProfileId(e.target.value as LabelProfileId)}
+                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-sm text-on-surface outline-none focus:border-primary"
+                                >
+                                    {Object.values(LABEL_PRINT_PROFILES).map((profile) => (
+                                        <option key={profile.id} value={profile.id}>
+                                            {profile.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div className="space-y-2">
@@ -1760,6 +1755,21 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                         </div>
 
                         <div className="flex justify-end gap-3 pt-6 border-t border-outline/5 mt-6">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
+                                    previewBarcodes([{
+                                        name: printProduct.name,
+                                        sku: printProduct.sku || '',
+                                        price: printProduct.price,
+                                        quantity: parseInt(printQuantity.toString()) || 1
+                                    }], selectedSettings);
+                                }}
+                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-xl transition cursor-pointer"
+                            >
+                                Vista previa
+                            </button>
                             <button 
                                 onClick={() => setIsPrintModalOpen(false)}
                                 className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-xl transition cursor-pointer"
@@ -1777,7 +1787,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                     </div>
                 </div>
             )}
-            {/* Modal de Reabastecimiento Rápido (Refill) */}
+            {/* Modal de Reabastecimiento RÃ¡pido (Refill) */}
             {isRefillModalOpen && refillProduct && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <form onSubmit={handleSaveRefill} className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in space-y-4">
@@ -1798,7 +1808,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                         <div className="bg-surface-container p-3 rounded-xl border border-outline/5 text-xs space-y-1">
                             <p className="text-on-surface font-semibold">{refillProduct.name}</p>
                             <p className="text-on-surface-variant opacity-75 font-mono">SKU: {refillProduct.sku || 'N/A'}</p>
-                            <p className="text-on-surface-variant opacity-75">Stock Actual: <strong className="text-on-surface">{refillProduct.stock} uds</strong> (Mínimo: {refillProduct.min_stock !== undefined ? refillProduct.min_stock : 5} uds)</p>
+                            <p className="text-on-surface-variant opacity-75">Stock Actual: <strong className="text-on-surface">{refillProduct.stock} uds</strong> (MÃ­nimo: {refillProduct.min_stock !== undefined ? refillProduct.min_stock : 5} uds)</p>
                         </div>
 
                         <div className="flex flex-col gap-1.5">
@@ -1821,7 +1831,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                 onChange={(e) => setPrintAfterRefill(e.target.checked)}
                                 className="accent-primary w-4 h-4 rounded"
                             />
-                            <span>Imprimir códigos de barra para estas nuevas unidades</span>
+                            <span>Imprimir cÃ³digos de barra para estas nuevas unidades</span>
                         </label>
 
                         <div className="flex justify-end gap-3 pt-4 border-t border-outline/5 mt-4">
@@ -1846,3 +1856,4 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
         </div>
     );
 };
+

@@ -3,11 +3,40 @@ import path from 'path';
 import { pool } from '../database/postgres';
 
 const LOGS_DIR = path.join(process.cwd(), 'logs');
+const ALERT_THROTTLE_MS = 300000; // 5 minutos - evita alertas duplicadas
+
+// Mapear cuándo fue la última alerta de cada tipo
+const alertThrottleMap = new Map<string, number>();
 
 // Asegurar que exista la carpeta de logs
 if (!fs.existsSync(LOGS_DIR)) {
     fs.mkdirSync(LOGS_DIR, { recursive: true });
 }
+
+/**
+ * Verificar si una alerta debe ser throttled (silenciada temporalmente)
+ */
+const isAlertThrottled = (alertKey: string, clientId?: string): boolean => {
+    const throttleKey = `${alertKey}:${clientId || 'system'}`;
+    const lastAlertTime = alertThrottleMap.get(throttleKey);
+    const now = Date.now();
+
+    if (!lastAlertTime) {
+        // Primera vez que se dispara esta alerta
+        alertThrottleMap.set(throttleKey, now);
+        return false;
+    }
+
+    const timeSinceLastAlert = now - lastAlertTime;
+    if (timeSinceLastAlert < ALERT_THROTTLE_MS) {
+        // Alerta está siendo throttled
+        return true;
+    }
+
+    // Suficiente tiempo ha pasado, actualizar timestamp
+    alertThrottleMap.set(throttleKey, now);
+    return false;
+};
 
 /**
  * Helper to write logs to files locally
@@ -109,6 +138,12 @@ export const logger = {
      */
     raiseAlert: async (alertKey: string, severity: 'red' | 'orange' | 'yellow', message: string, detail?: string, clientId?: string): Promise<void> => {
         try {
+            // Verificar si esta alerta está siendo throttled
+            if (isAlertThrottled(alertKey, clientId)) {
+                console.warn(`[ALERT THROTTLED] Key: ${alertKey} (silenciada por ${ALERT_THROTTLE_MS / 1000}s)`);
+                return;
+            }
+
             // Write local log first
             logger.error(`[ALERT RAISED] Key: ${alertKey} | ${message}${clientId ? ` | Tenant: ${clientId}` : ''}`, detail);
 
@@ -137,9 +172,9 @@ export const logger = {
 
             // Registrar en base de datos
             await pool.query(
-                `INSERT INTO system_alerts (alert_key, severity, message, status, client_id) 
-                 VALUES ($1, $2, $3, 'active', $4)`,
-                [alertKey, severity, message, clientId || null]
+                `INSERT INTO system_alerts (alert_key, severity, message, status, client_id, severity_level) 
+                 VALUES ($1, $2, $3, 'active', $4, $5)`,
+                [alertKey, severity, message, clientId || null, severity === 'red' ? 1 : severity === 'orange' ? 2 : 3]
             );
 
             // Enviar alerta a Discord

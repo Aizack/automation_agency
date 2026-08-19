@@ -18,11 +18,25 @@ interface DocRequest {
     start_date: string;
     end_date: string;
     reason: string;
-    status: 'pending' | 'approved' | 'rejected';
+    notes?: string;
+    admin_notes?: string;
+    status: 'pending' | 'approved' | 'rejected' | 'negotiating';
     created_at: string;
 }
 
 export const EmployeePortal: React.FC = () => {
+    const formatDateOnly = (dateStr: string) => {
+        if (!dateStr) return '';
+        const part = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+        const parts = part.split('-');
+        if (parts.length === 3) {
+            return `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`;
+        }
+        return new Date(dateStr).toLocaleDateString('es-CO');
+    };
+
+
+
     // Auth State
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [phone, setPhone] = useState('');
@@ -79,6 +93,7 @@ export const EmployeePortal: React.FC = () => {
     const [docType, setDocType] = useState('vacaciones');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [returnDate, setReturnDate] = useState('');
     const [reason, setReason] = useState('');
     const [docError, setDocError] = useState('');
     const [docSuccess, setDocSuccess] = useState('');
@@ -235,6 +250,30 @@ export const EmployeePortal: React.FC = () => {
 
     // check localstorage session
     useEffect(() => {
+        const originalFetch = window.fetch;
+        window.fetch = async (...args) => {
+            const res = await originalFetch(...args);
+            if (res.status === 403) {
+                const clone = res.clone();
+                try {
+                    const json = await clone.json();
+                    if (json.error === 'Token inválido o expirado.') {
+                        localStorage.removeItem('emp_token');
+                        localStorage.removeItem('emp_id');
+                        localStorage.removeItem('emp_name');
+                        localStorage.removeItem('emp_role');
+                        localStorage.removeItem('emp_client_id');
+                        localStorage.removeItem('shift_start_ts');
+                        alert('Tu sesión de empleado ha expirado. Por favor inicia sesión nuevamente.');
+                        window.location.reload();
+                    }
+                } catch (e) {
+                    // Ignore
+                }
+            }
+            return res;
+        };
+
         const storedToken = localStorage.getItem('emp_token');
         const storedEmpId = localStorage.getItem('emp_id');
         const storedName = localStorage.getItem('emp_name');
@@ -256,6 +295,10 @@ export const EmployeePortal: React.FC = () => {
                 setShiftStatus('working');
             }
         }
+
+        return () => {
+            window.fetch = originalFetch;
+        };
     }, []);
 
     // Fetch Tasks & Requests when authenticated
@@ -630,6 +673,7 @@ export const EmployeePortal: React.FC = () => {
                     doc_type: docType,
                     start_date: startDate,
                     end_date: endDate || null,
+                    return_date: returnDate || null,
                     reason: reason,
                     file_url: fileBase64 || null
                 })
@@ -639,6 +683,7 @@ export const EmployeePortal: React.FC = () => {
                 setDocSuccess('Solicitud enviada correctamente a administración.');
                 setStartDate('');
                 setEndDate('');
+                setReturnDate('');
                 setReason('');
                 setFileBase64(null);
                 fetchRequests();
@@ -1577,24 +1622,50 @@ export const EmployeePortal: React.FC = () => {
                                     </select>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-2">
                                     <div className="space-y-1">
-                                        <label className="block text-[10px] font-bold text-on-surface-variant">Fecha de Inicio</label>
+                                        <label className="block text-[10px] font-bold text-on-surface-variant">Inicio de Receso</label>
                                         <input 
                                             type="date"
                                             required
                                             value={startDate}
                                             onChange={(e) => setStartDate(e.target.value)}
-                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface outline-none"
+                                            onClick={(e) => {
+                                                try {
+                                                    (e.target as any).showPicker();
+                                                } catch (err) {}
+                                            }}
+                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2 rounded-xl text-on-surface outline-none cursor-pointer text-xs"
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="block text-[10px] font-bold text-on-surface-variant">Fecha de Fin (Opcional)</label>
+                                        <label className="block text-[10px] font-bold text-on-surface-variant">Último Día de Receso</label>
                                         <input 
                                             type="date"
+                                            required
                                             value={endDate}
                                             onChange={(e) => setEndDate(e.target.value)}
-                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface outline-none"
+                                            onClick={(e) => {
+                                                try {
+                                                    (e.target as any).showPicker();
+                                                } catch (err) {}
+                                            }}
+                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2 rounded-xl text-on-surface outline-none cursor-pointer text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-bold text-on-surface-variant">Regreso a Labores</label>
+                                        <input 
+                                            type="date"
+                                            required
+                                            value={returnDate}
+                                            onChange={(e) => setReturnDate(e.target.value)}
+                                            onClick={(e) => {
+                                                try {
+                                                    (e.target as any).showPicker();
+                                                } catch (err) {}
+                                            }}
+                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2 rounded-xl text-on-surface outline-none cursor-pointer text-xs"
                                         />
                                     </div>
                                 </div>
@@ -1660,10 +1731,20 @@ export const EmployeePortal: React.FC = () => {
                                                     {req.status.toUpperCase()}
                                                 </span>
                                             </div>
-                                            <p className="text-on-surface-variant font-medium">{req.reason}</p>
+                                            <p className="text-on-surface-variant font-medium">{req.notes || req.reason || 'Sin justificación'}</p>
+                                            {req.admin_notes && (
+                                                <div className="bg-surface-container-high/40 p-2 rounded-lg border border-outline/5 mt-1.5 text-[10px] text-on-surface">
+                                                    <span className="font-bold text-primary block mb-0.5">Respuesta de Gestión Humana:</span>
+                                                    {req.admin_notes}
+                                                </div>
+                                            )}
                                             <div className="flex justify-between items-center text-[10px] text-on-surface-variant/60 font-mono mt-2 pt-1 border-t border-outline/5">
-                                                <span>📅 {new Date(req.start_date).toLocaleDateString('es-CO')}</span>
-                                                <span>Creado: {new Date(req.created_at).toLocaleDateString('es-CO')}</span>
+                                                <span>
+                                                    📅 {formatDateOnly(req.start_date)}
+                                                    {req.end_date ? ` al ${formatDateOnly(req.end_date)}` : ''}
+                                                    {(req as any).return_date ? ` (Regresa: ${formatDateOnly((req as any).return_date)})` : ''}
+                                                </span>
+                                                <span>Creado: {formatDateOnly(req.created_at)}</span>
                                             </div>
                                         </div>
                                     ))}

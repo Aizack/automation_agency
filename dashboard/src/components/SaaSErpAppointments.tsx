@@ -28,6 +28,13 @@ interface SaaSErpAppointmentsProps {
     clientId: string;
 }
 
+const formatLocalDateInput = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ clientId }) => {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
@@ -55,6 +62,16 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
     // Separated Date & Time
     const [apptOnlyDate, setApptOnlyDate] = useState('');
     const [apptOnlyTime, setApptOnlyTime] = useState('09:00');
+    const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+    const [availabilityMeta, setAvailabilityMeta] = useState<{ blocked: boolean; reason?: string | null; slotDurationMinutes?: number } | null>(null);
+
+    // Block modal state
+    const [isBlockOpen, setIsBlockOpen] = useState(false);
+    const [blockType, setBlockType] = useState<'day' | 'slot'>('slot');
+    const [blockDate, setBlockDate] = useState('');
+    const [blockStartTime, setBlockStartTime] = useState('09:00');
+    const [blockEndTime, setBlockEndTime] = useState('10:00');
+    const [blockReason, setBlockReason] = useState('Bloqueo administrativo');
 
     // Visit Reasons
     const [visitReason, setVisitReason] = useState('examen_vista');
@@ -103,6 +120,11 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         fetchAppointments();
         fetchCustomers();
     }, [clientId]);
+
+    useEffect(() => {
+        const dateValue = formatLocalDateInput(selectedDate);
+        fetchAvailability(dateValue);
+    }, [selectedDate, clientId]);
 
     // Handle click outside suggestions dropdown
     useEffect(() => {
@@ -181,6 +203,31 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
     const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
     const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
 
+    const fetchAvailability = async (date: string) => {
+        if (!date) return;
+        try {
+            const res = await fetch(`/api/clients/${clientId}/appointments/availability?date=${date}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setAvailableSlots(json.availableSlots || []);
+                setAvailabilityMeta({
+                    blocked: Boolean(json.blocked),
+                    reason: json.reason || null,
+                    slotDurationMinutes: json.slotDurationMinutes
+                });
+            } else {
+                setAvailableSlots([]);
+                setAvailabilityMeta({ blocked: true, reason: json.error || 'No hay disponibilidad disponible.' });
+            }
+        } catch (err) {
+            console.error('Error fetching availability:', err);
+            setAvailableSlots([]);
+            setAvailabilityMeta({ blocked: true, reason: 'No se pudo consultar la disponibilidad.' });
+        }
+    };
+
     const handleCreateOpen = () => {
         setCustomerName('');
         setCustomerPhone('');
@@ -188,13 +235,14 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         setCrmCustomerId(null);
         setSearchQuery('');
         
-        // Split date and time defaults
         const d = new Date(selectedDate);
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
-        setApptOnlyDate(`${yyyy}-${mm}-${dd}`);
-        setApptOnlyTime("09:00");
+        const dateValue = `${yyyy}-${mm}-${dd}`;
+        setApptOnlyDate(dateValue);
+        setApptOnlyTime('09:00');
+        fetchAvailability(dateValue);
         
         setVisitReason('examen_vista');
         setVisitReasonDetails('');
@@ -213,8 +261,10 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
-        setApptOnlyDate(`${yyyy}-${mm}-${dd}`);
+        const dateValue = `${yyyy}-${mm}-${dd}`;
+        setApptOnlyDate(dateValue);
         setApptOnlyTime(timeSlot);
+        fetchAvailability(dateValue);
         
         setVisitReason('examen_vista');
         setVisitReasonDetails('');
@@ -248,6 +298,11 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         e.preventDefault();
         if (!customerName || !customerPhone || !apptOnlyDate || !apptOnlyTime || !customerDocumentNumber) {
             setErrorMsg('Por favor completa Nombre, Teléfono, Documento, Fecha y Hora.');
+            return;
+        }
+
+        if (availabilityMeta?.blocked && !availableSlots.includes(apptOnlyTime)) {
+            setErrorMsg('El horario seleccionado no está disponible para este día. Selecciona otro slot o desbloquea el día.');
             return;
         }
 
@@ -373,6 +428,51 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         });
     };
 
+    const handleCreateBlock = async () => {
+        try {
+            setActionLoading(true);
+            const payload: any = {
+                blockType,
+                reason: blockReason,
+                isActive: true
+            };
+
+            if (blockType === 'day') {
+                payload.targetDate = blockDate || apptOnlyDate || formatLocalDateInput(selectedDate);
+            } else {
+                payload.targetDate = blockDate || apptOnlyDate || formatLocalDateInput(selectedDate);
+                payload.startTime = blockStartTime;
+                payload.endTime = blockEndTime;
+                if (!payload.targetDate) {
+                    throw new Error('Debes seleccionar la fecha del bloqueo.');
+                }
+            }
+
+            const res = await fetch(`/api/clients/${clientId}/appointments/blocks`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                setIsBlockOpen(false);
+                fetchAppointments();
+                const dateValue = (payload.targetDate || formatLocalDateInput(selectedDate));
+                fetchAvailability(dateValue);
+            } else {
+                setErrorMsg(json.error || 'No se pudo registrar el bloqueo.');
+            }
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Error de conexión al registrar el bloqueo.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const timeSlots = [
         '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
         '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
@@ -444,6 +544,21 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                         title="Refrescar Citas"
                     >
                         <span className="material-symbols-outlined text-[18px]">refresh</span>
+                    </button>
+                    <button 
+                        type="button"
+                        onClick={() => {
+                            const defaultDate = formatLocalDateInput(selectedDate);
+                            setBlockDate(defaultDate);
+                            setBlockType('slot');
+                            setBlockStartTime('09:00');
+                            setBlockEndTime('10:00');
+                            setBlockReason('Bloqueo administrativo');
+                            setIsBlockOpen(true);
+                        }}
+                        className="px-3 py-2 border border-outline/20 bg-surface-container-high/40 text-on-surface text-xs font-bold rounded-xl cursor-pointer shadow transition"
+                    >
+                        Bloquear horario
                     </button>
                     <button 
                         onClick={handleCreateOpen}
@@ -850,6 +965,105 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {isBlockOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float">
+                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
+                            <h3 className="font-bold text-lg text-on-surface">Bloquear Horario / Día</h3>
+                            <button 
+                                onClick={() => setIsBlockOpen(false)}
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 text-sm">
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-on-surface-variant">Tipo de bloqueo</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setBlockType('slot')}
+                                        className={`py-2 rounded-xl text-xs font-bold border ${blockType === 'slot' ? 'bg-primary text-white border-primary' : 'bg-surface-container border-outline/20 text-on-surface'}`}
+                                    >
+                                        Franja Horaria
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setBlockType('day')}
+                                        className={`py-2 rounded-xl text-xs font-bold border ${blockType === 'day' ? 'bg-primary text-white border-primary' : 'bg-surface-container border-outline/20 text-on-surface'}`}
+                                    >
+                                        Día completo
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-on-surface-variant">Fecha</label>
+                                <input
+                                    type="date"
+                                    value={blockDate || apptOnlyDate || formatLocalDateInput(selectedDate)}
+                                    onChange={(e) => setBlockDate(e.target.value)}
+                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                />
+                            </div>
+
+                            {blockType === 'slot' && (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-bold text-on-surface-variant">Hora inicio</label>
+                                        <input
+                                            type="time"
+                                            value={blockStartTime}
+                                            onChange={(e) => setBlockStartTime(e.target.value)}
+                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-bold text-on-surface-variant">Hora fin</label>
+                                        <input
+                                            type="time"
+                                            value={blockEndTime}
+                                            onChange={(e) => setBlockEndTime(e.target.value)}
+                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-on-surface-variant">Motivo</label>
+                                <textarea
+                                    rows={2}
+                                    value={blockReason}
+                                    onChange={(e) => setBlockReason(e.target.value)}
+                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none resize-none"
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2 border-t border-outline/10">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsBlockOpen(false)}
+                                    className="px-4 py-2 border border-outline/20 text-on-surface hover:bg-surface-variant/20 rounded-xl font-bold cursor-pointer text-xs transition"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleCreateBlock}
+                                    disabled={actionLoading}
+                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-xl font-bold cursor-pointer text-xs transition disabled:opacity-50"
+                                >
+                                    {actionLoading ? 'Guardando...' : 'Registrar bloqueo'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

@@ -150,15 +150,23 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
                 body: JSON.stringify(body)
             });
             
+            if (!res.ok) {
+                const errorText = await res.text();
+                console.error(`[Supplier Save] HTTP ${res.status}:`, errorText);
+                alert(`Error del servidor: ${res.status}. Verifica la consola para más detalles.`);
+                return;
+            }
+
             const json = await res.json();
             if (json.success) {
                 setIsSupplierModalOpen(false);
                 fetchData();
             } else {
-                alert(`Error: ${json.error}`);
+                alert(`Error: ${json.error || 'Error desconocido'}`);
             }
-        } catch (err) {
-            alert('Error al guardar el proveedor.');
+        } catch (err: any) {
+            console.error('[Supplier Save Error]:', err);
+            alert(`Error al guardar el proveedor: ${err.message}`);
         }
     };
 

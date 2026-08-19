@@ -31,6 +31,10 @@ import { startScheduler } from './services/scheduler';
 import { AIAgent } from './agents/base';
 import { getClientConfigById } from './core/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { correlationIdMiddleware } from './middlewares/correlationIdMiddleware';
+import { errorHandler, asyncHandler } from './middlewares/errorHandler';
+import { StructuredLogger } from './utils/structuredLogger';
+import { initDatabase } from './database/initDb';
 
 // Inicializar el manejador de señales de apagado del SO
 registerShutdownHandlers();
@@ -45,6 +49,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
 app.use(express.json());
+
+// Registrar middlewares globales (ANTES de rutas)
+app.use(correlationIdMiddleware);
 
 // Servir la carpeta de media de forma estática
 const mediaDir = path.join(process.cwd(), 'media', 'clients');
@@ -1251,7 +1258,7 @@ app.get('/api/clients/:clientId/products', authenticateToken as any, authorizeCl
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, created_at 
+      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, created_at 
        FROM products 
        WHERE client_id = $1 
        ORDER BY created_at DESC`,
@@ -1268,7 +1275,7 @@ app.get('/api/clients/:clientId/products/sku/:sku', authenticateToken as any, au
   try {
     const { clientId, sku } = req.params;
     const result = await pool.query(
-      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount 
+      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, attributes 
        FROM products 
        WHERE client_id = $1 AND sku = $2 LIMIT 1`,
       [clientId, sku]
@@ -1288,7 +1295,7 @@ app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, a
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, name, sku, stock, min_stock, supplier_name, supplier_phone, promo_discount 
+      `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, attributes, created_at 
        FROM products 
        WHERE client_id = $1 AND stock <= min_stock 
        ORDER BY stock ASC`,
@@ -1304,7 +1311,7 @@ app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, a
 app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
@@ -1312,14 +1319,14 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 
     const result = await pool.query(
       `INSERT INTO products (
-         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, created_at`,
+         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, created_at`,
       [
         clientId, name, sku || null, description || null, price, stock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null,
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
-        category_id || null
+        category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}'
       ]
     );
 
@@ -1333,7 +1340,7 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, productId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
@@ -1344,14 +1351,15 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
        SET name = $1, sku = $2, description = $3, price = $4, stock = $5, 
            cost_price = $6, min_stock = $7, supplier_name = $8, supplier_phone = $9,
            brand = $10, material = $11, style = $12, color = $13, promo_discount = $14,
-           category_id = $15
-       WHERE client_id = $16 AND id = $17 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, created_at`,
+           category_id = $15, attributes = $16
+       WHERE client_id = $17 AND id = $18 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, created_at`,
       [
         name, sku || null, description || null, price, stock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null, 
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
-        category_id || null, clientId, productId
+        category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
+        clientId, productId
       ]
     );
 
@@ -1872,7 +1880,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, reminder_sent, overdue_sent, payment_method, installments_count, installment_frequency, created_at 
+      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, reminder_sent, overdue_sent, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, created_at 
        FROM invoices 
        WHERE client_id = $1 
        ORDER BY created_at DESC`,
@@ -1914,10 +1922,14 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
       return res.status(400).json({ success: false, error: 'Campos obligatorios incompletos.' });
     }
 
+    // Log para depuración de despachos
+    console.log(`[Invoice Create] deliveryMethod recibido: "${deliveryMethod}" (type: ${typeof deliveryMethod})`);
+
     const initialAbono = parseFloat(abono) || 0;
     const cleanTotal = parseFloat(totalAmount) || 0;
     const cleanDeliveryFee = parseFloat(deliveryFee) || 0;
     const cleanInstallmentsCount = installmentsCount !== undefined ? parseInt(installmentsCount) : 1;
+    const finalDeliveryMethod = deliveryMethod === 'domicilio' ? 'domicilio' : 'local';
 
     // Calcular estado inicial de la factura
     let initialStatus = 'pending';
@@ -1983,14 +1995,16 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
       paymentMethod || 'contado',
       cleanInstallmentsCount,
       installmentFrequency || null,
-      deliveryMethod || 'local',
+      finalDeliveryMethod,
       cleanDeliveryFee,
       deliveryAddress || customerAddress || null,
       deliveryDate || null,
-      deliveryMethod === 'domicilio' ? 'pending' : 'entregado'
+      finalDeliveryMethod === 'domicilio' ? 'pending' : 'entregado'
     ]);
 
     const invoice = invoiceResult.rows[0];
+    console.log(`[Invoice Create] Factura creada con delivery_method: "${invoice.delivery_method}" | delivery_status: "${invoice.delivery_status}"`);
+
 
     // 2. Si el pago es financiado (por cuotas), generar el plan de cuotas dinámico
     if (paymentMethod === 'cuotas') {
@@ -2535,6 +2549,19 @@ app.delete('/api/clients/:clientId/formulas/:formulaId', authenticateToken as an
   }
 });
 
+// Utilidades locales para fechas/hora sin UTC
+const timeToMinutes = (time: string): number => {
+  if (!time) return 0;
+  const [hours, minutes] = time.split(':').map(Number);
+  return (hours || 0) * 60 + (minutes || 0);
+};
+
+const minutesToTime = (totalMinutes: number): string => {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
 // Obtener citas / agenda de un cliente (soporta opcionalmente filtro ?date=YYYY-MM-DD)
 app.get('/api/clients/:clientId/appointments', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
@@ -2563,6 +2590,288 @@ app.get('/api/clients/:clientId/appointments', authenticateToken as any, authori
     const result = await pool.query(query, params);
     res.json({ success: true, appointments: result.rows });
   } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Obtener disponibilidad de horarios para una fecha dada (sin UTC, todo en tiempo local)
+app.get('/api/clients/:clientId/appointments/availability', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { date } = req.query;
+
+    if (!date || typeof date !== 'string') {
+      return res.status(400).json({ success: false, error: 'El parámetro date es requerido (YYYY-MM-DD).' });
+    }
+
+    const settingsRes = await pool.query(
+      `SELECT slot_duration_minutes, opening_time, closing_time, working_days
+       FROM appointment_settings
+       WHERE client_id = $1`,
+      [clientId]
+    );
+
+    const settings = settingsRes.rows[0] || {
+      slot_duration_minutes: 30,
+      opening_time: '08:00:00',
+      closing_time: '18:00:00',
+      working_days: [1, 2, 3, 4, 5]
+    };
+
+    const slotDuration = Number(settings.slot_duration_minutes || 30);
+    const openingTime = settings.opening_time || '08:00:00';
+    const closingTime = settings.closing_time || '18:00:00';
+
+    let workingDays: number[] = [1, 2, 3, 4, 5];
+    try {
+      workingDays = Array.isArray(settings.working_days)
+        ? settings.working_days
+        : JSON.parse(settings.working_days || '[1,2,3,4,5]');
+    } catch {
+      workingDays = [1, 2, 3, 4, 5];
+    }
+
+    const selectedDate = new Date(`${date}T00:00:00`);
+    const dayOfWeek = selectedDate.getDay();
+    const normalizedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+    if (!workingDays.includes(normalizedDay)) {
+      return res.json({
+        success: true,
+        date,
+        slotDurationMinutes: slotDuration,
+        availableSlots: [],
+        unavailableSlots: [],
+        blocked: true,
+        reason: 'Día no laborable para la clínica'
+      });
+    }
+
+    const fullDayBlock = await pool.query(
+      `SELECT reason FROM appointment_schedule_blocks
+       WHERE client_id = $1 AND is_active = TRUE AND block_type = 'day' AND target_date = $2`,
+      [clientId, date]
+    );
+
+    if (fullDayBlock.rows.length > 0) {
+      return res.json({
+        success: true,
+        date,
+        slotDurationMinutes: slotDuration,
+        availableSlots: [],
+        unavailableSlots: [],
+        blocked: true,
+        reason: fullDayBlock.rows[0].reason || 'Día bloqueado'
+      });
+    }
+
+    const openingMinutes = timeToMinutes(openingTime);
+    const closingMinutes = timeToMinutes(closingTime);
+    const generatedSlots: string[] = [];
+
+    for (let current = openingMinutes; current < closingMinutes; current += slotDuration) {
+      const end = current + slotDuration;
+      if (end > closingMinutes) break;
+      generatedSlots.push(minutesToTime(current));
+    }
+
+    const occupiedRes = await pool.query(
+      `SELECT to_char(appointment_date, 'HH24:MI') as slot_time
+       FROM appointments
+       WHERE client_id = $1
+         AND DATE(appointment_date) = $2
+         AND status IN ('scheduled', 'completed')`,
+      [clientId, date]
+    );
+
+    const occupiedSlots = new Set<string>(occupiedRes.rows.map(r => r.slot_time));
+
+    const blockRes = await pool.query(
+      `SELECT start_time, end_time
+       FROM appointment_schedule_blocks
+       WHERE client_id = $1
+         AND is_active = TRUE
+         AND block_type = 'slot'
+         AND (
+           (target_date = $2)
+           OR
+           (target_date IS NULL AND day_of_week = $3)
+         )`,
+      [clientId, date, normalizedDay]
+    );
+
+    const blockedRanges: Array<{ start: number; end: number }> = [];
+    for (const row of blockRes.rows) {
+      blockedRanges.push({
+        start: timeToMinutes(row.start_time),
+        end: timeToMinutes(row.end_time)
+      });
+    }
+
+    const availableSlots: string[] = [];
+    const unavailableSlots: string[] = [];
+
+    for (const slot of generatedSlots) {
+      const startMinutes = timeToMinutes(slot);
+      const endMinutes = startMinutes + slotDuration;
+      const occupied = occupiedSlots.has(slot);
+      const blocked = blockedRanges.some(range => startMinutes < range.end && endMinutes > range.start);
+
+      if (occupied || blocked) {
+        unavailableSlots.push(slot);
+      } else {
+        availableSlots.push(slot);
+      }
+    }
+
+    res.json({
+      success: true,
+      date,
+      slotDurationMinutes: slotDuration,
+      availableSlots,
+      unavailableSlots,
+      blocked: false,
+      reason: null
+    });
+  } catch (err: any) {
+    console.error("[Appointments Availability] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Bloquear una franja o un día completo de la agenda
+app.post('/api/clients/:clientId/appointments/blocks', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { blockType, targetDate, dayOfWeek, startTime, endTime, reason, isActive } = req.body;
+
+    if (!blockType || !['day', 'slot'].includes(blockType)) {
+      return res.status(400).json({ success: false, error: 'blockType debe ser "day" o "slot".' });
+    }
+
+    if (blockType === 'day' && !targetDate) {
+      return res.status(400).json({ success: false, error: 'targetDate es requerido para un bloqueo de día completo.' });
+    }
+
+    if (blockType === 'slot' && (!targetDate && dayOfWeek === undefined)) {
+      return res.status(400).json({ success: false, error: 'Debes enviar targetDate o dayOfWeek para bloquear una franja.' });
+    }
+
+    if (blockType === 'slot' && (!startTime || !endTime)) {
+      return res.status(400).json({ success: false, error: 'startTime y endTime son requeridos para bloquear una franja.' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO appointment_schedule_blocks (
+        client_id, block_type, target_date, day_of_week, start_time, end_time, reason, is_active, created_by
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, TRUE), COALESCE($9, 'admin'))
+      RETURNING *`,
+      [
+        clientId,
+        blockType,
+        targetDate || null,
+        dayOfWeek !== undefined ? Number(dayOfWeek) : null,
+        startTime || null,
+        endTime || null,
+        reason || 'Bloqueado por administración',
+        isActive !== undefined ? Boolean(isActive) : true,
+        (req as any).user?.username || 'admin'
+      ]
+    );
+
+    res.status(201).json({ success: true, block: result.rows[0] });
+  } catch (err: any) {
+    console.error("[Appointment Blocks API] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/clients/:clientId/appointments/blocks', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { date, activeOnly } = req.query;
+
+    let query = `
+      SELECT *
+      FROM appointment_schedule_blocks
+      WHERE client_id = $1
+    `;
+    const params: any[] = [clientId];
+
+    if (date) {
+      query += ` AND (target_date = $2 OR target_date IS NULL)`;
+      params.push(date);
+    }
+
+    if (activeOnly !== undefined) {
+      query += ` AND is_active = $${params.length + 1}`;
+      params.push(activeOnly === 'true');
+    }
+
+    query += ` ORDER BY created_at DESC`;
+
+    const result = await pool.query(query, params);
+    res.json({ success: true, blocks: result.rows });
+  } catch (err: any) {
+    console.error("[Appointment Blocks List API] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/clients/:clientId/appointments/blocks/:blockId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, blockId } = req.params;
+
+    const result = await pool.query(
+      `DELETE FROM appointment_schedule_blocks
+       WHERE id = $1 AND client_id = $2
+       RETURNING *`,
+      [blockId, clientId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Bloqueo no encontrado.' });
+    }
+
+    res.json({ success: true, message: 'Bloqueo eliminado correctamente.' });
+  } catch (err: any) {
+    console.error("[Appointment Block Delete API] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.patch('/api/clients/:clientId/appointments/:appointmentId/status', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, appointmentId } = req.params;
+    const { status } = req.body;
+
+    if (!status || !['scheduled', 'completed', 'cancelled', 'no_show'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'status inválido. Debe ser scheduled, completed, cancelled o no_show.'
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE appointments
+       SET status = $1
+       WHERE id = $2 AND client_id = $3
+       RETURNING id, status, customer_name, customer_phone, appointment_date`,
+      [status, appointmentId, clientId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Cita no encontrada.' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Estado actualizado correctamente.',
+      appointment: result.rows[0]
+    });
+  } catch (err: any) {
+    console.error("[Appointment Status Update API] Error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -2776,17 +3085,46 @@ app.delete('/api/clients/:clientId/departments/:id', authenticateToken as any, a
 app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
+    
+    // Obtener días disfrutados y aprobados de vacaciones para todos los empleados de este cliente inquilino
+    const enjoyedRes = await pool.query(
+      `SELECT employee_id, COALESCE(SUM(end_date - start_date + 1), 0) as enjoyed_days 
+       FROM hr_documents 
+       WHERE client_id = $1 AND doc_type = 'vacaciones' AND status = 'approved' AND start_date IS NOT NULL AND end_date IS NOT NULL
+       GROUP BY employee_id`,
+      [clientId]
+    );
+    const enjoyedMap = new Map(enjoyedRes.rows.map(r => [r.employee_id, parseInt(r.enjoyed_days)]));
+
     const result = await pool.query(
       `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, e.pin, e.is_active, e.created_at,
               e.hire_date, e.basic_salary, e.payment_type, e.pay_period, e.cutoff_day_1, e.cutoff_day_2, e.pay_day_1, e.pay_day_2,
-              e.vacation_days_accumulated, e.hourly_rate, e.employment_status, e.activity_status, e.payment_method, e.bank_name, e.bank_account_number
+              e.hourly_rate, e.transport_allowance, e.employment_status, e.activity_status, e.payment_method, e.bank_name, e.bank_account_number, e.contract_type
        FROM employees e 
        LEFT JOIN business_departments d ON e.department_id = d.id 
        WHERE e.client_id = $1 
        ORDER BY e.created_at DESC`,
       [clientId]
     );
-    res.json({ success: true, employees: result.rows });
+
+    const employees = result.rows.map(emp => {
+      let vacationDays = 0;
+      if (emp.hire_date) {
+        const hireDate = new Date(emp.hire_date);
+        const today = new Date();
+        const diffTime = Math.max(0, today.getTime() - hireDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const earned = (diffDays * 15) / 360;
+        const enjoyed = enjoyedMap.get(emp.id) || 0;
+        vacationDays = parseFloat(Math.max(0, earned - enjoyed).toFixed(2));
+      }
+      return {
+        ...emp,
+        vacation_days_accumulated: vacationDays
+      };
+    });
+
+    res.json({ success: true, employees });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -2796,11 +3134,11 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
   try {
     const { clientId } = req.params;
     const { 
-      name, last_name, phone, role, department_id, pin,
+      name, last_name, phone, role, department_id, pin, employee_code,
       hire_date, basic_salary, payment_type, pay_period,
-      cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
-      vacation_days_accumulated, hourly_rate, employment_status,
-      activity_status, payment_method, bank_name, bank_account_number
+      cutoff_days, pay_days, cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
+      vacation_days_accumulated, hourly_rate, transport_allowance, employment_status,
+      activity_status, payment_method, bank_name, bank_account_number, contract_type
     } = req.body;
 
     if (!name || !phone) {
@@ -2809,22 +3147,32 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
 
     const cleanPhone = phone.replace(/\D/g, '');
 
+    const cutoffs = (cutoff_days || '').split(',');
+    const c1 = parseInt(cutoffs[0]) || parseInt(cutoff_day_1) || 15;
+    const c2 = parseInt(cutoffs[1]) || parseInt(cutoff_day_2) || 30;
+
+    const pays = (pay_days || '').split(',');
+    const p1 = parseInt(pays[0]) || parseInt(pay_day_1) || 15;
+    const p2 = parseInt(pays[1]) || parseInt(pay_day_2) || 30;
+
     const result = await pool.query(
       `INSERT INTO employees (
          client_id, name, last_name, phone, role, department_id, pin, is_active,
          hire_date, basic_salary, payment_type, pay_period,
          cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
-         vacation_days_accumulated, hourly_rate, employment_status,
-         activity_status, payment_method, bank_name, bank_account_number
+         vacation_days_accumulated, hourly_rate, transport_allowance, employment_status,
+         activity_status, payment_method, bank_name, bank_account_number, contract_type,
+         employee_code
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
        RETURNING *`,
       [
         clientId, name, last_name || '', cleanPhone, role || 'agent', department_id || null, pin || '1234',
         hire_date || null, parseFloat(basic_salary) || 0.00, payment_type || 'fixed_monthly', pay_period || 'mensual',
-        parseInt(cutoff_day_1) || 15, parseInt(cutoff_day_2) || 30, parseInt(pay_day_1) || 15, parseInt(pay_day_2) || 30,
-        parseFloat(vacation_days_accumulated) || 0.00, parseFloat(hourly_rate) || 0.00, employment_status || 'vinculado',
-        activity_status || 'activo', payment_method || 'cash', bank_name || null, bank_account_number || null
+        c1, c2, p1, p2,
+        parseFloat(vacation_days_accumulated) || 0.00, parseFloat(hourly_rate) || 0.00, parseFloat(transport_allowance) || 0.00, employment_status || 'vinculado',
+        activity_status || 'activo', payment_method || 'cash', bank_name || null, bank_account_number || null, contract_type || 'indefinido',
+        employee_code || null
       ]
     );
 
@@ -2857,48 +3205,94 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
     const { clientId, employeeId } = req.params;
     const { 
       name, last_name, phone, role, department_id, pin, is_active,
+      custom_formulas_history, employee_code,
       hire_date, basic_salary, payment_type, pay_period,
-      cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
-      vacation_days_accumulated, hourly_rate, employment_status,
-      activity_status, payment_method, bank_name, bank_account_number
+      cutoff_days, pay_days, cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
+      vacation_days_accumulated, hourly_rate, transport_allowance, employment_status,
+      activity_status, payment_method, bank_name, bank_account_number, contract_type
     } = req.body;
 
-    if (!name || !phone) {
-      return res.status(400).json({ success: false, error: 'Nombre y teléfono son requeridos.' });
+    const currentEmpRes = await pool.query(
+      `SELECT * FROM employees WHERE id = $1 AND client_id = $2`,
+      [employeeId, clientId]
+    );
+    if (currentEmpRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Empleado no encontrado.' });
+    }
+    const currentEmp = currentEmpRes.rows[0];
+
+    const finalName = name !== undefined ? name : currentEmp.name;
+    const finalLastName = last_name !== undefined ? last_name : currentEmp.last_name;
+    const finalPhone = phone !== undefined ? phone.replace(/\D/g, '') : currentEmp.phone;
+    const finalRole = role !== undefined ? role : currentEmp.role;
+    const finalDeptId = department_id !== undefined ? department_id : currentEmp.department_id;
+    const finalPin = pin !== undefined ? pin : currentEmp.pin;
+    const finalIsActive = is_active !== undefined ? is_active : currentEmp.is_active;
+    const finalHireDate = hire_date !== undefined ? hire_date : currentEmp.hire_date;
+    const finalBasicSalary = basic_salary !== undefined ? parseFloat(basic_salary) : parseFloat(currentEmp.basic_salary || 0);
+    const finalPaymentType = payment_type !== undefined ? payment_type : currentEmp.payment_type;
+    const finalPayPeriod = pay_period !== undefined ? pay_period : currentEmp.pay_period;
+    const finalEmployeeCode = employee_code !== undefined ? employee_code : currentEmp.employee_code;
+
+    let c1 = currentEmp.cutoff_day_1;
+    let c2 = currentEmp.cutoff_day_2;
+    if (cutoff_days !== undefined) {
+      const cutoffs = (cutoff_days || '').split(',');
+      c1 = parseInt(cutoffs[0]) || 15;
+      c2 = parseInt(cutoffs[1]) || 30;
+    } else {
+      if (cutoff_day_1 !== undefined) c1 = parseInt(cutoff_day_1);
+      if (cutoff_day_2 !== undefined) c2 = parseInt(cutoff_day_2);
     }
 
-    const cleanPhone = phone.replace(/\D/g, '');
+    let p1 = currentEmp.pay_day_1;
+    let p2 = currentEmp.pay_day_2;
+    if (pay_days !== undefined) {
+      const pays = (pay_days || '').split(',');
+      p1 = parseInt(pays[0]) || 15;
+      p2 = parseInt(pays[1]) || 30;
+    } else {
+      if (pay_day_1 !== undefined) p1 = parseInt(pay_day_1);
+      if (pay_day_2 !== undefined) p2 = parseInt(pay_day_2);
+    }
+
+    const finalVacations = vacation_days_accumulated !== undefined ? parseFloat(vacation_days_accumulated) : parseFloat(currentEmp.vacation_days_accumulated || 0);
+    const finalHourlyRate = hourly_rate !== undefined ? parseFloat(hourly_rate) : parseFloat(currentEmp.hourly_rate || 0);
+    const finalTransportAllowance = transport_allowance !== undefined ? parseFloat(transport_allowance) : parseFloat(currentEmp.transport_allowance || 0);
+    const finalEmploymentStatus = employment_status !== undefined ? employment_status : currentEmp.employment_status;
+    const finalActivityStatus = activity_status !== undefined ? activity_status : currentEmp.activity_status;
+    const finalPaymentMethod = payment_method !== undefined ? payment_method : currentEmp.payment_method;
+    const finalBankName = bank_name !== undefined ? bank_name : currentEmp.bank_name;
+    const finalBankAccount = bank_account_number !== undefined ? bank_account_number : currentEmp.bank_account_number;
+    const finalContractType = contract_type !== undefined ? contract_type : currentEmp.contract_type;
 
     const result = await pool.query(
       `UPDATE employees
        SET name = $1, last_name = $2, phone = $3, role = $4, department_id = $5, pin = $6, is_active = $7,
            hire_date = $8, basic_salary = $9, payment_type = $10, pay_period = $11,
            cutoff_day_1 = $12, cutoff_day_2 = $13, pay_day_1 = $14, pay_day_2 = $15,
-           vacation_days_accumulated = $16, hourly_rate = $17, employment_status = $18,
-           activity_status = $19, payment_method = $20, bank_name = $21, bank_account_number = $22
-       WHERE id = $23 AND client_id = $24
+           vacation_days_accumulated = $16, hourly_rate = $17, transport_allowance = $18, employment_status = $19,
+           activity_status = $20, payment_method = $21, bank_name = $22, bank_account_number = $23, contract_type = $24,
+           employee_code = $25
+       WHERE id = $26 AND client_id = $27
        RETURNING *`,
       [
-        name, last_name || '', cleanPhone, role, department_id || null, pin, is_active,
-        hire_date || null, parseFloat(basic_salary) || 0.00, payment_type || 'fixed_monthly', pay_period || 'mensual',
-        parseInt(cutoff_day_1) || 15, parseInt(cutoff_day_2) || 30, parseInt(pay_day_1) || 15, parseInt(pay_day_2) || 30,
-        parseFloat(vacation_days_accumulated) || 0.00, parseFloat(hourly_rate) || 0.00, employment_status || 'vinculado',
-        activity_status || 'activo', payment_method || 'cash', bank_name || null, bank_account_number || null,
-        employeeId, clientId
+        finalName, finalLastName || '', finalPhone, finalRole, finalDeptId, finalPin, finalIsActive,
+        finalHireDate, finalBasicSalary, finalPaymentType, finalPayPeriod,
+        c1, c2, p1, p2,
+        finalVacations, finalHourlyRate, finalTransportAllowance, finalEmploymentStatus,
+        finalActivityStatus, finalPaymentMethod, finalBankName, finalBankAccount, finalContractType,
+        finalEmployeeCode, employeeId, clientId
       ]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ success: false, error: 'Empleado no encontrado.' });
-    }
-
     let deptName = 'Ninguno';
-    if (department_id) {
-      const deptRes = await pool.query(`SELECT name FROM business_departments WHERE id = $1`, [department_id]);
+    if (finalDeptId) {
+      const deptRes = await pool.query(`SELECT name FROM business_departments WHERE id = $1`, [finalDeptId]);
       if (deptRes.rows.length > 0) deptName = deptRes.rows[0].name.toLowerCase();
     }
 
-    const fullName = `${name} ${last_name || ''}`.trim();
+    const fullName = `${finalName} ${finalLastName || ''}`.trim();
 
     // Actualizar también en agent_contacts
     await pool.query(
@@ -2906,7 +3300,7 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
        VALUES ($1, $2, $3, 1, 'offline', $4, TRUE, $5, $6)
        ON CONFLICT (client_id, phone) DO UPDATE
        SET name = $2, department = $4, role = $5, pin = $6`,
-      [clientId, fullName, cleanPhone, deptName, role || 'agent', pin]
+      [clientId, fullName, finalPhone, deptName, finalRole || 'agent', finalPin]
     );
 
     res.json({ success: true, employee: result.rows[0] });
@@ -3066,16 +3460,12 @@ app.post('/api/clients/:clientId/employees/:employeeId/lunch-end', authenticateT
 app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, employeeId } = req.params;
-    const { month_year } = req.query; // Formato YYYY-MM
-
-    if (!month_year || typeof month_year !== 'string') {
-      return res.status(400).json({ success: false, error: 'month_year es requerido en formato YYYY-MM.' });
-    }
+    const month_year = (req.query.month_year as string) || new Date().toISOString().substring(0, 7);
 
     // 1. Obtener la información contractual del empleado
     const empRes = await pool.query(
       `SELECT name, role, basic_salary, allowances, arl_class, payment_type, hourly_rate, pay_period,
-              cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2, vacation_days_accumulated
+              cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2, vacation_days_accumulated, transport_allowance, contract_type
        FROM employees WHERE id = $1 AND client_id = $2`,
       [employeeId, clientId]
     );
@@ -3086,9 +3476,9 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
 
     const emp = empRes.rows[0];
     const isHourly = emp.payment_type === 'hourly';
-    const rawHourlyRate = parseFloat(emp.hourly_rate || '0');
     const basicSalary = parseFloat(emp.basic_salary || '0');
     const allowances = parseFloat(emp.allowances || '0');
+    const transportAllowance = parseFloat(emp.transport_allowance || '0');
     const arlClass = emp.arl_class || 'I';
 
     // 2. Obtener todos los turnos del empleado para el mes/año indicado
@@ -3096,7 +3486,7 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
       `SELECT clock_in, clock_out, lunch_start, lunch_end 
        FROM shift_logs 
        WHERE employee_id = $1 AND clock_out IS NOT NULL 
-         AND TO_CHAR(clock_in, 'YYYY-MM') = $2`,
+          AND TO_CHAR(clock_in, 'YYYY-MM') = $2`,
       [employeeId, month_year]
     );
 
@@ -3153,18 +3543,31 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
     });
 
     // 3. Tarifas y Recargos de Nómina (240 horas laborables estándar en el mes)
-    const hourlyRate = isHourly ? rawHourlyRate : (basicSalary / 240);
+    // El valor hora se calcula de forma automática derivando del salario base / 240
+    const hourlyRate = basicSalary > 0 ? (basicSalary / 240) : (parseFloat(emp.hourly_rate || '0') || 4833);
     const basicEarned = isHourly ? (totalHours * hourlyRate) : basicSalary;
 
     const extraEarned = extraHours * hourlyRate * 0.25; // Extra diurno +25%
     const nightEarned = nightHours * hourlyRate * 0.35; // Recargo nocturno +35%
     const sundayEarned = sundayHours * hourlyRate * 0.75; // Recargo dominical +75%
     
-    const grossSalary = basicEarned + extraEarned + nightEarned + sundayEarned + allowances;
+    const contractType = emp.contract_type || 'indefinido';
+    const actualTransportAllowance = (contractType === 'servicios' || contractType === 'aprendizaje') ? 0 : transportAllowance;
 
-    // Deducciones de Empleado (Salud 4%, Pensión 4%)
-    const employeeHealthDeduction = grossSalary * 0.04;
-    const employeePensionDeduction = grossSalary * 0.04;
+    // Ingreso Bruto (incluye auxilio de transporte si aplica)
+    const grossSalary = basicEarned + extraEarned + nightEarned + sundayEarned + allowances + actualTransportAllowance;
+
+    // IBC (Ingreso Base de Cotización) excluye auxilio de transporte para el cálculo de aportes y prestaciones base
+    const ibc = basicEarned + extraEarned + nightEarned + sundayEarned + allowances;
+
+    // Deducciones de Empleado (Salud 4%, Pensión 4% sobre IBC) - EXCEPTO para Servicios y Aprendizaje
+    let employeeHealthDeduction = 0;
+    let employeePensionDeduction = 0;
+
+    if (contractType !== 'servicios' && contractType !== 'aprendizaje') {
+      employeeHealthDeduction = ibc * 0.04;
+      employeePensionDeduction = ibc * 0.04;
+    }
     
     // 4. Obtener anticipos confirmados de este mes
     const advRes = await pool.query(
@@ -3182,27 +3585,51 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
     const netSalaryToPay = grossSalary - employeeHealthDeduction - employeePensionDeduction - totalAdvancesDeduction;
 
     // Aportes Patronales (Costos de Contabilidad de la Tienda)
-    // Exoneración en Colombia: < 10 SMMLV (aprox. $14M COP), exento de Salud (8.5%), Sena (2%) e ICBF (3%)
-    const isExonerated = (basicSalary < 14000000); 
-    const employerHealth = isExonerated ? 0 : (grossSalary * 0.085);
-    const employerPension = grossSalary * 0.12;
+    let employerHealth = 0;
+    let employerPension = 0;
+    let employerArl = 0;
+    let employerCaja = 0;
+    let employerSena = 0;
+    let employerIcbf = 0;
 
-    // ARL
+    // Provisiones sociales de prestaciones
+    let provisionPrima = 0;
+    let provisionCesantias = 0;
+    let provisionIntCesantias = 0;
+    let provisionVacaciones = 0;
+
+    // ARL rate based on class
     let arlRate = 0.00522; // Clase I
     if (arlClass === 'II') arlRate = 0.01044;
     else if (arlClass === 'III') arlRate = 0.02436;
     else if (arlClass === 'IV') arlRate = 0.04350;
     else if (arlClass === 'V') arlRate = 0.06960;
 
-    const employerArl = grossSalary * arlRate;
+    const isExonerated = (contractType !== 'servicios' && contractType !== 'aprendizaje') ? (basicSalary < 14000000) : false;
 
-    // Provisiones sociales
-    const provisionPrima = grossSalary * 0.0833;
-    const provisionCesantias = grossSalary * 0.0833;
-    const provisionIntCesantias = provisionCesantias * 0.12; // 12% anual
-    const provisionVacaciones = grossSalary * 0.0417;
+    if (contractType !== 'servicios') {
+      if (contractType === 'aprendizaje') {
+        // Aprendizaje: Solo Salud (12.5% completo por la empresa) y ARL
+        employerHealth = ibc * 0.125;
+        employerArl = ibc * arlRate;
+      } else {
+        // Contrato laboral estándar (Indefinido, Fijo, Obra o Labor)
+        employerHealth = isExonerated ? 0 : (ibc * 0.085);
+        employerPension = ibc * 0.12;
+        employerArl = ibc * arlRate;
+        employerCaja = ibc * 0.04;
+        employerSena = isExonerated ? 0 : (ibc * 0.02);
+        employerIcbf = isExonerated ? 0 : (ibc * 0.03);
 
-    const totalEmployerCost = grossSalary + employerHealth + employerPension + employerArl + provisionPrima + provisionCesantias + provisionIntCesantias + provisionVacaciones;
+        // Provisiones prestaciones sociales
+        provisionPrima = grossSalary * 0.0833;
+        provisionCesantias = grossSalary * 0.0833;
+        provisionIntCesantias = provisionCesantias * 0.12;
+        provisionVacaciones = basicEarned * 0.0417;
+      }
+    }
+
+    const totalEmployerCost = grossSalary + employerHealth + employerPension + employerArl + employerCaja + employerSena + employerIcbf + provisionPrima + provisionCesantias + provisionIntCesantias + provisionVacaciones;
 
     res.json({
       success: true,
@@ -3212,47 +3639,45 @@ app.get('/api/clients/:clientId/employees/:employeeId/payroll-summary', authenti
         monthYear: month_year,
         paymentType: emp.payment_type,
         payPeriod: emp.pay_period,
-        cutoffDay1: emp.cutoff_day_1,
-        cutoffDay2: emp.cutoff_day_2,
-        payDay1: emp.pay_day_1,
-        payDay2: emp.pay_day_2,
-        vacationDaysAccumulated: parseFloat(emp.vacation_days_accumulated || '0'),
+        base_salary: basicSalary,
+        hours_worked: totalHours,
+        lunch_discount_minutes: 0,
+        net_hours_worked: totalHours,
+        base_payment: parseFloat(basicEarned.toFixed(2)),
+        night_surcharge: parseFloat(nightEarned.toFixed(2)),
+        sunday_surcharge: parseFloat(sundayEarned.toFixed(2)),
+        extra_hours_surcharge: parseFloat(extraEarned.toFixed(2)),
+        gross_earnings: parseFloat(grossSalary.toFixed(2)),
+        transport_allowance: parseFloat(transportAllowance.toFixed(2)),
+        deductions: {
+          health: parseFloat(employeeHealthDeduction.toFixed(2)),
+          pension: parseFloat(employeePensionDeduction.toFixed(2)),
+          advances: totalAdvancesDeduction
+        },
+        total_deductions: parseFloat((employeeHealthDeduction + employeePensionDeduction + totalAdvancesDeduction).toFixed(2)),
+        net_payment: parseFloat(netSalaryToPay.toFixed(2)),
+        employer_contributions: {
+          pension: parseFloat(employerPension.toFixed(2)),
+          health: parseFloat(employerHealth.toFixed(2)),
+          arl: parseFloat(employerArl.toFixed(2)),
+          arl_percentage: arlRate * 100,
+          exonerated_health_sena: isExonerated,
+          sena: parseFloat(employerSena.toFixed(2)),
+          icbf: parseFloat(employerIcbf.toFixed(2)),
+          caja_compensacion: parseFloat(employerCaja.toFixed(2))
+        },
+        provisions: {
+          prima: parseFloat(provisionPrima.toFixed(2)),
+          cesantias: parseFloat(provisionCesantias.toFixed(2)),
+          intereses_cesantias: parseFloat(provisionIntCesantias.toFixed(2)),
+          vacaciones: parseFloat(provisionVacaciones.toFixed(2))
+        },
+        totalEmployerCost: parseFloat(totalEmployerCost.toFixed(2)),
         metrics: {
           totalHoursWorked: parseFloat(totalHours.toFixed(2)),
           extraHours: parseFloat(extraHours.toFixed(2)),
           nightHours: parseFloat(nightHours.toFixed(2)),
           sundayHours: parseFloat(sundayHours.toFixed(2))
-        },
-        earnings: {
-          basicSalary,
-          allowances,
-          hourlyRate: parseFloat(hourlyRate.toFixed(2)),
-          basicEarned: parseFloat(basicEarned.toFixed(2)),
-          extraEarned: parseFloat(extraEarned.toFixed(2)),
-          nightEarned: parseFloat(nightEarned.toFixed(2)),
-          sundayEarned: parseFloat(sundayEarned.toFixed(2)),
-          grossSalary: parseFloat(grossSalary.toFixed(2))
-        },
-        deductions: {
-          health: parseFloat(employeeHealthDeduction.toFixed(2)),
-          pension: parseFloat(employeePensionDeduction.toFixed(2)),
-          advances: totalAdvancesDeduction,
-          totalDeductions: parseFloat((employeeHealthDeduction + employeePensionDeduction + totalAdvancesDeduction).toFixed(2))
-        },
-        netSalary: parseFloat(netSalaryToPay.toFixed(2)),
-        employerCosts: {
-          exoneratedParafiscales: isExonerated,
-          health: parseFloat(employerHealth.toFixed(2)),
-          pension: parseFloat(employerPension.toFixed(2)),
-          arl: parseFloat(employerArl.toFixed(2)),
-          provisions: {
-            prima: parseFloat(provisionPrima.toFixed(2)),
-            cesantias: parseFloat(provisionCesantias.toFixed(2)),
-            interesesCesantias: parseFloat(provisionIntCesantias.toFixed(2)),
-            vacaciones: parseFloat(provisionVacaciones.toFixed(2))
-          },
-          totalEmployerCost: parseFloat(totalEmployerCost.toFixed(2)),
-          extraCostOverGross: parseFloat((totalEmployerCost - grossSalary).toFixed(2))
         }
       }
     });
@@ -3499,7 +3924,9 @@ app.get('/api/clients/:clientId/hr-documents', authenticateToken as any, authori
     const { employeeId } = req.query; // Filtro opcional
 
     let query = `SELECT d.id, d.employee_id, e.name as employee_name, e.phone as employee_phone, 
-                        d.doc_type, d.status, d.file_url, d.notes, d.start_date, d.end_date, d.created_at
+                        e.employee_code,
+                        e.department_id, (SELECT name FROM business_departments WHERE id = e.department_id) as department_name,
+                        d.doc_type, d.status, d.file_url, d.notes, d.start_date, d.end_date, d.return_date, d.created_at, d.admin_notes
                  FROM hr_documents d
                  JOIN employees e ON d.employee_id = e.id
                  WHERE d.client_id = $1`;
@@ -3523,7 +3950,7 @@ app.get('/api/clients/:clientId/hr-documents', authenticateToken as any, authori
 app.post('/api/clients/:clientId/hr-documents', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { employee_id, doc_type, status, file_url, notes, start_date, end_date } = req.body;
+    const { employee_id, doc_type, status, file_url, notes, reason, start_date, end_date, return_date } = req.body;
 
     if (!employee_id || !doc_type) {
       return res.status(400).json({ success: false, error: 'employee_id y doc_type son requeridos.' });
@@ -3554,13 +3981,22 @@ app.post('/api/clients/:clientId/hr-documents', authenticateToken as any, author
     }
 
     const result = await pool.query(
-      `INSERT INTO hr_documents (client_id, employee_id, doc_type, status, file_url, notes, start_date, end_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO hr_documents (client_id, employee_id, doc_type, status, file_url, notes, start_date, end_date, return_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [clientId, employee_id, doc_type, status || 'pending', file_url || null, notes || generatedContent || null, start_date || null, end_date || null]
+      [clientId, employee_id, doc_type, status || 'pending', file_url || null, notes || reason || generatedContent || null, start_date || null, end_date || null, return_date || null]
     );
 
-    res.json({ success: true, document: result.rows[0] });
+    const doc = result.rows[0];
+    const initialStatus = status || 'pending';
+    if (initialStatus === 'approved' && (doc_type === 'vacaciones' || doc_type === 'permiso' || doc_type === 'incapacidad')) {
+      await pool.query(
+        `UPDATE employees SET activity_status = 'inactive' WHERE id = $1 AND client_id = $2`,
+        [employee_id, clientId]
+      );
+    }
+
+    res.json({ success: true, document: doc });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -3570,23 +4006,33 @@ app.post('/api/clients/:clientId/hr-documents', authenticateToken as any, author
 app.put('/api/clients/:clientId/hr-documents/:docId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, docId } = req.params;
-    const { status, notes, file_url } = req.body;
+    const { status, notes, file_url, admin_notes, return_date } = req.body;
 
     const result = await pool.query(
       `UPDATE hr_documents 
        SET status = COALESCE($1, status), 
            notes = COALESCE($2, notes), 
-           file_url = COALESCE($3, file_url)
-       WHERE id = $4 AND client_id = $5
+           file_url = COALESCE($3, file_url),
+           admin_notes = COALESCE($4, admin_notes),
+           return_date = COALESCE($5, return_date)
+       WHERE id = $6 AND client_id = $7
        RETURNING *`,
-      [status, notes, file_url, docId, clientId]
+      [status, notes, file_url, admin_notes, return_date, docId, clientId]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Documento no encontrado.' });
     }
 
-    res.json({ success: true, document: result.rows[0] });
+    const updatedDoc = result.rows[0];
+    if (status === 'approved' && (updatedDoc.doc_type === 'vacaciones' || updatedDoc.doc_type === 'permiso' || updatedDoc.doc_type === 'incapacidad')) {
+      await pool.query(
+        `UPDATE employees SET activity_status = 'inactive' WHERE id = $1 AND client_id = $2`,
+        [updatedDoc.employee_id, clientId]
+      );
+    }
+
+    res.json({ success: true, document: updatedDoc });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -4874,17 +5320,141 @@ app.delete('/api/clients/:clientId/employee-advances/:advanceId', authenticateTo
   }
 });
 
-// Global Express Error Handler Middleware
-app.use((err: any, req: Request, res: Response, next: any) => {
-  console.error("[Express Global Error]", err);
-  logger.raiseAlert(
-    'express_route_error', 
-    'orange', 
-    `Fallo crítico en endpoint Express: ${req.method} ${req.originalUrl}`, 
-    err?.stack || String(err)
+// =============== ENDPOINTS DE GESTIÓN DE ALERTAS ===============
+// Listar alertas activas del admin
+app.get('/api/admin/alerts/active', authenticateToken as any, requireRole(['admin']) as any, asyncHandler(async (req: Request, res: Response) => {
+  const activeAlerts = await pool.query(
+    `SELECT * FROM system_alerts 
+     WHERE status = 'active' 
+     AND (snooze_until IS NULL OR snooze_until < NOW())
+     ORDER BY severity_level ASC, created_at DESC`
   );
-  res.status(500).json({ success: false, error: 'Ocurrió un error interno en el servidor.' });
-});
+  
+  res.json({ success: true, alerts: activeAlerts.rows });
+}));
+
+// Historial de alertas (pageable)
+app.get('/api/admin/alerts/history', authenticateToken as any, requireRole(['admin']) as any, asyncHandler(async (req: Request, res: Response) => {
+  const limit = parseInt(req.query.limit as string) || 50;
+  const offset = parseInt(req.query.offset as string) || 0;
+
+  const alerts = await pool.query(
+    `SELECT * FROM system_alerts 
+     ORDER BY created_at DESC
+     LIMIT $1 OFFSET $2`,
+    [limit, offset]
+  );
+  
+  res.json({ success: true, alerts: alerts.rows });
+}));
+
+// Historial de alertas por cliente
+app.get('/api/clients/:clientId/alerts/history', authenticateToken as any, asyncHandler(async (req: Request, res: Response) => {
+  const { clientId } = req.params;
+  const authReq = req as AuthenticatedRequest;
+  
+  // Verificar permisos
+  if (authReq.user?.role !== 'admin' && authReq.user?.id !== clientId) {
+    return res.status(403).json({ success: false, error: 'No autorizado' });
+  }
+
+  const alerts = await pool.query(
+    `SELECT * FROM system_alerts 
+     WHERE client_id = $1
+     ORDER BY created_at DESC
+     LIMIT 50`,
+    [clientId]
+  );
+  
+  res.json({ success: true, alerts: alerts.rows });
+}));
+
+// Resolver alerta manualmente
+app.post('/api/admin/alerts/:alertId/resolve', authenticateToken as any, requireRole(['admin']) as any, asyncHandler(async (req: Request, res: Response) => {
+  const { alertId } = req.params;
+  const { resolutionNotes } = req.body;
+  const authReq = req as AuthenticatedRequest;
+  const userId = authReq.user?.username || 'admin';
+
+  const result = await pool.query(
+    `UPDATE system_alerts 
+     SET status = 'resolved', resolved_at = NOW(), resolved_by = $1, resolution_notes = $2
+     WHERE id = $3
+     RETURNING *`,
+    [userId, resolutionNotes || '', alertId]
+  );
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ success: false, error: 'Alerta no encontrada' });
+  }
+
+  StructuredLogger.info('Alert resolved manually', {
+    correlationId: (req as any).correlationId,
+    alertId,
+    resolvedBy: userId
+  });
+
+  res.json({ success: true, message: 'Alerta resuelta', alert: result.rows[0] });
+}));
+
+// Snooze de alerta (silenciarla temporalmente)
+app.post('/api/admin/alerts/:alertId/snooze', authenticateToken as any, requireRole(['admin']) as any, asyncHandler(async (req: Request, res: Response) => {
+  const { alertId } = req.params;
+  const { snoozeMinutes = 60 } = req.body;
+
+  if (!Number.isInteger(snoozeMinutes) || snoozeMinutes < 1) {
+    return res.status(400).json({ success: false, error: 'snoozeMinutes debe ser un entero positivo' });
+  }
+
+  const snoozeUntil = new Date(Date.now() + snoozeMinutes * 60000);
+
+  const result = await pool.query(
+    `UPDATE system_alerts 
+     SET snooze_until = $1
+     WHERE id = $2
+     RETURNING *`,
+    [snoozeUntil, alertId]
+  );
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ success: false, error: 'Alerta no encontrada' });
+  }
+
+  StructuredLogger.info('Alert snoozed', {
+    correlationId: (req as any).correlationId,
+    alertId,
+    snoozeMinutes
+  });
+
+  res.json({ success: true, message: `Alerta silenciada por ${snoozeMinutes} minutos`, alert: result.rows[0] });
+}));
+
+// Reabrir alerta (si fue resuelta incorrectamente)
+app.post('/api/admin/alerts/:alertId/reopen', authenticateToken as any, requireRole(['admin']) as any, asyncHandler(async (req: Request, res: Response) => {
+  const { alertId } = req.params;
+
+  const result = await pool.query(
+    `UPDATE system_alerts 
+     SET status = 'active', resolved_at = NULL, resolved_by = NULL, resolution_notes = NULL, reopen_count = reopen_count + 1
+     WHERE id = $1
+     RETURNING *`,
+    [alertId]
+  );
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ success: false, error: 'Alerta no encontrada' });
+  }
+
+  StructuredLogger.info('Alert reopened', {
+    correlationId: (req as any).correlationId,
+    alertId
+  });
+
+  res.json({ success: true, message: 'Alerta reabierta', alert: result.rows[0] });
+}));
+
+// Global Express Error Handler Middleware (REEMPLAZADO)
+app.use(errorHandler);
 
 // Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
 app.get(/.*/, (req: Request, res: Response) => {
@@ -4902,6 +5472,9 @@ export const server = app.listen(PORT, () => {
   // Asegurar que las columnas e incrementos de BD existan
   (async () => {
     try {
+      await initDatabase();
+      console.log("[DB Migration] ✅ Inicialización completa de tablas verificada.");
+
       await pool.query(`ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;`);
       console.log("[DB Migration] ✅ Columna 'phone_number' alterada con éxito (permite NULL).");
 
@@ -4987,6 +5560,9 @@ export const server = app.listen(PORT, () => {
             created_by_name VARCHAR(100),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        ALTER TABLE hr_documents ADD COLUMN IF NOT EXISTS return_date DATE;
+        ALTER TABLE employees ADD COLUMN IF NOT EXISTS employee_code VARCHAR(50);
       `);
       console.log("[DB Migration] ✅ Columnas y tablas de la Fase 4 (Cartera/Logística/Perfil) inicializadas con éxito.");
     } catch (err: any) {

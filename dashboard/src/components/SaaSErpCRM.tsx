@@ -41,12 +41,27 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [selectedCust, setSelectedCust] = useState<Customer | null>(null);
-    const [custFormulas, setCustFormulas] = useState<any[]>([]);
-    const [loadingFormulas, setLoadingFormulas] = useState(false);
     const [custAppointments, setCustAppointments] = useState<any[]>([]);
     const [loadingAppointments, setLoadingAppointments] = useState(false);
     const [custLabJobs, setCustLabJobs] = useState<any[]>([]);
     const [loadingLabJobs, setLoadingLabJobs] = useState(false);
+
+    // Accordion visibility and search/filter states for patient profile
+    const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({
+        info: true,
+        formula: true,
+        citas: true,
+        laboratorio: true,
+        facturacion: true
+    });
+    const [visitReasonFilter, setVisitReasonFilter] = useState<'all' | 'examen_vista' | 'venta_lentes' | 'otros'>('all');
+
+    const toggleSection = (section: string) => {
+        setOpenSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
 
     // Form inputs
     const [custType, setCustType] = useState<'persona' | 'empresa'>('persona');
@@ -344,31 +359,36 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
     const openProfileModal = async (cust: Customer) => {
         setSelectedCust(cust);
         setIsProfileOpen(true);
-        setLoadingFormulas(true);
         setLoadingAppointments(true);
         setLoadingLabJobs(true);
-        
-        try {
-            const res = await fetch(`/api/clients/${clientId}/formulas?customerId=${cust.id}`);
-            const json = await res.json();
-            if (json.success) {
-                setCustFormulas(json.formulas || []);
-            }
-        } catch (err) {
-            console.error("Error fetching patient formulas history:", err);
-        } finally {
-            setLoadingFormulas(false);
-        }
 
         try {
-            const res = await fetch(`/api/clients/${clientId}/appointments`);
+            const res = await fetch(`/api/clients/${clientId}/appointments`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             const json = await res.json();
             if (json.success) {
-                const filteredApps = (json.appointments || []).filter((app: any) => 
-                    app.crm_customer_id === cust.id || 
-                    (app.customer_document_number && app.customer_document_number === cust.document_number) ||
-                    (app.customer_phone && app.customer_phone === cust.phone)
-                );
+                const cleanName = (n: string) => n ? n.toLowerCase().replace(/\s+/g, ' ').trim() : '';
+                const filteredApps = (json.appointments || []).filter((app: any) => {
+                    const appId = app.crm_customer_id;
+                    const docApp = app.customer_document_number ? app.customer_document_number.toString().trim() : '';
+                    const docCust = cust.document_number ? cust.document_number.toString().trim() : '';
+                    const phoneApp = app.customer_phone ? app.customer_phone.replace(/\D/g, '') : '';
+                    const phoneCust = cust.phone ? cust.phone.replace(/\D/g, '') : '';
+                    const nameApp = cleanName(app.customer_name);
+                    const nameCust = cleanName(`${cust.name} ${cust.last_name || ''}`);
+
+                    const matchPhone = phoneApp && phoneCust && (phoneApp.endsWith(phoneCust) || phoneCust.endsWith(phoneApp));
+                    const matchName = nameApp && nameCust && (nameApp.includes(nameCust) || nameCust.includes(nameApp));
+
+                    return (
+                        (appId && appId === cust.id) ||
+                        (docApp && docCust && docApp === docCust) ||
+                        matchPhone ||
+                        matchName
+                    );
+                });
+                filteredApps.sort((a: any, b: any) => new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime());
                 setCustAppointments(filteredApps);
             }
         } catch (err) {
@@ -378,7 +398,9 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
         }
 
         try {
-            const res = await fetch(`/api/clients/${clientId}/lab-jobs`);
+            const res = await fetch(`/api/clients/${clientId}/lab-jobs`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             const json = await res.json();
             if (json.success) {
                 const filteredJobs = (json.labJobs || []).filter((job: any) => job.customer_id === cust.id);
@@ -854,180 +876,236 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'op
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-3">
-                                    <h4 className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline/5 pb-1">Ficha del Paciente</h4>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-on-surface-variant">WhatsApp:</span>
-                                            <span className="font-mono text-on-surface font-bold">+{selectedCust.phone}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-on-surface-variant">Email:</span>
-                                            <span className="text-on-surface">{selectedCust.email || 'No Registrado'}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-on-surface-variant">Dirección:</span>
-                                            <span className="text-on-surface">{selectedCust.address || 'No Registrado'}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-on-surface-variant">Último Contacto:</span>
-                                            <span className="text-on-surface">
-                                                {selectedCust.last_interaction_at 
-                                                    ? new Date(selectedCust.last_interaction_at).toLocaleDateString('es-CO')
-                                                    : 'Desconocido'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <h4 className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline/5 pb-1">
-                                        {category === 'optica' ? 'Fórmula Óptica' :
-                                         category === 'restaurante' ? 'Preferencias Alimenticias & Notas' : 'Notas & Observaciones'}
-                                    </h4>
-                                    {renderPrescriptionDetail(selectedCust.lens_prescription)}
-                                </div>
-                            </div>
-
-                            {/* Historial de Exámenes Clínicos para Ópticas */}
-                            {category === 'optica' && (
-                                <div className="space-y-3">
-                                    <h4 className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline/5 pb-1">Historial de Exámenes Clínicos</h4>
-                                    {loadingFormulas ? (
-                                        <p className="text-xs text-on-surface-variant italic py-1 animate-pulse">Cargando historial clínico...</p>
-                                    ) : custFormulas.length === 0 ? (
-                                        <p className="text-on-surface-variant/60 italic py-2">No se registran exámenes en el historial clínico.</p>
-                                    ) : (
-                                        <div className="space-y-3 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                                            {custFormulas.map(form => (
-                                                <div key={form.id} className="p-3 bg-surface-container/20 border border-outline/5 rounded-xl space-y-2 text-xs">
-                                                    <div className="flex justify-between items-center text-[10px] text-primary font-bold">
-                                                        <span>📋 Examen del {new Date(form.created_at).toLocaleDateString('es-CO')}</span>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                                                        <div className="p-1.5 bg-surface-container-high/40 rounded">
-                                                             <span className="font-bold text-on-surface-variant">OD (Ojo Derecho):</span>
-                                                             <div className="font-mono text-[10px] mt-0.5">
-                                                                 Esf: {form.od_sphere || '0.00'} | Cil: {form.od_cylinder || '0.00'} | Eje: {form.od_axis || '0'}° {form.od_addition ? `| Ad: ${form.od_addition}` : ''}
-                                                             </div>
-                                                        </div>
-                                                        <div className="p-1.5 bg-surface-container-high/40 rounded">
-                                                             <span className="font-bold text-on-surface-variant">OI (Ojo Izquierdo):</span>
-                                                             <div className="font-mono text-[10px] mt-0.5">
-                                                                 Esf: {form.oi_sphere || '0.00'} | Cil: {form.oi_cylinder || '0.00'} | Eje: {form.oi_axis || '0'}° {form.oi_addition ? `| Ad: ${form.oi_addition}` : ''}
-                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                    {(form.dp_distance || form.height || form.notes) && (
-                                                         <div className="text-[10px] text-on-surface-variant leading-relaxed border-t border-outline/5 pt-1.5">
-                                                             {form.dp_distance && <span><strong>DP:</strong> {form.dp_distance} mm </span>}
-                                                             {form.height && <span><strong>Alt:</strong> {form.height} mm </span>}
-                                                             {form.notes && <p className="mt-1 italic">"{form.notes}"</p>}
-                                                         </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Historial de Citas Agendadas (Bug B) */}
+                            {/* ACCORDION 1: FICHA PACIENTE */}
                             <div className="space-y-3">
-                                <h4 className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline/5 pb-1">Historial de Citas</h4>
-                                {loadingAppointments ? (
-                                    <p className="text-xs text-on-surface-variant italic py-1 animate-pulse">Cargando historial de citas...</p>
-                                ) : custAppointments.length === 0 ? (
-                                    <p className="text-on-surface-variant/60 italic py-2">No se registran citas en la agenda para este paciente.</p>
-                                ) : (
-                                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                        {custAppointments.map(app => (
-                                            <div key={app.id} className="flex justify-between items-center p-3 bg-surface-container/20 border border-outline/5 rounded-xl text-xs">
-                                                <div>
-                                                    <p className="font-bold text-on-surface">📅 {new Date(app.appointment_date).toLocaleDateString('es-CO')} - {new Date(app.appointment_date).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</p>
-                                                    <p className="text-[10px] text-on-surface-variant mt-0.5">Motivo: {app.visit_reason || 'Sin especificar'} {app.visit_reason_details ? `(${app.visit_reason_details})` : ''}</p>
-                                                </div>
-                                                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                                                    app.status === 'confirmed' ? 'bg-green-500/10 text-green-500' :
-                                                    app.status === 'canceled' ? 'bg-red-500/10 text-red-500' :
-                                                    app.status === 'attended' ? 'bg-blue-500/10 text-blue-500' :
-                                                    'bg-yellow-500/10 text-yellow-500'
-                                                }`}>
-                                                    {app.status === 'confirmed' ? 'Confirmada' :
-                                                     app.status === 'canceled' ? 'Cancelada' :
-                                                     app.status === 'attended' ? 'Atendida' : 'Pendiente'}
+                                <div 
+                                    onClick={() => toggleSection('info')}
+                                    className="flex justify-between items-center cursor-pointer border-b border-outline/5 pb-1 select-none hover:text-primary transition-colors text-on-surface-variant"
+                                >
+                                    <h4 className="font-bold text-[10px] uppercase tracking-wider">Ficha del Paciente</h4>
+                                    <span className="material-symbols-outlined text-[16px]">
+                                        {openSections.info ? 'expand_less' : 'expand_more'}
+                                    </span>
+                                </div>
+                                {openSections.info && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-surface-container/10 p-4 rounded-xl border border-outline/5 text-left">
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-on-surface-variant">WhatsApp:</span>
+                                                <span className="font-mono text-on-surface font-bold">+{selectedCust.phone}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-on-surface-variant">Email:</span>
+                                                <span className="text-on-surface">{selectedCust.email || 'No Registrado'}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-on-surface-variant">Dirección:</span>
+                                                <span className="text-on-surface">{selectedCust.address || 'No Registrado'}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-on-surface-variant">Último Contacto:</span>
+                                                <span className="text-on-surface">
+                                                    {selectedCust.last_interaction_at 
+                                                        ? new Date(selectedCust.last_interaction_at).toLocaleDateString('es-CO')
+                                                        : 'Desconocido'}
                                                 </span>
                                             </div>
-                                        ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Trabajos de Laboratorio (Lentes) */}
+                            {/* ACCORDION 2: FÓRMULA ÓPTICA / DIAGNÓSTICO */}
+                            <div className="space-y-3">
+                                <div 
+                                    onClick={() => toggleSection('formula')}
+                                    className="flex justify-between items-center cursor-pointer border-b border-outline/5 pb-1 select-none hover:text-primary transition-colors text-on-surface-variant"
+                                >
+                                    <h4 className="font-bold text-[10px] uppercase tracking-wider">
+                                        {category === 'optica' ? 'Fórmula Óptica' :
+                                         category === 'restaurante' ? 'Preferencias Alimenticias & Notas' : 'Notas & Observaciones'}
+                                    </h4>
+                                    <span className="material-symbols-outlined text-[16px]">
+                                        {openSections.formula ? 'expand_less' : 'expand_more'}
+                                    </span>
+                                </div>
+                                {openSections.formula && (
+                                    <div className="bg-surface-container/10 p-4 rounded-xl border border-outline/5">
+                                        {renderPrescriptionDetail(selectedCust.lens_prescription)}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* ACCORDION 3: HISTORIAL DE CITAS (WITH ACCORDION & SEARCH FILTER) */}
+                            <div className="space-y-3">
+                                <div 
+                                    onClick={() => toggleSection('citas')}
+                                    className="flex justify-between items-center cursor-pointer border-b border-outline/5 pb-1 select-none hover:text-primary transition-colors text-on-surface-variant"
+                                >
+                                    <h4 className="font-bold text-[10px] uppercase tracking-wider">Historial de Citas</h4>
+                                    <span className="material-symbols-outlined text-[16px]">
+                                        {openSections.citas ? 'expand_less' : 'expand_more'}
+                                    </span>
+                                </div>
+                                {openSections.citas && (
+                                    <div className="space-y-3 bg-surface-container/10 p-4 rounded-xl border border-outline/5 text-left">
+                                        {/* Selector de tipo de cita (Estilo Excel) */}
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {[
+                                                { value: 'all', label: 'Todos' },
+                                                { value: 'examen_vista', label: 'Examen Vista' },
+                                                { value: 'venta_lentes', label: 'Venta Lentes' },
+                                                { value: 'otros', label: 'Otros' }
+                                            ].map(opt => (
+                                                <button
+                                                    key={opt.value}
+                                                    type="button"
+                                                    onClick={() => setVisitReasonFilter(opt.value as any)}
+                                                    className={`py-1 px-2.5 rounded-lg border text-[10px] font-semibold transition cursor-pointer text-center border-0 ${
+                                                        visitReasonFilter === opt.value
+                                                            ? 'bg-primary text-white border-primary shadow-sm'
+                                                            : 'bg-surface-container-high/30 border-outline/10 text-on-surface-variant hover:bg-surface-variant/30'
+                                                    }`}
+                                                >
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {loadingAppointments ? (
+                                            <p className="text-xs text-on-surface-variant italic py-1 animate-pulse">Cargando historial de citas...</p>
+                                        ) : (() => {
+                                            const filteredApps = custAppointments.filter((app: any) => {
+                                                // Filtrar por píldora Excel
+                                                if (visitReasonFilter !== 'all' && app.visit_reason !== visitReasonFilter) return false;
+                                                return true;
+                                            });
+
+                                            if (filteredApps.length === 0) {
+                                                return <p className="text-on-surface-variant/60 italic py-2 text-center text-xs">No se registran citas que coincidan con la búsqueda.</p>;
+                                            }
+
+                                            return (
+                                                <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                                    {filteredApps.map(app => {
+                                                        const cleanReason = app.visit_reason === 'examen_vista' ? 'Examen Vista' :
+                                                                           app.visit_reason === 'venta_lentes' ? 'Venta Lentes' :
+                                                                           app.visit_reason === 'otros' ? 'Otros' : (app.visit_reason || 'Sin especificar');
+
+                                                        return (
+                                                            <div key={app.id} className="flex justify-between items-center p-3 bg-surface-container/30 border border-outline/5 rounded-xl text-xs">
+                                                                <div>
+                                                                    <p className="font-bold text-on-surface">📅 {new Date(app.appointment_date).toLocaleDateString('es-CO')} - {new Date(app.appointment_date).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                                                                    <p className="text-[10px] text-on-surface-variant mt-0.5">Motivo: <span className="font-bold text-primary">{cleanReason}</span> {app.visit_reason_details ? `(${app.visit_reason_details})` : ''}</p>
+                                                                </div>
+                                                                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                                                    app.status === 'confirmed' ? 'bg-green-500/10 text-green-500' :
+                                                                    app.status === 'canceled' ? 'bg-red-500/10 text-red-500' :
+                                                                    app.status === 'attended' ? 'bg-blue-500/10 text-blue-500' :
+                                                                    'bg-yellow-500/10 text-yellow-500'
+                                                                }`}>
+                                                                    {app.status === 'confirmed' ? 'Confirmada' :
+                                                                     app.status === 'canceled' ? 'Cancelada' :
+                                                                     app.status === 'attended' ? 'Atendida' : 'Pendiente'}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* ACCORDION 4: TRABAJOS DE LABORATORIO (LENTES) */}
                             {category === 'optica' && (
                                 <div className="space-y-3">
-                                    <h4 className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline/5 pb-1">Trabajos de Laboratorio (Lentes)</h4>
-                                    {loadingLabJobs ? (
-                                        <p className="text-xs text-on-surface-variant italic py-1 animate-pulse">Cargando órdenes de laboratorio...</p>
-                                    ) : custLabJobs.length === 0 ? (
-                                        <p className="text-on-surface-variant/60 italic py-2">No se registran trabajos de taller para este paciente.</p>
-                                    ) : (
-                                        <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                            {custLabJobs.map(job => (
-                                                <div key={job.id} className="p-3 bg-surface-container/20 border border-outline/5 rounded-xl space-y-1.5 text-xs">
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="font-bold text-on-surface">🔬 {job.product_name || 'Lente Formulada'}</span>
-                                                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider ${
-                                                            job.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                                            job.status === 'sent' ? 'bg-blue-500/10 text-blue-500' :
-                                                            job.status === 'received' ? 'bg-green-500/10 text-green-500' :
-                                                            job.status === 'delivered' ? 'bg-emerald-500/20 text-emerald-500' :
-                                                            'bg-red-500/10 text-red-500'
-                                                        }`}>
-                                                            {job.status === 'pending' ? 'Pendiente' :
-                                                             job.status === 'sent' ? 'En Laboratorio' :
-                                                             job.status === 'received' ? 'En Tienda' :
-                                                             job.status === 'delivered' ? 'Entregado' : 'Cancelado'}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-[10px] text-on-surface-variant font-mono">
-                                                        Diseño: {job.lens_design || 'N/A'} | Material: {job.lens_material || 'N/A'} | Tratamiento: {job.lens_treatment || 'N/A'}
-                                                    </div>
-                                                    <div className="text-[10px] text-on-surface-variant flex justify-between border-t border-outline/5 pt-1.5">
-                                                        <span>Lab: {job.supplier_name || 'Sin asignar'}</span>
-                                                        {job.delivered_at && <span>Entregado: {new Date(job.delivered_at).toLocaleDateString('es-CO')}</span>}
-                                                    </div>
+                                    <div 
+                                        onClick={() => toggleSection('laboratorio')}
+                                        className="flex justify-between items-center cursor-pointer border-b border-outline/5 pb-1 select-none hover:text-primary transition-colors text-on-surface-variant"
+                                    >
+                                        <h4 className="font-bold text-[10px] uppercase tracking-wider">Trabajos de Laboratorio (Lentes)</h4>
+                                        <span className="material-symbols-outlined text-[16px]">
+                                            {openSections.laboratorio ? 'expand_less' : 'expand_more'}
+                                        </span>
+                                    </div>
+                                    {openSections.laboratorio && (
+                                        <div className="bg-surface-container/10 p-4 rounded-xl border border-outline/5 space-y-2">
+                                            {loadingLabJobs ? (
+                                                <p className="text-xs text-on-surface-variant italic py-1 animate-pulse">Cargando órdenes de laboratorio...</p>
+                                            ) : custLabJobs.length === 0 ? (
+                                                <p className="text-on-surface-variant/60 italic py-2 text-center text-xs">No se registran trabajos de taller para este paciente.</p>
+                                            ) : (
+                                                <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                                    {custLabJobs.map(job => (
+                                                        <div key={job.id} className="p-3 bg-surface-container/30 border border-outline/5 rounded-xl space-y-1.5 text-xs text-left">
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="font-bold text-on-surface">🔬 {job.product_name || 'Lente Formulada'}</span>
+                                                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider ${
+                                                                    job.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
+                                                                    job.status === 'sent' ? 'bg-blue-500/10 text-blue-500' :
+                                                                    job.status === 'received' ? 'bg-green-500/10 text-green-500' :
+                                                                    job.status === 'delivered' ? 'bg-emerald-500/20 text-emerald-500' :
+                                                                    'bg-red-500/10 text-red-500'
+                                                                }`}>
+                                                                    {job.status === 'pending' ? 'Pendiente' :
+                                                                     job.status === 'sent' ? 'En Laboratorio' :
+                                                                     job.status === 'received' ? 'En Tienda' :
+                                                                     job.status === 'delivered' ? 'Entregado' : 'Cancelado'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-[10px] text-on-surface-variant font-mono">
+                                                                Diseño: {job.lens_design || 'N/A'} | Material: {job.lens_material || 'N/A'} | Tratamiento: {job.lens_treatment || 'N/A'}
+                                                            </div>
+                                                            <div className="text-[10px] text-on-surface-variant flex justify-between border-t border-outline/5 pt-1.5">
+                                                                <span>Lab: {job.supplier_name || 'Sin asignar'}</span>
+                                                                {job.delivered_at && <span>Entregado: {new Date(job.delivered_at).toLocaleDateString('es-CO')}</span>}
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     )}
                                 </div>
                             )}
 
-                            {/* Billing & Debt link information */}
+                            {/* ACCORDION 5: HISTORIAL DE FACTURACIÓN */}
                             <div className="space-y-3">
-                                <h4 className="font-bold text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline/5 pb-1">Historial de Facturación</h4>
-                                {getCustomerInvoices(selectedCust.document_number).length === 0 ? (
-                                    <p className="text-on-surface-variant/60 italic py-2">No se registran compras o deudas en el historial de facturación.</p>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {getCustomerInvoices(selectedCust.document_number).map(inv => (
-                                            <div key={inv.id} className="flex justify-between items-center p-3 bg-surface-container/20 border border-outline/5 rounded-xl">
-                                                <div>
-                                                    <span className="font-bold font-mono text-on-surface">{inv.invoice_number}</span>
-                                                    <span className="text-[10px] text-on-surface-variant ml-2 font-mono">Vence: {new Date(inv.due_date).toLocaleDateString('es-CO')}</span>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className="font-bold text-on-surface font-mono">${Number(inv.total_amount || 0).toLocaleString('es-CO')}</span>
-                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                                                        inv.status === 'paid' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
-                                                    }`}>
-                                                        {inv.status.toUpperCase()}
-                                                    </span>
-                                                </div>
+                                <div 
+                                    onClick={() => toggleSection('facturacion')}
+                                    className="flex justify-between items-center cursor-pointer border-b border-outline/5 pb-1 select-none hover:text-primary transition-colors text-on-surface-variant"
+                                >
+                                    <h4 className="font-bold text-[10px] uppercase tracking-wider">Historial de Facturación</h4>
+                                    <span className="material-symbols-outlined text-[16px]">
+                                        {openSections.facturacion ? 'expand_less' : 'expand_more'}
+                                    </span>
+                                </div>
+                                {openSections.facturacion && (
+                                    <div className="bg-surface-container/10 p-4 rounded-xl border border-outline/5">
+                                        {getCustomerInvoices(selectedCust.document_number).length === 0 ? (
+                                            <p className="text-on-surface-variant/60 italic py-2 text-center text-xs">No se registran compras o deudas en el historial de facturación.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {getCustomerInvoices(selectedCust.document_number).map(inv => (
+                                                    <div key={inv.id} className="flex justify-between items-center p-3 bg-surface-container/30 border border-outline/5 rounded-xl text-left">
+                                                        <div>
+                                                            <span className="font-bold font-mono text-on-surface">{inv.invoice_number}</span>
+                                                            <span className="text-[10px] text-on-surface-variant ml-2 font-mono">Vence: {new Date(inv.due_date).toLocaleDateString('es-CO')}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="font-bold text-on-surface font-mono">${Number(inv.total_amount || 0).toLocaleString('es-CO')}</span>
+                                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                                                inv.status === 'paid' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                                                            }`}>
+                                                                {inv.status.toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
                                 )}
                             </div>
