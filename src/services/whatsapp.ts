@@ -8,6 +8,7 @@ import { getClientById, updateClient } from '../database/clientsCrud';
 import { fetchDocumentsFromDrive, uploadFileToFolder } from './drive';
 import { pool } from '../database/postgres';
 import { logger } from './logger';
+import { uploadTenantFile } from './storageService';
 
 // Estado global de WhatsApp expuesto para el Dashboard
 export const whatsappState = {
@@ -259,8 +260,86 @@ export const initializeWhatsAppClient = (): Client => {
             return;
         }
 
-        // --- INTERCEPTAR ARCHIVOS (PDF, TXT, DOCX, etc.) ---
+        // --- INTERCEPTAR ARCHIVOS (PDF, TXT, DOCX, COMPROBANTES DE PAGO) ---
         if (msg.hasMedia) {
+            // 1. RECEPTOR AUTOMÁTICO DE COMPROBANTES DE PAGO (FOTOS DE TRANSFERENCIA)
+            if (msg.type === 'image') {
+                try {
+                    const cleanSender = senderPhone.replace(/[^0-9]/g, '');
+                    const cleanNoCountry = cleanSender.replace(/^57/, '');
+
+                    // Buscar si el cliente remitente tiene alguna factura en estado pendiente
+                    const pendingInvoiceRes = await pool.query(
+                        `SELECT id, invoice_number, customer_name, total_amount, client_id, payment_method, transfer_bank
+                         FROM invoices 
+                         WHERE (customer_phone = $1 OR customer_phone = $2 OR customer_phone = $3)
+                           AND status = 'pending'
+                         ORDER BY created_at DESC 
+                         LIMIT 1`,
+                        [cleanSender, cleanNoCountry, `+${cleanSender}`]
+                    );
+
+                    if (pendingInvoiceRes.rows.length > 0) {
+                        const invoice = pendingInvoiceRes.rows[0];
+                        console.log(`[WhatsApp Receipt] 📸 Foto de comprobante recibida de +${senderPhone} para Factura #${invoice.invoice_number}`);
+                        
+                        const media = await msg.downloadMedia();
+
+                        if (media) {
+                            let ext = '.jpg';
+                            if (media.mimetype?.includes('png')) ext = '.png';
+                            else if (media.mimetype?.includes('webp')) ext = '.webp';
+
+                            const fileName = `receipt_${invoice.id}_${Date.now()}${ext}`;
+                            const buffer = Buffer.from(media.data, 'base64');
+
+                            // Guardar mediante el servicio híbrido (Cloudflare R2 o Fallback Local VPS)
+                            const publicReceiptUrl = await uploadTenantFile(
+                                invoice.client_id,
+                                'receipts',
+                                fileName,
+                                buffer,
+                                media.mimetype || 'image/jpeg'
+                            );
+
+                            // Opcional: Subir también a Google Drive si el cliente lo tiene configurado
+                            try {
+                                const clientData = await getClientById(invoice.client_id);
+                                if (clientData && clientData.driveFolderId) {
+                                    const { Readable } = require('stream');
+                                    const stream = new Readable();
+                                    stream.push(buffer);
+                                    stream.push(null);
+                                    await uploadFileToFolder(clientData.driveFolderId, `Factura_${invoice.invoice_number}_${fileName}`, media.mimetype || 'image/jpeg', stream);
+                                    console.log(`[WhatsApp Receipt] ☁️ Comprobante subido a Google Drive de tienda ${invoice.client_id}`);
+                                }
+                            } catch (driveErr) {
+                                console.warn(`[WhatsApp Receipt] No se pudo subir a Drive (usando servicio de almacenamiento principal):`, driveErr);
+                            }
+
+                            // Actualizar la factura en la base de datos
+                            await pool.query(
+                                `UPDATE invoices 
+                                 SET payment_receipt_url = $1, updated_at = NOW() 
+                                 WHERE id = $2`,
+                                [publicReceiptUrl, invoice.id]
+                            );
+
+                            console.log(`[WhatsApp Receipt] ✅ Comprobante guardado en BD para tienda ${invoice.client_id}: ${publicReceiptUrl}`);
+
+                            await msg.reply(
+                                `📸 **¡Comprobante de Pago Recibido!**\n\n` +
+                                `Hemos asociado tu soporte de transferencia a la **Factura #${invoice.invoice_number}** por valor de **$${parseFloat(invoice.total_amount).toLocaleString('es-CO')}**.\n\n` +
+                                `Nuestro equipo de caja lo verificará en breve. ¡Gracias por tu compra!`
+                            );
+                            return; // Terminamos el flujo sin procesar como RAG ni mensaje administrativo
+                        }
+                    }
+                } catch (receiptErr) {
+                    console.error("[WhatsApp Receipt] ❌ Error procesando comprobante de transferencia:", receiptErr);
+                }
+            }
+
             const session = activeWaSessions.get(senderPhone);
             if (session && session.expiresAt > Date.now()) {
                 // Si el archivo enviado es un audio o nota de voz
@@ -446,5 +525,25 @@ export const logoutWhatsApp = async () => {
         console.error("[WhatsApp] Error en logout de WhatsApp:", err);
     } finally {
         client = null;
+    }
+};
+
+// Función auxiliar para enviar un mensaje de texto por WhatsApp de forma segura
+export const sendWhatsAppTextMessage = async (phone: string, text: string): Promise<boolean> => {
+    try {
+        if (!client || whatsappState.status !== 'CONNECTED') {
+            console.log(`[WhatsApp Sender] No se envió mensaje a +${phone} porque WhatsApp no está conectado.`);
+            return false;
+        }
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+        if (!cleanPhone) return false;
+
+        const target = cleanPhone.endsWith('@c.us') ? cleanPhone : `${cleanPhone}@c.us`;
+        await client.sendMessage(target, text);
+        console.log(`[WhatsApp Sender] ✅ Mensaje proactivo enviado exitosamente a +${cleanPhone}`);
+        return true;
+    } catch (err: any) {
+        console.error(`[WhatsApp Sender] ❌ Error enviando mensaje a +${phone}:`, err?.message || err);
+        return false;
     }
 };

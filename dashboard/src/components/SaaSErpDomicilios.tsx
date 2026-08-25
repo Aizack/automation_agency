@@ -34,15 +34,36 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId }) => {
   const fetchDeliveries = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/clients/${clientId}/invoices`);
+      const res = await fetch(`/api/clients/${clientId}/deliveries`);
       const json = await res.json();
       if (json.success) {
-        // Filtrar facturas con despacho a domicilio
-        const list = (json.invoices || []).filter((inv: any) => inv.delivery_method === 'domicilio');
+        const list = (json.deliveries || []).map((inv: any) => ({
+          ...inv,
+          delivery_fee: inv.delivery_fee ?? '0',
+          delivery_status: inv.delivery_status ?? 'pending',
+          delivery_address: inv.delivery_address || inv.customer_address || ''
+        }));
         setDeliveries(list);
+      } else {
+        const fallback = await fetch(`/api/clients/${clientId}/invoices`);
+        const fallbackJson = await fallback.json();
+        if (fallbackJson.success) {
+          const list = (fallbackJson.invoices || []).filter((inv: any) => inv.delivery_method === 'domicilio');
+          setDeliveries(list);
+        }
       }
     } catch (err) {
       console.error("Error cargando domicilios:", err);
+      try {
+        const fallback = await fetch(`/api/clients/${clientId}/invoices`);
+        const fallbackJson = await fallback.json();
+        if (fallbackJson.success) {
+          const list = (fallbackJson.invoices || []).filter((inv: any) => inv.delivery_method === 'domicilio');
+          setDeliveries(list);
+        }
+      } catch {
+        setDeliveries([]);
+      }
     } finally {
       setLoading(false);
     }

@@ -4,8 +4,8 @@ export interface ExtendedRequest extends Request {
   user?: {
     id: string;
     username: string;
-    role: 'admin' | 'client' | 'employee';
-    clientId?: string; // Solo presente si el rol es 'employee'
+    role: 'admin' | 'client' | 'tenant_admin' | 'employee';
+    clientId?: string;
   };
 }
 

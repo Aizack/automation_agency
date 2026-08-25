@@ -52,12 +52,15 @@ function App() {
       }
 
       try {
-        // Validar token con el servidor
+        // Timeout de seguridad para evitar spinner infinito si la red falla
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+
         const res = await fetch('/api/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` },
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
         const json = await res.json();
 
         if (json.success) {
@@ -74,6 +77,22 @@ function App() {
             } else {
               setView('admin');
               localStorage.setItem('current_view', 'admin');
+            }
+          } else if (user.role === 'employee') {
+            localStorage.setItem('session_name', user.name || '');
+            localStorage.setItem('employee_role', user.employeeRole || '');
+            localStorage.setItem('employee_permissions', JSON.stringify(user.permissions || []));
+            if (user.clientId) {
+              localStorage.setItem('current_client_id', user.clientId);
+              setClientId(user.clientId);
+            }
+
+            if (user.hasErpAccess) {
+              setView('client');
+              localStorage.setItem('current_view', 'client');
+            } else {
+              setView('employee');
+              localStorage.setItem('current_view', 'employee');
             }
           } else {
             setClientId(user.id);
@@ -111,20 +130,43 @@ function App() {
     checkAuthAndRoute();
   }, []);
 
-  const handleLoginSuccess = (id: string, role: 'admin' | 'client', token: string) => {
+  const handleLoginSuccess = (id: string, role: string, token: string, extra?: Record<string, any>) => {
     localStorage.setItem('auth_token', token);
     localStorage.setItem('session_role', role);
+
     if (role === 'admin') {
       setView('admin');
       localStorage.setItem('current_view', 'admin');
       localStorage.removeItem('current_client_id');
+    } else if (role === 'employee') {
+      // Guardar sesión principal y sesión nativa de EmployeePortal
+      localStorage.setItem('session_name', extra?.name || '');
+      localStorage.setItem('employee_role', extra?.employeeRole || '');
+      localStorage.setItem('employee_permissions', JSON.stringify(extra?.permissions || []));
+      localStorage.setItem('current_client_id', id);
+
+      localStorage.setItem('emp_token', token);
+      localStorage.setItem('emp_id', extra?.employeeId || id);
+      localStorage.setItem('emp_name', extra?.name || '');
+      localStorage.setItem('emp_role', extra?.employeeRole || 'employee');
+      localStorage.setItem('emp_client_id', id);
+
+      setClientId(id);
+
+      if (extra?.hasErpAccess) {
+        setView('client');
+        localStorage.setItem('current_view', 'client');
+      } else {
+        setView('employee');
+        localStorage.setItem('current_view', 'employee');
+      }
     } else {
       setClientId(id);
       setView('client');
       localStorage.setItem('current_view', 'client');
       localStorage.setItem('current_client_id', id);
     }
-    // Forzar limpieza visual de la barra de direcciones
+
     window.history.pushState({}, '', '/');
   };
 
@@ -136,6 +178,15 @@ function App() {
     localStorage.removeItem('current_client_id');
     localStorage.removeItem('client_active_tab');
     localStorage.removeItem('admin_active_tab');
+    localStorage.removeItem('employee_role');
+    localStorage.removeItem('employee_permissions');
+    localStorage.removeItem('emp_token');
+    localStorage.removeItem('emp_id');
+    localStorage.removeItem('emp_name');
+    localStorage.removeItem('emp_role');
+    localStorage.removeItem('emp_client_id');
+    localStorage.removeItem('shift_start_ts');
+    setClientId('');
     setView('login');
     window.history.pushState({}, '', '/');
   };

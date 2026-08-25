@@ -16,6 +16,9 @@ interface Invoice {
     reminder_sent: boolean;
     overdue_sent: boolean;
     payment_method?: string;
+    transfer_bank?: string | null;
+    transfer_destination_account?: string | null;
+    payment_receipt_url?: string | null;
     installments_count?: number;
     installment_frequency?: string | null;
     delivery_method: string;
@@ -24,6 +27,9 @@ interface Invoice {
     delivery_date: string | null;
     delivery_status: string;
     created_at: string;
+    cufe?: string | null;
+    qr_code_url?: string | null;
+    electronic_status?: string | null;
 }
 
 interface Product {
@@ -33,10 +39,13 @@ interface Product {
     stock: number;
     sku?: string | null;
     promo_discount?: string | null;
+    category_id?: string | null;
 }
 
 interface InvoiceItemInput {
     productId: string;
+    categoryId: string;
+    productSearch: string;
     quantity: number;
     price: number;
     discountPercentage: number;
@@ -54,11 +63,36 @@ interface SaaSErpInvoicesProps {
 export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) => {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
     const [crmCustomers, setCrmCustomers] = useState<any[]>([]);
     const [clientProfile, setClientProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
+    // Filtros de búsqueda
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
+    const [minAmount, setMinAmount] = useState('');
+    const [maxAmount, setMaxAmount] = useState('');
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+    // Modal de Detalle Completo de Factura
+    const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+    const [invoiceDetail, setInvoiceDetail] = useState<any | null>(null);
+    const [loadingDetail, setLoadingDetail] = useState(false);
+    const [receiptInputUrl, setReceiptInputUrl] = useState('');
+    const [isUpdatingReceipt, setIsUpdatingReceipt] = useState(false);
+
+    // Lightbox modal para ver foto del comprobante grande
+    const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+    // Estado del Plan SaaS y Modal de Upgrade (Feature Gating)
+    const [planStatus, setPlanStatus] = useState<any>(null);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [generatingElectronicId, setGeneratingElectronicId] = useState<string | null>(null);
 
     // Form fields
     const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -70,7 +104,12 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
     const [customerAddress, setCustomerAddress] = useState('');
     
     // Condiciones de Pago
-    const [paymentMethod, setPaymentMethod] = useState<'contado' | 'tarjeta' | 'cuotas'>('contado');
+    const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'transferencia' | 'tarjeta_credito' | 'tarjeta_debito' | 'credito'>('efectivo');
+    const [transferBank, setTransferBank] = useState('');
+    const [transferBankSelect, setTransferBankSelect] = useState('');
+    const [customTransferBank, setCustomTransferBank] = useState('');
+    const [transferDestinationAccount, setTransferDestinationAccount] = useState('');
+    const [bankAccounts, setBankAccounts] = useState<any[]>([]);
     const [installmentsCount, setInstallmentsCount] = useState<number | string>(1);
     const [installmentFrequency, setInstallmentFrequency] = useState<'semanal' | 'quincenal' | 'mensual'>('mensual');
     const [abono, setAbono] = useState('0'); // Abono inicial
@@ -86,6 +125,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
     // Form Items (inicializado con 1 fila vacía por defecto)
     const [selectedItems, setSelectedItems] = useState<InvoiceItemInput[]>([{
         productId: '',
+        categoryId: '',
+        productSearch: '',
         quantity: 1,
         price: 0,
         discountPercentage: 0,
@@ -105,22 +146,28 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [invRes, prodRes, crmRes, clientRes] = await Promise.all([
+            const [invRes, prodRes, catRes, crmRes, clientRes, bankRes] = await Promise.all([
                 fetch(`/api/clients/${clientId}/invoices`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}/products`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`/api/clients/${clientId}/categories`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}/crm-customers`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`/api/clients/${clientId}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`/api/clients/${clientId}/bank-accounts`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
             const invData = await invRes.json();
             const prodData = await prodRes.json();
+            const catData = await catRes.json();
             const crmData = await crmRes.json();
             const clientData = await clientRes.json();
+            const bankData = await bankRes.json();
 
             if (invData.success) setInvoices(invData.invoices || []);
             if (prodData.success) setProducts(prodData.products || []);
+            if (catData.success) setCategories(catData.categories || []);
             if (crmData.success) setCrmCustomers(crmData.customers || []);
             if (clientData.success) setClientProfile(clientData.data || null);
+            if (bankData.success) setBankAccounts(bankData.accounts || []);
         } catch (err) {
             console.error("Error loading billing data:", err);
         } finally {
@@ -130,10 +177,59 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
 
     useEffect(() => {
         fetchData();
+        fetchPlanStatus();
         const today = new Date().toISOString().split('T')[0];
         setDueDate(today);
         setInvoiceNumber(`F-${Math.floor(1000 + Math.random() * 9000)}`);
     }, [clientId]);
+
+    const fetchPlanStatus = async () => {
+        try {
+            const res = await fetch(`/api/clients/${clientId}/plan-status`);
+            const data = await res.json();
+            if (data.success) {
+                setPlanStatus(data);
+            }
+        } catch (err) {
+            console.error("Error cargando estado del plan:", err);
+        }
+    };
+
+    const handleGenerateElectronicInvoice = async (invoiceId: string) => {
+        try {
+            setGeneratingElectronicId(invoiceId);
+            const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceId}/electronic`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                if (data.planUpgradeRequired) {
+                    setShowUpgradeModal(true);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+                return;
+            }
+
+            setInvoices(prev => prev.map(inv => inv.id === invoiceId ? { ...inv, cufe: data.cufe, qr_code_url: data.qrCodeUrl, electronic_status: 'accepted' } : inv));
+            if (selectedInvoice && selectedInvoice.id === invoiceId) {
+                setSelectedInvoice(prev => prev ? { ...prev, cufe: data.cufe, qr_code_url: data.qrCodeUrl, electronic_status: 'accepted' } : null);
+            }
+
+            fetchPlanStatus();
+            alert('⚡ ¡Factura Electrónica generada con éxito con Hash CUFE SHA-384 y QR Fiscal!');
+        } catch (err: any) {
+            alert(`Error procesando factura electrónica: ${err.message}`);
+        } finally {
+            setGeneratingElectronicId(null);
+        }
+    };
+
+    const handlePrintPOS = (invoiceId: string) => {
+        window.open(`/api/clients/${clientId}/invoices/${invoiceId}/pos-print`, '_blank', 'width=400,height=600');
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -147,9 +243,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         };
     }, []);
 
-    // Calcular fecha de vencimiento según la frecuencia elegida
     useEffect(() => {
-        if (paymentMethod === 'cuotas') {
+        if (paymentMethod === 'credito') {
             const count = typeof installmentsCount === 'string' ? (parseInt(installmentsCount, 10) || 0) : installmentsCount;
             const date = new Date();
             if (installmentFrequency === 'semanal') {
@@ -168,6 +263,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
     const handleAddItem = () => {
         setSelectedItems([...selectedItems, {
             productId: '',
+            categoryId: '',
+            productSearch: '',
             quantity: 1,
             price: 0,
             discountPercentage: 0,
@@ -186,41 +283,75 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
     };
 
     const handleItemChange = (index: number, field: keyof InvoiceItemInput, value: any) => {
-        const copy = [...selectedItems];
-        const item = { ...copy[index] };
+        setSelectedItems((prev) => {
+            const copy = [...prev];
+            const item = { ...copy[index] };
 
-        if (field === 'productId') {
-            item.productId = value;
-            const selectedProd = products.find(p => p.id === value);
-            if (selectedProd) {
-                item.productName = selectedProd.name;
-                item.price = parseFloat(selectedProd.price);
-                item.discountPercentage = selectedProd.promo_discount ? parseFloat(selectedProd.promo_discount) : 0;
+            if (field === 'productId') {
+                item.productId = value;
+                const selectedProd = products.find(p => p.id === value);
+                if (selectedProd) {
+                    item.productName = selectedProd.name;
+                    item.productSearch = selectedProd.name;
+                    item.categoryId = selectedProd.category_id || item.categoryId;
+                    item.price = parseFloat(selectedProd.price);
+                    item.discountPercentage = selectedProd.promo_discount ? parseFloat(selectedProd.promo_discount) : 0;
+                }
+            } else if (field === 'categoryId') {
+                item.categoryId = value;
+                item.productId = '';
+                item.productName = '';
+                item.productSearch = '';
+                item.price = 0;
+                item.discountPercentage = 0;
+            } else if (field === 'productType') {
+                item.productType = 'inventory';
+                item.productId = '';
+                item.productName = '';
+                item.productSearch = '';
+                item.price = 0;
+                item.discountPercentage = 0;
+            } else if (field === 'quantity') {
+                item.quantity = Math.max(1, parseInt(value) || 1);
+            } else if (field === 'price') {
+                item.price = Math.max(0, parseFloat(value) || 0);
+            } else if (field === 'discountPercentage') {
+                item.discountPercentage = Math.max(0, Math.min(100, parseFloat(value) || 0));
+            } else if (field === 'productSearch') {
+                item.productSearch = value;
+                const currentSelectedName = products.find(p => p.id === item.productId)?.name || '';
+                if (!value.trim() || (item.productId && value.trim() !== currentSelectedName)) {
+                    item.productId = '';
+                    item.productName = '';
+                    item.price = 0;
+                    item.discountPercentage = 0;
+                }
+            } else {
+                (item as any)[field] = value;
             }
-        } else if (field === 'productType') {
-            item.productType = value;
-            item.productId = '';
-            item.productName = value === 'lens' ? 'Lente de Laboratorio' : '';
-            item.price = 0;
-            item.discountPercentage = 0;
-        } else if (field === 'quantity') {
-            item.quantity = Math.max(1, parseInt(value) || 1);
-        } else if (field === 'price') {
-            item.price = Math.max(0, parseFloat(value) || 0);
-        } else if (field === 'discountPercentage') {
-            item.discountPercentage = Math.max(0, Math.min(100, parseFloat(value) || 0));
-        } else {
-            (item as any)[field] = value;
-        }
 
-        copy[index] = item;
-        setSelectedItems(copy);
+            copy[index] = item;
+            return copy;
+        });
     };
 
     const getItemSubtotal = (item: InvoiceItemInput) => {
         const base = item.price * item.quantity;
         const disc = base * ((item.discountPercentage || 0) / 100);
         return base - disc;
+    };
+
+    const getFilteredProductsForItem = (item: InvoiceItemInput) => {
+        const term = (item.productSearch || '').trim().toLowerCase();
+
+        return products.filter((product) => {
+            if (!term) return false;
+
+            return (
+                product.name.toLowerCase().includes(term) ||
+                (product.sku || '').toLowerCase().includes(term)
+            );
+        });
     };
 
     const totalAmount = selectedItems.reduce((acc, curr) => acc + getItemSubtotal(curr), 0);
@@ -267,9 +398,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             totalAmount,
             dueDate,
             paymentMethod,
-            installmentsCount: paymentMethod === 'cuotas' ? (parseInt(String(installmentsCount)) || 1) : 1,
-            installmentFrequency: paymentMethod === 'cuotas' ? installmentFrequency : null,
-            abono: paymentMethod === 'cuotas' ? parseFloat(abono) || 0 : 0,
+            transferBank: paymentMethod === 'transferencia' ? transferBank : null,
+            transferDestinationAccount: paymentMethod === 'transferencia' ? transferDestinationAccount : null,
+            installmentsCount: paymentMethod === 'credito' ? (parseInt(String(installmentsCount)) || 1) : 1,
+            installmentFrequency: paymentMethod === 'credito' ? installmentFrequency : null,
+            abono: paymentMethod === 'credito' ? parseFloat(abono) || 0 : 0,
             deliveryMethod,
             deliveryFee: deliveryMethod === 'domicilio' ? parseFloat(deliveryFee) || 0 : 0,
             deliveryAddress: (deliveryMethod === 'domicilio' && differentDeliveryAddress) ? altDeliveryAddress : customerAddress,
@@ -306,7 +439,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         setCustomerDocumentNumber('');
         setCustomerEmail('');
         setCustomerAddress('');
-        setPaymentMethod('contado');
+        setPaymentMethod('efectivo');
+        setTransferBank('');
+        setTransferBankSelect('');
+        setCustomTransferBank('');
+        setTransferDestinationAccount('');
         setInstallmentsCount(1);
         setInstallmentFrequency('mensual');
         setAbono('0');
@@ -317,6 +454,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         setDeliveryDate('');
         setSelectedItems([{
             productId: '',
+            categoryId: '',
+            productSearch: '',
             quantity: 1,
             price: 0,
             discountPercentage: 0,
@@ -328,6 +467,95 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         }]);
         setBarcodeScanInput('');
         setIsFormOpen(false);
+    };
+
+    const handleOpenInvoiceDetail = async (inv: Invoice) => {
+        setSelectedInvoice(inv);
+        setInvoiceDetail(null);
+        setReceiptInputUrl(inv.payment_receipt_url || '');
+        setLoadingDetail(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/clients/${clientId}/invoices/${inv.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (json.success && json.data) {
+                setInvoiceDetail(json.data);
+            }
+        } catch (e) {
+            console.error("Error al obtener detalle de factura:", e);
+        } finally {
+            setLoadingDetail(false);
+        }
+    };
+
+    const handleSaveReceiptUrl = async () => {
+        if (!selectedInvoice) return;
+        setIsUpdatingReceipt(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/clients/${clientId}/invoices/${selectedInvoice.id}/receipt`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ payment_receipt_url: receiptInputUrl })
+            });
+            const json = await res.json();
+            if (json.success) {
+                setSelectedInvoice(prev => prev ? { ...prev, payment_receipt_url: receiptInputUrl } : null);
+                setInvoices(prev => prev.map(i => i.id === selectedInvoice.id ? { ...i, payment_receipt_url: receiptInputUrl } : i));
+                alert('✅ Comprobante de pago actualizado con éxito.');
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (e) {
+            alert('Error al guardar la imagen del comprobante.');
+        } finally {
+            setIsUpdatingReceipt(false);
+        }
+    };
+
+    // Lógica de filtrado de facturas
+    const filteredInvoices = invoices.filter(inv => {
+        const term = searchTerm.toLowerCase().trim();
+        if (term) {
+            const matchName = inv.customer_name?.toLowerCase().includes(term);
+            const matchPhone = inv.customer_phone?.includes(term);
+            const matchDoc = inv.customer_document_number?.includes(term);
+            const matchInv = inv.invoice_number?.toLowerCase().includes(term);
+            if (!matchName && !matchPhone && !matchDoc && !matchInv) return false;
+        }
+
+        if (statusFilter !== 'all' && inv.status !== statusFilter) return false;
+
+        const invDate = new Date(inv.created_at || inv.due_date);
+        if (dateFrom) {
+            const dFrom = new Date(dateFrom);
+            if (invDate < dFrom) return false;
+        }
+        if (dateTo) {
+            const dTo = new Date(dateTo);
+            dTo.setHours(23, 59, 59, 999);
+            if (invDate > dTo) return false;
+        }
+
+        const total = parseFloat(inv.total_amount) + parseFloat(inv.delivery_fee || '0');
+        if (minAmount && total < parseFloat(minAmount)) return false;
+        if (maxAmount && total > parseFloat(maxAmount)) return false;
+
+        return true;
+    });
+
+    const resetFilters = () => {
+        setSearchTerm('');
+        setStatusFilter('all');
+        setDateFrom('');
+        setDateTo('');
+        setMinAmount('');
+        setMaxAmount('');
     };
 
     const handlePrintInvoice = async (invoice: Invoice) => {
@@ -518,6 +746,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                     if (selectedItems.length === 1 && !selectedItems[0].productId && selectedItems[0].productType === 'inventory') {
                         setSelectedItems([{
                             productId: matchedProd.id,
+                            categoryId: matchedProd.category_id || '',
+                            productSearch: matchedProd.name,
                             productType: 'inventory',
                             productName: matchedProd.name,
                             quantity: 1,
@@ -530,6 +760,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                     } else {
                         setSelectedItems([...selectedItems, {
                             productId: matchedProd.id,
+                            categoryId: matchedProd.category_id || '',
+                            productSearch: matchedProd.name,
                             productType: 'inventory',
                             productName: matchedProd.name,
                             quantity: 1,
@@ -622,8 +854,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-xl font-bold text-on-surface">Ventas y Facturación</h2>
-                    <p className="text-xs text-on-surface-variant">Emite facturas al instante, configura despachos e imprime recibos de 80mm.</p>
+                    <h2 className="text-xl font-bold text-on-surface">Ventas y Facturación Electrónica DIAN</h2>
+                    <p className="text-xs text-on-surface-variant">Emite facturas POS y Electrónicas DIAN con CUFE, QR fiscal y tiquetes térmicos 80mm.</p>
                 </div>
                 <button
                     onClick={() => { resetForm(); setIsFormOpen(true); }}
@@ -633,6 +865,39 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                     Crear Factura
                 </button>
             </div>
+
+            {/* BANNER DE CUOTA DE FACTURACIÓN ELECTRÓNICA SEGÚN PLAN */}
+            {planStatus && (
+                <div className="bg-surface-container border border-outline/20 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
+                            <span className="material-symbols-outlined text-2xl">electric_bolt</span>
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-on-surface">Plan Actual:</span>
+                                <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase ${planStatus.planTier === 'pro' || planStatus.planTier === 'enterprise' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-primary/20 text-primary border border-primary/30'}`}>
+                                    Plan {planStatus.planTier === 'basic' ? 'Básico (Híbrido)' : planStatus.planTier}
+                                </span>
+                            </div>
+                            <p className="text-xs text-on-surface-variant mt-0.5">
+                                Facturas Electrónicas emitidas este mes: <span className="font-semibold text-on-surface">{planStatus.used}</span> / {planStatus.planTier === 'pro' || planStatus.planTier === 'enterprise' ? 'Ilimitadas' : `${planStatus.limit} incluidas (Micro-cobro habilitado)`}
+                            </p>
+                        </div>
+                    </div>
+
+                    {planStatus.planTier === 'basic' && (
+                        <button
+                            type="button"
+                            onClick={() => setShowUpgradeModal(true)}
+                            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-md cursor-pointer"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
+                            Pasar al Plan Pro (Facturas Ilimitadas)
+                        </button>
+                    )}
+                </div>
+            )}
 
             {isFormOpen && (
                 <div className="glass-card p-6 space-y-4">
@@ -725,13 +990,92 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                         onChange={(e) => setPaymentMethod(e.target.value as any)}
                                         required
                                     >
-                                        <option value="contado">Contado</option>
-                                        <option value="tarjeta">Tarjeta Débito / Crédito</option>
-                                        <option value="cuotas">Venta Financiada (Cuotas)</option>
+                                        <option value="efectivo">💵 Efectivo</option>
+                                        <option value="transferencia">🏦 Transferencia Bancaria</option>
+                                        <option value="tarjeta_credito">💳 Tarjeta de Crédito</option>
+                                        <option value="tarjeta_debito">💳 Tarjeta de Débito</option>
+                                        <option value="credito">📋 Crédito (por cuotas)</option>
                                     </select>
                                 </div>
 
-                                {paymentMethod === 'cuotas' && (
+                                {paymentMethod === 'transferencia' && (
+                                    <>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-xs text-on-surface-variant font-medium">Banco del Cliente (Origen)</label>
+                                            <select
+                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                value={transferBankSelect}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setTransferBankSelect(val);
+                                                    if (val !== 'otro') {
+                                                        setTransferBank(val);
+                                                    } else {
+                                                        setTransferBank(customTransferBank);
+                                                    }
+                                                }}
+                                            >
+                                                <option value="">-- Seleccionar Banco Origen --</option>
+                                                <option value="Bancolombia">Bancolombia</option>
+                                                <option value="Nequi">Nequi</option>
+                                                <option value="Daviplata">Daviplata</option>
+                                                <option value="Davivienda">Davivienda</option>
+                                                <option value="Banco de Bogotá">Banco de Bogotá</option>
+                                                <option value="BBVA">BBVA</option>
+                                                <option value="Banco Agrario">Banco Agrario</option>
+                                                <option value="Scotiabank Colpatria">Scotiabank Colpatria</option>
+                                                <option value="Banco Popular">Banco Popular</option>
+                                                <option value="Banco AV Villas">Banco AV Villas</option>
+                                                <option value="Banco Itaú">Banco Itaú</option>
+                                                <option value="Nu Bank">Nu Bank</option>
+                                                <option value="Lulo Bank">Lulo Bank</option>
+                                                <option value="RappiPay">RappiPay</option>
+                                                <option value="Bold / Mercado Pago">Bold / Mercado Pago</option>
+                                                <option value="otro">➕ Otro / Banco Extranjero...</option>
+                                            </select>
+
+                                            {transferBankSelect === 'otro' && (
+                                                <input 
+                                                    type="text" 
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition mt-1"
+                                                    placeholder="Escribe el nombre del banco..."
+                                                    value={customTransferBank}
+                                                    onChange={(e) => {
+                                                        setCustomTransferBank(e.target.value);
+                                                        setTransferBank(e.target.value);
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-xs text-on-surface-variant font-medium">Cuenta de Destino (Propia)</label>
+                                            {bankAccounts.length > 0 ? (
+                                                <select 
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                    value={transferDestinationAccount}
+                                                    onChange={(e) => setTransferDestinationAccount(e.target.value)}
+                                                >
+                                                    <option value="">-- Seleccionar Cuenta Destino --</option>
+                                                    {bankAccounts.map(b => (
+                                                        <option key={b.id} value={`${b.bank_name} - ${b.account_type} #${b.account_number}`}>
+                                                            {b.bank_name} ({b.account_type}) - #{b.account_number}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <input 
+                                                    type="text" 
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                    placeholder="Ej: Ahorros Bancolombia #1234"
+                                                    value={transferDestinationAccount}
+                                                    onChange={(e) => setTransferDestinationAccount(e.target.value)}
+                                                />
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+
+                                {paymentMethod === 'credito' && (
                                     <>
                                         <div className="flex flex-col gap-1.5">
                                             <label className="text-xs text-on-surface-variant font-medium">Abono Inicial ($) *</label>
@@ -852,10 +1196,6 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
                                 <h4 className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Detalle de la Venta</h4>
-                                <button type="button" onClick={handleAddItem} className="bg-surface-container border border-outline/20 hover:bg-surface-container-high text-[11px] font-semibold py-1 px-3 rounded-lg flex items-center gap-1 cursor-pointer text-on-surface">
-                                    <span className="material-symbols-outlined text-[14px]">add</span>
-                                    Agregar Línea
-                                </button>
                             </div>
 
                             {/* Barcode Fast Scanner */}
@@ -877,138 +1217,108 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                 />
                             </div>
 
-                            {selectedItems.map((item, index) => (
-                                <div key={index} className="bg-surface-container/40 p-4 rounded-xl border border-outline/10 space-y-3">
-                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                                        
-                                        {/* Tipo de Producto */}
-                                        <div className="md:col-span-3 flex flex-col gap-1">
-                                            <label className="text-[10px] text-on-surface-variant font-bold">Tipo de Artículo</label>
-                                            <select 
-                                                value={item.productType} 
-                                                onChange={(e) => handleItemChange(index, 'productType', e.target.value as any)}
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary outline-none text-on-surface"
-                                            >
-                                                <option value="inventory">📦 Producto en Stock (Monturas, Estuches)</option>
-                                                <option value="lens">🧪 Lente Formulada (Laboratorio Bajo Demanda)</option>
-                                            </select>
-                                        </div>
+                            {selectedItems.map((item, index) => {
+                                const filteredProducts = getFilteredProductsForItem(item);
+                                const shouldShowProductDropdown = !item.productId && item.productSearch.trim() !== '' && filteredProducts.length > 0;
 
-                                        {/* Selector / Input de Producto */}
-                                        <div className="md:col-span-4 flex flex-col gap-1">
-                                            <label className="text-[10px] text-on-surface-variant font-bold">Nombre del Artículo</label>
-                                            {item.productType === 'lens' ? (
-                                                <input 
-                                                    type="text" 
-                                                    value={item.productName} 
-                                                    onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
-                                                    placeholder="ej. Monofocal CR-39 Antirreflejo"
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none"
-                                                    required
+                                return (
+                                    <div key={index} className="bg-surface-container/40 p-4 rounded-xl border border-outline/10 space-y-3">
+                                        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_2.2fr_0.7fr_1.2fr_0.7fr_44px] gap-3 items-end">
+                                            
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-bold">Categoría</label>
+                                                <div className="bg-surface-container border border-outline/20 rounded-lg px-2 py-2 text-xs text-on-surface/80 h-10 flex items-center truncate">
+                                                    {item.categoryId
+                                                        ? categories.find(cat => cat.id === item.categoryId)?.name || 'Categoría interna'
+                                                        : 'Automática'}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col gap-1 relative">
+                                                <label className="text-[10px] text-on-surface-variant font-bold">Nombre del Artículo</label>
+                                                <input
+                                                    type="text"
+                                                    value={item.productSearch || (item.productId ? products.find(p => p.id === item.productId)?.name || '' : '')}
+                                                    onChange={(e) => {
+                                                        handleItemChange(index, 'productSearch', e.target.value);
+                                                        if (!e.target.value.trim()) {
+                                                            handleItemChange(index, 'productId', '');
+                                                        }
+                                                    }}
+                                                    onFocus={() => {
+                                                        if (item.categoryId && !item.productId) {
+                                                            handleItemChange(index, 'productSearch', '');
+                                                        }
+                                                    }}
+                                                    placeholder="Buscar por nombre o SKU..."
+                                                    className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs focus:border-primary text-on-surface outline-none h-10"
                                                 />
-                                            ) : (
-                                                <select 
-                                                    value={item.productId} 
-                                                    onChange={(e) => handleItemChange(index, 'productId', e.target.value)} 
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary outline-none text-on-surface" 
-                                                    required
+
+                                                {shouldShowProductDropdown && (
+                                                    <div className="absolute left-0 right-0 top-[72px] z-20 bg-surface-container border border-outline/20 rounded-xl shadow-xl max-h-52 overflow-y-auto divide-y divide-outline/5">
+                                                        {filteredProducts.slice(0, 8).map(p => (
+                                                            <button
+                                                                key={p.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedItems((prev) => {
+                                                                        const copy = [...prev];
+                                                                        copy[index] = {
+                                                                            ...copy[index],
+                                                                            productId: p.id,
+                                                                            productName: p.name,
+                                                                            productSearch: p.name,
+                                                                            categoryId: p.category_id || copy[index].categoryId,
+                                                                            price: Number(p.price),
+                                                                            discountPercentage: Number(p.promo_discount || 0)
+                                                                        };
+                                                                        return copy;
+                                                                    });
+                                                                }}
+                                                                className="w-full text-left p-2.5 hover:bg-primary/10 text-xs text-on-surface transition-colors cursor-pointer border-0 bg-transparent"
+                                                            >
+                                                                {p.name} {p.sku ? `[${p.sku}]` : ''} (Stock: {p.stock} uds) - {formatPrice(p.price)}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-bold text-center">Cant.</label>
+                                                <input type="number" min={1} className="bg-surface-container text-center border border-outline/20 rounded-lg p-2 text-xs focus:border-primary text-on-surface outline-none w-full h-10" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required />
+                                            </div>
+                                            
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-bold">Precio Unit.</label>
+                                                <input 
+                                                    type="number" 
+                                                    className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs focus:border-primary text-on-surface outline-none w-full h-10 font-mono font-bold" 
+                                                    value={item.price} 
+                                                    onChange={(e) => handleItemChange(index, 'price', e.target.value)} 
+                                                    readOnly={item.productType === 'inventory' && !item.productId}
+                                                    required 
+                                                />
+                                            </div>
+                                            
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] text-on-surface-variant font-bold text-center">% Desc.</label>
+                                                <input type="number" min={0} max={100} className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs focus:border-primary text-on-surface outline-none w-full h-10 text-center" value={item.discountPercentage} onChange={(e) => handleItemChange(index, 'discountPercentage', e.target.value)} />
+                                            </div>
+
+                                            <div className="flex justify-center items-end pb-0.5">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => handleRemoveItem(index)} 
+                                                    className="w-8 h-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-md cursor-pointer border-0 flex items-center justify-center transition-all duration-200 hover:scale-[1.02]"
                                                 >
-                                                    <option value="">-- Selecciona del Inventario --</option>
-                                                    {products.map(p => (
-                                                        <option key={p.id} value={p.id}>
-                                                            {p.name} {p.sku ? `[${p.sku}]` : ''} (Stock: {p.stock} uds) - {formatPrice(p.price)}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            )}
-                                        </div>
-
-                                        <div className="md:col-span-1 flex flex-col gap-1">
-                                            <label className="text-[10px] text-on-surface-variant font-bold text-center">Cant.</label>
-                                            <input type="number" min={1} className="bg-surface-container text-center border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none w-full" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required />
-                                        </div>
-                                        
-                                        <div className="md:col-span-2 flex flex-col gap-1">
-                                            <label className="text-[10px] text-on-surface-variant font-bold">Precio Unit.</label>
-                                            <input 
-                                                type="number" 
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none w-full font-mono font-bold" 
-                                                value={item.price} 
-                                                onChange={(e) => handleItemChange(index, 'price', e.target.value)} 
-                                                readOnly={item.productType === 'inventory' && !item.productId}
-                                                required 
-                                            />
-                                        </div>
-                                        
-                                        <div className="md:col-span-1 flex flex-col gap-1">
-                                            <label className="text-[10px] text-on-surface-variant font-bold text-center">% Desc.</label>
-                                            <input type="number" min={0} max={100} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none w-full text-center" value={item.discountPercentage} onChange={(e) => handleItemChange(index, 'discountPercentage', e.target.value)} />
-                                        </div>
-
-                                        <div className="md:col-span-1 flex justify-center pb-1">
-                                            <button 
-                                                type="button" 
-                                                onClick={() => handleRemoveItem(index)} 
-                                                className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg cursor-pointer border-0"
-                                            >
-                                                <span className="material-symbols-outlined text-[16px]">close</span>
-                                            </button>
+                                                    <span className="material-symbols-outlined text-[16px] leading-none">close</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    {/* Campos adicionales exclusivos para Lentes Oftálmicos formulados */}
-                                    {item.productType === 'lens' && (
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-3 bg-surface-container/30 rounded-xl border border-outline/5 text-xs">
-                                            <div className="space-y-1">
-                                                <label className="text-on-surface-variant text-[10px] font-bold">Diseño del Lente</label>
-                                                <select
-                                                    value={item.lensDesign}
-                                                    onChange={e => handleItemChange(index, 'lensDesign', e.target.value)}
-                                                    className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-on-surface outline-none cursor-pointer"
-                                                >
-                                                    <option value="">-- Selecciona --</option>
-                                                    <option value="Monofocal">Monofocal</option>
-                                                    <option value="Bifocal">Bifocal (Flattop)</option>
-                                                    <option value="Progresivo">Progresivo (Multifocal)</option>
-                                                    <option value="Ocupacional">Ocupacional / Office</option>
-                                                </select>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <label className="text-on-surface-variant text-[10px] font-bold">Material del Lente</label>
-                                                <select
-                                                    value={item.lensMaterial}
-                                                    onChange={e => handleItemChange(index, 'lensMaterial', e.target.value)}
-                                                    className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-on-surface outline-none cursor-pointer"
-                                                >
-                                                    <option value="">-- Selecciona --</option>
-                                                    <option value="CR-39">CR-39 (Resina Básica 1.50)</option>
-                                                    <option value="Policarbonato">Policarbonato (Resistente 1.59)</option>
-                                                    <option value="Alto Indice">Alto Índice (Sleek/Ultrathin 1.67 / 1.74)</option>
-                                                    <option value="Trivex">Trivex (Máxima Claridad 1.53)</option>
-                                                    <option value="Vidrio">Vidrio (Mineral)</option>
-                                                </select>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <label className="text-on-surface-variant text-[10px] font-bold">Tratamientos Filtros</label>
-                                                <select
-                                                    value={item.lensTreatment}
-                                                    onChange={e => handleItemChange(index, 'lensTreatment', e.target.value)}
-                                                    className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-on-surface outline-none cursor-pointer"
-                                                >
-                                                    <option value="">-- Selecciona --</option>
-                                                    <option value="Blanco">Blanco (Sin tratamiento)</option>
-                                                    <option value="AR">Antirreflejo Estándar (AR)</option>
-                                                    <option value="Blue Block">Filtro de Luz Azul (Blue Cut / UV)</option>
-                                                    <option value="Transitions">Transitions / Fotocromático (AR)</option>
-                                                    <option value="Polarizado">Polarizado (Solar)</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         {/* Total y Botones */}
@@ -1022,7 +1332,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                     Total: {formatPrice(totalAmount + (deliveryMethod === 'domicilio' ? parseFloat(deliveryFee) || 0 : 0))}
                                 </p>
                             </div>
-                            <div className="flex gap-3">
+                            <div className="flex items-center gap-3">
+                                <button type="button" onClick={handleAddItem} className="bg-surface-container border border-outline/20 hover:bg-surface-container-high text-[10px] font-semibold py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer text-on-surface transition-all duration-200">
+                                    <span className="material-symbols-outlined text-[12px]">add</span>
+                                    Agregar Producto
+                                </button>
                                 <button type="button" onClick={resetForm} className="bg-surface-container border border-outline/20 hover:bg-surface-container-high text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer text-on-surface">
                                     Cancelar
                                 </button>
@@ -1035,13 +1349,106 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                 </div>
             )}
 
+            {/* BARRA DE BÚSQUEDA Y FILTROS */}
+            <div className="glass-card p-4 space-y-3">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+                    <div className="relative flex-1 w-full">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                        <input
+                            type="text"
+                            placeholder="Buscar por cliente, N° factura, teléfono o cédula..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-surface-container border border-outline/20 rounded-xl pl-10 pr-4 py-2 text-xs text-on-surface focus:border-primary outline-none transition"
+                        />
+                    </div>
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                            className="bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface focus:border-primary outline-none transition cursor-pointer"
+                        >
+                            <option value="all">Todas las Facturas</option>
+                            <option value="paid">✅ Pagadas</option>
+                            <option value="pending">⏳ Pendientes</option>
+                            <option value="overdue">🔴 En Mora</option>
+                        </select>
+                        <button
+                            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                            className={`px-3 py-2 rounded-xl border text-xs font-medium flex items-center gap-1 transition cursor-pointer ${
+                                showAdvancedFilters || dateFrom || dateTo || minAmount || maxAmount
+                                    ? 'bg-primary/20 border-primary text-primary'
+                                    : 'bg-surface-container border-outline/20 text-on-surface-variant hover:bg-surface-container-high'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[16px]">tune</span>
+                            Filtros
+                        </button>
+                        {(searchTerm || statusFilter !== 'all' || dateFrom || dateTo || minAmount || maxAmount) && (
+                            <button
+                                onClick={resetFilters}
+                                className="px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline/20 text-xs text-red-400 font-medium transition cursor-pointer flex items-center gap-1"
+                                title="Limpiar todos los filtros"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">filter_alt_off</span>
+                                Limpiar
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Filtros Avanzados desplegables */}
+                {showAdvancedFilters && (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-3 border-t border-outline/10 text-xs">
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-on-surface-variant font-medium">Fecha Desde</label>
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => setDateFrom(e.target.value)}
+                                className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none focus:border-primary"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-on-surface-variant font-medium">Fecha Hasta</label>
+                            <input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => setDateTo(e.target.value)}
+                                className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none focus:border-primary"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-on-surface-variant font-medium">Monto Mínimo ($)</label>
+                            <input
+                                type="number"
+                                placeholder="Ej: 50000"
+                                value={minAmount}
+                                onChange={(e) => setMinAmount(e.target.value)}
+                                className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none focus:border-primary"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-on-surface-variant font-medium">Monto Máximo ($)</label>
+                            <input
+                                type="number"
+                                placeholder="Ej: 500000"
+                                value={maxAmount}
+                                onChange={(e) => setMaxAmount(e.target.value)}
+                                className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none focus:border-primary"
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {loading ? (
                 <div className="flex justify-center py-10">
                     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 </div>
-            ) : invoices.length === 0 ? (
+            ) : filteredInvoices.length === 0 ? (
                 <div className="glass-card p-12 text-center">
-                    <p className="text-sm text-on-surface-variant">No hay facturas o cobros registrados en la base de datos aún.</p>
+                    <p className="text-sm text-on-surface-variant">No se encontraron facturas con los filtros seleccionados.</p>
                 </div>
             ) : (
                 <div className="glass-card overflow-hidden">
@@ -1050,34 +1457,40 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                             <tr className="bg-surface-container/50 border-b border-outline/10 text-xs text-on-surface-variant uppercase font-semibold">
                                 <th className="p-4">Factura / Cliente</th>
                                 <th className="p-4">WhatsApp</th>
-                                <th className="p-4">Monto</th>
+                                <th className="p-4">Monto Total</th>
                                 <th className="p-4">Despacho</th>
                                 <th className="p-4">Vence</th>
-                                <th className="p-4">Estado / Notif.</th>
+                                <th className="p-4">Estado / Soporte</th>
                                 <th className="p-4 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-outline/10 text-sm">
-                            {invoices.map((inv) => (
-                                <tr key={inv.id} className="hover:bg-surface-container/40 transition-colors">
+                            {filteredInvoices.map((inv) => (
+                                <tr 
+                                    key={inv.id} 
+                                    onClick={() => handleOpenInvoiceDetail(inv)}
+                                    className="hover:bg-surface-container/60 transition-colors cursor-pointer group"
+                                >
                                     <td className="p-4">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-semibold text-on-surface text-xs font-mono bg-surface-container py-1 px-2 rounded-lg border border-outline/10">
+                                            <span className="font-semibold text-on-surface text-xs font-mono bg-surface-container py-1 px-2 rounded-lg border border-outline/10 group-hover:border-primary/40 transition">
                                                 {inv.invoice_number}
                                             </span>
                                             <div>
-                                                <p className="font-semibold text-on-surface">{inv.customer_name}</p>
+                                                <p className="font-semibold text-on-surface group-hover:text-primary transition">{inv.customer_name}</p>
                                                 <p className="text-[10px] text-on-surface-variant flex items-center gap-1 mt-0.5 font-medium">
                                                     <span className="material-symbols-outlined text-[12px] opacity-75">payments</span>
-                                                    {inv.payment_method === 'contado' ? 'Contado' :
-                                                     inv.payment_method === 'tarjeta' ? 'Tarjeta Débito/Crédito' :
-                                                     `Financiación (${inv.installments_count} cuotas)`}
+                                                    {inv.payment_method === 'efectivo' || inv.payment_method === 'contado' ? '💵 Efectivo' :
+                                                     inv.payment_method === 'transferencia' ? `🏦 Transf. (${inv.transfer_bank || 'Banco'})` :
+                                                     inv.payment_method === 'tarjeta_credito' || inv.payment_method === 'tarjeta' ? '💳 Tarjeta Crédito' :
+                                                     inv.payment_method === 'tarjeta_debito' ? '💳 Tarjeta Débito' :
+                                                     `📋 Crédito (${inv.installments_count || 1} cuotas)`}
                                                 </p>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="p-4 font-mono text-xs text-on-surface-variant">+{inv.customer_phone}</td>
-                                    <td className="p-4 font-semibold text-on-surface">
+                                    <td className="p-4 font-semibold text-on-surface text-xs">
                                         {formatPrice(parseFloat(inv.total_amount) + parseFloat(inv.delivery_fee || '0'))}
                                     </td>
                                     <td className="p-4 text-xs text-on-surface-variant font-medium">
@@ -1092,7 +1505,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                         {new Date(inv.due_date).toLocaleDateString('es-CO')}
                                     </td>
                                     <td className="p-4 space-y-1">
-                                        <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
                                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${
                                                 inv.status === 'paid' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
                                                 inv.status === 'overdue' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
@@ -1100,16 +1513,30 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                             }`}>
                                                 {inv.status === 'paid' ? 'Pagado' : inv.status === 'overdue' ? 'Mora' : 'Pendiente'}
                                             </span>
+                                            {inv.payment_receipt_url && (
+                                                <span 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setLightboxUrl(inv.payment_receipt_url!);
+                                                    }}
+                                                    className="bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-0.5 hover:bg-primary/30 cursor-pointer"
+                                                    title="Ver foto del comprobante de transferencia"
+                                                >
+                                                    <span className="material-symbols-outlined text-[10px]">receipt_long</span>
+                                                    Soporte 📸
+                                                </span>
+                                            )}
                                         </div>
-                                        {inv.payment_method === 'cuotas' && (
-                                            <div className="flex gap-2 text-[10px] text-on-surface-variant font-mono">
-                                                <span>Rec.: {inv.reminder_sent ? '✅' : '❌'}</span>
-                                                <span>Mora: {inv.overdue_sent ? '✅' : '❌'}</span>
-                                            </div>
-                                        )}
                                     </td>
-                                    <td className="p-4 text-right">
+                                    <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                                         <div className="flex justify-end gap-1.5">
+                                            <button 
+                                                onClick={() => handleOpenInvoiceDetail(inv)}
+                                                className="p-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg transition cursor-pointer flex items-center justify-center border border-outline/20"
+                                                title="Ver Detalle Completo de Factura"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">visibility</span>
+                                            </button>
                                             {inv.status !== 'paid' && (
                                                 <>
                                                     <button 
@@ -1143,6 +1570,374 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                             ))}
                         </tbody>
                     </table>
+                </div>
+            )}
+
+            {/* MODAL DETALLE COMPLETO DE FACTURA */}
+            {selectedInvoice && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-2 sm:p-4 overflow-hidden">
+                    <div className="relative glass-card w-full max-w-3xl max-h-[92vh] flex flex-col border border-outline/20 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        {/* Header Fijo Sticky del Modal */}
+                        <div className="sticky top-0 z-30 bg-[#16131c]/95 backdrop-blur-md border-b border-outline/10 p-4 sm:p-5 flex items-center justify-between shadow-md shrink-0">
+                            <div>
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-lg sm:text-xl font-bold text-on-surface font-mono">
+                                        Factura #{selectedInvoice.invoice_number}
+                                    </h2>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${
+                                        selectedInvoice.status === 'paid' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
+                                        selectedInvoice.status === 'overdue' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                                        'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                    }`}>
+                                        {selectedInvoice.status === 'paid' ? 'Pagado' : selectedInvoice.status === 'overdue' ? 'Mora' : 'Pendiente'}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-on-surface-variant mt-0.5">
+                                    Emisión: {new Date(selectedInvoice.created_at).toLocaleString('es-CO')} | Vencimiento: {new Date(selectedInvoice.due_date).toLocaleDateString('es-CO')}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedInvoice(null)}
+                                className="p-2 hover:bg-surface-container bg-surface-container/80 border border-outline/20 rounded-full text-on-surface hover:text-red-400 transition cursor-pointer flex items-center justify-center"
+                                title="Cerrar ventana"
+                            >
+                                <span className="material-symbols-outlined text-[20px] font-bold">close</span>
+                            </button>
+                        </div>
+
+                        {/* Cuerpo Desplazable del Modal */}
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-xs text-on-surface">
+                            {/* Grid de Información de Cliente y Pago */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                                {/* Cliente */}
+                                <div className="bg-surface-container/50 border border-outline/10 p-4 rounded-xl space-y-2">
+                                    <h3 className="font-semibold text-primary flex items-center gap-1.5 text-xs uppercase">
+                                        <span className="material-symbols-outlined text-[16px]">person</span>
+                                        Información del Cliente
+                                    </h3>
+                                    <div className="space-y-1 text-on-surface-variant">
+                                        <p><strong className="text-on-surface">Nombre:</strong> {selectedInvoice.customer_name}</p>
+                                        <p><strong className="text-on-surface">Documento:</strong> {selectedInvoice.customer_document_type} {selectedInvoice.customer_document_number || 'N/A'}</p>
+                                        <p><strong className="text-on-surface">WhatsApp:</strong> +{selectedInvoice.customer_phone}</p>
+                                        {selectedInvoice.customer_email && <p><strong className="text-on-surface">Email:</strong> {selectedInvoice.customer_email}</p>}
+                                        {selectedInvoice.customer_address && <p><strong className="text-on-surface">Dirección:</strong> {selectedInvoice.customer_address}</p>}
+                                    </div>
+                                </div>
+
+                                {/* Pago y Despacho */}
+                                <div className="bg-surface-container/50 border border-outline/10 p-4 rounded-xl space-y-2">
+                                    <h3 className="font-semibold text-primary flex items-center gap-1.5 text-xs uppercase">
+                                        <span className="material-symbols-outlined text-[16px]">payments</span>
+                                        Condiciones de Pago & Envío
+                                    </h3>
+                                    <div className="space-y-1 text-on-surface-variant">
+                                        <p>
+                                            <strong className="text-on-surface">Método de Pago:</strong>{' '}
+                                            {selectedInvoice.payment_method === 'efectivo' || selectedInvoice.payment_method === 'contado' ? '💵 Efectivo' :
+                                             selectedInvoice.payment_method === 'transferencia' ? '🏦 Transferencia Bancaria' :
+                                             selectedInvoice.payment_method === 'tarjeta_credito' ? '💳 Tarjeta de Crédito' :
+                                             selectedInvoice.payment_method === 'tarjeta_debito' ? '💳 Tarjeta de Débito' :
+                                             `📋 Crédito por cuotas (${selectedInvoice.installments_count || 1} cuotas)`}
+                                        </p>
+                                        {selectedInvoice.payment_method === 'transferencia' && (
+                                            <>
+                                                {selectedInvoice.transfer_bank && <p><strong className="text-on-surface">Banco Origen:</strong> {selectedInvoice.transfer_bank}</p>}
+                                                {selectedInvoice.transfer_destination_account && <p><strong className="text-on-surface">Cuenta Destino:</strong> {selectedInvoice.transfer_destination_account}</p>}
+                                            </>
+                                        )}
+                                        <p><strong className="text-on-surface">Logística:</strong> {selectedInvoice.delivery_method === 'domicilio' ? `🚚 Domicilio (${selectedInvoice.delivery_status})` : '🏬 Entrega en Tienda / Local'}</p>
+                                        {selectedInvoice.delivery_method === 'domicilio' && (
+                                            <p><strong className="text-on-surface">Costo Envío:</strong> {formatPrice(parseFloat(selectedInvoice.delivery_fee || '0'))}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* COMPROBANTE DE PAGO (FOTO DE TRANSFERENCIA) */}
+                            <div className="bg-surface-container/40 border border-outline/10 p-4 rounded-xl space-y-3">
+                                <h3 className="font-semibold text-on-surface flex items-center gap-1.5 text-xs uppercase">
+                                    <span className="material-symbols-outlined text-[16px] text-primary">receipt_long</span>
+                                    Comprobante de Pago / Soporte de Transferencia
+                                </h3>
+
+                                {selectedInvoice.payment_receipt_url ? (
+                                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-surface-container p-3 rounded-xl border border-outline/20">
+                                        <div 
+                                            onClick={() => setLightboxUrl(selectedInvoice.payment_receipt_url!)}
+                                            className="relative group cursor-pointer w-32 h-32 rounded-lg overflow-hidden border border-primary/30 flex-shrink-0"
+                                        >
+                                            <img 
+                                                src={selectedInvoice.payment_receipt_url} 
+                                                alt="Comprobante de pago" 
+                                                className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
+                                            />
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white text-[10px] font-bold text-center p-1">
+                                                🔍 Toca para ampliar
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1.5 text-xs flex-1">
+                                            <p className="text-green-400 font-semibold flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                                Soporte adjunto a esta factura
+                                            </p>
+                                            <p className="text-[11px] text-on-surface-variant">
+                                                Haz clic en la foto para revisarla en pantalla completa y verificar los datos de la transferencia.
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => setLightboxUrl(selectedInvoice.payment_receipt_url!)}
+                                                className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
+                                            >
+                                                <span className="material-symbols-outlined text-[14px]">zoom_in</span>
+                                                Ver Foto Completa
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-on-surface-variant italic">No hay comprobante de pago adjunto aún a esta factura.</p>
+                                )}
+
+                                {/* Campo para ingresar / actualizar comprobante manualmente */}
+                                <div className="flex items-center gap-2 pt-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Pegar URL o enlace de la foto del comprobante..."
+                                        value={receiptInputUrl}
+                                        onChange={(e) => setReceiptInputUrl(e.target.value)}
+                                        className="flex-1 bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface focus:border-primary outline-none transition"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveReceiptUrl}
+                                        disabled={isUpdatingReceipt || !receiptInputUrl}
+                                        className="bg-primary text-on-primary font-semibold text-xs px-4 py-2 rounded-xl hover:opacity-90 transition cursor-pointer disabled:opacity-40"
+                                    >
+                                        {isUpdatingReceipt ? 'Guardando...' : 'Guardar Comprobante'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* DETALLE DE ÍTEMS COMPRADOS */}
+                            <div className="space-y-2">
+                                <h3 className="font-semibold text-on-surface text-xs uppercase flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[16px] text-primary">shopping_bag</span>
+                                    Productos e Ítems de la Factura
+                                </h3>
+                                {loadingDetail ? (
+                                    <div className="py-6 text-center text-xs text-on-surface-variant animate-pulse">Cargando productos de la factura...</div>
+                                ) : invoiceDetail?.items?.length > 0 ? (
+                                    <div className="glass-card overflow-hidden border border-outline/10">
+                                        <table className="w-full text-left text-xs border-collapse">
+                                            <thead>
+                                                <tr className="bg-surface-container/60 border-b border-outline/10 text-on-surface-variant uppercase font-semibold">
+                                                    <th className="p-3">Producto / Descripción</th>
+                                                    <th className="p-3 text-center">Cant.</th>
+                                                    <th className="p-3 text-right">Precio Unit.</th>
+                                                    <th className="p-3 text-right">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-outline/10">
+                                                {invoiceDetail.items.map((item: any) => (
+                                                    <tr key={item.id}>
+                                                        <td className="p-3">
+                                                            <p className="font-semibold text-on-surface">{item.product_name || item.inventory_name}</p>
+                                                            {item.product_type === 'optical_lens' && (
+                                                                <div className="flex gap-1.5 mt-1 flex-wrap">
+                                                                    {item.lens_design && <span className="bg-primary/10 text-primary text-[9px] px-1.5 py-0.5 rounded font-mono">Diseño: {item.lens_design}</span>}
+                                                                    {item.lens_material && <span className="bg-primary/10 text-primary text-[9px] px-1.5 py-0.5 rounded font-mono">Mat: {item.lens_material}</span>}
+                                                                    {item.lens_treatment && <span className="bg-primary/10 text-primary text-[9px] px-1.5 py-0.5 rounded font-mono">Trat: {item.lens_treatment}</span>}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-3 text-center font-mono">{item.quantity}</td>
+                                                        <td className="p-3 text-right font-mono">{formatPrice(parseFloat(item.price))}</td>
+                                                        <td className="p-3 text-right font-bold text-on-surface font-mono">{formatPrice(parseFloat(item.price) * item.quantity)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-on-surface-variant italic">No se encontraron ítems detallados.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Pie Fijo Sticky del Modal */}
+                        <div className="sticky bottom-0 z-30 bg-[#16131c]/95 backdrop-blur-md border-t border-outline/10 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shrink-0">
+                            <div>
+                                <p className="text-xs text-on-surface-variant">
+                                    Envío Domicilio: <span className="font-semibold">{formatPrice(parseFloat(selectedInvoice.delivery_fee || '0'))}</span>
+                                </p>
+                                <p className="text-lg sm:text-xl font-bold text-[#00ff88]">
+                                    Total Factura: {formatPrice(parseFloat(selectedInvoice.total_amount) + parseFloat(selectedInvoice.delivery_fee || '0'))}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {selectedInvoice.status !== 'paid' && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                handlePayInvoice(selectedInvoice.id);
+                                                setSelectedInvoice(null);
+                                            }}
+                                            className="bg-green-600 hover:bg-green-500 text-white font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">check</span>
+                                            Confirmar Pago
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleTriggerCollection(selectedInvoice.id)}
+                                            className="bg-primary hover:opacity-90 text-on-primary font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">send</span>
+                                            Notificar por WhatsApp
+                                        </button>
+                                    </>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => handlePrintInvoice(selectedInvoice)}
+                                    className="bg-surface-container hover:bg-surface-container-high border border-outline/20 text-on-surface font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">print</span>
+                                    Imprimir (80mm)
+                                </button>
+                                {/* BOTÓN EMITIR FACTURA ELECTRÓNICA DIAN */}
+                                {!selectedInvoice.cufe ? (
+                                    <button
+                                        type="button"
+                                        disabled={generatingElectronicId === selectedInvoice.id}
+                                        onClick={() => handleGenerateElectronicInvoice(selectedInvoice.id)}
+                                        className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:opacity-90 text-white font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-md disabled:opacity-50"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">electric_bolt</span>
+                                        {generatingElectronicId === selectedInvoice.id ? 'Generando CUFE DIAN...' : 'Emitir Factura Electrónica DIAN'}
+                                    </button>
+                                ) : (
+                                    <a
+                                        href={selectedInvoice.qr_code_url || '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="bg-green-500/20 text-green-400 border border-green-500/30 font-bold text-xs px-3 py-1.5 rounded-xl transition flex items-center gap-1 hover:bg-green-500/30"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">verified</span>
+                                        DIAN Verificada (CUFE OK)
+                                    </a>
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={() => handlePrintPOS(selectedInvoice.id)}
+                                    className="bg-surface-container hover:bg-surface-container-high border border-outline/20 text-on-surface font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                                    Imprimir POS (80mm)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedInvoice(null)}
+                                    className="bg-surface-container border border-outline/20 text-on-surface-variant hover:text-on-surface font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer"
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL DE UPGRADE A PLAN PRO (FEATURE GATING) */}
+            {showUpgradeModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                    <div className="bg-surface-container border border-outline/30 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+                        <div className="text-center space-y-2">
+                            <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg">
+                                <span className="material-symbols-outlined text-3xl">workspace_premium</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-on-surface">Límite del Plan Básico Alcanzado</h3>
+                            <p className="text-xs text-on-surface-variant max-w-sm mx-auto">
+                                Has emitido las 10 Facturas Electrónicas incluidas de este mes. Pásate al <strong className="text-amber-400">Plan Pro</strong> para disfrutar de emisión ilimitada ante la DIAN.
+                            </p>
+                        </div>
+
+                        <div className="bg-surface-container-high/60 border border-outline/15 rounded-2xl p-4 space-y-3">
+                            <div className="flex items-center gap-2 text-xs text-on-surface font-medium">
+                                <span className="material-symbols-outlined text-green-400 text-[18px]">check_circle</span>
+                                Facturación Electrónica DIAN Ilimitada con CUFE & QR
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-on-surface font-medium">
+                                <span className="material-symbols-outlined text-green-400 text-[18px]">check_circle</span>
+                                Envío automático de PDF por WhatsApp a tus clientes
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-on-surface font-medium">
+                                <span className="material-symbols-outlined text-green-400 text-[18px]">check_circle</span>
+                                Impresiones Térmicas POS 80mm ilimitadas
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-on-surface font-medium">
+                                <span className="material-symbols-outlined text-green-400 text-[18px]">check_circle</span>
+                                Soporte técnico prioritario 24/7 para habilitación fiscal
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    alert('🚀 ¡Solicitud enviada! Nuestro equipo se pondrá en contacto para activar tu Plan Pro.');
+                                    setShowUpgradeModal(false);
+                                }}
+                                className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-white font-bold text-sm py-3 rounded-xl transition text-center cursor-pointer shadow-lg"
+                            >
+                                Actualizar a Plan Pro Ahora
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowUpgradeModal(false)}
+                                className="px-4 py-3 bg-surface-container-high hover:bg-surface-container border border-outline/20 text-on-surface-variant font-semibold text-xs rounded-xl transition cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* LIGHTBOX FULLSCREEN PARA FOTO DE COMPROBANTE */}
+            {lightboxUrl && (
+                <div 
+                    onClick={() => setLightboxUrl(null)}
+                    className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer animate-in fade-in duration-200"
+                >
+                    <div className="relative max-w-4xl max-h-[90vh] p-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            type="button"
+                            onClick={() => setLightboxUrl(null)}
+                            className="absolute -top-12 right-0 text-white hover:text-red-400 text-xs font-bold flex items-center gap-1 bg-black/70 px-3 py-1.5 rounded-full border border-white/20 cursor-pointer shadow-lg"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">close</span>
+                            Cerrar [ESC]
+                        </button>
+                        <img
+                            src={lightboxUrl}
+                            alt="Comprobante de Pago Completo"
+                            className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-outline/20"
+                        />
+                        <div className="mt-3 text-center">
+                            <a
+                                href={lightboxUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs text-primary hover:underline font-semibold flex items-center justify-center gap-1"
+                            >
+                                <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                                Abrir imagen en pestaña nueva
+                            </a>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

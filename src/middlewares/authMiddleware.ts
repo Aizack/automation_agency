@@ -9,7 +9,9 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     username: string;
-    role: 'admin' | 'client';
+    role: 'admin' | 'client' | 'tenant_admin' | 'employee';
+    clientId?: string;
+    permissions?: string[];
   };
 }
 
@@ -42,7 +44,7 @@ export const authenticateToken = (
 /**
  * Middleware para restringir accesos según el rol de la cuenta (admin o client)
  */
-export const requireRole = (allowedRoles: ('admin' | 'client')[]) => {
+export const requireRole = (allowedRoles: Array<'admin' | 'client' | 'tenant_admin' | 'employee'>) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'No autorizado. Sesión no iniciada.' });
@@ -71,8 +73,13 @@ export const authorizeClientAccess = (
 
   const targetClientId = req.params.id || req.params.clientId;
 
-  // Si es administrador, tiene acceso completo
+  // Si es administrador global, tiene acceso completo
   if (req.user.role === 'admin') {
+    return next();
+  }
+
+  // Si es admin del tenant, tiene acceso a ese negocio específico
+  if (req.user.role === 'tenant_admin' && targetClientId && req.user.clientId === targetClientId) {
     return next();
   }
 
@@ -82,7 +89,7 @@ export const authorizeClientAccess = (
   }
 
   // Si es un empleado y pertenece a este cliente inquilino, permitir
-  if (targetClientId && (req.user as any).role === 'employee' && (req.user as any).clientId === targetClientId) {
+  if (targetClientId && req.user.role === 'employee' && req.user.clientId === targetClientId) {
     return next();
   }
 

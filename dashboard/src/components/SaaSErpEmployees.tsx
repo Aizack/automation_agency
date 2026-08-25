@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { translateErrorMessage } from '../utils/errorHandler';
 
 interface Employee {
     id: string;
@@ -46,10 +47,28 @@ interface SaaSErpEmployeesProps {
     viewMode?: 'personal' | 'turnos';
 }
 
+
+
+const MODULES = [
+    { key: 'inventory', label: '📦 Inventario' },
+    { key: 'billing', label: '💵 Facturación' },
+    { key: 'cartera', label: '📊 Cartera y Cobros' },
+    { key: 'crm', label: '👤 CRM / Clientes' },
+    { key: 'appointments', label: '📅 Agenda de Citas' },
+    { key: 'formulas', label: '👁 Optometría / Fórmulas' },
+    { key: 'lab', label: '🔬 Laboratorio' },
+    { key: 'domicilios', label: '🚴 Despachos y Domicilios' },
+    { key: 'employees', label: '👥 Administración Personal' },
+    { key: 'campaigns', label: '🗺️ Campañas' },
+    { key: 'marketing', label: '📢 Difusión Promocional' },
+] as const;
+
 export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, viewMode }) => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
+    const [workRoles, setWorkRoles] = useState<string[]>(['agent', 'sales', 'delivery', 'admin']);
     const [loading, setLoading] = useState(true);
+    const [employeeAccessPermissions, setEmployeeAccessPermissions] = useState<string[]>(['inventory', 'billing', 'crm', 'calendar', 'employees', 'hr', 'deliveries', 'whatsapp_bot']);
 
     // Salary advances states
     const [allAdvances, setAllAdvances] = useState<any[]>([]);
@@ -81,6 +100,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
 
     // Modals
     const [isDeptOpen, setIsDeptOpen] = useState(false);
+    const [isRoleOpen, setIsRoleOpen] = useState(false);
+    const [roleName, setRoleName] = useState('');
     const [isEmpOpen, setIsEmpOpen] = useState(false);
     const [selectedEmp, setSelectedEmp] = useState<Employee | null>(null);
     const [empShifts, setEmpShifts] = useState<Shift[]>([]);
@@ -96,7 +117,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
     const [newTaskDueDate, setNewTaskDueDate] = useState('');
     const [newTaskDueTime, setNewTaskDueTime] = useState('');
     const [newTaskCreator, setNewTaskCreator] = useState('');
-    const [detailTab, setDetailTab] = useState<'info' | 'shifts' | 'tasks' | 'contrato' | 'permisos'>('info');
+    const [detailTab, setDetailTab] = useState<'info' | 'shifts' | 'tasks' | 'contrato' | 'permisos' | 'deliveries'>('info');
 
     // Payroll states
     const [isPayrollOpen, setIsPayrollOpen] = useState(false);
@@ -200,16 +221,22 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
             setLoading(true);
             const headers = { 'Authorization': `Bearer ${token}` };
             
-            const [empRes, deptRes] = await Promise.all([
+            const [empRes, deptRes, rolesRes] = await Promise.all([
                 fetch(`/api/clients/${clientId}/employees`, { headers }),
-                fetch(`/api/clients/${clientId}/departments`, { headers })
+                fetch(`/api/clients/${clientId}/departments`, { headers }),
+                fetch(`/api/clients/${clientId}/employee-roles`, { headers })
             ]);
 
             const empJson = await empRes.json();
             const deptJson = await deptRes.json();
+            const rolesJson = await rolesRes.json();
 
             if (empJson.success) setEmployees(empJson.employees || []);
             if (deptJson.success) setDepartments(deptJson.departments || []);
+            if (rolesJson.success) {
+                const roles = (rolesJson.roles || []).map((role: any) => String(role.name || '').trim().toLowerCase()).filter(Boolean);
+                setWorkRoles(Array.from(new Set(['agent', 'sales', 'delivery', 'admin', ...roles])));
+            }
         } catch (err) {
             console.error("Error loading employees data:", err);
         } finally {
@@ -492,11 +519,36 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
     };
 
     useEffect(() => {
+        const storedRoles = localStorage.getItem(`erp_work_roles_${clientId}`);
+        if (storedRoles) {
+            try {
+                const parsed = JSON.parse(storedRoles);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setWorkRoles(Array.from(new Set(['agent', 'sales', 'delivery', 'admin', ...parsed])));
+                }
+            } catch (err) {
+                console.warn('No se pudieron cargar roles guardados:', err);
+            }
+        }
         fetchData();
         fetchHrDocs();
         fetchTodayShifts();
         fetchAllAdvances();
     }, [clientId]);
+
+    useEffect(() => {
+        if (employees.length > 0) {
+            const dbRoles = employees
+                .map((emp) => emp.role)
+                .filter((role): role is string => Boolean(role && role.trim()))
+                .map((role) => role.trim().toLowerCase());
+
+            const merged = Array.from(new Set(['agent', 'sales', 'delivery', 'admin', ...dbRoles, ...workRoles.map((role) => role.trim().toLowerCase())]));
+            const sorted = merged.filter((role) => role && role.trim().length > 0).sort((a, b) => a.localeCompare(b));
+            setWorkRoles(sorted);
+            localStorage.setItem(`erp_work_roles_${clientId}`, JSON.stringify(sorted));
+        }
+    }, [employees, clientId]);
 
     const handleCreateDept = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -544,6 +596,57 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         }
     };
 
+
+
+
+
+    const generateEmployeeCode = () => {
+        let maxNum = 0;
+        (employees || []).forEach((emp: any) => {
+            const code = String(emp.employee_code || '').trim().toUpperCase();
+            const match = code.match(/EMP-(\d+)/i);
+            if (match) {
+                const num = parseInt(match[1], 10);
+                if (num > maxNum) maxNum = num;
+            }
+        });
+        const nextNum = maxNum > 0 ? maxNum + 1 : (employees || []).length + 1;
+        return `EMP-${String(nextNum).padStart(3, '0')}`;
+    };
+
+    const handleCreateRole = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const normalized = roleName.trim();
+        if (!normalized) {
+            setErrorMsg('Escribe un nombre para el nuevo rol.');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/clients/${clientId}/employee-roles`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ name: normalized })
+            });
+            const json = await res.json();
+            if (json.success) {
+                setRoleName('');
+                setIsRoleOpen(false);
+                setErrorMsg('');
+                fetchData();
+            } else {
+                setErrorMsg(json.error || 'No se pudo crear el rol.');
+            }
+        } catch (err: any) {
+            setErrorMsg(err.message || 'Error de conexión al crear el rol.');
+        }
+    };
+
+
+
     const handleCreateEmp = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!empName || !empPhone) {
@@ -560,7 +663,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                 : `/api/clients/${clientId}/employees`;
             
             const method = selectedEmp ? 'PUT' : 'POST';
-
+            const finalEmployeeCode = empCode.trim() || generateEmployeeCode();
+            const normalizedRole = empRole.trim();
             const res = await fetch(url, {
                 method,
                 headers: {
@@ -571,10 +675,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                     name: empName,
                     last_name: empLastName,
                     phone: empPhone,
-                    role: empRole,
+                    role: normalizedRole,
                     department_id: empDeptId || null,
                     pin: empPin,
-                    employee_code: empCode || null,
+                    employee_code: finalEmployeeCode,
                     is_active: true
                 })
             });
@@ -583,11 +687,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                 setIsEmpOpen(false);
                 fetchData();
             } else {
-                setErrorMsg(json.error || 'Error al guardar empleado.');
+                setErrorMsg(translateErrorMessage(json.error, 'Error al guardar empleado.'));
             }
         } catch (err: any) {
             console.error("Error creating/editing employee:", err);
-            setErrorMsg('Error de red al guardar colaborador.');
+            setErrorMsg(translateErrorMessage(err.message, 'Error de red al guardar colaborador.'));
         } finally {
             setActionLoading(false);
         }
@@ -617,7 +721,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         setEmpRole('agent');
         setEmpDeptId('');
         setEmpPin('');
-        setEmpCode('');
+        setEmpCode(generateEmployeeCode());
         setErrorMsg('');
         setIsEmpOpen(true);
     };
@@ -630,7 +734,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         setEmpRole(emp.role);
         setEmpDeptId(emp.department_id || '');
         setEmpPin(emp.pin);
-        setEmpCode((emp as any).employee_code || '');
+        setEmpCode((emp as any).employee_code || generateEmployeeCode());
         setErrorMsg('');
         setIsEmpOpen(true);
     };
@@ -707,10 +811,52 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
         }
     };
 
+    const [empDeliveries, setEmpDeliveries] = useState<any[]>([]);
+    const [loadingEmpDeliveries, setLoadingEmpDeliveries] = useState(false);
+
+    const loadEmpDeliveries = async (empId: string) => {
+        try {
+            setLoadingEmpDeliveries(true);
+            const res = await fetch(`/api/clients/${clientId}/employees/${empId}/deliveries`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setEmpDeliveries(json.deliveries || []);
+            }
+        } catch (err) {
+            console.error("Error cargando entregas:", err);
+        } finally {
+            setLoadingEmpDeliveries(false);
+        }
+    };
+
+    const handleSeedDeliveriesTest = async () => {
+        try {
+            const res = await fetch(`/api/clients/${clientId}/deliveries/seed-test`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert('🎉 ¡6 Facturas de Domicilio de prueba creadas con éxito para Speedie Gonzalez y ordenadas por cercanía!');
+                if (selectedEmpDetail) {
+                    loadEmpDeliveries(selectedEmpDetail.id);
+                }
+                fetchData();
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (err) {
+            alert('Error generando entregas de prueba.');
+        }
+    };
+
     const handleOpenDetail = (emp: Employee) => {
         setSelectedEmpDetail(emp);
         loadShifts(emp.id);
         loadTasks(emp.id);
+        loadEmpDeliveries(emp.id);
         setNewTaskTitle('');
         setNewTaskDesc('');
         setNewTaskDueDate('');
@@ -1439,6 +1585,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                 Departamentos
                             </button>
                             <button 
+                                onClick={() => { setErrorMsg(''); setRoleName(''); setIsRoleOpen(true); }}
+                                className="px-4 py-2 border border-outline/20 hover:bg-surface-variant/20 text-on-surface text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">badge</span>
+                                Roles
+                            </button>
+                            <button 
                                 onClick={() => { fetchData(); fetchHrDocs(); fetchTodayShifts(); }}
                                 className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow"
                                 title="Refrescar Empleados"
@@ -1457,49 +1610,47 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                 </div>
             </div>
 
-            {viewMode !== 'turnos' && (
-                <div className="flex border-b border-outline/10 gap-6 mb-4">
-                    <button
-                        onClick={() => setActiveView('list')}
-                        className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
-                            activeView === 'list' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
-                        }`}
-                    >
-                        Colaboradores & Nómina
-                        {activeView === 'list' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
-                        )}
-                    </button>
-                    <button
-                        onClick={() => {
-                            setActiveView('shifts');
-                            setSelectedEmpForShifts(null);
-                        }}
-                        className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
-                            activeView === 'shifts' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
-                        }`}
-                    >
-                        Monitoreo de Turnos
-                        {activeView === 'shifts' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
-                        )}
-                    </button>
-                    <button
-                        onClick={() => {
-                            setActiveView('advances');
-                            fetchAllAdvances();
-                        }}
-                        className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
-                            activeView === 'advances' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
-                        }`}
-                    >
-                        Solicitudes de Anticipos
-                        {activeView === 'advances' && (
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
-                        )}
-                    </button>
-                </div>
-            )}
+            <div className="flex border-b border-outline/10 gap-6 mb-4">
+                        <button
+                            onClick={() => setActiveView('list')}
+                            className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
+                                activeView === 'list' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
+                            }`}
+                        >
+                            Colaboradores & Nómina
+                            {activeView === 'list' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
+                            )}
+                        </button>
+                        <button
+                            onClick={() => {
+                                setActiveView('shifts');
+                                setSelectedEmpForShifts(null);
+                            }}
+                            className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
+                                activeView === 'shifts' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
+                            }`}
+                        >
+                            Monitoreo de Turnos
+                            {activeView === 'shifts' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
+                            )}
+                        </button>
+                        <button
+                            onClick={() => {
+                                setActiveView('advances');
+                                fetchAllAdvances();
+                            }}
+                            className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
+                                activeView === 'advances' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
+                            }`}
+                        >
+                            Solicitudes de Anticipos
+                            {activeView === 'advances' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
+                            )}
+                        </button>
+                    </div>
 
             {loading ? (
                 <div className="flex justify-center py-20">
@@ -1865,6 +2016,56 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                 </div>
             )}
 
+            {/* ROLES MANAGER MODAL */}
+            {isRoleOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
+                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
+                            <h3 className="font-bold text-lg text-on-surface">Gestionar Roles</h3>
+                            <button 
+                                onClick={() => setIsRoleOpen(false)}
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreateRole} className="flex gap-2 mb-4">
+                            <input 
+                                type="text"
+                                required
+                                value={roleName}
+                                onChange={(e) => setRoleName(e.target.value)}
+                                className="flex-grow bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface text-xs focus:border-primary outline-none"
+                                placeholder="Ej: Auxiliar de ventas..."
+                            />
+                            <button 
+                                type="submit"
+                                className="px-4 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl cursor-pointer transition"
+                            >
+                                Agregar
+                            </button>
+                        </form>
+
+                        <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar">
+                            <h4 className="text-xs font-bold text-on-surface-variant mb-2">Roles Disponibles</h4>
+                            {workRoles.map((role) => (
+                                <div key={role} className="flex justify-between items-center bg-surface-container/30 border border-outline/5 p-3 rounded-xl">
+                                    <span className="text-xs font-bold capitalize">{role}</span>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setWorkRoles((prev) => prev.filter((item) => item !== role))}
+                                        className="p-1 text-red-500 hover:bg-red-500/10 border-0 rounded cursor-pointer transition-all inline-flex"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* REGISTER ABSENCE/PERMIT MODAL */}
             {isAdminDocOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -2062,6 +2263,29 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                 />
                             </div>
 
+                            <div className="space-y-3 pt-2 border-t border-outline/10">
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold text-on-surface-variant">Módulos permitidos en el ERP</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {MODULES.map((module) => {
+                                            const active = employeeAccessPermissions.includes(module.key);
+                                            return (
+                                                <button
+                                                    key={module.key}
+                                                    type="button"
+                                                    onClick={() => setEmployeeAccessPermissions(prev => prev.includes(module.key) ? prev.filter(item => item !== module.key) : [...prev, module.key])}
+                                                    className={`px-2 py-2 rounded-lg border text-[10px] font-bold transition ${
+                                                        active ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-surface-container-high/40 border-outline/15 text-on-surface-variant hover:border-outline/30'
+                                                    }`}
+                                                >
+                                                    {module.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="space-y-1">
                                 <label className="block text-xs font-bold text-on-surface-variant">Cargo o Rol de Trabajo</label>
                                 <select 
@@ -2069,10 +2293,15 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                     onChange={(e) => setEmpRole(e.target.value)}
                                     className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none cursor-pointer"
                                 >
-                                    <option value="agent">Asesor de Atención / Agente</option>
-                                    <option value="sales">Vendedor / Comercial</option>
-                                    <option value="delivery">Puerta a Puerta / Logística</option>
-                                    <option value="admin">Administrador del Inquilino</option>
+                                    {workRoles.map((role) => (
+                                        <option key={role} value={role}>
+                                            {role === 'agent' ? 'Asesor de Atención / Agente' :
+                                             role === 'sales' ? 'Vendedor / Comercial' :
+                                             role === 'delivery' ? 'Puerta a Puerta / Logística' :
+                                             role === 'admin' ? 'Administrador del Inquilino' :
+                                             role.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -2092,24 +2321,25 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">PIN de Seguridad (Fichaje)</label>
+                                    <label className="block text-xs font-bold text-on-surface-variant">PIN de Seguridad (6 dígitos)</label>
                                     <input 
                                         type="password"
-                                        maxLength={4}
+                                        maxLength={6}
                                         required
                                         value={empPin}
-                                        onChange={(e) => setEmpPin(e.target.value.replace(/\D/g, ''))}
+                                        onChange={(e) => setEmpPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                         className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono tracking-widest text-center text-lg"
-                                        placeholder="Ej: 1234"
+                                        placeholder="Ej: 123456"
                                     />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="block text-xs font-bold text-on-surface-variant">Código / No. Empleado</label>
                                     <input 
                                         type="text"
+                                        readOnly
                                         value={empCode}
                                         onChange={(e) => setEmpCode(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono text-center text-lg font-bold"
+                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono text-center text-lg font-bold opacity-90"
                                         placeholder="Ej: EMP-001"
                                     />
                                 </div>
@@ -2388,6 +2618,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                             </button>
                             <button 
                                 type="button"
+                                onClick={() => setDetailTab('deliveries')}
+                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'deliveries' ? 'bg-emerald-600 text-white font-bold' : 'text-emerald-400/80 hover:text-emerald-400'}`}
+                            >
+                                🚚 Mis Entregas ({empDeliveries.length})
+                            </button>
+                            <button 
+                                type="button"
                                 onClick={() => setDetailTab('contrato')}
                                 className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'contrato' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
                             >
@@ -2431,11 +2668,54 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                         </div>
                                         <div>
                                             <span className="text-on-surface-variant block mb-1">PIN Marcación Rápida:</span>
-                                            <strong className="text-on-surface font-mono text-sm tracking-widest">{selectedEmpDetail.pin}</strong>
+                                            <div className="flex items-center gap-2">
+                                                <strong className="text-on-surface font-mono text-sm tracking-widest bg-surface-container-high/40 px-2.5 py-1 rounded-lg border border-outline/10 text-on-surface-variant">
+                                                    ••••••
+                                                </strong>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newPin = window.prompt('Escribe el nuevo PIN de 4 a 6 dígitos para este colaborador (se guardará de forma segura):');
+                                                        if (newPin && newPin.trim()) {
+                                                            if (!/^\d{4,6}$/.test(newPin.trim())) {
+                                                                alert('El PIN debe contener únicamente entre 4 y 6 números.');
+                                                                return;
+                                                            }
+                                                            setSelectedEmpDetail((prev: any) => prev ? { ...prev, pin: newPin.trim() } : null);
+                                                            fetch(`/api/clients/${clientId}/employees/${selectedEmpDetail.id}`, {
+                                                                method: 'PUT',
+                                                                headers: {
+                                                                    'Content-Type': 'application/json',
+                                                                    'Authorization': `Bearer ${token}`
+                                                                },
+                                                                body: JSON.stringify({
+                                                                    name: selectedEmpDetail.name,
+                                                                    phone: selectedEmpDetail.phone,
+                                                                    role: selectedEmpDetail.role,
+                                                                    pin: newPin.trim()
+                                                                })
+                                                            }).then(res => res.json()).then(data => {
+                                                                if (data.success) {
+                                                                    alert('🔐 ¡PIN restablecido con éxito!');
+                                                                    fetchData();
+                                                                } else {
+                                                                    alert(`Error: ${data.error}`);
+                                                                }
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="text-xs bg-primary/10 text-primary hover:bg-primary/20 transition px-2.5 py-1 rounded-lg font-semibold cursor-pointer border border-primary/20 flex items-center gap-1"
+                                                >
+                                                    <span className="material-symbols-outlined text-[14px]">lock_reset</span>
+                                                    Restablecer PIN
+                                                </button>
+                                            </div>
                                         </div>
                                         <div>
                                             <span className="text-on-surface-variant block mb-1">Código de Empleado:</span>
-                                            <strong className="text-on-surface font-mono text-sm">{(selectedEmpDetail as any).employee_code || 'Sin Asignar'}</strong>
+                                            <strong className="text-on-surface font-mono text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-lg border border-primary/20">
+                                                {(selectedEmpDetail as any).employee_code || `EMP-${String(employees.findIndex(e => e.id === selectedEmpDetail.id) + 1 || 1).padStart(3, '0')}`}
+                                            </strong>
                                         </div>
                                         <div>
                                             <span className="text-on-surface-variant block mb-1">Fecha Registro:</span>
@@ -2596,7 +2876,121 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                                 ))}
                                             </div>
                                         )}
+                                     </div>
+                                </div>
+                            )}
+
+                            {detailTab === 'deliveries' && (
+                                <div className="space-y-4 text-xs text-left">
+                                    <div className="flex justify-between items-center bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
+                                        <div>
+                                            <h4 className="font-bold text-sm text-emerald-400 flex items-center gap-1.5">
+                                                <span className="material-symbols-outlined text-[18px]">local_shipping</span>
+                                                Mis Entregas del Día (Ruta de Domicilios por Cercanía)
+                                            </h4>
+                                            <p className="text-[11px] text-on-surface-variant mt-0.5">
+                                                Ruta asignada organizada automáticamente por proximidad y valores a cobrar.
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleSeedDeliveriesTest}
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-md"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">science</span>
+                                            Generar 6 Entregas de Prueba
+                                        </button>
                                     </div>
+
+                                    {loadingEmpDeliveries ? (
+                                        <p className="text-xs text-on-surface-variant italic py-6 text-center animate-pulse">Cargando ruta de domicilios para hoy...</p>
+                                    ) : empDeliveries.length === 0 ? (
+                                        <div className="text-center py-8 bg-surface-container/20 border border-outline/10 rounded-2xl space-y-3">
+                                            <span className="material-symbols-outlined text-4xl text-on-surface-variant opacity-50">local_shipping</span>
+                                            <p className="text-xs text-on-surface-variant font-medium">No se registran entregas asignadas para hoy.</p>
+                                            <button
+                                                type="button"
+                                                onClick={handleSeedDeliveriesTest}
+                                                className="bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer"
+                                            >
+                                                🧪 Generar 6 Entregas de Prueba para Speedie
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+                                            {empDeliveries.map((del: any, idx: number) => (
+                                                <div key={del.invoice_id} className="bg-surface-container/40 border border-outline/15 p-4 rounded-2xl space-y-3 hover:border-emerald-500/30 transition">
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="bg-emerald-500/20 text-emerald-400 font-bold text-[10px] px-2.5 py-1 rounded-lg border border-emerald-500/30 font-mono">
+                                                                Parada #{del.route_order || idx + 1} (Cercanía)
+                                                            </span>
+                                                            <span className="font-bold text-on-surface text-sm">Factura #{del.invoice_number}</span>
+                                                        </div>
+                                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                                            del.delivery_status === 'delivered' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                                                            del.delivery_status === 'in_transit' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                                            'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                                        }`}>
+                                                            {del.delivery_status === 'delivered' ? '✅ Entregado' : del.delivery_status === 'in_transit' ? '🚀 En Camino' : '⏳ Pendiente'}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                                                        <div className="space-y-0.5">
+                                                            <span className="text-on-surface-variant block font-medium">Cliente / Recibe:</span>
+                                                            <strong className="text-on-surface font-semibold">{del.customer_name}</strong>
+                                                            <p className="text-on-surface-variant font-mono text-[11px]">📞 +{del.customer_phone}</p>
+                                                        </div>
+
+                                                        <div className="space-y-0.5">
+                                                            <span className="text-on-surface-variant block font-medium">Dirección de Entrega:</span>
+                                                            <strong className="text-emerald-400 font-medium">{del.delivery_address}</strong>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-outline/10 text-xs">
+                                                        <div>
+                                                            <span className="text-on-surface-variant text-[11px]">Monto a Recibir: </span>
+                                                            <strong className={`font-bold font-mono text-sm ${del.payment_status === 'paid' ? 'text-green-400' : 'text-amber-400'}`}>
+                                                                ${del.total_amount.toLocaleString('es-CO')} COP
+                                                            </strong>
+                                                            <span className="text-[10px] text-on-surface-variant ml-1 font-mono uppercase">
+                                                                ({del.payment_method === 'efectivo' ? '💵 Efectivo Contra-Entrega' : '🏦 Pagado por Nequi/Banco'})
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="flex gap-1.5">
+                                                            <a
+                                                                href={`https://maps.google.com/?q=${encodeURIComponent(del.delivery_address)}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="bg-surface-container-high hover:bg-surface-container text-on-surface font-semibold text-[10px] px-2.5 py-1.5 rounded-lg border border-outline/20 transition flex items-center gap-1"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[14px]">map</span>
+                                                                Abrir Mapa
+                                                            </a>
+                                                            <a
+                                                                href={`https://wa.me/${del.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${del.customer_name}, soy Speedie Gonzalez tu domiciliario. Estoy en camino a la dirección ${del.delivery_address} con tu pedido de la Factura #${del.invoice_number}.`)}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="bg-green-600 hover:bg-green-500 text-white font-semibold text-[10px] px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[14px]">chat</span>
+                                                                WhatsApp
+                                                            </a>
+                                                        </div>
+                                                    </div>
+
+                                                    {del.notes && (
+                                                        <p className="text-[10px] text-on-surface-variant/80 bg-surface-container-high/40 p-2 rounded-lg italic">
+                                                            💡 Nota del Despacho: {del.notes}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

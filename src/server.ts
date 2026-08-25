@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import 'dotenv/config';
 import path from 'path';
 import fs from 'fs';
@@ -14,7 +14,7 @@ import {
   updateClientStatus 
 } from './database/clientsCrud';
 import { pool } from './database/postgres';
-import { whatsappState, initializeWhatsAppClient, connectWhatsApp, logoutWhatsApp, client } from './services/whatsapp';
+import { whatsappState, initializeWhatsAppClient, connectWhatsApp, logoutWhatsApp, client, sendWhatsAppTextMessage } from './services/whatsapp';
 import { 
   fetchDocumentsFromDrive, 
   createClientFolder, 
@@ -28,6 +28,9 @@ import { startEscalationService } from './services/escalation';
 import { authenticateToken, requireRole, authorizeClientAccess, AuthenticatedRequest } from './middlewares/authMiddleware';
 import { registerShutdownHandlers, restoreSystemState } from './services/shutdownManager';
 import { startScheduler } from './services/scheduler';
+import { logReqAudit, logAudit } from './services/auditService';
+import { processElectronicInvoice, checkElectronicInvoicePermission } from './services/electronicInvoiceService';
+import { getInvoicePrintData, generatePOSThermalTicketHTML } from './services/pdfGeneratorService';
 import { AIAgent } from './agents/base';
 import { getClientConfigById } from './core/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -35,6 +38,11 @@ import { correlationIdMiddleware } from './middlewares/correlationIdMiddleware';
 import { errorHandler, asyncHandler } from './middlewares/errorHandler';
 import { StructuredLogger } from './utils/structuredLogger';
 import { initDatabase } from './database/initDb';
+import { validateEnv } from './utils/envValidator';
+import { verifyPassword } from './utils/passwordUtils';
+
+// Validar variables de entorno antes de cualquier otra cosa
+validateEnv();
 
 // Inicializar el manejador de señales de apagado del SO
 registerShutdownHandlers();
@@ -50,8 +58,22 @@ const upload = multer({ storage: multer.memoryStorage() });
 const app = express();
 app.use(express.json());
 
-// Registrar middlewares globales (ANTES de rutas)
+import { authRateLimiter, seedRateLimiter, generalApiLimiter } from './middlewares/rateLimiter';
+
+// Registrar middlewares globales y de seguridad HTTP (ANTES de rutas)
 app.use(correlationIdMiddleware);
+
+// Middleware de Seguridad HTTP Zero-Trust Headers
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
+
+// Aplicar Rate Limiting General a la API
+app.use('/api', generalApiLimiter);
 
 // Servir la carpeta de media de forma estática
 const mediaDir = path.join(process.cwd(), 'media', 'clients');
@@ -59,6 +81,13 @@ if (!fs.existsSync(mediaDir)) {
   fs.mkdirSync(mediaDir, { recursive: true });
 }
 app.use('/media', express.static(path.join(process.cwd(), 'media')));
+
+// Servir la carpeta de uploads (comprobantes de pago, imágenes)
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
 
 // Servir los archivos estáticos de la aplicación React (Dashboard)
 app.use(express.static(path.join(process.cwd(), 'dashboard/dist')));
@@ -590,6 +619,34 @@ app.put('/api/clients/:clientId/profile-settings', authenticateToken as any, aut
 });
 
 // 7.6 Autenticación de Clientes (Login)
+// --- HEALTH CHECK ---
+app.get('/api/health', async (_req: Request, res: Response) => {
+  const health: Record<string, any> = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    environment: process.env.NODE_ENV || 'development',
+  };
+
+  // Verificar conexión a base de datos
+  try {
+    await pool.query('SELECT 1');
+    health.database = 'connected';
+  } catch {
+    health.database = 'error';
+    health.status = 'degraded';
+  }
+
+  // Estado de WhatsApp
+  health.whatsapp = whatsappState.status || 'unknown';
+  if (whatsappState.status !== 'CONNECTED') {
+    health.status = health.status === 'error' ? 'error' : 'degraded';
+  }
+
+  const httpStatus = health.status === 'ok' ? 200 : health.status === 'degraded' ? 200 : 503;
+  res.status(httpStatus).json(health);
+});
+
 app.post('/api/login', async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
@@ -650,6 +707,48 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
     const authReq = req as AuthenticatedRequest;
     if (!authReq.user) {
       return res.status(401).json({ success: false, error: 'No autorizado. Sesión no iniciada.' });
+    }
+
+    if (authReq.user.role === 'employee') {
+      const employeeResult = await pool.query(
+        `SELECT e.id, e.client_id, e.name, e.phone, e.role, e.is_active
+         FROM employees e
+         WHERE e.id = $1 AND e.is_active = TRUE LIMIT 1`,
+        [authReq.user.id]
+      );
+
+      if (employeeResult.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Empleado no encontrado.' });
+      }
+
+      const emp = employeeResult.rows[0];
+      const ROLE_PERMISSIONS: Record<string, string[]> = {
+        admin:        ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad'],
+        vendedor:     ['crm', 'billing', 'inventory', 'cartera'],
+        optometra:    ['appointments', 'formulas', 'crm'],
+        laboratorio:  ['lab'],
+        recepcion:    ['appointments', 'crm'],
+        contabilidad: ['billing', 'cartera', 'inventory', 'contabilidad'],
+        domicilios:   [],
+        agent:        [],
+      };
+
+      const employeeRoleLower = (emp.role || '').toLowerCase().trim();
+      const permissions = ROLE_PERMISSIONS[employeeRoleLower] ?? ['billing', 'cartera'];
+
+      return res.json({
+        success: true,
+        data: {
+          id: emp.id,
+          name: emp.name,
+          username: emp.phone,
+          role: 'employee',
+          employeeRole: emp.role,
+          permissions,
+          clientId: emp.client_id,
+          hasErpAccess: permissions.length > 0,
+        }
+      });
     }
 
     // Buscar detalles frescos del cliente
@@ -1880,7 +1979,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, reminder_sent, overdue_sent, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, created_at 
+      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, reminder_sent, overdue_sent, payment_method, transfer_bank, transfer_destination_account, payment_receipt_url, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, created_at 
        FROM invoices 
        WHERE client_id = $1 
        ORDER BY created_at DESC`,
@@ -1915,6 +2014,8 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
       deliveryFee,
       deliveryAddress,
       deliveryDate,
+      transferBank,
+      transferDestinationAccount,
       items 
     } = req.body;
 
@@ -1933,9 +2034,9 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
 
     // Calcular estado inicial de la factura
     let initialStatus = 'pending';
-    if (paymentMethod === 'contado' || paymentMethod === 'tarjeta') {
+    if (paymentMethod === 'contado' || paymentMethod === 'efectivo' || paymentMethod === 'transferencia' || paymentMethod === 'tarjeta' || paymentMethod === 'tarjeta_credito' || paymentMethod === 'tarjeta_debito') {
       initialStatus = 'paid';
-    } else if (paymentMethod === 'cuotas') {
+    } else if (paymentMethod === 'cuotas' || paymentMethod === 'credito') {
       if (initialAbono >= cleanTotal) {
         initialStatus = 'paid';
       }
@@ -1976,10 +2077,11 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
         customer_document_type, customer_document_number, customer_email, 
         customer_address, total_amount, status, due_date, 
         payment_method, installments_count, installment_frequency,
-        delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status
+        delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status,
+        transfer_bank, transfer_destination_account
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
-      RETURNING id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, created_at
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+      RETURNING id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, transfer_bank, transfer_destination_account, created_at
     `, [
       clientId, 
       invoiceNumber, 
@@ -1992,19 +2094,62 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
       cleanTotal, 
       initialStatus, 
       dueDate,
-      paymentMethod || 'contado',
+      paymentMethod || 'efectivo',
       cleanInstallmentsCount,
       installmentFrequency || null,
       finalDeliveryMethod,
       cleanDeliveryFee,
       deliveryAddress || customerAddress || null,
       deliveryDate || null,
-      finalDeliveryMethod === 'domicilio' ? 'pending' : 'entregado'
+      finalDeliveryMethod === 'domicilio' ? 'pending' : 'entregado',
+      transferBank || null,
+      transferDestinationAccount || null
     ]);
 
     const invoice = invoiceResult.rows[0];
     console.log(`[Invoice Create] Factura creada con delivery_method: "${invoice.delivery_method}" | delivery_status: "${invoice.delivery_status}"`);
 
+    if (finalDeliveryMethod === 'domicilio') {
+      const existingDelivery = await dbClient.query(
+        `SELECT id FROM deliveries WHERE client_id = $1 AND invoice_id = $2`,
+        [clientId, invoice.id]
+      );
+
+      const deliveryAddressForRow = deliveryAddress || customerAddress || null;
+
+      if (existingDelivery.rows.length > 0) {
+        await dbClient.query(
+          `UPDATE deliveries
+           SET recipient_name = $3,
+               recipient_phone = $4,
+               address = $5,
+               status = $6,
+               notes = COALESCE(notes, 'Sin notas')
+           WHERE client_id = $1 AND invoice_id = $2`,
+          [
+            clientId,
+            invoice.id,
+            customerName,
+            customerPhone,
+            deliveryAddressForRow,
+            invoice.delivery_status || 'pending'
+          ]
+        );
+      } else {
+        await dbClient.query(
+          `INSERT INTO deliveries (client_id, invoice_id, recipient_name, recipient_phone, address, status, notes)
+           VALUES ($1, $2, $3, $4, $5, $6, 'Sin notas')`,
+          [
+            clientId,
+            invoice.id,
+            customerName,
+            customerPhone,
+            deliveryAddressForRow,
+            invoice.delivery_status || 'pending'
+          ]
+        );
+      }
+    }
 
     // 2. Si el pago es financiado (por cuotas), generar el plan de cuotas dinámico
     if (paymentMethod === 'cuotas') {
@@ -2046,7 +2191,79 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
 
     // 3. Insertar Items
     if (items && Array.isArray(items)) {
+      const normalizedCustomerDoc = String(customerDocumentNumber || '').trim();
+      const normalizedPhone = String(customerPhone || '').replace(/\D/g, '');
+      const normalizedEmail = String(customerEmail || '').trim().toLowerCase();
+
+      let customerId = null;
+      const customerRecordRes = await dbClient.query(`
+        SELECT id
+        FROM crm_customers
+        WHERE client_id = $1
+          AND (
+            document_number = $2 OR
+            REPLACE(phone, ' ', '') = $3 OR
+            LOWER(COALESCE(email, '')) = LOWER($4)
+          )
+        ORDER BY created_at DESC
+        LIMIT 1
+      `, [clientId, normalizedCustomerDoc, normalizedPhone, normalizedEmail]);
+
+      if (customerRecordRes.rows[0]) {
+        customerId = customerRecordRes.rows[0].id;
+      } else {
+        const nameParts = String(customerName || 'Cliente').trim().split(/\s+/);
+        const firstName = nameParts[0] || 'Cliente';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        const createdCustomer = await dbClient.query(`
+          INSERT INTO crm_customers (client_id, name, last_name, document_type, document_number, phone, email, address)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          ON CONFLICT (client_id, document_number)
+          DO UPDATE SET phone = EXCLUDED.phone, email = EXCLUDED.email, address = EXCLUDED.address
+          RETURNING id
+        `, [
+          clientId,
+          firstName,
+          lastName,
+          customerDocumentType || 'CC',
+          normalizedCustomerDoc,
+          customerPhone,
+          normalizedEmail || null,
+          customerAddress || null
+        ]);
+
+        customerId = createdCustomer.rows[0]?.id || null;
+        console.log(`[Invoice Lab Order] CRM creado desde factura: ${customerName} / ${normalizedCustomerDoc} / customerId=${customerId || 'null'}`);
+      }
+
+      console.log(`[Invoice Lab Order] Cliente factura: ${customerName} | documento=${normalizedCustomerDoc} | phone=${normalizedPhone} | customerId=${customerId || 'null'}`);
+
+      const productIds = items
+        .filter((item) => item?.productId && item.productType !== 'lens')
+        .map((item) => item.productId)
+        .filter(Boolean);
+
+      const productCategoryMap = new Map<string, string>();
+      if (productIds.length > 0) {
+        const productCategoriesRes = await dbClient.query(`
+          SELECT p.id, LOWER(COALESCE(pc.name, '')) AS category_name
+          FROM products p
+          LEFT JOIN product_categories pc ON pc.id = p.category_id
+          WHERE p.client_id = $1 AND p.id = ANY($2)
+        `, [clientId, productIds]);
+
+        for (const row of productCategoriesRes.rows) {
+          productCategoryMap.set(row.id, String(row.category_name || ''));
+        }
+      }
+
       for (const item of items) {
+        const productCategoryName = item.productId ? (productCategoryMap.get(item.productId) || '') : '';
+        const isLensCategory = productCategoryName.includes('lente');
+        const isLegacyLensItem = item.productType === 'lens';
+        const isLensSale = isLegacyLensItem || isLensCategory;
+
         await dbClient.query(`
           INSERT INTO invoice_items (
             invoice_id, product_id, quantity, price, 
@@ -2055,7 +2272,7 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         `, [
           invoice.id, 
-          item.productType === 'lens' ? null : item.productId, 
+          isLensSale && item.productId === null ? null : item.productId, 
           item.quantity || 1, 
           item.price,
           item.productName || null,
@@ -2065,47 +2282,45 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
           item.lensTreatment || null
         ]);
 
-        if (item.productType === 'lens') {
-          // Obtener el ID del cliente en CRM
-          const crmCustRes = await dbClient.query(`
-            SELECT id FROM crm_customers 
-            WHERE client_id = $1 AND document_number = $2
-            LIMIT 1
-          `, [clientId, customerDocumentNumber]);
-          const customerId = crmCustRes.rows[0]?.id || null;
-
-          if (customerId) {
-            // Obtener la última fórmula clínica activa del paciente
-            const formulaRes = await dbClient.query(`
-              SELECT id FROM formulas 
-              WHERE client_id = $1 AND customer_id = $2 
-              ORDER BY created_at DESC LIMIT 1
-            `, [clientId, customerId]);
-            const formulaId = formulaRes.rows[0]?.id || null;
-
-            // Insertar la orden de laboratorio en estado pending
-            await dbClient.query(`
-              INSERT INTO lab_jobs (
-                client_id, customer_id, formula_id, invoice_id,
-                product_name, lens_design, lens_material, lens_treatment,
-                job_value, status
-              )
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0.00, 'pending')
-            `, [
-              clientId,
-              customerId,
-              formulaId,
-              invoice.id,
-              item.productName || 'Lente Formulada',
-              item.lensDesign || null,
-              item.lensMaterial || null,
-              item.lensTreatment || null
-            ]);
+        if (isLensSale) {
+          if (!customerId) {
+            console.warn(`[Invoice Lab Order] No se encontró CRM para ${customerName} (${customerDocumentNumber}). No se puede crear orden de laboratorio.`);
+            continue;
           }
+
+          const formulaRes = await dbClient.query(`
+            SELECT id FROM formulas 
+            WHERE client_id = $1 AND customer_id = $2 
+            ORDER BY created_at DESC LIMIT 1
+          `, [clientId, customerId]);
+          const formulaId = formulaRes.rows[0]?.id || null;
+
+          const jobValue = Number(item.price || 0) * Number(item.quantity || 1);
+
+          await dbClient.query(`
+            INSERT INTO lab_jobs (
+              client_id, customer_id, formula_id, invoice_id,
+              product_name, lens_design, lens_material, lens_treatment,
+              job_value, status
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
+          `, [
+            clientId,
+            customerId,
+            formulaId,
+            invoice.id,
+            item.productName || 'Lente',
+            item.lensDesign || null,
+            item.lensMaterial || null,
+            item.lensTreatment || null,
+            jobValue
+          ]);
+
+          console.log(`[Invoice Lab Order] Orden creada para cliente ${customerName} / factura ${invoice.invoice_number} / producto ${item.productName || 'Lente'}`);
         }
 
         // Solo descontar stock si es un producto físico del inventario
-        if (item.productType !== 'lens' && item.productId) {
+        if (!isLensSale && item.productId) {
           const prodUpdateRes = await dbClient.query(`
             UPDATE products 
             SET stock = GREATEST(0, stock - $1) 
@@ -2130,6 +2345,24 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
     }
 
     await dbClient.query('COMMIT');
+
+    // Notificación proactiva por WhatsApp si el pago es por transferencia bancaria
+    if (paymentMethod === 'transferencia' && customerPhone) {
+      const bankMsg = transferBank ? `\n🏦 **Banco Origen:** ${transferBank}` : '';
+      const accountMsg = transferDestinationAccount ? `\n💳 **Cuenta Destino:** ${transferDestinationAccount}` : '';
+      const formattedTotal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(cleanTotal);
+
+      const textMessage = 
+        `📄 **¡Hola ${customerName}!**\n\n` +
+        `Se ha emitido tu **Factura #${invoice.invoice_number}** por valor de **${formattedTotal}**.\n` +
+        `${bankMsg}${accountMsg}\n\n` +
+        `📸 **Por favor realiza tu transferencia y responde a este chat ENVIANDO LA FOTO O CAPTURA DEL COMPROBANTE DE PAGO** para verificar tu compra automáticamente.`;
+
+      sendWhatsAppTextMessage(customerPhone, textMessage).catch((err: any) => {
+        console.error('[WhatsApp Payment Proactive] Error enviando mensaje inicial de cobro:', err?.message || err);
+      });
+    }
+
     res.json({ success: true, invoice });
   } catch (err: any) {
     await dbClient.query('ROLLBACK');
@@ -2187,14 +2420,32 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/trigger-collection', authen
 app.put('/api/clients/:clientId/invoices/:invoiceId/pay', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, invoiceId } = req.params;
+    const user = (req as any).user;
+    const userName = user?.name || user?.username || user?.email || 'Usuario Cajero';
+
     const result = await pool.query(
-      `UPDATE invoices SET status = 'paid', updated_at = NOW() WHERE client_id = $1 AND id = $2 RETURNING id`,
-      [clientId, invoiceId]
+      `UPDATE invoices 
+       SET status = 'paid', paid_by_user_id = $3, paid_by_user_name = $4, updated_at = NOW() 
+       WHERE client_id = $1 AND id = $2 
+       RETURNING id, invoice_number, customer_name, customer_phone, total_amount`,
+      [clientId, invoiceId, user?.id || null, userName]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
     }
+
+    const inv = result.rows[0];
+
+    // Registrar en auditoría del sistema
+    await logReqAudit(
+      req,
+      clientId as string,
+      'PAGO_FACTURA_APROBADO',
+      'Facturación',
+      `Pago de la Factura #${inv.invoice_number} por $${parseFloat(inv.total_amount).toLocaleString('es-CO')} aprobado por ${userName}.`,
+      { invoice_id: inv.id, invoice_number: inv.invoice_number, total_amount: inv.total_amount }
+    );
 
     // Marcar todas las cuotas asociadas como pagadas
     await pool.query(
@@ -2202,8 +2453,149 @@ app.put('/api/clients/:clientId/invoices/:invoiceId/pay', authenticateToken as a
       [invoiceId]
     );
 
+    // Enviar mensaje de WhatsApp al cliente confirmándole la recepción del pago
+    if (inv.customer_phone) {
+      const confirmText = 
+        `✅ **¡Pago Verificado con Éxito!**\n\n` +
+        `Hola **${inv.customer_name}**, hemos verificado la recepción de tu pago para la **Factura #${inv.invoice_number}** por un monto de **$${parseFloat(inv.total_amount).toLocaleString('es-CO')}**.\n\n` +
+        `¡Muchas gracias por tu compra! Estamos a tu entero servicio.`;
+
+      sendWhatsAppTextMessage(inv.customer_phone, confirmText).catch((err: any) => {
+        console.error('[WhatsApp Payment Approved] Error enviando confirmación:', err?.message || err);
+      });
+    }
+
     res.json({ success: true, message: 'Factura pagada exitosamente.' });
   } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Endpoint de Estado del Plan y Cupos de Facturación Electrónica (Feature Gating)
+app.get('/api/clients/:clientId/plan-status', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const permCheck = await checkElectronicInvoicePermission(clientId as string);
+    
+    const clientRes = await pool.query(
+      `SELECT plan_tier, electronic_invoices_limit, electronic_invoices_used FROM clients WHERE id = $1`,
+      [clientId]
+    );
+
+    const data = clientRes.rows[0] || {};
+    res.json({
+      success: true,
+      planTier: data.plan_tier || 'basic',
+      limit: data.electronic_invoices_limit || 10,
+      used: data.electronic_invoices_used || 0,
+      allowed: permCheck.allowed,
+      planUpgradeRequired: permCheck.planUpgradeRequired || false,
+      reason: permCheck.reason
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Generar Factura Electrónica DIAN (CUFE + QR)
+app.post('/api/clients/:clientId/invoices/:invoiceId/electronic', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    const user = (req as any).user;
+    const userName = user?.name || user?.username || user?.email || 'Operador ERP';
+
+    const result = await processElectronicInvoice(
+      clientId as string,
+      invoiceId as string,
+      user?.id,
+      userName
+    );
+
+    if (!result.success) {
+      return res.status(result.planUpgradeRequired ? 403 : 400).json({
+        success: false,
+        error: result.error,
+        planUpgradeRequired: result.planUpgradeRequired
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Factura Electrónica generada con éxito.',
+      cufe: result.cufe,
+      qrCodeUrl: result.qrCodeUrl,
+      electronicStatus: result.electronicStatus
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Imprimir Representación Gráfica Tiquete POS 80mm
+app.get('/api/clients/:clientId/invoices/:invoiceId/pos-print', async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    const printData = await getInvoicePrintData(clientId as string, invoiceId as string);
+
+    if (!printData) {
+      return res.status(404).send('<h2>Factura no encontrada.</h2>');
+    }
+
+    const html = generatePOSThermalTicketHTML(printData);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (err: any) {
+    res.status(500).send(`<h2>Error generando tiquete POS: ${err.message}</h2>`);
+  }
+});
+
+// Endpoint de Trazabilidad: Obtener Bitácora de Auditoría del Sistema
+app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { module, userId, search, limit = '50', offset = '0' } = req.query;
+
+    let query = `
+      SELECT id, client_id, user_id, user_name, user_email, user_role, action, module, description, details, ip_address, user_agent, created_at
+      FROM system_audit_logs
+      WHERE client_id = $1
+    `;
+    const params: any[] = [clientId];
+    let paramIndex = 2;
+
+    if (module && typeof module === 'string' && module.trim().length > 0) {
+      query += ` AND module = $${paramIndex}`;
+      params.push(module);
+      paramIndex++;
+    }
+
+    if (userId && typeof userId === 'string' && userId.trim().length > 0) {
+      query += ` AND user_id = $${paramIndex}`;
+      params.push(userId);
+      paramIndex++;
+    }
+
+    if (search && typeof search === 'string' && search.trim().length > 0) {
+      query += ` AND (user_name ILIKE $${paramIndex} OR description ILIKE $${paramIndex} OR action ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(parseInt(limit as string, 10) || 50, parseInt(offset as string, 10) || 0);
+
+    const result = await pool.query(query, params);
+
+    // Contar total de registros para paginación
+    const countRes = await pool.query(`SELECT COUNT(*) FROM system_audit_logs WHERE client_id = $1`, [clientId]);
+
+    res.json({
+      success: true,
+      logs: result.rows,
+      total: parseInt(countRes.rows[0].count, 10)
+    });
+  } catch (err: any) {
+    console.error('[API Audit Logs] Error obteniendo registros de auditoría:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -2215,7 +2607,7 @@ app.get('/api/clients/:clientId/invoices/:invoiceId', authenticateToken as any, 
     
     // Consultar factura
     const invRes = await pool.query(
-      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, created_at
+      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, transfer_bank, transfer_destination_account, payment_receipt_url, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, created_at
        FROM invoices
        WHERE client_id = $1 AND id = $2`,
       [clientId, invoiceId]
@@ -2257,6 +2649,274 @@ app.get('/api/clients/:clientId/invoices/:invoiceId', authenticateToken as any, 
   }
 });
 
+// Endpoint para actualizar el comprobante de pago (payment_receipt_url)
+app.put('/api/clients/:clientId/invoices/:invoiceId/receipt', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    const { payment_receipt_url } = req.body;
+
+    await pool.query(
+      `UPDATE invoices 
+       SET payment_receipt_url = $1 
+       WHERE client_id = $2 AND id = $3`,
+      [payment_receipt_url, clientId, invoiceId]
+    );
+
+    res.json({ success: true, message: 'Comprobante de pago actualizado con éxito.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/clients/:clientId/deliveries', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+
+    const result = await pool.query(
+      `SELECT
+         i.id,
+         i.invoice_number,
+         i.customer_name,
+         i.customer_phone,
+         i.customer_address,
+         COALESCE(i.delivery_address, i.customer_address) AS delivery_address,
+         i.total_amount,
+         i.delivery_method,
+         i.delivery_fee,
+         i.delivery_date,
+         COALESCE(d.status, i.delivery_status) AS delivery_status,
+         i.created_at,
+         d.id AS delivery_row_id,
+         d.invoice_id,
+         d.route_order
+       FROM invoices i
+       LEFT JOIN deliveries d ON d.client_id = i.client_id AND d.invoice_id = i.id
+       WHERE i.client_id = $1 AND i.delivery_method = 'domicilio'
+       ORDER BY
+         d.route_order ASC NULLS LAST,
+         i.delivery_date ASC NULLS LAST,
+         i.created_at DESC`,
+      [clientId]
+    );
+
+    res.json({
+      success: true,
+      deliveries: result.rows.map((row: any) => ({
+        id: row.id,
+        delivery_row_id: row.delivery_row_id,
+        invoice_id: row.invoice_id || row.id,
+        invoice_number: row.invoice_number,
+        customer_name: row.customer_name,
+        customer_phone: row.customer_phone,
+        customer_address: row.customer_address,
+        delivery_address: row.delivery_address || row.customer_address,
+        total_amount: row.total_amount,
+        delivery_method: row.delivery_method,
+        delivery_fee: row.delivery_fee ?? '0',
+        delivery_date: row.delivery_date,
+        delivery_status: row.delivery_status,
+        created_at: row.created_at,
+        route_order: row.route_order ?? 0
+      }))
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Endpoint: Obtener Entregas del Día para un Domiciliario Específico (Mis Entregas)
+app.get('/api/clients/:clientId/employees/:employeeId/deliveries', async (req: Request, res: Response) => {
+  try {
+    const { clientId, employeeId } = req.params;
+
+    const result = await pool.query(
+      `SELECT
+         i.id as invoice_id,
+         i.invoice_number,
+         i.customer_name,
+         i.customer_phone,
+         COALESCE(i.delivery_address, i.customer_address) AS delivery_address,
+         i.total_amount,
+         i.delivery_fee,
+         i.payment_method,
+         i.status as payment_status,
+         COALESCE(d.status, i.delivery_status, 'pending') AS delivery_status,
+         COALESCE(d.route_order, 999) AS route_order,
+         d.notes,
+         i.created_at
+       FROM invoices i
+       LEFT JOIN deliveries d ON d.client_id = i.client_id AND d.invoice_id = i.id
+       WHERE i.client_id = $1 
+         AND i.delivery_method = 'domicilio'
+         AND (d.delivery_guy_id = $2 OR d.delivery_guy_id IS NULL)
+       ORDER BY
+         COALESCE(d.route_order, 999) ASC,
+         i.created_at DESC`,
+      [clientId, employeeId]
+    );
+
+    res.json({
+      success: true,
+      deliveries: result.rows.map((row: any) => ({
+        invoice_id: row.invoice_id,
+        invoice_number: row.invoice_number,
+        customer_name: row.customer_name,
+        customer_phone: row.customer_phone,
+        delivery_address: row.delivery_address || 'Dirección de Entrega no especificada',
+        total_amount: parseFloat(row.total_amount || 0),
+        delivery_fee: parseFloat(row.delivery_fee || 0),
+        payment_method: row.payment_method || 'efectivo',
+        payment_status: row.payment_status || 'pending',
+        delivery_status: row.delivery_status || 'pending',
+        route_order: row.route_order,
+        notes: row.notes || 'Entregar en portería / llamar al cliente al llegar'
+      }))
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Endpoint de Prueba: Generar 6 Facturas de Domicilio de Prueba para Speedie Gonzalez
+app.post('/api/clients/:clientId/deliveries/seed-test', async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+
+    // 1. Buscar o crear a Speedie Gonzalez
+    let empRes = await pool.query(
+      `SELECT id, name FROM employees WHERE client_id = $1 AND (LOWER(name) LIKE '%speedie%' OR LOWER(name) LIKE '%gonzalez%' OR role = 'delivery') LIMIT 1`,
+      [clientId]
+    );
+
+    let speedieId: string;
+    if (empRes.rows.length === 0) {
+      const newEmp = await pool.query(
+        `INSERT INTO employees (client_id, name, last_name, phone, role, employee_code, is_active, pin)
+         VALUES ($1, 'Speedie', 'Gonzalez', '3001234567', 'delivery', 'EMP-007', TRUE, '9999')
+         RETURNING id`,
+        [clientId]
+      );
+      speedieId = newEmp.rows[0].id;
+    } else {
+      speedieId = empRes.rows[0].id;
+    }
+
+    // 2. Definir 6 entregas reales organizadas por ruta de cercanía en Barranquilla
+    const testDeliveries = [
+      {
+        customer_name: 'Carlos Mendoza (Óptica Norte)',
+        phone: '3015550101',
+        address: 'Calle 84 #52-10, Apt 402, Alto Prado',
+        amount: 185000,
+        payment_method: 'efectivo',
+        payment_status: 'pending',
+        route_order: 1,
+        notes: 'Parada 1: Cobrar $185.000 en efectivo contra-entrega.'
+      },
+      {
+        customer_name: 'Dra. María Fernanda López',
+        phone: '3025550202',
+        address: 'Carrera 53 #79-120, Consultorio 301, El Golf',
+        amount: 320000,
+        payment_method: 'transferencia',
+        payment_status: 'paid',
+        route_order: 2,
+        notes: 'Parada 2: Factura ya pagada por Nequi. Entregar en recepción.'
+      },
+      {
+        customer_name: 'Andrés Felipe Gómez',
+        phone: '3005550303',
+        address: 'Calle 72 #44-05, Local 12, Centro Comercial Mall',
+        amount: 140000,
+        payment_method: 'efectivo',
+        payment_status: 'pending',
+        route_order: 3,
+        notes: 'Parada 3: Lentes monofocales antirreflejo. Cobrar $140.000.'
+      },
+      {
+        customer_name: 'Valeria Restrepo',
+        phone: '3155550404',
+        address: 'Carrera 43 #65-18, Barrio Recreo',
+        amount: 210000,
+        payment_method: 'efectivo',
+        payment_status: 'pending',
+        route_order: 4,
+        notes: 'Parada 4: Recibir $210.000. Llamar 5 minutos antes de llegar.'
+      },
+      {
+        customer_name: 'Roberto Silva',
+        phone: '3185550505',
+        address: 'Calle 98 #56-22, Conjunto Alameda Plaza, Torre 2 Apto 801',
+        amount: 450000,
+        payment_method: 'tarjeta_debito',
+        payment_status: 'paid',
+        route_order: 5,
+        notes: 'Parada 5: Lentes Progresivos Digitales. Pagado en tienda.'
+      },
+      {
+        customer_name: 'Lucía Fernández',
+        phone: '3205550606',
+        address: 'Carrera 51B #93-15, Oficina 504, Riomar',
+        amount: 295000,
+        payment_method: 'efectivo',
+        payment_status: 'pending',
+        route_order: 6,
+        notes: 'Parada 6: Cobrar $295.000 en efectivo en portería.'
+      }
+    ];
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const createdInvoices = [];
+
+    for (const item of testDeliveries) {
+      const invNum = `DOM-${Math.floor(1000 + Math.random() * 9000)}`;
+      const invRes = await pool.query(
+        `INSERT INTO invoices (
+           client_id, invoice_number, customer_name, customer_email, customer_phone, customer_document_type, customer_document_number,
+           customer_address, delivery_address, total_amount, status, due_date, payment_method,
+           delivery_method, delivery_fee, delivery_status, delivery_date
+         )
+         VALUES ($1, $2, $3, $4, $5, 'CC', '1122334455', $6, $7, $8, $9, $10, $11, 'domicilio', 8000, 'pending', $10)
+         RETURNING id`,
+        [
+          clientId,
+          invNum,
+          item.customer_name,
+          'cliente@opticanorte.com',
+          item.phone,
+          item.address,
+          item.address,
+          item.amount,
+          item.payment_status,
+          todayStr,
+          item.payment_method
+        ]
+      );
+
+      const invoiceId = invRes.rows[0].id;
+
+      // Insertar entrega asignada a Speedie
+      await pool.query(
+        `INSERT INTO deliveries (client_id, invoice_id, delivery_guy_id, recipient_name, recipient_phone, address, status, route_order, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, 'pendiente', $7, $8)
+         ON CONFLICT (id) DO NOTHING`,
+        [clientId, invoiceId, speedieId, item.customer_name, item.phone, item.address, item.route_order, item.notes]
+      );
+
+      createdInvoices.push({ invoiceId, invoiceNumber: invNum, customer: item.customer_name });
+    }
+
+    res.json({
+      success: true,
+      message: '🎉 6 entregas a domicilio de prueba creadas exitosamente para Speedie Gonzalez organizadas por ruta.',
+      speedieId,
+      createdInvoices
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Actualizar información de logística de entrega (domicilios)
 app.patch('/api/clients/:clientId/invoices/:invoiceId/delivery', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
@@ -2286,6 +2946,55 @@ app.patch('/api/clients/:clientId/invoices/:invoiceId/delivery', authenticateTok
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
+    }
+
+    const invoiceData = await pool.query(
+      `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_address, i.delivery_address, i.delivery_status, i.delivery_method
+       FROM invoices i
+       WHERE i.client_id = $1 AND i.id = $2`,
+      [clientId, invoiceId]
+    );
+
+    const invoice = invoiceData.rows[0];
+    if (invoice && invoice.delivery_method === 'domicilio') {
+      const existingDelivery = await pool.query(
+        `SELECT id FROM deliveries WHERE client_id = $1 AND invoice_id = $2`,
+        [clientId, invoiceId]
+      );
+
+      const destinationAddress = invoice.delivery_address || invoice.customer_address || '';
+      if (existingDelivery.rows.length > 0) {
+        await pool.query(
+          `UPDATE deliveries
+           SET recipient_name = $3,
+               recipient_phone = $4,
+               address = $5,
+               status = $6,
+               notes = COALESCE(notes, 'Sin notas')
+           WHERE client_id = $1 AND invoice_id = $2`,
+          [
+            clientId,
+            invoiceId,
+            invoice.customer_name,
+            invoice.customer_phone,
+            destinationAddress,
+            invoice.delivery_status || 'pending'
+          ]
+        );
+      } else {
+        await pool.query(
+          `INSERT INTO deliveries (client_id, invoice_id, recipient_name, recipient_phone, address, status, notes)
+           VALUES ($1, $2, $3, $4, $5, $6, 'Sin notas')`,
+          [
+            clientId,
+            invoiceId,
+            invoice.customer_name,
+            invoice.customer_phone,
+            destinationAddress,
+            invoice.delivery_status || 'pending'
+          ]
+        );
+      }
     }
 
     res.json({ success: true, message: 'Información de despacho actualizada con éxito.', data: result.rows[0] });
@@ -3025,6 +3734,228 @@ app.delete('/api/clients/:clientId/appointments/:appointmentId', authenticateTok
   }
 });
 
+// --- SAAS ERP: CRUD DE ROLES DE EMPLEADOS ---
+app.get('/api/clients/:clientId/employee-roles', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+
+    let result = await pool.query(
+      `SELECT id, name, created_at FROM employee_roles WHERE client_id = $1 ORDER BY name ASC`,
+      [clientId]
+    );
+
+    const defaultRoles = [
+      'admin', 'vendedor', 'optometra', 'laboratorio', 'recepcion', 'contabilidad', 
+      'auxiliar_contable', 'cajero', 'almacenista', 'logistica', 'domiciliario', 'gerente'
+    ];
+    if (result.rows.length === 0) {
+      for (const role of defaultRoles) {
+        await pool.query(
+          `INSERT INTO employee_roles (client_id, name) VALUES ($1, $2) ON CONFLICT (client_id, name) DO NOTHING`,
+          [clientId, role]
+        );
+      }
+      result = await pool.query(
+        `SELECT id, name, created_at FROM employee_roles WHERE client_id = $1 ORDER BY name ASC`,
+        [clientId]
+      );
+    }
+
+    res.json({ success: true, roles: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/clients/:clientId/employee-roles', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ success: false, error: 'Nombre de rol requerido.' });
+
+    const result = await pool.query(
+      `INSERT INTO employee_roles (client_id, name) VALUES ($1, $2) RETURNING id, name, created_at`,
+      [clientId, name.trim().toLowerCase()]
+    );
+    res.json({ success: true, role: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/clients/:clientId/employee-roles/:roleId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, roleId } = req.params;
+    await pool.query(`DELETE FROM employee_roles WHERE id = $1 AND client_id = $2`, [roleId, clientId]);
+    res.json({ success: true, message: 'Rol eliminado con éxito.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- SAAS ERP: USUARIOS DEL NEGOCIO Y PERMISOS POR MÓDULO ---
+app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const result = await pool.query(
+      `SELECT u.id AS id, u.username, u.full_name, u.email, u.created_at,
+              r.id AS role_id, r.role,
+              COALESCE(r.permissions_json, '{}'::jsonb) AS permissions_json
+       FROM user_client_roles r
+       INNER JOIN users u ON u.id = r.user_id
+       WHERE r.client_id = $1
+       ORDER BY u.full_name ASC, u.username ASC`,
+      [clientId]
+    );
+
+    const users = result.rows.map((row: any) => ({
+      id: row.id,
+      username: row.username,
+      full_name: row.full_name,
+      email: row.email,
+      role: row.role,
+      permissions: Array.isArray(row.permissions_json?.modules) ? row.permissions_json.modules : [],
+      created_at: row.created_at
+    }));
+
+    res.json({ success: true, users });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { username, full_name, email, role, permissions = [] } = req.body;
+
+    if (!username || !String(username).trim()) {
+      return res.status(400).json({ success: false, error: 'El usuario del negocio es requerido.' });
+    }
+
+    const cleanUsername = String(username).trim().toLowerCase();
+    const cleanFullName = String(full_name || '').trim() || cleanUsername;
+    const cleanEmail = String(email || '').trim();
+    const cleanRole = String(role || 'admin_tenant').trim();
+    const cleanPermissions = Array.isArray(permissions)
+      ? permissions.map((item: any) => String(item).trim()).filter(Boolean)
+      : [];
+
+    const userResult = await pool.query(
+      `INSERT INTO users (username, full_name, email)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (username) DO UPDATE SET
+         full_name = EXCLUDED.full_name,
+         email = EXCLUDED.email
+       RETURNING id, username, full_name, email`,
+      [cleanUsername, cleanFullName, cleanEmail || null]
+    );
+
+    const user = userResult.rows[0];
+
+    const roleResult = await pool.query(
+      `INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
+       VALUES ($1, $2, $3, $4::jsonb)
+       ON CONFLICT (user_id, client_id, role)
+       DO UPDATE SET permissions_json = EXCLUDED.permissions_json
+       RETURNING *`,
+      [user.id, clientId, cleanRole, JSON.stringify({ modules: cleanPermissions })]
+    );
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        full_name: user.full_name,
+        email: user.email,
+        role: roleResult.rows[0]?.role || cleanRole,
+        permissions: cleanPermissions,
+        created_at: new Date().toISOString()
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, userId } = req.params;
+    const { username, full_name, email, role, permissions = [] } = req.body;
+
+    const cleanUsername = String(username || '').trim().toLowerCase();
+    const cleanFullName = String(full_name || '').trim();
+    const cleanEmail = String(email || '').trim();
+    const cleanRole = String(role || 'admin_tenant').trim();
+    const cleanPermissions = Array.isArray(permissions)
+      ? permissions.map((item: any) => String(item).trim()).filter(Boolean)
+      : [];
+
+    if (!cleanUsername) {
+      return res.status(400).json({ success: false, error: 'El usuario del negocio es requerido.' });
+    }
+
+    const userUpdate = await pool.query(
+      `UPDATE users
+       SET username = $1, full_name = $2, email = $3
+       WHERE id = $4
+       RETURNING id, username, full_name, email`,
+      [cleanUsername, cleanFullName || cleanUsername, cleanEmail || null, userId]
+    );
+
+    if (userUpdate.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Usuario del negocio no encontrado.' });
+    }
+
+    await pool.query(
+      `DELETE FROM user_client_roles WHERE user_id = $1 AND client_id = $2 AND role <> $3`,
+      [userId, clientId, cleanRole]
+    );
+
+    const result = await pool.query(
+      `INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
+       VALUES ($1, $2, $3, $4::jsonb)
+       ON CONFLICT (user_id, client_id, role)
+       DO UPDATE SET permissions_json = EXCLUDED.permissions_json
+       RETURNING *`,
+      [userId, clientId, cleanRole, JSON.stringify({ modules: cleanPermissions })]
+    );
+
+    res.json({
+      success: true,
+      user: {
+        id: userId,
+        username: userUpdate.rows[0].username,
+        full_name: userUpdate.rows[0].full_name,
+        email: userUpdate.rows[0].email,
+        role: result.rows[0]?.role || cleanRole,
+        permissions: cleanPermissions
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, userId } = req.params;
+    const result = await pool.query(
+      `DELETE FROM user_client_roles WHERE user_id = $1 AND client_id = $2 RETURNING *`,
+      [userId, clientId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'No se encontró acceso del usuario para este negocio.' });
+    }
+
+    res.json({ success: true, message: 'Acceso del usuario eliminado del negocio.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // --- SAAS ERP: CRUD DE DEPARTAMENTOS ---
 app.get('/api/clients/:clientId/departments', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
@@ -3097,7 +4028,7 @@ app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeC
     const enjoyedMap = new Map(enjoyedRes.rows.map(r => [r.employee_id, parseInt(r.enjoyed_days)]));
 
     const result = await pool.query(
-      `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, e.pin, e.is_active, e.created_at,
+      `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, e.pin, e.employee_code, e.is_active, e.created_at,
               e.hire_date, e.basic_salary, e.payment_type, e.pay_period, e.cutoff_day_1, e.cutoff_day_2, e.pay_day_1, e.pay_day_2,
               e.hourly_rate, e.transport_allowance, e.employment_status, e.activity_status, e.payment_method, e.bank_name, e.bank_account_number, e.contract_type
        FROM employees e 
@@ -3155,6 +4086,13 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
     const p1 = parseInt(pays[0]) || parseInt(pay_day_1) || 15;
     const p2 = parseInt(pays[1]) || parseInt(pay_day_2) || 30;
 
+    let finalEmpCode = (employee_code || '').trim();
+    if (!finalEmpCode) {
+      const countRes = await pool.query(`SELECT COUNT(*) FROM employees WHERE client_id = $1`, [clientId]);
+      const nextSeq = parseInt(countRes.rows[0].count || '0') + 1;
+      finalEmpCode = `EMP-${String(nextSeq).padStart(3, '0')}`;
+    }
+
     const result = await pool.query(
       `INSERT INTO employees (
          client_id, name, last_name, phone, role, department_id, pin, is_active,
@@ -3172,7 +4110,7 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
         c1, c2, p1, p2,
         parseFloat(vacation_days_accumulated) || 0.00, parseFloat(hourly_rate) || 0.00, parseFloat(transport_allowance) || 0.00, employment_status || 'vinculado',
         activity_status || 'activo', payment_method || 'cash', bank_name || null, bank_account_number || null, contract_type || 'indefinido',
-        employee_code || null
+        finalEmpCode
       ]
     );
 
@@ -3883,15 +4821,48 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'PIN de acceso incorrecto.' });
     }
 
-    // Firmar token JWT con rol 'employee' y clientId
+    // Determinar permisos según rol del empleado
+    // Consultar el departamento del empleado si existe
+    let deptName = '';
+    if (emp.department_id) {
+      const deptRes = await pool.query(`SELECT name FROM business_departments WHERE id = $1 LIMIT 1`, [emp.department_id]);
+      if (deptRes.rows.length > 0) {
+        deptName = deptRes.rows[0].name.toLowerCase();
+      }
+    }
+
+    const ROLE_PERMISSIONS: Record<string, string[]> = {
+      admin:        ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad'],
+      vendedor:     ['crm', 'billing', 'inventory', 'cartera'],
+      optometra:    ['appointments', 'formulas', 'crm'],
+      laboratorio:  ['lab'],
+      recepcion:    ['appointments', 'crm'],
+      contabilidad: ['billing', 'cartera', 'inventory', 'contabilidad'],
+      domicilios:   [],
+      agent:        [],
+    };
+
+    const employeeRoleLower = (emp.role || '').toLowerCase().trim();
+    let permissions = ROLE_PERMISSIONS[employeeRoleLower] || ROLE_PERMISSIONS[deptName] || [];
+
+    // Si el rol o departamento es de oficina (contabilidad, ventas, administración, rrhh, etc.), asegurar permisos ERP
+    if (permissions.length === 0 && (deptName.includes('contab') || deptName.includes('ventas') || deptName.includes('admin') || deptName.includes('cobro') || deptName.includes('factur') || employeeRoleLower.includes('contab'))) {
+      permissions = ['billing', 'cartera', 'inventory'];
+    }
+
+    const hasErpAccess = permissions.length > 0;
+
+    // Firmar token JWT con rol 'employee', clientId y permissions
     const token = jwt.sign(
-      { 
-        id: emp.id, 
-        username: emp.phone, 
-        role: 'employee', 
+      {
+        id: emp.id,
+        username: emp.phone,
+        role: 'employee',
         employeeRole: emp.role,
         clientId: emp.client_id,
-        name: emp.name
+        name: emp.name,
+        permissions,
+        hasErpAccess,
       },
       JWT_SECRET,
       { expiresIn: '24h' }
@@ -3907,6 +4878,8 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
         employeeRole: emp.role,
         clientId: emp.client_id,
         clientName: emp.client_name,
+        permissions,
+        hasErpAccess,
         token
       }
     });
@@ -5139,13 +6112,17 @@ app.get('/api/clients/:clientId/lab-jobs', authenticateToken as any, authorizeCl
     const { clientId } = req.params;
     const result = await pool.query(`
       SELECT j.*, 
-             c.name as customer_name, c.last_name as customer_last_name, c.phone as customer_phone, c.document_number as customer_document_number,
+             COALESCE(c.name, i.customer_name) as customer_name,
+             COALESCE(c.last_name, '') as customer_last_name,
+             COALESCE(c.phone, i.customer_phone) as customer_phone,
+             COALESCE(c.document_number, i.customer_document_number) as customer_document_number,
              s.name as supplier_name,
              f.od_sphere, f.od_cylinder, f.od_axis, f.od_addition,
              f.oi_sphere, f.oi_cylinder, f.oi_axis, f.oi_addition,
              f.dp_distance, f.height
       FROM lab_jobs j
-      JOIN crm_customers c ON j.customer_id = c.id
+      LEFT JOIN crm_customers c ON j.customer_id = c.id
+      LEFT JOIN invoices i ON j.invoice_id = i.id
       LEFT JOIN suppliers s ON j.supplier_id = s.id
       LEFT JOIN formulas f ON j.formula_id = f.id
       WHERE j.client_id = $1
@@ -5456,13 +6433,6 @@ app.post('/api/admin/alerts/:alertId/reopen', authenticateToken as any, requireR
 // Global Express Error Handler Middleware (REEMPLAZADO)
 app.use(errorHandler);
 
-// Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
-app.get(/.*/, (req: Request, res: Response) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(process.cwd(), 'dashboard/dist/index.html'));
-  }
-});
-
 // Inicializar servidor de API
 export const server = app.listen(PORT, () => {
   console.log(`🚀 [Servidor API] Servidor Express activo en el puerto ${PORT}`);
@@ -5575,6 +6545,378 @@ export const server = app.listen(PORT, () => {
   console.log("[WhatsApp] Iniciando auto-conexión del cliente al arrancar el servidor...");
   activeClient.initialize().catch(err => {
     console.error("[WhatsApp] Error en auto-inicialización de WhatsApp:", err);
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ENDPOINTS TAREA 2 — MÓDULO CONTABLE
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // 1. Resumen Contable (/api/clients/:clientId/accounting/summary)
+  app.get('/api/clients/:clientId/accounting/summary', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const period = (req.query.period as string) || 'month';
+      const refDate = (req.query.date as string) || new Date().toISOString().split('T')[0];
+
+      let dateFrom = new Date(refDate);
+      let dateTo = new Date(refDate);
+      dateTo.setHours(23, 59, 59, 999);
+
+      if (period === 'day') {
+        dateFrom.setHours(0, 0, 0, 0);
+      } else if (period === 'week') {
+        const day = dateFrom.getDay();
+        const diffToMon = dateFrom.getDate() - day + (day === 0 ? -6 : 1);
+        dateFrom = new Date(dateFrom.setDate(diffToMon));
+        dateFrom.setHours(0, 0, 0, 0);
+      } else if (period === 'month') {
+        dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
+        dateFrom.setHours(0, 0, 0, 0);
+      } else if (period === 'quarter') {
+        const currentMonth = dateFrom.getMonth();
+        const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
+        dateFrom = new Date(dateFrom.getFullYear(), quarterStartMonth, 1);
+        dateFrom.setHours(0, 0, 0, 0);
+      } else if (period === 'semester') {
+        const currentMonth = dateFrom.getMonth();
+        const semesterStartMonth = currentMonth < 6 ? 0 : 6;
+        dateFrom = new Date(dateFrom.getFullYear(), semesterStartMonth, 1);
+        dateFrom.setHours(0, 0, 0, 0);
+      } else if (period === 'year') {
+        dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
+        dateFrom.setHours(0, 0, 0, 0);
+      }
+
+      // Consulta de métodos de pago y totales
+      const queryResult = await pool.query(`
+        SELECT 
+          LOWER(payment_method) as method,
+          COUNT(*)::int as count,
+          COALESCE(SUM(total_amount), 0)::numeric as total
+        FROM invoices
+        WHERE client_id = $1
+          AND created_at >= $2
+          AND created_at <= $3
+          AND status != 'cancelled'
+        GROUP BY LOWER(payment_method)
+        ORDER BY total DESC
+      `, [clientId, dateFrom.toISOString(), dateTo.toISOString()]);
+
+      // Mapear nomenclatura de BD a etiquetas estándar
+      const methodMap: Record<string, string> = {
+        'efectivo': 'efectivo',
+        'contado': 'efectivo',
+        'transferencia': 'transferencia',
+        'tarjeta': 'tarjeta_credito',
+        'tarjeta_credito': 'tarjeta_credito',
+        'tarjeta_debito': 'tarjeta_debito',
+        'cuotas': 'credito',
+        'por_cuotas': 'credito',
+        'credito': 'credito'
+      };
+
+      const groupedMap = new Map<string, { method: string, count: number, total: number }>();
+      let grandTotalRevenue = 0;
+      let grandTotalInvoices = 0;
+
+      queryResult.rows.forEach(r => {
+        const mappedKey = methodMap[r.method] || r.method || 'efectivo';
+        const numTotal = parseFloat(r.total);
+        const numCount = parseInt(r.count);
+
+        grandTotalRevenue += numTotal;
+        grandTotalInvoices += numCount;
+
+        if (groupedMap.has(mappedKey)) {
+          const curr = groupedMap.get(mappedKey)!;
+          curr.count += numCount;
+          curr.total += numTotal;
+        } else {
+          groupedMap.set(mappedKey, { method: mappedKey, count: numCount, total: numTotal });
+        }
+      });
+
+      const byPaymentMethod = Array.from(groupedMap.values());
+      const avgTicket = grandTotalInvoices > 0 ? grandTotalRevenue / grandTotalInvoices : 0;
+
+      res.json({
+        success: true,
+        period,
+        date_range: {
+          from: dateFrom.toISOString().split('T')[0],
+          to: dateTo.toISOString().split('T')[0]
+        },
+        total_revenue: grandTotalRevenue,
+        total_invoices: grandTotalInvoices,
+        average_ticket: avgTicket,
+        by_payment_method: byPaymentMethod
+      });
+    } catch (err: any) {
+      console.error("[Accounting Summary Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 2. Productos Más Vendidos / Rotación Contable (/api/clients/:clientId/accounting/top-products)
+  app.get('/api/clients/:clientId/accounting/top-products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const period = (req.query.period as string) || 'month';
+      const refDate = (req.query.date as string) || new Date().toISOString().split('T')[0];
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      let dateFrom = new Date(refDate);
+      let dateTo = new Date(refDate);
+      dateTo.setHours(23, 59, 59, 999);
+
+      if (period === 'day') dateFrom.setHours(0, 0, 0, 0);
+      else if (period === 'month') dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
+      else if (period === 'quarter') dateFrom = new Date(dateFrom.getFullYear(), Math.floor(dateFrom.getMonth() / 3) * 3, 1);
+      else if (period === 'year') dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
+
+      const topRes = await pool.query(`
+        SELECT 
+          p.id as product_id,
+          p.name as product_name,
+          COALESCE(SUM(ii.quantity), 0)::int as total_sold,
+          COALESCE(SUM(ii.quantity * ii.price), 0)::numeric as total_revenue,
+          COALESCE(AVG(ii.price), 0)::numeric as avg_price
+        FROM invoice_items ii
+        JOIN invoices i ON ii.invoice_id = i.id
+        JOIN products p ON ii.product_id = p.id
+        WHERE i.client_id = $1
+          AND i.created_at >= $2
+          AND i.created_at <= $3
+          AND i.status != 'cancelled'
+        GROUP BY p.id, p.name
+        ORDER BY total_sold DESC
+        LIMIT $4
+      `, [clientId, dateFrom.toISOString(), dateTo.toISOString(), limit]);
+
+      const products = topRes.rows.map((r, index) => ({
+        product_id: r.product_id,
+        product_name: r.product_name,
+        total_sold: parseInt(r.total_sold),
+        total_revenue: parseFloat(r.total_revenue),
+        avg_price: parseFloat(r.avg_price),
+        rotation_rank: index + 1
+      }));
+
+      res.json({ success: true, products });
+    } catch (err: any) {
+      console.error("[Accounting Top Products Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 3. Tendencia Diaria de Ingresos (/api/clients/:clientId/accounting/daily-trend)
+  app.get('/api/clients/:clientId/accounting/daily-trend', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const period = (req.query.period as string) || 'month';
+      const refDate = (req.query.date as string) || new Date().toISOString().split('T')[0];
+
+      let dateFrom = new Date(refDate);
+      let dateTo = new Date(refDate);
+      dateTo.setHours(23, 59, 59, 999);
+
+      if (period === 'day') dateFrom.setHours(0, 0, 0, 0);
+      else if (period === 'week') {
+        const day = dateFrom.getDay();
+        const diffToMon = dateFrom.getDate() - day + (day === 0 ? -6 : 1);
+        dateFrom = new Date(dateFrom.setDate(diffToMon));
+        dateFrom.setHours(0, 0, 0, 0);
+      }
+      else if (period === 'month') dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
+      else if (period === 'quarter') dateFrom = new Date(dateFrom.getFullYear(), Math.floor(dateFrom.getMonth() / 3) * 3, 1);
+      else if (period === 'year') dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
+
+      const trendRes = await pool.query(`
+        SELECT 
+          TO_CHAR(created_at, 'YYYY-MM-DD') as date,
+          COALESCE(SUM(total_amount), 0)::numeric as revenue,
+          COUNT(*)::int as count
+        FROM invoices
+        WHERE client_id = $1
+          AND created_at >= $2
+          AND created_at <= $3
+          AND status != 'cancelled'
+        GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
+        ORDER BY date ASC
+      `, [clientId, dateFrom.toISOString(), dateTo.toISOString()]);
+
+      const trend = trendRes.rows.map(r => ({
+        date: r.date,
+        revenue: parseFloat(r.revenue),
+        count: parseInt(r.count)
+      }));
+
+      res.json({ success: true, trend });
+    } catch (err: any) {
+      console.error("[Accounting Daily Trend Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ENDPOINTS TAREA 3 — CUENTAS BANCARIAS DEL NEGOCIO (CRUD)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // Listar Cuentas Bancarias Activas
+  app.get('/api/clients/:clientId/bank-accounts', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const result = await pool.query(`
+        SELECT id, bank_name, account_type, account_number, account_holder, is_active, created_at
+        FROM business_bank_accounts
+        WHERE client_id = $1 AND is_active = true
+        ORDER BY bank_name ASC
+      `, [clientId]);
+      res.json({ success: true, accounts: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Crear Cuenta Bancaria
+  app.post('/api/clients/:clientId/bank-accounts', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { bank_name, account_type, account_number, account_holder } = req.body;
+      if (!bank_name || !account_number) {
+        return res.status(400).json({ success: false, error: 'El nombre del banco y el número de cuenta son obligatorios.' });
+      }
+
+      const result = await pool.query(`
+        INSERT INTO business_bank_accounts (client_id, bank_name, account_type, account_number, account_holder)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+      `, [clientId, bank_name.trim(), account_type || 'ahorros', account_number.trim(), account_holder ? account_holder.trim() : null]);
+
+      res.json({ success: true, account: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Editar Cuenta Bancaria
+  app.put('/api/clients/:clientId/bank-accounts/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, id } = req.params;
+      const { bank_name, account_type, account_number, account_holder } = req.body;
+
+      const result = await pool.query(`
+        UPDATE business_bank_accounts
+        SET bank_name = COALESCE($1, bank_name),
+            account_type = COALESCE($2, account_type),
+            account_number = COALESCE($3, account_number),
+            account_holder = COALESCE($4, account_holder)
+        WHERE id = $5 AND client_id = $6
+        RETURNING *
+      `, [bank_name, account_type, account_number, account_holder, id, clientId]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Cuenta bancaria no encontrada.' });
+      }
+      res.json({ success: true, account: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Eliminar (Soft delete) Cuenta Bancaria
+  app.delete('/api/clients/:clientId/bank-accounts/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, id } = req.params;
+      await pool.query(`
+        UPDATE business_bank_accounts
+        SET is_active = false
+        WHERE id = $1 AND client_id = $2
+      `, [id, clientId]);
+      res.json({ success: true, message: 'Cuenta bancaria eliminada con éxito.' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ENDPOINTS TAREA 4 — ROTACIÓN DE INVENTARIO
+  // ══════════════════════════════════════════════════════════════════════════
+
+  app.get('/api/clients/:clientId/inventory/rotation', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const period = (req.query.period as string) || 'month';
+      const refDate = (req.query.date as string) || new Date().toISOString().split('T')[0];
+
+      let dateFrom = new Date(refDate);
+      let dateTo = new Date(refDate);
+      dateTo.setHours(23, 59, 59, 999);
+
+      if (period === 'month') dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
+      else if (period === 'quarter') dateFrom = new Date(dateFrom.getFullYear(), Math.floor(dateFrom.getMonth() / 3) * 3, 1);
+      else if (period === 'year') dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
+
+      const daysInPeriod = Math.max(1, Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 3600 * 24)));
+
+      const rotationRes = await pool.query(`
+        SELECT 
+          p.id as product_id,
+          p.name as product_name,
+          COALESCE(p.stock, 0)::int as current_stock,
+          COALESCE(SUM(ii.quantity), 0)::int as units_sold
+        FROM products p
+        LEFT JOIN invoice_items ii ON ii.product_id = p.id
+        LEFT JOIN invoices i ON ii.invoice_id = i.id 
+          AND i.client_id = $1 
+          AND i.created_at >= $2 
+          AND i.created_at <= $3 
+          AND i.status != 'cancelled'
+        WHERE p.client_id = $1
+        GROUP BY p.id, p.name, p.stock
+        ORDER BY units_sold DESC
+      `, [clientId, dateFrom.toISOString(), dateTo.toISOString()]);
+
+      const products = rotationRes.rows.map(r => {
+        const currentStock = parseInt(r.current_stock);
+        const unitsSold = parseInt(r.units_sold);
+        const rotationRate = parseFloat((unitsSold / daysInPeriod).toFixed(2));
+        
+        let rotationLabel = "Alta";
+        if (rotationRate < 0.1) rotationLabel = "Baja";
+        else if (rotationRate <= 0.5) rotationLabel = "Media";
+
+        let daysOfStock = rotationRate > 0 ? Math.round(currentStock / rotationRate) : 9999;
+        let recommendation = "Stock saludable";
+        if (rotationLabel === "Baja" && currentStock > 10) recommendation = "Candidato a descontinuar";
+        else if (daysOfStock < 7) recommendation = "Reabastecer pronto";
+
+        return {
+          product_id: r.product_id,
+          product_name: r.product_name,
+          current_stock: currentStock,
+          units_sold: unitsSold,
+          rotation_rate: rotationRate,
+          rotation_label: rotationLabel,
+          days_of_stock: daysOfStock > 365 ? 365 : daysOfStock,
+          recommendation
+        };
+      });
+
+      res.json({ success: true, period, days_in_period: daysInPeriod, products });
+    } catch (err: any) {
+      console.error("[Inventory Rotation Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
+  app.get(/.*/, (req: Request, res: Response, next: NextFunction) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(process.cwd(), 'dashboard/dist/index.html'));
+    } else {
+      next();
+    }
   });
 
   // Iniciar el programador de cobros y recordatorios estáticos

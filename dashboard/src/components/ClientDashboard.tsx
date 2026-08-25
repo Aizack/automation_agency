@@ -14,6 +14,9 @@ import { SaaSErpCRM } from './SaaSErpCRM';
 import { SaaSErpCampaigns } from './SaaSErpCampaigns';
 import { SaaSErpMarketing } from './SaaSErpMarketing';
 import { SystemAlertsPanel } from './SystemAlertsPanel';
+import { SaaSErpUsers } from './SaaSErpUsers';
+import { SaaSErpAccounting } from './SaaSErpAccounting';
+import { SaaSErpAuditLogs } from './SaaSErpAuditLogs';
 
 interface Client {
   id: string;
@@ -65,26 +68,70 @@ interface ClientDashboardProps {
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBack }) => {
   const [clientData, setClientData] = useState<Client | null>(null);
-  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'cartera' | 'domicilios' | 'formulas' | 'agenda' | 'empleados' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion'>('resumen');
+
+  // Permisos de sesión de empleado
+  const sessionRole = localStorage.getItem('session_role');
+  const isEmployeeSession = sessionRole === 'employee';
+  const employeePermissions: string[] = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('employee_permissions') || '[]');
+    } catch {
+      return [];
+    }
+  })();
+
+  const hasPermission = (moduleKey: string) => {
+    if (!isEmployeeSession) return true; // Admins y dueños del negocio ven todo
+    return employeePermissions.includes(moduleKey);
+  };
+
+  // Calcular la pestaña por defecto si es colaborador
+  const getDefaultTab = () => {
+    if (!isEmployeeSession) return 'resumen';
+    if (employeePermissions.includes('billing')) return 'facturacion';
+    if (employeePermissions.includes('contabilidad')) return 'contabilidad';
+    if (employeePermissions.includes('cartera')) return 'cartera';
+    if (employeePermissions.includes('inventory')) return 'inventario';
+    if (employeePermissions.includes('crm')) return 'clientes';
+    if (employeePermissions.includes('appointments')) return 'agenda';
+    if (employeePermissions.includes('formulas')) return 'formulas';
+    if (employeePermissions.includes('lab')) return 'lab_jobs';
+    if (employeePermissions.includes('domicilios')) return 'domicilios';
+    if (employeePermissions.includes('employees')) return 'empleados';
+    return 'cartera';
+  };
+
+  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'contabilidad' | 'cartera' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion' | 'trazabilidad'>(getDefaultTab());
   const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Tema Claro / Oscuro
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  // Temas Dinámicos Open-Design (W3C Tokens)
+  const [theme, setTheme] = useState<string>(() => {
+    return localStorage.getItem('app_theme') || localStorage.getItem('theme') || 'obsidian-gold';
+  });
+  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+
+  const openDesignThemes = [
+    { id: 'obsidian-gold', name: 'Obsidian Gold', icon: 'brightness_7', color: '#d8a24e', desc: 'Oscuro Lujo & Oro' },
+    { id: 'emerald-lux', name: 'Emerald Lux', icon: 'eco', color: '#10b981', desc: 'Esmeralda & Menta' },
+    { id: 'cyberpunk-neon', name: 'Cyberpunk Neon', icon: 'bolt', color: '#a855f7', desc: 'Neón Morado & Cian' },
+    { id: 'royal-light', name: 'Royal Light', icon: 'light_mode', color: '#2563eb', desc: 'Modo Claro Pulcro' },
+    { id: 'sunset-violet', name: 'Sunset Violet', icon: 'auto_awesome', color: '#ec4899', desc: 'Violeta & Rosa Neón' },
+  ];
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const initialTheme = savedTheme || 'light';
-    setTheme(initialTheme);
-    document.documentElement.setAttribute('data-theme', initialTheme);
+    const saved = localStorage.getItem('app_theme') || localStorage.getItem('theme') || 'obsidian-gold';
+    setTheme(saved);
+    document.documentElement.setAttribute('data-theme', saved);
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+  const changeOpenDesignTheme = (themeId: string) => {
+    setTheme(themeId);
+    localStorage.setItem('app_theme', themeId);
+    localStorage.setItem('theme', themeId);
+    document.documentElement.setAttribute('data-theme', themeId);
+    setIsThemeDropdownOpen(false);
   };
 
   // Estado de WhatsApp en tiempo real
@@ -109,6 +156,23 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   // Estados para sincronización de Drive
   const [syncingDrive, setSyncingDrive] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  // Lista de colaboradores para selección rápida con buscador tipo autocomplete
+  const [employeeList, setEmployeeList] = useState<Array<{id: string, name: string, last_name?: string, phone: string}>>([]);
+  const [employeeSearchQuery, setEmployeeSearchQuery] = useState('');
+  const [isEmployeeSearchOpen, setIsEmployeeSearchOpen] = useState(false);
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await fetch(`/api/clients/${clientId}/employees`);
+      const json = await res.json();
+      if (json.success) {
+        setEmployeeList(json.employees || []);
+      }
+    } catch (err) {
+      console.error("Error cargando lista de colaboradores:", err);
+    }
+  };
 
   // Estados para visor y carga de archivos del cliente
   const [uploadedFiles, setUploadedFiles] = useState<Array<{id: string, name: string, mimeType: string}>>([]);
@@ -437,6 +501,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   useEffect(() => {
     fetchClientInfo();
     fetchAgents();
+    fetchEmployees();
     fetchAudios();
     fetchLogos();
     fetchDashboardMetrics();
@@ -775,159 +840,237 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="flex-grow space-y-1.5 overflow-y-auto custom-scrollbar">
-          <button 
-            onClick={() => setActiveTab('resumen')}
-            className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-              activeTab === 'resumen' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">smart_toy</span>
-            <span className="font-bold text-xs">Agente &amp; QR</span>
-          </button>
-          
-          {clientData?.enabledModules?.inventory !== false && (
-            <button 
-              onClick={() => setActiveTab('inventario')}
-              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                activeTab === 'inventario' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-              <span className="font-bold text-xs">Inventario</span>
-            </button>
-          )}
-
-          {clientData?.enabledModules?.billing !== false && (
-            <>
+        <nav className="flex-grow space-y-2.5 overflow-y-auto custom-scrollbar px-1.5 py-1">
+          {hasPermission('settings') && (
+            <div className="space-y-1">
               <button 
-                onClick={() => setActiveTab('facturacion')}
+                onClick={() => setActiveTab('resumen')}
                 className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'facturacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  activeTab === 'resumen' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-                <span className="font-bold text-xs">Ventas &amp; Facturación</span>
+                <span className="material-symbols-outlined text-[18px]">smart_toy</span>
+                <span className="font-bold text-xs">Configuración Agente IA</span>
               </button>
-              
+            </div>
+          )}
+
+          {hasPermission('settings') && (
+            <div className="space-y-1 pt-1">
+              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Información Empresa</div>
               <button 
-                onClick={() => setActiveTab('cartera')}
+                onClick={() => setActiveTab('configuracion')}
                 className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'cartera' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  activeTab === 'configuracion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">payments</span>
-                <span className="font-bold text-xs">Cartera &amp; Cobros</span>
+                <span className="material-symbols-outlined text-[18px]">settings</span>
+                <span className="font-bold text-xs">Información Empresa</span>
               </button>
-              
+            </div>
+          )}
+
+          {(hasPermission('inventory') || hasPermission('lab') || hasPermission('domicilios')) && (
+            <div className="space-y-1 pt-1">
+              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Logística</div>
+              {hasPermission('inventory') && clientData?.enabledModules?.inventory !== false && (
+                <button 
+                  onClick={() => setActiveTab('inventario')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'inventario' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+                  <span className="font-bold text-xs">Inventario</span>
+                </button>
+              )}
+
+              {hasPermission('lab') && clientData?.category === 'optica' && (
+                <button 
+                  onClick={() => setActiveTab('lab_jobs')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'lab_jobs' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">precision_manufacturing</span>
+                  <span className="font-bold text-xs">Trabajos de laboratorio</span>
+                </button>
+              )}
+
+              {hasPermission('domicilios') && clientData?.enabledModules?.billing !== false && (
+                <button 
+                  onClick={() => setActiveTab('domicilios')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'domicilios' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">local_shipping</span>
+                  <span className="font-bold text-xs">Despachos y Domicilios</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {(hasPermission('billing') || hasPermission('contabilidad') || hasPermission('cartera')) && (
+            <div className="space-y-1 pt-1">
+              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Facturación y Contabilidad</div>
+              {hasPermission('billing') && clientData?.enabledModules?.billing !== false && (
+                <button 
+                  onClick={() => setActiveTab('facturacion')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'facturacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+                  <span className="font-bold text-xs">Facturación</span>
+                </button>
+              )}
+
+              {hasPermission('contabilidad') && (
+                <button 
+                  onClick={() => setActiveTab('contabilidad')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'contabilidad' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">bar_chart</span>
+                  <span className="font-bold text-xs">Contabilidad</span>
+                </button>
+              )}
+
+              {hasPermission('cartera') && (
+                <button 
+                  onClick={() => setActiveTab('cartera')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'cartera' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">payments</span>
+                  <span className="font-bold text-xs">Cartera</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {(hasPermission('crm') || hasPermission('campaigns') || hasPermission('marketing')) && (
+            <div className="space-y-1 pt-1">
+              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Marketing y Ventas</div>
+              {hasPermission('crm') && clientData?.enabledModules?.crm !== false && (
+                <button 
+                  onClick={() => setActiveTab('clientes')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'clientes' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">contacts</span>
+                  <span className="font-bold text-xs">Clientes</span>
+                </button>
+              )}
+
+              {hasPermission('campaigns') && clientData?.enabledModules?.field_visits !== false && (
+                <button 
+                  onClick={() => setActiveTab('campanias')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'campanias' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">explore</span>
+                  <span className="font-bold text-xs">Campañas de Campo</span>
+                </button>
+              )}
+
+              {hasPermission('marketing') && clientData?.enabledModules?.marketing !== false && (
+                <button 
+                  onClick={() => setActiveTab('marketing')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'marketing' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">campaign</span>
+                  <span className="font-bold text-xs">Difusión Promocional</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {(hasPermission('appointments') || hasPermission('formulas')) && (
+            <div className="space-y-1 pt-1">
+              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Citas y Exámenes</div>
+              {hasPermission('appointments') && clientData?.enabledModules?.appointments !== false && (
+                <button 
+                  onClick={() => setActiveTab('agenda')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'agenda' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">calendar_month</span>
+                  <span className="font-bold text-xs">
+                    {clientData?.category === 'restaurante' ? 'Reservas de Mesa' :
+                     clientData?.category === 'optica' ? 'Programación Citas' : 'Agenda Citas'}
+                  </span>
+                </button>
+              )}
+
+              {hasPermission('formulas') && clientData?.category === 'optica' && (
+                <button 
+                  onClick={() => setActiveTab('formulas')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'formulas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">visibility</span>
+                  <span className="font-bold text-xs">Optometría</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {hasPermission('employees') && (
+            <div className="space-y-1 pt-1">
+              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Administración de Personal</div>
+              {clientData?.enabledModules?.employees !== false && (
+                <button 
+                  onClick={() => setActiveTab('empleados')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'empleados' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">groups</span>
+                  <span className="font-bold text-xs">Administración de Personal</span>
+                </button>
+              )}
               <button 
-                onClick={() => setActiveTab('domicilios')}
+                onClick={() => setActiveTab('usuarios')}
                 className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'domicilios' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  activeTab === 'usuarios' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">local_shipping</span>
-                <span className="font-bold text-xs">Despachos &amp; Domicilios</span>
+                <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
+                <span className="font-bold text-xs">Accesos y Permisos</span>
               </button>
-            </>
+              <button 
+                onClick={() => setActiveTab('trazabilidad')}
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  activeTab === 'trazabilidad' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">shield</span>
+                <span className="font-bold text-xs">Trazabilidad & Auditoría</span>
+              </button>
+            </div>
           )}
 
-          {clientData?.category === 'optica' && (
+          <div className="space-y-1 pt-1">
             <button 
-              onClick={() => setActiveTab('formulas')}
+              onClick={() => setActiveTab('logs')}
               className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                activeTab === 'formulas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                activeTab === 'logs' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
               }`}
             >
-              <span className="material-symbols-outlined text-[18px]">visibility</span>
-              <span className="font-bold text-xs">Fórmulas Oftálmicas</span>
+              <span className="material-symbols-outlined text-[18px]">build</span>
+              <span className="font-bold text-xs">Estado del Sistema</span>
             </button>
-          )}
-
-          {clientData?.enabledModules?.appointments !== false && (
-            <button 
-              onClick={() => setActiveTab('agenda')}
-              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                activeTab === 'agenda' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-              <span className="font-bold text-xs">
-                {clientData?.category === 'restaurante' ? 'Reservas de Mesa' :
-                 clientData?.category === 'optica' ? 'Citas Oftálmicas' : 'Agenda Citas'}
-              </span>
-            </button>
-          )}
-
-          {clientData?.enabledModules?.employees !== false && (
-            <button 
-              onClick={() => setActiveTab('empleados')}
-              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                activeTab === 'empleados' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">groups</span>
-              <span className="font-bold text-xs">Personal &amp; Turnos</span>
-            </button>
-          )}
-
-          {clientData?.enabledModules?.crm !== false && (
-            <button 
-              onClick={() => setActiveTab('clientes')}
-              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                activeTab === 'clientes' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">contacts</span>
-              <span className="font-bold text-xs">
-                {clientData?.category === 'optica' ? 'Clientes (CRM)' : 'Clientes (CRM)'}
-              </span>
-            </button>
-          )}
-
-          {clientData?.enabledModules?.field_visits !== false && (
-            <button 
-              onClick={() => setActiveTab('campanias')}
-              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                activeTab === 'campanias' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">explore</span>
-              <span className="font-bold text-xs">Campañas de Campo</span>
-            </button>
-          )}
-
-          {clientData?.enabledModules?.marketing !== false && (
-            <button 
-              onClick={() => setActiveTab('marketing')}
-              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-                activeTab === 'marketing' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">campaign</span>
-              <span className="font-bold text-xs">Difusión Promocional</span>
-            </button>
-          )}
-
-          <button 
-            onClick={() => setActiveTab('configuracion')}
-            className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-              activeTab === 'configuracion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">settings</span>
-            <span className="font-bold text-xs">Configuración Tienda</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('logs')}
-            className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
-              activeTab === 'logs' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">build</span>
-            <span className="font-bold text-xs">Estado del Sistema</span>
-          </button>
+          </div>
         </nav>
 
         {/* Back / Logout footer */}
@@ -949,35 +1092,86 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           <div>
             <h2 className="font-extrabold text-base sm:text-lg text-on-surface flex items-center gap-2">
               <span className="font-sans">
-                {activeTab === 'resumen' ? 'Resumen y Agente IA' :
-                 activeTab === 'inventario' ? 'Inventario de Tienda' :
-                 activeTab === 'facturacion' ? 'Ventas y Facturación' :
-                 activeTab === 'cartera' ? 'Cartera y Cobranza' :
+                {activeTab === 'resumen' ? 'Automatización y Agente IA' :
+                 activeTab === 'inventario' ? 'Inventario' :
+                 activeTab === 'facturacion' ? 'Facturación' :
+                 activeTab === 'contabilidad' ? 'Contabilidad y Análisis Financiero' :
+                 activeTab === 'cartera' ? 'Cartera' :
                  activeTab === 'domicilios' ? 'Despachos y Domicilios' :
-                 activeTab === 'formulas' ? 'Fórmulas y Recetas Oftálmicas' :
+                 activeTab === 'lab_jobs' ? 'Trabajos de laboratorio' :
+                 activeTab === 'formulas' ? 'Optometría' :
                  activeTab === 'agenda' ? (
                    clientData?.category === 'restaurante' ? 'Reservación de Mesas' :
-                   clientData?.category === 'optica' ? 'Citas Clínicas y Optometría' : 'Calendario de Citas'
+                   clientData?.category === 'optica' ? 'Programación de Citas' : 'Calendario de Citas'
                  ) :
-                 activeTab === 'empleados' ? 'Gestión de Personal y Nómina' :
-                 activeTab === 'clientes' ? 'CRM & Directorio de Clientes' :
-                 activeTab === 'configuracion' ? 'Configuración Comercial de Tienda' :
+                 activeTab === 'empleados' ? 'Administración de Personal' :
+                 activeTab === 'usuarios' ? 'Accesos y Permisos ERP' :
+                 activeTab === 'clientes' ? 'Clientes' :
+                 activeTab === 'configuracion' ? 'Información Empresa' :
                  'Estado del Sistema'}
               </span>
             </h2>
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Theme selector toggle */}
-            <button 
-              onClick={toggleTheme}
-              className="w-9 h-9 rounded-full bg-surface-container/50 hover:bg-surface-container border border-outline/20 flex items-center justify-center cursor-pointer transition text-on-surface"
-              title="Cambiar Tema"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                {theme === 'light' ? 'dark_mode' : 'light_mode'}
-              </span>
-            </button>
+            {/* Quick Open-Design Theme Switcher Popover */}
+            <div className="relative">
+              <button 
+                type="button"
+                onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
+                className="px-3 py-1.5 rounded-xl bg-surface-container/60 hover:bg-surface-container border border-outline/20 flex items-center gap-2 cursor-pointer transition text-on-surface text-xs font-semibold shadow-sm"
+                title="Cambiar Paleta de Tema (Open-Design Tokens)"
+              >
+                <span className="material-symbols-outlined text-[16px] text-primary">palette</span>
+                <span className="hidden md:inline font-mono text-[11px]">
+                  {openDesignThemes.find(t => t.id === theme)?.name || 'Temas'}
+                </span>
+                <span className="material-symbols-outlined text-[14px] opacity-70">arrow_drop_down</span>
+              </button>
+
+              {/* Menú Desplegable de 5 Temas Open-Design */}
+              {isThemeDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-64 bg-surface-container-highest border border-outline/20 rounded-2xl shadow-2xl p-2 z-50 divide-y divide-outline/5 backdrop-blur-xl animate-fade-in">
+                  <div className="p-2 border-b border-outline/10">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px] text-primary">auto_awesome</span>
+                      Paletas Open-Design Tokens
+                    </p>
+                  </div>
+                  <div className="py-1 space-y-1">
+                    {openDesignThemes.map((t) => {
+                      const isSelected = theme === t.id;
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => changeOpenDesignTheme(t.id)}
+                          className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs transition cursor-pointer border-0 ${
+                            isSelected 
+                              ? 'bg-primary/15 text-primary font-bold border-l-2 border-primary' 
+                              : 'text-on-surface hover:bg-surface-container-high/60 font-normal'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span 
+                              className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0 shadow-sm" 
+                              style={{ backgroundColor: t.color }} 
+                            />
+                            <div>
+                              <p className="font-semibold leading-tight">{t.name}</p>
+                              <p className="text-[9.5px] text-on-surface-variant opacity-80">{t.desc}</p>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <span className="material-symbols-outlined text-primary text-[16px]">check</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Business Logo/Profile badge */}
             <div className="flex items-center gap-2">
@@ -1150,21 +1344,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                         placeholder="Define cómo debe responder la IA... Ej: Eres un recepcionista amable de la Clínica Dental. Tu objetivo es agendar citas."
                       />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="space-y-1">
-                        <label className="font-label-md text-label-md text-on-surface-variant">Línea del Asesor Humano (Traspaso)</label>
-                        <input 
-                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface font-mono"
-                          type="text"
-                          value={agentPhone}
-                          onChange={(e) => setAgentPhone(e.target.value)}
-                          placeholder="Ej: 573009998888"
-                        />
-                      </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-1">
                         <label className="font-label-md text-label-md text-on-surface-variant">Tono de Voz del Bot</label>
                         <select 
-                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface outline-none"
+                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface outline-none cursor-pointer"
                           value={toneOfVoice}
                           onChange={(e) => setToneOfVoice(e.target.value)}
                         >
@@ -1176,7 +1360,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                       <div className="space-y-1">
                         <label className="font-label-md text-label-md text-on-surface-variant">Categoría del Negocio</label>
                         <select 
-                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface outline-none"
+                          className="w-full bg-surface-container border border-outline/30 rounded-lg p-3 text-body-md focus:border-primary-container focus:ring-1 focus:ring-primary-container text-on-surface outline-none cursor-pointer"
                           value={category}
                           onChange={(e) => setCategory(e.target.value)}
                         >
@@ -1366,8 +1550,69 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                   <form onSubmit={handleAddAgent} className="bg-surface-container/20 border border-outline/5 rounded-lg p-4 space-y-4">
                     <span className="text-[11px] font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-[16px]">person_add</span>
-                      Agregar Nuevo Asesor
+                      Agregar Asesor de WhatsApp
                     </span>
+
+                    {/* Buscador inteligente tipo Autocomplete / Combobox */}
+                    <div className="space-y-1 relative">
+                      <label className="font-label-md text-label-md text-on-surface-variant flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px] text-primary">search</span>
+                        Buscar Colaborador de la Empresa (escribe nombre, teléfono o cargo):
+                      </label>
+                      <input
+                        type="text"
+                        value={employeeSearchQuery}
+                        onChange={(e) => {
+                          setEmployeeSearchQuery(e.target.value);
+                          setIsEmployeeSearchOpen(true);
+                        }}
+                        onFocus={() => setIsEmployeeSearchOpen(true)}
+                        placeholder="Escribe para buscar (Ej: Carla, Cantos, 301...)"
+                        className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      />
+
+                      {/* Menu desplegable de sugerencias filtradas */}
+                      {isEmployeeSearchOpen && employeeSearchQuery.trim().length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-surface-container-high border border-outline/20 rounded-xl shadow-2xl max-h-48 overflow-y-auto divide-y divide-outline/5 custom-scrollbar">
+                          {(() => {
+                            const q = employeeSearchQuery.toLowerCase().trim();
+                            const filtered = employeeList.filter(emp => 
+                              emp.name.toLowerCase().includes(q) || 
+                              (emp.last_name && emp.last_name.toLowerCase().includes(q)) ||
+                              emp.phone.includes(q)
+                            );
+
+                            if (filtered.length === 0) {
+                              return (
+                                <div className="p-3 text-xs text-on-surface-variant italic text-center">
+                                  No se encontraron colaboradores con "{employeeSearchQuery}"
+                                </div>
+                              );
+                            }
+
+                            return filtered.map((emp) => (
+                              <button
+                                key={emp.id}
+                                type="button"
+                                onClick={() => {
+                                  setNewAgentName(`${emp.name} ${emp.last_name || ''}`.trim());
+                                  setNewAgentPhone(emp.phone.replace(/\D/g, ''));
+                                  setEmployeeSearchQuery(`${emp.name} ${emp.last_name || ''}`.trim());
+                                  setIsEmployeeSearchOpen(false);
+                                }}
+                                className="w-full text-left p-2.5 text-xs hover:bg-primary/10 transition-colors flex justify-between items-center cursor-pointer border-0 text-on-surface"
+                              >
+                                <div>
+                                  <p className="font-bold text-on-surface">{emp.name} {emp.last_name || ''}</p>
+                                  <p className="text-[10px] text-on-surface-variant font-mono">+{emp.phone}</p>
+                                </div>
+                                <span className="material-symbols-outlined text-[16px] text-primary">add_circle_outline</span>
+                              </button>
+                            ));
+                          })()}
+                        </div>
+                      )}
+                    </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-1">
@@ -1377,7 +1622,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                           required
                           value={newAgentName}
                           onChange={(e) => setNewAgentName(e.target.value)}
-                          placeholder="Ej: Carlos"
+                          placeholder="Ej: Carlos Cantos"
                           className="w-full bg-surface-container border border-outline/30 rounded-lg p-2.5 text-xs text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none"
                         />
                       </div>
@@ -1393,7 +1638,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="font-label-md text-label-md text-on-surface-variant">Prioridad (Orden)</label>
+                        <label className="font-label-md text-label-md text-on-surface-variant">Prioridad (Orden de atención)</label>
                         <input
                           type="number"
                           min="1"
@@ -1412,7 +1657,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                         className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-lg font-bold text-xs hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all flex items-center gap-1.5 cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                        Agregar a la Lista
+                        Agregar a la Lista de WhatsApp
                       </button>
                     </div>
                   </form>
@@ -1895,6 +2140,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           </div>
         )}
 
+        {activeTab === 'contabilidad' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpAccounting clientId={clientId} />
+          </div>
+        )}
+
         {activeTab === 'cartera' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
             <SaaSErpCartera clientId={clientId} />
@@ -1909,7 +2160,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
 
         {activeTab === 'formulas' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
-            <SaaSErpFormulas clientId={clientId} />
+            <SaaSErpFormulas clientId={clientId} defaultSubTab="formulas" showSubTabs={false} />
+          </div>
+        )}
+
+        {activeTab === 'lab_jobs' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpFormulas clientId={clientId} defaultSubTab="lab_jobs" showSubTabs={false} />
           </div>
         )}
 
@@ -1922,6 +2179,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
         {activeTab === 'empleados' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
             <SaaSErpEmployees clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'usuarios' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpUsers clientId={clientId} />
           </div>
         )}
 
@@ -1956,6 +2219,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                 })
                 .catch(err => console.error("Error recargando logo/datos:", err));
             }} />
+          </div>
+        )}
+
+        {activeTab === 'trazabilidad' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpAuditLogs clientId={clientId} />
           </div>
         )}
 

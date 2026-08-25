@@ -39,10 +39,6 @@ export const EmployeePortal: React.FC = () => {
 
     // Auth State
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [phone, setPhone] = useState('');
-    const [pin, setPin] = useState('');
-    const [errorMsg, setErrorMsg] = useState('');
-    const [loading, setLoading] = useState(false);
 
     // Session Data
     const [employeeToken, setEmployeeToken] = useState('');
@@ -76,7 +72,31 @@ export const EmployeePortal: React.FC = () => {
     const [crmCustomers, setCrmCustomers] = useState<any[]>([]);
     const [selectedCrmCustomerId, setSelectedCrmCustomerId] = useState<string>('');
     const [showCrmSuggestions, setShowCrmSuggestions] = useState(false);
-    const [activeTab, setActiveTab] = useState<'turnos' | 'tareas' | 'solicitudes' | 'chat' | 'campanias' | 'finanzas'>('turnos');
+    const [activeTab, setActiveTab] = useState<'turnos' | 'tareas' | 'solicitudes' | 'chat' | 'campanias' | 'finanzas' | 'entregas'>('turnos');
+    const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
+    const [deliveriesLoading, setDeliveriesLoading] = useState(false);
+
+    const fetchMyDeliveries = async () => {
+        const storedToken = localStorage.getItem('emp_token') || employeeToken;
+        const storedClientId = localStorage.getItem('emp_client_id') || clientId;
+        const storedEmpId = localStorage.getItem('emp_id') || employeeId;
+        if (!storedClientId || !storedEmpId) return;
+
+        try {
+            setDeliveriesLoading(true);
+            const res = await fetch(`/api/clients/${storedClientId}/employees/${storedEmpId}/deliveries`, {
+                headers: { 'Authorization': `Bearer ${storedToken}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setMyDeliveries(json.deliveries || []);
+            }
+        } catch (err) {
+            console.error("Error loading employee deliveries:", err);
+        } finally {
+            setDeliveriesLoading(false);
+        }
+    };
 
     // Timer Interval ref
     const [timerActive, setTimerActive] = useState(false);
@@ -309,6 +329,7 @@ export const EmployeePortal: React.FC = () => {
             fetchVisits();
             fetchActiveShiftStatus();
             fetchCrmCustomers();
+            fetchMyDeliveries();
             if (activeTab === 'chat') {
                 fetchChatMessages();
             }
@@ -431,49 +452,17 @@ export const EmployeePortal: React.FC = () => {
         }
     }, [isAuthenticated, activeTab, clientId, employeeToken]);
 
-    // LOGIN ACTION
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!phone || !pin) {
-            setErrorMsg('Completa tu teléfono y PIN.');
-            return;
-        }
 
-        try {
-            setLoading(true);
-            setErrorMsg('');
-            const res = await fetch('/api/auth/employee-login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone, pin })
-            });
-            const json = await res.json();
-            if (json.success && json.data) {
-                const empData = json.data;
-                localStorage.setItem('emp_token', empData.token);
-                localStorage.setItem('emp_id', empData.id);
-                localStorage.setItem('emp_name', empData.name);
-                localStorage.setItem('emp_role', empData.employeeRole);
-                localStorage.setItem('emp_client_id', empData.clientId);
-
-                setEmployeeToken(empData.token);
-                setEmployeeId(empData.id);
-                setEmployeeName(empData.name);
-                setEmployeeRole(empData.employeeRole);
-                setClientId(empData.clientId);
-                setIsAuthenticated(true);
-            } else {
-                setErrorMsg(json.error || 'PIN o teléfono incorrecto.');
-            }
-        } catch (err: any) {
-            setErrorMsg(`Error de conexión: ${err.message || 'Error de red'}`);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // LOGOUT ACTION
     const handleLogout = () => {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('session_role');
+        localStorage.removeItem('session_name');
+        localStorage.removeItem('current_view');
+        localStorage.removeItem('current_client_id');
+        localStorage.removeItem('employee_role');
+        localStorage.removeItem('employee_permissions');
         localStorage.removeItem('emp_token');
         localStorage.removeItem('emp_id');
         localStorage.removeItem('emp_name');
@@ -484,6 +473,7 @@ export const EmployeePortal: React.FC = () => {
         setTimerActive(false);
         setShiftStartTimestamp(null);
         setShiftStatus('no_started');
+        window.location.reload();
     };
 
     // FETCH TASKS
@@ -1023,59 +1013,13 @@ export const EmployeePortal: React.FC = () => {
         }
     };
 
-    // LOGIN SCREEN
+    // PANTALLA DE VERIFICACIÓN / CARGA DE SESIÓN
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-[#070b13] flex flex-col justify-center items-center p-4 font-sans text-white">
-                <div className="w-full max-w-sm glass-card p-8 rounded-3xl border border-outline/10 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-secondary"></div>
-                    
-                    <div className="text-center mb-8">
-                        <span className="material-symbols-outlined text-[48px] text-primary animate-pulse">lock</span>
-                        <h2 className="text-2xl font-black mt-3">Portal del Empleado</h2>
-                        <p className="text-xs text-on-surface-variant mt-1">Registra tu jornada de trabajo y gestiona tus tareas.</p>
-                    </div>
-
-                    {errorMsg && (
-                        <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3.5 rounded-2xl mb-5 font-bold text-center">
-                            ⚠️ {errorMsg}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleLogin} className="space-y-4">
-                        <div className="space-y-1.5">
-                            <label className="block text-xs font-bold text-on-surface-variant">Número de Teléfono</label>
-                            <input 
-                                type="tel"
-                                required
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                className="w-full bg-surface-container-high/40 border border-outline/25 p-3 rounded-2xl text-on-surface focus:border-primary outline-none font-mono text-center text-lg"
-                                placeholder="Ej: 3001234567"
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="block text-xs font-bold text-on-surface-variant">PIN de Acceso (4 dígitos)</label>
-                            <input 
-                                type="password"
-                                maxLength={4}
-                                required
-                                value={pin}
-                                onChange={(e) => setPin(e.target.value)}
-                                className="w-full bg-surface-container-high/40 border border-outline/25 p-3 rounded-2xl text-on-surface focus:border-primary outline-none font-mono text-center text-2xl tracking-widest"
-                                placeholder="••••"
-                            />
-                        </div>
-
-                        <button 
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-primary hover:bg-primary-container text-white py-3 rounded-2xl font-bold cursor-pointer transition shadow-lg text-sm mt-6"
-                        >
-                            {loading ? 'Verificando PIN...' : 'Ingresar al Portal'}
-                        </button>
-                    </form>
+            <div className="min-h-screen bg-[#070b13] text-white flex flex-col items-center justify-center font-sans">
+                <div className="flex flex-col items-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-[#d8a24e] border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-sm text-gray-400 font-bold uppercase tracking-wider animate-pulse">Cargando perfil de trabajo...</p>
                 </div>
             </div>
         );
@@ -1158,6 +1102,17 @@ export const EmployeePortal: React.FC = () => {
                         >
                             <span className="material-symbols-outlined text-[15px] opacity-70">task_alt</span>
                             Mis Tareas
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('entregas')}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                activeTab === 'entregas' 
+                                    ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 sidebar-item-active font-bold' 
+                                    : 'bg-transparent text-emerald-400/80 hover:bg-emerald-500/10 hover:text-emerald-300 font-medium'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[15px]">local_shipping</span>
+                            Mis Entregas ({myDeliveries.length})
                         </button>
                         <button 
                             onClick={() => setActiveTab('solicitudes')}
@@ -1471,6 +1426,25 @@ export const EmployeePortal: React.FC = () => {
                 {/* TAB 2: TAREAS ASIGNADAS */}
                 {activeTab === 'tareas' && (
                     <div className="space-y-4">
+                        {/* Banner si el colaborador tiene entregas a domicilio */}
+                        {myDeliveries.length > 0 && (
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center justify-between">
+                                <div className="flex items-center gap-3 text-left">
+                                    <span className="material-symbols-outlined text-emerald-400 text-2xl">local_shipping</span>
+                                    <div>
+                                        <h4 className="font-bold text-xs text-emerald-400">¡Tienes {myDeliveries.length} Entregas a Domicilio hoy!</h4>
+                                        <p className="text-[10px] text-on-surface-variant">Ruta asignada por cercanía con direcciones y cobros en efectivo.</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setActiveTab('entregas')}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition cursor-pointer shrink-0"
+                                >
+                                    Ver Entregas
+                                </button>
+                            </div>
+                        )}
+
                         <div className="flex justify-between items-center mb-2">
                             <div className="flex items-center gap-2">
                                 <h3 className="font-bold text-base text-on-surface">Mis Tareas Pendientes</h3>
@@ -1566,6 +1540,115 @@ export const EmployeePortal: React.FC = () => {
                                         </div>
                                     );
                                 })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* TAB: MIS ENTREGAS DEL DÍA (DOMICILIOS Y RUTAS POR CERCANÍA) */}
+                {activeTab === 'entregas' && (
+                    <div className="space-y-4 text-left">
+                        <div className="flex justify-between items-center bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl">
+                            <div>
+                                <h3 className="font-bold text-sm text-emerald-400 flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+                                    Mis Entregas del Día (Ruta de Domicilios)
+                                </h3>
+                                <p className="text-[11px] text-on-surface-variant mt-0.5">
+                                    Ruta asignada organizada automáticamente por orden de cercanía.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={fetchMyDeliveries}
+                                className="w-8 h-8 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-xl flex items-center justify-center border border-emerald-500/30 cursor-pointer transition"
+                                title="Refrescar entregas"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">refresh</span>
+                            </button>
+                        </div>
+
+                        {deliveriesLoading ? (
+                            <p className="text-xs text-on-surface-variant italic py-8 text-center animate-pulse">Cargando tu ruta de domicilios para hoy...</p>
+                        ) : myDeliveries.length === 0 ? (
+                            <div className="glass-card p-8 text-center text-xs text-on-surface-variant rounded-2xl border border-outline/10 space-y-2">
+                                <span className="material-symbols-outlined text-4xl text-emerald-500/40">task_alt</span>
+                                <p className="font-bold text-on-surface">No tienes entregas pendientes asignadas para hoy.</p>
+                                <p className="text-[11px] text-on-surface-variant/80">¡Buen trabajo! Si se asignan nuevas facturas con despacho aparecierán aquí automáticamente.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {myDeliveries.map((del: any, idx: number) => (
+                                    <div key={del.invoice_id} className="bg-surface-container/40 border border-outline/15 p-4 rounded-2xl space-y-3 hover:border-emerald-500/40 transition shadow-lg">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-emerald-500/20 text-emerald-400 font-bold text-[10px] px-2.5 py-1 rounded-lg border border-emerald-500/30 font-mono">
+                                                    Parada #{del.route_order || idx + 1} (Cercanía)
+                                                </span>
+                                                <span className="font-bold text-on-surface text-sm">Factura #{del.invoice_number}</span>
+                                            </div>
+                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                                del.delivery_status === 'delivered' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                                                del.delivery_status === 'in_transit' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                                'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                            }`}>
+                                                {del.delivery_status === 'delivered' ? '✅ Entregado' : del.delivery_status === 'in_transit' ? '🚀 En Camino' : '⏳ Pendiente'}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                                            <div className="space-y-0.5">
+                                                <span className="text-on-surface-variant block font-medium text-[10px] uppercase tracking-wider">Cliente / Recibe:</span>
+                                                <strong className="text-on-surface font-semibold text-sm">{del.customer_name}</strong>
+                                                <p className="text-on-surface-variant font-mono text-[11px]">📞 +{del.customer_phone}</p>
+                                            </div>
+
+                                            <div className="space-y-0.5">
+                                                <span className="text-on-surface-variant block font-medium text-[10px] uppercase tracking-wider">Dirección de Entrega:</span>
+                                                <strong className="text-emerald-400 font-semibold text-xs leading-snug block">{del.delivery_address}</strong>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-outline/10 text-xs">
+                                            <div>
+                                                <span className="text-on-surface-variant text-[11px]">Monto a Recibir: </span>
+                                                <strong className={`font-bold font-mono text-sm ${del.payment_status === 'paid' ? 'text-green-400' : 'text-amber-400'}`}>
+                                                    ${del.total_amount.toLocaleString('es-CO')} COP
+                                                </strong>
+                                                <span className="text-[10px] text-on-surface-variant block font-mono uppercase mt-0.5">
+                                                    ({del.payment_method === 'efectivo' ? '💵 Efectivo Contra-Entrega' : '🏦 Pagado por Nequi/Banco'})
+                                                </span>
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                <a
+                                                    href={`https://maps.google.com/?q=${encodeURIComponent(del.delivery_address)}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="bg-surface-container-high hover:bg-surface-container text-on-surface font-semibold text-[11px] px-3 py-2 rounded-xl border border-outline/20 transition flex items-center gap-1"
+                                                >
+                                                    <span className="material-symbols-outlined text-[15px]">map</span>
+                                                    Navegar Mapa
+                                                </a>
+                                                <a
+                                                    href={`https://wa.me/${del.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${del.customer_name}, soy Speedie Gonzalez tu domiciliario. Estoy en camino a la dirección ${del.delivery_address} con tu pedido de la Factura #${del.invoice_number}.`)}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="bg-green-600 hover:bg-green-500 text-white font-bold text-[11px] px-3 py-2 rounded-xl transition flex items-center gap-1 shadow-md"
+                                                >
+                                                    <span className="material-symbols-outlined text-[15px]">chat</span>
+                                                    WhatsApp
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        {del.notes && (
+                                            <p className="text-[11px] text-on-surface-variant/90 bg-surface-container-high/40 p-2.5 rounded-xl italic border border-outline/5">
+                                                💡 Indicación: {del.notes}
+                                            </p>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>

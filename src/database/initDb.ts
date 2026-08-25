@@ -51,6 +51,48 @@ export const initDatabase = async () => {
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'optica';`);
         console.log("[DB Init] ✅ Tabla 'clients' creada y alterada con columnas de Login, agent_phone, drive_folder_id, owner_phone, first_message_notified, is_activated y category.");
 
+        // 2.1 Crear tabla users (usuarios de plataforma) y user_client_roles (acceso multi-tenant)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                username VARCHAR(100) NOT NULL UNIQUE,
+                password_hash VARCHAR(255),
+                full_name VARCHAR(150),
+                email VARCHAR(150),
+                is_global_admin BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS user_client_roles (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                role VARCHAR(50) NOT NULL DEFAULT 'viewer',
+                permissions_json JSONB DEFAULT '{"modules": []}'::jsonb,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, client_id, role)
+            );
+        `);
+
+        await pool.query(`
+            INSERT INTO users (username, password_hash, full_name, email, is_global_admin)
+            SELECT c.username, c.password, c.name, c.email, (c.username = 'admin')
+            FROM clients c
+            WHERE c.username IS NOT NULL
+            ON CONFLICT (username) DO NOTHING
+        `);
+
+        await pool.query(`
+            INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
+            SELECT u.id, c.id, 'admin_tenant', '{"modules":["inventory","billing","crm","calendar","employees","hr","deliveries","whatsapp_bot"]}'::jsonb
+            FROM clients c
+            INNER JOIN users u ON u.username = c.username
+            WHERE c.username IS NOT NULL
+            ON CONFLICT (user_id, client_id, role) DO NOTHING
+        `);
+        console.log("[DB Init] ✅ Tablas 'users' y 'user_client_roles' creadas y sincronizadas con clientes existentes.");
+
         // 3. Crear tabla interactions (Métricas)
         await pool.query(`
             CREATE TABLE IF NOT EXISTS interactions (
@@ -102,7 +144,8 @@ export const initDatabase = async () => {
         await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS department VARCHAR(30) DEFAULT 'recepcion';`);
         await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;`);
         await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'agent';`);
-        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS pin VARCHAR(4) DEFAULT '1234';`);
+        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS pin VARCHAR(20) DEFAULT '1234';`);
+        await pool.query(`ALTER TABLE agent_contacts ALTER COLUMN pin TYPE VARCHAR(20);`);
         await pool.query(`ALTER TABLE takeover_sessions ADD COLUMN IF NOT EXISTS department VARCHAR(50) DEFAULT 'recepcion';`);
         console.log("[DB Init] ✅ Tabla 'agent_contacts' creada o ya existente, alterada con columnas department, is_verified, role y pin. Tabla 'takeover_sessions' alterada con department.");
 
@@ -288,13 +331,24 @@ export const initDatabase = async () => {
         console.log("[DB Init] ✅ Tabla 'business_departments' creada o ya existente.");
 
         await pool.query(`
+            CREATE TABLE IF NOT EXISTS employee_roles (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(client_id, name)
+            );
+        `);
+        console.log("[DB Init] ✅ Tabla 'employee_roles' creada o ya existente.");
+
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS employees (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
                 name VARCHAR(100) NOT NULL,
                 last_name VARCHAR(100) DEFAULT '',
                 phone VARCHAR(20) NOT NULL,
-                role VARCHAR(30) DEFAULT 'agent', -- 'admin', 'agent'
+                role VARCHAR(100) DEFAULT 'agent', -- 'admin', 'agent'
                 department_id UUID REFERENCES business_departments(id) ON DELETE SET NULL,
                 pin VARCHAR(4) DEFAULT '1234',
                 is_active BOOLEAN DEFAULT TRUE,
@@ -302,6 +356,8 @@ export const initDatabase = async () => {
             );
         `);
         console.log("[DB Init] ✅ Tabla 'employees' creada o ya existente.");
+
+        await pool.query(`ALTER TABLE employees ALTER COLUMN role TYPE VARCHAR(100);`);
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS shift_logs (
@@ -821,6 +877,106 @@ export const initDatabase = async () => {
         `);
         console.log("[DB Init] ✅ Tablas y alteraciones de Laboratorios, Nómina y Anticipos completadas con éxito.");
         console.log("[DB Init] ✅ Tablas y columnas de la Fase 4 creadas o verificadas con éxito.");
+
+        // ── FASE 5: Arquitectura multi-tenant, identidad y trazabilidad de stock ──
+        await pool.query(`
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS slug VARCHAR(100) UNIQUE;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+            ALTER TABLE employees ALTER COLUMN pin TYPE VARCHAR(20);
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS reserved_stock INT DEFAULT 0;
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS committed_stock INT DEFAULT 0;
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS stock_movements (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                movement_type VARCHAR(30) NOT NULL,
+                quantity INT NOT NULL,
+                previous_stock INT NOT NULL DEFAULT 0,
+                new_stock INT NOT NULL DEFAULT 0,
+                reference_id UUID,
+                reference_type VARCHAR(50),
+                notes TEXT,
+                created_by VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_stock_movements_client ON stock_movements(client_id);
+            CREATE INDEX IF NOT EXISTS idx_stock_movements_product ON stock_movements(product_id);
+        `);
+
+        // ── FASE 6: Módulo Contable, Cuentas Bancarias del Negocio y Métodos de Pago ──
+        await pool.query(`
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS transfer_bank VARCHAR(100);
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS transfer_destination_account VARCHAR(200);
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_receipt_url TEXT;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_name VARCHAR(100);
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_by_user_name VARCHAR(100);
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS cufe VARCHAR(100);
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS qr_code_url TEXT;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS electronic_status VARCHAR(30) DEFAULT 'draft';
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_breakdown JSONB;
+            
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS plan_tier VARCHAR(20) DEFAULT 'basic';
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS electronic_invoices_limit INT DEFAULT 10;
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS electronic_invoices_used INT DEFAULT 0;
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS subscription_plans (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(100) NOT NULL,
+                description TEXT,
+                price NUMERIC(10, 2) NOT NULL,
+                billing_cycle VARCHAR(20) DEFAULT 'monthly',
+                features JSONB,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_subscription_plans_client ON subscription_plans(client_id);
+        `);
+
+        // Reparación e inicialización secuencial automática de Códigos de Empleados (EMP-001, EMP-002, etc.)
+        await pool.query(`
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS employee_code VARCHAR(50);
+            
+            WITH numbered_employees AS (
+                SELECT id, client_id, ROW_NUMBER() OVER (PARTITION BY client_id ORDER BY created_at ASC, id ASC) as seq
+                FROM employees
+            )
+            UPDATE employees e
+            SET employee_code = 'EMP-' || LPAD(ne.seq::text, 3, '0')
+            FROM numbered_employees ne
+            WHERE e.id = ne.id AND (e.employee_code IS NULL OR e.employee_code = '' OR e.employee_code = 'EMP-004');
+        `);
+
+        // Tabla de Trazabilidad y Bitácora de Auditoría del Sistema
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS system_audit_logs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                user_name VARCHAR(100) NOT NULL DEFAULT 'Sistema / IA',
+                user_email VARCHAR(100),
+                user_role VARCHAR(50) DEFAULT 'operador',
+                action VARCHAR(100) NOT NULL,
+                module VARCHAR(50) NOT NULL,
+                description TEXT NOT NULL,
+                details JSONB,
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_audit_logs_client ON system_audit_logs(client_id, created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON system_audit_logs(user_id);
+            CREATE INDEX IF NOT EXISTS idx_audit_logs_module ON system_audit_logs(module);
+        `);
+
+        console.log("[DB Init] ✅ Módulo de Trazabilidad Global y Bitácora de Auditoría inicializado.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 
     } catch (error) {
