@@ -39,7 +39,7 @@ import { errorHandler, asyncHandler } from './middlewares/errorHandler';
 import { StructuredLogger } from './utils/structuredLogger';
 import { initDatabase } from './database/initDb';
 import { validateEnv } from './utils/envValidator';
-import { verifyPassword } from './utils/passwordUtils';
+import { verifyPassword, hashPassword, isHashedPassword } from './utils/passwordUtils';
 
 // Validar variables de entorno antes de cualquier otra cosa
 validateEnv();
@@ -666,9 +666,20 @@ app.post('/api/login', async (req: Request, res: Response) => {
 
     const client = result.rows[0];
 
-    // Comparación simple de contraseña (texto plano para el prototipo/pruebas)
-    if (client.password !== password) {
+    // Verificar contraseña de forma segura con bcrypt (con fallback y auto-migración)
+    const isPasswordValid = await verifyPassword(password, client.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos.' });
+    }
+
+    // Auto-migración: Si la contraseña estaba en texto plano, actualizarla a bcrypt hash inmediatamente
+    if (!isHashedPassword(client.password)) {
+      try {
+        const hashed = await hashPassword(password);
+        await pool.query(`UPDATE clients SET password = $1 WHERE id = $2`, [hashed, client.id]);
+      } catch (hashErr) {
+        console.error("Error auto-migrando contraseña a bcrypt:", hashErr);
+      }
     }
 
     const isAdmin = client.username.toLowerCase() === 'admin';
@@ -808,10 +819,11 @@ app.post('/api/activate-account', async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Token de activación inválido.' });
     }
 
-    // Actualizar contraseña y activar la cuenta
+    // Actualizar contraseña con hash bcrypt seguro y activar la cuenta
+    const hashedPassword = await hashPassword(password);
     await pool.query(
       `UPDATE clients SET password = $1, is_activated = TRUE WHERE id = $2`,
-      [password, clientId]
+      [hashedPassword, clientId]
     );
 
     res.json({
@@ -4093,6 +4105,9 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
       finalEmpCode = `EMP-${String(nextSeq).padStart(3, '0')}`;
     }
 
+    const rawPin = pin || '1234';
+    const hashedPin = isHashedPassword(rawPin) ? rawPin : await hashPassword(rawPin);
+
     const result = await pool.query(
       `INSERT INTO employees (
          client_id, name, last_name, phone, role, department_id, pin, is_active,
@@ -4105,7 +4120,7 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
        VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
        RETURNING *`,
       [
-        clientId, name, last_name || '', cleanPhone, role || 'agent', department_id || null, pin || '1234',
+        clientId, name, last_name || '', cleanPhone, role || 'agent', department_id || null, hashedPin,
         hire_date || null, parseFloat(basic_salary) || 0.00, payment_type || 'fixed_monthly', pay_period || 'mensual',
         c1, c2, p1, p2,
         parseFloat(vacation_days_accumulated) || 0.00, parseFloat(hourly_rate) || 0.00, parseFloat(transport_allowance) || 0.00, employment_status || 'vinculado',
@@ -4164,7 +4179,10 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
     const finalPhone = phone !== undefined ? phone.replace(/\D/g, '') : currentEmp.phone;
     const finalRole = role !== undefined ? role : currentEmp.role;
     const finalDeptId = department_id !== undefined ? department_id : currentEmp.department_id;
-    const finalPin = pin !== undefined ? pin : currentEmp.pin;
+    let finalPin = currentEmp.pin;
+    if (pin !== undefined && pin !== null && pin !== '') {
+      finalPin = isHashedPassword(pin) ? pin : await hashPassword(pin);
+    }
     const finalIsActive = is_active !== undefined ? is_active : currentEmp.is_active;
     const finalHireDate = hire_date !== undefined ? hire_date : currentEmp.hire_date;
     const finalBasicSalary = basic_salary !== undefined ? parseFloat(basic_salary) : parseFloat(currentEmp.basic_salary || 0);
@@ -4816,9 +4834,20 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
 
     const emp = result.rows[0];
 
-    // Validar PIN
-    if (emp.pin !== pin) {
+    // Validar PIN con bcrypt (soporta PINs legados en texto plano y auto-migra a bcrypt)
+    const isPinValid = await verifyPassword(pin, emp.pin);
+    if (!isPinValid) {
       return res.status(401).json({ success: false, error: 'PIN de acceso incorrecto.' });
+    }
+
+    // Auto-migración: Si el PIN estaba almacenado en texto plano, actualizarlo a bcrypt
+    if (!isHashedPassword(emp.pin)) {
+      try {
+        const hashedPin = await hashPassword(pin);
+        await pool.query(`UPDATE employees SET pin = $1 WHERE id = $2`, [hashedPin, emp.id]);
+      } catch (pinHashErr) {
+        console.error("Error auto-migrando PIN de empleado a bcrypt:", pinHashErr);
+      }
     }
 
     // Determinar permisos según rol del empleado
