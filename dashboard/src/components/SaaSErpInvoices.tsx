@@ -852,19 +852,68 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-xl font-bold text-on-surface">Ventas y Facturación Electrónica DIAN</h2>
                     <p className="text-xs text-on-surface-variant">Emite facturas POS y Electrónicas DIAN con CUFE, QR fiscal y tiquetes térmicos 80mm.</p>
                 </div>
-                <button
-                    onClick={() => { resetForm(); setIsFormOpen(true); }}
-                    className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                    <span className="material-symbols-outlined text-[16px]">add</span>
-                    Crear Factura
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowUpgradeModal(true)}
+                        className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold py-2 px-3.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">workspace_premium</span>
+                        Planes & Upgrade
+                    </button>
+                    <button
+                        onClick={() => { resetForm(); setIsFormOpen(true); }}
+                        className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">add</span>
+                        Crear Factura
+                    </button>
+                </div>
             </div>
+
+            {/* Banner Indicador de Cuota y Plan Activo */}
+            {planStatus && (
+                <div className="bg-surface-container/40 border border-outline/15 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                            <span className="material-symbols-outlined text-xl">verified</span>
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h4 className="font-bold text-xs text-on-surface uppercase tracking-wider">
+                                    Plan Actual: <span className="text-primary">{planStatus.planTier === 'enterprise' ? '👑 Enterprise IA' : planStatus.planTier === 'pro' ? '🚀 Pro Crecimiento' : '🟢 Básico Micro'}</span>
+                                </h4>
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-white/10 text-on-surface border border-white/10">
+                                    {planStatus.planTier === 'basic' ? 'Hasta 10 Facturas/mes' : 'Ilimitado'}
+                                </span>
+                            </div>
+                            <p className="text-[11px] text-on-surface-variant mt-0.5">
+                                Emisiones DIAN este mes: <strong className="text-on-surface">{planStatus.used}</strong> / {planStatus.limit >= 99999 ? '∞ Ilimitadas' : planStatus.limit}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="w-full sm:w-64 space-y-1">
+                        <div className="flex justify-between text-[10px] font-mono text-on-surface-variant">
+                            <span>Consumo de cuota</span>
+                            <span className="font-bold">{planStatus.limit >= 99999 ? '100% Disponible' : `${Math.round((planStatus.used / planStatus.limit) * 100)}%`}</span>
+                        </div>
+                        <div className="w-full h-2 bg-surface-container-high rounded-full overflow-hidden border border-outline/10">
+                            <div 
+                                className={`h-full transition-all duration-500 ${
+                                    (planStatus.used / planStatus.limit) >= 0.9 ? 'bg-red-500' :
+                                    (planStatus.used / planStatus.limit) >= 0.7 ? 'bg-amber-500' : 'bg-emerald-500'
+                                }`} 
+                                style={{ width: `${planStatus.limit >= 99999 ? 100 : Math.min(100, (planStatus.used / planStatus.limit) * 100)}%` }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* BANNER DE CUOTA DE FACTURACIÓN ELECTRÓNICA SEGÚN PLAN */}
             {planStatus && (
