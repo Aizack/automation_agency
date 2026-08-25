@@ -5,9 +5,10 @@ import { Login } from './components/Login';
 import { AuthFast } from './components/AuthFast';
 import { EmployeePortal } from './components/EmployeePortal';
 import { ActivateAccount } from './components/ActivateAccount';
+import { LandingPage } from './components/LandingPage';
 
 function App() {
-  const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee'>('login');
+  const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing'>('landing');
   const [clientId, setClientId] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +20,14 @@ function App() {
       const urlClientId = params.get('clientId');
       const urlToken = params.get('token');
 
-      // 0. Caso de portal de empleado o chat corporativo standalone
+      // 0. Caso de vista de inicio explícita de login
+      if (urlView === 'login' || window.location.pathname === '/login') {
+        setView('login');
+        setLoading(false);
+        return;
+      }
+
+      // 0.1 Caso de portal de empleado o chat corporativo standalone
       if (window.location.pathname === '/empleados' || window.location.pathname === '/employee' || window.location.pathname === '/chat') {
         setView('employee');
         setLoading(false);
@@ -43,7 +51,7 @@ function App() {
       // 2. Verificar si existe token en localStorage
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        setView('login');
+        setView('landing');
         setLoading(false);
         if (window.location.search !== '') {
           window.history.pushState({}, '', '/');
@@ -256,7 +264,24 @@ function App() {
     );
   }
 
-  return <Login onLoginSuccess={handleLoginSuccess} />;
+  if (view === 'landing') {
+    return <LandingPage onLoginClick={() => setView('login')} />;
+  }
+
+  return (
+    <div>
+      <div className="fixed top-4 right-4 z-50">
+        <button
+          onClick={() => setView('landing')}
+          className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-white/20 flex items-center gap-1 cursor-pointer transition shadow"
+        >
+          <span className="material-symbols-outlined text-[15px]">home</span>
+          Página Principal / Precios
+        </button>
+      </div>
+      <Login onLoginSuccess={handleLoginSuccess} />
+    </div>
+  );
 }
 
 export default App;
