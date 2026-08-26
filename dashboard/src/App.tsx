@@ -8,7 +8,15 @@ import { ActivateAccount } from './components/ActivateAccount';
 import { LandingPage } from './components/LandingPage';
 
 function App() {
-  const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing'>('landing');
+  const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing'>(() => {
+    // Si el dominio es la raíz comercial (diazlab.online o www.diazlab.online), mostrar la Landing Page por defecto
+    const host = window.location.hostname.toLowerCase();
+    if (host === 'diazlab.online' || host === 'www.diazlab.online') {
+      return 'landing';
+    }
+    // Si el dominio es la app (app.diazlab.online) o localhost, ir directamente a login/app
+    return 'login';
+  });
   const [clientId, setClientId] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -19,8 +27,15 @@ function App() {
       const urlView = params.get('view');
       const urlClientId = params.get('clientId');
       const urlToken = params.get('token');
+      const host = window.location.hostname.toLowerCase();
 
-      // 0. Caso de vista de inicio explícita de login
+      // 0. Caso de vista de inicio explícita
+      if (urlView === 'landing' || window.location.pathname === '/landing') {
+        setView('landing');
+        setLoading(false);
+        return;
+      }
+
       if (urlView === 'login' || window.location.pathname === '/login') {
         setView('login');
         setLoading(false);
@@ -51,7 +66,13 @@ function App() {
       // 2. Verificar si existe token en localStorage
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        setView('landing');
+        // Si es el dominio comercial diazlab.online -> Mostrar Landing
+        if (host === 'diazlab.online' || host === 'www.diazlab.online') {
+          setView('landing');
+        } else {
+          // Si es app.diazlab.online o localhost -> Mostrar Login directo
+          setView('login');
+        }
         setLoading(false);
         if (window.location.search !== '') {
           window.history.pushState({}, '', '/');
