@@ -16,6 +16,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     return `https://wa.me/573104567890?text=${text}`;
   };
 
+  const handleLoginRedirection = () => {
+    const host = window.location.hostname.toLowerCase();
+    if (host.includes('diazlab.online')) {
+      window.location.href = 'https://app.diazlab.online';
+    } else {
+      onLoginClick();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0d0d0d] text-slate-100 font-sans selection:bg-amber-500/30 selection:text-amber-300">
       
@@ -40,7 +49,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={onLoginClick}
+            onClick={handleLoginRedirection}
             className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 border border-white/15 text-xs font-bold transition-all cursor-pointer"
           >
             Iniciar Sesión
@@ -85,7 +94,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             Ver Planes desde $49.000 COP
           </a>
           <button
-            onClick={onLoginClick}
+            onClick={handleLoginRedirection}
             className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm border border-white/15 transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur"
           >
             <span className="material-symbols-outlined text-lg">login</span>
