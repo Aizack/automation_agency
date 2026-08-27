@@ -52,10 +52,10 @@ El módulo conecta en tiempo real los cuatro puntos neurálgicos de la operació
 - **Propina Voluntaria del 10%**: Sugerida automáticamente sobre el subtotal, con opción de modificar o exonerar a solicitud del cliente.
 - **Facturación**: Impresión en tiquete térmico 80mm y emisión de Factura Electrónica DIAN con CUFE y QR.
 
-### E. Domicilios & Hojas de Ruta
-- Recepción de pedidos a domicilio vía WhatsApp.
-- Agrupación de repartos por ruta geográfica más cercana.
-- Enlace directo a Google Maps para el domiciliario y registro de cobros contra-entrega o comprobantes de transferencia.
+### F. Recetario Digital e Instructivo Técnico de Preparación (SOP / Secret Recipe - Planes Avanzados)
+- **Ficha Técnica del Plato**: Espacio donde el propietario o Chef Ejecutivo almacena el procedimiento paso a paso de preparación de cada plato.
+- **Estandarización de Sabor**: Incluye fotos del emplatado final, secretos de sazón, temperaturas de cocción y tiempos exactos.
+- **Continuidad Operativa**: Si el restaurante cambia de cocinero o contrata personal nuevo, el empleado consulta el instructivo desde su pantalla KDS/Tablet y replica la receta manteniendo exactamente la esencia, presentación y calidad del restaurante.
 
 ---
 
