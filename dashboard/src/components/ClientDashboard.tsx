@@ -20,6 +20,7 @@ import { SaaSErpAuditLogs } from './SaaSErpAuditLogs';
 import { RestaurantKdsDisplay } from './RestaurantKdsDisplay';
 import { RestaurantWaiterPortal } from './RestaurantWaiterPortal';
 import { RestaurantMenuBuilder } from './RestaurantMenuBuilder';
+import { EnterprisePlanningModule } from './EnterprisePlanningModule';
 
 interface Client {
   id: string;
@@ -104,7 +105,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
     return 'cartera';
   };
 
-  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'contabilidad' | 'cartera' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu'>(getDefaultTab());
+  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'contabilidad' | 'cartera' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial'>(getDefaultTab());
   const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -868,6 +869,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                 }`}
               >
                 <span className="material-symbols-outlined text-[18px]">settings</span>
+                <span className="font-bold text-xs">Información Empresa</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('planeacion_empresarial')}
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  activeTab === 'planeacion_empresarial' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">query_stats</span>
+                <span className="font-bold text-xs">Planeación Empresarial</span>
               </button>
             </div>
           )}
@@ -2115,6 +2126,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           </div>
         </section>
           </>
+        )}
+
+        {activeTab === 'planeacion_empresarial' && (
+          <div className="animate-fade-in">
+            <EnterprisePlanningModule clientId={clientId} />
+          </div>
         )}
 
         {activeTab === 'restaurante_menu' && (
