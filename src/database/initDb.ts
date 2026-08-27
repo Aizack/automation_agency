@@ -915,6 +915,7 @@ export const initDatabase = async () => {
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_name VARCHAR(100);
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_by_user_name VARCHAR(100);
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS cufe VARCHAR(100);
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS qr_code_url TEXT;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS electronic_status VARCHAR(30) DEFAULT 'draft';

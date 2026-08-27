@@ -53,11 +53,16 @@ CREATE TABLE IF NOT EXISTS sales_goals (
 - `GET /api/clients/:clientId/employees/:employeeId/sales-goal`: Retorna la meta activa del vendedor del mes corriente con porcentaje de cumplimiento, monto vendido y faltante.
 
 ### C. Actualización Automática al Facturar
-- En el endpoint `POST /api/clients/:clientId/invoices`, si la factura incluye `seller_id` o fue creada por un usuario con rol de vendedor, el sistema ejecuta:
+- En el endpoint de emisión de factura (`POST /api/clients/:clientId/invoices`), la venta se atribuye al vendedor mediante la columna `seller_employee_id` en la tabla `invoices`.
+- La atribución se determina mediante 3 mecanismos:
+  1. **Selección Directa en Caja/ERP**: El usuario selecciona el *"Vendedor Responsable"* en un desplegable al crear la factura.
+  2. **Por Sesión del Vendedor**: Si el vendedor está operando desde su Portal Móvil de Empleado, el sistema asigna su `employee_id` automáticamente.
+  3. **Por CRM**: Si el cliente seleccionado tiene un asesor comercial pre-asignado (`crm_customers.assigned_seller_id`), la venta se le computa a dicho vendedor.
+- Al registrar el pago o emitir la factura, el sistema ejecuta automáticamente:
   ```sql
   UPDATE sales_goals 
   SET current_amount = current_amount + $amount 
-  WHERE client_id = $clientId AND employee_id = $sellerId AND month_year = $currentMonth;
+  WHERE client_id = $clientId AND employee_id = $sellerEmployeeId AND month_year = $currentMonth;
   ```
 
 ---
