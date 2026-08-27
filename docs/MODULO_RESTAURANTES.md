@@ -117,21 +117,25 @@ Cuando una empresa tiene la categoría `restaurante`, el **Portal de Empleados**
 
 ## 5. Estudio de Viabilidad: Marketplace B2B de Proveedores para Restaurantes (Red Mayorista B2B)
 
-### A. Concepto del Proyecto
-Una vitrina o mercado público virtual integrado dentro de Diaz Lab ERP donde **proveedores mayoristas** (distribuidores de carnes, verduras, lácteos, empaques y licores) pueden ofertar directamente sus insumos a los restaurantes afiliados a la plataforma.
+### A. Concepto del Proyecto (Modelo de Exposición B2B Sin Carga Logística)
+Una vitrina o mercado público virtual integrado dentro de Diaz Lab ERP donde **proveedores mayoristas** (distribuidores de carnes, verduras, lácteos, empaques y licores) adquieren exposición para venderle directo a los restaurantes afiliados.
 
-### B. Análisis de Viabilidad & Estrategias de Ingreso (Monetización)
+### B. Modelo Operativo: Despacho Directo por el Proveedor (Vendor Direct Fulfillment)
+- **Cero Riesgo u Operación Logística para Diaz Lab**: Diaz Lab **NO asume bodegas, ni flota de transporte, ni fletes, ni garantías de mercancía, ni devoluciones**.
+- **Responsabilidad del Proveedor**: Cada mayorista administra su propio stock, sus bodegas y su logística de entrega.
+- **Rol de la Plataforma**: Diaz Lab actúa exclusivamente como el **conector tecnológico y canal de ventas**, otorgándole exposición masiva al proveedor ante la comunidad de restaurantes del ERP.
 
-1. **Estrategia A (Monetización por Comisión B2B)**:
-   - Los restaurantes emiten sus Órdenes de Compra directamente dentro del ERP hacia los proveedores conectados.
-   - Diaz Lab cobra un **% de comisión por transacción al proveedor mayorista** (ej. 2% - 4% sobre la orden), generando un flujo de ingresos recurrente masivo sin cobrarle extra al restaurante.
+### C. Análisis de Viabilidad & Estrategias de Monetización
 
-2. **Estrategia B (Plus de Adquisición / Imán de Clientes - Freemium)**:
-   - Ofrecer el Marketplace de Insumos con **Descuentos Exclusivos Negociados por Volumen** para los restaurantes clientes.
-   - Sirve como argumento comercial imbatible: *"Al usar Diaz Lab ERP, ahorras un 12% en tus compras semanales de carne y vegetales a través de nuestra red de proveedores aliados, lo que paga solo la suscripción del ERP"*.
+1. **Monetización por Comisión B2B / Membresía de Proveedor**:
+   - Los restaurantes emiten sus Órdenes de Compra directamente en la plataforma.
+   - Diaz Lab cobra un **% de comisión por venta al proveedor mayorista** (ej. 2% - 4% sobre la orden) o un plan de membresía destacado por exposición, generando ingresos recurrentes de alto margen sin ningún costo operativo de transporte.
 
-3. **Estrategia C (Inventario Automatizado & Auto-Reabastecimiento)**:
-   - Cuando un restaurante llega al stock mínimo de un insumo (ej. quedan menos de 5 kg de carne), el ERP genera una sugerencia automática de orden de compra con el proveedor mayorista de mejor precio en la red.
+2. **Plus Comercial para Captar Restaurantes (Imán de Clientes)**:
+   - Ofrecer el Marketplace como valor agregado único: *"Al usar Diaz Lab ERP, accedes a una red de proveedores mayoristas con precios directos de bodega, lo que ahorra hasta un 12% en tu costo de insumos"*.
+
+3. **Sugerencia Inteligente de Reabastecimiento**:
+   - Al alcanzar el stock mínimo de un insumo en el ERP (ej. < 5 kg de carne), la plataforma genera la sugerencia de orden de compra enviando la solicitud directamente al proveedor seleccionado.
 
 ---
 
