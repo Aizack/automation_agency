@@ -19,6 +19,7 @@ import { SaaSErpAccounting } from './SaaSErpAccounting';
 import { SaaSErpAuditLogs } from './SaaSErpAuditLogs';
 import { RestaurantKdsDisplay } from './RestaurantKdsDisplay';
 import { RestaurantWaiterPortal } from './RestaurantWaiterPortal';
+import { RestaurantMenuBuilder } from './RestaurantMenuBuilder';
 
 interface Client {
   id: string;
@@ -103,7 +104,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
     return 'cartera';
   };
 
-  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'contabilidad' | 'cartera' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds'>(getDefaultTab());
+  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'contabilidad' | 'cartera' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu'>(getDefaultTab());
   const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -874,6 +875,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           {clientData?.category === 'restaurante' && (
             <div className="space-y-1 pt-1">
               <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Gastronomía & Mesas</div>
+              <button 
+                onClick={() => setActiveTab('restaurante_menu')}
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  activeTab === 'restaurante_menu' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">menu_book</span>
+                <span className="font-bold text-xs">Crear Menú & Recetario</span>
+              </button>
               <button 
                 onClick={() => setActiveTab('restaurante_mesas')}
                 className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
@@ -2105,6 +2115,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           </div>
         </section>
           </>
+        )}
+
+        {activeTab === 'restaurante_menu' && (
+          <div className="animate-fade-in">
+            <RestaurantMenuBuilder clientId={clientId} />
+          </div>
         )}
 
         {activeTab === 'restaurante_mesas' && (

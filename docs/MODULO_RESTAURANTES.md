@@ -57,6 +57,18 @@ El módulo conecta en tiempo real los cuatro puntos neurálgicos de la operació
 - **Estandarización de Sabor**: Incluye fotos del emplatado final, secretos de sazón, temperaturas de cocción y tiempos exactos.
 - **Continuidad Operativa**: Si el restaurante cambia de cocinero o contrata personal nuevo, el empleado consulta el instructivo desde su pantalla KDS/Tablet y replica la receta manteniendo exactamente la esencia, presentación y calidad del restaurante.
 
+### G. Creación de Menú Digital & Gramaje por Insumo (BOM por Peso)
+- **Formulario de Creación de Plato**: Nombre, categoría del menú (Entradas, Fuertes, Bebidas, Postres), precio comercial, foto y descripción.
+- **Desglose en Gramos / ML**: El usuario ingresa la cantidad exacta en gramos, mililitros o unidades de cada insumo que compone el plato (ej. *200g Carne de Res, 40g Queso, 150g Papas*).
+- **Guía de Inventario**: Leyenda informativa recomendando ingresar el peso exacto para garantizar el descuento automático del inventario de insumos comprado por Libra o Kilogramo.
+
+### H. Historial de Variación de Precios de Insumos & Estrategia de Margen
+- **Bitácora Volátil de Costos**: Cada vez que se registra una compra o cambia el costo de un insumo (ej. subida en la carne o verduras), el sistema guarda un registro en el historial (`raw_material_price_history`).
+- **Análisis de Impacto en Utilidad**: Al subir el costo de un insumo, el módulo de planeación analiza 3 alternativas estratégicas:
+  1. *Conservar Precio de Venta*: Evalúa la pérdida de porcentaje de margen (ej. baja del 45% al 38%) y alerta si está en rango aceptable.
+  2. *Ajuste de Precio Comercial*: Sugiere el nuevo precio de venta recomendado para mantener el margen neto objetivo.
+  3. *Porcionado Inteligente (Shrinkflation Controlada)*: Recomienda el ajuste exacto en gramos por plato para conservar el precio final sin sacrificar rentabilidad.
+
 ---
 
 ## 3. Matriz de Roles y Permisos por Sector
@@ -81,7 +93,28 @@ Cuando una empresa tiene la categoría `restaurante`, el **Portal de Empleados**
 - `product_recipes`: id, client_id, product_id (plato), raw_product_id (insumo), quantity_required, unit_of_measure.
 - `kitchen_orders`: id, client_id, table_id, invoice_id, station (`kitchen` / `bar`), status (`pending`, `in_preparation`, `ready`), prep_time_minutes, created_at.
 - `dish_modifiers`: id, kitchen_order_item_id, type (`removal` / `addition`), name, extra_price.
+- `raw_material_price_history`: id, client_id, product_id, previous_cost, new_cost, changed_at, supplier_id.
 
 ---
 
-*Diaz Lab Food ERP — Especificación Técnica del Módulo Gastronómico.*
+## 5. Estudio de Viabilidad: Marketplace B2B de Proveedores para Restaurantes (Red Mayorista B2B)
+
+### A. Concepto del Proyecto
+Una vitrina o mercado público virtual integrado dentro de Diaz Lab ERP donde **proveedores mayoristas** (distribuidores de carnes, verduras, lácteos, empaques y licores) pueden ofertar directamente sus insumos a los restaurantes afiliados a la plataforma.
+
+### B. Análisis de Viabilidad & Estrategias de Ingreso (Monetización)
+
+1. **Estrategia A (Monetización por Comisión B2B)**:
+   - Los restaurantes emiten sus Órdenes de Compra directamente dentro del ERP hacia los proveedores conectados.
+   - Diaz Lab cobra un **% de comisión por transacción al proveedor mayorista** (ej. 2% - 4% sobre la orden), generando un flujo de ingresos recurrente masivo sin cobrarle extra al restaurante.
+
+2. **Estrategia B (Plus de Adquisición / Imán de Clientes - Freemium)**:
+   - Ofrecer el Marketplace de Insumos con **Descuentos Exclusivos Negociados por Volumen** para los restaurantes clientes.
+   - Sirve como argumento comercial imbatible: *"Al usar Diaz Lab ERP, ahorras un 12% en tus compras semanales de carne y vegetales a través de nuestra red de proveedores aliados, lo que paga solo la suscripción del ERP"*.
+
+3. **Estrategia C (Inventario Automatizado & Auto-Reabastecimiento)**:
+   - Cuando un restaurante llega al stock mínimo de un insumo (ej. quedan menos de 5 kg de carne), el ERP genera una sugerencia automática de orden de compra con el proveedor mayorista de mejor precio en la red.
+
+---
+
+*Diaz Lab Food ERP — Especificación Técnica y Estratégica del Módulo Gastronómico.*
