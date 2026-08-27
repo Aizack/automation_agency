@@ -69,6 +69,24 @@ El módulo conecta en tiempo real los cuatro puntos neurálgicos de la operació
   2. *Ajuste de Precio Comercial*: Sugiere el nuevo precio de venta recomendado para mantener el margen neto objetivo.
   3. *Porcionado Inteligente (Shrinkflation Controlada)*: Recomienda el ajuste exacto en gramos por plato para conservar el precio final sin sacrificar rentabilidad.
 
+### I. Estándar de la Industria: Gestión de Mermas y Escandallo de Carnes
+Cualquier análisis, costeo o consulta de porcionado en el ERP sigue estrictamente las 4 reglas fundamentales gastronómicas:
+
+1. **Estándar de Menú y Gramaje en Carta**:
+   - El peso declarado en carta (ej. *250g, 300g*) corresponde **siempre al peso en crudo** tras la merma primaria y antes de la cocción.
+   - *Sin compensación física en cocina*: No se añaden gramos extra para compensar lo que encogerá al cocinar, ya que la merma por cocción es una variable móvil según el término solicitado (*Azul, Medio 15% vs. Bien Cocido +35%*).
+
+2. **Clasificación Estándar de Mermas**:
+   - **Merma Primaria (Limpieza y Porcionado)**: Tejido no utilizable antes de cocinar (grasa excesiva, nervios, tendones, hueso). Determina el costo real por gramo limpio en crudo.
+   - **Merma Secundaria (Cocción y Pérdida Térmica)**: Pérdida de agua, jugos y grasa durante la cocción (15% a +35%).
+
+3. **Integración en el Costeo (Escandallo Financiero)**:
+   - La merma no se ajusta modificando la porción del plato, sino **financieramente en la ficha técnica (escandallo)**.
+   - El Precio de Venta Público (PVP) absorbe el costo real del insumo limpio para mantener el margen bruto objetivo, dejando que la merma secundaria sea la reducción física natural servida al comensal.
+
+4. **Modelos de Excepción (Cobro por Peso Cocido / Servido)**:
+   - Aplica únicamente a ahumaderos BBQ estilo Texas (brisket, pulled pork), carnicerías-asadero por peso y buffets por gramo, donde el precio ya incluye la amortización total de las mermas primaria y secundaria.
+
 ---
 
 ## 3. Matriz de Roles y Permisos por Sector
