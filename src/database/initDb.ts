@@ -978,6 +978,53 @@ export const initDatabase = async () => {
         `);
 
         console.log("[DB Init] ✅ Módulo de Trazabilidad Global y Bitácora de Auditoría inicializado.");
+
+        // ----------------- FASE RESTAURANTES & GASTRONOMÍA -----------------
+        console.log("[DB Init] 🔄 Inicializando tablas del Módulo de Restaurantes & Gastronomía...");
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS restaurant_tables (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                table_number VARCHAR(20) NOT NULL,
+                zone VARCHAR(50) DEFAULT 'Salon Principal',
+                capacity INT DEFAULT 4,
+                status VARCHAR(20) DEFAULT 'free',
+                assigned_waiter_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(client_id, table_number, zone)
+            );
+
+            CREATE TABLE IF NOT EXISTS product_recipes (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                raw_product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+                quantity_required NUMERIC(10,4) NOT NULL DEFAULT 1.0000,
+                unit_of_measure VARCHAR(30) DEFAULT 'unidad',
+                preparation_instructions TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS kitchen_orders (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                table_id UUID REFERENCES restaurant_tables(id) ON DELETE SET NULL,
+                invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL,
+                waiter_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+                order_number VARCHAR(50) NOT NULL,
+                station VARCHAR(30) NOT NULL DEFAULT 'kitchen',
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                items JSONB NOT NULL DEFAULT '[]'::jsonb,
+                notes TEXT,
+                prep_start_time TIMESTAMP,
+                ready_time TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_kitchen_orders_client ON kitchen_orders(client_id, status);
+        `);
+
+        console.log("[DB Init] ✅ Tablas de Restaurante & Gastronomía (mesas, recetario BOM y KDS) inicializadas.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 
     } catch (error) {

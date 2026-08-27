@@ -7052,6 +7052,178 @@ export const server = app.listen(PORT, () => {
     }
   });
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // ENDPOINTS RESTAURANTES & GASTRONOMÍA (MESA, KDS, RECETARIO SOP)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // Obtener Mapa de Mesas
+  app.get('/api/clients/:clientId/restaurant/tables', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const result = await pool.query(
+        `SELECT t.id, t.table_number, t.zone, t.capacity, t.status, t.assigned_waiter_id, e.name as waiter_name
+         FROM restaurant_tables t
+         LEFT JOIN employees e ON t.assigned_waiter_id = e.id
+         WHERE t.client_id = $1
+         ORDER BY t.zone ASC, t.table_number ASC`,
+        [clientId]
+      );
+      res.json({ success: true, tables: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Crear o Actualizar Mesa
+  app.post('/api/clients/:clientId/restaurant/tables', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { table_number, zone, capacity, assigned_waiter_id } = req.body;
+      const result = await pool.query(
+        `INSERT INTO restaurant_tables (client_id, table_number, zone, capacity, assigned_waiter_id)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (client_id, table_number, zone) DO UPDATE SET
+           capacity = EXCLUDED.capacity,
+           assigned_waiter_id = EXCLUDED.assigned_waiter_id
+         RETURNING *`,
+        [clientId, table_number, zone || 'Salon Principal', capacity || 4, assigned_waiter_id || null]
+      );
+      res.json({ success: true, table: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Actualizar Estado de Mesa ('free', 'occupied', 'waiting_food', 'billing')
+  app.put('/api/clients/:clientId/restaurant/tables/:tableId/status', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, tableId } = req.params;
+      const { status, assigned_waiter_id } = req.body;
+      const result = await pool.query(
+        `UPDATE restaurant_tables
+         SET status = $1, assigned_waiter_id = COALESCE($2, assigned_waiter_id)
+         WHERE id = $3 AND client_id = $4
+         RETURNING *`,
+        [status, assigned_waiter_id || null, tableId, clientId]
+      );
+      res.json({ success: true, table: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Obtener Comandas para Pantalla KDS (Cocina / Barra)
+  app.get('/api/clients/:clientId/restaurant/kds', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const station = req.query.station as string; // 'kitchen' o 'bar'
+      let query = `
+        SELECT k.id, k.order_number, k.station, k.status, k.items, k.notes, k.prep_start_time, k.ready_time, k.created_at,
+               t.table_number, t.zone, e.name as waiter_name
+        FROM kitchen_orders k
+        LEFT JOIN restaurant_tables t ON k.table_id = t.id
+        LEFT JOIN employees e ON k.waiter_id = e.id
+        WHERE k.client_id = $1 AND k.status IN ('pending', 'in_preparation', 'ready')
+      `;
+      const params: any[] = [clientId];
+      if (station && (station === 'kitchen' || station === 'bar')) {
+        query += ` AND k.station = $2`;
+        params.push(station);
+      }
+      query += ` ORDER BY k.created_at ASC`;
+      const result = await pool.query(query, params);
+      res.json({ success: true, orders: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Crear Comanda de Cocina / Barra (Comandero Mesero)
+  app.post('/api/clients/:clientId/restaurant/kds', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { table_id, waiter_id, station, items, notes } = req.body;
+      const orderNumber = `CMD-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      const result = await pool.query(
+        `INSERT INTO kitchen_orders (client_id, table_id, waiter_id, order_number, station, items, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [clientId, table_id || null, waiter_id || null, orderNumber, station || 'kitchen', JSON.stringify(items || []), notes || '']
+      );
+
+      // Si la comanda está asociada a una mesa, actualizar estado a 'waiting_food'
+      if (table_id) {
+        await pool.query(
+          `UPDATE restaurant_tables SET status = 'waiting_food' WHERE id = $1 AND client_id = $2`,
+          [table_id, clientId]
+        );
+      }
+
+      res.json({ success: true, order: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Cambiar Estado en KDS ('in_preparation', 'ready', 'delivered', 'cancelled')
+  app.put('/api/clients/:clientId/restaurant/kds/:orderId/status', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, orderId } = req.params;
+      const { status } = req.body;
+      let extraField = '';
+      if (status === 'in_preparation') extraField = ', prep_start_time = NOW()';
+      else if (status === 'ready') extraField = ', ready_time = NOW()';
+
+      const result = await pool.query(
+        `UPDATE kitchen_orders
+         SET status = $1 ${extraField}
+         WHERE id = $2 AND client_id = $3
+         RETURNING *`,
+        [status, orderId, clientId]
+      );
+
+      res.json({ success: true, order: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Obtener Receta e Instructivo SOP de un Plato
+  app.get('/api/clients/:clientId/restaurant/recipes/:productId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, productId } = req.params;
+      const result = await pool.query(
+        `SELECT r.id, r.product_id, r.raw_product_id, r.quantity_required, r.unit_of_measure, r.preparation_instructions,
+                p.name as raw_product_name, p.cost_price as raw_cost
+         FROM product_recipes r
+         LEFT JOIN products p ON r.raw_product_id = p.id
+         WHERE r.client_id = $1 AND r.product_id = $2`,
+        [clientId, productId]
+      );
+      res.json({ success: true, recipe_items: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Crear/Actualizar Receta BOM e Instructivo SOP
+  app.post('/api/clients/:clientId/restaurant/recipes', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { product_id, raw_product_id, quantity_required, unit_of_measure, preparation_instructions } = req.body;
+      const result = await pool.query(
+        `INSERT INTO product_recipes (client_id, product_id, raw_product_id, quantity_required, unit_of_measure, preparation_instructions)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [clientId, product_id, raw_product_id || null, quantity_required || 1.0, unit_of_measure || 'unidad', preparation_instructions || null]
+      );
+      res.json({ success: true, recipe: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
   app.get(/.*/, (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith('/api')) {
