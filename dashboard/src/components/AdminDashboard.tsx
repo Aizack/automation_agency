@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { authFetch } from '../utils/api';
 import { SystemAlertsPanel } from './SystemAlertsPanel';
 
@@ -504,8 +505,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
       </main>
 
       {/* Modal: Active Alerts */}
-      {showAlertsModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md transition-all">
+      {showAlertsModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 text-left">
           <div className="glass-card w-full max-w-xl rounded-2xl p-8 shadow-2xl">
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -516,7 +517,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
                 <p className="text-on-surface-variant text-body-md opacity-70">Incidencias actualmente no resueltas en el servidor.</p>
               </div>
               <button 
-                className="p-2 hover:bg-surface-variant rounded-full text-on-surface-variant transition-all cursor-pointer"
+                className="p-2 hover:bg-surface-variant rounded-full text-on-surface-variant transition-all cursor-pointer border-0 bg-transparent"
                 onClick={() => setShowAlertsModal(false)}
               >
                 <span className="material-symbols-outlined">close</span>
@@ -548,12 +549,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal: Create New Client */}
-      {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md transition-all duration-300">
+      {showModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 text-left">
           <div className="glass-card w-full max-w-lg rounded-2xl p-8 shadow-2xl transition-transform duration-300">
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -561,7 +563,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
                 <p className="text-on-surface-variant text-body-md opacity-70">Inicializa una nueva instancia de bot en el sistema.</p>
               </div>
               <button 
-                className="p-2 hover:bg-surface-variant rounded-full text-on-surface-variant transition-all cursor-pointer"
+                className="p-2 hover:bg-surface-variant rounded-full text-on-surface-variant transition-all cursor-pointer border-0 bg-transparent"
                 onClick={() => setShowModal(false)}
               >
                 <span className="material-symbols-outlined">close</span>
@@ -663,7 +665,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
                   Cancelar
                 </button>
                 <button 
-                  className="flex-1 px-4 py-2.5 bg-primary-container text-on-primary-container font-label-md rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer" 
+                  className="flex-1 px-4 py-2.5 bg-primary-container text-on-primary-container font-label-md rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer border-0" 
                   type="submit"
                 >
                   Crear Cliente
@@ -671,7 +673,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

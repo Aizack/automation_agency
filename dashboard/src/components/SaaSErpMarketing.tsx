@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Campaign {
     id: string;
@@ -287,8 +288,8 @@ export const SaaSErpMarketing: React.FC<SaaSErpMarketingProps> = ({ clientId }) 
             </div>
 
             {/* CREATE CAMPAIGN MODAL */}
-            {isCreateOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isCreateOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Iniciar Campaña de Difusión</h3>
@@ -365,7 +366,8 @@ export const SaaSErpMarketing: React.FC<SaaSErpMarketingProps> = ({ clientId }) 
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

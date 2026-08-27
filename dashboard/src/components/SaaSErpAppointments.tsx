@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 
 interface Appointment {
@@ -799,8 +800,8 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
             )}
 
             {/* CREATE APPOINTMENT MODAL */}
-            {isCreateOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isCreateOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Agendar Cita Manual</h3>
@@ -966,11 +967,12 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
-            {isBlockOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+            {isBlockOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Bloquear Horario / Día</h3>
@@ -1065,12 +1067,13 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* EDIT APPOINTMENT MODAL */}
-            {isEditOpen && selectedAppt && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isEditOpen && selectedAppt && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Gestionar Cita</h3>
@@ -1226,7 +1229,8 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

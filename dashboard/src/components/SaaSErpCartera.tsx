@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 
 interface CarteraProps {
@@ -278,8 +279,8 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId }) => {
       </div>
 
       {/* Modal de Transacción sobre Cuota */}
-      {showPayModal && selectedInstallment && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-sm">
+      {showPayModal && selectedInstallment && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 text-left">
           <div className="glass-card w-full max-w-md rounded-2xl p-6 shadow-2xl">
             <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
               <h4 className="font-extrabold text-sm text-on-surface">Procesar Transacción sobre Cuota</h4>
@@ -366,7 +367,8 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId }) => {
               </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

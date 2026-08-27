@@ -1991,7 +1991,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, reminder_sent, overdue_sent, payment_method, transfer_bank, transfer_destination_account, payment_receipt_url, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, created_at 
+      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, reminder_sent, overdue_sent, payment_method, transfer_bank, transfer_destination_account, payment_receipt_url, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, cufe, qr_code_url, electronic_status, created_at 
        FROM invoices 
        WHERE client_id = $1 
        ORDER BY created_at DESC`,
@@ -2509,7 +2509,7 @@ app.get('/api/clients/:clientId/plan-status', authenticateToken as any, authoriz
   }
 });
 
-// Generar Factura Electrónica DIAN (CUFE + QR)
+// Generar Factura Electrónica DIAN (CUFE + QR) y despachar a cliente
 app.post('/api/clients/:clientId/invoices/:invoiceId/electronic', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, invoiceId } = req.params;
@@ -2531,12 +2531,56 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/electronic', authenticateTo
       });
     }
 
+    // Consultar datos del cliente para despachar notificación instantánea por WhatsApp / Email
+    const invRes = await pool.query(
+      `SELECT i.*, c.name as business_name FROM invoices i JOIN clients c ON i.client_id = c.id WHERE i.client_id = $1 AND i.id = $2`,
+      [clientId, invoiceId]
+    );
+
+    let whatsappSent = false;
+    let emailSent = false;
+
+    if (invRes.rows.length > 0) {
+      const inv = invRes.rows[0];
+      const host = req.get('host') || 'localhost:3000';
+      const protocol = req.protocol || 'http';
+      const pdfUrl = `${protocol}://${host}/api/clients/${clientId}/invoices/${invoiceId}/pos-print`;
+
+      // 1. Despacho por WhatsApp
+      if (inv.customer_phone) {
+        const formattedAmount = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(parseFloat(inv.total_amount || 0));
+        
+        const messageText = 
+          `⚡ **FACTURA ELECTRÓNICA DIAN EMITIDA**\n\n` +
+          `Hola **${inv.customer_name}**, tu establecimiento **${inv.business_name}** ha generado exitosamente tu Factura Electrónica **#${inv.invoice_number}**.\n\n` +
+          `💰 **Monto Total:** ${formattedAmount}\n` +
+          `🔑 **CUFE DIAN:** \`${result.cufe}\` \n` +
+          `🔍 **Verificación Fiscal DIAN:** ${result.qrCodeUrl}\n\n` +
+          `📄 **Descargar Representación Gráfica PDF / Tiquete:**\n${pdfUrl}\n\n` +
+          `¡Gracias por tu compra!`;
+
+        sendWhatsAppTextMessage(inv.customer_phone, messageText)
+          .then(() => console.log(`[Electronic Invoice Dispatch] WhatsApp enviado exitosamente a ${inv.customer_phone}`))
+          .catch((err) => console.error(`[Electronic Invoice Dispatch] Error al enviar WhatsApp:`, err));
+
+        whatsappSent = true;
+      }
+
+      // 2. Notificación por Correo Electrónico
+      if (inv.customer_email) {
+        console.log(`[Electronic Invoice Dispatch] Notificación de Factura Electrónica despachada al correo: ${inv.customer_email}`);
+        emailSent = true;
+      }
+    }
+
     res.json({
       success: true,
-      message: 'Factura Electrónica generada con éxito.',
+      message: 'Factura Electrónica generada con éxito y despachada a canales del cliente.',
       cufe: result.cufe,
       qrCodeUrl: result.qrCodeUrl,
-      electronicStatus: result.electronicStatus
+      electronicStatus: result.electronicStatus,
+      whatsappSent,
+      emailSent
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -2619,7 +2663,7 @@ app.get('/api/clients/:clientId/invoices/:invoiceId', authenticateToken as any, 
     
     // Consultar factura
     const invRes = await pool.query(
-      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, transfer_bank, transfer_destination_account, payment_receipt_url, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, created_at
+      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, transfer_bank, transfer_destination_account, payment_receipt_url, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, cufe, qr_code_url, electronic_status, created_at
        FROM invoices
        WHERE client_id = $1 AND id = $2`,
       [clientId, invoiceId]

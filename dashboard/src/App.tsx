@@ -9,12 +9,22 @@ import { LandingPage } from './components/LandingPage';
 
 function App() {
   const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing'>(() => {
-    // Si el dominio es la raíz comercial (diazlab.online o www.diazlab.online), mostrar la Landing Page por defecto
+    const path = window.location.pathname.toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    const urlView = params.get('view');
     const host = window.location.hostname.toLowerCase();
-    if (host === 'diazlab.online' || host === 'www.diazlab.online') {
+
+    // Si la ruta es /landpage o /landing -> Mostrar la Landing Page
+    if (path === '/landpage' || path === '/landing' || urlView === 'landpage' || urlView === 'landing') {
       return 'landing';
     }
-    // Si el dominio es la app (app.diazlab.online) o localhost, ir directamente a login/app
+
+    // Si está en el dominio comercial diazlab.online en el root / -> Mostrar landing
+    if ((host === 'diazlab.online' || host === 'www.diazlab.online') && path === '/') {
+      return 'landing';
+    }
+
+    // Por defecto en localhost y app.diazlab.online -> ERP / Login directo
     return 'login';
   });
   const [clientId, setClientId] = useState('');
@@ -27,23 +37,24 @@ function App() {
       const urlView = params.get('view');
       const urlClientId = params.get('clientId');
       const urlToken = params.get('token');
+      const path = window.location.pathname.toLowerCase();
       const host = window.location.hostname.toLowerCase();
 
-      // 0. Caso de vista de inicio explícita
-      if (urlView === 'landing' || window.location.pathname === '/landing') {
+      // 0. Caso explícito de /landpage o /landing
+      if (path === '/landpage' || path === '/landing' || urlView === 'landpage' || urlView === 'landing') {
         setView('landing');
         setLoading(false);
         return;
       }
 
-      if (urlView === 'login' || window.location.pathname === '/login') {
+      if (urlView === 'login' || path === '/login') {
         setView('login');
         setLoading(false);
         return;
       }
 
       // 0.1 Caso de portal de empleado o chat corporativo standalone
-      if (window.location.pathname === '/empleados' || window.location.pathname === '/employee' || window.location.pathname === '/chat') {
+      if (path === '/empleados' || path === '/employee' || path === '/chat') {
         setView('employee');
         setLoading(false);
         return;
@@ -57,7 +68,7 @@ function App() {
       }
 
       // 1.1 Caso de verificación rápida de WhatsApp (Passkey/PIN)
-      if (window.location.pathname === '/auth-fast' || urlView === 'auth-fast') {
+      if (path === '/auth-fast' || urlView === 'auth-fast') {
         setView('auth-fast' as any);
         setLoading(false);
         return;
@@ -66,11 +77,11 @@ function App() {
       // 2. Verificar si existe token en localStorage
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        // Si es el dominio comercial diazlab.online -> Mostrar Landing
-        if (host === 'diazlab.online' || host === 'www.diazlab.online') {
+        // Si el usuario navegó a /landpage explícitamente o está en diazlab.online
+        if (path === '/landpage' || path === '/landing' || ((host === 'diazlab.online' || host === 'www.diazlab.online') && path === '/')) {
           setView('landing');
         } else {
-          // Si es app.diazlab.online o localhost -> Mostrar Login directo
+          // En localhost:3000 o app.diazlab.online sin token -> ERP / Login directo
           setView('login');
         }
         setLoading(false);

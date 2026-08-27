@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 
 interface Category {
@@ -364,8 +365,8 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
             )}
 
             {/* Modal Proveedor */}
-            {isSupplierModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isSupplierModalOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <form onSubmit={handleSaveSupplier} className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-lg w-full shadow-2xl animate-fade-in space-y-4">
                         <div className="flex justify-between items-center mb-2">
                             <h3 className="font-bold text-base text-on-surface">
@@ -481,12 +482,13 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
                             </button>
                         </div>
                     </form>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Modal Categorías */}
-            {isCategoryModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isCategoryModalOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in space-y-4">
                         <div className="flex justify-between items-center mb-2">
                             <h3 className="font-bold text-base text-on-surface">Categorías de Producto</h3>
@@ -550,10 +552,11 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
-            {selectedLabForJobs && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            {selectedLabForJobs && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 text-left">
                     <div className="bg-surface border border-outline/10 p-6 rounded-2xl w-full max-w-lg shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-2 shrink-0">
                             <div>
@@ -622,7 +625,8 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

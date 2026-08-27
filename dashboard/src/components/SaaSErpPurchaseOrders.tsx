@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 import { printBarcodes } from '../utils/barcodePrinter';
 
@@ -369,8 +370,8 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
             )}
 
             {/* Modal Creación de Orden de Compra */}
-            {isCreateModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isCreateModalOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <form onSubmit={handleSaveOrder} className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-3xl w-full shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <h3 className="font-bold text-base text-on-surface">Crear Orden de Compra</h3>
@@ -392,7 +393,7 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
                                         required
                                         value={supplierId}
                                         onChange={(e) => setSupplierId(e.target.value)}
-                                        className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-sm focus:border-primary text-on-surface outline-none transition"
+                                        className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-sm focus:border-primary text-on-surface outline-none transition cursor-pointer"
                                     >
                                         <option value="" className="bg-surface-container">-- Selecciona Proveedor --</option>
                                         {suppliers.map(s => (
@@ -415,7 +416,7 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
                                     <select 
                                         value={deliveryMethod}
                                         onChange={(e) => setDeliveryMethod(e.target.value)}
-                                        className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-sm focus:border-primary text-on-surface outline-none transition"
+                                        className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-sm focus:border-primary text-on-surface outline-none transition cursor-pointer"
                                     >
                                         <option value="envio_tienda" className="bg-surface-container">🚚 Envío por Proveedor</option>
                                         <option value="recogida_local" className="bg-surface-container">🏪 Recogida en Local / Chofer</option>
@@ -487,7 +488,7 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
                                                         required
                                                         value={item.product_id}
                                                         onChange={(e) => handleItemChange(idx, 'product_id', e.target.value)}
-                                                        className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none"
+                                                        className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none cursor-pointer"
                                                     >
                                                         <option value="">-- Selecciona --</option>
                                                         {products.map(p => (
@@ -550,7 +551,8 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
                             </button>
                         </div>
                     </form>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

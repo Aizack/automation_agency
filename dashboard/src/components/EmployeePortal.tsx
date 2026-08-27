@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Task {
     id: string;
@@ -1971,8 +1972,8 @@ export const EmployeePortal: React.FC = () => {
                         </div>
 
                         {/* CREATE VISITA / CAMPAÑA FORM DIALOG */}
-                        {isVCreateOpen && (
-                            <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
+                        {isVCreateOpen && createPortal(
+                            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                                 <div className="glass-card max-w-sm w-full rounded-2xl p-5 shadow-2xl animate-float max-h-[85vh] overflow-y-auto custom-scrollbar">
                                     <div className="flex justify-between items-center border-b border-outline/10 pb-2 mb-3">
                                         <h4 className="font-bold text-sm text-on-surface">Registrar Nueva Visita</h4>
@@ -2170,7 +2171,8 @@ export const EmployeePortal: React.FC = () => {
                                         </div>
                                     </form>
                                 </div>
-                            </div>
+                            </div>,
+                            document.body
                         )}
                     </div>
                 )}
@@ -2538,7 +2540,7 @@ export const EmployeePortal: React.FC = () => {
                 )}
 
                 {/* CREATE TAREA / VISITA FORM MODAL */}
-                {isCreateTaskOpen && (
+                {isCreateTaskOpen && createPortal(
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                         <div className="glass-card max-w-sm w-full rounded-2xl p-6 shadow-2xl animate-float max-h-[90vh] overflow-y-auto custom-scrollbar text-xs">
                             <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
@@ -2704,7 +2706,8 @@ export const EmployeePortal: React.FC = () => {
                                 </button>
                             </form>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
             </main>
         </div>

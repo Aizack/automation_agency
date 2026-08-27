@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import JsBarcode from 'jsbarcode';
 import { printBarcodes, previewBarcodes, LABEL_PRINT_PROFILES, DEFAULT_LABEL_PRINT_SETTINGS, type LabelProfileId } from '../utils/barcodePrinter';
 
@@ -826,8 +827,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                     )}
 
                     {/* Modal Rápido para Crear Nueva Categoría */}
-                    {showCreateCategoryPrompt && (
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    {showCreateCategoryPrompt && createPortal(
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                             <div className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in space-y-4">
                                 <div className="flex justify-between items-center">
                                     <h3 className="font-bold text-base text-on-surface flex items-center gap-1.5">
@@ -879,7 +880,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </div>,
+                        document.body
                     )}
 
                     {isFormOpen && (
@@ -901,14 +903,31 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                         />
                                     </div>
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium">SKU / Código Único (En blanco para autogenerar)</label>
-                                        <input 
-                                            type="text"
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                            value={sku}
-                                            onChange={(e) => setSku(e.target.value)}
-                                            placeholder="Autogenerado si está vacío"
-                                        />
+                                        <label className="text-xs text-on-surface-variant font-medium flex items-center justify-between">
+                                            <span>SKU / Código de Barras</span>
+                                            <span className="text-[10px] text-primary font-semibold flex items-center gap-0.5">
+                                                <span className="material-symbols-outlined text-[13px]">barcode_scanner</span>
+                                                Listo para Pistola Lectora
+                                            </span>
+                                        </label>
+                                        <div className="relative">
+                                            <input 
+                                                type="text"
+                                                className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 pr-10 text-sm focus:border-primary text-on-surface outline-none transition font-mono uppercase"
+                                                value={sku}
+                                                onChange={(e) => setSku(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                placeholder="Disparar pistola lectora o dejar en blanco..."
+                                            />
+                                            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">
+                                                barcode_scanner
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-on-surface-variant">Si lo dejas en blanco, el sistema autogenerará un código único.</p>
                                     </div>
 
                                     {(() => {
@@ -1341,7 +1360,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                 <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl space-y-2 text-center my-3">
                                     <p className="text-[11px] text-on-surface-variant font-medium">¿Necesitas campos adicionales o un esquema de inventario a tu medida?</p>
                                     <a 
-                                        href="https://wa.me/573007137887?text=Hola%20Aizack%20Agency,%20deseo%20solicitar%20un%20formulario%20personalizado%20para%20el%20inventario%20de%20mi%20óptica."
+                                        href="https://wa.me/573116718652?text=Hola%20Diaz%20Lab%20Automation,%20deseo%20solicitar%20un%20formulario%20personalizado%20para%20el%20inventario%20de%20mi%20empresa."
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1.5 text-xs text-primary font-bold hover:underline"
@@ -1799,8 +1818,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                 </div>
             )}
             {/* Modal de Reabastecimiento Rápido (Refill) */}
-            {isRefillModalOpen && refillProduct && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isRefillModalOpen && refillProduct && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <form onSubmit={handleSaveRefill} className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in space-y-4">
                         <div className="flex justify-between items-center mb-2">
                             <h3 className="font-bold text-base text-on-surface flex items-center gap-1.5">
@@ -1855,14 +1874,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                             </button>
                             <button 
                                 type="submit"
-                                className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                                className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 border-0"
                             >
                                 <span className="material-symbols-outlined text-[16px]">done</span>
                                 Confirmar Refill
                             </button>
                         </div>
                     </form>
-                </div>
+                </div>,
+                document.body
             )}
             {/* Pestaña de Rotación de Inventario */}
             {activeTab === 'rotation' && (

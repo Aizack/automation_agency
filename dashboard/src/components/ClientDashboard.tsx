@@ -803,7 +803,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   return (
     <div className="flex min-h-screen bg-background text-on-surface transition-colors duration-200">
       {/* Sidebar Navigation */}
-      <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline/20 flex flex-col py-6 px-6 z-50">
+      <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline/20 flex flex-col py-6 px-6 z-[100]">
         {/* Header/Logo Empresa */}
         <div className="flex flex-col items-center text-center py-4 mb-8">
           <input 

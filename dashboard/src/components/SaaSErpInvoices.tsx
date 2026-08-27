@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 
 interface Invoice {
@@ -219,7 +220,17 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             }
 
             fetchPlanStatus();
-            alert('⚡ ¡Factura Electrónica generada con éxito con Hash CUFE SHA-384 y QR Fiscal!');
+
+            let channelsMsg = '';
+            if (data.whatsappSent && data.emailSent) {
+                channelsMsg = '\n\n📲 Documento PDF enviado de inmediato a WhatsApp y ✉️ Correo Electrónico del cliente.';
+            } else if (data.whatsappSent) {
+                channelsMsg = '\n\n📲 Documento PDF enviado de inmediato a WhatsApp del cliente.';
+            } else if (data.emailSent) {
+                channelsMsg = '\n\n✉️ Notificación enviada al Correo Electrónico del cliente.';
+            }
+
+            alert(`⚡ ¡Factura Electrónica DIAN emitida exitosamente con CUFE SHA-384 y QR Fiscal!${channelsMsg}`);
         } catch (err: any) {
             alert(`Error procesando factura electrónica: ${err.message}`);
         } finally {
@@ -1623,9 +1634,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             )}
 
             {/* MODAL DETALLE COMPLETO DE FACTURA */}
-            {selectedInvoice && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-2 sm:p-4 overflow-hidden">
-                    <div className="relative glass-card w-full max-w-3xl max-h-[92vh] flex flex-col border border-outline/20 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {selectedInvoice && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="relative bg-[#16131c] border border-outline/20 w-full max-w-3xl max-h-[85vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
                         {/* Header Fijo Sticky del Modal */}
                         <div className="sticky top-0 z-30 bg-[#16131c]/95 backdrop-blur-md border-b border-outline/10 p-4 sm:p-5 flex items-center justify-between shadow-md shrink-0">
                             <div>
@@ -1638,135 +1649,118 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                         selectedInvoice.status === 'overdue' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
                                         'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                                     }`}>
-                                        {selectedInvoice.status === 'paid' ? 'Pagado' : selectedInvoice.status === 'overdue' ? 'Mora' : 'Pendiente'}
+                                        {selectedInvoice.status === 'paid' ? 'PAGADO' : selectedInvoice.status === 'overdue' ? 'VENCIDO' : 'PENDIENTE'}
                                     </span>
                                 </div>
                                 <p className="text-xs text-on-surface-variant mt-0.5">
-                                    Emisión: {new Date(selectedInvoice.created_at).toLocaleString('es-CO')} | Vencimiento: {new Date(selectedInvoice.due_date).toLocaleDateString('es-CO')}
+                                    Emisión: {new Date(selectedInvoice.created_at || Date.now()).toLocaleString('es-CO')} | Vencimiento: {new Date(selectedInvoice.due_date).toLocaleDateString('es-CO')}
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setSelectedInvoice(null)}
-                                className="p-2 hover:bg-surface-container bg-surface-container/80 border border-outline/20 rounded-full text-on-surface hover:text-red-400 transition cursor-pointer flex items-center justify-center"
-                                title="Cerrar ventana"
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface transition"
                             >
-                                <span className="material-symbols-outlined text-[20px] font-bold">close</span>
+                                <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
-                        {/* Cuerpo Desplazable del Modal */}
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 text-xs text-on-surface">
-                            {/* Grid de Información de Cliente y Pago */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                                {/* Cliente */}
-                                <div className="bg-surface-container/50 border border-outline/10 p-4 rounded-xl space-y-2">
-                                    <h3 className="font-semibold text-primary flex items-center gap-1.5 text-xs uppercase">
-                                        <span className="material-symbols-outlined text-[16px]">person</span>
+                        {/* Cuerpo Escroleable del Modal */}
+                        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar space-y-6 flex-grow">
+                            {/* INFORMACIÓN DEL CLIENTE & CONDICIONES */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-surface-container/30 border border-outline/10 p-4 rounded-2xl space-y-2">
+                                    <h3 className="font-semibold text-on-surface text-xs uppercase flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[16px] text-primary">person</span>
                                         Información del Cliente
                                     </h3>
-                                    <div className="space-y-1 text-on-surface-variant">
+                                    <div className="text-xs space-y-1 text-on-surface-variant">
                                         <p><strong className="text-on-surface">Nombre:</strong> {selectedInvoice.customer_name}</p>
-                                        <p><strong className="text-on-surface">Documento:</strong> {selectedInvoice.customer_document_type} {selectedInvoice.customer_document_number || 'N/A'}</p>
+                                        <p><strong className="text-on-surface">Documento:</strong> {selectedInvoice.customer_document_type} {selectedInvoice.customer_document_number}</p>
                                         <p><strong className="text-on-surface">WhatsApp:</strong> +{selectedInvoice.customer_phone}</p>
-                                        {selectedInvoice.customer_email && <p><strong className="text-on-surface">Email:</strong> {selectedInvoice.customer_email}</p>}
-                                        {selectedInvoice.customer_address && <p><strong className="text-on-surface">Dirección:</strong> {selectedInvoice.customer_address}</p>}
+                                        <p><strong className="text-on-surface">Email:</strong> {selectedInvoice.customer_email}</p>
+                                        {selectedInvoice.customer_address && (
+                                            <p><strong className="text-on-surface">Dirección:</strong> {selectedInvoice.customer_address}</p>
+                                        )}
                                     </div>
                                 </div>
 
-                                {/* Pago y Despacho */}
-                                <div className="bg-surface-container/50 border border-outline/10 p-4 rounded-xl space-y-2">
-                                    <h3 className="font-semibold text-primary flex items-center gap-1.5 text-xs uppercase">
-                                        <span className="material-symbols-outlined text-[16px]">payments</span>
+                                <div className="bg-surface-container/30 border border-outline/10 p-4 rounded-2xl space-y-2">
+                                    <h3 className="font-semibold text-on-surface text-xs uppercase flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[16px] text-primary">payments</span>
                                         Condiciones de Pago & Envío
                                     </h3>
-                                    <div className="space-y-1 text-on-surface-variant">
-                                        <p>
-                                            <strong className="text-on-surface">Método de Pago:</strong>{' '}
-                                            {selectedInvoice.payment_method === 'efectivo' || selectedInvoice.payment_method === 'contado' ? '💵 Efectivo' :
-                                             selectedInvoice.payment_method === 'transferencia' ? '🏦 Transferencia Bancaria' :
-                                             selectedInvoice.payment_method === 'tarjeta_credito' ? '💳 Tarjeta de Crédito' :
-                                             selectedInvoice.payment_method === 'tarjeta_debito' ? '💳 Tarjeta de Débito' :
-                                             `📋 Crédito por cuotas (${selectedInvoice.installments_count || 1} cuotas)`}
-                                        </p>
-                                        {selectedInvoice.payment_method === 'transferencia' && (
-                                            <>
-                                                {selectedInvoice.transfer_bank && <p><strong className="text-on-surface">Banco Origen:</strong> {selectedInvoice.transfer_bank}</p>}
-                                                {selectedInvoice.transfer_destination_account && <p><strong className="text-on-surface">Cuenta Destino:</strong> {selectedInvoice.transfer_destination_account}</p>}
-                                            </>
+                                    <div className="text-xs space-y-1 text-on-surface-variant">
+                                        <p><strong className="text-on-surface">Método de Pago:</strong> <span className="uppercase font-semibold text-primary">{selectedInvoice.payment_method || 'Efectivo'}</span></p>
+                                        {selectedInvoice.transfer_bank && (
+                                            <p><strong className="text-on-surface">Banco Origen:</strong> {selectedInvoice.transfer_bank}</p>
                                         )}
-                                        <p><strong className="text-on-surface">Logística:</strong> {selectedInvoice.delivery_method === 'domicilio' ? `🚚 Domicilio (${selectedInvoice.delivery_status})` : '🏬 Entrega en Tienda / Local'}</p>
-                                        {selectedInvoice.delivery_method === 'domicilio' && (
-                                            <p><strong className="text-on-surface">Costo Envío:</strong> {formatPrice(parseFloat(selectedInvoice.delivery_fee || '0'))}</p>
+                                        {selectedInvoice.transfer_destination_account && (
+                                            <p><strong className="text-on-surface">Cuenta Destino:</strong> {selectedInvoice.transfer_destination_account}</p>
+                                        )}
+                                        {selectedInvoice.installments_count && selectedInvoice.installments_count > 1 && (
+                                            <p><strong className="text-on-surface">Plan Cuotas:</strong> {selectedInvoice.installments_count} cuotas ({selectedInvoice.installment_frequency})</p>
+                                        )}
+                                        <p><strong className="text-on-surface">Logística:</strong> {selectedInvoice.delivery_method === 'domicilio' ? '🚚 Envío a Domicilio' : '🏪 Entrega en Tienda / Local'}</p>
+                                        {selectedInvoice.delivery_address && (
+                                            <p><strong className="text-on-surface">Dirección Envío:</strong> {selectedInvoice.delivery_address}</p>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* COMPROBANTE DE PAGO (FOTO DE TRANSFERENCIA) */}
-                            <div className="bg-surface-container/40 border border-outline/10 p-4 rounded-xl space-y-3">
-                                <h3 className="font-semibold text-on-surface flex items-center gap-1.5 text-xs uppercase">
-                                    <span className="material-symbols-outlined text-[16px] text-primary">receipt_long</span>
+                            {/* COMPROBANTE ADJUNTO */}
+                            <div className="bg-surface-container/30 border border-outline/10 p-4 rounded-2xl space-y-3">
+                                <h3 className="font-semibold text-on-surface text-xs uppercase flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[16px] text-primary">receipt</span>
                                     Comprobante de Pago / Soporte de Transferencia
                                 </h3>
 
                                 {selectedInvoice.payment_receipt_url ? (
-                                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-surface-container p-3 rounded-xl border border-outline/20">
-                                        <div 
-                                            onClick={() => setLightboxUrl(selectedInvoice.payment_receipt_url!)}
-                                            className="relative group cursor-pointer w-32 h-32 rounded-lg overflow-hidden border border-primary/30 flex-shrink-0"
-                                        >
-                                            <img 
-                                                src={selectedInvoice.payment_receipt_url} 
-                                                alt="Comprobante de pago" 
-                                                className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
-                                            />
-                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white text-[10px] font-bold text-center p-1">
-                                                🔍 Toca para ampliar
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1.5 text-xs flex-1">
+                                    <div className="flex items-center gap-4">
+                                        <img
+                                            src={selectedInvoice.payment_receipt_url}
+                                            alt="Comprobante"
+                                            onClick={() => setLightboxUrl(selectedInvoice.payment_receipt_url || null)}
+                                            className="w-20 h-20 object-cover rounded-xl border border-outline/20 cursor-pointer hover:scale-105 transition"
+                                            title="Clic para ampliar"
+                                        />
+                                        <div className="text-xs space-y-1">
                                             <p className="text-green-400 font-semibold flex items-center gap-1">
-                                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                                Soporte adjunto a esta factura
+                                                <span className="material-symbols-outlined text-[16px]">check_circle</span> Comprobante Adjunto
                                             </p>
-                                            <p className="text-[11px] text-on-surface-variant">
-                                                Haz clic en la foto para revisarla en pantalla completa y verificar los datos de la transferencia.
-                                            </p>
-                                            <button
-                                                type="button"
-                                                onClick={() => setLightboxUrl(selectedInvoice.payment_receipt_url!)}
-                                                className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
+                                            <a
+                                                href={selectedInvoice.payment_receipt_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-primary hover:underline font-mono text-[11px] block"
                                             >
-                                                <span className="material-symbols-outlined text-[14px]">zoom_in</span>
-                                                Ver Foto Completa
-                                            </button>
+                                                Ver foto en tamaño completo ↗
+                                            </a>
                                         </div>
                                     </div>
                                 ) : (
                                     <p className="text-xs text-on-surface-variant italic">No hay comprobante de pago adjunto aún a esta factura.</p>
                                 )}
 
-                                {/* Campo para ingresar / actualizar comprobante manualmente */}
-                                <div className="flex items-center gap-2 pt-2">
+                                <div className="flex gap-2 pt-2 border-t border-outline/5">
                                     <input
                                         type="text"
                                         placeholder="Pegar URL o enlace de la foto del comprobante..."
                                         value={receiptInputUrl}
                                         onChange={(e) => setReceiptInputUrl(e.target.value)}
-                                        className="flex-1 bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface focus:border-primary outline-none transition"
+                                        className="flex-grow bg-surface-container border border-outline/20 rounded-xl px-3 py-1.5 text-xs text-on-surface outline-none focus:border-primary"
                                     />
                                     <button
                                         type="button"
                                         onClick={handleSaveReceiptUrl}
-                                        disabled={isUpdatingReceipt || !receiptInputUrl}
-                                        className="bg-primary text-on-primary font-semibold text-xs px-4 py-2 rounded-xl hover:opacity-90 transition cursor-pointer disabled:opacity-40"
+                                        disabled={isUpdatingReceipt || !receiptInputUrl.trim()}
+                                        className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold px-4 py-1.5 rounded-xl transition disabled:opacity-50 cursor-pointer"
                                     >
                                         {isUpdatingReceipt ? 'Guardando...' : 'Guardar Comprobante'}
                                     </button>
                                 </div>
                             </div>
-
                             {/* DETALLE DE ÍTEMS COMPRADOS */}
                             <div className="space-y-2">
                                 <h3 className="font-semibold text-on-surface text-xs uppercase flex items-center gap-1.5">
@@ -1828,9 +1822,23 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                     <>
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                handlePayInvoice(selectedInvoice.id);
-                                                setSelectedInvoice(null);
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch(`/api/clients/${clientId}/invoices/${selectedInvoice.id}/approve-payment`, {
+                                                        method: 'POST',
+                                                        headers: { 'Authorization': `Bearer ${token}` }
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) {
+                                                        alert('✅ Pago aprobado exitosamente.');
+                                                        setInvoices(prev => prev.map(inv => inv.id === selectedInvoice.id ? { ...inv, status: 'paid' } : inv));
+                                                        setSelectedInvoice(prev => prev ? { ...prev, status: 'paid' } : null);
+                                                    } else {
+                                                        alert(`Error: ${data.error}`);
+                                                    }
+                                                } catch (err: any) {
+                                                    alert(`Error procesando pago: ${err.message}`);
+                                                }
                                             }}
                                             className="bg-green-600 hover:bg-green-500 text-white font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
                                         >
@@ -1862,20 +1870,19 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                         disabled={generatingElectronicId === selectedInvoice.id}
                                         onClick={() => handleGenerateElectronicInvoice(selectedInvoice.id)}
                                         className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:opacity-90 text-white font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-md disabled:opacity-50"
+                                        title="Genera CUFE, QR fiscal DIAN y despacha PDF automáticamente a WhatsApp / Email del cliente"
                                     >
                                         <span className="material-symbols-outlined text-[16px]">electric_bolt</span>
-                                        {generatingElectronicId === selectedInvoice.id ? 'Generando CUFE DIAN...' : 'Emitir Factura Electrónica DIAN'}
+                                        {generatingElectronicId === selectedInvoice.id ? 'Emitiendo y enviando...' : 'Emitir Factura Electrónica DIAN'}
                                     </button>
                                 ) : (
-                                    <a
-                                        href={selectedInvoice.qr_code_url || '#'}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="bg-green-500/20 text-green-400 border border-green-500/30 font-bold text-xs px-3 py-1.5 rounded-xl transition flex items-center gap-1 hover:bg-green-500/30"
+                                    <div 
+                                        className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 select-none"
+                                        title="Factura validada y emitida electrónicamente ante la DIAN con CUFE oficial"
                                     >
                                         <span className="material-symbols-outlined text-[16px]">verified</span>
                                         DIAN Verificada (CUFE OK)
-                                    </a>
+                                    </div>
                                 )}
 
                                 <button
@@ -1896,12 +1903,13 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* MODAL DE UPGRADE A PLAN PRO (FEATURE GATING) */}
-            {showUpgradeModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            {showUpgradeModal && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
                     <div className="bg-surface-container border border-outline/30 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
                         <div className="text-center space-y-2">
                             <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg">
@@ -1952,14 +1960,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* LIGHTBOX FULLSCREEN PARA FOTO DE COMPROBANTE */}
-            {lightboxUrl && (
+            {lightboxUrl && createPortal(
                 <div 
                     onClick={() => setLightboxUrl(null)}
-                    className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer animate-in fade-in duration-200"
+                    className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer animate-in fade-in duration-200"
                 >
                     <div className="relative max-w-4xl max-h-[90vh] p-2" onClick={(e) => e.stopPropagation()}>
                         <button
@@ -1987,7 +1996,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                             </a>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

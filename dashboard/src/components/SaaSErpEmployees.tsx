@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { translateErrorMessage } from '../utils/errorHandler';
 
 interface Employee {
@@ -1955,8 +1956,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
             </div>
 
             {/* DEPARTMENTS MANAGER MODAL */}
-            {isDeptOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isDeptOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Gestionar Departamentos</h3>
@@ -1987,7 +1988,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                             <button 
                                 type="submit"
                                 disabled={actionLoading}
-                                className="px-4 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl cursor-pointer transition"
+                                className="px-4 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl cursor-pointer transition border-0"
                             >
                                 Agregar
                             </button>
@@ -2004,7 +2005,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                         <span className="text-xs font-bold">{d.name}</span>
                                         <button 
                                             onClick={() => handleDeleteDept(d.id, d.name)}
-                                            className="p-1 text-red-500 hover:bg-red-500/10 border-0 rounded cursor-pointer transition-all inline-flex"
+                                            className="p-1 text-red-500 hover:bg-red-500/10 border-0 rounded cursor-pointer transition-all inline-flex bg-transparent"
                                         >
                                             <span className="material-symbols-outlined text-[16px]">delete</span>
                                         </button>
@@ -2013,12 +2014,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                             )}
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* ROLES MANAGER MODAL */}
-            {isRoleOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isRoleOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Gestionar Roles</h3>
@@ -2041,7 +2043,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                             />
                             <button 
                                 type="submit"
-                                className="px-4 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl cursor-pointer transition"
+                                className="px-4 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl cursor-pointer transition border-0"
                             >
                                 Agregar
                             </button>
@@ -2055,7 +2057,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                     <button 
                                         type="button"
                                         onClick={() => setWorkRoles((prev) => prev.filter((item) => item !== role))}
-                                        className="p-1 text-red-500 hover:bg-red-500/10 border-0 rounded cursor-pointer transition-all inline-flex"
+                                        className="p-1 text-red-500 hover:bg-red-500/10 border-0 rounded cursor-pointer transition-all inline-flex bg-transparent"
                                     >
                                         <span className="material-symbols-outlined text-[16px]">delete</span>
                                     </button>
@@ -2063,12 +2065,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                             ))}
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* REGISTER ABSENCE/PERMIT MODAL */}
-            {isAdminDocOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isAdminDocOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Registrar Ausencia o Permiso</h3>
@@ -2201,12 +2204,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* CREATE/EDIT EMPLOYEE MODAL */}
-            {isEmpOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isEmpOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">
@@ -2349,27 +2353,27 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                 <button 
                                     type="button"
                                     onClick={() => setIsEmpOpen(false)}
-                                    className="px-4 py-2 border border-outline/20 text-on-surface hover:bg-surface-variant/20 rounded-xl font-bold cursor-pointer text-xs transition"
+                                    className="px-4 py-2 border border-outline/20 text-on-surface hover:bg-surface-variant/20 rounded-xl font-bold cursor-pointer text-xs transition bg-transparent"
                                 >
                                     Cancelar
                                 </button>
                                 <button 
                                     type="submit"
                                     disabled={actionLoading}
-                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-xl font-bold cursor-pointer text-xs transition flex items-center gap-1.5"
+                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-xl font-bold cursor-pointer text-xs transition flex items-center gap-1.5 border-0"
                                 >
                                     {actionLoading ? 'Guardando...' : 'Guardar'}
                                 </button>
                             </div>
                         </form>
-                         {/* Clock modal removed, functionality integrated into Assistance & Turnos subview */}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* PAYROLL SUMMARY MODAL */}
-            {isPayrollOpen && selectedEmp && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isPayrollOpen && selectedEmp && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="glass-card max-w-2xl w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface flex items-center gap-1.5">
@@ -2573,12 +2577,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                             </div>
                         ) : null}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* EMP DETAIL MODAL */}
-            {isDetailOpen && selectedEmpDetail && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {isDetailOpen && selectedEmpDetail && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="glass-card max-w-2xl w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float max-h-[90vh] flex flex-col">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <div>
@@ -3318,13 +3323,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                             <button 
                                 type="button"
                                 onClick={() => setIsDetailOpen(false)}
-                                className="px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold rounded-xl cursor-pointer transition"
+                                className="px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold rounded-xl cursor-pointer transition border border-outline/20"
                             >
                                 Cerrar Ficha
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

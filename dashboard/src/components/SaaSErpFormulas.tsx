@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 
 interface FormulasProps {
@@ -532,8 +533,8 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId, defaultSubT
           {renderLabJobColumn("Entregados", delivered, "delivered")}
         </div>
 
-        {assigningJob && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        {assigningJob && createPortal(
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 text-left">
             <div className="bg-surface border border-outline/10 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
               <h3 className="font-bold text-sm text-on-surface">Asignar Laboratorio a Orden</h3>
               <p className="text-xs text-on-surface-variant font-mono">Lente: {assigningJob.product_name}</p>
@@ -544,7 +545,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId, defaultSubT
                   <select 
                     value={selectedLabId} 
                     onChange={(e) => setSelectedLabId(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none cursor-pointer"
                   >
                     <option value="">Selecciona un Laboratorio...</option>
                     {laboratories.map(lab => (
@@ -601,7 +602,8 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId, defaultSubT
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     );

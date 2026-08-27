@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface SystemAlert {
     id: string;
@@ -316,14 +317,14 @@ export const SystemAlertsPanel: React.FC<SystemAlertsPanelProps> = ({ clientId }
             )}
 
             {/* Modal de Resolución */}
-            {showResolveModal && selectedAlert && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 rounded-2xl">
+            {showResolveModal && selectedAlert && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="bg-surface rounded-2xl p-6 max-w-md w-full mx-4 border border-outline/10 shadow-lg">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold">Resolver Alerta</h3>
                             <button
                                 onClick={() => setShowResolveModal(false)}
-                                className="text-on-surface-variant hover:text-on-surface"
+                                className="text-on-surface-variant hover:text-on-surface p-1 rounded-full cursor-pointer bg-transparent border-0"
                             >
                                 <span className="material-symbols-outlined">close</span>
                             </button>
@@ -354,20 +355,21 @@ export const SystemAlertsPanel: React.FC<SystemAlertsPanelProps> = ({ clientId }
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setShowResolveModal(false)}
-                                className="flex-1 text-xs font-bold py-2.5 rounded-lg bg-surface-container hover:bg-surface-container/80 text-on-surface transition"
+                                className="flex-1 text-xs font-bold py-2.5 rounded-lg bg-surface-container hover:bg-surface-container/80 text-on-surface transition cursor-pointer border border-outline/20"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleResolveSubmit}
                                 disabled={resolving || !resolutionNotes.trim()}
-                                className="flex-1 text-xs font-bold py-2.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 transition disabled:opacity-50"
+                                className="flex-1 text-xs font-bold py-2.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 transition cursor-pointer border border-green-500/20 disabled:opacity-50"
                             >
                                 {resolving ? 'Resolviendo...' : 'Confirmar'}
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
