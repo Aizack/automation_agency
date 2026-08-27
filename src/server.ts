@@ -1991,10 +1991,11 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, reminder_sent, overdue_sent, payment_method, transfer_bank, transfer_destination_account, payment_receipt_url, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, cufe, qr_code_url, electronic_status, created_at 
-       FROM invoices 
-       WHERE client_id = $1 
-       ORDER BY created_at DESC`,
+      `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_document_type, i.customer_document_number, i.customer_email, i.customer_address, i.total_amount, i.status, i.due_date, i.reminder_sent, i.overdue_sent, i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_at, COALESCE(NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name 
+       FROM invoices i 
+       LEFT JOIN employees e ON i.seller_employee_id = e.id
+       WHERE i.client_id = $1 
+       ORDER BY i.created_at DESC`,
       [clientId]
     );
     res.json({ success: true, invoices: result.rows });
@@ -2663,9 +2664,10 @@ app.get('/api/clients/:clientId/invoices/:invoiceId', authenticateToken as any, 
     
     // Consultar factura
     const invRes = await pool.query(
-      `SELECT id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, transfer_bank, transfer_destination_account, payment_receipt_url, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, cufe, qr_code_url, electronic_status, created_at
-       FROM invoices
-       WHERE client_id = $1 AND id = $2`,
+      `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_document_type, i.customer_document_number, i.customer_email, i.customer_address, i.total_amount, i.status, i.due_date, i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_at, COALESCE(NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name
+       FROM invoices i
+       LEFT JOIN employees e ON i.seller_employee_id = e.id
+       WHERE i.client_id = $1 AND i.id = $2`,
       [clientId, invoiceId]
     );
 
@@ -2719,6 +2721,73 @@ app.put('/api/clients/:clientId/invoices/:invoiceId/receipt', authenticateToken 
     );
 
     res.json({ success: true, message: 'Comprobante de pago actualizado con éxito.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Endpoint para reasignar o cambiar el vendedor asignado a una factura existente (desde el modal "ojito")
+app.put('/api/clients/:clientId/invoices/:invoiceId/seller', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    const { seller_employee_id } = req.body;
+
+    const invRes = await pool.query(
+      `SELECT id, invoice_number, total_amount, seller_employee_id, created_at FROM invoices WHERE client_id = $1 AND id = $2`,
+      [clientId, invoiceId]
+    );
+
+    if (invRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
+    }
+
+    const inv = invRes.rows[0];
+    const oldSellerId = inv.seller_employee_id;
+    const newSellerId = seller_employee_id || null;
+
+    await pool.query(
+      `UPDATE invoices SET seller_employee_id = $1, updated_at = NOW() WHERE client_id = $2 AND id = $3`,
+      [newSellerId, clientId, invoiceId]
+    );
+
+    // Si cambió el vendedor, recalcular automáticamente las metas mensuales de ventas
+    if (oldSellerId !== newSellerId) {
+      const monthYear = new Date(inv.created_at).toISOString().substring(0, 7);
+      const invoiceAmount = parseFloat(inv.total_amount || '0');
+
+      if (oldSellerId) {
+        await pool.query(
+          `UPDATE sales_goals 
+           SET current_amount = GREATEST(0, current_amount - $1) 
+           WHERE client_id = $2 AND employee_id = $3 AND month_year = $4`,
+          [invoiceAmount, clientId, oldSellerId, monthYear]
+        );
+      }
+
+      if (newSellerId) {
+        await pool.query(
+          `UPDATE sales_goals 
+           SET current_amount = current_amount + $1 
+           WHERE client_id = $2 AND employee_id = $3 AND month_year = $4`,
+          [invoiceAmount, clientId, newSellerId, monthYear]
+        );
+      }
+    }
+
+    let sellerName = 'Sin asignar';
+    if (newSellerId) {
+      const empRes = await pool.query(`SELECT name, last_name FROM employees WHERE id = $1`, [newSellerId]);
+      if (empRes.rows[0]) {
+        sellerName = `${empRes.rows[0].name} ${empRes.rows[0].last_name || ''}`.trim();
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Vendedor reasignado exitosamente.',
+      seller_employee_id: newSellerId,
+      seller_name: sellerName
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

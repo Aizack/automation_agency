@@ -31,6 +31,8 @@ interface Invoice {
     cufe?: string | null;
     qr_code_url?: string | null;
     electronic_status?: string | null;
+    seller_employee_id?: string | null;
+    seller_name?: string | null;
 }
 
 interface Product {
@@ -140,20 +142,22 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
 
     const [barcodeScanInput, setBarcodeScanInput] = useState('');
     const [activeDropdownField, setActiveDropdownField] = useState<'name' | 'document' | 'phone' | null>(null);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [employees, setEmployees] = useState<any[]>([]);
+    const [dropdownRef] = [useRef<HTMLDivElement>(null)];
 
     const token = localStorage.getItem('auth_token');
 
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [invRes, prodRes, catRes, crmRes, clientRes, bankRes] = await Promise.all([
+            const [invRes, prodRes, catRes, crmRes, clientRes, bankRes, empRes] = await Promise.all([
                 fetch(`/api/clients/${clientId}/invoices`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}/products`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}/categories`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}/crm-customers`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/bank-accounts`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`/api/clients/${clientId}/bank-accounts`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`/api/clients/${clientId}/employees`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
             const invData = await invRes.json();
@@ -162,6 +166,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             const crmData = await crmRes.json();
             const clientData = await clientRes.json();
             const bankData = await bankRes.json();
+            const empData = await empRes.json();
 
             if (invData.success) setInvoices(invData.invoices || []);
             if (prodData.success) setProducts(prodData.products || []);
@@ -169,10 +174,34 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             if (crmData.success) setCrmCustomers(crmData.customers || []);
             if (clientData.success) setClientProfile(clientData.data || null);
             if (bankData.success) setBankAccounts(bankData.accounts || []);
+            if (empData.success) setEmployees(empData.employees || []);
         } catch (err) {
             console.error("Error loading billing data:", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAssignSellerToInvoice = async (invoiceId: string, sellerEmployeeId: string) => {
+        try {
+            const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceId}/seller`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ seller_employee_id: sellerEmployeeId })
+            });
+            const json = await res.json();
+            if (json.success) {
+                setSelectedInvoice(prev => prev ? { ...prev, seller_employee_id: json.seller_employee_id, seller_name: json.seller_name } : null);
+                setInvoices(prev => prev.map(inv => inv.id === invoiceId ? { ...inv, seller_employee_id: json.seller_employee_id, seller_name: json.seller_name } : inv));
+                alert('✅ Vendedor reasignado exitosamente a la factura.');
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (e) {
+            alert('Error al reasignar el vendedor a la factura.');
         }
     };
 
@@ -1705,6 +1734,25 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                         {selectedInvoice.delivery_address && (
                                             <p><strong className="text-on-surface">Dirección Envío:</strong> {selectedInvoice.delivery_address}</p>
                                         )}
+
+                                        <div className="border-t border-outline/10 pt-2.5 mt-2 space-y-1.5">
+                                            <div className="flex items-center justify-between text-xs">
+                                                <strong className="text-on-surface">Vendedor Asignado:</strong>
+                                                <span className="text-primary font-bold">{selectedInvoice.seller_name || 'Sin asignar'}</span>
+                                            </div>
+                                            <select
+                                                value={selectedInvoice.seller_employee_id || ''}
+                                                onChange={(e) => handleAssignSellerToInvoice(selectedInvoice.id, e.target.value)}
+                                                className="w-full bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary cursor-pointer font-medium"
+                                            >
+                                                <option value="">-- Cambiar / Asignar Vendedor --</option>
+                                                {employees.map(emp => (
+                                                    <option key={emp.id} value={emp.id}>
+                                                        👤 {emp.name} {emp.last_name || ''} ({emp.role})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
