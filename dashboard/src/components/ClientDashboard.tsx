@@ -1002,7 +1002,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
                 </button>
               )}
 
-              {hasPermission('campaigns') && clientData?.enabledModules?.field_visits !== false && (
+              {hasPermission('campaigns') && clientData?.enabledModules?.field_visits !== false && clientData?.category === 'optica' && (
                 <button 
                   onClick={() => setActiveTab('campanias')}
                   className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${

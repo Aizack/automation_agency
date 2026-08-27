@@ -6,16 +6,50 @@ Este documento contiene la **especificación técnica, funcional y de arquitectu
 
 ## 1. Arquitectura General y Flujo de Información
 
-El módulo conecta en tiempo real los cuatro puntos neurálgicos de la operación gastronómica:
+El módulo conecta en tiempo real los puntos neurálgicos de la operación gastronómica:
 
-```
-[ Cliente (QR / WhatsApp) ] ──> [ Comandero Móvil (Mesero) ] ──> [ Pantalla KDS (Cocina/Barra) ] ──> [ Caja POS & DIAN ]
+```mermaid
+flowchart TD
+    subgraph ADMIN["👑 Administración del ERP"]
+        A1["📖 Crear Menú & Recetario BOM<br/>(Gramaje en g/ml + SOP)"]
+        A2["🍽️ Crear Mesas & Asignar Mesero<br/>(Zonas: Salón, Terraza, VIP)"]
+    end
+
+    subgraph SALON["🍽️ Salón & Meseros"]
+        S1["📱 Comandero Móvil de Meseros"]
+        S2["Mapa de Mesas por Estado<br/>(Libre, Ocupada, Cocina, Cuenta)"]
+        S3["Toma de Pedido & Modificadores<br/>(Remociones sin costo / Adicionales $)"]
+    end
+
+    subgraph COCINA["👨‍🍳 Pantallas KDS en Tiempo Real"]
+        K1["Pantalla KDS Cocina (Chef)<br/>(Semáforo <8m / 8-14m / >15m)"]
+        K2["Pantalla KDS Barra (Bartender)<br/>(Bebidas & Coctelería)"]
+        K3["📖 Botón SOP: Instructivo Técnico Secret Recipe"]
+    end
+
+    subgraph CAJA["💵 Facturación & Cierre"]
+        C1["Caja POS Express (80mm)"]
+        C2["Sugerencia Propina 10%"]
+        C3["Emisión Factura Electrónica DIAN<br/>(CUFE + QR)"]
+        C4["Atribución de Ventas a Meta del Vendedor"]
+    end
+
+    A1 --> S1
+    A2 --> S2
+    S1 --> S2
+    S2 --> S3
+    S3 -->|Comanda Alimentos| K1
+    S3 -->|Comanda Bebidas| K2
+    K1 --> K3
+    K1 & K2 -->|Plato Listo| S1
+    S1 --> C1
+    C1 --> C2 --> C3 --> C4
 ```
 
-1. **Cliente / QR de Mesa**: Acceso al menú interactivo digital o atención automatizada por WhatsApp.
-2. **Mesero / Comandero**: Recepción de la solicitud, validación, adición de modificadores y envío a cocina.
-3. **Cocina / Barra (KDS)**: Recepción de comandas en pantallas digitales clasificadas por estación (Cocina vs. Barra) con temporizador.
-4. **Caja Central**: Facturación POS 80mm, cobro con sugerencia de propina del 10% y emisión de Factura Electrónica DIAN.
+1. **Administración & Menú**: Creación de platos con receta BOM en gramos/ml, instructivo SOP y creación de mesas por zonas con asignación de meseros responsables.
+2. **Mesero / Comandero**: Recepción de pedidos en 3 toques con remociones (sin costo) y adicionales (con costo).
+3. **Cocina / Barra (KDS)**: Pantallas táctiles en tiempo real clasificadas por estación con semáforo de tiempo y consulta del instructivo técnico SOP.
+4. **Caja Central & DIAN**: Facturación POS, sugerencia de propina del 10%, emisión DIAN con CUFE y atribución a la meta del vendedor.
 
 ---
 
@@ -28,8 +62,10 @@ El módulo conecta en tiempo real los cuatro puntos neurálgicos de la operació
 - **Descuento Automático**: Al vender 1 unidad de un plato del menú, el sistema descuenta de la bodega los insumos configurados en su receta (BOM - Bill of Materials).
 - **Alertas de Stock Crítico**: Notificación automática cuando un insumo básico cae por debajo del nivel mínimo de reabastecimiento.
 
-### B. Mapa de Mesas & Comandero Móvil de Meseros
-- **Mapa por Zonas**: Visualización gráfica del estado de mesas (Libre, Ocupada, Esperando Comida, Solicitó Cuenta).
+### B. Mapa de Mesas, Creación & Asignación de Meseros
+- **Creación & Configuración de Mesas**: Botón `+ Crear / Configurar Mesa` para registrar número/código de mesa, zona (Salón Principal, Terraza, VIP, Barra) y capacidad de comensales.
+- **Asignación de Mesero Responsable**: Cada mesa puede tener asignado un mesero específico (o selector rápido desplegable para reasignar meseros en tiempo real).
+- **Mapa por Zonas**: Visualización gráfica por código de color (🟢 *Libre*, 🔴 *Ocupada*, 🟡 *En Cocina*, 🔵 *Pidiendo Cuenta*).
 - **Toma de Pedido Táctil**: Selección de ítems en 3 toques.
 - **Personalización de Platos (Modificadores)**:
   - **Remociones (Sin Costo)**: Notas de cocina (ej. *"Sin cebolla"*, *"Término 3/4"*).

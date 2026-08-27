@@ -10,6 +10,13 @@ interface Table {
     waiter_name?: string;
 }
 
+interface Employee {
+    id: string;
+    name: string;
+    role?: string;
+    position?: string;
+}
+
 interface Product {
     id: string;
     name: string;
@@ -34,6 +41,7 @@ interface RestaurantWaiterPortalProps {
 
 export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ clientId, waiterId, waiterName }) => {
     const [tables, setTables] = useState<Table[]>([]);
+    const [employees, setEmployees] = useState<Employee[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [selectedTable, setSelectedTable] = useState<Table | null>(null);
     const [orderCart, setOrderCart] = useState<SelectedOrderItem[]>([]);
@@ -47,21 +55,31 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
     const [itemStation, setItemStation] = useState<'kitchen' | 'bar'>('kitchen');
     const [loading, setLoading] = useState(false);
 
+    // Modal Crear / Editar Mesa
+    const [isTableModalOpen, setIsTableModalOpen] = useState(false);
+    const [modalTableNumber, setModalTableNumber] = useState('');
+    const [modalZone, setModalZone] = useState('Salón Principal');
+    const [modalCapacity, setModalCapacity] = useState('4');
+    const [modalWaiterId, setModalWaiterId] = useState('');
+
     const token = localStorage.getItem('auth_token');
 
-    const fetchTablesAndProducts = async () => {
+    const fetchTablesProductsAndEmployees = async () => {
         try {
             setLoading(true);
-            const [tabRes, prodRes] = await Promise.all([
+            const [tabRes, prodRes, empRes] = await Promise.all([
                 fetch(`/api/clients/${clientId}/restaurant/tables`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/products`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`/api/clients/${clientId}/products`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`/api/clients/${clientId}/employees`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
             const tabData = await tabRes.json();
             const prodData = await prodRes.json();
+            const empData = await empRes.json();
 
             if (tabData.success) setTables(tabData.tables || []);
             if (prodData.success) setProducts(prodData.products || []);
+            if (empData.success) setEmployees(empData.employees || empData.data || []);
         } catch (err) {
             console.error("Error loading waiter portal data:", err);
         } finally {
@@ -70,10 +88,76 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
     };
 
     useEffect(() => {
-        fetchTablesAndProducts();
-        const interval = setInterval(fetchTablesAndProducts, 12000);
+        fetchTablesProductsAndEmployees();
+        const interval = setInterval(fetchTablesProductsAndEmployees, 12000);
         return () => clearInterval(interval);
     }, []);
+
+    const handleSaveTable = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!modalTableNumber) {
+            alert("Por favor ingresa el número o código de la mesa.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const res = await fetch(`/api/clients/${clientId}/restaurant/tables`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    table_number: modalTableNumber,
+                    zone: modalZone,
+                    capacity: parseInt(modalCapacity) || 4,
+                    assigned_waiter_id: modalWaiterId || null
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ Mesa '${modalTableNumber}' guardada exitosamente.`);
+                setIsTableModalOpen(false);
+                setModalTableNumber('');
+                setModalWaiterId('');
+                fetchTablesProductsAndEmployees();
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        } catch (err) {
+            console.error("Error saving table:", err);
+            alert("Error al guardar la mesa.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleQuickAssignWaiter = async (table: Table, newWaiterId: string) => {
+        try {
+            setLoading(true);
+            const res = await fetch(`/api/clients/${clientId}/restaurant/tables/${table.id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    status: table.status,
+                    assigned_waiter_id: newWaiterId || null
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                fetchTablesProductsAndEmployees();
+            }
+        } catch (err) {
+            console.error("Error assigning waiter:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleAddRemoval = () => {
         if (!removalInput.trim()) return;
@@ -127,7 +211,7 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                     },
                     body: JSON.stringify({
                         table_id: selectedTable.id,
-                        waiter_id: waiterId || null,
+                        waiter_id: waiterId || selectedTable.assigned_waiter_id || null,
                         station: 'kitchen',
                         items: kitchenItems.map(i => ({
                             name: i.product.name,
@@ -149,7 +233,7 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                     },
                     body: JSON.stringify({
                         table_id: selectedTable.id,
-                        waiter_id: waiterId || null,
+                        waiter_id: waiterId || selectedTable.assigned_waiter_id || null,
                         station: 'bar',
                         items: barItems.map(i => ({
                             name: i.product.name,
@@ -165,7 +249,7 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
             alert(`✅ Comanda de Mesa ${selectedTable.table_number} enviada a Cocina/Barra con éxito.`);
             setOrderCart([]);
             setSelectedTable(null);
-            fetchTablesAndProducts();
+            fetchTablesProductsAndEmployees();
         } catch (err) {
             console.error("Error sending order to KDS:", err);
             alert("Error al enviar comanda a cocina.");
@@ -196,54 +280,115 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
 
     return (
         <div className="space-y-6">
-            {/* Header Comandero */}
+            {/* Header Comandero & Gestión de Mesas */}
             <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container/40 p-4 rounded-3xl border border-outline/10 backdrop-blur-md">
                 <div className="flex items-center gap-3">
                     <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 text-primary">
                         <span className="material-symbols-outlined text-[28px]">room_service</span>
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-on-surface">Comandero Móvil de Meseros</h2>
+                        <h2 className="text-xl font-bold text-on-surface">Comandero Móvil & Mapa de Mesas</h2>
                         <p className="text-xs text-on-surface-variant">
-                            {waiterName ? `Atendiendo como: ${waiterName}` : 'Selección de mesas y envío rápido a cocina/barra'}
+                            {waiterName ? `Atendiendo como: ${waiterName}` : 'Selección de mesas, asignación de meseros y comanda'}
                         </p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs">
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Libre</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Ocupada</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> En Cocina</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Pidiendo Cuenta</span>
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setIsTableModalOpen(true)}
+                        className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-2xl hover:opacity-90 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-primary/20"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">add_location</span>
+                        + Crear / Configurar Mesa
+                    </button>
+
+                    <div className="hidden sm:flex items-center gap-2 text-xs">
+                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Libre</span>
+                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Ocupada</span>
+                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> En Cocina</span>
+                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Pidiendo Cuenta</span>
+                    </div>
                 </div>
             </div>
 
             {/* Mapa de Mesas por Zonas */}
             {!selectedTable ? (
                 <div className="space-y-6">
-                    <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary">table_restaurant</span>
-                        Selecciona una Mesa para Tomar Pedido
-                    </h3>
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
+                            <span className="material-symbols-outlined text-primary">table_restaurant</span>
+                            Mapa de Mesas & Meseros Asignados
+                        </h3>
+                    </div>
 
                     {tables.length === 0 ? (
-                        <div className="text-center py-12 bg-surface-container/20 border border-dashed border-outline/20 rounded-3xl">
-                            <p className="text-on-surface-variant text-sm">No hay mesas registradas. Puedes crearlas desde la administración del ERP.</p>
+                        <div className="text-center py-12 bg-surface-container/20 border border-dashed border-outline/20 rounded-3xl space-y-3">
+                            <p className="text-on-surface-variant text-sm">No hay mesas registradas en el sistema.</p>
+                            <button
+                                type="button"
+                                onClick={() => setIsTableModalOpen(true)}
+                                className="px-5 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-2xl hover:opacity-90 transition cursor-pointer inline-flex items-center gap-2 shadow-lg"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">add_location</span>
+                                Crear Primera Mesa
+                            </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             {tables.map(table => (
-                                <button
+                                <div
                                     key={table.id}
-                                    type="button"
-                                    onClick={() => setSelectedTable(table)}
-                                    className={`p-5 rounded-3xl border text-center transition cursor-pointer flex flex-col items-center justify-center gap-2 shadow-md hover:scale-105 ${getTableBadgeColor(table.status)}`}
+                                    className={`p-5 rounded-3xl border flex flex-col justify-between gap-3 shadow-md hover:border-primary/50 transition ${getTableBadgeColor(table.status)}`}
                                 >
-                                    <span className="material-symbols-outlined text-[36px]">table_restaurant</span>
-                                    <span className="font-extrabold text-base text-on-surface">Mesa {table.table_number}</span>
-                                    <span className="text-[11px] font-semibold">{getTableStatusLabel(table.status)}</span>
-                                    <span className="text-[10px] opacity-75">{table.zone} ({table.capacity} p)</span>
-                                </button>
+                                    {/* Encabezado Mesa */}
+                                    <div
+                                        onClick={() => setSelectedTable(table)}
+                                        className="cursor-pointer flex items-center justify-between border-b border-outline/10 pb-2"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-[28px]">table_restaurant</span>
+                                            <div>
+                                                <span className="font-extrabold text-base text-on-surface block">Mesa {table.table_number}</span>
+                                                <span className="text-[10px] opacity-80 block">{table.zone} ({table.capacity} p)</span>
+                                            </div>
+                                        </div>
+                                        <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-black/20 border border-outline/10">
+                                            {getTableStatusLabel(table.status)}
+                                        </span>
+                                    </div>
+
+                                    {/* Asignación de Mesero */}
+                                    <div className="space-y-1 bg-surface/40 p-2 rounded-2xl border border-outline/5 text-xs">
+                                        <label className="text-[10px] font-bold text-on-surface-variant flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[14px]">person</span>
+                                            Mesero Asignado:
+                                        </label>
+                                        <select
+                                            value={table.assigned_waiter_id || ''}
+                                            onChange={(e) => handleQuickAssignWaiter(table, e.target.value)}
+                                            className="w-full bg-surface border border-outline/20 rounded-xl p-1.5 text-xs text-on-surface font-semibold outline-none focus:border-primary cursor-pointer"
+                                        >
+                                            <option value="">-- Sin Mesero --</option>
+                                            {employees.map(emp => (
+                                                <option key={emp.id} value={emp.id}>
+                                                    {emp.name} {emp.role ? `(${emp.role})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Botón Tomar Pedido */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedTable(table)}
+                                        className="w-full py-2 bg-primary/20 hover:bg-primary text-primary hover:text-on-primary font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+                                    >
+                                        <span className="material-symbols-outlined text-[16px]">touch_app</span>
+                                        Tomar Pedido
+                                    </button>
+                                </div>
                             ))}
                         </div>
                     )}
@@ -266,7 +411,9 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                                     <h3 className="font-bold text-on-surface text-base">
                                         Mesa {selectedTable.table_number} ({selectedTable.zone})
                                     </h3>
-                                    <p className="text-xs text-on-surface-variant">Toca un plato para personalizar e incluir en la comanda</p>
+                                    <p className="text-xs text-on-surface-variant">
+                                        {selectedTable.waiter_name ? `Atendida por: ${selectedTable.waiter_name}` : 'Toca un plato para personalizar e incluir en la comanda'}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -335,6 +482,87 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                                 {loading ? 'Enviando...' : 'Enviar Comanda a Cocina/Barra'}
                             </button>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Crear / Configurar Mesa */}
+            {isTableModalOpen && (
+                <div className="fixed inset-0 z-[9999] backdrop-blur-sm bg-black/80 flex items-center justify-center p-4">
+                    <div className="bg-surface-container border border-outline/20 w-full max-w-md rounded-3xl p-6 space-y-5 shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+                            <h3 className="font-extrabold text-on-surface text-base flex items-center gap-2">
+                                <span>🍽️</span> Crear / Asignar Mesa
+                            </h3>
+                            <button type="button" onClick={() => setIsTableModalOpen(false)} className="text-on-surface-variant hover:text-on-surface">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSaveTable} className="space-y-4">
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-on-surface-variant">Número / Nombre de la Mesa *</label>
+                                <input
+                                    type="text"
+                                    placeholder="Ej: Mesa 1, Mesa 2, Terraza 3, VIP A"
+                                    value={modalTableNumber}
+                                    onChange={(e) => setModalTableNumber(e.target.value)}
+                                    className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary font-bold"
+                                    required
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-on-surface-variant">Zona del Restaurante</label>
+                                    <select
+                                        value={modalZone}
+                                        onChange={(e) => setModalZone(e.target.value)}
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary cursor-pointer"
+                                    >
+                                        <option value="Salón Principal">Salón Principal</option>
+                                        <option value="Terraza">Terraza / Exterior</option>
+                                        <option value="VIP">Zona VIP</option>
+                                        <option value="Barra">Barra / Mostrador</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-on-surface-variant">Capacidad (Personas)</label>
+                                    <input
+                                        type="number"
+                                        placeholder="4"
+                                        value={modalCapacity}
+                                        onChange={(e) => setModalCapacity(e.target.value)}
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-on-surface-variant">Asignar Mesero Responsable</label>
+                                <select
+                                    value={modalWaiterId}
+                                    onChange={(e) => setModalWaiterId(e.target.value)}
+                                    className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary cursor-pointer font-semibold"
+                                >
+                                    <option value="">-- Sin Mesero Asignado --</option>
+                                    {employees.map(emp => (
+                                        <option key={emp.id} value={emp.id}>
+                                            👤 {emp.name} {emp.role ? `(${emp.role})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full py-3 bg-primary text-on-primary font-extrabold text-xs rounded-xl hover:opacity-90 shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">save</span>
+                                {loading ? 'Guardando...' : 'Guardar Mesa'}
+                            </button>
+                        </form>
                     </div>
                 </div>
             )}
