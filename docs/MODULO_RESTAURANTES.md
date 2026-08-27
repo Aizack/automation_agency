@@ -55,12 +55,18 @@ flowchart TD
 
 ## 2. Especificación de Funcionalidades
 
-### A. Gestión de Inventarios e Insumos (Recetario / BOM)
-- **Doble Inventario**:
-  - **Insumos / Materia Prima**: Unidades de medida primarias (gramos, mililitros, unidades crudas).
-  - **Menú / Productos Terminados**: Platos del menú comercial.
-- **Descuento Automático**: Al vender 1 unidad de un plato del menú, el sistema descuenta de la bodega los insumos configurados en su receta (BOM - Bill of Materials).
-- **Alertas de Stock Crítico**: Notificación automática cuando un insumo básico cae por debajo del nivel mínimo de reabastecimiento.
+### A. Módulo Especializado de Inventario de Insumos & Materias Primas (`raw_materials`)
+- **Diseño de Interfaz Dedicada Exclusiva para Cocina**: Pestaña **"Inventario de Insumos & Ingredientes"** separada del catálogo de ventas comercial.
+- **Unidad de Compra vs. Unidad de Consumo (Conversión de Unidades)**:
+  - *Unidades de Compra*: Bulto, Kilogramo, Libra (454g), Garrafa, Arroba, Caja, Unidad.
+  - *Unidades de Consumo Interno*: Gramos (g), Mililitros (ml), Unidades (unid).
+- **Ejemplo de Cálculo Automatizado**:
+  - Si el restaurante registra la compra de **1 Bulto de Papa Sabanera (50 kg)** por **$100.000 COP**:
+    - Costo por Kilo: `$2.000 COP/kg`
+    - Costo por Gramo: `$2,00 COP/g`
+    - Stock disponible en bodega: `50.000 gramos`.
+- **Descuento Automático de Bodega por Venta**: Al facturar 1 plato del menú (ej. *Hamburguesa con 150g de papa*), el ERP deduce automáticamente `150g` del stock de la papa.
+- **Alertas de Stock Crítico**: Notificación cuando el stock acumulado cae por debajo del nivel mínimo de reabastecimiento en gramos/kilos.
 
 ### B. Mapa de Mesas, Creación & Asignación de Meseros
 - **Creación & Configuración de Mesas**: Botón `+ Crear / Configurar Mesa` para registrar número/código de mesa, zona (Salón Principal, Terraza, VIP, Barra) y capacidad de comensales.

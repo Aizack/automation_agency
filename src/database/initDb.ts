@@ -1022,9 +1022,49 @@ export const initDatabase = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             CREATE INDEX IF NOT EXISTS idx_kitchen_orders_client ON kitchen_orders(client_id, status);
+
+            CREATE TABLE IF NOT EXISTS raw_materials (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(255) NOT NULL,
+                category VARCHAR(100) DEFAULT 'General',
+                purchase_unit VARCHAR(50) NOT NULL DEFAULT 'kg',
+                purchase_unit_cost NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+                conversion_factor_to_consumption NUMERIC(12,4) NOT NULL DEFAULT 1000.0000,
+                consumption_unit VARCHAR(30) NOT NULL DEFAULT 'g',
+                stock_in_consumption_units NUMERIC(14,4) NOT NULL DEFAULT 0.0000,
+                min_stock_alert NUMERIC(14,4) DEFAULT 1000.0000,
+                supplier_name VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_raw_materials_client ON raw_materials(client_id);
+
+            CREATE TABLE IF NOT EXISTS business_assets (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                name VARCHAR(255) NOT NULL,
+                asset_type VARCHAR(50) DEFAULT 'equipo',
+                asset_value NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+                useful_life_months INT NOT NULL DEFAULT 60,
+                purchase_date DATE DEFAULT CURRENT_DATE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS business_liabilities (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                creditor_name VARCHAR(255) NOT NULL,
+                liability_type VARCHAR(50) DEFAULT 'bancario',
+                total_debt NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+                monthly_payment NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+                interest_rate_annual NUMERIC(5,2) DEFAULT 0.00,
+                remaining_months INT DEFAULT 12,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
-        console.log("[DB Init] ✅ Tablas de Restaurante & Gastronomía (mesas, recetario BOM y KDS) inicializadas.");
+        console.log("[DB Init] ✅ Tablas de Insumos (raw_materials), Activos y Pasivos Financieros inicializadas.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 
     } catch (error) {

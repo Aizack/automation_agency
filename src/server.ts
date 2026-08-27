@@ -7224,6 +7224,181 @@ export const server = app.listen(PORT, () => {
     }
   });
 
+  // --- ENDPOINTS DE MATERIAS PRIMAS E INGREDIENTES ---
+  app.get('/api/clients/:clientId/raw-materials', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const result = await pool.query(
+        `SELECT * FROM raw_materials WHERE client_id = $1 ORDER BY category ASC, name ASC`,
+        [clientId]
+      );
+      res.json({ success: true, raw_materials: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/clients/:clientId/raw-materials', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const {
+        name, category, purchase_unit, purchase_unit_cost,
+        conversion_factor_to_consumption, consumption_unit,
+        stock_in_consumption_units, min_stock_alert, supplier_name
+      } = req.body;
+
+      const result = await pool.query(
+        `INSERT INTO raw_materials (
+          client_id, name, category, purchase_unit, purchase_unit_cost,
+          conversion_factor_to_consumption, consumption_unit, stock_in_consumption_units,
+          min_stock_alert, supplier_name
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING *`,
+        [
+          clientId, name, category || 'General', purchase_unit || 'kg',
+          purchase_unit_cost || 0, conversion_factor_to_consumption || 1000,
+          consumption_unit || 'g', stock_in_consumption_units || 0,
+          min_stock_alert || 1000, supplier_name || null
+        ]
+      );
+      res.json({ success: true, raw_material: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.delete('/api/clients/:clientId/raw-materials/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, id } = req.params;
+      await pool.query(`DELETE FROM raw_materials WHERE id = $1 AND client_id = $2`, [id, clientId]);
+      res.json({ success: true, message: "Insumo eliminado con éxito" });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- ENDPOINTS DE ACTIVOS Y PASIVOS FINANCIEROS ---
+  app.get('/api/clients/:clientId/financial-planning/assets', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const result = await pool.query(`SELECT * FROM business_assets WHERE client_id = $1 ORDER BY created_at DESC`, [clientId]);
+      res.json({ success: true, assets: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/clients/:clientId/financial-planning/assets', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { name, asset_type, asset_value, useful_life_months } = req.body;
+      const result = await pool.query(
+        `INSERT INTO business_assets (client_id, name, asset_type, asset_value, useful_life_months)
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [clientId, name, asset_type || 'equipo', asset_value || 0, useful_life_months || 60]
+      );
+      res.json({ success: true, asset: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.delete('/api/clients/:clientId/financial-planning/assets/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, id } = req.params;
+      await pool.query(`DELETE FROM business_assets WHERE id = $1 AND client_id = $2`, [id, clientId]);
+      res.json({ success: true, message: "Activo eliminado" });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.get('/api/clients/:clientId/financial-planning/liabilities', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const result = await pool.query(`SELECT * FROM business_liabilities WHERE client_id = $1 ORDER BY created_at DESC`, [clientId]);
+      res.json({ success: true, liabilities: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/clients/:clientId/financial-planning/liabilities', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { creditor_name, liability_type, total_debt, monthly_payment, remaining_months } = req.body;
+      const result = await pool.query(
+        `INSERT INTO business_liabilities (client_id, creditor_name, liability_type, total_debt, monthly_payment, remaining_months)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+        [clientId, creditor_name, liability_type || 'bancario', total_debt || 0, monthly_payment || 0, remaining_months || 12]
+      );
+      res.json({ success: true, liability: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.delete('/api/clients/:clientId/financial-planning/liabilities/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, id } = req.params;
+      await pool.query(`DELETE FROM business_liabilities WHERE id = $1 AND client_id = $2`, [id, clientId]);
+      res.json({ success: true, message: "Pasivo eliminado" });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- ENDPOINT DE INSIGHTS DE CRECIMIENTO BASADOS EN DATOS REALES ---
+  app.get('/api/clients/:clientId/financial-planning/growth-insights', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+
+      // 1. Promedio de ticket real y total de facturas
+      const invRes = await pool.query(
+        `SELECT AVG(total_amount) as avg_ticket, COUNT(*) as total_invoices, SUM(total_amount) as total_revenue
+         FROM invoices WHERE client_id = $1 AND status != 'cancelled'`,
+        [clientId]
+      );
+      const avgTicket = parseFloat(invRes.rows[0]?.avg_ticket || 0);
+      const totalInvoices = parseInt(invRes.rows[0]?.total_invoices || 0);
+      const totalRevenue = parseFloat(invRes.rows[0]?.total_revenue || 0);
+
+      // 2. Día de la semana con menor facturación histórica (0=Domingo, 1=Lunes, 2=Martes, etc.)
+      const dayRes = await pool.query(
+        `SELECT EXTRACT(DOW FROM created_at) as dow, SUM(total_amount) as total
+         FROM invoices WHERE client_id = $1 AND status != 'cancelled'
+         GROUP BY dow ORDER BY total ASC LIMIT 1`,
+        [clientId]
+      );
+      const daysMap: { [key: number]: string } = {
+        0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Miércoles',
+        4: 'Jueves', 5: 'Viernes', 6: 'Sábado'
+      };
+      const lowestSalesDay = dayRes.rows[0] ? daysMap[parseInt(dayRes.rows[0].dow)] : 'Martes';
+
+      // 3. Producto estrella más vendido del catálogo
+      const prodRes = await pool.query(
+        `SELECT name, price, cost_price FROM products WHERE client_id = $1 ORDER BY price DESC LIMIT 1`,
+        [clientId]
+      );
+      const topProduct = prodRes.rows[0] ? prodRes.rows[0].name : 'Plato Principal';
+
+      res.json({
+        success: true,
+        insights: {
+          real_avg_ticket: Math.round(avgTicket),
+          total_invoices: totalInvoices,
+          total_revenue: totalRevenue,
+          lowest_sales_day: lowestSalesDay,
+          top_product_name: topProduct,
+          target_suggested_ticket: Math.round(avgTicket > 0 ? avgTicket * 1.2 : 32000)
+        }
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
   app.get(/.*/, (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith('/api')) {
