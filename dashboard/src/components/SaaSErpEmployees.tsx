@@ -236,7 +236,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
             if (deptJson.success) setDepartments(deptJson.departments || []);
             if (rolesJson.success) {
                 const roles = (rolesJson.roles || []).map((role: any) => String(role.name || '').trim().toLowerCase()).filter(Boolean);
-                setWorkRoles(Array.from(new Set(['agent', 'sales', 'delivery', 'admin', ...roles])));
+                setWorkRoles(Array.from(new Set(['agent', 'sales', 'delivery', 'admin', 'mesero', 'cocinero', 'bartender', 'caja', 'capitan_meseros', ...roles])));
             }
         } catch (err) {
             console.error("Error loading employees data:", err);
@@ -544,7 +544,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                 .filter((role): role is string => Boolean(role && role.trim()))
                 .map((role) => role.trim().toLowerCase());
 
-            const merged = Array.from(new Set(['agent', 'sales', 'delivery', 'admin', ...dbRoles, ...workRoles.map((role) => role.trim().toLowerCase())]));
+            const merged = Array.from(new Set(['agent', 'sales', 'delivery', 'admin', 'mesero', 'cocinero', 'bartender', 'caja', 'capitan_meseros', ...dbRoles, ...workRoles.map((role) => role.trim().toLowerCase())]));
             const sorted = merged.filter((role) => role && role.trim().length > 0).sort((a, b) => a.localeCompare(b));
             setWorkRoles(sorted);
             localStorage.setItem(`erp_work_roles_${clientId}`, JSON.stringify(sorted));
@@ -2301,8 +2301,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
                                         <option key={role} value={role}>
                                             {role === 'agent' ? 'Asesor de Atención / Agente' :
                                              role === 'sales' ? 'Vendedor / Comercial' :
-                                             role === 'delivery' ? 'Puerta a Puerta / Logística' :
+                                             role === 'delivery' ? 'Puerta a Puerta / Domiciliario' :
                                              role === 'admin' ? 'Administrador del Inquilino' :
+                                             role === 'mesero' ? '🍽️ Mesero / Comandero Móvil' :
+                                             role === 'cocinero' ? '👨‍🍳 Cocinero / Chef (Pantalla Cocina KDS)' :
+                                             role === 'bartender' ? '🍹 Bartender (Pantalla Barra KDS)' :
+                                             role === 'caja' ? '💵 Cajero / Caja Central' :
+                                             role === 'capitan_meseros' ? '🤵 Capitán de Meseros' :
                                              role.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())}
                                         </option>
                                     ))}
