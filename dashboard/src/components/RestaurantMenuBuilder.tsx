@@ -16,6 +16,7 @@ interface RecipeItem {
     raw_product_name: string;
     quantity_required: number;
     unit_of_measure: string;
+    waste_percentage: number; // Merma Primaria (%)
     raw_cost: number;
 }
 
@@ -41,6 +42,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
     const [selectedRawId, setSelectedRawId] = useState('');
     const [rawQty, setRawQty] = useState('');
     const [rawUnit, setRawUnit] = useState('gramos');
+    const [rawWaste, setRawWaste] = useState('0'); // Merma primaria por defecto 0%
 
     const token = localStorage.getItem('auth_token');
 
@@ -54,7 +56,6 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
             const prodData = await prodRes.json();
             if (prodData.success) {
                 const allProds: Product[] = prodData.products || [];
-                // Separar platos terminados de insumos/materia prima
                 setDishes(allProds);
                 setRawMaterials(allProds);
             }
@@ -75,7 +76,13 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
         if (!rawProd) return;
 
         const qty = parseFloat(rawQty) || 0;
+        const wastePct = parseFloat(rawWaste) || 0;
         const unitCost = parseFloat(rawProd.cost_price || '0');
+
+        // Cálculo del costo base
+        const baseCost = unitCost * (rawUnit === 'gramos' ? qty / 1000 : qty);
+        // Ajuste del costo financiero por Merma Primaria en crudo
+        const adjustedCost = wastePct > 0 && wastePct < 100 ? baseCost / (1 - wastePct / 100) : baseCost;
 
         setRecipeItems(prev => [
             ...prev,
@@ -84,19 +91,21 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                 raw_product_name: rawProd.name,
                 quantity_required: qty,
                 unit_of_measure: rawUnit,
-                raw_cost: unitCost * (rawUnit === 'gramos' ? qty / 1000 : qty)
+                waste_percentage: wastePct,
+                raw_cost: adjustedCost
             }
         ]);
 
         setSelectedRawId('');
         setRawQty('');
+        setRawWaste('0');
     };
 
     const handleRemoveIngredient = (index: number) => {
         setRecipeItems(prev => prev.filter((_, i) => i !== index));
     };
 
-    // Calcular Costo Total del Recetario BOM
+    // Calcular Costo Total del Recetario BOM (Escandallo Financiero)
     const totalBomCost = recipeItems.reduce((sum, item) => sum + item.raw_cost, 0);
     const salePriceNum = parseFloat(dishPrice) || 0;
     const estimatedMargin = salePriceNum > 0 ? ((salePriceNum - totalBomCost) / salePriceNum) * 100 : 0;
@@ -177,8 +186,8 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                         <span className="material-symbols-outlined text-[28px]">menu_book</span>
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-on-surface">Crear Menú & Recetario (BOM por Peso)</h2>
-                        <p className="text-xs text-on-surface-variant">Configura platos del menú, gramajes de insumos y recetas secretas SOP</p>
+                        <h2 className="text-xl font-bold text-on-surface">Crear Menú & Recetario (Escandallo Financiero)</h2>
+                        <p className="text-xs text-on-surface-variant">Configura platos, gramaje en crudo, merma primaria e instructivo secreto SOP</p>
                     </div>
                 </div>
 
@@ -192,15 +201,15 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                 </button>
             </div>
 
-            {/* Guía Explicativa del Gramaje */}
+            {/* Guía Explicativa del Gramaje & Escandallo */}
             <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-3xl text-xs space-y-1 text-amber-300">
                 <h4 className="font-extrabold flex items-center gap-1.5 text-amber-200">
                     <span className="material-symbols-outlined text-[16px]">lightbulb</span>
-                    💡 Guía de Inventario por Gramaje & Control de Costos:
+                    💡 Reglas Gastronómicas de Porcionado & Escandallo:
                 </h4>
                 <p className="opacity-90">
-                    En restaurantes, los insumos de materia prima se compran por **Libra (454g) o Kilogramo (1000g)** y se consumen en **Gramos**.
-                    Ingresa los gramos exactos de cada ingrediente por plato para que el sistema deduzca automáticamente la bodega por cada venta y calcule el margen de ganancia exacto.
+                    <strong>1. Peso en Carta:</strong> Corresponde al peso en <em>crudo limpio</em> tras la merma primaria. No se compensa físicamente en cocina.<br/>
+                    <strong>2. Escandallo Financiero:</strong> La merma primaria (limpieza/hueso) se absorbe en el costo del insumo dentro de la ficha técnica para proteger el margen del restaurante.
                 </p>
             </div>
 
@@ -222,7 +231,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
 
                             <div className="grid grid-cols-2 gap-2 text-xs bg-surface/40 p-2.5 rounded-2xl border border-outline/5">
                                 <div>
-                                    <span className="text-on-surface-variant block text-[10px]">Costo BOM Insumos:</span>
+                                    <span className="text-on-surface-variant block text-[10px]">Costo Escandallo:</span>
                                     <strong className="text-on-surface">${costNum.toLocaleString()}</strong>
                                 </div>
                                 <div>
@@ -259,7 +268,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                     <label className="text-xs font-bold text-on-surface-variant">Nombre del Plato *</label>
                                     <input
                                         type="text"
-                                        placeholder="Ej: Hamburguesa Artesanal Angus"
+                                        placeholder="Ej: Bife de Chorizo 300g"
                                         value={dishName}
                                         onChange={(e) => setDishName(e.target.value)}
                                         className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
@@ -270,7 +279,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                     <label className="text-xs font-bold text-on-surface-variant">Precio de Venta ($ COP) *</label>
                                     <input
                                         type="number"
-                                        placeholder="28000"
+                                        placeholder="45000"
                                         value={dishPrice}
                                         onChange={(e) => setDishPrice(e.target.value)}
                                         className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary font-bold text-primary"
@@ -298,7 +307,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                     <label className="text-xs font-bold text-on-surface-variant">Descripción Breve</label>
                                     <input
                                         type="text"
-                                        placeholder="Ej: Carne Angus 200g, pan brioche, queso cheddar..."
+                                        placeholder="Ej: Corte magro de res 300g en crudo, acompañado de papas..."
                                         value={dishDescription}
                                         onChange={(e) => setDishDescription(e.target.value)}
                                         className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
@@ -306,30 +315,30 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                 </div>
                             </div>
 
-                            {/* Configuración de Insumos / Gramajes (BOM) */}
+                            {/* Configuración de Insumos / Gramajes & Merma (BOM) */}
                             <div className="space-y-3 bg-surface/50 border border-outline/10 p-4 rounded-2xl">
                                 <h4 className="text-xs font-extrabold text-primary uppercase flex items-center gap-1.5">
                                     <span className="material-symbols-outlined text-[16px]">scale</span>
-                                    Insumos & Gramaje del Plato (Bill of Materials)
+                                    Insumos, Gramaje & Merma Primaria (Escandallo)
                                 </h4>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                                     <select
                                         value={selectedRawId}
                                         onChange={(e) => setSelectedRawId(e.target.value)}
                                         className="sm:col-span-2 bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary cursor-pointer"
                                     >
-                                        <option value="">-- Seleccionar Insumo de Bodega --</option>
+                                        <option value="">-- Insumo de Bodega --</option>
                                         {rawMaterials.map(m => (
                                             <option key={m.id} value={m.id}>
-                                                {m.name} (Costo: ${parseFloat(m.cost_price || '0').toLocaleString()})
+                                                {m.name} (${parseFloat(m.cost_price || '0').toLocaleString()})
                                             </option>
                                         ))}
                                     </select>
 
                                     <input
                                         type="number"
-                                        placeholder="Cantidad (Ej: 200)"
+                                        placeholder="Gramaje (Ej: 300)"
                                         value={rawQty}
                                         onChange={(e) => setRawQty(e.target.value)}
                                         className="bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
@@ -344,6 +353,14 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                         <option value="ml">Mililitros (ml)</option>
                                         <option value="unidades">Unidades</option>
                                     </select>
+
+                                    <input
+                                        type="number"
+                                        placeholder="Merma % (Ej: 15)"
+                                        value={rawWaste}
+                                        onChange={(e) => setRawWaste(e.target.value)}
+                                        className="bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
+                                    />
                                 </div>
 
                                 <button
@@ -351,7 +368,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                     onClick={handleAddIngredientToRecipe}
                                     className="w-full py-1.5 bg-surface-variant text-on-surface font-bold text-xs rounded-xl hover:bg-surface-variant/80 transition"
                                 >
-                                    + Agregar Insumo a la Receta
+                                    + Agregar Insumo con Merma al Escandallo
                                 </button>
 
                                 {/* Tabla de Insumos Agregados */}
@@ -359,13 +376,16 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                     <div className="space-y-1 pt-2">
                                         <div className="text-[11px] font-bold text-on-surface-variant flex justify-between px-1">
                                             <span>Insumo</span>
-                                            <span>Cantidad / Gramos</span>
+                                            <span>Cantidad / Merma / Costo Ajustado</span>
                                         </div>
                                         {recipeItems.map((item, index) => (
                                             <div key={index} className="flex items-center justify-between bg-surface p-2 rounded-xl text-xs border border-outline/5">
                                                 <span>{item.raw_product_name}</span>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-mono font-bold text-primary">{item.quantity_required} {item.unit_of_measure}</span>
+                                                    <span className="font-mono font-bold text-primary">
+                                                        {item.quantity_required} {item.unit_of_measure} {item.waste_percentage > 0 ? `(Merma: ${item.waste_percentage}%)` : ''}
+                                                    </span>
+                                                    <span className="font-bold text-on-surface">${Math.round(item.raw_cost).toLocaleString()}</span>
                                                     <button type="button" onClick={() => handleRemoveIngredient(index)} className="text-rose-400 hover:text-rose-300">
                                                         <span className="material-symbols-outlined text-[16px]">delete</span>
                                                     </button>
@@ -381,7 +401,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                 <label className="text-xs font-bold text-amber-400">Instructivo Técnico SOP de Preparación (Secret Recipe):</label>
                                 <textarea
                                     rows={3}
-                                    placeholder="Paso 1: Sazonar la carne con sal marina... Paso 2: Sellar a 220°C durante 4 minutos..."
+                                    placeholder="Paso 1: Sazonar la carne en crudo... Paso 2: Sellar a alta temperatura..."
                                     value={dishSopInstructions}
                                     onChange={(e) => setDishSopInstructions(e.target.value)}
                                     className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary font-mono"
@@ -391,8 +411,8 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                             {/* Resumen de Margen */}
                             <div className="flex items-center justify-between bg-surface-container/60 p-4 rounded-2xl border border-outline/10 text-xs">
                                 <div>
-                                    <span className="text-on-surface-variant block">Costo BOM Estimado:</span>
-                                    <strong className="text-on-surface text-sm">${totalBomCost.toLocaleString()} COP</strong>
+                                    <span className="text-on-surface-variant block">Costo Escandallo Financiero:</span>
+                                    <strong className="text-on-surface text-sm">${Math.round(totalBomCost).toLocaleString()} COP</strong>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-on-surface-variant block">Margen Neto de Ganancia:</span>
@@ -408,7 +428,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                 className="w-full py-3.5 bg-primary text-on-primary font-extrabold text-xs rounded-2xl hover:opacity-90 shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-[18px]">save</span>
-                                {loading ? 'Guardando...' : 'Guardar Plato & Configuración BOM'}
+                                {loading ? 'Guardando...' : 'Guardar Plato & Escandallo BOM'}
                             </button>
                         </form>
                     </div>
