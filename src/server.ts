@@ -7435,14 +7435,15 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       }
 
       const orderNumber = `PED-${Math.floor(1000 + Math.random() * 9000)}`;
-      const orderNotes = `${order_type === 'domicilio' ? `🛵 DOMICILIO para ${customer_name} (Tel: ${customer_phone}) - Dir: ${customer_address}` : `🪑 MESA ${table_number || 'Salón'}`} ${notes ? `| ${notes}` : ''}`;
+      const initialStatus = order_type === 'domicilio' ? 'pending_payment' : 'pending';
+      const orderNotes = `${order_type === 'domicilio' ? `🛵 DOMICILIO para ${customer_name} (Tel: ${customer_phone}) - Dir: ${customer_address} [PENDIENTE PAGO]` : `🪑 MESA ${table_number || 'Salón'}`} ${notes ? `| ${notes}` : ''}`;
 
       // Crear Comanda en KDS para la Cocina
       const kdsRes = await pool.query(
         `INSERT INTO kitchen_orders (client_id, table_id, order_number, station, status, items, notes)
-         VALUES ($1, $2, NULL, $3, 'kitchen', 'pending', $4, $5)
+         VALUES ($1, $2, $3, 'kitchen', $4, $5, $6)
          RETURNING *`,
-        [clientId, tableId, orderNumber, JSON.stringify(items), orderNotes]
+        [clientId, tableId, orderNumber, initialStatus, JSON.stringify(items), orderNotes]
       );
 
       // Calcular Subtotal y Total

@@ -680,12 +680,28 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
             {orderSuccess && (
                 <div className="fixed inset-0 z-[9999] backdrop-blur-md bg-black/90 flex items-center justify-center p-4">
                     <div className="bg-[#121216] border border-amber-500/40 w-full max-w-md rounded-3xl p-6 text-center space-y-5 shadow-2xl">
-                        <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-3xl border border-emerald-500/30">
-                            ✓
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto text-3xl border ${
+                            orderType === 'domicilio' 
+                                ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' 
+                                : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                        }`}>
+                            {orderType === 'domicilio' ? '⏳' : '✓'}
                         </div>
                         <div>
-                            <h3 className="font-extrabold text-white text-xl">¡Pedido Recibido en Cocina!</h3>
-                            <p className="text-xs text-on-surface-variant mt-1">Tu comanda <strong>#{orderSuccess.order_number}</strong> ha sido enviada al KDS de preparación.</p>
+                            <h3 className="font-extrabold text-white text-xl">
+                                {orderType === 'domicilio' ? '🟡 Pedido Registrado (Pago Pendiente)' : '¡Pedido Recibido en Cocina!'}
+                            </h3>
+                            <p className="text-xs text-on-surface-variant mt-1.5 leading-relaxed">
+                                {orderType === 'domicilio' ? (
+                                    <>
+                                        Tu orden <strong>#{orderSuccess.order_number}</strong> está registrada. Para envíos a domicilio, <strong>envía tu comprobante de pago por WhatsApp</strong> para que la caja valide e inicie la preparación en cocina.
+                                    </>
+                                ) : (
+                                    <>
+                                        Tu comanda <strong>#{orderSuccess.order_number}</strong> para la <strong>Mesa #{tableNumber}</strong> ha sido enviada al KDS de cocina.
+                                    </>
+                                )}
+                            </p>
                         </div>
 
                         <div className="bg-surface/50 p-4 rounded-2xl border border-outline/10 text-xs space-y-1">
@@ -697,10 +713,10 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                             <button
                                 type="button"
                                 onClick={sendWhatsAppConfirmation}
-                                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+                                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-[18px]">chat</span>
-                                💬 Enviar Confirmación por WhatsApp
+                                💬 {orderType === 'domicilio' ? 'Adjuntar Comprobante de Pago por WhatsApp' : 'Confirmar Pedido por WhatsApp'}
                             </button>
 
                             <button
