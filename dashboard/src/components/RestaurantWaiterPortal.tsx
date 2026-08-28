@@ -62,7 +62,7 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
     const [modalCapacity, setModalCapacity] = useState('4');
     const [modalWaiterId, setModalWaiterId] = useState('');
 
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('emp_token');
 
     const fetchTablesProductsAndEmployees = async () => {
         try {

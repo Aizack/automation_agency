@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { RestaurantWaiterPortal } from './RestaurantWaiterPortal';
 
 interface Task {
     id: string;
@@ -73,7 +74,7 @@ export const EmployeePortal: React.FC = () => {
     const [crmCustomers, setCrmCustomers] = useState<any[]>([]);
     const [selectedCrmCustomerId, setSelectedCrmCustomerId] = useState<string>('');
     const [showCrmSuggestions, setShowCrmSuggestions] = useState(false);
-    const [activeTab, setActiveTab] = useState<'turnos' | 'tareas' | 'solicitudes' | 'chat' | 'campanias' | 'finanzas' | 'entregas'>('turnos');
+    const [activeTab, setActiveTab] = useState<'turnos' | 'mesas' | 'tareas' | 'solicitudes' | 'chat' | 'campanias' | 'finanzas' | 'entregas'>('turnos');
     const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
     const [deliveriesLoading, setDeliveriesLoading] = useState(false);
 
@@ -1094,6 +1095,17 @@ export const EmployeePortal: React.FC = () => {
                             Mi Jornada
                         </button>
                         <button 
+                            onClick={() => setActiveTab('mesas')}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                activeTab === 'mesas' 
+                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 sidebar-item-active font-bold' 
+                                    : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 font-medium'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-[15px]">table_restaurant</span>
+                            🪑 Mis Mesas & Comandero
+                        </button>
+                        <button 
                             onClick={() => setActiveTab('tareas')}
                             className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
                                 activeTab === 'tareas' 
@@ -1204,6 +1216,15 @@ export const EmployeePortal: React.FC = () => {
                         Jornada
                     </button>
                     <button 
+                        onClick={() => setActiveTab('mesas')}
+                        className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                            activeTab === 'mesas' ? 'text-amber-400 font-extrabold' : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined text-amber-400">table_restaurant</span>
+                        Mesas
+                    </button>
+                    <button 
                         onClick={() => setActiveTab('tareas')}
                         className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
                             activeTab === 'tareas' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
@@ -1251,9 +1272,15 @@ export const EmployeePortal: React.FC = () => {
                 </nav>
 
                 {/* Main Content Area */}
-                <main className="flex-grow p-4 md:p-6 overflow-y-auto max-w-xl mx-auto w-full relative">
+                <main className={`flex-grow p-4 md:p-6 overflow-y-auto mx-auto w-full relative ${activeTab === 'mesas' ? 'max-w-7xl' : 'max-w-xl'}`}>
 
-                    
+                    {/* TAB MESAS & COMANDERO (PARA MESEROS) */}
+                    {activeTab === 'mesas' && (
+                        <div className="space-y-4 text-left">
+                            <RestaurantWaiterPortal clientId={clientId} waiterId={employeeId} waiterName={employeeName} />
+                        </div>
+                    )}
+
                     {/* TAB 1: TURNOS & ELAPSED TIMER */}
                     {activeTab === 'turnos' && (
                         <div className="space-y-6">
