@@ -151,7 +151,14 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
         if (msg.timestamp && msg.timestamp < (startupTime - 300)) return;
 
         console.log(`[WhatsApp - ${key}] Mensaje recibido de ${msg.from}: ${msg.body}`);
-        const senderPhone = msg.from.split('@')[0];
+        let senderPhone = msg.from.split('@')[0];
+        try {
+            const contact = await msg.getContact();
+            if (contact && contact.number) {
+                senderPhone = contact.number;
+            }
+        } catch (cErr) {}
+
         const msgText = msg.body.toLowerCase().trim();
 
         // --- INTERCEPTOR DE OPT-OUT DE MARKETING ---

@@ -275,7 +275,7 @@ export class AIAgent {
       if (process.env.GEMINI_API_KEY) {
         // Inicializar Modelo Gemini con herramientas si están configuradas
         const modelConfig: any = {
-          model: process.env.GEMINI_MODEL || "gemini-1.5-flash",
+          model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
           systemInstruction: fullSystemPrompt
         };
 
