@@ -48,8 +48,12 @@ El plan de crecimiento abandona los consejos genéricos y **se alimenta en tiemp
 - **Definición de Arquetipos de Cliente (Buyer Personas)**: Herramienta para identificar a quién se le vende, dolores principales y canales de adquisición.
 - **Prospección y Canales de Venta**: Plan para ventas físicas, WhatsApp, redes sociales y domicilios.
 
-### E. Manuales de Servicio & Estándares de Atención
-- Checklist interactivo para mejorar la atención al cliente, reducir quejas y fidelizar consumidores recurrentes.
+### F. Protección Legal de Software, Transparencia de IA & Generador de Términos (Legal SaaS Hub)
+- **Generador Personalizado de Términos & Condiciones**: Herramienta que crea los términos legales específicos para los servicios del negocio (evita copiar términos genéricos de internet que no cubren los riesgos reales).
+- **Declaración de Transparencia en Inteligencia Artificial**:
+  - Plantilla legal lista para publicar en la landing page y footer declarando el uso de modelos de lenguaje e IA (agentes de WhatsApp, recomendadores, analítica predictiva) cumpliendo las directrices internacionales de transparencia algorítmica.
+- **Política de Tratamiento de Datos (Habeas Data & Privacidad de Pagos)**:
+  - Cláusulas específicas para pasarelas de pago (Stripe, Wompi, MercadoPago), almacenamiento en la nube, cookies y manejo seguro de información sensible de clientes.
 
 ---
 
