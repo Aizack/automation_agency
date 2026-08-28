@@ -62,6 +62,56 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
     const [modalCapacity, setModalCapacity] = useState('4');
     const [modalWaiterId, setModalWaiterId] = useState('');
 
+    // Modal Código QR Único de Mesa
+    const [qrModalTable, setQrModalTable] = useState<Table | null>(null);
+
+    const getTableQrUrl = (tNumber: string) => {
+        return `${window.location.protocol}//${window.location.host}/menu/${clientId}?table=${encodeURIComponent(tNumber)}`;
+    };
+
+    const handleCopyQRUrl = (tNumber: string) => {
+        const url = getTableQrUrl(tNumber);
+        navigator.clipboard.writeText(url);
+        alert(`¡Enlace copiado al portapapeles!\n${url}`);
+    };
+
+    const handlePrintQRWindow = (table: Table) => {
+        const url = getTableQrUrl(table.table_number);
+        const printWin = window.open('', '_blank');
+        if (!printWin) return;
+        printWin.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>QR Stand - Mesa ${table.table_number}</title>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #fff; color: #111; }
+                    .stand-card { width: 320px; border: 3px solid #111; border-radius: 24px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+                    .badge { background: #d8a24e; color: #000; font-weight: 900; padding: 6px 16px; border-radius: 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+                    h1 { margin: 15px 0 5px; font-size: 32px; font-weight: 900; }
+                    p { font-size: 13px; color: #555; margin-bottom: 20px; }
+                    img { width: 220px; height: 220px; border-radius: 16px; border: 2px solid #eee; }
+                    .footer { font-size: 11px; color: #888; margin-top: 15px; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="stand-card">
+                    <span class="badge">${table.zone || 'RESTAURANTE'}</span>
+                    <h1>MESA ${table.table_number}</h1>
+                    <p>Escanea con tu celular para ver la carta digital y realizar tu pedido</p>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}" alt="QR Mesa ${table.table_number}" />
+                    <div class="footer">CARTA DIGITAL SMART MENU</div>
+                </div>
+                <script>
+                    window.onload = function() { window.print(); }
+                </script>
+            </body>
+            </html>
+        `);
+        printWin.document.close();
+    };
+
+
     const token = localStorage.getItem('auth_token') || localStorage.getItem('emp_token');
 
     const fetchTablesProductsAndEmployees = async () => {
@@ -378,45 +428,63 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                                             ))}
                                         </select>
                                     </div>
+                                    {/* Botones Tomar Pedido & Generar QR */}
+                                     <div className="grid grid-cols-2 gap-2">
+                                         <button
+                                             type="button"
+                                             onClick={() => setSelectedTable(table)}
+                                             className="py-2 bg-primary/20 hover:bg-primary text-primary hover:text-on-primary font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
+                                         >
+                                             <span className="material-symbols-outlined text-[15px]">touch_app</span>
+                                             Tomar Pedido
+                                         </button>
+                                         <button
+                                             type="button"
+                                             onClick={() => setQrModalTable(table)}
+                                             className="py-2 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black font-bold text-xs rounded-xl border border-amber-500/30 transition cursor-pointer flex items-center justify-center gap-1"
+                                         >
+                                             <span className="material-symbols-outlined text-[15px]">qr_code_2</span>
+                                             QR Mesa
+                                         </button>
+                                     </div>
+                                 </div>
+                             ))}
+                         </div>
+                     )}
+                 </div>
+             ) : (
+                 /* Panel de Pedido de la Mesa Seleccionada */
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                     {/* Catálogo de Menú */}
+                     <div className="lg:col-span-2 bg-surface-container/30 border border-outline/10 p-5 rounded-3xl space-y-4">
+                         <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+                             <div className="flex items-center gap-2">
+                                 <button
+                                     type="button"
+                                     onClick={() => setSelectedTable(null)}
+                                     className="p-2 bg-surface-container border border-outline/20 hover:bg-surface-variant rounded-xl transition text-on-surface"
+                                 >
+                                     <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                                 </button>
+                                 <div>
+                                     <h3 className="font-bold text-on-surface text-base">
+                                         Mesa {selectedTable.table_number} ({selectedTable.zone})
+                                     </h3>
+                                     <p className="text-xs text-on-surface-variant">
+                                         {selectedTable.waiter_name ? `Atendida por: ${selectedTable.waiter_name}` : 'Toca un plato para personalizar e incluir en la comanda'}
+                                     </p>
+                                 </div>
+                             </div>
 
-                                    {/* Botón Tomar Pedido */}
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedTable(table)}
-                                        className="w-full py-2 bg-primary/20 hover:bg-primary text-primary hover:text-on-primary font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
-                                    >
-                                        <span className="material-symbols-outlined text-[16px]">touch_app</span>
-                                        Tomar Pedido
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            ) : (
-                /* Panel de Pedido de la Mesa Seleccionada */
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Catálogo de Menú */}
-                    <div className="lg:col-span-2 bg-surface-container/30 border border-outline/10 p-5 rounded-3xl space-y-4">
-                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedTable(null)}
-                                    className="p-2 bg-surface-container border border-outline/20 hover:bg-surface-variant rounded-xl transition text-on-surface"
-                                >
-                                    <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                                </button>
-                                <div>
-                                    <h3 className="font-bold text-on-surface text-base">
-                                        Mesa {selectedTable.table_number} ({selectedTable.zone})
-                                    </h3>
-                                    <p className="text-xs text-on-surface-variant">
-                                        {selectedTable.waiter_name ? `Atendida por: ${selectedTable.waiter_name}` : 'Toca un plato para personalizar e incluir en la comanda'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                             <button
+                                 type="button"
+                                 onClick={() => setQrModalTable(selectedTable)}
+                                 className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black font-extrabold text-xs rounded-xl border border-amber-500/30 transition cursor-pointer flex items-center gap-1.5"
+                             >
+                                 <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
+                                 Generar QR Mesa
+                             </button>
+                         </div>
 
                         {/* Grid de Productos */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -704,6 +772,79 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                         >
                             Agregar a Comanda
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Código QR Único de Mesa */}
+            {qrModalTable && (
+                <div className="fixed inset-0 z-[9999] backdrop-blur-md bg-black/85 flex items-center justify-center p-4">
+                    <div className="bg-[#121216] border border-amber-500/40 w-full max-w-md rounded-3xl p-6 space-y-5 shadow-2xl text-center">
+                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+                            <h3 className="font-extrabold text-white text-base flex items-center gap-2">
+                                <span className="material-symbols-outlined text-amber-400">qr_code_2</span>
+                                Código QR Único - Mesa {qrModalTable.table_number}
+                            </h3>
+                            <button type="button" onClick={() => setQrModalTable(null)} className="text-on-surface-variant hover:text-white">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        {/* Tarjeta del QR / Stand de Mesa */}
+                        <div className="bg-surface/60 border border-outline/20 p-5 rounded-3xl space-y-3 flex flex-col items-center shadow-inner">
+                            <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 uppercase tracking-widest">
+                                {qrModalTable.zone || 'Salón Principal'}
+                            </span>
+                            <h4 className="font-black text-white text-xl">MESA {qrModalTable.table_number}</h4>
+                            <p className="text-xs text-on-surface-variant/90 max-w-xs">
+                                Escanea este código para acceder a la carta digital exclusiva y enviar pedidos directamente a la mesa.
+                            </p>
+
+                            <div className="p-3 bg-white rounded-2xl border-4 border-amber-500/30 shadow-xl my-2">
+                                <img
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(getTableQrUrl(qrModalTable.table_number))}`}
+                                    alt={`QR Mesa ${qrModalTable.table_number}`}
+                                    className="w-48 h-48 rounded-lg"
+                                />
+                            </div>
+
+                            <div className="w-full bg-surface border border-outline/10 p-2.5 rounded-xl text-[11px] font-mono text-amber-300 truncate select-all">
+                                {getTableQrUrl(qrModalTable.table_number)}
+                            </div>
+                        </div>
+
+                        {/* Botones de Acción */}
+                        <div className="space-y-2">
+                            <button
+                                type="button"
+                                onClick={() => handlePrintQRWindow(qrModalTable)}
+                                className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">print</span>
+                                🖨️ Imprimir Stand para la Mesa
+                            </button>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => handleCopyQRUrl(qrModalTable.table_number)}
+                                    className="py-2.5 bg-surface hover:bg-surface-variant text-on-surface font-bold text-xs rounded-xl border border-outline/20 transition cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                                    Copiar Enlace
+                                </button>
+                                <a
+                                    href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(getTableQrUrl(qrModalTable.table_number))}`}
+                                    download={`QR-Mesa-${qrModalTable.table_number}.png`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="py-2.5 bg-surface hover:bg-surface-variant text-on-surface font-bold text-xs rounded-xl border border-outline/20 transition cursor-pointer flex items-center justify-center gap-1 text-center"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">download</span>
+                                    Descargar PNG
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
