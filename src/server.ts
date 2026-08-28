@@ -5504,7 +5504,7 @@ async function startMarketingCampaignWorker(clientId: string, campaignId: string
     // Instanciar Gemini
     const apiKey = process.env.GEMINI_API_KEY || "API_KEY_MISSING";
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     for (const log of pendingLogs) {
       // Validar si el WhatsApp está listo antes de cada envío
@@ -7303,7 +7303,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 
       if (apiKey && apiKey !== "API_KEY_MISSING") {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         let result;
         if (fileBase64 && mimeType) {
