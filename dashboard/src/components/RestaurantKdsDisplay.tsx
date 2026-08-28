@@ -16,6 +16,8 @@ interface KdsOrder {
     items: KdsItem[];
     notes?: string;
     table_number?: string;
+    order_type?: 'mesa' | 'domicilio' | 'para_llevar';
+    customer_name?: string;
     zone?: string;
     waiter_name?: string;
     created_at: string;
@@ -212,17 +214,34 @@ export const RestaurantKdsDisplay: React.FC<RestaurantKdsDisplayProps> = ({ clie
                                 className={`rounded-3xl border p-4 space-y-4 flex flex-col justify-between transition-all shadow-lg ${timer.bg}`}
                             >
                                 <div className="space-y-3">
-                                    {/* Cabecera Tarjeta */}
+                                    {/* Cabecera Tarjeta con Distinción de Tipo de Pedido */}
                                     <div className="flex items-center justify-between border-b border-outline/10 pb-3">
                                         <div>
-                                            <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                                                {ord.order_number}
-                                            </span>
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                                                    {ord.order_number}
+                                                </span>
+                                                {ord.order_type === 'domicilio' || (!ord.table_number && ord.customer_name) ? (
+                                                    <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                                                        🛵 DOMICILIO (EMPAQUE DE VIAJE)
+                                                    </span>
+                                                ) : ord.order_type === 'para_llevar' || !ord.table_number ? (
+                                                    <span className="bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                        🛍️ PARA LLEVAR (RECOGIDA)
+                                                    </span>
+                                                ) : (
+                                                    <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                        🪑 SERVICIO EN MESA (VAJILLA)
+                                                    </span>
+                                                )}
+                                            </div>
+
                                             <h3 className="text-base font-extrabold text-on-surface flex items-center gap-1.5">
                                                 <span>{ord.station === 'bar' ? '🍹' : '🍽️'}</span>
-                                                {ord.table_number ? `Mesa ${ord.table_number}` : 'Para Llevar'}
+                                                {ord.table_number
+                                                    ? `Mesa ${ord.table_number} (${ord.zone || 'Salón'})`
+                                                    : (ord.customer_name ? `Cliente: ${ord.customer_name}` : 'Pedido Directo')}
                                             </h3>
-                                            {ord.zone && <span className="text-[11px] text-on-surface-variant font-medium">{ord.zone}</span>}
                                         </div>
 
                                         {/* Temporizador */}
