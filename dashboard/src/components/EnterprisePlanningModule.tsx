@@ -30,7 +30,7 @@ interface EnterprisePlanningModuleProps {
 }
 
 export const EnterprisePlanningModule: React.FC<EnterprisePlanningModuleProps> = ({ clientId }) => {
-    const [activeTab, setActiveTab] = useState<'proyecciones' | 'activos_pasivos' | 'pricing' | 'juridico' | 'crecimiento'>('proyecciones');
+    const [activeTab, setActiveTab] = useState<'proyecciones' | 'activos_pasivos' | 'pricing' | 'juridico' | 'crecimiento' | 'legal_hub'>('proyecciones');
 
     // 1. Estados Calculadora de Punto de Equilibrio & Proyección
     const [fixedCosts, setFixedCosts] = useState<string>('8000000'); // Arriendo, Nómina, Servicios
@@ -61,6 +61,16 @@ export const EnterprisePlanningModule: React.FC<EnterprisePlanningModuleProps> =
     const [annualRevenue, setAnnualRevenue] = useState<string>('50000000');
     const [hasPartners, setHasPartners] = useState<boolean>(false);
     const [protectPersonalAssets, setProtectPersonalAssets] = useState<boolean>(true);
+
+    // 6. Hub Legal, Transparencia IA & Generador de Términos
+    const [businessLegalName, setBusinessLegalName] = useState<string>('Mi Negocio S.A.S.');
+    const [businessNit, setBusinessNit] = useState<string>('901.234.567-8');
+    const [businessDomain, setBusinessDomain] = useState<string>('minegocio.com');
+    const [useAIWhatsApp, setUseAIWhatsApp] = useState<boolean>(true);
+    const [usePaymentGateways, setUsePaymentGateways] = useState<boolean>(true);
+    const [useHabeasData, setUseHabeasData] = useState<boolean>(true);
+    const [activeLegalDocTab, setActiveLegalDocTab] = useState<'terminos' | 'ai_transparency' | 'privacidad'>('terminos');
+    const [copySuccess, setCopySuccess] = useState<string | null>(null);
 
     const token = localStorage.getItem('auth_token');
 
@@ -288,6 +298,14 @@ export const EnterprisePlanningModule: React.FC<EnterprisePlanningModuleProps> =
                     >
                         <span className="material-symbols-outlined text-[16px]">trending_up</span>
                         Plan Crecimiento
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('legal_hub')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'legal_hub' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'}`}
+                    >
+                        <span className="material-symbols-outlined text-[16px]">balance</span>
+                        Legales & Transparencia IA
                     </button>
                 </div>
             </div>
@@ -740,6 +758,215 @@ export const EnterprisePlanningModule: React.FC<EnterprisePlanningModuleProps> =
                                 <p className="text-on-surface-variant text-[11px]">
                                     <strong>Acción Práctica:</strong> Diseña un paquete "Combo Ejecutivo" emparejando <strong>{growthInsights?.top_product_name || 'tu plato principal'}</strong> con entradas de alto margen neto.
                                 </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Pestaña 6: Legal SaaS Hub, Transparencia IA & Generador de Términos */}
+            {activeTab === 'legal_hub' && (
+                <div className="space-y-6 animate-fade-in">
+                    {/* Banner Informativo */}
+                    <div className="bg-purple-500/10 border border-purple-500/30 p-5 rounded-3xl text-xs text-purple-300 flex items-center justify-between gap-4 backdrop-blur-md">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-purple-500/20 text-purple-300 rounded-2xl">
+                                <span className="material-symbols-outlined text-[28px]">balance</span>
+                            </div>
+                            <div>
+                                <strong className="font-bold text-purple-200 block text-sm">Hub de Protección Legal, Transparencia IA & Términos a la Medida</strong>
+                                <span>Evita sanciones legales declarando el uso de IA, especificando tus términos de servicio y cumpliendo la ley de tratamiento de datos personales.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Configuración del Negocio para Legales */}
+                        <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4 text-xs">
+                            <h3 className="font-extrabold text-on-surface text-sm flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">badge</span>
+                                Datos del Negocio para Documentos Legales
+                            </h3>
+
+                            <div className="space-y-3">
+                                <div className="space-y-1">
+                                    <label className="font-bold text-on-surface-variant">Razón Social / Nombre Legal *</label>
+                                    <input
+                                        type="text"
+                                        value={businessLegalName}
+                                        onChange={(e) => setBusinessLegalName(e.target.value)}
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-on-surface font-bold outline-none focus:border-primary"
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="font-bold text-on-surface-variant">NIT / Documento Fiscal *</label>
+                                    <input
+                                        type="text"
+                                        value={businessNit}
+                                        onChange={(e) => setBusinessNit(e.target.value)}
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-on-surface font-mono outline-none focus:border-primary"
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="font-bold text-on-surface-variant">Dominio / Sitio Web Oficial</label>
+                                    <input
+                                        type="text"
+                                        value={businessDomain}
+                                        onChange={(e) => setBusinessDomain(e.target.value)}
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="border-t border-outline/10 pt-4 space-y-2">
+                                <span className="font-extrabold text-on-surface block text-xs">Variables Operativas de la Plataforma:</span>
+                                
+                                <label className="flex items-center gap-2 p-2 bg-surface/40 rounded-xl border border-outline/5 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={useAIWhatsApp}
+                                        onChange={(e) => setUseAIWhatsApp(e.target.checked)}
+                                        className="accent-primary"
+                                    />
+                                    <span className="text-[11px] text-on-surface">Usamos Agentes de IA en WhatsApp / Web</span>
+                                </label>
+
+                                <label className="flex items-center gap-2 p-2 bg-surface/40 rounded-xl border border-outline/5 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={usePaymentGateways}
+                                        onChange={(e) => setUsePaymentGateways(e.target.checked)}
+                                        className="accent-primary"
+                                    />
+                                    <span className="text-[11px] text-on-surface">Procesamos Pagos Digitales (Stripe / Wompi)</span>
+                                </label>
+
+                                <label className="flex items-center gap-2 p-2 bg-surface/40 rounded-xl border border-outline/5 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={useHabeasData}
+                                        onChange={(e) => setUseHabeasData(e.target.checked)}
+                                        className="accent-primary"
+                                    />
+                                    <span className="text-[11px] text-on-surface">Almacenamos Datos de Clientes (Ley 1581)</span>
+                                </label>
+                            </div>
+
+                            {/* Checklist Auditoría Legal */}
+                            <div className="bg-surface/60 p-3.5 rounded-2xl border border-outline/10 space-y-1.5 text-[11px]">
+                                <strong className="text-on-surface font-bold block text-xs">Estado de Cumplimiento Legal:</strong>
+                                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                                    <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                    <span>Transparencia de IA Configurada</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                                    <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                    <span>Términos de Servicio Específicos Generados</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                                    <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                    <span>Habeas Data & Privacidad Listas</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Visor de Documentos Legales Generados */}
+                        <div className="lg:col-span-2 bg-surface-container/40 border border-outline/10 p-6 rounded-3xl space-y-4 flex flex-col justify-between">
+                            <div className="space-y-4">
+                                {/* Selector de Documento Legal */}
+                                <div className="flex flex-wrap gap-2 border-b border-outline/10 pb-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveLegalDocTab('terminos')}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${activeLegalDocTab === 'terminos' ? 'bg-primary text-on-primary' : 'bg-surface/60 text-on-surface-variant hover:text-on-surface'}`}
+                                    >
+                                        📄 Términos y Condiciones
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveLegalDocTab('ai_transparency')}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${activeLegalDocTab === 'ai_transparency' ? 'bg-purple-500 text-white' : 'bg-surface/60 text-on-surface-variant hover:text-on-surface'}`}
+                                    >
+                                        🤖 Declaración de IA (Footer/Landing)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveLegalDocTab('privacidad')}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${activeLegalDocTab === 'privacidad' ? 'bg-sky-500 text-white' : 'bg-surface/60 text-on-surface-variant hover:text-on-surface'}`}
+                                    >
+                                        🔒 Habeas Data & Privacidad
+                                    </button>
+                                </div>
+
+                                {/* Texto Generado en Tiempo Real */}
+                                <div className="bg-surface/80 border border-outline/10 p-4 rounded-2xl max-h-[350px] overflow-y-auto font-mono text-xs text-on-surface leading-relaxed whitespace-pre-wrap">
+                                    {activeLegalDocTab === 'terminos' && `TÉRMINOS Y CONDICIONES DE SERVICIO
+Razón Social: ${businessLegalName}
+NIT / Registro: ${businessNit}
+Dominio / Sitio Web: ${businessDomain}
+
+1. OBJETO Y ACEPTACIÓN
+El presente contrato regula la prestación de servicios comerciales por parte de ${businessLegalName}. Al acceder a nuestras plataformas, pedidos en comandero o atención directa, el cliente acepta expresamente los presentes Términos de Servicio especificamente diseñados para nuestro sistema.
+
+2. OPERACIÓN Y ASISTENCIA CON INTELIGENCIA ARTIFICIAL
+${useAIWhatsApp ? `[✓ DECLARADO EN TÉRMINOS] ${businessLegalName} implementa asistentes virtuales y agentes automatizados basados en Inteligencia Artificial (IA) a través de WhatsApp y plataformas web. Los usuarios comprenden que la atención inicial y toma de pedidos es procesada por algoritmos de IA diseñados para optimizar el servicio.` : 'No se utilizan agentes automatizados de IA en la atención directa al público.'}
+
+3. PROCESAMIENTO DE PAGOS Y TRANSACCIONES
+${usePaymentGateways ? `[✓ DECLARADO EN TÉRMINOS] Las transacciones electrónicas, pasarelas de pago y tarjetas son procesadas a través de proveedores certificados (Stripe, Wompi, MercadoPago). ${businessLegalName} no almacena datos de tarjetas de crédito ni códigos CVV.` : 'Los pagos se realizan directamente en efectivo o transferencia bancaria directa.'}
+
+4. LIMITACIÓN DE RESPONSABILIDAD
+${businessLegalName} garantiza la calidad e inocuidad de sus productos y servicios. No asumimos responsabilidad por interrupciones en proveedores de servicios de internet o causas de fuerza mayor.
+
+Fecha de actualización: ${new Date().toLocaleDateString()}`}
+
+                                    {activeLegalDocTab === 'ai_transparency' && `🤖 AVISO LEGAL DE TRANSPARENCIA EN INTELIGENCIA ARTIFICIAL (AI DISCLOSURE)
+
+En cumplimiento de las directrices internacionales de transparencia algorítmica y protección al consumidor:
+
+1. USO DE AGENTES VIRTUALES CON IA: Informamos a nuestros clientes que ${businessLegalName} (NIT ${businessNit}) utiliza tecnología de Inteligencia Artificial (modelos de lenguaje e información procesada en tiempo real) para brindar soporte al cliente, confirmar reservaciones y procesar pedidos por WhatsApp y plataformas digitales en ${businessDomain}.
+
+2. SUPERVISIÓN HUMANA: Todos nuestros procesos automatizados cuentan con supervisión del equipo humano de ${businessLegalName}. En cualquier momento, el usuario puede solicitar hablar con un operador humano durante el horario de atención.
+
+3. TRATAMIENTO ÉTICO DE DATOS: Los datos procesados por la Inteligencia Artificial no son utilizados para entrenar modelos de terceros ni comercializados a empresas externas.`}
+
+                                    {activeLegalDocTab === 'privacidad' && `🔒 POLÍTICA DE TRATAMIENTO DE DATOS PERSONALES (HABEAS DATA - LEY 1581)
+Empresa: ${businessLegalName} | NIT: ${businessNit}
+
+1. TRATAMIENTO Y FINALIDAD: Los datos personales recolectados (nombre, teléfono, dirección, correo electrónico e historial de compras) serán utilizados exclusivamente para la facturación, expedición de facturas electrónicas, despacho de pedidos y envío de promociones personalizadas de ${businessLegalName}.
+
+2. DERECHOS DEL TITULAR (ARCO): De acuerdo con la legislación vigente de Habeas Data, el titular de la información tiene derecho a conocer, actualizar, rectificar y solicitar la supresión de sus datos personales de nuestras bases de datos en cualquier momento enviando una solicitud a soporte@${businessDomain}.
+
+3. SEGURIDAD DE PAGOS Y DATOS: ${businessLegalName} implementa encriptación SSL y medidas técnicas estrictas para proteger la confidencialidad de la información de sus usuarios.`}
+                                </div>
+                            </div>
+
+                            {/* Botón de Copiado Rápido */}
+                            <div className="pt-3 border-t border-outline/10 flex items-center justify-between">
+                                <span className="text-xs text-on-surface-variant">
+                                    {copySuccess ? `✅ ${copySuccess}` : 'Copia el texto legal para tu página web o políticas.'}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        let textToCopy = '';
+                                        if (activeLegalDocTab === 'terminos') {
+                                            textToCopy = `TÉRMINOS Y CONDICIONES DE SERVICIO\nRazón Social: ${businessLegalName}\nNIT: ${businessNit}\nDominio: ${businessDomain}\n\n1. OBJETO Y ACEPTACIÓN\nEl presente contrato regula la prestación de servicios comerciales por parte de ${businessLegalName}...`;
+                                        } else if (activeLegalDocTab === 'ai_transparency') {
+                                            textToCopy = `🤖 AVISO LEGAL DE TRANSPARENCIA EN INTELIGENCIA ARTIFICIAL\nEn cumplimiento de las directrices internacionales de transparencia algorítmica:\nInformamos que ${businessLegalName} (NIT ${businessNit}) utiliza tecnología de Inteligencia Artificial para soporte y procesar pedidos por WhatsApp en ${businessDomain}.`;
+                                        } else {
+                                            textToCopy = `🔒 POLÍTICA DE TRATAMIENTO DE DATOS PERSONALES (HABEAS DATA)\nEmpresa: ${businessLegalName} | NIT: ${businessNit}\nLos datos personales recolectados serán utilizados exclusivamente para la facturación y gestión comercial de ${businessLegalName}.`;
+                                        }
+                                        navigator.clipboard.writeText(textToCopy);
+                                        setCopySuccess('Copiado al portapapeles con éxito');
+                                        setTimeout(() => setCopySuccess(null), 3000);
+                                    }}
+                                    className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl hover:opacity-90 transition flex items-center gap-2 cursor-pointer shadow-md"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                                    Copiar Documento Legal Seleccionado
+                                </button>
                             </div>
                         </div>
                     </div>
