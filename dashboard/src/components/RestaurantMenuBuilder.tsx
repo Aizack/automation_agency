@@ -424,14 +424,25 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
 
             {/* Modal para Crear/Editar Plato del Menú */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[9999] backdrop-blur-sm bg-black/80 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-surface-container border border-outline/20 w-full max-w-2xl rounded-3xl p-6 space-y-6 shadow-2xl my-8">
+                <div
+                    className="fixed inset-0 z-[9999] backdrop-blur-sm bg-black/80 flex items-center justify-center p-4 overflow-y-auto"
+                    onClick={() => setIsModalOpen(false)}
+                >
+                    <div
+                        className="bg-surface-container border border-outline/20 w-full max-w-2xl rounded-3xl p-6 space-y-6 shadow-2xl my-8 relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="flex items-center justify-between border-b border-outline/10 pb-3">
                             <h3 className="font-extrabold text-on-surface text-base flex items-center gap-2">
                                 <span>🍽️</span> Crear Plato del Menú & Recetario (BOM)
                             </h3>
-                            <button type="button" onClick={() => setIsModalOpen(false)} className="text-on-surface-variant hover:text-on-surface">
-                                <span className="material-symbols-outlined">close</span>
+                            <button
+                                type="button"
+                                onClick={() => setIsModalOpen(false)}
+                                className="w-9 h-9 bg-surface hover:bg-rose-500/20 border border-outline/20 hover:border-rose-500/40 rounded-full text-on-surface hover:text-rose-400 transition cursor-pointer flex items-center justify-center shadow shrink-0"
+                                title="Cerrar ventana"
+                            >
+                                <span className="material-symbols-outlined text-lg">close</span>
                             </button>
                         </div>
 
@@ -648,14 +659,23 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                 </div>
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-3.5 bg-primary text-on-primary font-extrabold text-xs rounded-2xl hover:opacity-90 shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
-                            >
-                                <span className="material-symbols-outlined text-[18px]">save</span>
-                                {loading ? 'Guardando...' : 'Guardar Plato & Escandallo BOM'}
-                            </button>
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="px-6 py-3.5 bg-surface hover:bg-surface-variant border border-outline/20 text-on-surface font-bold text-xs rounded-2xl transition cursor-pointer"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-1 py-3.5 bg-primary text-on-primary font-extrabold text-xs rounded-2xl hover:opacity-90 shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">save</span>
+                                    {loading ? 'Guardando...' : 'Guardar Plato & Escandallo BOM'}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
