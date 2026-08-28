@@ -53,7 +53,6 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
     const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
     const [itemQty, setItemQty] = useState(1);
     const [removalsList, setRemovalsList] = useState<string[]>([]);
-    const [removalInput, setRemovalInput] = useState('');
     const [additionsList, setAdditionsList] = useState<{ name: string; price: number }[]>([]);
     const [additionName, setAdditionName] = useState('');
     const [additionPrice, setAdditionPrice] = useState('');
@@ -67,8 +66,10 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
     const [orderType, setOrderType] = useState<'mesa' | 'domicilio'>('mesa');
     const [tableNumber, setTableNumber] = useState('');
     const [customerName, setCustomerName] = useState('');
+    const [customerDni, setCustomerDni] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [customerAddress, setCustomerAddress] = useState('');
+    const [isIndividualAccount, setIsIndividualAccount] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState<any | null>(null);
 
@@ -115,18 +116,13 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
         setSelectedItem(item);
         setItemQty(1);
         setRemovalsList([]);
-        setRemovalInput('');
         setAdditionsList([]);
         setAdditionName('');
         setAdditionPrice('');
         setItemNotes('');
     };
 
-    const handleAddRemoval = () => {
-        if (!removalInput.trim()) return;
-        setRemovalsList(prev => [...prev, removalInput.trim()]);
-        setRemovalInput('');
-    };
+
 
     const handleAddCustomAddition = () => {
         if (!additionName.trim()) return;
@@ -177,6 +173,11 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
             return;
         }
 
+        if (orderType === 'mesa' && isIndividualAccount && (!customerName.trim() || !customerDni.trim())) {
+            alert("Por favor ingresa tu Nombre y Cédula/NIT para tu cuenta individual.");
+            return;
+        }
+
         if (orderType === 'domicilio' && (!customerName || !customerPhone || !customerAddress)) {
             alert("Por favor completa tu Nombre, Teléfono y Dirección de entrega.");
             return;
@@ -191,9 +192,11 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                     clientId,
                     order_type: orderType,
                     table_number: tableNumber,
-                    customer_name: customerName,
+                    customer_name: isIndividualAccount ? customerName : (customerName || `Mesa #${tableNumber}`),
+                    customer_dni: customerDni || null,
                     customer_phone: customerPhone,
                     customer_address: customerAddress,
+                    is_individual: isIndividualAccount,
                     items: cart,
                     notes: `Pedido desde Carta Digital Web`
                 })
@@ -345,7 +348,7 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                                         className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-2xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/20"
                                     >
                                         <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
-                                        Personalizar & Pedir
+                                        Ordenar
                                     </button>
                                 </div>
                             );
@@ -360,7 +363,7 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                     <div className="bg-[#121216] border border-outline/20 w-full max-w-md rounded-3xl p-6 space-y-5 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between border-b border-outline/10 pb-3">
                             <div>
-                                <h3 className="font-extrabold text-white text-base">Personalizar {selectedItem.name}</h3>
+                                <h3 className="font-extrabold text-white text-base">{selectedItem.name}</h3>
                                 <span className="text-xs font-black text-amber-400">${(parseFloat(selectedItem.price) || 0).toLocaleString()} COP</span>
                             </div>
                             <button type="button" onClick={() => setSelectedItem(null)} className="text-on-surface-variant hover:text-white">
@@ -388,33 +391,6 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                                     +
                                 </button>
                             </div>
-                        </div>
-
-                        {/* Remociones Sin Costo */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-on-surface-variant">Remociones / Quitar Insumo (Sin costo):</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Ej: Sin cebolla, Sin salsa tártara..."
-                                    value={removalInput}
-                                    onChange={(e) => setRemovalInput(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddRemoval(); } }}
-                                    className="flex-grow bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-400"
-                                />
-                                <button type="button" onClick={handleAddRemoval} className="px-3 bg-rose-500/20 text-rose-300 font-bold text-xs rounded-xl border border-rose-500/30">
-                                    + Quitar
-                                </button>
-                            </div>
-                            {removalsList.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5 pt-1">
-                                    {removalsList.map((r, i) => (
-                                        <span key={i} className="bg-rose-500/20 text-rose-300 text-[11px] px-2.5 py-0.5 rounded-lg border border-rose-500/30">
-                                            🚫 {r}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
                         </div>
 
                         {/* Adicionales Pre-configurados en 1-Clic */}
@@ -578,16 +554,75 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
 
                         {/* Formulario según modalidad */}
                         {orderType === 'mesa' ? (
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-white">Número de Mesa *</label>
-                                <input
-                                    type="text"
-                                    placeholder="Ej: Mesa 4, Terraza 2"
-                                    value={tableNumber}
-                                    onChange={(e) => setTableNumber(e.target.value)}
-                                    className="w-full bg-surface border border-outline/20 rounded-xl p-3 text-xs text-white outline-none focus:border-amber-400 font-bold"
-                                    required
-                                />
+                            <div className="space-y-3 bg-surface/50 p-3.5 rounded-2xl border border-outline/10">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-white">Número de Mesa *</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Ej: Mesa 4, Terraza 2"
+                                        value={tableNumber}
+                                        onChange={(e) => setTableNumber(e.target.value)}
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-400 font-bold"
+                                        required
+                                    />
+                                </div>
+
+                                {/* Modalidad de Cuenta: Individual por Comensal vs Cuenta Conjunta */}
+                                <div className="space-y-2 pt-1 border-t border-outline/10">
+                                    <label className="text-[11px] font-extrabold text-amber-400 uppercase tracking-wide">💳 Modalidad de Cobro para la Mesa:</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsIndividualAccount(false)}
+                                            className={`py-2 rounded-xl text-[11px] font-extrabold transition cursor-pointer border ${
+                                                !isIndividualAccount ? 'bg-amber-500 text-black border-amber-400 shadow-md' : 'bg-surface border-outline/20 text-on-surface-variant'
+                                            }`}
+                                        >
+                                            🪑 Cuenta Conjunta de Mesa
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsIndividualAccount(true)}
+                                            className={`py-2 rounded-xl text-[11px] font-extrabold transition cursor-pointer border ${
+                                                isIndividualAccount ? 'bg-amber-500 text-black border-amber-400 shadow-md' : 'bg-surface border-outline/20 text-on-surface-variant'
+                                            }`}
+                                        >
+                                            👤 Cuenta Individual por Persona
+                                        </button>
+                                    </div>
+
+                                    {isIndividualAccount && (
+                                        <div className="space-y-2 pt-2">
+                                            <p className="text-[11px] text-amber-300 font-medium leading-relaxed">
+                                                💡 Tu pedido quedará separado a tu nombre para que al pagar solo canceles tu consumo individual.
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="space-y-1">
+                                                    <label className="text-[11px] font-bold text-white">Nombre y Apellido *</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Ej: Laura Restrepo"
+                                                        value={customerName}
+                                                        onChange={(e) => setCustomerName(e.target.value)}
+                                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-white outline-none focus:border-amber-400 font-semibold"
+                                                        required={isIndividualAccount}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[11px] font-bold text-white">Cédula / NIT *</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Ej: 1020304050"
+                                                        value={customerDni}
+                                                        onChange={(e) => setCustomerDni(e.target.value)}
+                                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-white outline-none focus:border-amber-400 font-mono"
+                                                        required={isIndividualAccount}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         ) : (
                             <div className="space-y-3">

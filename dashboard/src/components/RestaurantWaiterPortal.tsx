@@ -47,7 +47,6 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
     const [selectedTable, setSelectedTable] = useState<Table | null>(null);
     const [orderCart, setOrderCart] = useState<SelectedOrderItem[]>([]);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [removalInput, setRemovalInput] = useState('');
     const [removalsList, setRemovalsList] = useState<string[]>([]);
     const [additionNameInput, setAdditionNameInput] = useState('');
     const [additionPriceInput, setAdditionPriceInput] = useState('');
@@ -160,15 +159,7 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
         }
     };
 
-    const handleAddRemoval = () => {
-        if (!removalInput.trim()) return;
-        setRemovalsList(prev => [...prev, removalInput.trim()]);
-        setRemovalInput('');
-    };
 
-    const handleRemoveRemovalTag = (index: number) => {
-        setRemovalsList(prev => prev.filter((_, i) => i !== index));
-    };
 
     const handleAddAddition = () => {
         if (!additionNameInput.trim()) return;
@@ -608,42 +599,7 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                             </div>
                         </div>
 
-                        {/* Remociones Sin Costo */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-semibold text-on-surface-variant">Remociones / Quitar Insumo (Sin costo):</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Ej: Sin cebolla, Sin picante..."
-                                    value={removalInput}
-                                    onChange={(e) => setRemovalInput(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddRemoval(); } }}
-                                    className="flex-grow bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleAddRemoval}
-                                    className="px-4 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-extrabold text-xs rounded-xl transition cursor-pointer"
-                                >
-                                    + Quitar
-                                </button>
-                            </div>
-                            {removalsList.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5 pt-1">
-                                    {removalsList.map((rem, i) => (
-                                        <button
-                                            type="button"
-                                            key={i}
-                                            onClick={() => handleRemoveRemovalTag(i)}
-                                            className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] px-2.5 py-1 rounded-lg border border-rose-500/40 flex items-center gap-1 font-semibold cursor-pointer transition"
-                                            title="Click para eliminar remoción"
-                                        >
-                                            🚫 {rem} <span className="text-[10px] opacity-70">✕</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+
 
                         {/* Adicionales Con Costo Extra */}
                         <div className="space-y-2">
