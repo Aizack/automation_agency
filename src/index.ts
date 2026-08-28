@@ -33,5 +33,7 @@ registerShutdownHandlers();
 // Restaurar sesiones de carga activas previas y limpiar archivo temporal
 restoreSystemState();
 
-// Nota: El cliente de WhatsApp Web / Puppeteer NO se auto-inicia al arrancar el servidor.
-// Se inicializará 100% bajo demanda cuando el usuario haga clic en 'Conectar WhatsApp' desde su tienda.
+import { autoRestoreSavedWhatsAppSessions } from './services/whatsapp';
+
+// Restaurar únicamente las sesiones de WhatsApp que YA ESTÁN VINCULADAS previamente en disco (sin pedir QR nuevo)
+autoRestoreSavedWhatsAppSessions();
