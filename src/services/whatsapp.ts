@@ -77,8 +77,7 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
         }),
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         webVersionCache: {
-            type: 'remote',
-            remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1043584437-alpha.html'
+            type: 'local'
         },
         puppeteer: {
             headless: true,
@@ -264,10 +263,23 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
                     await chat.sendStateTyping();
                 } catch {}
 
-                const delayMs = Math.floor(Math.random() * 2000) + 2000;
+                const delayMs = Math.floor(Math.random() * 1500) + 1000;
                 await new Promise(resolve => setTimeout(resolve, delayMs));
 
-                await msg.reply(responseText);
+                try {
+                    // 1. Intentar enviar directamente a la JID de origen (sea @c.us o @lid)
+                    await newClient.sendMessage(msg.from, responseText);
+                    console.log(`[WhatsApp - ${key}] ✅ Respuesta enviada exitosamente a ${msg.from}`);
+                } catch (replyErr: any) {
+                    console.warn(`[WhatsApp - ${key}] Warning enviando a ${msg.from}, reintentando por senderPhone:`, replyErr?.message);
+                    try {
+                        const target = senderPhone.includes('@c.us') ? senderPhone : `${senderPhone}@c.us`;
+                        await newClient.sendMessage(target, responseText);
+                        console.log(`[WhatsApp - ${key}] ✅ Respuesta enviada exitosamente a ${target}`);
+                    } catch (fallbackErr: any) {
+                        console.error(`[WhatsApp - ${key}] ❌ Error enviando respuesta a ${senderPhone}:`, fallbackErr?.message);
+                    }
+                }
             }
         } catch (error) {
             console.error(`[WhatsApp - ${key}] Error procesando mensaje:`, error);
