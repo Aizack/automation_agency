@@ -145,19 +145,28 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
     const [employees, setEmployees] = useState<any[]>([]);
     const [dropdownRef] = [useRef<HTMLDivElement>(null)];
 
+    // Campos específicos para Restaurantes & Gastronomía
+    const [tables, setTables] = useState<any[]>([]);
+    const [selectedTableId, setSelectedTableId] = useState<string>('');
+    const [selectedWaiterId, setSelectedWaiterId] = useState<string>('');
+    const [taxMode, setTaxMode] = useState<'impoconsumo_8' | 'iva_19' | 'exento'>('impoconsumo_8');
+    const [includeTip, setIncludeTip] = useState(true);
+    const [tipPercentage, setTipPercentage] = useState<number>(10);
+
     const token = localStorage.getItem('auth_token');
 
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [invRes, prodRes, catRes, crmRes, clientRes, bankRes, empRes] = await Promise.all([
+            const [invRes, prodRes, catRes, crmRes, clientRes, bankRes, empRes, tblRes] = await Promise.all([
                 fetch(`/api/clients/${clientId}/invoices`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}/products`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}/categories`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}/crm-customers`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`/api/clients/${clientId}/bank-accounts`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/employees`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`/api/clients/${clientId}/employees`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`/api/clients/${clientId}/tables`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
             const invData = await invRes.json();
@@ -167,6 +176,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             const clientData = await clientRes.json();
             const bankData = await bankRes.json();
             const empData = await empRes.json();
+            const tblData = await tblRes.json();
 
             if (invData.success) setInvoices(invData.invoices || []);
             if (prodData.success) setProducts(prodData.products || []);
@@ -175,6 +185,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             if (clientData.success) setClientProfile(clientData.data || null);
             if (bankData.success) setBankAccounts(bankData.accounts || []);
             if (empData.success) setEmployees(empData.employees || []);
+            if (tblData.success) setTables(tblData.tables || []);
         } catch (err) {
             console.error("Error loading billing data:", err);
         } finally {
@@ -394,7 +405,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         });
     };
 
-    const totalAmount = selectedItems.reduce((acc, curr) => acc + getItemSubtotal(curr), 0);
+    const subtotalItems = selectedItems.reduce((acc, curr) => acc + getItemSubtotal(curr), 0);
+    const taxRate = clientProfile?.category === 'restaurante'
+        ? (taxMode === 'impoconsumo_8' ? 0.08 : (taxMode === 'iva_19' ? 0.19 : 0))
+        : 0;
+    const taxAmount = subtotalItems * taxRate;
+    const tipAmount = (clientProfile?.category === 'restaurante' && includeTip)
+        ? subtotalItems * (tipPercentage / 100)
+        : 0;
+    const totalAmount = subtotalItems + taxAmount + tipAmount;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -1063,6 +1082,87 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                 <input type="text" className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
                             </div>
                         </div>
+
+                        {/* Configuración Específica de Restaurantes & Gastronomía */}
+                        {clientProfile?.category === 'restaurante' && (
+                            <div className="border border-primary/20 p-4 rounded-2xl space-y-3 bg-primary/5">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[16px]">restaurant</span>
+                                    Servicio Gastronómico: Mesa, Impoconsumo 8% & Propina Sugerida
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-bold">Mesa de Servicio</label>
+                                        <select
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-semibold outline-none focus:border-primary cursor-pointer"
+                                            value={selectedTableId}
+                                            onChange={(e) => setSelectedTableId(e.target.value)}
+                                        >
+                                            <option value="">🛒 Venta Directa (Barra / Para Llevar)</option>
+                                            {tables.map(t => (
+                                                <option key={t.id} value={t.id}>
+                                                    🪑 Mesa #{t.table_number} ({t.zone})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-bold">Mesero Atribuidor</label>
+                                        <select
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-semibold outline-none focus:border-primary cursor-pointer"
+                                            value={selectedWaiterId}
+                                            onChange={(e) => setSelectedWaiterId(e.target.value)}
+                                        >
+                                            <option value="">👤 Sin mesero asignado</option>
+                                            {employees.map(emp => (
+                                                <option key={emp.id} value={emp.id}>
+                                                    👤 {emp.name} ({emp.employee_role || 'Mesero'})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-xs text-on-surface-variant font-bold">Impuesto Gastronómico (E.T. Colombia)</label>
+                                        <select
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none focus:border-primary cursor-pointer text-primary"
+                                            value={taxMode}
+                                            onChange={(e) => setTaxMode(e.target.value as any)}
+                                        >
+                                            <option value="impoconsumo_8">🏷️ Impoconsumo (8% E.T.) [Restaurantes]</option>
+                                            <option value="iva_19">🏷️ IVA (19%) [Franquicias/Concesiones]</option>
+                                            <option value="exento">🛡️ Exento de Impuestos (RST)</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5 justify-center">
+                                        <label className="text-xs text-on-surface-variant font-bold">💵 Propina Sugerida (Ley 1935)</label>
+                                        <div className="flex items-center gap-2 pt-1">
+                                            <input
+                                                type="checkbox"
+                                                id="includeTipCheck"
+                                                checked={includeTip}
+                                                onChange={(e) => setIncludeTip(e.target.checked)}
+                                                className="w-4 h-4 text-primary rounded cursor-pointer"
+                                            />
+                                            <label htmlFor="includeTipCheck" className="text-xs font-bold text-on-surface cursor-pointer flex items-center gap-1">
+                                                <span>Incluir</span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max="30"
+                                                    value={tipPercentage}
+                                                    onChange={(e) => setTipPercentage(parseFloat(e.target.value) || 0)}
+                                                    className="w-12 bg-surface border border-outline/20 rounded px-1 py-0.5 text-xs text-center font-bold text-primary outline-none"
+                                                />
+                                                <span>% Voluntario</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Condiciones de Pago */}
                         <div className="border border-outline/10 p-4 rounded-xl space-y-3 bg-surface-container/10">

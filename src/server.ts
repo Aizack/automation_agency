@@ -2353,6 +2353,38 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
               );
             }
           }
+
+          // Descuento automático de Insumos / Materias Primas en Bodega Gastronómica (Escandallo BOM)
+          try {
+            const recipeRes = await dbClient.query(`
+              SELECT raw_product_id, quantity_required
+              FROM product_recipes
+              WHERE client_id = $1 AND product_id = $2
+            `, [clientId, item.productId]);
+
+            for (const recipeRow of recipeRes.rows) {
+              if (recipeRow.raw_product_id) {
+                const qtyToDeduct = (parseFloat(recipeRow.quantity_required) || 0) * (item.quantity || 1);
+                
+                // Descontar gramos/ml directamente de la bodega de insumos (raw_materials)
+                await dbClient.query(`
+                  UPDATE raw_materials
+                  SET stock_in_consumption_units = GREATEST(0, stock_in_consumption_units - $1),
+                      updated_at = NOW()
+                  WHERE id = $2 AND client_id = $3
+                `, [qtyToDeduct, recipeRow.raw_product_id, clientId]);
+
+                // Descontar en productos simples si aplica
+                await dbClient.query(`
+                  UPDATE products
+                  SET stock = GREATEST(0, stock - $1)
+                  WHERE id = $2 AND client_id = $3
+                `, [qtyToDeduct, recipeRow.raw_product_id, clientId]);
+              }
+            }
+          } catch (bomErr: any) {
+            console.error(`[Invoice BOM Deduction Error] Error al descontar insumos de receta para producto ${item.productId}:`, bomErr.message);
+          }
         }
       }
     }
