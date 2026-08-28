@@ -90,6 +90,14 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
 
     useEffect(() => {
         fetchMenu();
+
+        // Extraer número de mesa automáticamente si el cliente escaneó un código QR (?table=4 o ?mesa=4)
+        const params = new URLSearchParams(window.location.search);
+        const mesaParam = params.get('table') || params.get('mesa');
+        if (mesaParam) {
+            setTableNumber(mesaParam);
+            setOrderType('mesa');
+        }
     }, [clientId]);
 
     // Extraer Categorías Únicas
@@ -710,21 +718,28 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                         </div>
 
                         <div className="space-y-2">
-                            <button
-                                type="button"
-                                onClick={sendWhatsAppConfirmation}
-                                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
-                            >
-                                <span className="material-symbols-outlined text-[18px]">chat</span>
-                                💬 {orderType === 'domicilio' ? 'Adjuntar Comprobante de Pago por WhatsApp' : 'Confirmar Pedido por WhatsApp'}
-                            </button>
+                            {orderType === 'domicilio' ? (
+                                <button
+                                    type="button"
+                                    onClick={sendWhatsAppConfirmation}
+                                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">chat</span>
+                                    💬 Adjuntar Comprobante de Pago por WhatsApp
+                                </button>
+                            ) : (
+                                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-xs text-emerald-300 font-bold flex items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                                    ¡Comanda enviada 100% digital a la pantalla de cocina!
+                                </div>
+                            )}
 
                             <button
                                 type="button"
                                 onClick={() => setOrderSuccess(null)}
-                                className="w-full py-2.5 bg-surface text-on-surface font-bold text-xs rounded-xl border border-outline/20 cursor-pointer"
+                                className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-xs rounded-xl hover:opacity-90 transition cursor-pointer"
                             >
-                                Volver a la Carta
+                                {orderType === 'mesa' ? '🍽️ Pedir Algo Más para la Mesa' : 'Volver a la Carta'}
                             </button>
                         </div>
                     </div>
