@@ -165,12 +165,20 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
         setRemovalInput('');
     };
 
+    const handleRemoveRemovalTag = (index: number) => {
+        setRemovalsList(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleAddAddition = () => {
         if (!additionNameInput.trim()) return;
         const price = parseFloat(additionPriceInput) || 0;
         setAdditionsList(prev => [...prev, { name: additionNameInput.trim(), price }]);
         setAdditionNameInput('');
         setAdditionPriceInput('');
+    };
+
+    const handleRemoveAdditionTag = (index: number) => {
+        setAdditionsList(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleAddItemToCart = () => {
@@ -608,51 +616,75 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                                     placeholder="Ej: Sin cebolla, Sin picante..."
                                     value={removalInput}
                                     onChange={(e) => setRemovalInput(e.target.value)}
-                                    className="flex-grow bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddRemoval(); } }}
+                                    className="flex-grow bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
                                 />
-                                <button type="button" onClick={handleAddRemoval} className="px-3 bg-surface-variant text-on-surface font-bold text-xs rounded-xl">
-                                    +
+                                <button
+                                    type="button"
+                                    onClick={handleAddRemoval}
+                                    className="px-4 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-extrabold text-xs rounded-xl transition cursor-pointer"
+                                >
+                                    + Quitar
                                 </button>
                             </div>
                             {removalsList.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 pt-1">
                                     {removalsList.map((rem, i) => (
-                                        <span key={i} className="bg-rose-500/20 text-rose-300 text-[11px] px-2 py-0.5 rounded-lg border border-rose-500/30">
-                                            🚫 {rem}
-                                        </span>
+                                        <button
+                                            type="button"
+                                            key={i}
+                                            onClick={() => handleRemoveRemovalTag(i)}
+                                            className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] px-2.5 py-1 rounded-lg border border-rose-500/40 flex items-center gap-1 font-semibold cursor-pointer transition"
+                                            title="Click para eliminar remoción"
+                                        >
+                                            🚫 {rem} <span className="text-[10px] opacity-70">✕</span>
+                                        </button>
                                     ))}
                                 </div>
                             )}
                         </div>
 
-                        {/* Adicionales Con Costo */}
+                        {/* Adicionales Con Costo Extra */}
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-on-surface-variant">Adicionales (Con costo extra):</label>
                             <div className="grid grid-cols-3 gap-2">
                                 <input
                                     type="text"
-                                    placeholder="Nombre adicion..."
+                                    placeholder="Nombre adicional (Ej: Queso costeño)"
                                     value={additionNameInput}
                                     onChange={(e) => setAdditionNameInput(e.target.value)}
-                                    className="col-span-2 bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddAddition(); } }}
+                                    className="col-span-2 bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
                                 />
                                 <input
                                     type="number"
                                     placeholder="Precio ($)"
                                     value={additionPriceInput}
                                     onChange={(e) => setAdditionPriceInput(e.target.value)}
-                                    className="bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddAddition(); } }}
+                                    className="bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
                                 />
                             </div>
-                            <button type="button" onClick={handleAddAddition} className="w-full py-1.5 bg-surface-variant text-on-surface font-bold text-xs rounded-xl">
-                                + Agregar Adicional
+                            <button
+                                type="button"
+                                onClick={handleAddAddition}
+                                className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-extrabold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                                + Agregar Adicional a la Comanda
                             </button>
                             {additionsList.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 pt-1">
                                     {additionsList.map((add, i) => (
-                                        <span key={i} className="bg-emerald-500/20 text-emerald-300 text-[11px] px-2 py-0.5 rounded-lg border border-emerald-500/30">
-                                            ➕ {add.name} (+${add.price})
-                                        </span>
+                                        <button
+                                            type="button"
+                                            key={i}
+                                            onClick={() => handleRemoveAdditionTag(i)}
+                                            className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] px-2.5 py-1 rounded-lg border border-emerald-500/40 flex items-center gap-1 font-semibold cursor-pointer transition"
+                                            title="Click para eliminar adicional"
+                                        >
+                                            ➕ {add.name} (+${add.price.toLocaleString()} COP) <span className="text-[10px] opacity-70">✕</span>
+                                        </button>
                                     ))}
                                 </div>
                             )}
