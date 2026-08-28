@@ -66,7 +66,13 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
     const [qrModalTable, setQrModalTable] = useState<Table | null>(null);
 
     const getTableQrUrl = (tNumber: string) => {
-        return `${window.location.protocol}//${window.location.host}/menu/${clientId}?table=${encodeURIComponent(tNumber)}`;
+        try {
+            const payload = JSON.stringify({ c: clientId, t: tNumber });
+            const b64 = btoa(payload).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            return `${window.location.protocol}//${window.location.host}/m/t_${b64}`;
+        } catch {
+            return `${window.location.protocol}//${window.location.host}/m/${clientId}?table=${encodeURIComponent(tNumber)}`;
+        }
     };
 
     const handleCopyQRUrl = (tNumber: string) => {

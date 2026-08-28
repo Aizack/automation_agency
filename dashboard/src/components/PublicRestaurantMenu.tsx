@@ -37,9 +37,26 @@ interface PublicRestaurantMenuProps {
 }
 
 export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clientId: propClientId }) => {
-    // Extraer clientId de URL o prop
+    // Extraer y decodificar clientId y número de mesa (Soporta token de seguridad o ID directo)
     const pathParts = window.location.pathname.split('/');
-    const clientId = propClientId || pathParts[pathParts.length - 1] || 'CLIENT-RESTAURANTE-TEST';
+    const lastPathSegment = pathParts[pathParts.length - 1] || '';
+
+    let activeClientId = propClientId || 'CLIENT-RESTAURANTE-TEST';
+    let activeTableNumber = '';
+
+    // Si la URL contiene un token de seguridad t_...
+    if (lastPathSegment.startsWith('t_')) {
+        try {
+            const rawB64 = lastPathSegment.slice(2).replace(/-/g, '+').replace(/_/g, '/');
+            const decoded = JSON.parse(atob(rawB64));
+            if (decoded.c) activeClientId = decoded.c;
+            if (decoded.t) activeTableNumber = decoded.t;
+        } catch (e) {
+            console.error("Error decoding secure menu token:", e);
+        }
+    } else if (lastPathSegment && lastPathSegment !== 'menu' && !lastPathSegment.startsWith('mesa-')) {
+        activeClientId = lastPathSegment;
+    }
 
     const [restaurant, setRestaurant] = useState<RestaurantInfo | null>(null);
     const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -64,7 +81,7 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
 
     // Datos del Cliente y Tipo de Orden
     const [orderType, setOrderType] = useState<'mesa' | 'domicilio'>('mesa');
-    const [tableNumber, setTableNumber] = useState('');
+    const [tableNumber, setTableNumber] = useState(activeTableNumber);
     const [customerName, setCustomerName] = useState('');
     const [customerDni, setCustomerDni] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
@@ -76,7 +93,7 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
     const fetchMenu = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/public/menu/${clientId}`);
+            const res = await fetch(`/api/public/menu/${activeClientId}`);
             const data = await res.json();
             if (data.success) {
                 setRestaurant(data.restaurant);
@@ -92,14 +109,21 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
     useEffect(() => {
         fetchMenu();
 
-        // Extraer número de mesa automáticamente si el cliente escaneó un código QR (?table=4 o ?mesa=4)
+        // Extraer número de mesa si viene por query param tradicional
         const params = new URLSearchParams(window.location.search);
-        const mesaParam = params.get('table') || params.get('mesa');
+        const mesaParam = params.get('table') || params.get('mesa') || activeTableNumber;
         if (mesaParam) {
             setTableNumber(mesaParam);
             setOrderType('mesa');
         }
-    }, [clientId]);
+
+        // Ocultar / Enmascarar la URL en la barra del navegador por seguridad
+        const maskedTable = mesaParam || activeTableNumber;
+        const cleanPath = maskedTable ? `/m/mesa-${maskedTable}` : `/m/menu-digital`;
+        if (window.location.pathname !== cleanPath) {
+            window.history.replaceState({}, '', cleanPath);
+        }
+    }, [activeClientId]);
 
     // Extraer Categorías Únicas
     const categories = ['TODOS', ...Array.from(new Set(menuItems.map(item => item.category_id || 'Menú General')))];
@@ -189,7 +213,7 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    clientId,
+                    clientId: activeClientId,
                     order_type: orderType,
                     table_number: tableNumber,
                     customer_name: isIndividualAccount ? customerName : (customerName || `Mesa #${tableNumber}`),
