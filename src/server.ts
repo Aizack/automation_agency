@@ -14,7 +14,7 @@ import {
   updateClientStatus 
 } from './database/clientsCrud';
 import { pool } from './database/postgres';
-import { whatsappState, initializeWhatsAppClient, connectWhatsApp, logoutWhatsApp, client, sendWhatsAppTextMessage } from './services/whatsapp';
+import { getWhatsAppState, whatsappState, initializeWhatsAppClient, connectWhatsApp, logoutWhatsApp, client, sendWhatsAppTextMessage } from './services/whatsapp';
 import { 
   fetchDocumentsFromDrive, 
   createClientFolder, 
@@ -97,19 +97,21 @@ const PORT = process.env.PORT || 3000;
 
 // --- ENDPOINT DE VINCULACIÓN WHATSAPP ---
 app.get('/api/whatsapp/status', authenticateToken as any, (req: Request, res: Response) => {
-  res.json({ success: true, data: whatsappState });
+  const clientId = (req.query.clientId as string) || 'admin';
+  const state = getWhatsAppState(clientId);
+  res.json({ success: true, data: state });
 });
 
-app.post('/api/whatsapp/connect', authenticateToken as any, (req: Request, res: Response, next) => {
+app.post('/api/whatsapp/connect', authenticateToken as any, (req: Request, res: Response, next: NextFunction) => {
   const authReq = req as AuthenticatedRequest;
-  const clientId = req.query.clientId as string;
+  const clientId = (req.query.clientId as string) || 'admin';
   if (authReq.user?.role === 'admin' || authReq.user?.id === clientId) {
     return next();
   }
   return res.status(403).json({ success: false, error: 'Acceso denegado. No tienes permisos para conectar esta cuenta.' });
 }, (req: Request, res: Response) => {
   try {
-    const clientId = req.query.clientId as string;
+    const clientId = (req.query.clientId as string) || 'admin';
     connectWhatsApp(clientId);
     res.json({ success: true, message: 'Inicializando conexión de WhatsApp...' });
   } catch (error: any) {
@@ -119,7 +121,8 @@ app.post('/api/whatsapp/connect', authenticateToken as any, (req: Request, res: 
 
 app.post('/api/whatsapp/logout', authenticateToken as any, async (req: Request, res: Response) => {
   try {
-    await logoutWhatsApp();
+    const clientId = (req.query.clientId as string) || 'admin';
+    await logoutWhatsApp(clientId);
     res.json({ success: true, message: 'Sesión de WhatsApp cerrada correctamente' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -6721,12 +6724,7 @@ export const server = app.listen(PORT, () => {
     }
   })();
   
-  // Inicializamos el receptor de eventos de WhatsApp al arrancar y auto-conectamos
-  const activeClient = initializeWhatsAppClient();
-  console.log("[WhatsApp] Iniciando auto-conexión del cliente al arrancar el servidor...");
-  activeClient.initialize().catch(err => {
-    console.error("[WhatsApp] Error en auto-inicialización de WhatsApp:", err);
-  });
+
 
   // ══════════════════════════════════════════════════════════════════════════
   // ENDPOINTS TAREA 2 — MÓDULO CONTABLE
