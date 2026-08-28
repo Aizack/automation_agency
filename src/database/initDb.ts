@@ -882,11 +882,13 @@ export const initDatabase = async () => {
         // ── FASE 5: Arquitectura multi-tenant, identidad y trazabilidad de stock ──
         await pool.query(`
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS slug VARCHAR(100) UNIQUE;
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS banner_url TEXT;
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE SET NULL;
             ALTER TABLE employees ALTER COLUMN pin TYPE VARCHAR(255);
             ALTER TABLE products ADD COLUMN IF NOT EXISTS reserved_stock INT DEFAULT 0;
             ALTER TABLE products ADD COLUMN IF NOT EXISTS committed_stock INT DEFAULT 0;
             ALTER TABLE products ADD COLUMN IF NOT EXISTS available_modifiers JSONB DEFAULT '[]';
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;
         `);
 
         await pool.query(`

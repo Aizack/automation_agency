@@ -481,15 +481,55 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                                      </p>
                                  </div>
                              </div>
+                         </div>
 
-                             <button
-                                 type="button"
-                                 onClick={() => setQrModalTable(selectedTable)}
-                                 className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black font-extrabold text-xs rounded-xl border border-amber-500/30 transition cursor-pointer flex items-center gap-1.5"
-                             >
-                                 <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
-                                 Generar QR Mesa
-                             </button>
+                         {/* Tarjeta Anclada Visible del Código QR de la Mesa */}
+                         <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+                             <div className="flex items-center gap-3">
+                                 <div className="p-2 bg-white rounded-xl border border-amber-500/40 shadow-md">
+                                     <img
+                                         src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(getTableQrUrl(selectedTable.table_number))}`}
+                                         alt={`QR Mesa ${selectedTable.table_number}`}
+                                         className="w-14 h-14 rounded"
+                                     />
+                                 </div>
+                                 <div>
+                                     <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest block">Código QR Anclado Mesa #{selectedTable.table_number}</span>
+                                     <strong className="text-xs text-white block">Escaneo Directo a Carta Digital</strong>
+                                     <span className="text-[10px] text-on-surface-variant font-mono block truncate max-w-[200px] sm:max-w-[280px]">
+                                         {getTableQrUrl(selectedTable.table_number)}
+                                     </span>
+                                 </div>
+                             </div>
+
+                             <div className="flex items-center gap-2 w-full sm:w-auto">
+                                 <button
+                                     type="button"
+                                     onClick={() => handlePrintQRWindow(selectedTable)}
+                                     className="flex-1 sm:flex-none px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow transition cursor-pointer flex items-center justify-center gap-1"
+                                     title="Imprimir Stand para la mesa"
+                                 >
+                                     <span className="material-symbols-outlined text-[16px]">print</span>
+                                     Imprimir
+                                 </button>
+                                 <button
+                                     type="button"
+                                     onClick={() => handleCopyQRUrl(selectedTable.table_number)}
+                                     className="flex-1 sm:flex-none px-3 py-2 bg-surface hover:bg-surface-variant border border-outline/20 text-on-surface font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
+                                     title="Copiar Enlace Directo"
+                                 >
+                                     <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                                     Copiar
+                                 </button>
+                                 <button
+                                     type="button"
+                                     onClick={() => setQrModalTable(selectedTable)}
+                                     className="px-2.5 py-2 bg-surface hover:bg-surface-variant border border-outline/20 text-amber-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                                     title="Ver QR ampliado"
+                                 >
+                                     <span className="material-symbols-outlined text-[16px]">fullscreen</span>
+                                 </button>
+                             </div>
                          </div>
 
                         {/* Grid de Productos */}

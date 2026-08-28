@@ -10,6 +10,7 @@ interface MenuItem {
     name: string;
     description?: string;
     price: string;
+    image_url?: string;
     category_id?: string;
     available_modifiers?: Modifier[] | string;
 }
@@ -29,6 +30,7 @@ interface RestaurantInfo {
     name: string;
     category?: string;
     logo_url?: string;
+    banner_url?: string;
     phone_number?: string;
 }
 
@@ -260,24 +262,42 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
 
     return (
         <div className="min-h-screen bg-[#0a0a0c] text-on-surface font-sans pb-32">
-            {/* Header Hero Banner */}
-            <header className="bg-gradient-to-b from-amber-950/40 via-[#0a0a0c] to-[#0a0a0c] border-b border-outline/10 p-6 backdrop-blur-xl sticky top-0 z-40">
-                <div className="max-w-4xl mx-auto space-y-4">
-                    <div className="flex items-center justify-between">
+            {/* Header Hero Banner del Restaurante */}
+            <header className="relative border-b border-outline/10 backdrop-blur-xl sticky top-0 z-40 bg-[#0a0a0c]">
+                {/* Banner de Portada / Hero Background */}
+                <div className="relative h-36 sm:h-48 w-full overflow-hidden bg-gradient-to-r from-amber-950 via-slate-900 to-black">
+                    {restaurant?.banner_url ? (
+                        <img
+                            src={restaurant.banner_url}
+                            alt="Banner Restaurante"
+                            className="w-full h-full object-cover opacity-60"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/40 via-black to-black opacity-80" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-[#0a0a0c]/50 to-transparent" />
+                </div>
+
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-12 relative z-10 space-y-4 pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/10">
-                                🍽️
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-surface border-2 border-amber-500/50 text-amber-400 flex items-center justify-center text-3xl shadow-2xl overflow-hidden shrink-0">
+                                {restaurant?.logo_url ? (
+                                    <img src={restaurant.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                                ) : (
+                                    '🍽️'
+                                )}
                             </div>
                             <div>
-                                <h1 className="text-lg font-black text-white tracking-tight">{restaurant?.name || 'Restaurante Exclusivo'}</h1>
-                                <span className="text-[11px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 uppercase">
+                                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">{restaurant?.name || 'Restaurante Exclusivo'}</h1>
+                                <span className="text-[11px] text-amber-400 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-wide">
                                     {restaurant?.category || 'Menú Digital Gourmet'}
                                 </span>
                             </div>
                         </div>
 
                         {/* Selector de Modalidad */}
-                        <div className="bg-surface/80 p-1 rounded-2xl border border-outline/10 flex gap-1">
+                        <div className="bg-surface/90 p-1 rounded-2xl border border-outline/20 flex gap-1 shadow-lg self-start sm:self-auto">
                             <button
                                 type="button"
                                 onClick={() => setOrderType('mesa')}
@@ -339,31 +359,47 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                         <p className="text-xs font-bold text-on-surface-variant">No encontramos platos en esta categoría.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         {filteredItems.map(item => {
                             const priceNum = parseFloat(item.price) || 0;
                             const mods = typeof item.available_modifiers === 'string' ? JSON.parse(item.available_modifiers || '[]') : (item.available_modifiers || []);
                             return (
-                                <div key={item.id} className="bg-surface/50 border border-outline/10 p-5 rounded-3xl space-y-4 hover:border-amber-500/30 transition flex flex-col justify-between shadow-xl backdrop-blur-md">
-                                    <div className="space-y-2">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <h3 className="font-extrabold text-white text-base leading-tight">{item.name}</h3>
-                                            <span className="font-black text-amber-400 text-sm whitespace-nowrap bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
+                                <div key={item.id} className="bg-surface/50 border border-outline/10 rounded-3xl overflow-hidden hover:border-amber-500/40 transition flex flex-col justify-between shadow-2xl backdrop-blur-md group">
+                                    <div className="space-y-3 p-5">
+                                        {/* Foto del Plato */}
+                                        <div className="relative h-44 w-full rounded-2xl overflow-hidden bg-black/40 border border-outline/10 group-hover:border-amber-500/20 transition">
+                                            {item.image_url ? (
+                                                <img
+                                                    src={item.image_url}
+                                                    alt={item.name}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-950/30 via-slate-900 to-black text-amber-500/40 space-y-1">
+                                                    <span className="material-symbols-outlined text-4xl">restaurant</span>
+                                                    <span className="text-[10px] font-bold text-amber-500/30 uppercase tracking-widest">Plato Gourmet</span>
+                                                </div>
+                                            )}
+                                            <span className="absolute top-3 right-3 font-black text-amber-400 text-xs bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-amber-500/30 shadow-lg">
                                                 ${priceNum.toLocaleString()} COP
                                             </span>
                                         </div>
 
-                                        {item.description && (
-                                            <p className="text-xs text-on-surface-variant/80 line-clamp-3 leading-relaxed">{item.description}</p>
-                                        )}
+                                        <div className="space-y-1.5">
+                                            <h3 className="font-extrabold text-white text-base leading-tight">{item.name}</h3>
 
-                                        {mods.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 pt-1">
-                                                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                                                    ✨ {mods.length} adicionales disponibles
-                                                </span>
-                                            </div>
-                                        )}
+                                            {item.description && (
+                                                <p className="text-xs text-on-surface-variant/80 line-clamp-3 leading-relaxed">{item.description}</p>
+                                            )}
+
+                                            {mods.length > 0 && (
+                                                <div className="flex flex-wrap gap-1 pt-1">
+                                                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                                                        ✨ {mods.length} adicionales disponibles
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <button

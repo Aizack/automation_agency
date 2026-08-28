@@ -37,6 +37,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
     const [dishPrice, setDishPrice] = useState('');
     const [dishCategory, setDishCategory] = useState('Platos Fuertes');
     const [dishDescription, setDishDescription] = useState('');
+    const [dishImageUrl, setDishImageUrl] = useState('');
     const [dishSopInstructions, setDishSopInstructions] = useState('');
 
     // Pre-configured Modifiers State
@@ -210,7 +211,8 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                     cost_price: totalBomCost,
                     stock: 9999,
                     description: dishDescription,
-                    available_modifiers: availableModifiers
+                    available_modifiers: availableModifiers,
+                    image_url: dishImageUrl
                 })
             });
 
@@ -460,8 +462,8 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                 </div>
                             </div>
 
-                            {/* Categoría & Descripción */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Categoría, Foto & Descripción */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-on-surface-variant">Categoría del Menú</label>
                                     <select
@@ -477,10 +479,20 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                     </select>
                                 </div>
                                 <div className="space-y-1">
+                                    <label className="text-xs font-bold text-on-surface-variant">Foto del Plato (URL)</label>
+                                    <input
+                                        type="url"
+                                        placeholder="https://.../foto.jpg"
+                                        value={dishImageUrl}
+                                        onChange={(e) => setDishImageUrl(e.target.value)}
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
+                                    />
+                                </div>
+                                <div className="space-y-1">
                                     <label className="text-xs font-bold text-on-surface-variant">Descripción Breve</label>
                                     <input
                                         type="text"
-                                        placeholder="Ej: Corte magro de res 300g en crudo, acompañado de papas..."
+                                        placeholder="Ej: Papa crujiente, salchicha picada..."
                                         value={dishDescription}
                                         onChange={(e) => setDishDescription(e.target.value)}
                                         className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"

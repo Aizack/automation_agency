@@ -1422,7 +1422,7 @@ app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, a
 app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
@@ -1432,15 +1432,15 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 
     const result = await pool.query(
       `INSERT INTO products (
-         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, created_at`,
+         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, created_at`,
       [
         clientId, name, sku || null, description || null, price, stock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null,
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
-        modsJson
+        modsJson, image_url || null
       ]
     );
 
@@ -1454,7 +1454,7 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, productId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
@@ -1467,15 +1467,15 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
        SET name = $1, sku = $2, description = $3, price = $4, stock = $5, 
            cost_price = $6, min_stock = $7, supplier_name = $8, supplier_phone = $9,
            brand = $10, material = $11, style = $12, color = $13, promo_discount = $14,
-           category_id = $15, attributes = $16, available_modifiers = $17
-       WHERE client_id = $18 AND id = $19 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, created_at`,
+           category_id = $15, attributes = $16, available_modifiers = $17, image_url = $18
+       WHERE client_id = $19 AND id = $20 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, created_at`,
       [
         name, sku || null, description || null, price, stock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null, 
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
-        modsJson,
+        modsJson, image_url || null,
         clientId, productId
       ]
     );
@@ -7385,7 +7385,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const { clientId } = req.params;
 
       const clientRes = await pool.query(
-        `SELECT id, name, category, logo_url, phone_number, email FROM clients WHERE id = $1 LIMIT 1`,
+        `SELECT id, name, category, logo_url, banner_url, phone_number, email FROM clients WHERE id = $1 LIMIT 1`,
         [clientId]
       );
 
@@ -7396,7 +7396,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const clientInfo = clientRes.rows[0];
 
       const productsRes = await pool.query(
-        `SELECT id, name, description, price, available_modifiers, category_id, attributes
+        `SELECT id, name, description, price, image_url, available_modifiers, category_id, attributes
          FROM products
          WHERE client_id = $1 AND (stock > 0 OR stock IS NULL)
          ORDER BY name ASC`,
