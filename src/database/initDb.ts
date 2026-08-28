@@ -1034,10 +1034,16 @@ export const initDatabase = async () => {
                 consumption_unit VARCHAR(30) NOT NULL DEFAULT 'g',
                 stock_in_consumption_units NUMERIC(14,4) NOT NULL DEFAULT 0.0000,
                 min_stock_alert NUMERIC(14,4) DEFAULT 1000.0000,
+                expiration_date DATE,
+                batch_number VARCHAR(100),
+                is_casual_purchase BOOLEAN DEFAULT FALSE,
                 supplier_name VARCHAR(255),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+            ALTER TABLE raw_materials ADD COLUMN IF NOT EXISTS expiration_date DATE;
+            ALTER TABLE raw_materials ADD COLUMN IF NOT EXISTS batch_number VARCHAR(100);
+            ALTER TABLE raw_materials ADD COLUMN IF NOT EXISTS is_casual_purchase BOOLEAN DEFAULT FALSE;
             CREATE INDEX IF NOT EXISTS idx_raw_materials_client ON raw_materials(client_id);
 
             CREATE TABLE IF NOT EXISTS business_assets (

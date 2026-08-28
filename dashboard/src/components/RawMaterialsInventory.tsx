@@ -10,6 +10,9 @@ interface RawMaterial {
     consumption_unit: string;
     stock_in_consumption_units: number;
     min_stock_alert: number;
+    expiration_date?: string;
+    batch_number?: string;
+    is_casual_purchase?: boolean;
     supplier_name?: string;
 }
 
@@ -24,11 +27,14 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
     // Form Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [name, setName] = useState('');
-    const [category, setCategory] = useState('Verduras');
-    const [purchaseUnit, setPurchaseUnit] = useState('bulto_50kg');
+    const [category, setCategory] = useState('Panadería, Harinas & Masa');
+    const [purchaseUnit, setPurchaseUnit] = useState('unidad');
     const [purchaseUnitCost, setPurchaseUnitCost] = useState('');
     const [purchaseQuantity, setPurchaseQuantity] = useState('1');
     const [minStockAlert, setMinStockAlert] = useState('1000');
+    const [expirationDate, setExpirationDate] = useState('');
+    const [batchNumber, setBatchNumber] = useState('');
+    const [isCasualPurchase, setIsCasualPurchase] = useState(false);
     const [supplierName, setSupplierName] = useState('');
 
     const token = localStorage.getItem('auth_token');
@@ -52,26 +58,27 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
         fetchMaterials();
     }, []);
 
-    // Determinar factor de conversión y unidad de consumo según la unidad de compra seleccionada
+    // Determinar factor de conversión y unidad de consumo ordenados de sencillo a mayor
     const getConversionPreset = (unitKey: string) => {
         switch (unitKey) {
-            case 'bulto_50kg':
-                return { factor: 50000, consumptionUnit: 'g', label: 'Bulto de 50 kg (50.000 g)' };
-            case 'bulto_25kg':
-                return { factor: 25000, consumptionUnit: 'g', label: 'Bulto de 25 kg (25.000 g)' };
-            case 'kg':
-                return { factor: 1000, consumptionUnit: 'g', label: 'Kilogramo (1.000 g)' };
+            case 'unidad':
+                return { factor: 1, consumptionUnit: 'unid', label: 'Unidad Individual (1 unid)' };
             case 'libra':
                 return { factor: 454, consumptionUnit: 'g', label: 'Libra (454 g)' };
-            case 'garrafa_20l':
-                return { factor: 20000, consumptionUnit: 'ml', label: 'Garrafa de 20 Litros (20.000 ml)' };
+            case 'kg':
+                return { factor: 1000, consumptionUnit: 'g', label: 'Kilogramo (1.000 g)' };
             case 'litro':
                 return { factor: 1000, consumptionUnit: 'ml', label: 'Litro (1.000 ml)' };
             case 'caja_24':
                 return { factor: 24, consumptionUnit: 'unid', label: 'Caja de 24 Unidades' };
-            case 'unidad':
+            case 'garrafa_20l':
+                return { factor: 20000, consumptionUnit: 'ml', label: 'Garrafa de 20 Litros (20.000 ml)' };
+            case 'bulto_25kg':
+                return { factor: 25000, consumptionUnit: 'g', label: 'Bulto / Saco de 25 kg (25.000 g)' };
+            case 'bulto_50kg':
+                return { factor: 50000, consumptionUnit: 'g', label: 'Bulto / Saco de 50 kg (50.000 g)' };
             default:
-                return { factor: 1, consumptionUnit: 'unid', label: 'Unidad Individual' };
+                return { factor: 1, consumptionUnit: 'unid', label: 'Unidad Individual (1 unid)' };
         }
     };
 
@@ -107,17 +114,23 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                     consumption_unit: preset.consumptionUnit,
                     stock_in_consumption_units: totalStockAdded,
                     min_stock_alert: parseFloat(minStockAlert) || 1000,
-                    supplier_name: supplierName
+                    expiration_date: expirationDate || null,
+                    batch_number: batchNumber || null,
+                    is_casual_purchase: isCasualPurchase,
+                    supplier_name: isCasualPurchase ? (supplierName || 'Compra Ocasional Caja Menor') : supplierName
                 })
             });
 
             const data = await res.json();
             if (data.success) {
-                alert(`✅ Insumo '${name}' registrado con stock de ${totalStockAdded.toLocaleString()} ${preset.consumptionUnit}.`);
+                alert(`✅ ${isCasualPurchase ? '⚡ Compra Ocasional de Caja Menor' : 'Insumo'} '${name}' registrado con stock de ${totalStockAdded.toLocaleString()} ${preset.consumptionUnit}.`);
                 setIsModalOpen(false);
                 setName('');
                 setPurchaseUnitCost('');
                 setSupplierName('');
+                setExpirationDate('');
+                setBatchNumber('');
+                setIsCasualPurchase(false);
                 fetchMaterials();
             } else {
                 alert(`Error: ${data.error}`);
@@ -146,6 +159,24 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
         }
     };
 
+    // Helper de Estado de Vencimiento
+    const getExpirationStatus = (expDateStr?: string) => {
+        if (!expDateStr) return null;
+        const expDate = new Date(expDateStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const diffTime = expDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            return { label: `🔴 Vencido hace ${Math.abs(diffDays)}d`, color: 'bg-rose-500/20 text-rose-300 border-rose-500/40' };
+        } else if (diffDays <= 5) {
+            return { label: `🟡 Vence en ${diffDays}d (Revisar FIFO)`, color: 'bg-amber-500/20 text-amber-300 border-amber-500/40' };
+        }
+        return { label: `🟢 Vence: ${expDate.toLocaleDateString()}`, color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' };
+    };
+
     return (
         <div className="space-y-6">
             {/* Encabezado */}
@@ -156,26 +187,45 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                     </div>
                     <div>
                         <h2 className="text-xl font-bold text-on-surface">Inventario de Insumos & Materias Primas</h2>
-                        <p className="text-xs text-on-surface-variant">Control de bodega para ingredientes, conversiones (Bulto/Kg/Lb ➔ Gramos/ML) y mermas</p>
+                        <p className="text-xs text-on-surface-variant">Bodega interna de cocina: Harinas, carnes frías, salchichas, vencimientos y compras de caja menor</p>
                     </div>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={() => setIsModalOpen(true)}
-                    className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-2xl hover:opacity-90 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-primary/20"
-                >
-                    <span className="material-symbols-outlined text-[18px]">add_box</span>
-                    Registrar Nuevo Insumo / Materia Prima
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsCasualPurchase(true);
+                            setSupplierName('Caja Menor / Compra Ocasional');
+                            setIsModalOpen(true);
+                        }}
+                        className="px-3.5 py-2.5 bg-amber-500/20 text-amber-300 font-bold text-xs rounded-2xl border border-amber-500/40 hover:bg-amber-500/30 transition cursor-pointer flex items-center gap-1.5"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">bolt</span>
+                        + Compra Ocasional / Caja Menor
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsCasualPurchase(false);
+                            setSupplierName('');
+                            setIsModalOpen(true);
+                        }}
+                        className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-2xl hover:opacity-90 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-primary/20"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">add_box</span>
+                        Registrar Insumo Regular
+                    </button>
+                </div>
             </div>
 
-            {/* Banner Informativo */}
+            {/* Banner Informativo sobre Rotación PEPS / FIFO */}
             <div className="bg-surface-container/30 border border-outline/10 p-4 rounded-3xl text-xs space-y-1 text-on-surface-variant flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-[28px]">scale</span>
+                <span className="material-symbols-outlined text-primary text-[28px]">published_with_changes</span>
                 <div>
-                    <strong className="text-on-surface block font-bold">Conversión Transparente de Compra a Consumo:</strong>
-                    <span>Registras tus compras por Bulto, Kilo o Libra y el ERP calcula automáticamente el costo por gramo/mililitro para deducirlo de bodega en cada plato vendido.</span>
+                    <strong className="text-on-surface block font-bold">Rotación de Inventario FIFO / PEPS (Primeras en Entrar, Primeras en Salir):</strong>
+                    <span>Las materias primas con fechas de vencimiento más próximas deben usarse primero en cocina para evitar mermas térmicas o pérdidas de insumos.</span>
                 </div>
             </div>
 
@@ -200,19 +250,35 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                         const unitCost = Number(mat.purchase_unit_cost) || 0;
                         const costPerGram = factor > 0 ? unitCost / factor : 0;
                         const isLowStock = stockNum <= minAlertNum;
+                        const expStatus = getExpirationStatus(mat.expiration_date);
 
                         return (
                             <div key={mat.id} className="bg-surface-container/30 border border-outline/10 p-5 rounded-3xl space-y-3 shadow-md hover:border-primary/30 transition flex flex-col justify-between">
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between border-b border-outline/10 pb-2">
                                         <div>
-                                            <h3 className="font-extrabold text-on-surface text-sm">{mat.name}</h3>
+                                            <div className="flex items-center gap-1.5">
+                                                <h3 className="font-extrabold text-on-surface text-sm">{mat.name}</h3>
+                                                {mat.is_casual_purchase && (
+                                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30" title="Compra Ocasional / Caja Menor">
+                                                        ⚡ Caja Menor
+                                                    </span>
+                                                )}
+                                            </div>
                                             <span className="text-[11px] text-on-surface-variant">{mat.category}</span>
                                         </div>
                                         <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${isLowStock ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
                                             {isLowStock ? '⚠️ Stock Bajo' : '🟢 Stock OK'}
                                         </span>
                                     </div>
+
+                                    {/* Alerta de Vencimiento */}
+                                    {expStatus && (
+                                        <div className={`text-[11px] font-bold px-3 py-1 rounded-xl border flex items-center justify-between ${expStatus.color}`}>
+                                            <span>{expStatus.label}</span>
+                                            {mat.batch_number && <span className="text-[9px] opacity-80">Lote: {mat.batch_number}</span>}
+                                        </div>
+                                    )}
 
                                     <div className="grid grid-cols-2 gap-2 text-xs bg-surface/40 p-2.5 rounded-2xl border border-outline/5">
                                         <div>
@@ -254,13 +320,14 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                 </div>
             )}
 
-            {/* Modal Registrar Insumo */}
+            {/* Modal Registrar Insumo / Compra Ocasional */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[9999] backdrop-blur-sm bg-black/80 flex items-center justify-center p-4">
                     <div className="bg-surface-container border border-outline/20 w-full max-w-lg rounded-3xl p-6 space-y-5 shadow-2xl">
                         <div className="flex items-center justify-between border-b border-outline/10 pb-3">
                             <h3 className="font-extrabold text-on-surface text-base flex items-center gap-2">
-                                <span>🥦</span> Registrar Insumo / Materia Prima
+                                <span>{isCasualPurchase ? '⚡' : '🥦'}</span>
+                                {isCasualPurchase ? 'Registrar Compra Ocasional (Caja Menor / Emergencia)' : 'Registrar Insumo / Materia Prima'}
                             </h3>
                             <button type="button" onClick={() => setIsModalOpen(false)} className="text-on-surface-variant hover:text-on-surface">
                                 <span className="material-symbols-outlined">close</span>
@@ -273,7 +340,7 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                                     <label className="text-xs font-bold text-on-surface-variant">Nombre del Insumo *</label>
                                     <input
                                         type="text"
-                                        placeholder="Ej: Papa Sabanera, Carne Angus"
+                                        placeholder="Ej: Harina de Trigo, Salchichas, Queso"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary font-bold"
@@ -281,46 +348,50 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-on-surface-variant">Categoría</label>
+                                    <label className="text-xs font-bold text-on-surface-variant">Categoría Gastronómica</label>
                                     <select
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value)}
-                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary cursor-pointer"
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary cursor-pointer font-semibold"
                                     >
-                                        <option value="Verduras & Vegetales">Verduras & Vegetales</option>
+                                        <option value="Panadería, Harinas & Masa">Panadería, Harinas & Masa</option>
+                                        <option value="Embutidos, Salchichas & Charcutería">Embutidos, Salchichas & Charcutería</option>
                                         <option value="Carnes & Aves">Carnes & Aves</option>
+                                        <option value="Pescados & Mariscos">Pescados & Mariscos</option>
                                         <option value="Lácteos & Quesos">Lácteos & Quesos</option>
-                                        <option value="Abarrotes & Aceites">Abarrotes & Aceites</option>
+                                        <option value="Verduras & Vegetales">Verduras & Vegetales</option>
+                                        <option value="Abarrotes, Salsas & Aceites">Abarrotes, Salsas & Aceites</option>
                                         <option value="Bebidas & Licores">Bebidas & Licores</option>
                                         <option value="Empaques & Desechables">Empaques & Desechables</option>
                                     </select>
                                 </div>
                             </div>
 
+                            {/* Selector Ordenado de Unidad de Compra (De Sencillo a Mayor) */}
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-on-surface-variant">Unidad de Medida de Compra</label>
+                                <label className="text-xs font-bold text-on-surface-variant">Unidad de Medida de Compra (Escala Simple ➔ Mayorista)</label>
                                 <select
                                     value={purchaseUnit}
                                     onChange={(e) => setPurchaseUnit(e.target.value)}
                                     className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary font-semibold cursor-pointer"
                                 >
-                                    <option value="bulto_50kg">📦 Bulto de 50 Kilogramos (50.000 g)</option>
-                                    <option value="bulto_25kg">📦 Bulto de 25 Kilogramos (25.000 g)</option>
-                                    <option value="kg">⚖️ Kilogramo (1.000 g)</option>
-                                    <option value="libra">⚖️ Libra (454 g)</option>
-                                    <option value="garrafa_20l">🛢️ Garrafa de 20 Litros (20.000 ml)</option>
-                                    <option value="litro">🥛 Litro (1.000 ml)</option>
-                                    <option value="caja_24">📦 Caja de 24 Unidades</option>
-                                    <option value="unidad">🧃 Unidad Individual</option>
+                                    <option value="unidad">🧃 1. Unidad Individual (1 unid)</option>
+                                    <option value="libra">⚖️ 2. Libra (454 g)</option>
+                                    <option value="kg">⚖️ 3. Kilogramo (1.000 g)</option>
+                                    <option value="litro">🥛 4. Litro (1.000 ml)</option>
+                                    <option value="caja_24">📦 5. Caja de 24 Unidades</option>
+                                    <option value="garrafa_20l">🛢️ 6. Garrafa de 20 Litros (20.000 ml)</option>
+                                    <option value="bulto_25kg">📦 7. Bulto / Saco de 25 Kilogramos (25.000 g)</option>
+                                    <option value="bulto_50kg">📦 8. Bulto / Saco de 50 Kilogramos (50.000 g)</option>
                                 </select>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-on-surface-variant">Costo por Unidad de Compra ($ COP) *</label>
+                                    <label className="text-xs font-bold text-on-surface-variant">Costo de Compra ($ COP) *</label>
                                     <input
                                         type="number"
-                                        placeholder="Ej: 100000"
+                                        placeholder="Ej: 15000"
                                         value={purchaseUnitCost}
                                         onChange={(e) => setPurchaseUnitCost(e.target.value)}
                                         className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold text-primary outline-none focus:border-primary"
@@ -334,7 +405,30 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                                         placeholder="1"
                                         value={purchaseQuantity}
                                         onChange={(e) => setPurchaseQuantity(e.target.value)}
-                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary font-bold"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Fecha de Vencimiento & Lote */}
+                            <div className="grid grid-cols-2 gap-3 bg-surface/50 p-3 rounded-2xl border border-outline/10">
+                                <div className="space-y-1">
+                                    <label className="text-[11px] font-bold text-on-surface-variant">Fecha de Vencimiento (Alerta)</label>
+                                    <input
+                                        type="date"
+                                        value={expirationDate}
+                                        onChange={(e) => setExpirationDate(e.target.value)}
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary font-semibold"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[11px] font-bold text-on-surface-variant">Número de Lote (Opcional)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Ej: LOTE-8823"
+                                        value={batchNumber}
+                                        onChange={(e) => setBatchNumber(e.target.value)}
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary font-mono"
                                     />
                                 </div>
                             </div>
@@ -365,10 +459,10 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-on-surface-variant">Proveedor (Opcional)</label>
+                                    <label className="text-xs font-bold text-on-surface-variant">Proveedor / Fuente</label>
                                     <input
                                         type="text"
-                                        placeholder="Ej: Distribuidora Central"
+                                        placeholder="Ej: Distribuidora / Tienda Local"
                                         value={supplierName}
                                         onChange={(e) => setSupplierName(e.target.value)}
                                         className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
@@ -379,10 +473,10 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-3.5 bg-primary text-on-primary font-extrabold text-xs rounded-2xl hover:opacity-90 shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+                                className={`w-full py-3.5 font-extrabold text-xs rounded-2xl hover:opacity-90 shadow-lg transition cursor-pointer flex items-center justify-center gap-2 ${isCasualPurchase ? 'bg-amber-500 text-black' : 'bg-primary text-on-primary'}`}
                             >
                                 <span className="material-symbols-outlined text-[18px]">save</span>
-                                {loading ? 'Guardando...' : 'Guardar Insumo en Bodega'}
+                                {loading ? 'Guardando...' : isCasualPurchase ? 'Registrar Compra Ocasional de Caja Menor' : 'Guardar Insumo en Bodega'}
                             </button>
                         </form>
                     </div>

@@ -7244,21 +7244,23 @@ export const server = app.listen(PORT, () => {
       const {
         name, category, purchase_unit, purchase_unit_cost,
         conversion_factor_to_consumption, consumption_unit,
-        stock_in_consumption_units, min_stock_alert, supplier_name
+        stock_in_consumption_units, min_stock_alert, supplier_name,
+        expiration_date, batch_number, is_casual_purchase
       } = req.body;
 
       const result = await pool.query(
         `INSERT INTO raw_materials (
           client_id, name, category, purchase_unit, purchase_unit_cost,
           conversion_factor_to_consumption, consumption_unit, stock_in_consumption_units,
-          min_stock_alert, supplier_name
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          min_stock_alert, supplier_name, expiration_date, batch_number, is_casual_purchase
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING *`,
         [
           clientId, name, category || 'General', purchase_unit || 'kg',
           purchase_unit_cost || 0, conversion_factor_to_consumption || 1000,
           consumption_unit || 'g', stock_in_consumption_units || 0,
-          min_stock_alert || 1000, supplier_name || null
+          min_stock_alert || 1000, supplier_name || null,
+          expiration_date || null, batch_number || null, is_casual_purchase ? true : false
         ]
       );
       res.json({ success: true, raw_material: result.rows[0] });
