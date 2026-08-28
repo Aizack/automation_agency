@@ -886,6 +886,7 @@ export const initDatabase = async () => {
             ALTER TABLE employees ALTER COLUMN pin TYPE VARCHAR(255);
             ALTER TABLE products ADD COLUMN IF NOT EXISTS reserved_stock INT DEFAULT 0;
             ALTER TABLE products ADD COLUMN IF NOT EXISTS committed_stock INT DEFAULT 0;
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS available_modifiers JSONB DEFAULT '[]';
         `);
 
         await pool.query(`

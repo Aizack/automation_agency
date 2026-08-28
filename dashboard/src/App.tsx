@@ -6,13 +6,19 @@ import { AuthFast } from './components/AuthFast';
 import { EmployeePortal } from './components/EmployeePortal';
 import { ActivateAccount } from './components/ActivateAccount';
 import { LandingPage } from './components/LandingPage';
+import { PublicRestaurantMenu } from './components/PublicRestaurantMenu';
 
 function App() {
-  const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing'>(() => {
+  const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing' | 'menu'>(() => {
     const path = window.location.pathname.toLowerCase();
     const params = new URLSearchParams(window.location.search);
     const urlView = params.get('view');
     const host = window.location.hostname.toLowerCase();
+
+    // Carta Digital Pública para Clientes (/menu/:clientId o /m/:clientId)
+    if (path.startsWith('/menu') || path.startsWith('/m/')) {
+      return 'menu';
+    }
 
     // Si la ruta es /landpage o /landing -> Mostrar la Landing Page
     if (path === '/landpage' || path === '/landing' || urlView === 'landpage' || urlView === 'landing') {
@@ -39,6 +45,13 @@ function App() {
       const urlToken = params.get('token');
       const path = window.location.pathname.toLowerCase();
       const host = window.location.hostname.toLowerCase();
+
+      // Caso Carta Digital Pública para Clientes
+      if (path.startsWith('/menu') || path.startsWith('/m/')) {
+        setView('menu');
+        setLoading(false);
+        return;
+      }
 
       // 0. Caso explícito de /landpage o /landing
       if (path === '/landpage' || path === '/landing' || urlView === 'landpage' || urlView === 'landing') {
@@ -276,6 +289,10 @@ function App() {
 
   if (view === 'employee') {
     return <EmployeePortal />;
+  }
+
+  if (view === 'menu') {
+    return <PublicRestaurantMenu />;
   }
 
   if (view === 'client') {

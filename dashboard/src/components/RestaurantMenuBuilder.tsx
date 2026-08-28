@@ -6,8 +6,10 @@ interface Product {
     price: string;
     cost_price?: string;
     stock: number;
+    description?: string;
     sku?: string | null;
     category_id?: string;
+    available_modifiers?: { name: string; price: number }[];
 }
 
 interface RecipeItem {
@@ -36,6 +38,18 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
     const [dishCategory, setDishCategory] = useState('Platos Fuertes');
     const [dishDescription, setDishDescription] = useState('');
     const [dishSopInstructions, setDishSopInstructions] = useState('');
+
+    // Pre-configured Modifiers State
+    const [availableModifiers, setAvailableModifiers] = useState<{ name: string; price: number }[]>([]);
+    const [modName, setModName] = useState('');
+    const [modPrice, setModPrice] = useState('');
+
+    // AI Import Modal State
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+    const [aiInputText, setAiInputText] = useState('');
+    const [aiFileBase64, setAiFileBase64] = useState<string | null>(null);
+    const [aiMimeType, setAiMimeType] = useState<string | null>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     // Recipe BOM items for the dish being created/edited
     const [recipeItems, setRecipeItems] = useState<RecipeItem[]>([]);
@@ -105,6 +119,70 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
         setRecipeItems(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleAddModifier = () => {
+        if (!modName.trim()) return;
+        const p = parseFloat(modPrice) || 0;
+        setAvailableModifiers(prev => [...prev, { name: modName.trim(), price: p }]);
+        setModName('');
+        setModPrice('');
+    };
+
+    const handleRemoveModifier = (index: number) => {
+        setAvailableModifiers(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setAiMimeType(file.type);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setAiFileBase64(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleImportMenuAI = async () => {
+        if (!aiInputText.trim() && !aiFileBase64) {
+            alert("Ingresa un texto o selecciona una foto/PDF del menú.");
+            return;
+        }
+
+        try {
+            setAiLoading(true);
+            const res = await fetch(`/api/clients/${clientId}/restaurant/import-menu-ai`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    textContent: aiInputText,
+                    fileBase64: aiFileBase64,
+                    mimeType: aiMimeType
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                alert(`🎉 ${data.message}`);
+                setIsAiModalOpen(false);
+                setAiInputText('');
+                setAiFileBase64(null);
+                setAiMimeType(null);
+                fetchData();
+            } else {
+                alert(`Error al importar: ${data.error}`);
+            }
+        } catch (err) {
+            console.error("Error importing menu:", err);
+            alert("Error de conexión al importar el menú con IA.");
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
     // Calcular Costo Total del Recetario BOM (Escandallo Financiero)
     const totalBomCost = recipeItems.reduce((sum, item) => sum + item.raw_cost, 0);
     const salePriceNum = parseFloat(dishPrice) || 0;
@@ -131,7 +209,8 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                     price: parseFloat(dishPrice),
                     cost_price: totalBomCost,
                     stock: 9999,
-                    description: dishDescription
+                    description: dishDescription,
+                    available_modifiers: availableModifiers
                 })
             });
 
@@ -157,7 +236,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                     });
                 }
 
-                alert(`✅ Plato '${dishName}' creado con su recetario e instructivo SOP de cocina.`);
+                alert(`✅ Plato '${dishName}' creado con sus adicionales e instructivo SOP de cocina.`);
                 setIsModalOpen(false);
                 // Reset Form
                 setDishName('');
@@ -165,6 +244,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                 setDishDescription('');
                 setDishSopInstructions('');
                 setRecipeItems([]);
+                setAvailableModifiers([]);
                 fetchData();
             } else {
                 alert(`Error: ${prodJson.error}`);
@@ -191,14 +271,24 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                     </div>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={() => setIsModalOpen(true)}
-                    className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-2xl hover:opacity-90 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-primary/20"
-                >
-                    <span className="material-symbols-outlined text-[18px]">add</span>
-                    Crear Nuevo Plato del Menú
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setIsAiModalOpen(true)}
+                        className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold text-xs rounded-2xl hover:opacity-95 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-purple-500/20 border border-purple-400/30"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                        ✨ Importar Menú con IA (PDF / Foto / Texto)
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setIsModalOpen(true)}
+                        className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-2xl hover:opacity-90 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-primary/20"
+                    >
+                        <span className="material-symbols-outlined text-[18px]">add</span>
+                        Crear Nuevo Plato
+                    </button>
+                </div>
             </div>
 
             {/* Guía Explicativa del Gramaje & Escandallo */}
@@ -219,34 +309,116 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                     const costNum = parseFloat(dish.cost_price || '0');
                     const priceNum = parseFloat(dish.price || '0');
                     const margin = priceNum > 0 ? ((priceNum - costNum) / priceNum) * 100 : 0;
+                    const mods = dish.available_modifiers || [];
                     return (
-                        <div key={dish.id} className="bg-surface-container/30 border border-outline/10 p-5 rounded-3xl space-y-3 shadow-md hover:border-primary/30 transition">
-                            <div className="flex items-center justify-between border-b border-outline/10 pb-3">
-                                <div>
-                                    <h3 className="font-extrabold text-on-surface text-sm">{dish.name}</h3>
-                                    <span className="text-[11px] text-on-surface-variant">Menú Comercial</span>
+                        <div key={dish.id} className="bg-surface-container/30 border border-outline/10 p-5 rounded-3xl space-y-3 shadow-md hover:border-primary/30 transition flex flex-col justify-between">
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+                                    <div>
+                                        <h3 className="font-extrabold text-on-surface text-sm">{dish.name}</h3>
+                                        <span className="text-[11px] text-on-surface-variant">Menú Comercial</span>
+                                    </div>
+                                    <span className="font-black text-primary text-sm">${priceNum.toLocaleString()} COP</span>
                                 </div>
-                                <span className="font-black text-primary text-sm">${priceNum.toLocaleString()} COP</span>
+
+                                {dish.description && (
+                                    <p className="text-xs text-on-surface-variant line-clamp-2">{dish.description}</p>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-2 text-xs bg-surface/40 p-2.5 rounded-2xl border border-outline/5">
+                                    <div>
+                                        <span className="text-on-surface-variant block text-[10px]">Costo Escandallo:</span>
+                                        <strong className="text-on-surface">${costNum.toLocaleString()}</strong>
+                                    </div>
+                                    <div>
+                                        <span className="text-on-surface-variant block text-[10px]">Margen Estimado:</span>
+                                        <strong className={margin >= 40 ? 'text-emerald-400 font-extrabold' : 'text-amber-400 font-extrabold'}>
+                                            {margin.toFixed(1)}%
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                {mods.length > 0 && (
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-bold text-on-surface-variant uppercase">Adicionales Configurados ({mods.length}):</span>
+                                        <div className="flex flex-wrap gap-1">
+                                            {mods.map((m, i) => (
+                                                <span key={i} className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-lg">
+                                                    +{m.name} (${m.price.toLocaleString()})
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-2 text-xs bg-surface/40 p-2.5 rounded-2xl border border-outline/5">
-                                <div>
-                                    <span className="text-on-surface-variant block text-[10px]">Costo Escandallo:</span>
-                                    <strong className="text-on-surface">${costNum.toLocaleString()}</strong>
-                                </div>
-                                <div>
-                                    <span className="text-on-surface-variant block text-[10px]">Margen Estimado:</span>
-                                    <strong className={margin >= 40 ? 'text-emerald-400 font-extrabold' : 'text-amber-400 font-extrabold'}>
-                                        {margin.toFixed(1)}%
-                                    </strong>
-                                </div>
-                            </div>
-
-                            {dish.sku && <p className="text-[11px] text-on-surface-variant/70 italic">SKU/Código: {dish.sku}</p>}
+                            {dish.sku && <p className="text-[11px] text-on-surface-variant/70 italic pt-1">SKU/Código: {dish.sku}</p>}
                         </div>
                     );
                 })}
             </div>
+
+            {/* Modal para Importación de Menú con IA */}
+            {isAiModalOpen && (
+                <div className="fixed inset-0 z-[9999] backdrop-blur-sm bg-black/80 flex items-center justify-center p-4">
+                    <div className="bg-surface-container border border-outline/20 w-full max-w-xl rounded-3xl p-6 space-y-5 shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+                            <h3 className="font-extrabold text-on-surface text-base flex items-center gap-2">
+                                <span className="material-symbols-outlined text-purple-400">auto_awesome</span>
+                                ✨ Importar Carta / Menú con IA
+                            </h3>
+                            <button type="button" onClick={() => setIsAiModalOpen(false)} className="text-on-surface-variant hover:text-on-surface">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 text-xs">
+                            <p className="text-on-surface-variant">
+                                Sube la <strong>foto de tu carta física</strong>, archivo <strong>PDF</strong> o <strong>pega el texto</strong> del menú. La IA extraerá automáticamente todos los platos, precios, descripciones y sugerencias de adicionales.
+                            </p>
+
+                            {/* Opción 1: Archivo Imagen o PDF */}
+                            <div className="space-y-1">
+                                <label className="font-bold text-on-surface">Opción 1: Subir Foto de la Carta o PDF</label>
+                                <input
+                                    type="file"
+                                    accept="image/*,application/pdf"
+                                    onChange={handleFileUpload}
+                                    className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                />
+                                {aiFileBase64 && (
+                                    <p className="text-emerald-400 font-bold text-[11px] flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                        Archivo cargado listo para análisis con IA
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Opción 2: Texto Copiado */}
+                            <div className="space-y-1">
+                                <label className="font-bold text-on-surface">Opción 2: Pegar Texto de la Carta</label>
+                                <textarea
+                                    rows={5}
+                                    placeholder="Ej: Hamburguesa Angus - $32.000 COP (150g carne, queso cheddar)\nSalchipapa Costeña - $10.000 COP..."
+                                    value={aiInputText}
+                                    onChange={(e) => setAiInputText(e.target.value)}
+                                    className="w-full bg-surface border border-outline/20 rounded-xl p-3 text-xs text-on-surface outline-none focus:border-purple-500 font-mono"
+                                />
+                            </div>
+
+                            <button
+                                type="button"
+                                disabled={aiLoading}
+                                onClick={handleImportMenuAI}
+                                className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold text-xs rounded-xl hover:opacity-90 shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">psychology</span>
+                                {aiLoading ? 'Analizando Menú con IA de Gemini...' : 'Procesar e Importar Menú de Inmediato'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal para Crear/Editar Plato del Menú */}
             {isModalOpen && (
@@ -299,6 +471,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                     >
                                         <option value="Entradas">Entradas & Snacks</option>
                                         <option value="Platos Fuertes">Platos Fuertes</option>
+                                        <option value="Salchipapas">Salchipapas & Comida Rápida</option>
                                         <option value="Bebidas">Bebidas & Coctelería</option>
                                         <option value="Postres">Postres & Dulces</option>
                                     </select>
@@ -313,6 +486,47 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                         className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
                                     />
                                 </div>
+                            </div>
+
+                            {/* Adicionales Pre-configurados por Plato */}
+                            <div className="space-y-2 bg-surface/50 border border-outline/10 p-4 rounded-2xl">
+                                <h4 className="text-xs font-extrabold text-emerald-400 uppercase flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                                    Adicionales Pre-configurados para este Plato (Con Costo Extra)
+                                </h4>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Nombre (Ej: Queso costeño)"
+                                        value={modName}
+                                        onChange={(e) => setModName(e.target.value)}
+                                        className="col-span-2 bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Precio ($)"
+                                        value={modPrice}
+                                        onChange={(e) => setModPrice(e.target.value)}
+                                        className="bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleAddModifier}
+                                    className="w-full py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs rounded-xl transition cursor-pointer border border-emerald-500/30"
+                                >
+                                    + Agregar Adicional Configurado
+                                </button>
+                                {availableModifiers.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                        {availableModifiers.map((mod, index) => (
+                                            <span key={index} className="bg-emerald-500/20 text-emerald-300 text-[11px] px-2.5 py-1 rounded-lg border border-emerald-500/40 flex items-center gap-1">
+                                                ➕ {mod.name} (+${mod.price.toLocaleString()} COP)
+                                                <button type="button" onClick={() => handleRemoveModifier(index)} className="text-rose-400 hover:text-rose-300 ml-1">✕</button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Configuración de Insumos / Gramajes & Merma (BOM) */}

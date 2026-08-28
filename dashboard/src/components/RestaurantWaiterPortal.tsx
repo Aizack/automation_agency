@@ -22,6 +22,7 @@ interface Product {
     name: string;
     price: string;
     category_id?: string;
+    available_modifiers?: { name: string; price: number }[] | string;
 }
 
 interface SelectedOrderItem {
@@ -647,6 +648,44 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                         {/* Adicionales Con Costo Extra */}
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-on-surface-variant">Adicionales (Con costo extra):</label>
+
+                            {/* Adicionales Frecuentes / Pre-configurados en 1-Clic */}
+                            {selectedProduct?.available_modifiers && (() => {
+                                const parsedMods = typeof selectedProduct.available_modifiers === 'string' 
+                                    ? JSON.parse(selectedProduct.available_modifiers) 
+                                    : selectedProduct.available_modifiers;
+                                if (!Array.isArray(parsedMods) || parsedMods.length === 0) return null;
+                                return (
+                                    <div className="space-y-1 bg-surface/50 p-2.5 rounded-2xl border border-outline/10">
+                                        <label className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wide">💡 Adicionales del Menú (1-Clic):</label>
+                                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                            {parsedMods.map((mod: any, idx: number) => {
+                                                const isSelected = additionsList.some(a => a.name === mod.name);
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                setAdditionsList(prev => prev.filter(a => a.name !== mod.name));
+                                                            } else {
+                                                                setAdditionsList(prev => [...prev, { name: mod.name, price: parseFloat(mod.price) || 0 }]);
+                                                            }
+                                                        }}
+                                                        className={`text-[11px] px-2.5 py-1 rounded-xl border font-extrabold transition cursor-pointer flex items-center gap-1 ${
+                                                            isSelected
+                                                                ? 'bg-emerald-500 text-black border-emerald-400 shadow-md scale-105'
+                                                                : 'bg-surface border-outline/20 text-emerald-300 hover:bg-emerald-500/20'
+                                                        }`}
+                                                    >
+                                                        {isSelected ? '✓' : '+'} {mod.name} (+${(parseFloat(mod.price) || 0).toLocaleString()} COP)
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                             <div className="grid grid-cols-3 gap-2">
                                 <input
                                     type="text"

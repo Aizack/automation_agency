@@ -1422,22 +1422,25 @@ app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, a
 app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
     }
 
+    const modsJson = available_modifiers ? (typeof available_modifiers === 'string' ? available_modifiers : JSON.stringify(available_modifiers)) : '[]';
+
     const result = await pool.query(
       `INSERT INTO products (
-         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, created_at`,
+         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, created_at`,
       [
         clientId, name, sku || null, description || null, price, stock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null,
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
-        category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}'
+        category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
+        modsJson
       ]
     );
 
@@ -1451,25 +1454,28 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, productId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
     }
+
+    const modsJson = available_modifiers ? (typeof available_modifiers === 'string' ? available_modifiers : JSON.stringify(available_modifiers)) : '[]';
 
     const result = await pool.query(
       `UPDATE products 
        SET name = $1, sku = $2, description = $3, price = $4, stock = $5, 
            cost_price = $6, min_stock = $7, supplier_name = $8, supplier_phone = $9,
            brand = $10, material = $11, style = $12, color = $13, promo_discount = $14,
-           category_id = $15, attributes = $16
-       WHERE client_id = $17 AND id = $18 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, created_at`,
+           category_id = $15, attributes = $16, available_modifiers = $17
+       WHERE client_id = $18 AND id = $19 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, created_at`,
       [
         name, sku || null, description || null, price, stock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null, 
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
+        modsJson,
         clientId, productId
       ]
     );
@@ -7253,6 +7259,278 @@ export const server = app.listen(PORT, () => {
       );
       res.json({ success: true, recipe: result.rows[0] });
     } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Importar Menú Completo con IA (PDF / Imagen / Texto)
+  app.post('/api/clients/:clientId/restaurant/import-menu-ai', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { textContent, fileBase64, mimeType } = req.body;
+
+      if (!textContent && !fileBase64) {
+        return res.status(400).json({ success: false, error: 'Por favor proporciona un texto o una imagen/PDF del menú.' });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      let parsedDishes: any[] = [];
+
+      const promptText = `
+Eres un chef ejecutivo y sommelier experto en digitalizar cartas de restaurantes.
+Analiza detenidamente la carta/menú provisto y extrae TODOS los platos.
+
+Para cada plato extrae:
+- "name": Nombre comercial del plato.
+- "category": Categoría (ej: "Entradas", "Salchipapas", "Platos Fuertes", "Bebidas", "Postres").
+- "description": Descripción o ingredientes del plato.
+- "price": Precio de venta en pesos colombianos (número entero sin puntos, ej: 10000).
+- "available_modifiers": Lista de adicionales sugeridos para este plato en formato: [{ "name": "Nombre adicional", "price": 2000 }]
+
+Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
+{
+  "dishes": [
+    {
+      "name": "Salchipapa Costeña",
+      "category": "Salchipapas",
+      "description": "Papa frita con salchicha picada y queso costeño",
+      "price": 10000,
+      "available_modifiers": [
+        { "name": "Queso costeño extra", "price": 2000 }
+      ]
+    }
+  ]
+}
+`;
+
+      if (apiKey && apiKey !== "API_KEY_MISSING") {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        let result;
+        if (fileBase64 && mimeType) {
+          const cleanBase64 = fileBase64.includes('base64,') ? fileBase64.split('base64,')[1] : fileBase64;
+          result = await model.generateContent([
+            promptText,
+            {
+              inlineData: {
+                data: cleanBase64,
+                mimeType: mimeType || 'image/jpeg'
+              }
+            }
+          ]);
+        } else {
+          result = await model.generateContent([promptText, `Texto de la carta:\n${textContent}`]);
+        }
+
+        const responseText = result.response.text();
+        const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(cleanJson);
+        parsedDishes = parsed.dishes || [];
+      } else {
+        // Local parser fallback si no hay API Key
+        const lines = (textContent || '').split('\n').filter((l: string) => l.trim().length > 0);
+        parsedDishes = lines.map((line: string, idx: number) => {
+          const parts = line.split(/[\-\$]/);
+          const name = parts[0]?.trim() || `Plato ${idx + 1}`;
+          const priceNum = parts[1] ? parseInt(parts[1].replace(/\D/g, '')) || 10000 : 10000;
+          return {
+            name,
+            category: 'Menú General',
+            description: 'Plato importado de la carta digital',
+            price: priceNum,
+            available_modifiers: [
+              { name: 'Queso extra', price: 2000 },
+              { name: 'Salsa especial', price: 1000 }
+            ]
+          };
+        });
+      }
+
+      const createdDishes = [];
+      for (const dish of parsedDishes) {
+        if (!dish.name || !dish.price) continue;
+
+        const created = await pool.query(
+          `INSERT INTO products (client_id, name, description, price, stock, cost_price, available_modifiers)
+           VALUES ($1, $2, $3, $4, 999, $5, $6)
+           RETURNING id, name, price, description, available_modifiers`,
+          [
+            clientId,
+            dish.name,
+            dish.description || 'Plato importado con IA',
+            parseFloat(dish.price) || 10000,
+            (parseFloat(dish.price) * 0.4) || 4000,
+            JSON.stringify(dish.available_modifiers || [])
+          ]
+        );
+        createdDishes.push(created.rows[0]);
+      }
+
+      res.json({
+        success: true,
+        message: `¡Se importaron ${createdDishes.length} platos exitosamente con IA!`,
+        count: createdDishes.length,
+        dishes: createdDishes
+      });
+    } catch (err: any) {
+      console.error("[Import Menu AI Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // API PÚBLICA: Obtener Menú Digital para Clientes (Sin autenticación)
+  app.get('/api/public/menu/:clientId', async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+
+      const clientRes = await pool.query(
+        `SELECT id, name, category, logo_url, phone_number, email FROM clients WHERE id = $1 LIMIT 1`,
+        [clientId]
+      );
+
+      if (clientRes.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Restaurante no encontrado.' });
+      }
+
+      const clientInfo = clientRes.rows[0];
+
+      const productsRes = await pool.query(
+        `SELECT id, name, description, price, available_modifiers, category_id, attributes
+         FROM products
+         WHERE client_id = $1 AND (stock > 0 OR stock IS NULL)
+         ORDER BY name ASC`,
+        [clientId]
+      );
+
+      res.json({
+        success: true,
+        restaurant: clientInfo,
+        menu_items: productsRes.rows
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // API PÚBLICA: Registrar Pedido Realizado por Cliente (Consumo en Mesa o Domicilio)
+  app.post('/api/public/orders', async (req: Request, res: Response) => {
+    try {
+      const { clientId, order_type, table_number, customer_name, customer_phone, customer_address, items, notes } = req.body;
+
+      if (!clientId || !items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ success: false, error: 'Datos del pedido incompletos.' });
+      }
+
+      // Buscar si existe mesa para ese número
+      let tableId = null;
+      if (table_number) {
+        const tableRes = await pool.query(
+          `SELECT id FROM restaurant_tables WHERE client_id = $1 AND table_number = $2 LIMIT 1`,
+          [clientId, String(table_number)]
+        );
+        if (tableRes.rows.length > 0) {
+          tableId = tableRes.rows[0].id;
+        }
+      }
+
+      const orderNumber = `PED-${Math.floor(1000 + Math.random() * 9000)}`;
+      const orderNotes = `${order_type === 'domicilio' ? `🛵 DOMICILIO para ${customer_name} (Tel: ${customer_phone}) - Dir: ${customer_address}` : `🪑 MESA ${table_number || 'Salón'}`} ${notes ? `| ${notes}` : ''}`;
+
+      // Crear Comanda en KDS para la Cocina
+      const kdsRes = await pool.query(
+        `INSERT INTO kitchen_orders (client_id, table_id, order_number, station, status, items, notes)
+         VALUES ($1, $2, NULL, $3, 'kitchen', 'pending', $4, $5)
+         RETURNING *`,
+        [clientId, tableId, orderNumber, JSON.stringify(items), orderNotes]
+      );
+
+      // Calcular Subtotal y Total
+      let subtotal = 0;
+      for (const it of items) {
+        const p = parseFloat(it.price || '0');
+        const q = parseInt(it.quantity || '1');
+        let itemAddons = 0;
+        if (it.additions && Array.isArray(it.additions)) {
+          itemAddons = it.additions.reduce((s: number, a: any) => s + (parseFloat(a.price) || 0), 0);
+        }
+        subtotal += (p + itemAddons) * q;
+      }
+
+      const impoconsumo = subtotal * 0.08; // 8% Impoconsumo Colombia
+      const deliveryFee = order_type === 'domicilio' ? 4000 : 0;
+      const totalAmount = subtotal + impoconsumo + deliveryFee;
+
+      const invNumber = `FACT-CLI-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      // Registrar Factura
+      const invoiceRes = await pool.query(
+        `INSERT INTO invoices (
+          client_id, invoice_number, customer_name, customer_phone, customer_email,
+          total_amount, status, due_date, payment_method, delivery_method, delivery_fee, delivery_address, delivery_status
+        ) VALUES ($1, $2, $3, $4, $5, $6, 'pending', NOW(), 'efectivo', $7, $8, $9, 'pending')
+        RETURNING id, invoice_number`,
+        [
+          clientId,
+          invNumber,
+          customer_name || `Cliente Mesa ${table_number || 'Salón'}`,
+          customer_phone || '573000000000',
+          'cliente.menu@digital.com',
+          totalAmount,
+          order_type === 'domicilio' ? 'domicilio' : 'local',
+          deliveryFee,
+          customer_address || null
+        ]
+      );
+
+      const invoiceId = invoiceRes.rows[0].id;
+
+      // Registrar ítems y Descontar Insumos en Bodega (BOM Escandallo)
+      for (const it of items) {
+        if (it.product_id) {
+          await pool.query(
+            `INSERT INTO invoice_items (invoice_id, product_id, quantity, price, product_name, product_type)
+             VALUES ($1, $2, $3, $4, $5, 'inventory')`,
+            [invoiceId, it.product_id, it.quantity || 1, it.price || 0, it.name || 'Plato']
+          );
+
+          // Buscar receta BOM para descontar materias primas
+          const recipeRes = await pool.query(
+            `SELECT raw_product_id, quantity_required FROM product_recipes WHERE client_id = $1 AND product_id = $2`,
+            [clientId, it.product_id]
+          );
+
+          for (const rec of recipeRes.rows) {
+            if (rec.raw_product_id) {
+              const qtyToDeduct = (parseFloat(rec.quantity_required) || 0) * (it.quantity || 1);
+              await pool.query(
+                `UPDATE raw_materials SET stock_in_consumption_units = GREATEST(0, stock_in_consumption_units - $1) WHERE id = $2 AND client_id = $3`,
+                [qtyToDeduct, rec.raw_product_id, clientId]
+              );
+            }
+          }
+        }
+      }
+
+      // Si es domicilio, registrar en entregas
+      if (order_type === 'domicilio') {
+        await pool.query(
+          `INSERT INTO deliveries (client_id, invoice_id, recipient_name, recipient_phone, address, status, notes)
+           VALUES ($1, $2, $3, $4, $5, 'pending', $6)`,
+          [clientId, invoiceId, customer_name, customer_phone, customer_address, notes || 'Pedido por Carta Digital']
+        );
+      }
+
+      res.json({
+        success: true,
+        message: '¡Pedido enviado exitosamente a la cocina!',
+        order_number: orderNumber,
+        invoice_number: invNumber,
+        total_amount: totalAmount,
+        order: kdsRes.rows[0]
+      });
+    } catch (err: any) {
+      console.error("[Public Order API Error]:", err);
       res.status(500).json({ success: false, error: err.message });
     }
   });
