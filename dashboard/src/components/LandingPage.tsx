@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
+import { LegalDocsModal } from './LegalDocsModal';
+
 interface LandingPageProps {
   onLoginClick: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
+  const [legalModalTab, setLegalModalTab] = useState<'terminos' | 'privacidad' | 'ia_transparency'>('terminos');
 
   useEffect(() => {
     const link = document.createElement('link');
@@ -618,18 +622,69 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           </div>
 
           <div className="space-y-3">
-            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Contacto</h4>
-            <p className="text-[11px] text-[#94a3b8] leading-relaxed">
-              Diaz Lab Automation <br />
-              Colombia & Latinoamérica
-            </p>
+            <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Marco Legal & IA</h4>
+            <ul className="space-y-2 text-[11px] text-[#94a3b8]">
+              <li>
+                <button
+                  onClick={() => { setLegalModalTab('terminos'); setIsLegalModalOpen(true); }}
+                  className="hover:text-[#d89e41] cursor-pointer text-left bg-transparent border-0 p-0 text-[11px] text-[#94a3b8]"
+                >
+                  Términos de Servicio
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => { setLegalModalTab('privacidad'); setIsLegalModalOpen(true); }}
+                  className="hover:text-[#d89e41] cursor-pointer text-left bg-transparent border-0 p-0 text-[11px] text-[#94a3b8]"
+                >
+                  Política de Privacidad (Habeas Data)
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => { setLegalModalTab('ia_transparency'); setIsLegalModalOpen(true); }}
+                  className="hover:text-[#d89e41] cursor-pointer text-left bg-transparent border-0 p-0 text-[11px] text-[#d89e41] font-bold flex items-center gap-1"
+                >
+                  🤖 Transparencia en IA
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-[#64748b]">
-          <p>© 2026 Diaz Lab Automation. Todos los derechos reservados.</p>
+          <p>© 2026 Diaz Lab Automation. Todos los derechos reservados. Cumplimiento Habeas Data Ley 1581 & Transparencia Algorítmica IA.</p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => { setLegalModalTab('terminos'); setIsLegalModalOpen(true); }}
+              className="hover:text-slate-400 cursor-pointer"
+            >
+              Términos
+            </button>
+            <span>•</span>
+            <button
+              onClick={() => { setLegalModalTab('privacidad'); setIsLegalModalOpen(true); }}
+              className="hover:text-slate-400 cursor-pointer"
+            >
+              Privacidad
+            </button>
+            <span>•</span>
+            <button
+              onClick={() => { setLegalModalTab('ia_transparency'); setIsLegalModalOpen(true); }}
+              className="hover:text-[#d89e41] cursor-pointer"
+            >
+              Declaración IA
+            </button>
+          </div>
         </div>
       </footer>
+
+      {/* Modal Legal Global de Diaz Lab */}
+      <LegalDocsModal
+        isOpen={isLegalModalOpen}
+        onClose={() => setIsLegalModalOpen(false)}
+        initialTab={legalModalTab}
+      />
 
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LegalDocsModal } from './LegalDocsModal';
 
 type LoginTab = 'negocio' | 'empleado';
 type NegocioAccessMode = 'admin' | 'employee_erp';
@@ -8,6 +9,9 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<'terminos' | 'privacidad' | 'ia_transparency'>('terminos');
+
   const [activeTab, setActiveTab] = useState<LoginTab>(() => {
     return (localStorage.getItem('login_active_tab') as LoginTab) || 'negocio';
   });
@@ -376,10 +380,43 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           </form>
         )}
 
-        <p style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
-          Diaz Lab Automations © 2026
-        </p>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
+            Diaz Lab Automations © 2026 • Todos los derechos reservados.
+          </p>
+          <div style={{ display: 'flex', gap: 12, fontSize: '0.68rem', color: 'var(--primary-color)' }}>
+            <button
+              type="button"
+              onClick={() => { setLegalModalTab('terminos'); setIsLegalModalOpen(true); }}
+              style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.68rem', padding: 0 }}
+            >
+              Términos
+            </button>
+            <span style={{ color: 'var(--text-muted)' }}>•</span>
+            <button
+              type="button"
+              onClick={() => { setLegalModalTab('privacidad'); setIsLegalModalOpen(true); }}
+              style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.68rem', padding: 0 }}
+            >
+              Privacidad (Habeas Data)
+            </button>
+            <span style={{ color: 'var(--text-muted)' }}>•</span>
+            <button
+              type="button"
+              onClick={() => { setLegalModalTab('ia_transparency'); setIsLegalModalOpen(true); }}
+              style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.68rem', fontWeight: 'bold', padding: 0 }}
+            >
+              🤖 Transparencia IA
+            </button>
+          </div>
+        </div>
       </div>
+
+      <LegalDocsModal
+        isOpen={isLegalModalOpen}
+        onClose={() => setIsLegalModalOpen(false)}
+        initialTab={legalModalTab}
+      />
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
