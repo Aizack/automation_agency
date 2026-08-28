@@ -125,9 +125,17 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       const json = await res.json();
 
       if (json.success) {
+        localStorage.setItem('emp_token', json.data.token);
+        localStorage.setItem('emp_id', json.data.id);
+        localStorage.setItem('emp_name', json.data.name);
+        localStorage.setItem('emp_role', json.data.employeeRole || '');
+        localStorage.setItem('emp_client_id', json.data.clientId);
+        localStorage.setItem('emp_client_category', json.data.clientCategory || 'general');
+
         onLoginSuccess(json.data.clientId, 'employee', json.data.token, {
           employeeId: json.data.id,
           employeeRole: json.data.employeeRole,
+          clientCategory: json.data.clientCategory,
           permissions: json.data.permissions,
           hasErpAccess: false, // Forzar vista de perfil personal de trabajo
           name: json.data.name,

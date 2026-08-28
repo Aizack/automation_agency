@@ -47,6 +47,7 @@ export const EmployeePortal: React.FC = () => {
     const [employeeId, setEmployeeId] = useState('');
     const [employeeName, setEmployeeName] = useState('');
     const [employeeRole, setEmployeeRole] = useState('');
+    const [clientCategory, setClientCategory] = useState('');
     const [clientId, setClientId] = useState('');
 
     // Dashboard State
@@ -300,6 +301,7 @@ export const EmployeePortal: React.FC = () => {
         const storedEmpId = localStorage.getItem('emp_id');
         const storedName = localStorage.getItem('emp_name');
         const storedRole = localStorage.getItem('emp_role');
+        const storedCategory = localStorage.getItem('emp_client_category');
         const storedClientId = localStorage.getItem('emp_client_id');
         const storedShiftStart = localStorage.getItem('shift_start_ts');
 
@@ -308,6 +310,7 @@ export const EmployeePortal: React.FC = () => {
             setEmployeeId(storedEmpId);
             setEmployeeName(storedName || 'Empleado');
             setEmployeeRole(storedRole || 'employee');
+            setClientCategory(storedCategory || '');
             setClientId(storedClientId);
             setIsAuthenticated(true);
 
@@ -1064,6 +1067,15 @@ export const EmployeePortal: React.FC = () => {
         };
     };
 
+    const roleLower = (employeeRole || '').toLowerCase().trim();
+    const categoryLower = (clientCategory || '').toLowerCase().trim();
+
+    // Permisos Dinámicos por Categoría de Negocio y Rol de Empleado
+    const isDeliveryGuy = ['delivery', 'domiciliario', 'mensajero', 'driver', 'admin'].includes(roleLower) || myDeliveries.length > 0;
+    const canSeeTables = (categoryLower === 'restaurante' || categoryLower.includes('restauran') || categoryLower.includes('gastrono')) &&
+                          (['waiter', 'mesero', 'cashier', 'cajero', 'kitchen', 'cocina', 'admin'].includes(roleLower) || !roleLower || roleLower === 'employee');
+    const canSeeVisits = ['vendedor', 'field', 'comercial', 'sales', 'admin'].includes(roleLower);
+
     // MAIN DASHBOARD PORTAL
     return (
         <div className="min-h-screen bg-[#0d0d0d] text-on-surface font-sans flex flex-col md:flex-row">
@@ -1094,17 +1106,21 @@ export const EmployeePortal: React.FC = () => {
                             <span className="material-symbols-outlined text-[15px] opacity-70">schedule</span>
                             Mi Jornada
                         </button>
-                        <button 
-                            onClick={() => setActiveTab('mesas')}
-                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
-                                activeTab === 'mesas' 
-                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 sidebar-item-active font-bold' 
-                                    : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 font-medium'
-                            }`}
-                        >
-                            <span className="material-symbols-outlined text-[15px]">table_restaurant</span>
-                            🪑 Mis Mesas & Comandero
-                        </button>
+
+                        {canSeeTables && (
+                            <button 
+                                onClick={() => setActiveTab('mesas')}
+                                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                    activeTab === 'mesas' 
+                                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 sidebar-item-active font-bold' 
+                                        : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 font-medium'
+                                }`}
+                            >
+                                <span className="material-symbols-outlined text-[15px]">table_restaurant</span>
+                                🪑 Mis Mesas & Comandero
+                            </button>
+                        )}
+
                         <button 
                             onClick={() => setActiveTab('tareas')}
                             className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
@@ -1116,17 +1132,21 @@ export const EmployeePortal: React.FC = () => {
                             <span className="material-symbols-outlined text-[15px] opacity-70">task_alt</span>
                             Mis Tareas
                         </button>
-                        <button 
-                            onClick={() => setActiveTab('entregas')}
-                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
-                                activeTab === 'entregas' 
-                                    ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 sidebar-item-active font-bold' 
-                                    : 'bg-transparent text-emerald-400/80 hover:bg-emerald-500/10 hover:text-emerald-300 font-medium'
-                            }`}
-                        >
-                            <span className="material-symbols-outlined text-[15px]">local_shipping</span>
-                            Mis Entregas ({myDeliveries.length})
-                        </button>
+
+                        {isDeliveryGuy && (
+                            <button 
+                                onClick={() => setActiveTab('entregas')}
+                                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                    activeTab === 'entregas' 
+                                        ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 sidebar-item-active font-bold' 
+                                        : 'bg-transparent text-emerald-400/80 hover:bg-emerald-500/10 hover:text-emerald-300 font-medium'
+                                }`}
+                            >
+                                <span className="material-symbols-outlined text-[15px]">local_shipping</span>
+                                Mis Entregas ({myDeliveries.length})
+                            </button>
+                        )}
+
                         <button 
                             onClick={() => setActiveTab('solicitudes')}
                             className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
@@ -1138,17 +1158,20 @@ export const EmployeePortal: React.FC = () => {
                             <span className="material-symbols-outlined text-[15px] opacity-70">assignment</span>
                             Mis Solicitudes
                         </button>
-                        <button 
-                            onClick={() => setActiveTab('campanias')}
-                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
-                                activeTab === 'campanias' 
-                                    ? 'bg-white/5 text-on-surface sidebar-item-active font-medium' 
-                                    : 'bg-transparent text-on-surface-variant/80 hover:bg-white/5 hover:text-on-surface font-normal'
-                            }`}
-                        >
-                            <span className="material-symbols-outlined text-[15px] opacity-70">explore</span>
-                            Mis Visitas
-                        </button>
+
+                        {canSeeVisits && (
+                            <button 
+                                onClick={() => setActiveTab('campanias')}
+                                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
+                                    activeTab === 'campanias' 
+                                        ? 'bg-white/5 text-on-surface sidebar-item-active font-medium' 
+                                        : 'bg-transparent text-on-surface-variant/80 hover:bg-white/5 hover:text-on-surface font-normal'
+                                }`}
+                            >
+                                <span className="material-symbols-outlined text-[15px] opacity-70">explore</span>
+                                Mis Visitas
+                            </button>
+                        )}
                         <button 
                             onClick={() => setActiveTab('chat')}
                             className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border-0 cursor-pointer text-xs transition-all ${
@@ -1205,7 +1228,7 @@ export const EmployeePortal: React.FC = () => {
                 </header>
 
                 {/* Mobile Tab Navigation (Visible on Mobile) */}
-                <nav className="md:hidden bg-surface-container-high/20 border-b border-outline/10 flex justify-around p-1 select-none">
+                <nav className="md:hidden bg-surface-container-high/20 border-b border-outline/10 flex justify-around p-1 select-none overflow-x-auto">
                     <button 
                         onClick={() => setActiveTab('turnos')}
                         className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
@@ -1215,15 +1238,31 @@ export const EmployeePortal: React.FC = () => {
                         <span className="material-symbols-outlined">schedule</span>
                         Jornada
                     </button>
-                    <button 
-                        onClick={() => setActiveTab('mesas')}
-                        className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
-                            activeTab === 'mesas' ? 'text-amber-400 font-extrabold' : 'text-on-surface-variant hover:text-on-surface'
-                        }`}
-                    >
-                        <span className="material-symbols-outlined text-amber-400">table_restaurant</span>
-                        Mesas
-                    </button>
+
+                    {canSeeTables && (
+                        <button 
+                            onClick={() => setActiveTab('mesas')}
+                            className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                                activeTab === 'mesas' ? 'text-amber-400 font-extrabold' : 'text-on-surface-variant hover:text-on-surface'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-amber-400">table_restaurant</span>
+                            Mesas
+                        </button>
+                    )}
+
+                    {isDeliveryGuy && (
+                        <button 
+                            onClick={() => setActiveTab('entregas')}
+                            className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                                activeTab === 'entregas' ? 'text-emerald-400 font-extrabold' : 'text-on-surface-variant hover:text-on-surface'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-emerald-400">local_shipping</span>
+                            Entregas
+                        </button>
+                    )}
+
                     <button 
                         onClick={() => setActiveTab('tareas')}
                         className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
@@ -1242,15 +1281,18 @@ export const EmployeePortal: React.FC = () => {
                         <span className="material-symbols-outlined">assignment</span>
                         RRHH
                     </button>
-                    <button 
-                        onClick={() => setActiveTab('campanias')}
-                        className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
-                            activeTab === 'campanias' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
-                        }`}
-                    >
-                        <span className="material-symbols-outlined">explore</span>
-                        Visitas
-                    </button>
+
+                    {canSeeVisits && (
+                        <button 
+                            onClick={() => setActiveTab('campanias')}
+                            className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                                activeTab === 'campanias' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined">explore</span>
+                            Visitas
+                        </button>
+                    )}
                     <button 
                         onClick={() => setActiveTab('chat')}
                         className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${

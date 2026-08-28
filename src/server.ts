@@ -4966,7 +4966,7 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
 
     // Buscar en la tabla de empleados
     const result = await pool.query(
-      `SELECT e.id, e.client_id, e.name, e.phone, e.role, e.pin, e.is_active, c.name as client_name 
+      `SELECT e.id, e.client_id, e.name, e.phone, e.role, e.pin, e.is_active, c.name as client_name, c.category as client_category 
        FROM employees e
        JOIN clients c ON e.client_id = c.id
        WHERE e.phone = $1 AND e.is_active = TRUE LIMIT 1`,
@@ -5052,6 +5052,7 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
         employeeRole: emp.role,
         clientId: emp.client_id,
         clientName: emp.client_name,
+        clientCategory: emp.client_category || 'general',
         permissions,
         hasErpAccess,
         token
