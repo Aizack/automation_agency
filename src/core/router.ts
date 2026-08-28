@@ -30,15 +30,22 @@ export const routeIncomingMessage = async (
   senderPhone: string,    // El número de WhatsApp de la persona que escribe (Cliente o Agente)
   messageText: string,
   sendMessageFn?: (to: string, text: string) => Promise<any>,
-  sendVoiceFn?: (to: string, filePath: string) => Promise<any>
+  sendVoiceFn?: (to: string, filePath: string) => Promise<any>,
+  fallbackTenantId?: string
 ): Promise<string | undefined> => {
-  console.log(`[Router] Nuevo mensaje recibido en la línea: ${recipientPhone} de ${senderPhone}`);
+  console.log(`[Router] Nuevo mensaje recibido en la línea: ${recipientPhone} de ${senderPhone} (Tenant: ${fallbackTenantId || 'auto'})`);
 
   // 1. Identificar el Tenant (Cliente) desde la Base de Datos
-  const clientConfig = await getClientConfigByPhone(recipientPhone);
+  let clientConfig = await getClientConfigByPhone(recipientPhone);
+
+  if (!clientConfig && fallbackTenantId) {
+    console.log(`[Router] 🔍 Buscando cliente por fallbackTenantId: ${fallbackTenantId}`);
+    const { getClientConfigById } = require('./config');
+    clientConfig = await getClientConfigById(fallbackTenantId);
+  }
 
   if (!clientConfig) {
-    console.error(`[Router] ❌ No se encontró cliente asociado al número ${recipientPhone}`);
+    console.error(`[Router] ❌ No se encontró cliente asociado al número ${recipientPhone} ni ID ${fallbackTenantId}`);
     return;
   }
 

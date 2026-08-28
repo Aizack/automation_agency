@@ -147,7 +147,8 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
         if (msg.from.endsWith('@g.us')) return;
 
         if (!msg.body || !msg.body.trim()) return;
-        if (msg.timestamp < startupTime) return;
+        // Permitir un margen de 5 minutos (300s) para desfasaje de reloj entre servidor y WhatsApp Web
+        if (msg.timestamp && msg.timestamp < (startupTime - 300)) return;
 
         console.log(`[WhatsApp - ${key}] Mensaje recibido de ${msg.from}: ${msg.body}`);
         const senderPhone = msg.from.split('@')[0];
@@ -246,7 +247,8 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
                     const target = to.includes('@c.us') ? to : `${to}@c.us`;
                     const media = MessageMedia.fromFilePath(filePath);
                     await newClient.sendMessage(target, media, { sendAudioAsVoice: true });
-                }
+                },
+                key // fallbackTenantId
             );
 
             if (responseText) {
