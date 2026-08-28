@@ -929,7 +929,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           {(hasPermission('inventory') || hasPermission('lab') || hasPermission('domicilios')) && (
             <div className="space-y-1 pt-1">
               <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Logística</div>
-              {hasPermission('inventory') && clientData?.enabledModules?.inventory !== false && (
+              {hasPermission('inventory') && clientData?.enabledModules?.inventory !== false && clientData?.category !== 'restaurante' && (
                 <button 
                   onClick={() => setActiveTab('inventario')}
                   className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
