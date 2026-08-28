@@ -358,6 +358,7 @@ export const initDatabase = async () => {
         console.log("[DB Init] ✅ Tabla 'employees' creada o ya existente.");
 
         await pool.query(`ALTER TABLE employees ALTER COLUMN role TYPE VARCHAR(100);`);
+        await pool.query(`ALTER TABLE employees ALTER COLUMN pin TYPE VARCHAR(255);`);
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS shift_logs (
@@ -882,7 +883,7 @@ export const initDatabase = async () => {
         await pool.query(`
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS slug VARCHAR(100) UNIQUE;
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE SET NULL;
-            ALTER TABLE employees ALTER COLUMN pin TYPE VARCHAR(20);
+            ALTER TABLE employees ALTER COLUMN pin TYPE VARCHAR(255);
             ALTER TABLE products ADD COLUMN IF NOT EXISTS reserved_stock INT DEFAULT 0;
             ALTER TABLE products ADD COLUMN IF NOT EXISTS committed_stock INT DEFAULT 0;
         `);
@@ -999,12 +1000,13 @@ export const initDatabase = async () => {
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
                 product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-                raw_product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+                raw_product_id UUID,
                 quantity_required NUMERIC(10,4) NOT NULL DEFAULT 1.0000,
                 unit_of_measure VARCHAR(30) DEFAULT 'unidad',
                 preparation_instructions TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+            ALTER TABLE product_recipes DROP CONSTRAINT IF EXISTS product_recipes_raw_product_id_fkey;
 
             CREATE TABLE IF NOT EXISTS kitchen_orders (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
