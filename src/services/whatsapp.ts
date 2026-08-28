@@ -366,6 +366,7 @@ export const logoutWhatsApp = async (clientId?: string) => {
 // Autorestaurar sesiones de WhatsApp previamente vinculadas y guardadas en disco (Sin pedir QR nuevo)
 export const autoRestoreSavedWhatsAppSessions = async () => {
     const authDir = path.join(process.cwd(), '.wwebjs_auth');
+    console.log(`[WhatsApp Multi-Tenant] 🔍 Verificando sesiones guardadas en disco en: ${authDir}`);
     if (!fs.existsSync(authDir)) return;
 
     try {
@@ -374,15 +375,20 @@ export const autoRestoreSavedWhatsAppSessions = async () => {
             if (entry.startsWith('session-')) {
                 const tenantId = entry.replace('session-', '');
                 if (tenantId) {
-                    console.log(`[WhatsApp Multi-Tenant] 🔄 Restaurando sesión guardada de tienda: ${tenantId}...`);
-                    connectWhatsApp(tenantId).catch(err => {
-                        console.warn(`[WhatsApp Multi-Tenant] No se pudo autorestaurar sesión de ${tenantId}:`, err.message);
+                    console.log(`[WhatsApp Multi-Tenant] 🔄 Restaurando sesión guardada para tienda: ${tenantId}...`);
+                    await connectWhatsApp(tenantId).catch(err => {
+                        console.warn(`[WhatsApp Multi-Tenant] Error al restaurar sesión de ${tenantId}:`, err.message);
                     });
                 }
+            } else if (entry === 'session') {
+                console.log(`[WhatsApp Multi-Tenant] 🔄 Restaurando sesión guardada legacy para tienda: admin...`);
+                await connectWhatsApp('admin').catch(err => {
+                    console.warn(`[WhatsApp Multi-Tenant] Error al restaurar sesión legacy admin:`, err.message);
+                });
             }
         }
     } catch (err) {
-        console.error("[WhatsApp Multi-Tenant] Error escaneando sesiones guardadas en disco:", err);
+        console.error("[WhatsApp Multi-Tenant] Error escaneando sesiones guardadas:", err);
     }
 };
 

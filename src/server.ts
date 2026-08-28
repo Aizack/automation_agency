@@ -6719,6 +6719,10 @@ export const server = app.listen(PORT, () => {
         ALTER TABLE employees ADD COLUMN IF NOT EXISTS employee_code VARCHAR(50);
       `);
       console.log("[DB Migration] ✅ Columnas y tablas de la Fase 4 (Cartera/Logística/Perfil) inicializadas con éxito.");
+      
+      // Autorestaurar sesiones de WhatsApp previamente vinculadas en disco
+      const { autoRestoreSavedWhatsAppSessions } = require('./services/whatsapp');
+      autoRestoreSavedWhatsAppSessions();
     } catch (err: any) {
       console.error("[DB Migration] ⚠️ Error aplicando migraciones de arranque de la Fase 4:", err.message);
     }
