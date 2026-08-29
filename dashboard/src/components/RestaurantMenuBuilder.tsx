@@ -363,7 +363,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
             {/* Modal para Importación de Menú con IA */}
             {isAiModalOpen && (
                 <div className="fixed inset-0 z-[9999] backdrop-blur-sm bg-black/80 flex items-center justify-center p-4">
-                    <div className="bg-surface-container border border-outline/20 w-full max-w-xl rounded-3xl p-6 space-y-5 shadow-2xl">
+                    <div className="bg-surface-container border border-outline/20 w-full max-w-xl rounded-3xl p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <div className="flex items-center justify-between border-b border-outline/10 pb-3">
                             <h3 className="font-extrabold text-on-surface text-base flex items-center gap-2">
                                 <span className="material-symbols-outlined text-purple-400">auto_awesome</span>
@@ -429,7 +429,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                     onClick={() => setIsModalOpen(false)}
                 >
                     <div
-                        className="bg-surface-container border border-outline/20 w-full max-w-2xl rounded-3xl p-6 space-y-6 shadow-2xl my-8 relative"
+                        className="bg-surface-container border border-outline/20 w-full max-w-2xl rounded-3xl p-6 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between border-b border-outline/10 pb-3">

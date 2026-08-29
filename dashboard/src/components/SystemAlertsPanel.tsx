@@ -318,8 +318,8 @@ export const SystemAlertsPanel: React.FC<SystemAlertsPanelProps> = ({ clientId }
 
             {/* Modal de Resolución */}
             {showResolveModal && selectedAlert && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="bg-surface rounded-2xl p-6 max-w-md w-full mx-4 border border-outline/10 shadow-lg">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="bg-surface rounded-3xl p-6 max-w-md w-full mx-4 border border-outline/10 shadow-lg max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold">Resolver Alerta</h3>
                             <button

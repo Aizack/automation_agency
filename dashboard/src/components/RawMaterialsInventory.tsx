@@ -323,7 +323,7 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
             {/* Modal Registrar Insumo / Compra Ocasional */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[9999] backdrop-blur-sm bg-black/80 flex items-center justify-center p-4">
-                    <div className="bg-surface-container border border-outline/20 w-full max-w-lg rounded-3xl p-6 space-y-5 shadow-2xl">
+                    <div className="bg-surface-container border border-outline/20 w-full max-w-lg rounded-3xl p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <div className="flex items-center justify-between border-b border-outline/10 pb-3">
                             <h3 className="font-extrabold text-on-surface text-base flex items-center gap-2">
                                 <span>{isCasualPurchase ? '⚡' : '🥦'}</span>

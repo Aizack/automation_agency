@@ -534,8 +534,8 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId, defaultSubT
         </div>
 
         {assigningJob && createPortal(
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 text-left">
-            <div className="bg-surface border border-outline/10 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 text-left">
+            <div className="bg-surface border border-outline/10 p-6 rounded-3xl w-full max-w-md shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
               <h3 className="font-bold text-sm text-on-surface">Asignar Laboratorio a Orden</h3>
               <p className="text-xs text-on-surface-variant font-mono">Lente: {assigningJob.product_name}</p>
               

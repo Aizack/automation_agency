@@ -371,8 +371,8 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
 
             {/* Modal Creación de Orden de Compra */}
             {isCreateModalOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <form onSubmit={handleSaveOrder} className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-3xl w-full shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <form onSubmit={handleSaveOrder} className="bg-surface-container-high border border-outline/10 p-6 rounded-3xl max-w-3xl w-full shadow-2xl flex flex-col max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <h3 className="font-bold text-base text-on-surface">Crear Orden de Compra</h3>
                             <button 

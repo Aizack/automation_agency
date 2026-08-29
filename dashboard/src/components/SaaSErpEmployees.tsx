@@ -1957,8 +1957,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
 
             {/* DEPARTMENTS MANAGER MODAL */}
             {isDeptOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Gestionar Departamentos</h3>
                             <button 
@@ -2020,8 +2020,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
 
             {/* ROLES MANAGER MODAL */}
             {isRoleOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Gestionar Roles</h3>
                             <button 
@@ -2071,8 +2071,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
 
             {/* REGISTER ABSENCE/PERMIT MODAL */}
             {isAdminDocOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Registrar Ausencia o Permiso</h3>
                             <button 
@@ -2210,8 +2210,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
 
             {/* CREATE/EDIT EMPLOYEE MODAL */}
             {isEmpOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="glass-card max-w-lg w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">
                                 {selectedEmp ? 'Editar Empleado' : 'Registrar Empleado'}
@@ -2378,8 +2378,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
 
             {/* PAYROLL SUMMARY MODAL */}
             {isPayrollOpen && selectedEmp && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-2xl w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="glass-card max-w-2xl w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-primary">payments</span>
@@ -2588,8 +2588,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, vi
 
             {/* EMP DETAIL MODAL */}
             {isDetailOpen && selectedEmpDetail && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-2xl w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float max-h-[90vh] flex flex-col">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="glass-card max-w-2xl w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto flex flex-col">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <div>
                                 <h3 className="font-bold text-lg text-on-surface">Ficha del Empleado</h3>

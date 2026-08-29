@@ -2058,7 +2058,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             {/* MODAL DE UPGRADE A PLAN PRO (FEATURE GATING) */}
             {showUpgradeModal && createPortal(
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
-                    <div className="bg-surface-container border border-outline/30 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+                    <div className="bg-surface-container border border-outline/30 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative animate-in fade-in zoom-in duration-200 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="text-center space-y-2">
                             <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg">
                                 <span className="material-symbols-outlined text-3xl">workspace_premium</span>

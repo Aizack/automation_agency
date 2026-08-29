@@ -506,8 +506,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
 
       {/* Modal: Active Alerts */}
       {showAlertsModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 text-left">
-          <div className="glass-card w-full max-w-xl rounded-2xl p-8 shadow-2xl">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 text-left">
+          <div className="glass-card w-full max-w-xl rounded-3xl p-8 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h3 className="font-headline-md text-headline-md text-red-400 flex items-center gap-2">
@@ -555,8 +555,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
 
       {/* Modal: Create New Client */}
       {showModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 text-left">
-          <div className="glass-card w-full max-w-lg rounded-2xl p-8 shadow-2xl transition-transform duration-300">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 text-left">
+          <div className="glass-card w-full max-w-lg rounded-3xl p-8 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h3 className="font-headline-md text-headline-md text-on-surface">Registrar Empresa</h3>

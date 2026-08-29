@@ -801,8 +801,8 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
 
             {/* CREATE APPOINTMENT MODAL */}
             {isCreateOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="glass-card max-w-md w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Agendar Cita Manual</h3>
                             <button 
@@ -972,8 +972,8 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
             )}
 
             {isBlockOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="glass-card max-w-md w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Bloquear Horario / Día</h3>
                             <button 
@@ -1073,8 +1073,8 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
 
             {/* EDIT APPOINTMENT MODAL */}
             {isEditOpen && selectedAppt && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="glass-card max-w-md w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Gestionar Cita</h3>
                             <button 

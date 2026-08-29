@@ -429,8 +429,8 @@ export const SaaSErpCampaigns: React.FC<SaaSErpCampaignsProps> = ({ clientId }) 
 
             {/* CREATE CAMPAIGN MODAL */}
             {isCreateOpen && createPortal(
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-                    <div className="glass-card max-w-lg w-full rounded-2xl overflow-hidden p-6 shadow-2xl animate-float max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
+                    <div className="glass-card max-w-lg w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Programar Nueva Campaña</h3>
                             <button

@@ -280,8 +280,8 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId }) => {
 
       {/* Modal de Transacción sobre Cuota */}
       {showPayModal && selectedInstallment && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 text-left">
-          <div className="glass-card w-full max-w-md rounded-2xl p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 text-left">
+          <div className="glass-card w-full max-w-md rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
             <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
               <h4 className="font-extrabold text-sm text-on-surface">Procesar Transacción sobre Cuota</h4>
               <button 
