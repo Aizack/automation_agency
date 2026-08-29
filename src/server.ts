@@ -2282,9 +2282,11 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
 
       for (const item of items) {
         const productCategoryName = item.productId ? (productCategoryMap.get(item.productId) || '') : '';
-        const isLensCategory = productCategoryName.includes('lente');
+        const isLensCategory = productCategoryName.includes('lente') || productCategoryName.includes('cristal');
         const isLegacyLensItem = item.productType === 'lens';
-        const isLensSale = isLegacyLensItem || isLensCategory;
+        const hasLensSpecs = Boolean(item.lensDesign || item.lensMaterial || item.lensTreatment);
+        const nameHasLens = Boolean(item.productName && item.productName.toLowerCase().includes('lente'));
+        const isLensSale = isLegacyLensItem || isLensCategory || hasLensSpecs || nameHasLens;
 
         await dbClient.query(`
           INSERT INTO invoice_items (
@@ -2305,17 +2307,15 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
         ]);
 
         if (isLensSale) {
-          if (!customerId) {
-            console.warn(`[Invoice Lab Order] No se encontró CRM para ${customerName} (${customerDocumentNumber}). No se puede crear orden de laboratorio.`);
-            continue;
+          let formulaId = null;
+          if (customerId) {
+            const formulaRes = await dbClient.query(`
+              SELECT id FROM formulas 
+              WHERE client_id = $1 AND customer_id = $2 
+              ORDER BY created_at DESC LIMIT 1
+            `, [clientId, customerId]);
+            formulaId = formulaRes.rows[0]?.id || null;
           }
-
-          const formulaRes = await dbClient.query(`
-            SELECT id FROM formulas 
-            WHERE client_id = $1 AND customer_id = $2 
-            ORDER BY created_at DESC LIMIT 1
-          `, [clientId, customerId]);
-          const formulaId = formulaRes.rows[0]?.id || null;
 
           const jobValue = Number(item.price || 0) * Number(item.quantity || 1);
 
@@ -2328,17 +2328,17 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
           `, [
             clientId,
-            customerId,
+            customerId || null,
             formulaId,
             invoice.id,
-            item.productName || 'Lente',
+            item.productName || 'Lente Formulada',
             item.lensDesign || null,
             item.lensMaterial || null,
             item.lensTreatment || null,
             jobValue
           ]);
 
-          console.log(`[Invoice Lab Order] Orden creada para cliente ${customerName} / factura ${invoice.invoice_number} / producto ${item.productName || 'Lente'}`);
+          console.log(`[Invoice Lab Order] ✅ Orden de laboratorio creada para ${customerName} / factura ${invoice.invoice_number} / producto "${item.productName || 'Lente Formulada'}"`);
         }
 
         // Solo descontar stock si es un producto físico del inventario
@@ -7710,6 +7710,116 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           target_suggested_ticket: Math.round(avgTicket > 0 ? avgTicket * 1.2 : 32000)
         }
       });
+  // --- SAAS ERP: ARQUEO Y RELEVO DE CAJA (TURNOS DE EMPLEADOS) ---
+  app.get('/api/clients/:clientId/cash-shifts', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const result = await pool.query(
+        `SELECT cs.* 
+         FROM cash_shifts cs 
+         WHERE cs.client_id = $1 
+         ORDER BY cs.created_at DESC 
+         LIMIT 50`,
+        [clientId]
+      );
+      res.json({ success: true, shifts: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/clients/:clientId/cash-shifts', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { 
+        employeeOutId, 
+        employeeOutName, 
+        employeeInId, 
+        employeeInName, 
+        initialCash, 
+        reportedCashInDrawer, 
+        notes 
+      } = req.body;
+
+      if (!employeeOutName || !employeeInName) {
+        return res.status(400).json({ success: false, error: 'Debe especificar el empleado saliente y el empleado entrante.' });
+      }
+
+      // Calcular ventas del día en efectivo, tarjeta y transferencia
+      const salesQuery = await pool.query(
+        `SELECT 
+           LOWER(COALESCE(payment_method, 'efectivo')) as method,
+           COALESCE(SUM(total_amount), 0)::numeric as total
+         FROM invoices
+         WHERE client_id = $1 AND DATE(created_at) = CURRENT_DATE AND status != 'cancelled'
+         GROUP BY LOWER(payment_method)`,
+        [clientId]
+      );
+
+      let cashSales = 0;
+      let cardSales = 0;
+      let transferSales = 0;
+
+      for (const row of salesQuery.rows) {
+        const amt = parseFloat(row.total || '0');
+        if (row.method === 'efectivo') cashSales += amt;
+        else if (row.method.includes('tarjeta')) cardSales += amt;
+        else transferSales += amt;
+      }
+
+      const totalSales = cashSales + cardSales + transferSales;
+      const reportedCash = parseFloat(reportedCashInDrawer || '0');
+      const baseCash = parseFloat(initialCash || '0');
+      const expectedCash = baseCash + cashSales;
+      const cashDiff = reportedCash - expectedCash;
+
+      const insertResult = await pool.query(
+        `INSERT INTO cash_shifts (
+           client_id, employee_out_id, employee_out_name, employee_in_id, employee_in_name,
+           initial_cash, total_cash_sales, total_card_sales, total_transfer_sales, total_sales,
+           reported_cash_in_drawer, cash_difference, status, notes
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending_confirmation', $13)
+         RETURNING *`,
+        [
+          clientId,
+          employeeOutId || null,
+          employeeOutName,
+          employeeInId || null,
+          employeeInName,
+          baseCash,
+          cashSales,
+          cardSales,
+          transferSales,
+          totalSales,
+          reportedCash,
+          cashDiff,
+          notes || ''
+        ]
+      );
+
+      res.json({ success: true, shift: insertResult.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.put('/api/clients/:clientId/cash-shifts/:shiftId/confirm', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, shiftId } = req.params;
+      const result = await pool.query(
+        `UPDATE cash_shifts 
+         SET status = 'confirmed', confirmed_at = NOW() 
+         WHERE client_id = $1 AND id = $2 
+         RETURNING *`,
+        [clientId, shiftId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Turno de caja no encontrado.' });
+      }
+
+      res.json({ success: true, shift: result.rows[0] });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

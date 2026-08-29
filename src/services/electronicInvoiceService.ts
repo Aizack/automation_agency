@@ -139,38 +139,54 @@ export const processElectronicInvoice = async (
     const matiasApiUrl = process.env.MATIAS_API_URL || 'https://sandbox-api.matias-api.com/api/ubl2.1';
     const matiasApiToken = process.env.MATIAS_API_TOKEN;
 
-    // Si hay un token de Matias API configurado, realizamos la petición HTTP en vivo al endpoint /invoice
+    // Determinar si es Factura Electrónica (1) o Documento Soporte (11)
+    const isSupportDoc = inv.invoice_number?.startsWith('DS') || inv.document_type === 'DS';
+    const typeDocumentId = isSupportDoc ? 11 : 1;
+
+    // Si hay un token de Matias API configurado, realizamos la petición HTTP en vivo
     if (matiasApiToken) {
       try {
-        const response = await fetch(`${matiasApiUrl}/invoice`, {
+        const payload: any = {
+          number: inv.invoice_number,
+          type_document_id: typeDocumentId,
+          date: dateStr,
+          time: timeStr,
+          customer: {
+            company_name: inv.customer_name || 'Cliente Final',
+            dni: customerDoc,
+            email: inv.customer_email || 'cliente@correo.com'
+          },
+          legal_monetary_totals: {
+            line_extension_amount: totalAmt.toFixed(2),
+            tax_exclusive_amount: totalAmt.toFixed(2),
+            tax_inclusive_amount: (totalAmt + vatAmt).toFixed(2),
+            payable_amount: (totalAmt + vatAmt).toFixed(2)
+          }
+        };
+
+        // Soporte de campos Sector Salud / RIPS (Resolución Minsalud 948 / 510)
+        if (inv.health_reps_code || inv.health_rips_data) {
+          payload.health_sector = {
+            reps_code: inv.health_reps_code || '000000000000',
+            user_coverage: inv.health_coverage || 'Particular',
+            rips_data: inv.health_rips_data || null
+          };
+        }
+
+        const endpointUrl = isSupportDoc ? `${matiasApiUrl}/support-document` : `${matiasApiUrl}/invoice`;
+        const response = await fetch(endpointUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Authorization': `Bearer ${matiasApiToken}`
           },
-          body: JSON.stringify({
-            number: inv.invoice_number,
-            type_document_id: 1,
-            date: dateStr,
-            time: timeStr,
-            customer: {
-              company_name: 'Cliente Final',
-              dni: customerDoc,
-              email: 'cliente@correo.com'
-            },
-            legal_monetary_totals: {
-              line_extension_amount: totalAmt.toFixed(2),
-              tax_exclusive_amount: totalAmt.toFixed(2),
-              tax_inclusive_amount: (totalAmt + vatAmt).toFixed(2),
-              payable_amount: (totalAmt + vatAmt).toFixed(2)
-            }
-          })
+          body: JSON.stringify(payload)
         });
 
         if (response.ok) {
           const resData: any = await response.json();
-          cufe = resData?.XmlDocumentKey || resData?.data?.cufe || resData?.cufe;
+          cufe = resData?.XmlDocumentKey || resData?.data?.cufe || resData?.cufe || resData?.csds;
           qrCodeUrl = resData?.qr_code_url || resData?.data?.qr_code_url;
         }
       } catch (apiErr) {

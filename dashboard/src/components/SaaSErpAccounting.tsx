@@ -174,11 +174,11 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
                 <span className="text-[11px] text-on-surface-variant font-mono">Total {dailyTrend.length} día(s) activo(s)</span>
               </div>
 
-              {dailyTrend.length === 0 ? (
+              {!dailyTrend || dailyTrend.length === 0 ? (
                 <p className="text-xs text-on-surface-variant opacity-60 text-center py-12 italic">No hay ventas registradas en el período seleccionado.</p>
               ) : (
-                <div className="pt-16 pb-4 px-2 overflow-visible">
-                  <div className="h-56 flex items-end gap-3 sm:gap-5 border-b border-outline/15 pb-2 overflow-x-auto custom-scrollbar overflow-y-visible pt-10">
+                <div className="pt-20 pb-4 px-2">
+                  <div className="h-64 flex items-end gap-3 sm:gap-5 border-b border-outline/15 pb-2 overflow-x-auto custom-scrollbar pt-16">
                     {dailyTrend.map((t) => {
                       const heightPct = Math.max(12, Math.round((t.revenue / maxTrendRevenue) * 100));
                       // Formatear fecha bonita
@@ -189,7 +189,7 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
                         <div key={t.date} className="flex-1 max-w-[64px] min-w-[36px] flex flex-col items-center gap-1 group relative h-full justify-end cursor-pointer">
                           
                           {/* TOOLTIP FLOTANTE TIPO NOTA SOBRE EL CURSOR */}
-                          <div className="absolute -top-16 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-200 bg-[#1e1926] border border-primary/40 p-2.5 rounded-xl text-xs font-bold text-on-surface whitespace-nowrap z-50 pointer-events-none shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex flex-col items-center gap-0.5">
+                          <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-200 bg-[#1e1926] border border-primary/40 p-2 rounded-xl text-xs font-bold text-on-surface whitespace-nowrap z-50 pointer-events-none shadow-[0_10px_30px_rgba(0,0,0,0.9)] flex flex-col items-center gap-0.5">
                             <span className="text-[10px] text-on-surface-variant font-medium">{dateFormatted}</span>
                             <span className="text-[#00ff88] font-mono text-xs font-bold">{formatCOP(t.revenue)}</span>
                             <span className="text-[9px] text-primary/90 font-mono bg-primary/10 px-1.5 py-0.5 rounded">{t.count} venta(s)</span>

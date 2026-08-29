@@ -585,23 +585,29 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             const matchPhone = inv.customer_phone?.includes(term);
             const matchDoc = inv.customer_document_number?.includes(term);
             const matchInv = inv.invoice_number?.toLowerCase().includes(term);
-            if (!matchName && !matchPhone && !matchDoc && !matchInv) return false;
+            const matchEmail = inv.customer_email?.toLowerCase().includes(term);
+            if (!matchName && !matchPhone && !matchDoc && !matchInv && !matchEmail) return false;
         }
 
-        if (statusFilter !== 'all' && inv.status !== statusFilter) return false;
+        if (statusFilter !== 'all') {
+            const s = (inv.status || '').toLowerCase();
+            if (statusFilter === 'paid' && !(s === 'paid' || s === 'pagada' || s === 'completed' || s === 'activa')) return false;
+            if (statusFilter === 'pending' && !(s === 'pending' || s === 'pendiente' || s === 'draft')) return false;
+            if (statusFilter === 'overdue' && !(s === 'overdue' || s === 'mora' || s === 'vencida')) return false;
+        }
 
-        const invDate = new Date(inv.created_at || inv.due_date);
         if (dateFrom) {
-            const dFrom = new Date(dateFrom);
-            if (invDate < dFrom) return false;
+            const dFrom = new Date(`${dateFrom}T00:00:00`);
+            const invDate = new Date(inv.created_at || inv.due_date);
+            if (!isNaN(invDate.getTime()) && invDate < dFrom) return false;
         }
         if (dateTo) {
-            const dTo = new Date(dateTo);
-            dTo.setHours(23, 59, 59, 999);
-            if (invDate > dTo) return false;
+            const dTo = new Date(`${dateTo}T23:59:59`);
+            const invDate = new Date(inv.created_at || inv.due_date);
+            if (!isNaN(invDate.getTime()) && invDate > dTo) return false;
         }
 
-        const total = parseFloat(inv.total_amount) + parseFloat(inv.delivery_fee || '0');
+        const total = parseFloat(inv.total_amount || '0') + parseFloat(inv.delivery_fee || '0');
         if (minAmount && total < parseFloat(minAmount)) return false;
         if (maxAmount && total > parseFloat(maxAmount)) return false;
 

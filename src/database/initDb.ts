@@ -1073,9 +1073,31 @@ export const initDatabase = async () => {
                 remaining_months INT DEFAULT 12,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS cash_shifts (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                employee_out_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+                employee_out_name VARCHAR(100),
+                employee_in_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+                employee_in_name VARCHAR(100),
+                start_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                end_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                initial_cash NUMERIC(12,2) DEFAULT 0.00,
+                total_cash_sales NUMERIC(12,2) DEFAULT 0.00,
+                total_card_sales NUMERIC(12,2) DEFAULT 0.00,
+                total_transfer_sales NUMERIC(12,2) DEFAULT 0.00,
+                total_sales NUMERIC(12,2) DEFAULT 0.00,
+                reported_cash_in_drawer NUMERIC(12,2) DEFAULT 0.00,
+                cash_difference NUMERIC(12,2) DEFAULT 0.00,
+                status VARCHAR(30) DEFAULT 'pending_confirmation',
+                notes TEXT,
+                confirmed_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
-        console.log("[DB Init] ✅ Tablas de Insumos (raw_materials), Activos y Pasivos Financieros inicializadas.");
+        console.log("[DB Init] ✅ Tablas de Insumos (raw_materials), Activos, Pasivos y Arqueos de Caja inicializadas.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 
     } catch (error) {
