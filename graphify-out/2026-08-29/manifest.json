@@ -156,10 +156,10 @@
     "semantic_hash": "7fd47f49e6cefa52a583931498911266"
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
-    "mtime": 1788051988.4090927,
-    "seen": 1788052017.4414263,
-    "ast_hash": "0a6fd82a67018090e010e9ca59b6bf22",
-    "semantic_hash": "0a6fd82a67018090e010e9ca59b6bf22"
+    "mtime": 1788053753.4760756,
+    "seen": 1788053904.3738103,
+    "ast_hash": "a8f78be2e9b1664ee6ff9a705352c1f9",
+    "semantic_hash": "a8f78be2e9b1664ee6ff9a705352c1f9"
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
     "mtime": 1788047325.1819274,
@@ -474,10 +474,10 @@
     "semantic_hash": "b3024c4e4260cc821458cbe2a3a5d9e1"
   },
   "src/server.ts": {
-    "mtime": 1788051736.8623476,
-    "seen": 1788052017.449078,
-    "ast_hash": "150d0487581fd757a04682bbad1ef44d",
-    "semantic_hash": "150d0487581fd757a04682bbad1ef44d"
+    "mtime": 1788053808.1648252,
+    "seen": 1788053904.3827834,
+    "ast_hash": "62b48cc6d4b270aee82f642e0c36bc00",
+    "semantic_hash": "62b48cc6d4b270aee82f642e0c36bc00"
   },
   "src/services/auditService.ts": {
     "mtime": 1787442071.6743526,
@@ -642,15 +642,21 @@
     "semantic_hash": "60e1ddc0a47e722b44f729aac1bd0af9"
   },
   "shutdown_state.json": {
-    "mtime": 1788052695.7410748,
-    "seen": 1788052703.9669447,
-    "ast_hash": "bcf75707076e21b774bbe195133cd3c9",
-    "semantic_hash": "bcf75707076e21b774bbe195133cd3c9"
+    "mtime": 1788053896.6040065,
+    "seen": 1788053904.3767653,
+    "ast_hash": "fbdbbb8cf0406f458a59fde32b75e1d0",
+    "semantic_hash": "fbdbbb8cf0406f458a59fde32b75e1d0"
   },
   "scratch/seed_10_sales.ts": {
     "mtime": 1788051961.6752393,
     "seen": 1788052017.4438562,
     "ast_hash": "bb36a0f95df5fc8b473eb01bd6a9b6db",
     "semantic_hash": "bb36a0f95df5fc8b473eb01bd6a9b6db"
+  },
+  "scratch/seed_rich_optical_store.ts": {
+    "mtime": 1788053866.2986958,
+    "seen": 1788053904.3765583,
+    "ast_hash": "8f6af1def9e6e7738dc9c1bbf730ad72",
+    "semantic_hash": "8f6af1def9e6e7738dc9c1bbf730ad72"
   }
 }

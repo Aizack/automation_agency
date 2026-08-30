@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-30T01:38:16.600Z",
+  "timestamp": "2026-08-30T01:47:54.535Z",
   "whatsapp": {
     "status": "QR",
     "phone": "",
@@ -8,7 +8,7 @@
   "activeUploadSessions": [],
   "activeTakeovers": [],
   "process": {
-    "pid": 211,
-    "uptime": 87.927302189
+    "pid": 30,
+    "uptime": 576.580285253
   }
 }

@@ -153,20 +153,18 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
     const [includeTip, setIncludeTip] = useState(true);
     const [tipPercentage, setTipPercentage] = useState<number>(10);
 
-    const token = localStorage.getItem('auth_token');
-
     const fetchData = async () => {
         try {
             setLoading(true);
             const [invRes, prodRes, catRes, crmRes, clientRes, bankRes, empRes, tblRes] = await Promise.all([
-                fetch(`/api/clients/${clientId}/invoices`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/products`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/categories`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/crm-customers`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/bank-accounts`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/employees`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/tables`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`/api/clients/${clientId}/invoices`),
+                fetch(`/api/clients/${clientId}/products`),
+                fetch(`/api/clients/${clientId}/categories`),
+                fetch(`/api/clients/${clientId}/crm-customers`),
+                fetch(`/api/clients/${clientId}`),
+                fetch(`/api/clients/${clientId}/bank-accounts`),
+                fetch(`/api/clients/${clientId}/employees`),
+                fetch(`/api/clients/${clientId}/tables`)
             ]);
 
             const invData = await invRes.json();
@@ -198,8 +196,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceId}/seller`, {
                 method: 'PUT',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ seller_employee_id: sellerEmployeeId })
             });
@@ -240,8 +237,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         try {
             setGeneratingElectronicId(invoiceId);
             const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceId}/electronic`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
+                method: 'POST'
             });
             const data = await res.json();
 
@@ -473,8 +469,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
             const res = await fetch(`/api/clients/${clientId}/invoices`, {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(body)
             });
@@ -534,10 +529,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         setReceiptInputUrl(inv.payment_receipt_url || '');
         setLoadingDetail(true);
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`/api/clients/${clientId}/invoices/${inv.id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const res = await fetch(`/api/clients/${clientId}/invoices/${inv.id}`);
             const json = await res.json();
             if (json.success && json.data) {
                 setInvoiceDetail(json.data);
@@ -553,12 +545,10 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         if (!selectedInvoice) return;
         setIsUpdatingReceipt(true);
         try {
-            const token = localStorage.getItem('token');
             const res = await fetch(`/api/clients/${clientId}/invoices/${selectedInvoice.id}/receipt`, {
                 method: 'PUT',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ payment_receipt_url: receiptInputUrl })
             });
@@ -626,9 +616,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
     const handlePrintInvoice = async (invoice: Invoice) => {
         try {
             // Obtener detalles completos de la factura (con items y cuotas)
-            const res = await fetch(`/api/clients/${clientId}/invoices/${invoice.id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const res = await fetch(`/api/clients/${clientId}/invoices/${invoice.id}`);
             const json = await res.json();
             if (!json.success || !json.data) {
                 alert('No se pudieron obtener los detalles de la factura para impresión.');
@@ -753,8 +741,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         try {
             setActionLoadingId(invoiceId);
             const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceId}/trigger-collection`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
+                method: 'POST'
             });
             const data = await res.json();
 
@@ -776,8 +763,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         try {
             setActionLoadingId(invoiceId);
             const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceId}/pay`, {
-                method: 'PUT',
-                headers: { 'Authorization': `Bearer ${token}` }
+                method: 'PUT'
             });
             const data = await res.json();
 
@@ -1979,8 +1965,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                             onClick={async () => {
                                                 try {
                                                     const res = await fetch(`/api/clients/${clientId}/invoices/${selectedInvoice.id}/approve-payment`, {
-                                                        method: 'POST',
-                                                        headers: { 'Authorization': `Bearer ${token}` }
+                                                        method: 'POST'
                                                     });
                                                     const data = await res.json();
                                                     if (data.success) {
