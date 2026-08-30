@@ -1300,49 +1300,44 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                             required
                                         />
                                     </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium">Stock en Existencias *</label>
-                                        {productType === 'service' ? (
-                                            <input 
-                                                type="text"
-                                                className="bg-surface-container/50 border border-outline/10 rounded-xl p-3 text-sm text-purple-400 font-bold outline-none cursor-not-allowed"
-                                                value="N/A (Servicio Intangible / Infinito)"
-                                                disabled
-                                            />
-                                        ) : (
-                                            <input 
-                                                type="number"
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                value={stock}
-                                                onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
-                                                onFocus={(e) => e.target.select()}
-                                                required
-                                            />
-                                        )}
-                                    </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium">Stock Mínimo (Alerta de Alarma) *</label>
-                                        <input 
-                                            type="number"
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                            value={minStock}
-                                            onChange={(e) => setMinStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
-                                            onFocus={(e) => e.target.select()}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium">Descuento de la casa (%)</label>
-                                        <input 
-                                            type="number"
-                                            min={0}
-                                            max={100}
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                            value={promoDiscount}
-                                            onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
-                                            onFocus={(e) => e.target.select()}
-                                        />
-                                    </div>
+                                    {productType === 'product' && (
+                                        <>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs text-on-surface-variant font-medium">Stock en Existencias *</label>
+                                                <input 
+                                                    type="number"
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                    value={stock}
+                                                    onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
+                                                    onFocus={(e) => e.target.select()}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs text-on-surface-variant font-medium">Stock Mínimo (Alerta de Alarma) *</label>
+                                                <input 
+                                                    type="number"
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                    value={minStock}
+                                                    onChange={(e) => setMinStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
+                                                    onFocus={(e) => e.target.select()}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs text-on-surface-variant font-medium">Descuento de la casa (%)</label>
+                                                <input 
+                                                    type="number"
+                                                    min={0}
+                                                    max={100}
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                    value={promoDiscount}
+                                                    onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                                                    onFocus={(e) => e.target.select()}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                     {category === 'optica' && !hiddenFields.has('color') && (
                                         <FieldWrapper 
                                             fieldId="color" 

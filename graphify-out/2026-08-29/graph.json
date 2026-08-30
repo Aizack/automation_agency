@@ -3231,18 +3231,6 @@
       "source_location": "L79"
     },
     {
-      "id": "dashboard_src_app_app",
-      "label": "App()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "app()",
-      "source_file": "dashboard/src/App.tsx",
-      "source_location": "L11"
-    },
-    {
       "id": "dashboard_src_components_activateaccount_activateaccount",
       "label": "ActivateAccount()",
       "_callable": true,
@@ -3277,6 +3265,17 @@
       "norm_label": "publicrestaurantmenu()",
       "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
       "source_location": "L41"
+    },
+    {
+      "id": "dashboard_src_app_app",
+      "label": "App()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "file_type": "code",
+      "norm_label": "app()",
+      "source_file": "dashboard/src/App.tsx",
+      "source_location": "L11"
     },
     {
       "id": "dashboard_src_components_clientdashboard_clientdashboard",
@@ -6767,17 +6766,6 @@
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_app",
-      "label": "App.tsx",
-      "_origin": "ast",
-      "community": 9,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "app.tsx",
-      "source_file": "dashboard/src/App.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "dashboard_src_components_activateaccount",
       "label": "ActivateAccount.tsx",
       "_origin": "ast",
@@ -6831,6 +6819,16 @@
       "norm_label": "react",
       "source_file": "dashboard/.oxlintrc.json",
       "source_location": "L3"
+    },
+    {
+      "id": "dashboard_src_app",
+      "label": "App.tsx",
+      "_origin": "ast",
+      "community": 9,
+      "file_type": "code",
+      "norm_label": "app.tsx",
+      "source_file": "dashboard/src/App.tsx",
+      "source_location": "L1"
     }
   ],
   "links": [
@@ -18413,5 +18411,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "91c771a69b168186fdd5089b6a141912af08f790"
+  "built_at_commit": "1f5344f5e676849a1d0495e253002d21f952fd32"
 }

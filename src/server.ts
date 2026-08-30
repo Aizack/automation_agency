@@ -2179,8 +2179,8 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
       }
     }
 
-    // 2. Si el pago es financiado (por cuotas), generar el plan de cuotas dinámico
-    if (paymentMethod === 'cuotas') {
+    // 2. Si el pago es financiado (por cuotas o crédito), generar el plan de cuotas dinámico
+    if (paymentMethod === 'cuotas' || paymentMethod === 'credito') {
       // Registrar abono inicial si aplica (Cuota #0, ya pagada)
       if (initialAbono > 0) {
         await dbClient.query(`
