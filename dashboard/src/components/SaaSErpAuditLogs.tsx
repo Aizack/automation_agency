@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { authFetch as fetch } from '../utils/api';
 
 interface AuditLog {
   id: string;
@@ -30,7 +31,6 @@ export const SaaSErpAuditLogs: React.FC<SaaSErpAuditLogsProps> = ({ clientId }) 
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       let url = `/api/clients/${clientId}/audit-logs?limit=100`;
       if (selectedModule !== 'all') {
         url += `&module=${encodeURIComponent(selectedModule)}`;
@@ -39,11 +39,7 @@ export const SaaSErpAuditLogs: React.FC<SaaSErpAuditLogsProps> = ({ clientId }) 
         url += `&search=${encodeURIComponent(search.trim())}`;
       }
 
-      const res = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setLogs(data.logs || []);

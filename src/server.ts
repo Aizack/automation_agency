@@ -2417,6 +2417,15 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
       });
     }
 
+    await logReqAudit(
+      req,
+      clientId,
+      'CREAR_FACTURA',
+      'Facturación',
+      `Factura #${invoice.invoice_number} creada exitosamente para ${customerName} por valor de $${cleanTotal} COP.`,
+      { invoiceId: invoice.id, invoiceNumber: invoice.invoice_number, totalAmount: cleanTotal, customerName, paymentMethod }
+    );
+
     res.json({ success: true, invoice });
   } catch (err: any) {
     await dbClient.query('ROLLBACK');
@@ -2614,6 +2623,15 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/electronic', authenticateTo
         emailSent = true;
       }
     }
+
+    await logReqAudit(
+      req,
+      clientId,
+      'EMITIR_FACTURA_ELECTRONICA',
+      'Facturación',
+      `Factura Electrónica DIAN generada exitosamente. CUFE: ${result.cufe}`,
+      { invoiceId, cufe: result.cufe, qrCodeUrl: result.qrCodeUrl, whatsappSent, emailSent }
+    );
 
     res.json({
       success: true,

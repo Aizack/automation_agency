@@ -48,8 +48,6 @@
       "src_scratch_test_onboarding_flow_test",
       "src_scratch_test_optica_onboarding",
       "src_scratch_test_optica_onboarding_testopticaflow",
-      "src_scratch_test_pre_recorded_voice",
-      "src_scratch_test_pre_recorded_voice_run",
       "src_scratch_test_rag",
       "src_scratch_test_rag_runtest",
       "src_services_drive",
@@ -73,8 +71,6 @@
       "src_tools_consultarinventario_consultarinventariotool",
       "src_tools_crearpedido",
       "src_tools_crearpedido_crearpedidotool",
-      "src_tools_enviaraudio",
-      "src_tools_enviaraudio_enviaraudiotool",
       "src_tools_guardarperfilnegocio",
       "src_tools_guardarperfilnegocio_guardarperfilnegociotool",
       "src_tools_registrarcliente",
@@ -84,119 +80,46 @@
       "src_tools_reportarpago_reportarpagotool"
     ],
     "1": [
-      "src_database_clientscrud_deleteclient",
-      "src_database_clientscrud_updateclient",
-      "src_database_clientscrud_updateclientstatus",
-      "src_index",
-      "src_middlewares_authmiddleware",
-      "src_middlewares_authmiddleware_authenticatedrequest",
-      "src_middlewares_authmiddleware_authenticatetoken",
-      "src_middlewares_authmiddleware_authorizeclientaccess",
-      "src_middlewares_authmiddleware_requirerole",
-      "src_middlewares_errorhandler",
-      "src_middlewares_errorhandler_apperror",
-      "src_middlewares_errorhandler_apperror_constructor",
-      "src_middlewares_errorhandler_asynchandler",
-      "src_middlewares_errorhandler_errorhandler",
-      "src_middlewares_ratelimiter",
-      "src_middlewares_ratelimiter_authratelimiter",
-      "src_middlewares_ratelimiter_createratelimiter",
-      "src_middlewares_ratelimiter_generalapilimiter",
-      "src_middlewares_ratelimiter_ratelimitstore",
-      "src_middlewares_ratelimiter_seedratelimiter",
-      "src_scratch_check_wa_state",
-      "src_scratch_check_wa_state_check",
-      "src_scratch_test_graceful_shutdown",
-      "src_scratch_test_graceful_shutdown_runtest",
-      "src_scratch_test_graceful_shutdown_state_file_path",
-      "src_server",
-      "src_server_startmarketingcampaignworker",
-      "src_services_escalation",
-      "src_services_escalation_startescalationservice",
-      "src_services_escalation_stopescalationservice",
-      "src_services_localknowledge",
-      "src_services_localknowledge_knowledge_base_dir",
-      "src_services_localknowledge_listlocalfiles",
-      "src_services_localknowledge_savelocalfile",
-      "src_services_logger",
-      "src_services_logger_alertthrottlemap",
-      "src_services_logger_isalertthrottled",
-      "src_services_logger_logger",
-      "src_services_logger_logs_dir",
-      "src_services_logger_senddiscordalert",
-      "src_services_logger_senddiscordrecovery",
-      "src_services_logger_writetofile",
-      "src_services_scheduler",
-      "src_services_scheduler_checkandsendreminders",
-      "src_services_scheduler_delay",
-      "src_services_scheduler_formatcurrency",
-      "src_services_scheduler_startscheduler",
-      "src_services_shutdownmanager",
-      "src_services_shutdownmanager_capturesystemstate",
-      "src_services_shutdownmanager_gracefulshutdown",
-      "src_services_shutdownmanager_registershutdownhandlers",
-      "src_services_shutdownmanager_restoresystemstate",
-      "src_services_shutdownmanager_state_file_path",
-      "src_services_whatsapp",
-      "src_services_whatsapp_activewasessions",
-      "src_services_whatsapp_autorestoresavedwhatsappsessions",
-      "src_services_whatsapp_client",
-      "src_services_whatsapp_connectwhatsapp",
-      "src_services_whatsapp_getwhatsappstate",
-      "src_services_whatsapp_initializewhatsappclient",
-      "src_services_whatsapp_logoutwhatsapp",
-      "src_services_whatsapp_sendwhatsapptextmessage",
-      "src_services_whatsapp_startuptime",
-      "src_services_whatsapp_tenantwhatsappstate",
-      "src_services_whatsapp_whatsappclientsmap",
-      "src_services_whatsapp_whatsappsession",
-      "src_services_whatsapp_whatsappstate",
-      "src_services_whatsapp_whatsappstatesmap",
-      "src_utils_envvalidator",
-      "src_utils_envvalidator_required_vars",
-      "src_utils_envvalidator_validateenv",
-      "src_utils_envvalidator_warn_vars",
-      "src_utils_passwordutils",
-      "src_utils_passwordutils_hashpassword",
-      "src_utils_passwordutils_ishashedpassword",
-      "src_utils_passwordutils_verifypassword"
+      "aws_sdk_client_s3",
+      "bcrypt",
+      "dotenv",
+      "express",
+      "google_generative_ai",
+      "googleapis",
+      "jsonwebtoken",
+      "multer",
+      "package",
+      "package_dependencies",
+      "package_dependencies_aws_sdk_client_s3",
+      "package_dependencies_bcrypt",
+      "package_dependencies_dotenv",
+      "package_dependencies_express",
+      "package_dependencies_google_generative_ai",
+      "package_dependencies_googleapis",
+      "package_dependencies_jsonwebtoken",
+      "package_dependencies_multer",
+      "package_dependencies_pg",
+      "package_dependencies_qrcode_terminal",
+      "package_dependencies_types_bcrypt",
+      "package_dependencies_whatsapp_web_js",
+      "package_description",
+      "package_main",
+      "package_name",
+      "package_scripts",
+      "package_scripts_build_frontend",
+      "package_scripts_dev",
+      "package_scripts_dev_api",
+      "package_scripts_start",
+      "package_scripts_start_api",
+      "package_scripts_start_api_ui",
+      "package_scripts_start_ui",
+      "package_version",
+      "pg",
+      "qrcode_terminal",
+      "types_bcrypt",
+      "whatsapp_web_js"
     ],
     "2": [
-      "autoprefixer",
-      "dashboard_oxlintrc",
-      "dashboard_oxlintrc_plugins",
-      "dashboard_oxlintrc_rules",
-      "dashboard_oxlintrc_rules_react_only_export_components",
-      "dashboard_oxlintrc_rules_react_rules_of_hooks",
-      "dashboard_oxlintrc_schema",
-      "dashboard_package_devdependencies",
-      "dashboard_package_devdependencies_autoprefixer",
-      "dashboard_package_devdependencies_oxlint",
-      "dashboard_package_devdependencies_postcss",
-      "dashboard_package_devdependencies_tailwindcss",
-      "dashboard_package_devdependencies_tailwindcss_vite",
-      "dashboard_package_devdependencies_types_node",
-      "dashboard_package_devdependencies_types_react",
-      "dashboard_package_devdependencies_types_react_dom",
-      "dashboard_package_devdependencies_typescript",
-      "dashboard_package_devdependencies_vite",
-      "dashboard_package_devdependencies_vitejs_plugin_react",
-      "oxlint",
-      "package_devdependencies_types_node",
-      "package_devdependencies_typescript",
-      "package_json_types_node",
-      "postcss",
-      "ref_oxc",
-      "ref_typescript",
-      "ref_warn",
-      "tailwindcss",
-      "tailwindcss_vite",
-      "types_react",
-      "types_react_dom",
-      "vite",
-      "vitejs_plugin_react"
-    ],
-    "3": [
       "dashboard_src_components_saaserpinventory",
       "dashboard_src_components_saaserpinventory_barcodesvg",
       "dashboard_src_components_saaserpinventory_coloroption",
@@ -230,7 +153,7 @@
       "dashboard_src_utils_barcodeprinter_printitem",
       "dashboard_src_utils_barcodeprinter_rendercode128svg"
     ],
-    "4": [
+    "3": [
       "dashboard_src_components_clientdashboard",
       "dashboard_src_components_clientdashboard_agentcontact",
       "dashboard_src_components_clientdashboard_audiocontact",
@@ -262,39 +185,39 @@
       "dashboard_src_components_saaserpcampaigns_saaserpcampaignsprops",
       "dashboard_src_components_saaserpcampaigns_visit"
     ],
-    "5": [
-      "nodemon",
-      "package",
-      "package_description",
-      "package_devdependencies",
-      "package_devdependencies_nodemon",
-      "package_devdependencies_ssh2",
-      "package_devdependencies_ts_node",
-      "package_devdependencies_types_express",
-      "package_devdependencies_types_jsonwebtoken",
-      "package_devdependencies_types_multer",
-      "package_devdependencies_types_pg",
-      "package_devdependencies_types_qrcode_terminal",
-      "package_main",
-      "package_name",
-      "package_scripts",
-      "package_scripts_build_frontend",
-      "package_scripts_dev",
-      "package_scripts_dev_api",
-      "package_scripts_start",
-      "package_scripts_start_api",
-      "package_scripts_start_api_ui",
-      "package_scripts_start_ui",
-      "package_version",
-      "ssh2",
-      "ts_node",
-      "types_express",
-      "types_jsonwebtoken",
-      "types_multer",
-      "types_pg",
-      "types_qrcode_terminal"
+    "4": [
+      "src_database_clientscrud_deleteclient",
+      "src_database_clientscrud_updateclientstatus",
+      "src_middlewares_authmiddleware",
+      "src_middlewares_authmiddleware_authenticatedrequest",
+      "src_middlewares_authmiddleware_authenticatetoken",
+      "src_middlewares_authmiddleware_authorizeclientaccess",
+      "src_middlewares_authmiddleware_requirerole",
+      "src_middlewares_ratelimiter",
+      "src_middlewares_ratelimiter_authratelimiter",
+      "src_middlewares_ratelimiter_createratelimiter",
+      "src_middlewares_ratelimiter_generalapilimiter",
+      "src_middlewares_ratelimiter_ratelimitstore",
+      "src_middlewares_ratelimiter_seedratelimiter",
+      "src_server",
+      "src_server_app",
+      "src_server_diskupload",
+      "src_server_mediadir",
+      "src_server_minutestotime",
+      "src_server_startmarketingcampaignworker",
+      "src_server_timetominutes",
+      "src_server_upload",
+      "src_server_uploadsdir",
+      "src_services_localknowledge",
+      "src_services_localknowledge_knowledge_base_dir",
+      "src_services_localknowledge_listlocalfiles",
+      "src_services_localknowledge_savelocalfile",
+      "src_utils_passwordutils",
+      "src_utils_passwordutils_hashpassword",
+      "src_utils_passwordutils_ishashedpassword",
+      "src_utils_passwordutils_verifypassword"
     ],
-    "6": [
+    "5": [
       "dashboard_src_app",
       "dashboard_src_app_app",
       "dashboard_src_components_activateaccount",
@@ -325,34 +248,7 @@
       "dashboard_src_main",
       "ref_react"
     ],
-    "7": [
-      "aws_sdk_client_s3",
-      "bcrypt",
-      "dotenv",
-      "express",
-      "google_generative_ai",
-      "googleapis",
-      "jsonwebtoken",
-      "multer",
-      "package_dependencies",
-      "package_dependencies_aws_sdk_client_s3",
-      "package_dependencies_bcrypt",
-      "package_dependencies_dotenv",
-      "package_dependencies_express",
-      "package_dependencies_google_generative_ai",
-      "package_dependencies_googleapis",
-      "package_dependencies_jsonwebtoken",
-      "package_dependencies_multer",
-      "package_dependencies_pg",
-      "package_dependencies_qrcode_terminal",
-      "package_dependencies_types_bcrypt",
-      "package_dependencies_whatsapp_web_js",
-      "pg",
-      "qrcode_terminal",
-      "types_bcrypt",
-      "whatsapp_web_js"
-    ],
-    "8": [
+    "6": [
       "dashboard_tsconfig_app",
       "dashboard_tsconfig_app_compileroptions",
       "dashboard_tsconfig_app_compileroptions_allowarbitraryextensions",
@@ -378,7 +274,7 @@
       "ref_dom",
       "ref_vite_client"
     ],
-    "9": [
+    "7": [
       "dashboard_src_components_saaserpcartera",
       "dashboard_src_components_saaserpcartera_carteraprops",
       "dashboard_src_components_saaserpcartera_installment",
@@ -401,7 +297,7 @@
       "dashboard_src_utils_api",
       "dashboard_src_utils_api_authfetch"
     ],
-    "10": [
+    "8": [
       "dashboard_tsconfig_node",
       "dashboard_tsconfig_node_compileroptions",
       "dashboard_tsconfig_node_compileroptions_allowimportingtsextensions",
@@ -423,7 +319,68 @@
       "ref_node",
       "ref_vite_config_ts"
     ],
+    "9": [
+      "src_middlewares_correlationidmiddleware",
+      "src_middlewares_correlationidmiddleware_correlationidmiddleware",
+      "src_middlewares_correlationidmiddleware_express",
+      "src_middlewares_correlationidmiddleware_request",
+      "src_middlewares_errorhandler",
+      "src_middlewares_errorhandler_apperror",
+      "src_middlewares_errorhandler_apperror_constructor",
+      "src_middlewares_errorhandler_asynchandler",
+      "src_middlewares_errorhandler_errorhandler",
+      "src_utils_correlationid",
+      "src_utils_correlationid_createlogcontext",
+      "src_utils_correlationid_generatecorrelationid",
+      "src_utils_correlationid_logcontext",
+      "src_utils_structuredlogger",
+      "src_utils_structuredlogger_structuredlogger",
+      "src_utils_structuredlogger_structuredlogger_debug",
+      "src_utils_structuredlogger_structuredlogger_error",
+      "src_utils_structuredlogger_structuredlogger_info",
+      "src_utils_structuredlogger_structuredlogger_operation",
+      "src_utils_structuredlogger_structuredlogger_warn"
+    ],
+    "10": [
+      "src_database_clientscrud_updateclient",
+      "src_scratch_check_wa_state",
+      "src_scratch_check_wa_state_check",
+      "src_server_server",
+      "src_services_whatsapp",
+      "src_services_whatsapp_autorestoresavedwhatsappsessions",
+      "src_services_whatsapp_client",
+      "src_services_whatsapp_connectwhatsapp",
+      "src_services_whatsapp_getwhatsappstate",
+      "src_services_whatsapp_initializewhatsappclient",
+      "src_services_whatsapp_logoutwhatsapp",
+      "src_services_whatsapp_sendwhatsapptextmessage",
+      "src_services_whatsapp_startuptime",
+      "src_services_whatsapp_tenantwhatsappstate",
+      "src_services_whatsapp_whatsappclientsmap",
+      "src_services_whatsapp_whatsappsession",
+      "src_services_whatsapp_whatsappstate",
+      "src_services_whatsapp_whatsappstatesmap"
+    ],
     "11": [
+      "autoprefixer",
+      "dashboard_package_devdependencies",
+      "dashboard_package_devdependencies_autoprefixer",
+      "dashboard_package_devdependencies_oxlint",
+      "dashboard_package_devdependencies_postcss",
+      "dashboard_package_devdependencies_tailwindcss",
+      "dashboard_package_devdependencies_types_react",
+      "dashboard_package_devdependencies_types_react_dom",
+      "dashboard_package_devdependencies_vite",
+      "dashboard_package_devdependencies_vitejs_plugin_react",
+      "oxlint",
+      "postcss",
+      "tailwindcss",
+      "types_react",
+      "types_react_dom",
+      "vite",
+      "vitejs_plugin_react"
+    ],
+    "12": [
       "dashboard_package",
       "dashboard_package_dependencies",
       "dashboard_package_dependencies_jsbarcode",
@@ -442,24 +399,41 @@
       "react",
       "react_dom"
     ],
-    "12": [
-      "src_middlewares_correlationidmiddleware",
-      "src_middlewares_correlationidmiddleware_correlationidmiddleware",
-      "src_middlewares_correlationidmiddleware_express",
-      "src_middlewares_correlationidmiddleware_request",
-      "src_utils_correlationid",
-      "src_utils_correlationid_createlogcontext",
-      "src_utils_correlationid_generatecorrelationid",
-      "src_utils_correlationid_logcontext",
-      "src_utils_structuredlogger",
-      "src_utils_structuredlogger_structuredlogger",
-      "src_utils_structuredlogger_structuredlogger_debug",
-      "src_utils_structuredlogger_structuredlogger_error",
-      "src_utils_structuredlogger_structuredlogger_info",
-      "src_utils_structuredlogger_structuredlogger_operation",
-      "src_utils_structuredlogger_structuredlogger_warn"
-    ],
     "13": [
+      "nodemon",
+      "package_devdependencies",
+      "package_devdependencies_nodemon",
+      "package_devdependencies_ssh2",
+      "package_devdependencies_ts_node",
+      "package_devdependencies_types_express",
+      "package_devdependencies_types_jsonwebtoken",
+      "package_devdependencies_types_multer",
+      "package_devdependencies_types_pg",
+      "package_devdependencies_types_qrcode_terminal",
+      "ssh2",
+      "ts_node",
+      "types_express",
+      "types_jsonwebtoken",
+      "types_multer",
+      "types_pg",
+      "types_qrcode_terminal"
+    ],
+    "14": [
+      "src_scratch_test_graceful_shutdown",
+      "src_scratch_test_graceful_shutdown_runtest",
+      "src_scratch_test_graceful_shutdown_state_file_path",
+      "src_services_escalation",
+      "src_services_escalation_startescalationservice",
+      "src_services_escalation_stopescalationservice",
+      "src_services_shutdownmanager",
+      "src_services_shutdownmanager_capturesystemstate",
+      "src_services_shutdownmanager_gracefulshutdown",
+      "src_services_shutdownmanager_registershutdownhandlers",
+      "src_services_shutdownmanager_restoresystemstate",
+      "src_services_shutdownmanager_state_file_path",
+      "src_services_whatsapp_activewasessions"
+    ],
+    "15": [
       "tsconfig",
       "tsconfig_compileroptions",
       "tsconfig_compileroptions_esmoduleinterop",
@@ -473,7 +447,7 @@
       "tsconfig_include",
       "tsconfig_json_ref_src"
     ],
-    "14": [
+    "16": [
       "dashboard_src_components_employeeportal",
       "dashboard_src_components_employeeportal_docrequest",
       "dashboard_src_components_employeeportal_employeeportal",
@@ -486,7 +460,7 @@
       "dashboard_src_components_restaurantwaiterportal_selectedorderitem",
       "dashboard_src_components_restaurantwaiterportal_table"
     ],
-    "15": [
+    "17": [
       "src_scratch_testr2",
       "src_scratch_testr2_main",
       "src_services_pdfgeneratorservice",
@@ -498,7 +472,7 @@
       "src_services_storageservice_isr2configured",
       "src_services_storageservice_uploadtenantfile"
     ],
-    "16": [
+    "18": [
       "src_services_auditservice",
       "src_services_auditservice_auditlogoptions",
       "src_services_auditservice_logaudit",
@@ -510,7 +484,7 @@
       "src_services_electronicinvoiceservice_generatefiscalqr",
       "src_services_electronicinvoiceservice_processelectronicinvoice"
     ],
-    "17": [
+    "19": [
       "dashboard_src_components_admindashboard",
       "dashboard_src_components_admindashboard_admindashboard",
       "dashboard_src_components_admindashboard_admindashboardprops",
@@ -521,7 +495,7 @@
       "dashboard_src_components_systemalertspanel_systemalertspanel",
       "dashboard_src_components_systemalertspanel_systemalertspanelprops"
     ],
-    "18": [
+    "20": [
       "dashboard_src_components_saaserpemployees",
       "dashboard_src_components_saaserpemployees_department",
       "dashboard_src_components_saaserpemployees_employee",
@@ -532,7 +506,26 @@
       "dashboard_src_utils_errorhandler",
       "dashboard_src_utils_errorhandler_translateerrormessage"
     ],
-    "19": [
+    "21": [
+      "src_index",
+      "src_services_logger",
+      "src_services_logger_alertthrottlemap",
+      "src_services_logger_isalertthrottled",
+      "src_services_logger_logger",
+      "src_services_logger_logs_dir",
+      "src_services_logger_senddiscordalert",
+      "src_services_logger_senddiscordrecovery",
+      "src_services_logger_writetofile"
+    ],
+    "22": [
+      "dashboard_oxlintrc",
+      "dashboard_oxlintrc_rules",
+      "dashboard_oxlintrc_rules_react_only_export_components",
+      "dashboard_oxlintrc_rules_react_rules_of_hooks",
+      "dashboard_oxlintrc_schema",
+      "ref_warn"
+    ],
+    "23": [
       "dashboard_src_components_enterpriseplanningmodule",
       "dashboard_src_components_enterpriseplanningmodule_asset",
       "dashboard_src_components_enterpriseplanningmodule_enterpriseplanningmodule",
@@ -540,7 +533,7 @@
       "dashboard_src_components_enterpriseplanningmodule_growthinsights",
       "dashboard_src_components_enterpriseplanningmodule_liability"
     ],
-    "20": [
+    "24": [
       "dashboard_src_components_saaserpaccounting",
       "dashboard_src_components_saaserpaccounting_accountingsummary",
       "dashboard_src_components_saaserpaccounting_dailytrenditem",
@@ -548,7 +541,7 @@
       "dashboard_src_components_saaserpaccounting_saaserpaccountingprops",
       "dashboard_src_components_saaserpaccounting_topproduct"
     ],
-    "21": [
+    "25": [
       "dashboard_src_components_saaserpappointments",
       "dashboard_src_components_saaserpappointments_appointment",
       "dashboard_src_components_saaserpappointments_customer",
@@ -556,7 +549,7 @@
       "dashboard_src_components_saaserpappointments_saaserpappointments",
       "dashboard_src_components_saaserpappointments_saaserpappointmentsprops"
     ],
-    "22": [
+    "26": [
       "dashboard_src_components_saaserpinvoices",
       "dashboard_src_components_saaserpinvoices_invoice",
       "dashboard_src_components_saaserpinvoices_invoiceiteminput",
@@ -564,7 +557,7 @@
       "dashboard_src_components_saaserpinvoices_saaserpinvoices",
       "dashboard_src_components_saaserpinvoices_saaserpinvoicesprops"
     ],
-    "23": [
+    "27": [
       "dashboard_src_components_saaserpusers",
       "dashboard_src_components_saaserpusers_all_modules",
       "dashboard_src_components_saaserpusers_role_labels",
@@ -572,137 +565,182 @@
       "dashboard_src_components_saaserpusers_saaserpusersprops",
       "dashboard_src_components_saaserpusers_tenantuser"
     ],
-    "24": [
+    "28": [
+      "dashboard_oxlintrc_plugins",
+      "dashboard_package_devdependencies_typescript",
+      "package_devdependencies_typescript",
+      "ref_oxc",
+      "ref_typescript"
+    ],
+    "29": [
       "dashboard_src_components_saaserpcashshifts",
       "dashboard_src_components_saaserpcashshifts_cashshift",
       "dashboard_src_components_saaserpcashshifts_employee",
       "dashboard_src_components_saaserpcashshifts_saaserpcashshifts",
       "dashboard_src_components_saaserpcashshifts_saaserpcashshiftsprops"
     ],
-    "25": [
+    "30": [
       "dashboard_src_components_saaserpcrm",
       "dashboard_src_components_saaserpcrm_customer",
       "dashboard_src_components_saaserpcrm_invoice",
       "dashboard_src_components_saaserpcrm_saaserpcrm",
       "dashboard_src_components_saaserpcrm_saaserpcrmprops"
     ],
-    "26": [
+    "31": [
       "dashboard_src_components_saaserpformulas",
       "dashboard_src_components_saaserpformulas_customer",
       "dashboard_src_components_saaserpformulas_formula",
       "dashboard_src_components_saaserpformulas_formulasprops",
       "dashboard_src_components_saaserpformulas_saaserpformulas"
     ],
-    "27": [
+    "32": [
       "dashboard_src_components_saaserpmarketing",
       "dashboard_src_components_saaserpmarketing_campaign",
       "dashboard_src_components_saaserpmarketing_campaignlog",
       "dashboard_src_components_saaserpmarketing_saaserpmarketing",
       "dashboard_src_components_saaserpmarketing_saaserpmarketingprops"
     ],
-    "28": [
+    "33": [
       "dashboard_src_components_saaserpsuppliers",
       "dashboard_src_components_saaserpsuppliers_category",
       "dashboard_src_components_saaserpsuppliers_saaserpsuppliers",
       "dashboard_src_components_saaserpsuppliers_supplier",
       "dashboard_src_components_saaserpsuppliers_suppliersprops"
     ],
-    "29": [
+    "34": [
+      "src_services_scheduler",
+      "src_services_scheduler_checkandsendreminders",
+      "src_services_scheduler_delay",
+      "src_services_scheduler_formatcurrency",
+      "src_services_scheduler_startscheduler"
+    ],
+    "35": [
+      "src_scratch_test_pre_recorded_voice",
+      "src_scratch_test_pre_recorded_voice_run",
+      "src_tools_enviaraudio",
+      "src_tools_enviaraudio_enviaraudiotool"
+    ],
+    "36": [
+      "src_utils_envvalidator",
+      "src_utils_envvalidator_required_vars",
+      "src_utils_envvalidator_validateenv",
+      "src_utils_envvalidator_warn_vars"
+    ],
+    "37": [
+      "dashboard_package_devdependencies_types_node",
+      "package_devdependencies_types_node",
+      "package_json_types_node"
+    ],
+    "38": [
       "dashboard_tsconfig",
       "dashboard_tsconfig_files",
       "dashboard_tsconfig_references"
     ],
-    "30": [
+    "39": [
       "src_scratch_check_db_users",
       "src_scratch_check_db_users_pool",
       "src_scratch_check_db_users_run"
     ],
-    "31": [
+    "40": [
       "src_scratch_migration_agent_contacts",
       "src_scratch_migration_agent_contacts_pool",
       "src_scratch_migration_agent_contacts_run"
     ],
-    "32": [
+    "41": [
       "src_scratch_seed_admin_user",
       "src_scratch_seed_admin_user_pool",
       "src_scratch_seed_admin_user_run"
     ],
-    "33": [
+    "42": [
       "src_scratch_test_list_models",
       "src_scratch_test_list_models_genai",
       "src_scratch_test_list_models_run"
     ],
-    "34": [
+    "43": [
       "src_scratch_update_client_auth",
       "src_scratch_update_client_auth_pool",
       "src_scratch_update_client_auth_run"
     ],
-    "35": [
+    "44": [
+      "dashboard_package_devdependencies_tailwindcss_vite",
+      "tailwindcss_vite"
+    ],
+    "45": [
       "src_scratch_install_docker",
       "src_scratch_install_docker_sh__entry"
     ],
-    "36": [
+    "46": [
       "src_scratch_setup_nginx",
       "src_scratch_setup_nginx_sh__entry"
     ],
-    "37": [
+    "47": [
       "src_scratch_setup_ssl",
       "src_scratch_setup_ssl_sh__entry"
     ],
-    "38": [
+    "48": [
       "src_scratch_setup_vps",
       "src_scratch_setup_vps_sh__entry"
     ],
-    "39": [
+    "49": [
       "src_scratch_test_puppeteer",
       "src_scratch_test_puppeteer_test"
     ],
-    "40": [
+    "50": [
       "dashboard_vite_config"
     ]
   },
   "cohesion": {
-    "0": 0.0654320987654321,
+    "0": 0.07040328092959672,
     "1": 0.05263157894736842,
-    "2": 0.06060606060606061,
-    "3": 0.09879032258064516,
-    "4": 0.07816091954022988,
-    "5": 0.06666666666666667,
-    "6": 0.10837438423645321,
-    "7": 0.08,
-    "8": 0.08333333333333333,
-    "9": 0.11904761904761904,
-    "10": 0.1,
+    "2": 0.09879032258064516,
+    "3": 0.07816091954022988,
+    "4": 0.09425287356321839,
+    "5": 0.10837438423645321,
+    "6": 0.08333333333333333,
+    "7": 0.11904761904761904,
+    "8": 0.1,
+    "9": 0.1736842105263158,
+    "10": 0.1830065359477124,
     "11": 0.11764705882352941,
-    "12": 0.24761904761904763,
-    "13": 0.16666666666666666,
-    "14": 0.2,
-    "15": 0.35555555555555557,
-    "16": 0.3333333333333333,
-    "17": 0.25,
-    "18": 0.2777777777777778,
-    "19": 0.3333333333333333,
-    "20": 0.3333333333333333,
-    "21": 0.4,
+    "12": 0.11764705882352941,
+    "13": 0.11764705882352941,
+    "14": 0.2692307692307692,
+    "15": 0.16666666666666666,
+    "16": 0.2,
+    "17": 0.35555555555555557,
+    "18": 0.3333333333333333,
+    "19": 0.25,
+    "20": 0.2777777777777778,
+    "21": 0.25,
     "22": 0.3333333333333333,
     "23": 0.3333333333333333,
-    "24": 0.4,
+    "24": 0.3333333333333333,
     "25": 0.4,
-    "26": 0.4,
-    "27": 0.4,
+    "26": 0.3333333333333333,
+    "27": 0.3333333333333333,
     "28": 0.4,
-    "29": 0.6666666666666666,
-    "30": 0.6666666666666666,
-    "31": 0.6666666666666666,
-    "32": 0.6666666666666666,
-    "33": 0.6666666666666666,
-    "34": 0.6666666666666666,
-    "35": 1.0,
-    "36": 1.0,
-    "37": 1.0,
-    "38": 1.0,
-    "39": 1.0,
-    "40": 1.0
+    "29": 0.4,
+    "30": 0.4,
+    "31": 0.4,
+    "32": 0.4,
+    "33": 0.4,
+    "34": 0.7,
+    "35": 0.6666666666666666,
+    "36": 0.5,
+    "37": 0.6666666666666666,
+    "38": 0.6666666666666666,
+    "39": 0.6666666666666666,
+    "40": 0.6666666666666666,
+    "41": 0.6666666666666666,
+    "42": 0.6666666666666666,
+    "43": 0.6666666666666666,
+    "44": 1.0,
+    "45": 1.0,
+    "46": 1.0,
+    "47": 1.0,
+    "48": 1.0,
+    "49": 1.0,
+    "50": 1.0
   },
   "gods": [
     {
@@ -766,7 +804,7 @@
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",
-      "why": "connects across different repos/directories"
+      "why": "connects across different repos/directories; peripheral node `runValidation()` unexpectedly reaches hub `initDatabase()`"
     },
     {
       "source": "initializeWhatsAppClient()",
@@ -791,22 +829,22 @@
       "why": "bridges separate communities"
     },
     {
-      "source": "initializeWhatsAppClient()",
-      "target": "uploadTenantFile()",
+      "source": "server",
+      "target": "startScheduler()",
       "source_files": [
-        "src/services/whatsapp.ts",
-        "src/services/storageService.ts"
+        "src/server.ts",
+        "src/services/scheduler.ts"
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",
       "why": "bridges separate communities"
     },
     {
-      "source": "AdminDashboard()",
-      "target": "authFetch()",
+      "source": "server",
+      "target": "startEscalationService()",
       "source_files": [
-        "dashboard/src/components/AdminDashboard.tsx",
-        "dashboard/src/utils/api.ts"
+        "src/server.ts",
+        "src/services/escalation.ts"
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",
