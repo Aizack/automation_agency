@@ -1425,25 +1425,28 @@ app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, a
 app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type } = req.body;
 
-    if (!name || price === undefined || stock === undefined) {
-      return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
+    const resolvedType = product_type === 'service' ? 'service' : 'product';
+    const finalStock = resolvedType === 'service' ? (stock || 999999) : (stock ?? 0);
+
+    if (!name || price === undefined) {
+      return res.status(400).json({ success: false, error: 'Nombre y precio son requeridos.' });
     }
 
     const modsJson = available_modifiers ? (typeof available_modifiers === 'string' ? available_modifiers : JSON.stringify(available_modifiers)) : '[]';
 
     const result = await pool.query(
       `INSERT INTO products (
-         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, created_at`,
+         client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type, created_at`,
       [
-        clientId, name, sku || null, description || null, price, stock, 
+        clientId, name, sku || null, description || null, price, finalStock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null,
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
-        modsJson, image_url || null
+        modsJson, image_url || null, resolvedType
       ]
     );
 
@@ -1457,10 +1460,13 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, productId } = req.params;
-    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url } = req.body;
+    const { name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type } = req.body;
 
-    if (!name || price === undefined || stock === undefined) {
-      return res.status(400).json({ success: false, error: 'Nombre, precio y stock son requeridos.' });
+    const resolvedType = product_type === 'service' ? 'service' : 'product';
+    const finalStock = resolvedType === 'service' ? (stock || 999999) : (stock ?? 0);
+
+    if (!name || price === undefined) {
+      return res.status(400).json({ success: false, error: 'Nombre y precio son requeridos.' });
     }
 
     const modsJson = available_modifiers ? (typeof available_modifiers === 'string' ? available_modifiers : JSON.stringify(available_modifiers)) : '[]';
@@ -1470,15 +1476,15 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
        SET name = $1, sku = $2, description = $3, price = $4, stock = $5, 
            cost_price = $6, min_stock = $7, supplier_name = $8, supplier_phone = $9,
            brand = $10, material = $11, style = $12, color = $13, promo_discount = $14,
-           category_id = $15, attributes = $16, available_modifiers = $17, image_url = $18
-       WHERE client_id = $19 AND id = $20 
-       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, created_at`,
+           category_id = $15, attributes = $16, available_modifiers = $17, image_url = $18, product_type = $19
+       WHERE client_id = $20 AND id = $21 
+       RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type, created_at`,
       [
-        name, sku || null, description || null, price, stock, 
+        name, sku || null, description || null, price, finalStock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null, 
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
-        modsJson, image_url || null,
+        modsJson, image_url || null, resolvedType,
         clientId, productId
       ]
     );

@@ -1386,64 +1386,6 @@ export const EmployeePortal: React.FC = () => {
                     {/* TAB 1: TURNOS & ELAPSED TIMER */}
                     {activeTab === 'turnos' && (
                         <div className="space-y-6">
-                            {/* Banner de Arqueos de Caja Pendientes de Confirmación */}
-                            {pendingCashShifts.length > 0 && (
-                                <div className="space-y-3">
-                                    {pendingCashShifts.map((shift) => (
-                                        <div key={shift.id} className="bg-amber-500/10 border-2 border-amber-500/30 p-5 rounded-3xl space-y-3 text-left shadow-2xl backdrop-blur-md">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2 text-amber-400 font-bold text-xs">
-                                                    <span className="material-symbols-outlined text-xl animate-bounce">point_of_sale</span>
-                                                    Relevo & Arqueo de Caja Pendiente
-                                                </div>
-                                                <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider">
-                                                    Confirmar Cuentas
-                                                </span>
-                                            </div>
-
-                                            <p className="text-xs text-on-surface leading-relaxed">
-                                                El colaborador <span className="font-bold text-amber-300">{shift.employee_out_name}</span> te ha entregado las cuentas de la caja para el cambio de turno:
-                                            </p>
-
-                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-black/50 p-3 rounded-2xl font-mono text-xs border border-outline/10">
-                                                <div>
-                                                    <span className="text-[10px] text-gray-400 block uppercase">Base Inicial</span>
-                                                    <span className="font-bold text-white">${Number(shift.initial_cash).toLocaleString('es-CO')}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] text-gray-400 block uppercase">Ventas Efectivo</span>
-                                                    <span className="font-bold text-emerald-400">${Number(shift.total_cash_sales).toLocaleString('es-CO')}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] text-gray-400 block uppercase">Físico Contado</span>
-                                                    <span className="font-bold text-amber-400">${Number(shift.reported_cash_in_drawer).toLocaleString('es-CO')}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] text-gray-400 block uppercase">Diferencia</span>
-                                                    <span className={`font-bold ${shift.cash_difference < 0 ? 'text-red-400' : 'text-green-400'}`}>
-                                                        ${Number(shift.cash_difference).toLocaleString('es-CO')}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {shift.notes && (
-                                                <p className="text-[11px] text-gray-300 italic bg-white/5 p-2.5 rounded-xl border border-white/5">
-                                                    "{shift.notes}"
-                                                </p>
-                                            )}
-
-                                            <button
-                                                onClick={() => handleConfirmCashShift(shift.id)}
-                                                disabled={confirmingShiftId === shift.id}
-                                                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition shadow-xl border-0 uppercase tracking-wider"
-                                            >
-                                                <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                                                {confirmingShiftId === shift.id ? 'Confirmando...' : '✓ CONFIRMAR CUENTAS CLARAS'}
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
                             {/* Clock / Timer Widget */}
                             <div className="glass-card p-6 rounded-3xl text-center border border-outline/10 shadow-xl relative overflow-hidden bg-gradient-to-b from-surface-container/20 to-surface-container-high/40">
                                 <span className="text-[10px] text-primary uppercase font-mono tracking-wider font-bold">

@@ -1049,6 +1049,7 @@ export const initDatabase = async () => {
             ALTER TABLE raw_materials ADD COLUMN IF NOT EXISTS expiration_date DATE;
             ALTER TABLE raw_materials ADD COLUMN IF NOT EXISTS batch_number VARCHAR(100);
             ALTER TABLE raw_materials ADD COLUMN IF NOT EXISTS is_casual_purchase BOOLEAN DEFAULT FALSE;
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS product_type VARCHAR(50) DEFAULT 'product';
             CREATE INDEX IF NOT EXISTS idx_raw_materials_client ON raw_materials(client_id);
 
             CREATE TABLE IF NOT EXISTS business_assets (

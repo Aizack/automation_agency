@@ -18,8 +18,10 @@
       "src_core_router_routeincomingmessage",
       "src_database_clientscrud",
       "src_database_clientscrud_createclient",
+      "src_database_clientscrud_deleteclient",
       "src_database_clientscrud_getclientbyid",
       "src_database_clientscrud_listclients",
+      "src_database_clientscrud_updateclientstatus",
       "src_database_initdb",
       "src_database_initdb_initdatabase",
       "src_database_postgres",
@@ -48,6 +50,8 @@
       "src_scratch_test_onboarding_flow_test",
       "src_scratch_test_optica_onboarding",
       "src_scratch_test_optica_onboarding_testopticaflow",
+      "src_scratch_test_pre_recorded_voice",
+      "src_scratch_test_pre_recorded_voice_run",
       "src_scratch_test_rag",
       "src_scratch_test_rag_runtest",
       "src_services_drive",
@@ -57,7 +61,7 @@
       "src_services_drive_key_file_path",
       "src_services_drive_listfilesfromfolder",
       "src_services_drive_uploadfiletofolder",
-      "src_services_localknowledge_fetchlocaldocuments",
+      "src_services_whatsapp_activewasessions",
       "src_tools_agendarcita",
       "src_tools_agendarcita_agendarcitatool",
       "src_tools_asignartarea",
@@ -71,6 +75,8 @@
       "src_tools_consultarinventario_consultarinventariotool",
       "src_tools_crearpedido",
       "src_tools_crearpedido_crearpedidotool",
+      "src_tools_enviaraudio",
+      "src_tools_enviaraudio_enviaraudiotool",
       "src_tools_guardarperfilnegocio",
       "src_tools_guardarperfilnegocio_guardarperfilnegociotool",
       "src_tools_registrarcliente",
@@ -80,6 +86,85 @@
       "src_tools_reportarpago_reportarpagotool"
     ],
     "1": [
+      "src_database_clientscrud_updateclient",
+      "src_index",
+      "src_middlewares_authmiddleware",
+      "src_middlewares_authmiddleware_authenticatedrequest",
+      "src_middlewares_authmiddleware_authenticatetoken",
+      "src_middlewares_authmiddleware_authorizeclientaccess",
+      "src_middlewares_authmiddleware_requirerole",
+      "src_middlewares_ratelimiter",
+      "src_middlewares_ratelimiter_authratelimiter",
+      "src_middlewares_ratelimiter_createratelimiter",
+      "src_middlewares_ratelimiter_generalapilimiter",
+      "src_middlewares_ratelimiter_ratelimitstore",
+      "src_middlewares_ratelimiter_seedratelimiter",
+      "src_scratch_check_wa_state",
+      "src_scratch_check_wa_state_check",
+      "src_scratch_test_graceful_shutdown",
+      "src_scratch_test_graceful_shutdown_runtest",
+      "src_scratch_test_graceful_shutdown_state_file_path",
+      "src_server",
+      "src_server_app",
+      "src_server_diskupload",
+      "src_server_mediadir",
+      "src_server_minutestotime",
+      "src_server_server",
+      "src_server_startmarketingcampaignworker",
+      "src_server_timetominutes",
+      "src_server_upload",
+      "src_server_uploadsdir",
+      "src_services_escalation",
+      "src_services_escalation_startescalationservice",
+      "src_services_escalation_stopescalationservice",
+      "src_services_localknowledge",
+      "src_services_localknowledge_fetchlocaldocuments",
+      "src_services_localknowledge_knowledge_base_dir",
+      "src_services_localknowledge_listlocalfiles",
+      "src_services_localknowledge_savelocalfile",
+      "src_services_logger",
+      "src_services_logger_alertthrottlemap",
+      "src_services_logger_isalertthrottled",
+      "src_services_logger_logger",
+      "src_services_logger_logs_dir",
+      "src_services_logger_senddiscordalert",
+      "src_services_logger_senddiscordrecovery",
+      "src_services_logger_writetofile",
+      "src_services_scheduler",
+      "src_services_scheduler_checkandsendreminders",
+      "src_services_scheduler_delay",
+      "src_services_scheduler_formatcurrency",
+      "src_services_scheduler_startscheduler",
+      "src_services_shutdownmanager",
+      "src_services_shutdownmanager_capturesystemstate",
+      "src_services_shutdownmanager_gracefulshutdown",
+      "src_services_shutdownmanager_registershutdownhandlers",
+      "src_services_shutdownmanager_restoresystemstate",
+      "src_services_shutdownmanager_state_file_path",
+      "src_services_whatsapp",
+      "src_services_whatsapp_autorestoresavedwhatsappsessions",
+      "src_services_whatsapp_client",
+      "src_services_whatsapp_connectwhatsapp",
+      "src_services_whatsapp_getwhatsappstate",
+      "src_services_whatsapp_initializewhatsappclient",
+      "src_services_whatsapp_logoutwhatsapp",
+      "src_services_whatsapp_sendwhatsapptextmessage",
+      "src_services_whatsapp_startuptime",
+      "src_services_whatsapp_tenantwhatsappstate",
+      "src_services_whatsapp_whatsappclientsmap",
+      "src_services_whatsapp_whatsappsession",
+      "src_services_whatsapp_whatsappstate",
+      "src_services_whatsapp_whatsappstatesmap",
+      "src_utils_envvalidator",
+      "src_utils_envvalidator_required_vars",
+      "src_utils_envvalidator_validateenv",
+      "src_utils_envvalidator_warn_vars",
+      "src_utils_passwordutils",
+      "src_utils_passwordutils_hashpassword",
+      "src_utils_passwordutils_ishashedpassword",
+      "src_utils_passwordutils_verifypassword"
+    ],
+    "2": [
       "aws_sdk_client_s3",
       "bcrypt",
       "dotenv",
@@ -119,7 +204,7 @@
       "types_bcrypt",
       "whatsapp_web_js"
     ],
-    "2": [
+    "3": [
       "dashboard_src_components_saaserpinventory",
       "dashboard_src_components_saaserpinventory_barcodesvg",
       "dashboard_src_components_saaserpinventory_coloroption",
@@ -153,125 +238,7 @@
       "dashboard_src_utils_barcodeprinter_printitem",
       "dashboard_src_utils_barcodeprinter_rendercode128svg"
     ],
-    "3": [
-      "src_database_clientscrud_deleteclient",
-      "src_database_clientscrud_updateclientstatus",
-      "src_middlewares_authmiddleware",
-      "src_middlewares_authmiddleware_authenticatedrequest",
-      "src_middlewares_authmiddleware_authenticatetoken",
-      "src_middlewares_authmiddleware_authorizeclientaccess",
-      "src_middlewares_authmiddleware_requirerole",
-      "src_middlewares_ratelimiter",
-      "src_middlewares_ratelimiter_authratelimiter",
-      "src_middlewares_ratelimiter_createratelimiter",
-      "src_middlewares_ratelimiter_generalapilimiter",
-      "src_middlewares_ratelimiter_ratelimitstore",
-      "src_middlewares_ratelimiter_seedratelimiter",
-      "src_server",
-      "src_server_app",
-      "src_server_diskupload",
-      "src_server_mediadir",
-      "src_server_minutestotime",
-      "src_server_startmarketingcampaignworker",
-      "src_server_timetominutes",
-      "src_server_upload",
-      "src_server_uploadsdir",
-      "src_services_localknowledge",
-      "src_services_localknowledge_knowledge_base_dir",
-      "src_services_localknowledge_listlocalfiles",
-      "src_services_localknowledge_savelocalfile",
-      "src_utils_passwordutils",
-      "src_utils_passwordutils_hashpassword",
-      "src_utils_passwordutils_ishashedpassword",
-      "src_utils_passwordutils_verifypassword"
-    ],
     "4": [
-      "dashboard_src_app",
-      "dashboard_src_app_app",
-      "dashboard_src_components_activateaccount",
-      "dashboard_src_components_activateaccount_activateaccount",
-      "dashboard_src_components_activateaccount_activateaccountprops",
-      "dashboard_src_components_authfast",
-      "dashboard_src_components_authfast_authfast",
-      "dashboard_src_components_authfast_authfastprops",
-      "dashboard_src_components_clientdashboard_clientdashboard",
-      "dashboard_src_components_landingpage",
-      "dashboard_src_components_landingpage_landingpage",
-      "dashboard_src_components_landingpage_landingpageprops",
-      "dashboard_src_components_legaldocsmodal",
-      "dashboard_src_components_legaldocsmodal_legaldocsmodal",
-      "dashboard_src_components_legaldocsmodal_legaldocsmodalprops",
-      "dashboard_src_components_login",
-      "dashboard_src_components_login_login",
-      "dashboard_src_components_login_loginprops",
-      "dashboard_src_components_login_logintab",
-      "dashboard_src_components_login_negocioaccessmode",
-      "dashboard_src_components_publicrestaurantmenu",
-      "dashboard_src_components_publicrestaurantmenu_cartitem",
-      "dashboard_src_components_publicrestaurantmenu_menuitem",
-      "dashboard_src_components_publicrestaurantmenu_modifier",
-      "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenu",
-      "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenuprops",
-      "dashboard_src_components_publicrestaurantmenu_restaurantinfo",
-      "dashboard_src_main",
-      "ref_react"
-    ],
-    "5": [
-      "dashboard_src_components_clientdashboard",
-      "dashboard_src_components_clientdashboard_agentcontact",
-      "dashboard_src_components_clientdashboard_audiocontact",
-      "dashboard_src_components_clientdashboard_client",
-      "dashboard_src_components_clientdashboard_clientdashboardprops",
-      "dashboard_src_components_clientdashboard_interaction",
-      "dashboard_src_components_clientdashboard_whatsappstatus",
-      "dashboard_src_components_rawmaterialsinventory",
-      "dashboard_src_components_rawmaterialsinventory_rawmaterial",
-      "dashboard_src_components_rawmaterialsinventory_rawmaterialsinventory",
-      "dashboard_src_components_rawmaterialsinventory_rawmaterialsinventoryprops",
-      "dashboard_src_components_restaurantkdsdisplay",
-      "dashboard_src_components_restaurantkdsdisplay_kdsitem",
-      "dashboard_src_components_restaurantkdsdisplay_kdsorder",
-      "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplay",
-      "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplayprops",
-      "dashboard_src_components_restaurantmenubuilder",
-      "dashboard_src_components_restaurantmenubuilder_product",
-      "dashboard_src_components_restaurantmenubuilder_recipeitem",
-      "dashboard_src_components_restaurantmenubuilder_restaurantmenubuilder",
-      "dashboard_src_components_restaurantmenubuilder_restaurantmenubuilderprops",
-      "dashboard_src_components_saaserpcampaigns",
-      "dashboard_src_components_saaserpcampaigns_employee",
-      "dashboard_src_components_saaserpcampaigns_saaserpcampaigns",
-      "dashboard_src_components_saaserpcampaigns_saaserpcampaignsprops",
-      "dashboard_src_components_saaserpcampaigns_visit"
-    ],
-    "6": [
-      "dashboard_src_components_saaserpauditlogs",
-      "dashboard_src_components_saaserpauditlogs_auditlog",
-      "dashboard_src_components_saaserpauditlogs_saaserpauditlogs",
-      "dashboard_src_components_saaserpauditlogs_saaserpauditlogsprops",
-      "dashboard_src_components_saaserpcartera",
-      "dashboard_src_components_saaserpcartera_carteraprops",
-      "dashboard_src_components_saaserpcartera_installment",
-      "dashboard_src_components_saaserpcartera_invoice",
-      "dashboard_src_components_saaserpcartera_saaserpcartera",
-      "dashboard_src_components_saaserpdomicilios",
-      "dashboard_src_components_saaserpdomicilios_domiciliosprops",
-      "dashboard_src_components_saaserpdomicilios_invoice",
-      "dashboard_src_components_saaserpdomicilios_saaserpdomicilios",
-      "dashboard_src_components_saaserpstoresettings",
-      "dashboard_src_components_saaserpstoresettings_bankaccount",
-      "dashboard_src_components_saaserpstoresettings_bankaccountsmanager",
-      "dashboard_src_components_saaserpstoresettings_saaserpstoresettings",
-      "dashboard_src_components_saaserpstoresettings_storesettingsprops",
-      "dashboard_src_components_saaserpstoresettings_themeselectormanager",
-      "dashboard_src_components_saaserpsupportdocuments",
-      "dashboard_src_components_saaserpsupportdocuments_saaserpsupportdocuments",
-      "dashboard_src_components_saaserpsupportdocuments_saaserpsupportdocumentsprops",
-      "dashboard_src_components_saaserpsupportdocuments_supportdocument",
-      "dashboard_src_utils_api",
-      "dashboard_src_utils_api_authfetch"
-    ],
-    "7": [
       "dashboard_tsconfig_app",
       "dashboard_tsconfig_app_compileroptions",
       "dashboard_tsconfig_app_compileroptions_allowarbitraryextensions",
@@ -297,7 +264,52 @@
       "ref_dom",
       "ref_vite_client"
     ],
-    "8": [
+    "5": [
+      "dashboard_src_components_admindashboard",
+      "dashboard_src_components_admindashboard_admindashboard",
+      "dashboard_src_components_admindashboard_admindashboardprops",
+      "dashboard_src_components_admindashboard_client",
+      "dashboard_src_components_admindashboard_metrics",
+      "dashboard_src_components_saaserpaccounting",
+      "dashboard_src_components_saaserpaccounting_accountingsummary",
+      "dashboard_src_components_saaserpaccounting_dailytrenditem",
+      "dashboard_src_components_saaserpaccounting_saaserpaccounting",
+      "dashboard_src_components_saaserpaccounting_saaserpaccountingprops",
+      "dashboard_src_components_saaserpaccounting_topproduct",
+      "dashboard_src_components_saaserpdomicilios",
+      "dashboard_src_components_saaserpdomicilios_domiciliosprops",
+      "dashboard_src_components_saaserpdomicilios_invoice",
+      "dashboard_src_components_saaserpdomicilios_saaserpdomicilios",
+      "dashboard_src_components_saaserpsupportdocuments",
+      "dashboard_src_components_saaserpsupportdocuments_saaserpsupportdocuments",
+      "dashboard_src_components_saaserpsupportdocuments_saaserpsupportdocumentsprops",
+      "dashboard_src_components_saaserpsupportdocuments_supportdocument",
+      "dashboard_src_utils_api",
+      "dashboard_src_utils_api_authfetch"
+    ],
+    "6": [
+      "dashboard_src_components_clientdashboard",
+      "dashboard_src_components_clientdashboard_agentcontact",
+      "dashboard_src_components_clientdashboard_audiocontact",
+      "dashboard_src_components_clientdashboard_client",
+      "dashboard_src_components_clientdashboard_clientdashboardprops",
+      "dashboard_src_components_clientdashboard_interaction",
+      "dashboard_src_components_clientdashboard_whatsappstatus",
+      "dashboard_src_components_rawmaterialsinventory",
+      "dashboard_src_components_rawmaterialsinventory_rawmaterial",
+      "dashboard_src_components_rawmaterialsinventory_rawmaterialsinventory",
+      "dashboard_src_components_rawmaterialsinventory_rawmaterialsinventoryprops",
+      "dashboard_src_components_restaurantkdsdisplay",
+      "dashboard_src_components_restaurantkdsdisplay_kdsitem",
+      "dashboard_src_components_restaurantkdsdisplay_kdsorder",
+      "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplay",
+      "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplayprops",
+      "dashboard_src_components_systemalertspanel",
+      "dashboard_src_components_systemalertspanel_systemalert",
+      "dashboard_src_components_systemalertspanel_systemalertspanel",
+      "dashboard_src_components_systemalertspanel_systemalertspanelprops"
+    ],
+    "7": [
       "dashboard_tsconfig_node",
       "dashboard_tsconfig_node_compileroptions",
       "dashboard_tsconfig_node_compileroptions_allowimportingtsextensions",
@@ -319,7 +331,7 @@
       "ref_node",
       "ref_vite_config_ts"
     ],
-    "9": [
+    "8": [
       "src_middlewares_correlationidmiddleware",
       "src_middlewares_correlationidmiddleware_correlationidmiddleware",
       "src_middlewares_correlationidmiddleware_express",
@@ -341,27 +353,27 @@
       "src_utils_structuredlogger_structuredlogger_operation",
       "src_utils_structuredlogger_structuredlogger_warn"
     ],
-    "10": [
-      "src_database_clientscrud_updateclient",
-      "src_scratch_check_wa_state",
-      "src_scratch_check_wa_state_check",
-      "src_server_server",
-      "src_services_whatsapp",
-      "src_services_whatsapp_autorestoresavedwhatsappsessions",
-      "src_services_whatsapp_client",
-      "src_services_whatsapp_connectwhatsapp",
-      "src_services_whatsapp_getwhatsappstate",
-      "src_services_whatsapp_initializewhatsappclient",
-      "src_services_whatsapp_logoutwhatsapp",
-      "src_services_whatsapp_sendwhatsapptextmessage",
-      "src_services_whatsapp_startuptime",
-      "src_services_whatsapp_tenantwhatsappstate",
-      "src_services_whatsapp_whatsappclientsmap",
-      "src_services_whatsapp_whatsappsession",
-      "src_services_whatsapp_whatsappstate",
-      "src_services_whatsapp_whatsappstatesmap"
+    "9": [
+      "dashboard_src_app",
+      "dashboard_src_app_app",
+      "dashboard_src_components_activateaccount",
+      "dashboard_src_components_activateaccount_activateaccount",
+      "dashboard_src_components_activateaccount_activateaccountprops",
+      "dashboard_src_components_authfast",
+      "dashboard_src_components_authfast_authfast",
+      "dashboard_src_components_authfast_authfastprops",
+      "dashboard_src_components_clientdashboard_clientdashboard",
+      "dashboard_src_components_publicrestaurantmenu",
+      "dashboard_src_components_publicrestaurantmenu_cartitem",
+      "dashboard_src_components_publicrestaurantmenu_menuitem",
+      "dashboard_src_components_publicrestaurantmenu_modifier",
+      "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenu",
+      "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenuprops",
+      "dashboard_src_components_publicrestaurantmenu_restaurantinfo",
+      "dashboard_src_main",
+      "ref_react"
     ],
-    "11": [
+    "10": [
       "autoprefixer",
       "dashboard_package_devdependencies",
       "dashboard_package_devdependencies_autoprefixer",
@@ -380,7 +392,7 @@
       "vite",
       "vitejs_plugin_react"
     ],
-    "12": [
+    "11": [
       "dashboard_package",
       "dashboard_package_dependencies",
       "dashboard_package_dependencies_jsbarcode",
@@ -399,7 +411,7 @@
       "react",
       "react_dom"
     ],
-    "13": [
+    "12": [
       "nodemon",
       "package_devdependencies",
       "package_devdependencies_nodemon",
@@ -418,22 +430,7 @@
       "types_pg",
       "types_qrcode_terminal"
     ],
-    "14": [
-      "src_scratch_test_graceful_shutdown",
-      "src_scratch_test_graceful_shutdown_runtest",
-      "src_scratch_test_graceful_shutdown_state_file_path",
-      "src_services_escalation",
-      "src_services_escalation_startescalationservice",
-      "src_services_escalation_stopescalationservice",
-      "src_services_shutdownmanager",
-      "src_services_shutdownmanager_capturesystemstate",
-      "src_services_shutdownmanager_gracefulshutdown",
-      "src_services_shutdownmanager_registershutdownhandlers",
-      "src_services_shutdownmanager_restoresystemstate",
-      "src_services_shutdownmanager_state_file_path",
-      "src_services_whatsapp_activewasessions"
-    ],
-    "15": [
+    "13": [
       "tsconfig",
       "tsconfig_compileroptions",
       "tsconfig_compileroptions_esmoduleinterop",
@@ -447,7 +444,7 @@
       "tsconfig_include",
       "tsconfig_json_ref_src"
     ],
-    "16": [
+    "14": [
       "dashboard_src_components_employeeportal",
       "dashboard_src_components_employeeportal_docrequest",
       "dashboard_src_components_employeeportal_employeeportal",
@@ -460,7 +457,20 @@
       "dashboard_src_components_restaurantwaiterportal_selectedorderitem",
       "dashboard_src_components_restaurantwaiterportal_table"
     ],
-    "17": [
+    "15": [
+      "dashboard_src_components_landingpage",
+      "dashboard_src_components_landingpage_landingpage",
+      "dashboard_src_components_landingpage_landingpageprops",
+      "dashboard_src_components_legaldocsmodal",
+      "dashboard_src_components_legaldocsmodal_legaldocsmodal",
+      "dashboard_src_components_legaldocsmodal_legaldocsmodalprops",
+      "dashboard_src_components_login",
+      "dashboard_src_components_login_login",
+      "dashboard_src_components_login_loginprops",
+      "dashboard_src_components_login_logintab",
+      "dashboard_src_components_login_negocioaccessmode"
+    ],
+    "16": [
       "src_scratch_testr2",
       "src_scratch_testr2_main",
       "src_services_pdfgeneratorservice",
@@ -472,7 +482,7 @@
       "src_services_storageservice_isr2configured",
       "src_services_storageservice_uploadtenantfile"
     ],
-    "18": [
+    "17": [
       "src_services_auditservice",
       "src_services_auditservice_auditlogoptions",
       "src_services_auditservice_logaudit",
@@ -484,18 +494,7 @@
       "src_services_electronicinvoiceservice_generatefiscalqr",
       "src_services_electronicinvoiceservice_processelectronicinvoice"
     ],
-    "19": [
-      "dashboard_src_components_admindashboard",
-      "dashboard_src_components_admindashboard_admindashboard",
-      "dashboard_src_components_admindashboard_admindashboardprops",
-      "dashboard_src_components_admindashboard_client",
-      "dashboard_src_components_admindashboard_metrics",
-      "dashboard_src_components_systemalertspanel",
-      "dashboard_src_components_systemalertspanel_systemalert",
-      "dashboard_src_components_systemalertspanel_systemalertspanel",
-      "dashboard_src_components_systemalertspanel_systemalertspanelprops"
-    ],
-    "20": [
+    "18": [
       "dashboard_src_components_saaserpemployees",
       "dashboard_src_components_saaserpemployees_department",
       "dashboard_src_components_saaserpemployees_employee",
@@ -506,18 +505,7 @@
       "dashboard_src_utils_errorhandler",
       "dashboard_src_utils_errorhandler_translateerrormessage"
     ],
-    "21": [
-      "src_index",
-      "src_services_logger",
-      "src_services_logger_alertthrottlemap",
-      "src_services_logger_isalertthrottled",
-      "src_services_logger_logger",
-      "src_services_logger_logs_dir",
-      "src_services_logger_senddiscordalert",
-      "src_services_logger_senddiscordrecovery",
-      "src_services_logger_writetofile"
-    ],
-    "22": [
+    "19": [
       "dashboard_oxlintrc",
       "dashboard_oxlintrc_rules",
       "dashboard_oxlintrc_rules_react_only_export_components",
@@ -525,7 +513,7 @@
       "dashboard_oxlintrc_schema",
       "ref_warn"
     ],
-    "23": [
+    "20": [
       "dashboard_src_components_enterpriseplanningmodule",
       "dashboard_src_components_enterpriseplanningmodule_asset",
       "dashboard_src_components_enterpriseplanningmodule_enterpriseplanningmodule",
@@ -533,15 +521,7 @@
       "dashboard_src_components_enterpriseplanningmodule_growthinsights",
       "dashboard_src_components_enterpriseplanningmodule_liability"
     ],
-    "24": [
-      "dashboard_src_components_saaserpaccounting",
-      "dashboard_src_components_saaserpaccounting_accountingsummary",
-      "dashboard_src_components_saaserpaccounting_dailytrenditem",
-      "dashboard_src_components_saaserpaccounting_saaserpaccounting",
-      "dashboard_src_components_saaserpaccounting_saaserpaccountingprops",
-      "dashboard_src_components_saaserpaccounting_topproduct"
-    ],
-    "25": [
+    "21": [
       "dashboard_src_components_saaserpappointments",
       "dashboard_src_components_saaserpappointments_appointment",
       "dashboard_src_components_saaserpappointments_customer",
@@ -549,7 +529,7 @@
       "dashboard_src_components_saaserpappointments_saaserpappointments",
       "dashboard_src_components_saaserpappointments_saaserpappointmentsprops"
     ],
-    "26": [
+    "22": [
       "dashboard_src_components_saaserpinvoices",
       "dashboard_src_components_saaserpinvoices_invoice",
       "dashboard_src_components_saaserpinvoices_invoiceiteminput",
@@ -557,7 +537,15 @@
       "dashboard_src_components_saaserpinvoices_saaserpinvoices",
       "dashboard_src_components_saaserpinvoices_saaserpinvoicesprops"
     ],
-    "27": [
+    "23": [
+      "dashboard_src_components_saaserpstoresettings",
+      "dashboard_src_components_saaserpstoresettings_bankaccount",
+      "dashboard_src_components_saaserpstoresettings_bankaccountsmanager",
+      "dashboard_src_components_saaserpstoresettings_saaserpstoresettings",
+      "dashboard_src_components_saaserpstoresettings_storesettingsprops",
+      "dashboard_src_components_saaserpstoresettings_themeselectormanager"
+    ],
+    "24": [
       "dashboard_src_components_saaserpusers",
       "dashboard_src_components_saaserpusers_all_modules",
       "dashboard_src_components_saaserpusers_role_labels",
@@ -565,12 +553,33 @@
       "dashboard_src_components_saaserpusers_saaserpusersprops",
       "dashboard_src_components_saaserpusers_tenantuser"
     ],
-    "28": [
+    "25": [
       "dashboard_oxlintrc_plugins",
       "dashboard_package_devdependencies_typescript",
       "package_devdependencies_typescript",
       "ref_oxc",
       "ref_typescript"
+    ],
+    "26": [
+      "dashboard_src_components_restaurantmenubuilder",
+      "dashboard_src_components_restaurantmenubuilder_product",
+      "dashboard_src_components_restaurantmenubuilder_recipeitem",
+      "dashboard_src_components_restaurantmenubuilder_restaurantmenubuilder",
+      "dashboard_src_components_restaurantmenubuilder_restaurantmenubuilderprops"
+    ],
+    "27": [
+      "dashboard_src_components_saaserpcampaigns",
+      "dashboard_src_components_saaserpcampaigns_employee",
+      "dashboard_src_components_saaserpcampaigns_saaserpcampaigns",
+      "dashboard_src_components_saaserpcampaigns_saaserpcampaignsprops",
+      "dashboard_src_components_saaserpcampaigns_visit"
+    ],
+    "28": [
+      "dashboard_src_components_saaserpcartera",
+      "dashboard_src_components_saaserpcartera_carteraprops",
+      "dashboard_src_components_saaserpcartera_installment",
+      "dashboard_src_components_saaserpcartera_invoice",
+      "dashboard_src_components_saaserpcartera_saaserpcartera"
     ],
     "29": [
       "dashboard_src_components_saaserpcashshifts",
@@ -608,139 +617,130 @@
       "dashboard_src_components_saaserpsuppliers_suppliersprops"
     ],
     "34": [
-      "src_services_scheduler",
-      "src_services_scheduler_checkandsendreminders",
-      "src_services_scheduler_delay",
-      "src_services_scheduler_formatcurrency",
-      "src_services_scheduler_startscheduler"
+      "dashboard_src_components_saaserpauditlogs",
+      "dashboard_src_components_saaserpauditlogs_auditlog",
+      "dashboard_src_components_saaserpauditlogs_saaserpauditlogs",
+      "dashboard_src_components_saaserpauditlogs_saaserpauditlogsprops"
     ],
     "35": [
-      "src_scratch_test_pre_recorded_voice",
-      "src_scratch_test_pre_recorded_voice_run",
-      "src_tools_enviaraudio",
-      "src_tools_enviaraudio_enviaraudiotool"
-    ],
-    "36": [
-      "src_utils_envvalidator",
-      "src_utils_envvalidator_required_vars",
-      "src_utils_envvalidator_validateenv",
-      "src_utils_envvalidator_warn_vars"
-    ],
-    "37": [
       "dashboard_package_devdependencies_types_node",
       "package_devdependencies_types_node",
       "package_json_types_node"
     ],
-    "38": [
+    "36": [
       "dashboard_tsconfig",
       "dashboard_tsconfig_files",
       "dashboard_tsconfig_references"
     ],
-    "39": [
+    "37": [
+      "scratch_seed_10_sales",
+      "scratch_seed_10_sales_pool",
+      "scratch_seed_10_sales_seed10sales"
+    ],
+    "38": [
       "src_scratch_check_db_users",
       "src_scratch_check_db_users_pool",
       "src_scratch_check_db_users_run"
     ],
-    "40": [
+    "39": [
       "src_scratch_migration_agent_contacts",
       "src_scratch_migration_agent_contacts_pool",
       "src_scratch_migration_agent_contacts_run"
     ],
-    "41": [
+    "40": [
       "src_scratch_seed_admin_user",
       "src_scratch_seed_admin_user_pool",
       "src_scratch_seed_admin_user_run"
     ],
-    "42": [
+    "41": [
       "src_scratch_test_list_models",
       "src_scratch_test_list_models_genai",
       "src_scratch_test_list_models_run"
     ],
-    "43": [
+    "42": [
       "src_scratch_update_client_auth",
       "src_scratch_update_client_auth_pool",
       "src_scratch_update_client_auth_run"
     ],
-    "44": [
+    "43": [
       "dashboard_package_devdependencies_tailwindcss_vite",
       "tailwindcss_vite"
     ],
-    "45": [
+    "44": [
       "src_scratch_install_docker",
       "src_scratch_install_docker_sh__entry"
     ],
-    "46": [
+    "45": [
       "src_scratch_setup_nginx",
       "src_scratch_setup_nginx_sh__entry"
     ],
-    "47": [
+    "46": [
       "src_scratch_setup_ssl",
       "src_scratch_setup_ssl_sh__entry"
     ],
-    "48": [
+    "47": [
       "src_scratch_setup_vps",
       "src_scratch_setup_vps_sh__entry"
     ],
-    "49": [
+    "48": [
       "src_scratch_test_puppeteer",
       "src_scratch_test_puppeteer_test"
     ],
-    "50": [
+    "49": [
       "dashboard_vite_config"
     ]
   },
   "cohesion": {
-    "0": 0.07040328092959672,
-    "1": 0.05263157894736842,
-    "2": 0.09879032258064516,
-    "3": 0.09425287356321839,
-    "4": 0.10837438423645321,
-    "5": 0.08923076923076922,
-    "6": 0.1,
-    "7": 0.08333333333333333,
-    "8": 0.1,
-    "9": 0.1736842105263158,
-    "10": 0.1830065359477124,
+    "0": 0.06288568909785483,
+    "1": 0.050580997949419004,
+    "2": 0.05263157894736842,
+    "3": 0.09879032258064516,
+    "4": 0.08333333333333333,
+    "5": 0.11904761904761904,
+    "6": 0.11578947368421053,
+    "7": 0.1,
+    "8": 0.1736842105263158,
+    "9": 0.16339869281045752,
+    "10": 0.11764705882352941,
     "11": 0.11764705882352941,
     "12": 0.11764705882352941,
-    "13": 0.11764705882352941,
-    "14": 0.2692307692307692,
-    "15": 0.16666666666666666,
-    "16": 0.2,
-    "17": 0.35555555555555557,
-    "18": 0.3333333333333333,
-    "19": 0.25,
-    "20": 0.2777777777777778,
-    "21": 0.25,
+    "13": 0.16666666666666666,
+    "14": 0.2,
+    "15": 0.21818181818181817,
+    "16": 0.35555555555555557,
+    "17": 0.3333333333333333,
+    "18": 0.2777777777777778,
+    "19": 0.3333333333333333,
+    "20": 0.3333333333333333,
+    "21": 0.4,
     "22": 0.3333333333333333,
     "23": 0.3333333333333333,
     "24": 0.3333333333333333,
     "25": 0.4,
-    "26": 0.3333333333333333,
-    "27": 0.3333333333333333,
+    "26": 0.4,
+    "27": 0.4,
     "28": 0.4,
     "29": 0.4,
     "30": 0.4,
     "31": 0.4,
     "32": 0.4,
     "33": 0.4,
-    "34": 0.7,
+    "34": 0.5,
     "35": 0.6666666666666666,
-    "36": 0.5,
+    "36": 0.6666666666666666,
     "37": 0.6666666666666666,
     "38": 0.6666666666666666,
     "39": 0.6666666666666666,
     "40": 0.6666666666666666,
     "41": 0.6666666666666666,
     "42": 0.6666666666666666,
-    "43": 0.6666666666666666,
+    "43": 1.0,
     "44": 1.0,
     "45": 1.0,
     "46": 1.0,
     "47": 1.0,
     "48": 1.0,
-    "49": 1.0,
-    "50": 1.0
+    "49": 1.0
   },
   "gods": [
     {
@@ -807,6 +807,17 @@
       "why": "connects across different repos/directories; peripheral node `runValidation()` unexpectedly reaches hub `initDatabase()`"
     },
     {
+      "source": "BankAccountsManager()",
+      "target": "authFetch()",
+      "source_files": [
+        "dashboard/src/components/SaaSErpStoreSettings.tsx",
+        "dashboard/src/utils/api.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities; peripheral node `BankAccountsManager()` unexpectedly reaches hub `authFetch()`"
+    },
+    {
       "source": "initializeWhatsAppClient()",
       "target": "routeIncomingMessage()",
       "source_files": [
@@ -829,22 +840,11 @@
       "why": "bridges separate communities"
     },
     {
-      "source": "server",
-      "target": "initDatabase()",
+      "source": "fetchDocumentsFromDrive()",
+      "target": "fetchLocalDocuments()",
       "source_files": [
-        "src/server.ts",
-        "src/database/initDb.ts"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "bridges separate communities"
-    },
-    {
-      "source": "initializeWhatsAppClient()",
-      "target": "uploadTenantFile()",
-      "source_files": [
-        "src/services/whatsapp.ts",
-        "src/services/storageService.ts"
+        "src/services/drive.ts",
+        "src/services/localKnowledge.ts"
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",

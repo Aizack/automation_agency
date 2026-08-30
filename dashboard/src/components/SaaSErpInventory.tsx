@@ -21,6 +21,7 @@ interface Product {
     color: string | null;
     promo_discount: string;
     category_id?: string | null;
+    product_type?: 'product' | 'service';
     created_at: string;
 }
 
@@ -205,6 +206,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
     const [style, setStyle] = useState('');
     const [color, setColor] = useState('');
     const [promoDiscount, setPromoDiscount] = useState<number | ''>('');
+    const [productType, setProductType] = useState<'product' | 'service'>('product');
     const [customAttrs, setCustomAttrs] = useState<any>({});
 
     // Search and filter states
@@ -360,7 +362,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
             sku: finalSku, 
             description, 
             price: price === '' ? 0 : price, 
-            stock: stock === '' ? 0 : stock,
+            stock: productType === 'service' ? 999999 : (stock === '' ? 0 : stock),
             min_stock: minStock === '' ? 5 : minStock,
             cost_price: costPrice === '' ? 0 : costPrice,
             brand: brand.trim() || null,
@@ -369,6 +371,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
             color: color || null,
             promo_discount: promoDiscount === '' ? 0 : promoDiscount,
             category_id: categoryId || null,
+            product_type: productType,
             attributes: customAttrs
         };
 
@@ -559,6 +562,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
         setColor(prod.color || '');
         setPromoDiscount(prod.promo_discount ? parseFloat(prod.promo_discount) : 0);
         setCategoryId(prod.category_id || '');
+        setProductType(prod.product_type === 'service' || (prod.stock && prod.stock >= 999999) ? 'service' : 'product');
         setCustomAttrs((prod as any).attributes || {});
         setAddProductStep('open');
         setHiddenFields(new Set());
@@ -579,6 +583,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
         setColor('');
         setPromoDiscount('');
         setCategoryId('');
+        setProductType('product');
         setCustomAttrs({});
         setHiddenFields(new Set());
         setAddProductStep('closed');
@@ -887,9 +892,45 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                     {isFormOpen && (
                         <div className="glass-card p-6 space-y-4">
                             <h3 className="text-sm font-semibold tracking-tight text-on-surface">
-                                {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+                                {editingProduct ? 'Editar Producto / Servicio' : 'Nuevo Producto / Servicio'}
                             </h3>
                             <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Tipo de Ítem *</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setProductType('product');
+                                                if (stock === 999999) setStock('');
+                                            }}
+                                            className={`py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition ${
+                                                productType === 'product'
+                                                    ? 'bg-primary border-primary text-on-primary shadow-md'
+                                                    : 'bg-surface-container border-outline/20 text-on-surface-variant hover:border-primary/50'
+                                            }`}
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+                                            Producto Físico (Con Stock)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setProductType('service');
+                                                setStock(999999);
+                                            }}
+                                            className={`py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition ${
+                                                productType === 'service'
+                                                    ? 'bg-primary border-primary text-on-primary shadow-md'
+                                                    : 'bg-surface-container border-outline/20 text-on-surface-variant hover:border-primary/50'
+                                            }`}
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">medical_services</span>
+                                            Servicio / Examen (Sin Stock)
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="flex flex-col gap-1.5">
                                         <label className="text-xs text-on-surface-variant font-medium">Nombre del Producto *</label>
@@ -1261,14 +1302,23 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                     </div>
                                     <div className="flex flex-col gap-1.5">
                                         <label className="text-xs text-on-surface-variant font-medium">Stock en Existencias *</label>
-                                        <input 
-                                            type="number"
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                            value={stock}
-                                            onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
-                                            onFocus={(e) => e.target.select()}
-                                            required
-                                        />
+                                        {productType === 'service' ? (
+                                            <input 
+                                                type="text"
+                                                className="bg-surface-container/50 border border-outline/10 rounded-xl p-3 text-sm text-purple-400 font-bold outline-none cursor-not-allowed"
+                                                value="N/A (Servicio Intangible / Infinito)"
+                                                disabled
+                                            />
+                                        ) : (
+                                            <input 
+                                                type="number"
+                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                value={stock}
+                                                onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
+                                                onFocus={(e) => e.target.select()}
+                                                required
+                                            />
+                                        )}
                                     </div>
                                     <div className="flex flex-col gap-1.5">
                                         <label className="text-xs text-on-surface-variant font-medium">Stock Mínimo (Alerta de Alarma) *</label>
@@ -1498,15 +1548,22 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, ca
                                                 className="p-4 cursor-pointer"
                                                 onClick={() => openEdit(prod)}
                                             >
-                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                                    prod.stock <= (prod.min_stock !== undefined ? prod.min_stock : 5)
-                                                        ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                                        : prod.stock <= (prod.min_stock !== undefined ? prod.min_stock : 5) * 2
-                                                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                                            : 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                                }`}>
-                                                    {prod.stock} uds
-                                                </span>
+                                                {prod.product_type === 'service' || prod.stock >= 999999 ? (
+                                                    <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1 w-fit">
+                                                        <span className="material-symbols-outlined text-[14px]">medical_services</span>
+                                                        Servicio (Infinito)
+                                                    </span>
+                                                ) : (
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                        prod.stock <= (prod.min_stock !== undefined ? prod.min_stock : 5)
+                                                            ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                                            : prod.stock <= (prod.min_stock !== undefined ? prod.min_stock : 5) * 2
+                                                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                                                : 'bg-green-500/10 text-green-400 border border-green-500/20'
+                                                    }`}>
+                                                        {prod.stock} uds
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="p-4 text-right">
                                                 <div className="flex justify-end gap-1.5">

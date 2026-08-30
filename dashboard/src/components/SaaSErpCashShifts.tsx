@@ -71,6 +71,13 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
 
   useEffect(() => {
     fetchData();
+    // Cargar por defecto la persona que entrega tomando los datos de la sesión actual
+    const storedEmpName = localStorage.getItem('employee_name') || localStorage.getItem('user_name') || '';
+    const storedEmpId = localStorage.getItem('employee_id') || '';
+    if (storedEmpName) {
+      setEmployeeOutName(storedEmpName);
+      setEmployeeOutId(storedEmpId);
+    }
   }, [clientId]);
 
   const handleCreateShiftHandover = async (e: React.FormEvent) => {

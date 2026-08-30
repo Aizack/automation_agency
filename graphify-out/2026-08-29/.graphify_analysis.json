@@ -829,22 +829,22 @@
       "why": "bridges separate communities"
     },
     {
-      "source": "initializeWhatsAppClient()",
-      "target": "uploadTenantFile()",
+      "source": "server",
+      "target": "initDatabase()",
       "source_files": [
-        "src/services/whatsapp.ts",
-        "src/services/storageService.ts"
+        "src/server.ts",
+        "src/database/initDb.ts"
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",
       "why": "bridges separate communities"
     },
     {
-      "source": "server",
-      "target": "startEscalationService()",
+      "source": "initializeWhatsAppClient()",
+      "target": "uploadTenantFile()",
       "source_files": [
-        "src/server.ts",
-        "src/services/escalation.ts"
+        "src/services/whatsapp.ts",
+        "src/services/storageService.ts"
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",
