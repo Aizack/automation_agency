@@ -120,9 +120,16 @@ function App() {
           const user = json.data;
           localStorage.setItem('session_role', user.role);
           localStorage.setItem('session_name', user.name || '');
-          
-          if (user.role === 'admin') {
-            const savedView = localStorage.getItem('current_view');
+
+          const savedView = localStorage.getItem('current_view');
+
+          if (savedView === 'employee') {
+            if (user.clientId) {
+              localStorage.setItem('current_client_id', user.clientId);
+              setClientId(user.clientId);
+            }
+            setView('employee');
+          } else if (user.role === 'admin') {
             const savedClientId = localStorage.getItem('current_client_id');
             if (savedView === 'client' && savedClientId) {
               setClientId(savedClientId);
@@ -140,12 +147,12 @@ function App() {
               setClientId(user.clientId);
             }
 
-            if (user.hasErpAccess) {
-              setView('client');
-              localStorage.setItem('current_view', 'client');
-            } else {
+            if (!user.hasErpAccess) {
               setView('employee');
               localStorage.setItem('current_view', 'employee');
+            } else {
+              setView('client');
+              localStorage.setItem('current_view', 'client');
             }
           } else {
             setClientId(user.id);

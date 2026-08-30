@@ -365,6 +365,7 @@ export const EmployeePortal: React.FC = () => {
         const storedShiftStart = localStorage.getItem('shift_start_ts');
 
         if (storedToken && storedEmpId && storedClientId) {
+            localStorage.setItem('current_view', 'employee');
             setEmployeeToken(storedToken);
             setEmployeeId(storedEmpId);
             setEmployeeName(storedName || 'Empleado');

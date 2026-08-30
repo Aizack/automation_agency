@@ -12,10 +12,10 @@
     "semantic_hash": "0649eb6aa485ca40777181f08fec66a9"
   },
   "dashboard/src/App.tsx": {
-    "mtime": 1787932546.8676522,
-    "seen": 1788044146.8912919,
-    "ast_hash": "e82032cbc04373cbcf0b7195c928d7a0",
-    "semantic_hash": "e82032cbc04373cbcf0b7195c928d7a0"
+    "mtime": 1788052621.897984,
+    "seen": 1788052703.958963,
+    "ast_hash": "0f80bfa690420136804f5bb2fca9d67d",
+    "semantic_hash": "0f80bfa690420136804f5bb2fca9d67d"
   },
   "dashboard/src/components/ActivateAccount.tsx": {
     "mtime": 1783918692.1604216,
@@ -36,16 +36,16 @@
     "semantic_hash": "f834bd66a9e6ce8d0cccebe56e8a1027"
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1788047396.1209004,
-    "seen": 1788047465.5333412,
-    "ast_hash": "aae030608c3e511ee47c04647486626d",
-    "semantic_hash": "aae030608c3e511ee47c04647486626d"
+    "mtime": 1788052677.264247,
+    "seen": 1788052703.9594486,
+    "ast_hash": "3a959feabda9d6fd9fd8d3ec969fb8cb",
+    "semantic_hash": "3a959feabda9d6fd9fd8d3ec969fb8cb"
   },
   "dashboard/src/components/EmployeePortal.tsx": {
-    "mtime": 1788051684.326097,
-    "seen": 1788052017.4387994,
-    "ast_hash": "d97e9c1599f1a17aff4f5aba14f10b52",
-    "semantic_hash": "d97e9c1599f1a17aff4f5aba14f10b52"
+    "mtime": 1788052629.8910203,
+    "seen": 1788052703.9594512,
+    "ast_hash": "2a9db1efa62f095e54eeccd160badded",
+    "semantic_hash": "2a9db1efa62f095e54eeccd160badded"
   },
   "dashboard/src/components/EnterprisePlanningModule.tsx": {
     "mtime": 1787879451.0838177,
@@ -642,10 +642,10 @@
     "semantic_hash": "60e1ddc0a47e722b44f729aac1bd0af9"
   },
   "shutdown_state.json": {
-    "mtime": 1788052004.329967,
-    "seen": 1788052017.4439967,
-    "ast_hash": "f53946e142f2c21e781230afeb7eb4cb",
-    "semantic_hash": "f53946e142f2c21e781230afeb7eb4cb"
+    "mtime": 1788052695.7410748,
+    "seen": 1788052703.9669447,
+    "ast_hash": "bcf75707076e21b774bbe195133cd3c9",
+    "semantic_hash": "bcf75707076e21b774bbe195133cd3c9"
   },
   "scratch/seed_10_sales.ts": {
     "mtime": 1788051961.6752393,

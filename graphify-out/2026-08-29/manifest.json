@@ -42,10 +42,10 @@
     "semantic_hash": "aae030608c3e511ee47c04647486626d"
   },
   "dashboard/src/components/EmployeePortal.tsx": {
-    "mtime": 1788051221.111253,
-    "seen": 1788051258.9599073,
-    "ast_hash": "272a708caac98a66267b25340c91b4ba",
-    "semantic_hash": "272a708caac98a66267b25340c91b4ba"
+    "mtime": 1788051684.326097,
+    "seen": 1788052017.4387994,
+    "ast_hash": "d97e9c1599f1a17aff4f5aba14f10b52",
+    "semantic_hash": "d97e9c1599f1a17aff4f5aba14f10b52"
   },
   "dashboard/src/components/EnterprisePlanningModule.tsx": {
     "mtime": 1787879451.0838177,
@@ -156,10 +156,10 @@
     "semantic_hash": "7fd47f49e6cefa52a583931498911266"
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
-    "mtime": 1787979190.2359393,
-    "seen": 1788044146.891321,
-    "ast_hash": "cb507bb16adf0aacdddb514c3b5f1136",
-    "semantic_hash": "cb507bb16adf0aacdddb514c3b5f1136"
+    "mtime": 1788051988.4090927,
+    "seen": 1788052017.4414263,
+    "ast_hash": "0a6fd82a67018090e010e9ca59b6bf22",
+    "semantic_hash": "0a6fd82a67018090e010e9ca59b6bf22"
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
     "mtime": 1788047325.1819274,
@@ -288,10 +288,10 @@
     "semantic_hash": "d78a1b3ba48df623a32fb0fb29e7757f"
   },
   "src/database/initDb.ts": {
-    "mtime": 1788050046.4464216,
-    "seen": 1788050074.0057259,
-    "ast_hash": "625a85ec5063ce93b58eb64b6aca2f99",
-    "semantic_hash": "625a85ec5063ce93b58eb64b6aca2f99"
+    "mtime": 1788051718.539034,
+    "seen": 1788052017.4445372,
+    "ast_hash": "6a4eefd3dca89cde02c702b6cfa27bbf",
+    "semantic_hash": "6a4eefd3dca89cde02c702b6cfa27bbf"
   },
   "src/database/postgres.ts": {
     "mtime": 1782956250.6177719,
@@ -474,10 +474,10 @@
     "semantic_hash": "b3024c4e4260cc821458cbe2a3a5d9e1"
   },
   "src/server.ts": {
-    "mtime": 1788050796.2523973,
-    "seen": 1788051258.973595,
-    "ast_hash": "125438467711796256c27979a614db64",
-    "semantic_hash": "125438467711796256c27979a614db64"
+    "mtime": 1788051736.8623476,
+    "seen": 1788052017.449078,
+    "ast_hash": "150d0487581fd757a04682bbad1ef44d",
+    "semantic_hash": "150d0487581fd757a04682bbad1ef44d"
   },
   "src/services/auditService.ts": {
     "mtime": 1787442071.6743526,
@@ -630,10 +630,10 @@
     "semantic_hash": "52add3bf42447472d11447a646a56a1e"
   },
   "dashboard/src/components/SaaSErpCashShifts.tsx": {
-    "mtime": 1788051166.1663184,
-    "seen": 1788051258.962465,
-    "ast_hash": "b2de70ee735b87dd58a4f086fbaf4590",
-    "semantic_hash": "b2de70ee735b87dd58a4f086fbaf4590"
+    "mtime": 1788051696.2928412,
+    "seen": 1788052017.4409544,
+    "ast_hash": "96fe554ffb54d83ea3a1e26e93793f17",
+    "semantic_hash": "96fe554ffb54d83ea3a1e26e93793f17"
   },
   "dashboard/src/components/SaaSErpSupportDocuments.tsx": {
     "mtime": 1788047443.0131733,
@@ -642,9 +642,15 @@
     "semantic_hash": "60e1ddc0a47e722b44f729aac1bd0af9"
   },
   "shutdown_state.json": {
-    "mtime": 1788051240.050112,
-    "seen": 1788051258.9668748,
-    "ast_hash": "211dc11efc7cc914140a1767f24c60d0",
-    "semantic_hash": "211dc11efc7cc914140a1767f24c60d0"
+    "mtime": 1788052004.329967,
+    "seen": 1788052017.4439967,
+    "ast_hash": "f53946e142f2c21e781230afeb7eb4cb",
+    "semantic_hash": "f53946e142f2c21e781230afeb7eb4cb"
+  },
+  "scratch/seed_10_sales.ts": {
+    "mtime": 1788051961.6752393,
+    "seen": 1788052017.4438562,
+    "ast_hash": "bb36a0f95df5fc8b473eb01bd6a9b6db",
+    "semantic_hash": "bb36a0f95df5fc8b473eb01bd6a9b6db"
   }
 }

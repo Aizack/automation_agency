@@ -805,7 +805,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
   // Determinar el estatus del canal de WhatsApp (normalizando a últimos 10 dígitos)
   const cleanPhone = (phone: string) => phone.replace(/\D/g, '').slice(-10);
   const isWaConnected = whatsappStatus.status === 'CONNECTED' && 
-    cleanPhone(whatsappStatus.phone) === cleanPhone(clientData.phoneNumber);
+    cleanPhone(whatsappStatus.phone) === cleanPhone(clientData?.phoneNumber || '');
+
+  const activeUserName = localStorage.getItem('session_name') || localStorage.getItem('emp_name') || localStorage.getItem('user_name') || clientData?.name || 'Usuario Activo';
+  const rawRole = localStorage.getItem('session_role') || localStorage.getItem('emp_role') || 'client';
+  const activeUserRole = rawRole === 'admin' ? 'Super Admin' : rawRole === 'employee' ? (localStorage.getItem('employee_role') || 'Colaborador') : 'Administrador de Tienda';
 
   return (
     <div className="flex min-h-screen bg-background text-on-surface transition-colors duration-200">
@@ -1153,14 +1157,26 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId, onBa
           </div>
         </nav>
 
-        {/* Back / Logout footer */}
-        <div className="border-t border-outline/10 pt-4 mt-auto">
+        {/* User Session Info & Back / Logout footer */}
+        <div className="border-t border-outline/10 pt-4 mt-auto space-y-3">
+          <div className="flex items-center gap-3 px-3 py-2.5 bg-surface-container-high/60 rounded-2xl border border-outline/10 shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-primary/20 text-primary font-black text-xs flex items-center justify-center border border-primary/30 shrink-0">
+              {activeUserName.substring(0, 1).toUpperCase()}
+            </div>
+            <div className="flex flex-col min-w-0 flex-1 text-left">
+              <span className="text-xs font-bold text-on-surface truncate leading-tight">{activeUserName}</span>
+              <span className="text-[10px] text-primary font-mono font-medium truncate uppercase tracking-wider">
+                {activeUserRole}
+              </span>
+            </div>
+          </div>
+
           <button 
             onClick={onBack}
-            className="w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans text-on-surface-variant hover:bg-surface-variant/40 bg-transparent transition-all"
+            className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border-0 cursor-pointer font-sans text-on-surface-variant hover:bg-surface-variant/40 bg-transparent transition-all"
           >
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-            <span className="font-bold text-xs">Regresar</span>
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+            <span className="font-bold text-xs">Cerrar Sesión</span>
           </button>
         </div>
       </aside>
