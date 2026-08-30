@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { authFetch as fetch } from '../utils/api';
 import JsBarcode from 'jsbarcode';
 import { printBarcodes, previewBarcodes, LABEL_PRINT_PROFILES, DEFAULT_LABEL_PRINT_SETTINGS, type LabelProfileId } from '../utils/barcodePrinter';
 
@@ -182,7 +183,10 @@ const PromoDiscountRow: React.FC<{
     );
 };
 
-export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId, category = 'optica' }) => {
+export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: rawClientId, category = 'optica' }) => {
+    const clientId = (rawClientId && rawClientId !== 'undefined')
+        ? rawClientId
+        : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [addProductStep, setAddProductStep] = useState<'closed' | 'open'>('closed');

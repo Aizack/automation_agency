@@ -766,13 +766,13 @@
       "degree": 32
     },
     {
-      "id": "dashboard_tsconfig_app_compileroptions",
-      "label": "compilerOptions",
+      "id": "dashboard_src_utils_api_authfetch",
+      "label": "authFetch()",
       "degree": 18
     },
     {
-      "id": "dashboard_src_utils_api_authfetch",
-      "label": "authFetch()",
+      "id": "dashboard_tsconfig_app_compileroptions",
+      "label": "compilerOptions",
       "degree": 18
     },
     {

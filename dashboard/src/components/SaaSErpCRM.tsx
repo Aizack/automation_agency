@@ -30,7 +30,10 @@ interface SaaSErpCRMProps {
     category?: string;
 }
 
-export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId, category = 'optica' }) => {
+export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, category = 'optica' }) => {
+    const clientId = (rawClientId && rawClientId !== 'undefined')
+        ? rawClientId
+        : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(true);

@@ -18,18 +18,5 @@ export const authFetch = async (input: RequestInfo | URL, init?: RequestInit): P
     headers
   });
 
-  // Si el servidor responde con 401 (No autorizado) o 403 (Token expirado),
-  // limpiamos la sesión local y redirigimos al login recargando la página.
-  if (response.status === 401 || response.status === 403) {
-    console.warn("[API Auth] Sesión inválida o expirada detectada por el servidor.");
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('session_role');
-    
-    // Si no estamos en la página principal, recargar para disparar el flujo de login
-    if (window.location.pathname !== '/' || window.location.search !== '') {
-      window.location.href = '/';
-    }
-  }
-
   return response;
 };

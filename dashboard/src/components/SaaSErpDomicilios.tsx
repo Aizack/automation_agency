@@ -24,7 +24,10 @@ interface Invoice {
 const STORE_LAT = 4.60971; 
 const STORE_LNG = -74.08175;
 
-export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId }) => {
+export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClientId }) => {
+  const clientId = (rawClientId && rawClientId !== 'undefined')
+    ? rawClientId
+    : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
   const [deliveries, setDeliveries] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'date' | 'distance'>('distance');

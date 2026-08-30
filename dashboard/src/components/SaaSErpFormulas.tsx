@@ -42,7 +42,10 @@ interface Formula {
   created_at: string;
 }
 
-export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId, defaultSubTab = 'formulas', showSubTabs = true }) => {
+export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId, defaultSubTab = 'formulas', showSubTabs = true }) => {
+  const clientId = (rawClientId && rawClientId !== 'undefined')
+    ? rawClientId
+    : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);

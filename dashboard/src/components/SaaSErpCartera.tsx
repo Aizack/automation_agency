@@ -30,7 +30,10 @@ interface Installment {
   paid_at: string | null;
 }
 
-export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId }) => {
+export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }) => {
+  const clientId = (rawClientId && rawClientId !== 'undefined')
+    ? rawClientId
+    : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);

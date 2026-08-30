@@ -64,7 +64,10 @@ const MODULES = [
     { key: 'marketing', label: '📢 Difusión Promocional' },
 ] as const;
 
-export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId, viewMode }) => {
+export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: rawClientId, viewMode }) => {
+    const clientId = (rawClientId && rawClientId !== 'undefined')
+        ? rawClientId
+        : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [workRoles, setWorkRoles] = useState<string[]>(['agent', 'sales', 'delivery', 'admin']);
