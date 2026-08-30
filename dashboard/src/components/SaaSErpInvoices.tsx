@@ -63,7 +63,10 @@ interface SaaSErpInvoicesProps {
     clientId: string;
 }
 
-export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) => {
+export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawClientId }) => {
+    const clientId = (rawClientId && rawClientId !== 'undefined')
+        ? rawClientId
+        : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
@@ -386,19 +389,6 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
         const base = item.price * item.quantity;
         const disc = base * ((item.discountPercentage || 0) / 100);
         return base - disc;
-    };
-
-    const getFilteredProductsForItem = (item: InvoiceItemInput) => {
-        const term = (item.productSearch || '').trim().toLowerCase();
-
-        return products.filter((product) => {
-            if (!term) return false;
-
-            return (
-                product.name.toLowerCase().includes(term) ||
-                (product.sku || '').toLowerCase().includes(term)
-            );
-        });
     };
 
     const subtotalItems = selectedItems.reduce((acc, curr) => acc + getItemSubtotal(curr), 0);
@@ -1399,9 +1389,6 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                             </div>
 
                             {selectedItems.map((item, index) => {
-                                const filteredProducts = getFilteredProductsForItem(item);
-                                const shouldShowProductDropdown = !item.productId && item.productSearch.trim() !== '' && filteredProducts.length > 0;
-
                                 return (
                                     <div key={index} className="bg-surface-container/40 p-4 rounded-xl border border-outline/10 space-y-3">
                                         <div className="grid grid-cols-1 md:grid-cols-[1.2fr_2.2fr_0.7fr_1.2fr_0.7fr_44px] gap-3 items-end">
@@ -1416,53 +1403,43 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId }) =>
                                             </div>
 
                                             <div className="flex flex-col gap-1 relative">
-                                                <label className="text-[10px] text-on-surface-variant font-bold">Nombre del Artículo</label>
-                                                <input
-                                                    type="text"
-                                                    value={item.productSearch || (item.productId ? products.find(p => p.id === item.productId)?.name || '' : '')}
+                                                <label className="text-[10px] text-on-surface-variant font-bold">Seleccionar Artículo del Inventario</label>
+                                                <select
+                                                    value={item.productId || ''}
                                                     onChange={(e) => {
-                                                        handleItemChange(index, 'productSearch', e.target.value);
-                                                        if (!e.target.value.trim()) {
+                                                        const selectedId = e.target.value;
+                                                        if (!selectedId) {
                                                             handleItemChange(index, 'productId', '');
-                                                        }
-                                                    }}
-                                                    onFocus={() => {
-                                                        if (item.categoryId && !item.productId) {
+                                                            handleItemChange(index, 'productName', '');
                                                             handleItemChange(index, 'productSearch', '');
+                                                            return;
+                                                        }
+                                                        const p = products.find(prod => prod.id === selectedId);
+                                                        if (p) {
+                                                            setSelectedItems((prev) => {
+                                                                const copy = [...prev];
+                                                                copy[index] = {
+                                                                    ...copy[index],
+                                                                    productId: p.id,
+                                                                    productName: p.name,
+                                                                    productSearch: p.name,
+                                                                    categoryId: p.category_id || copy[index].categoryId,
+                                                                    price: Number(p.price),
+                                                                    discountPercentage: Number(p.promo_discount || 0)
+                                                                };
+                                                                return copy;
+                                                            });
                                                         }
                                                     }}
-                                                    placeholder="Buscar por nombre o SKU..."
-                                                    className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs focus:border-primary text-on-surface outline-none h-10"
-                                                />
-
-                                                {shouldShowProductDropdown && (
-                                                    <div className="absolute left-0 right-0 top-[72px] z-20 bg-surface-container border border-outline/20 rounded-xl shadow-xl max-h-52 overflow-y-auto divide-y divide-outline/5">
-                                                        {filteredProducts.slice(0, 8).map(p => (
-                                                            <button
-                                                                key={p.id}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedItems((prev) => {
-                                                                        const copy = [...prev];
-                                                                        copy[index] = {
-                                                                            ...copy[index],
-                                                                            productId: p.id,
-                                                                            productName: p.name,
-                                                                            productSearch: p.name,
-                                                                            categoryId: p.category_id || copy[index].categoryId,
-                                                                            price: Number(p.price),
-                                                                            discountPercentage: Number(p.promo_discount || 0)
-                                                                        };
-                                                                        return copy;
-                                                                    });
-                                                                }}
-                                                                className="w-full text-left p-2.5 hover:bg-primary/10 text-xs text-on-surface transition-colors cursor-pointer border-0 bg-transparent"
-                                                            >
-                                                                {p.name} {p.sku ? `[${p.sku}]` : ''} (Stock: {p.stock} uds) - {formatPrice(p.price)}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
+                                                    className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs focus:border-primary text-on-surface outline-none h-10 w-full font-medium cursor-pointer"
+                                                >
+                                                    <option value="">-- Seleccionar del Inventario ({products.length} disponibles) --</option>
+                                                    {products.map((p) => (
+                                                        <option key={p.id} value={p.id}>
+                                                            {p.name} {p.sku ? `[${p.sku}]` : ''} - ${Number(p.price).toLocaleString('es-CO')}
+                                                        </option>
+                                                    ))}
+                                                </select>
                                             </div>
 
                                             <div className="flex flex-col gap-1">
