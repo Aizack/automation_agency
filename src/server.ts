@@ -7710,6 +7710,10 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           target_suggested_ticket: Math.round(avgTicket > 0 ? avgTicket * 1.2 : 32000)
         }
       });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
   // --- SAAS ERP: ARQUEO Y RELEVO DE CAJA (TURNOS DE EMPLEADOS) ---
   app.get('/api/clients/:clientId/cash-shifts', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
