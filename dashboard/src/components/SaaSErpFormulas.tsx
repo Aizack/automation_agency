@@ -50,10 +50,34 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId, defaultSubT
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Subpestañas
-  const [formulasSubTab, setFormulasSubTab] = useState<'formulas' | 'lab_jobs'>(defaultSubTab);
+  const [formulasSubTab, setFormulasSubTab] = useState<'formulas' | 'lab_jobs' | 'historia_clinica'>(defaultSubTab);
   const [labJobs, setLabJobs] = useState<any[]>([]);
   const [loadingLabJobs, setLoadingLabJobs] = useState(false);
   const [laboratories, setLaboratories] = useState<any[]>([]);
+  
+  // Historia Clínica
+  const [clinicalRecords, setClinicalRecords] = useState<any[]>([]);
+  const [loadingClinical, setLoadingClinical] = useState(false);
+  const [isClinicalFormOpen, setIsClinicalFormOpen] = useState(false);
+  const [clinicalSearch, setClinicalSearch] = useState('');
+
+  // Campos de Ficha Médica
+  const [clinPatientName, setClinPatientName] = useState('');
+  const [clinPatientDoc, setClinPatientDoc] = useState('');
+  const [clinPatientPhone, setClinPatientPhone] = useState('');
+  const [clinReason, setClinReason] = useState('');
+  const [clinMedAntecedents, setClinMedAntecedents] = useState('');
+  const [clinOcuAntecedents, setClinOcuAntecedents] = useState('');
+  const [clinAvOd, setClinAvOd] = useState('20/20');
+  const [clinAvOi, setClinAvOi] = useState('20/20');
+  const [clinRefrOd, setClinRefrOd] = useState('');
+  const [clinRefrOi, setClinRefrOi] = useState('');
+  const [clinTonoOd, setClinTonoOd] = useState('14 mmHg');
+  const [clinTonoOi, setClinTonoOi] = useState('14 mmHg');
+  const [clinOphthalNotes, setClinOphthalNotes] = useState('');
+  const [clinDiagnosis, setClinDiagnosis] = useState('');
+  const [clinTreatmentPlan, setClinTreatmentPlan] = useState('');
+  const [clinOptometrist, setClinOptometrist] = useState('Dr. Optómetra Especialista');
   
   // Asignación de laboratorios
   const [assigningJob, setAssigningJob] = useState<any | null>(null);
@@ -609,6 +633,537 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId, defaultSubT
     );
   };
 
+  // Cargar Historias Clínicas
+  const fetchClinicalRecords = async () => {
+    try {
+      setLoadingClinical(true);
+      const res = await fetch(`/api/clients/${clientId}/clinical-records${clinicalSearch ? `?search=${encodeURIComponent(clinicalSearch)}` : ''}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setClinicalRecords(data.records || []);
+      }
+    } catch (err) {
+      console.error("Error al cargar historias clínicas:", err);
+    } finally {
+      setLoadingClinical(false);
+    }
+  };
+
+  useEffect(() => {
+    if (formulasSubTab === 'historia_clinica') {
+      fetchClinicalRecords();
+    }
+  }, [formulasSubTab, clinicalSearch]);
+
+  const handleCreateClinicalRecord = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clinPatientName) {
+      alert("Por favor ingresa el nombre del paciente.");
+      return;
+    }
+
+    try {
+      setLoadingClinical(true);
+      const res = await fetch(`/api/clients/${clientId}/clinical-records`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          customerId: selectedCustomer?.id || null,
+          customerName: clinPatientName,
+          customerDocument: clinPatientDoc,
+          customerPhone: clinPatientPhone,
+          consultationReason: clinReason,
+          medicalAntecedents: clinMedAntecedents,
+          ocularAntecedents: clinOcuAntecedents,
+          visualAcuityOd: clinAvOd,
+          visualAcuityOi: clinAvOi,
+          refractionOd: clinRefrOd,
+          refractionOi: clinRefrOi,
+          tonometryOd: clinTonoOd,
+          tonometryOi: clinTonoOi,
+          ophthalmoscopyNotes: clinOphthalNotes,
+          diagnosis: clinDiagnosis,
+          treatmentPlan: clinTreatmentPlan,
+          optometristName: clinOptometrist
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert("✅ Historia clínica guardada con éxito.");
+        setIsClinicalFormOpen(false);
+        setClinReason('');
+        setClinMedAntecedents('');
+        setClinOcuAntecedents('');
+        setClinRefrOd('');
+        setClinRefrOi('');
+        setClinDiagnosis('');
+        setClinTreatmentPlan('');
+        fetchClinicalRecords();
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (err) {
+      alert("Error al guardar la historia clínica.");
+    } finally {
+      setLoadingClinical(false);
+    }
+  };
+
+  const handleDeleteClinicalRecord = async (id: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar esta historia clínica?")) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/clinical-records/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchClinicalRecords();
+      }
+    } catch (err) {
+      alert("Error al eliminar la historia clínica.");
+    }
+  };
+
+  const handlePrintClinicalRecord = (record: any) => {
+    const printWin = window.open('', '_blank', 'width=800,height=900');
+    if (!printWin) return;
+
+    printWin.document.write(`
+      <html>
+        <head>
+          <title>Historia Clínica Optométrica - ${record.customer_name}</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 30px; color: #111; font-size: 13px; line-height: 1.5; }
+            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+            .title { font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+            .section-title { font-size: 13px; font-weight: bold; background: #eee; padding: 6px 10px; border-left: 4px solid #333; margin-top: 15px; margin-bottom: 10px; text-transform: uppercase; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            .field { margin-bottom: 8px; }
+            .label { font-weight: bold; color: #555; }
+            .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            .table th, .table td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+            .table th { background: #f5f5f5; }
+            .footer { margin-top: 50px; text-align: center; border-t: 1px solid #ccc; pt: 20px; }
+            .signature { margin-top: 60px; display: inline-block; border-top: 1px solid #000; width: 250px; padding-top: 5px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="title">Historia Clínica Optométrica</div>
+            <div>Fecha de Examen: ${new Date(record.created_at).toLocaleDateString('es-CO')} ${new Date(record.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</div>
+          </div>
+
+          <div class="section-title">1. Datos del Paciente</div>
+          <div class="grid">
+            <div class="field"><span class="label">Paciente:</span> ${record.customer_name}</div>
+            <div class="field"><span class="label">Cédula:</span> ${record.customer_document || 'N/A'}</div>
+            <div class="field"><span class="label">Teléfono:</span> ${record.customer_phone || 'N/A'}</div>
+            <div class="field"><span class="label">Optómetra:</span> ${record.optometrist_name || 'Atención General'}</div>
+          </div>
+
+          <div class="section-title">2. Anamnesis y Antecedentes</div>
+          <div class="field"><span class="label">Motivo de Consulta:</span> ${record.consultation_reason || 'Control visual de rutina'}</div>
+          <div class="grid" style="margin-top:8px;">
+            <div class="field"><span class="label">Antecedentes Médicos:</span> ${record.medical_antecedents || 'Ninguno reportado'}</div>
+            <div class="field"><span class="label">Antecedentes Oculares:</span> ${record.ocular_antecedents || 'Ninguno reportado'}</div>
+          </div>
+
+          <div class="section-title">3. Examen Clínico Ocular</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Ojo</th>
+                <th>Agudeza Visual (AV)</th>
+                <th>Refracción Prescrita</th>
+                <th>Tonometría (PIO)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>OD (Ojo Derecho)</strong></td>
+                <td>${record.visual_acuity_od || '20/20'}</td>
+                <td>${record.refraction_od || 'Plano'}</td>
+                <td>${record.tonometry_od || '14 mmHg'}</td>
+              </tr>
+              <tr>
+                <td><strong>OI (Ojo Izquierdo)</strong></td>
+                <td>${record.visual_acuity_oi || '20/20'}</td>
+                <td>${record.refraction_oi || 'Plano'}</td>
+                <td>${record.tonometry_oi || '14 mmHg'}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          ${record.ophthalmoscopy_notes ? `
+            <div style="margin-top:10px;" class="field">
+              <span class="label">Oftalmoscopía / Biomicroscopía:</span> ${record.ophthalmoscopy_notes}
+            </div>
+          ` : ''}
+
+          <div class="section-title">4. Diagnóstico y Plan de Manejo</div>
+          <div class="field"><span class="label">Diagnóstico Clínico:</span> ${record.diagnosis || 'Vicio de refracción general'}</div>
+          <div class="field" style="margin-top:8px;"><span class="label">Plan de Tratamiento / Conducta:</span> ${record.treatment_plan || 'Uso permanente de corrección óptica con filtro azul anti-reflejo.'}</div>
+
+          <div class="footer">
+            <div class="signature">
+              ${record.optometrist_name || 'Optómetra Tratante'}<br>
+              <span style="font-size:10px; font-weight:normal; color:#666;">Firma y Registro Profesional</span>
+            </div>
+          </div>
+          <script>window.print();</script>
+        </body>
+      </html>
+    `);
+    printWin.document.close();
+  };
+
+  const renderClinicalHistoryTab = () => {
+    return (
+      <div className="space-y-6 text-left">
+        {/* Subheader */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-outline/10 pb-4">
+          <div>
+            <h3 className="font-bold text-lg text-on-surface flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">clinical_notes</span>
+              Historias Clínicas & Expediente del Paciente
+            </h3>
+            <p className="text-xs text-on-surface-variant opacity-75">
+              Consulta y registra el expediente médico optométrico completo (Anamnesis, Antecedentes, Tonometría y Plan de Manejo).
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+              <input
+                type="text"
+                placeholder="Buscar paciente por cédula o nombre..."
+                value={clinicalSearch}
+                onChange={(e) => setClinicalSearch(e.target.value)}
+                className="w-full bg-surface-container border border-outline/20 rounded-xl pl-9 pr-3 py-2 text-xs text-on-surface outline-none focus:border-primary"
+              />
+            </div>
+            <button
+              onClick={() => {
+                if (selectedCustomer) {
+                  setClinPatientName(`${selectedCustomer.name} ${selectedCustomer.last_name || ''}`.trim());
+                  setClinPatientDoc(selectedCustomer.document_number || '');
+                  setClinPatientPhone(selectedCustomer.phone || '');
+                }
+                setIsClinicalFormOpen(true);
+              }}
+              className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl shadow hover:opacity-90 transition flex items-center gap-1.5 shrink-0 border-0 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              Nueva Historia Clínica
+            </button>
+          </div>
+        </div>
+
+        {/* Tabla de Historias Clínicas */}
+        {loadingClinical ? (
+          <div className="flex justify-center py-16">
+            <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : clinicalRecords.length === 0 ? (
+          <div className="glass-card p-12 text-center space-y-3">
+            <span className="material-symbols-outlined text-on-surface-variant text-[48px] opacity-40">medical_services</span>
+            <p className="text-sm text-on-surface-variant">No hay historias clínicas registradas aún.</p>
+            <p className="text-xs text-on-surface-variant opacity-60 max-w-md mx-auto">
+              Registra los datos de consulta, tonometría, agudeza visual y diagnósticos para construir el expediente médico digital del paciente.
+            </p>
+          </div>
+        ) : (
+          <div className="glass-card overflow-hidden">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-surface-container/50 border-b border-outline/10 text-xs text-on-surface-variant uppercase font-semibold">
+                  <th className="p-4">Fecha Examen</th>
+                  <th className="p-4">Paciente / Documento</th>
+                  <th className="p-4">Motivo Consulta</th>
+                  <th className="p-4">Agudeza Visual (OD/OI)</th>
+                  <th className="p-4">Diagnóstico</th>
+                  <th className="p-4">Optómetra</th>
+                  <th className="p-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline/10 text-sm">
+                {clinicalRecords.map((rec) => (
+                  <tr key={rec.id} className="hover:bg-surface-container/40 transition">
+                    <td className="p-4 font-mono text-xs text-on-surface-variant">
+                      {new Date(rec.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td className="p-4">
+                      <p className="font-bold text-on-surface text-xs">{rec.customer_name}</p>
+                      <p className="text-[10px] text-on-surface-variant font-mono">C.C. {rec.customer_document || 'N/A'}</p>
+                    </td>
+                    <td className="p-4 text-xs text-on-surface-variant truncate max-w-xs">{rec.consultation_reason || 'Control visual'}</td>
+                    <td className="p-4 font-mono text-xs">OD: {rec.visual_acuity_od || '20/20'} | OI: {rec.visual_acuity_oi || '20/20'}</td>
+                    <td className="p-4 text-xs font-bold text-primary truncate max-w-xs">{rec.diagnosis || 'Refracción'}</td>
+                    <td className="p-4 text-xs text-on-surface-variant">{rec.optometrist_name || 'Optómetra'}</td>
+                    <td className="p-4 text-right flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handlePrintClinicalRecord(rec)}
+                        className="px-2.5 py-1.5 bg-primary/20 text-primary font-bold text-xs rounded-lg hover:bg-primary/30 transition border border-primary/30 cursor-pointer flex items-center gap-1"
+                        title="Imprimir Historia Clínica"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">print</span>
+                        Imprimir
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClinicalRecord(rec.id)}
+                        className="px-2 py-1.5 bg-red-500/10 text-red-400 font-bold text-xs rounded-lg hover:bg-red-500/20 transition border border-red-500/20 cursor-pointer"
+                        title="Eliminar registro"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Modal Nueva Historia Clínica */}
+        {isClinicalFormOpen && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
+            <div className="bg-surface border border-outline/20 p-6 rounded-3xl w-full max-w-2xl shadow-2xl space-y-4 max-h-[88vh] overflow-y-auto custom-scrollbar my-auto text-left">
+              <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+                <h3 className="font-bold text-sm text-on-surface flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">post_add</span>
+                  Nueva Historia Clínica Optométrica
+                </h3>
+                <button onClick={() => setIsClinicalFormOpen(false)} className="text-on-surface-variant hover:text-on-surface bg-transparent border-0 cursor-pointer">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateClinicalRecord} className="space-y-4 text-xs">
+                {/* 1. Datos del Paciente */}
+                <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-xs text-primary uppercase tracking-wider">1. Información del Paciente</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Nombre del Paciente *</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Juan Pérez"
+                        value={clinPatientName}
+                        onChange={(e) => setClinPatientName(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Cédula / Documento</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: 1098234567"
+                        value={clinPatientDoc}
+                        onChange={(e) => setClinPatientDoc(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Celular</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: 3001234567"
+                        value={clinPatientPhone}
+                        onChange={(e) => setClinPatientPhone(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Anamnesis y Antecedentes */}
+                <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-xs text-primary uppercase tracking-wider">2. Anamnesis & Antecedentes</h4>
+                  <div className="space-y-1">
+                    <label className="font-bold text-on-surface-variant">Motivo de Consulta</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Visión borrosa de lejos / Cansancio ocular..."
+                      value={clinReason}
+                      onChange={(e) => setClinReason(e.target.value)}
+                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Antecedentes Médicos (Diabetes, HT, Alergias)</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Hipertensión en tratamiento..."
+                        value={clinMedAntecedents}
+                        onChange={(e) => setClinMedAntecedents(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Antecedentes Oculares (Cirugías, Glaucoma)</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Cirugía Láser en 2020..."
+                        value={clinOcuAntecedents}
+                        onChange={(e) => setClinOcuAntecedents(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Examen Físico Ocular */}
+                <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-xs text-primary uppercase tracking-wider">3. Examen Clínico (Agudeza Visual & Tonometría)</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant text-[10px]">AV OD</label>
+                      <input
+                        type="text"
+                        placeholder="20/20"
+                        value={clinAvOd}
+                        onChange={(e) => setClinAvOd(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant text-[10px]">AV OI</label>
+                      <input
+                        type="text"
+                        placeholder="20/20"
+                        value={clinAvOi}
+                        onChange={(e) => setClinAvOi(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant text-[10px]">Tonometría OD (PIO)</label>
+                      <input
+                        type="text"
+                        placeholder="14 mmHg"
+                        value={clinTonoOd}
+                        onChange={(e) => setClinTonoOd(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant text-[10px]">Tonometría OI (PIO)</label>
+                      <input
+                        type="text"
+                        placeholder="14 mmHg"
+                        value={clinTonoOi}
+                        onChange={(e) => setClinTonoOi(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Refracción Prescrita OD</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: -1.50 -0.50 x 180°"
+                        value={clinRefrOd}
+                        onChange={(e) => setClinRefrOd(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Refracción Prescrita OI</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: -1.25 -0.75 x 175°"
+                        value={clinRefrOi}
+                        onChange={(e) => setClinRefrOi(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-on-surface-variant">Oftalmoscopía / Biomicroscopía (Fondo de ojo, cristalino)</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Medios transparentes, papila de bordes nítidos..."
+                      value={clinOphthalNotes}
+                      onChange={(e) => setClinOphthalNotes(e.target.value)}
+                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                {/* 4. Diagnóstico y Tratamiento */}
+                <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-3">
+                  <h4 className="font-bold text-xs text-primary uppercase tracking-wider">4. Diagnóstico & Conducta</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Diagnóstico Clínico *</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Astigmatismo Miópico Compuesto"
+                        value={clinDiagnosis}
+                        onChange={(e) => setClinDiagnosis(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-bold"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Optómetra Tratante</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Dr. Fernando Gómez"
+                        value={clinOptometrist}
+                        onChange={(e) => setClinOptometrist(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-bold text-on-surface-variant">Plan de Manejo / Recomendaciones</label>
+                    <textarea
+                      placeholder="Ej: Lentes progresivos digital con filtro luz azul y antirreflejo verde. Control en 1 año..."
+                      value={clinTreatmentPlan}
+                      onChange={(e) => setClinTreatmentPlan(e.target.value)}
+                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary h-16 resize-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-outline/10">
+                  <button
+                    type="button"
+                    onClick={() => setIsClinicalFormOpen(false)}
+                    className="px-4 py-2 border border-outline/20 rounded-xl text-on-surface text-xs hover:bg-surface-container cursor-pointer bg-transparent"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-primary text-on-primary font-bold rounded-xl text-xs hover:opacity-90 transition cursor-pointer border-0 flex items-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">save</span>
+                    Guardar Historia Clínica
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderFormulaForm = () => {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -862,6 +1417,10 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId, defaultSubT
             Optometría y Diagnósticos
             {formulasSubTab === 'formulas' && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />}
           </button>
+          <button onClick={() => { setFormulasSubTab('historia_clinica'); fetchClinicalRecords(); }} className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${formulasSubTab === 'historia_clinica' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'}`}>
+            Historia Clínica
+            {formulasSubTab === 'historia_clinica' && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />}
+          </button>
           <button onClick={() => { setFormulasSubTab('lab_jobs'); fetchLabJobs(); }} className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${formulasSubTab === 'lab_jobs' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'}`}>
             Trabajos de laboratorio
             {formulasSubTab === 'lab_jobs' && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />}
@@ -869,7 +1428,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId, defaultSubT
         </div>
       )}
 
-      {formulasSubTab === 'lab_jobs' ? renderLabJobsTab() : renderFormulaForm()}
+      {formulasSubTab === 'lab_jobs' ? renderLabJobsTab() : formulasSubTab === 'historia_clinica' ? renderClinicalHistoryTab() : renderFormulaForm()}
     </div>
   );
 };

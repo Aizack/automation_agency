@@ -91,7 +91,8 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
           employeeInName,
           initialCash: parseFloat(initialCash) || 0,
           reportedCashInDrawer: parseFloat(reportedCashInDrawer) || 0,
-          notes
+          notes,
+          pcTimestamp: new Date().toISOString()
         })
       });
 

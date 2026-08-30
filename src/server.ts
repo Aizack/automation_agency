@@ -7742,12 +7742,18 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         employeeInName, 
         initialCash, 
         reportedCashInDrawer, 
-        notes 
+        notes,
+        pcTimestamp
       } = req.body;
 
       if (!employeeOutName || !employeeInName) {
         return res.status(400).json({ success: false, error: 'Debe especificar el empleado saliente y el empleado entrante.' });
       }
+
+      // Validar y contrastar timestamp de fecha/hora del PC con la del Servidor (Internet)
+      const pcTime = pcTimestamp ? new Date(pcTimestamp) : new Date();
+      const serverTime = new Date();
+      const clockDriftSeconds = isNaN(pcTime.getTime()) ? 0 : Math.round(Math.abs(serverTime.getTime() - pcTime.getTime()) / 1000);
 
       // Calcular ventas del día en efectivo, tarjeta y transferencia
       const salesQuery = await pool.query(
@@ -7756,7 +7762,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
            COALESCE(SUM(total_amount), 0)::numeric as total
          FROM invoices
          WHERE client_id = $1 AND DATE(created_at) = CURRENT_DATE AND status != 'cancelled'
-         GROUP BY LOWER(payment_method)`,
+         GROUP BY LOWER(COALESCE(payment_method, 'efectivo'))`,
         [clientId]
       );
 
@@ -7781,9 +7787,9 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         `INSERT INTO cash_shifts (
            client_id, employee_out_id, employee_out_name, employee_in_id, employee_in_name,
            initial_cash, total_cash_sales, total_card_sales, total_transfer_sales, total_sales,
-           reported_cash_in_drawer, cash_difference, status, notes
+           reported_cash_in_drawer, cash_difference, status, notes, client_timestamp, server_timestamp, clock_drift_seconds
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending_confirmation', $13)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending_confirmation', $13, $14, $15, $16)
          RETURNING *`,
         [
           clientId,
@@ -7798,11 +7804,118 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           totalSales,
           reportedCash,
           cashDiff,
-          notes || ''
+          notes || '',
+          pcTime,
+          serverTime,
+          clockDriftSeconds
         ]
       );
 
-      res.json({ success: true, shift: insertResult.rows[0] });
+      res.json({ 
+        success: true, 
+        shift: insertResult.rows[0],
+        clockDriftWarning: clockDriftSeconds > 300 ? `Advertencia: La hora del equipo local difiere por ${clockDriftSeconds} segundos de la hora oficial del servidor.` : null
+      });
+    } catch (err: any) {
+      console.error("[Cash Shift Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- ENDPOINTS HISTORIA CLÍNICA DE PACIENTES (OPTOMETRÍA / SALUD) ---
+  app.get('/api/clients/:clientId/clinical-records', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { customerId, search } = req.query;
+
+      let query = `SELECT * FROM patient_clinical_records WHERE client_id = $1`;
+      const params: any[] = [clientId];
+
+      if (customerId) {
+        params.push(customerId);
+        query += ` AND customer_id = $${params.length}`;
+      } else if (search) {
+        params.push(`%${search}%`);
+        query += ` AND (LOWER(customer_name) LIKE $${params.length} OR customer_document LIKE $${params.length} OR customer_phone LIKE $${params.length})`;
+      }
+
+      query += ` ORDER BY created_at DESC LIMIT 100`;
+
+      const result = await pool.query(query, params);
+      res.json({ success: true, records: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.post('/api/clients/:clientId/clinical-records', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const {
+        customerId,
+        customerName,
+        customerDocument,
+        customerPhone,
+        consultationReason,
+        medicalAntecedents,
+        ocularAntecedents,
+        visualAcuityOd,
+        visualAcuityOi,
+        refractionOd,
+        refractionOi,
+        tonometryOd,
+        tonometryOi,
+        ophthalmoscopyNotes,
+        diagnosis,
+        treatmentPlan,
+        optometristName
+      } = req.body;
+
+      if (!customerName) {
+        return res.status(400).json({ success: false, error: 'El nombre del paciente es obligatorio.' });
+      }
+
+      const result = await pool.query(
+        `INSERT INTO patient_clinical_records (
+           client_id, customer_id, customer_name, customer_document, customer_phone,
+           consultation_reason, medical_antecedents, ocular_antecedents,
+           visual_acuity_od, visual_acuity_oi, refraction_od, refraction_oi,
+           tonometry_od, tonometry_oi, ophthalmoscopy_notes, diagnosis, treatment_plan, optometrist_name
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+         RETURNING *`,
+        [
+          clientId,
+          customerId || null,
+          customerName,
+          customerDocument || '',
+          customerPhone || '',
+          consultationReason || '',
+          medicalAntecedents || '',
+          ocularAntecedents || '',
+          visualAcuityOd || '',
+          visualAcuityOi || '',
+          refractionOd || '',
+          refractionOi || '',
+          tonometryOd || '',
+          tonometryOi || '',
+          ophthalmoscopyNotes || '',
+          diagnosis || '',
+          treatmentPlan || '',
+          optometristName || 'Optómetra General'
+        ]
+      );
+
+      res.json({ success: true, record: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.delete('/api/clients/:clientId/clinical-records/:recordId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, recordId } = req.params;
+      await pool.query(`DELETE FROM patient_clinical_records WHERE id = $1 AND client_id = $2`, [recordId, clientId]);
+      res.json({ success: true, message: 'Registro clínico eliminado' });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

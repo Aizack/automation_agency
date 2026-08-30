@@ -179,22 +179,36 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
               ) : (
                 <div className="pt-20 pb-4 px-2">
                   <div className="h-64 flex items-end gap-3 sm:gap-5 border-b border-outline/15 pb-2 overflow-x-auto custom-scrollbar pt-16">
-                    {dailyTrend.map((t) => {
+                    {dailyTrend.map((t, idx) => {
                       const heightPct = Math.max(12, Math.round((t.revenue / maxTrendRevenue) * 100));
                       // Formatear fecha bonita
                       const dateObj = new Date(t.date + 'T00:00:00');
                       const dateFormatted = isNaN(dateObj.getTime()) ? t.date : dateObj.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
 
+                      // Evitar recortes en los bordes laterales
+                      const isFirst = idx === 0;
+                      const isLast = idx === dailyTrend.length - 1;
+                      const tooltipPosClass = isFirst 
+                        ? 'left-0 translate-x-0' 
+                        : isLast 
+                          ? 'right-0 left-auto translate-x-0' 
+                          : 'left-1/2 -translate-x-1/2';
+                      const arrowPosClass = isFirst 
+                        ? 'left-4 translate-x-0' 
+                        : isLast 
+                          ? 'right-4 left-auto translate-x-0' 
+                          : 'left-1/2 -translate-x-1/2';
+
                       return (
                         <div key={t.date} className="flex-1 max-w-[64px] min-w-[36px] flex flex-col items-center gap-1 group relative h-full justify-end cursor-pointer">
                           
                           {/* TOOLTIP FLOTANTE TIPO NOTA SOBRE EL CURSOR */}
-                          <div className="absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-200 bg-[#1e1926] border border-primary/40 p-2 rounded-xl text-xs font-bold text-on-surface whitespace-nowrap z-50 pointer-events-none shadow-[0_10px_30px_rgba(0,0,0,0.9)] flex flex-col items-center gap-0.5">
+                          <div className={`absolute -top-14 ${tooltipPosClass} opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-200 bg-[#1e1926] border border-primary/40 p-2 rounded-xl text-xs font-bold text-on-surface whitespace-nowrap z-50 pointer-events-none shadow-[0_10px_30px_rgba(0,0,0,0.9)] flex flex-col items-center gap-0.5`}>
                             <span className="text-[10px] text-on-surface-variant font-medium">{dateFormatted}</span>
                             <span className="text-[#00ff88] font-mono text-xs font-bold">{formatCOP(t.revenue)}</span>
                             <span className="text-[9px] text-primary/90 font-mono bg-primary/10 px-1.5 py-0.5 rounded">{t.count} venta(s)</span>
                             {/* Flecha apuntando a la barra */}
-                            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-primary/40"></div>
+                            <div className={`absolute -bottom-1.5 ${arrowPosClass} w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-primary/40`}></div>
                           </div>
 
                           {/* MONTO O TEXTO VISIBLE SOBRE LA BARRA */}
