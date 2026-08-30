@@ -2419,7 +2419,7 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
 
     await logReqAudit(
       req,
-      clientId,
+      clientId as string,
       'CREAR_FACTURA',
       'Facturación',
       `Factura #${invoice.invoice_number} creada exitosamente para ${customerName} por valor de $${cleanTotal} COP.`,
@@ -2626,7 +2626,7 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/electronic', authenticateTo
 
     await logReqAudit(
       req,
-      clientId,
+      clientId as string,
       'EMITIR_FACTURA_ELECTRONICA',
       'Facturación',
       `Factura Electrónica DIAN generada exitosamente. CUFE: ${result.cufe}`,

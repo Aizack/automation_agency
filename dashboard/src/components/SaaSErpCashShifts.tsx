@@ -39,7 +39,9 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   // Form states
+  const [employeeOutId, setEmployeeOutId] = useState('');
   const [employeeOutName, setEmployeeOutName] = useState('');
+  const [employeeInId, setEmployeeInId] = useState('');
   const [employeeInName, setEmployeeInName] = useState('');
   const [initialCash, setInitialCash] = useState('50000'); // Base inicial típica en caja
   const [reportedCashInDrawer, setReportedCashInDrawer] = useState('');
@@ -87,7 +89,9 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
+          employeeOutId,
           employeeOutName,
+          employeeInId,
           employeeInName,
           initialCash: parseFloat(initialCash) || 0,
           reportedCashInDrawer: parseFloat(reportedCashInDrawer) || 0,
@@ -287,7 +291,12 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
                   {employees.length > 0 ? (
                     <select
                       value={employeeOutName}
-                      onChange={(e) => setEmployeeOutName(e.target.value)}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        setEmployeeOutName(name);
+                        const emp = employees.find(m => `${m.name} ${m.last_name || ''}`.trim() === name);
+                        setEmployeeOutId(emp ? emp.id : '');
+                      }}
                       className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary cursor-pointer"
                       required
                     >
@@ -315,7 +324,12 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
                   {employees.length > 0 ? (
                     <select
                       value={employeeInName}
-                      onChange={(e) => setEmployeeInName(e.target.value)}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        setEmployeeInName(name);
+                        const emp = employees.find(m => `${m.name} ${m.last_name || ''}`.trim() === name);
+                        setEmployeeInId(emp ? emp.id : '');
+                      }}
                       className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary cursor-pointer"
                       required
                     >

@@ -42,10 +42,10 @@
     "semantic_hash": "aae030608c3e511ee47c04647486626d"
   },
   "dashboard/src/components/EmployeePortal.tsx": {
-    "mtime": 1787895410.9453247,
-    "seen": 1788044146.8912983,
-    "ast_hash": "efe7c2c1dace9399a4b49ef6eb776637",
-    "semantic_hash": "efe7c2c1dace9399a4b49ef6eb776637"
+    "mtime": 1788051221.111253,
+    "seen": 1788051258.9599073,
+    "ast_hash": "272a708caac98a66267b25340c91b4ba",
+    "semantic_hash": "272a708caac98a66267b25340c91b4ba"
   },
   "dashboard/src/components/EnterprisePlanningModule.tsx": {
     "mtime": 1787879451.0838177,
@@ -474,10 +474,10 @@
     "semantic_hash": "b3024c4e4260cc821458cbe2a3a5d9e1"
   },
   "src/server.ts": {
-    "mtime": 1788049558.2501826,
-    "seen": 1788049592.5051672,
-    "ast_hash": "6e946912cdaaa724321933850791015a",
-    "semantic_hash": "6e946912cdaaa724321933850791015a"
+    "mtime": 1788050796.2523973,
+    "seen": 1788051258.973595,
+    "ast_hash": "125438467711796256c27979a614db64",
+    "semantic_hash": "125438467711796256c27979a614db64"
   },
   "src/services/auditService.ts": {
     "mtime": 1787442071.6743526,
@@ -630,15 +630,21 @@
     "semantic_hash": "52add3bf42447472d11447a646a56a1e"
   },
   "dashboard/src/components/SaaSErpCashShifts.tsx": {
-    "mtime": 1788048620.491431,
-    "seen": 1788048746.0882843,
-    "ast_hash": "0656c89e1453a21328768fe94f0a722e",
-    "semantic_hash": "0656c89e1453a21328768fe94f0a722e"
+    "mtime": 1788051166.1663184,
+    "seen": 1788051258.962465,
+    "ast_hash": "b2de70ee735b87dd58a4f086fbaf4590",
+    "semantic_hash": "b2de70ee735b87dd58a4f086fbaf4590"
   },
   "dashboard/src/components/SaaSErpSupportDocuments.tsx": {
     "mtime": 1788047443.0131733,
     "seen": 1788047465.5365562,
     "ast_hash": "60e1ddc0a47e722b44f729aac1bd0af9",
     "semantic_hash": "60e1ddc0a47e722b44f729aac1bd0af9"
+  },
+  "shutdown_state.json": {
+    "mtime": 1788051240.050112,
+    "seen": 1788051258.9668748,
+    "ast_hash": "211dc11efc7cc914140a1767f24c60d0",
+    "semantic_hash": "211dc11efc7cc914140a1767f24c60d0"
   }
 }
