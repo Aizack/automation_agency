@@ -1127,41 +1127,6 @@ export const initDatabase = async () => {
             );
         `);
 
-        // 4. Semilla de Facturas Iniciales si la tabla está vacía
-        const invCountRes = await pool.query(`SELECT COUNT(*)::int as count FROM invoices;`);
-        if (invCountRes.rows[0].count === 0) {
-            console.log("[DB Init] 📦 Insertando facturas de demostración iniciales...");
-            
-            const seedInvoices = [
-                { client: 'client_test_optica', num: 'F-1001', name: 'Carlos Mendoza', doc: '1098472615', amount: 342000, method: 'efectivo', status: 'paid', daysAgo: 14 },
-                { client: 'client_test_optica', num: 'F-1002', name: 'Martha Gómez', doc: '63481029', amount: 684000, method: 'tarjeta_credito', status: 'paid', daysAgo: 9 },
-                { client: 'client_test_optica', num: 'F-1003', name: 'Pedro Pérez', doc: '1143456789', amount: 1600000, method: 'transferencia', status: 'paid', daysAgo: 4 },
-                { client: 'client_test_optica', num: 'F-1004', name: 'Virginio Vargas', doc: '91238475', amount: 335000, method: 'efectivo', status: 'paid', daysAgo: 3 },
-                { client: 'admin', num: 'F-2001', name: 'Laura Bermúdez', doc: '1047829102', amount: 450000, method: 'efectivo', status: 'paid', daysAgo: 2 },
-                { client: 'admin', num: 'F-2002', name: 'Andrés Pastrana', doc: '79123456', amount: 890000, method: 'transferencia', status: 'paid', daysAgo: 1 }
-            ];
-
-            for (const inv of seedInvoices) {
-                const dateStr = new Date(Date.now() - inv.daysAgo * 86400000).toISOString();
-                const invIns = await pool.query(`
-                    INSERT INTO invoices (
-                        client_id, invoice_number, customer_name, customer_phone, customer_document_type,
-                        customer_document_number, customer_email, customer_address, total_amount, status,
-                        due_date, payment_method, created_at
-                    ) VALUES ($1, $2, $3, '3001234567', 'CC', $4, 'cliente@ejemplo.com', 'Calle 10 # 5-20', $5, $6, $7, $8, $7)
-                    RETURNING id
-                `, [inv.client, inv.num, inv.name, inv.doc, inv.amount, inv.status, dateStr, inv.method]);
-
-                const invoiceId = invIns.rows[0].id;
-                await pool.query(`
-                    INSERT INTO invoice_items (
-                        invoice_id, product_name, quantity, price, discount_percentage, product_type, lens_design, lens_material, lens_treatment
-                    ) VALUES ($1, 'Lentes Progresivos Anti-Reflejo', 1, $2, 0, 'lens', 'Progresivo Digital', 'Polycarbonato', 'Anti-Reflejo Verde')
-                `, [invoiceId, inv.amount]);
-            }
-            console.log("[DB Init] ✅ Facturas de prueba insertadas con éxito.");
-        }
-
         console.log("[DB Init] ✅ Tablas de Insumos, Historia Clínica y Arqueos de Caja inicializadas.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 
