@@ -34,3 +34,12 @@ Este archivo sirve como memoria persistente del proyecto para sincronizar rápid
 
 ### 4. Chat Corporativo (`EmployeePortal.tsx`)
 *   **Mensajería Directa:** El portal permite seleccionar a cualquier compañero de trabajo activo para entablar un chat privado, calculando de manera compartida el nombre del canal (`direct_{minId}_{maxId}`) en la base de datos.
+
+---
+
+## ☁️ Servidor VPS & Despliegue CI/CD GitHub
+*   **Dominio Público:** `https://frant-test.diazlab.online`
+*   **Servidor VPS:** Contabo IP `209.145.50.230` | User: `root` | Pass: `Kadabrocol0726++` | Ruta: `/app/agency-bot`
+*   **GitHub Action Secret:** `VPS_PASSWORD` (`Kadabrocol0726++`) en [GitHub Secrets](https://github.com/Aizack/automation_agency/settings/secrets/actions)
+*   **Ramas de Backup:** `backup/v1-stable` y `backup/previous-stable`
+*   **Documentación Completa:** [DESPLIEGUE_VPS_Y_GITHUB_ACTIONS.md](file:///d:/Archivos/proyectos/Agencia%20Automatizaci%C3%B3n/Bot%20multi-tenant/docs/DESPLIEGUE_VPS_Y_GITHUB_ACTIONS.md)
