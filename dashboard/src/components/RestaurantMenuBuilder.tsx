@@ -40,6 +40,20 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
     const [dishImageUrl, setDishImageUrl] = useState('');
     const [dishSopInstructions, setDishSopInstructions] = useState('');
 
+    // Menu Categories Management State
+    const [menuCategories, setMenuCategories] = useState<string[]>([
+        'Entradas & Snacks',
+        'Platos Fuertes',
+        'Salchipapas & Comida Rápida',
+        'Bebidas & Coctelería',
+        'Postres & Dulces',
+        'Adicionales & Acompañamientos'
+    ]);
+    const [isCatModalOpen, setIsCatModalOpen] = useState(false);
+    const [newCatInput, setNewCatInput] = useState('');
+    const [editingCatIdx, setEditingCatIdx] = useState<number | null>(null);
+    const [editingCatName, setEditingCatName] = useState('');
+
     // Pre-configured Modifiers State
     const [availableModifiers, setAvailableModifiers] = useState<{ name: string; price: number }[]>([]);
     const [modName, setModName] = useState('');
@@ -64,8 +78,9 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [prodRes] = await Promise.all([
-                fetch(`/api/clients/${clientId}/products`, { headers: { 'Authorization': `Bearer ${token}` } })
+            const [prodRes, catRes] = await Promise.all([
+                fetch(`/api/clients/${clientId}/products`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`/api/clients/${clientId}/categories`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
             const prodData = await prodRes.json();
@@ -74,10 +89,50 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                 setDishes(allProds);
                 setRawMaterials(allProds);
             }
+
+            const catData = await catRes.json();
+            if (catData.success && catData.categories && catData.categories.length > 0) {
+                const fetchedNames: string[] = catData.categories.map((c: any) => c.name);
+                // Combine default menu categories with fetched categories uniquely
+                setMenuCategories(prev => Array.from(new Set([...prev, ...fetchedNames])));
+            }
         } catch (err) {
             console.error("Error loading menu builder data:", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAddCategory = () => {
+        if (!newCatInput.trim()) return;
+        const name = newCatInput.trim();
+        if (!menuCategories.includes(name)) {
+            setMenuCategories(prev => [...prev, name]);
+            setDishCategory(name);
+        }
+        setNewCatInput('');
+    };
+
+    const handleSaveEditCategory = (index: number) => {
+        if (!editingCatName.trim()) return;
+        const updated = [...menuCategories];
+        const oldName = updated[index];
+        updated[index] = editingCatName.trim();
+        setMenuCategories(updated);
+        if (dishCategory === oldName) {
+            setDishCategory(editingCatName.trim());
+        }
+        setEditingCatIdx(null);
+        setEditingCatName('');
+    };
+
+    const handleDeleteCategory = (index: number) => {
+        if (menuCategories.length <= 1) return;
+        const nameToRemove = menuCategories[index];
+        const updated = menuCategories.filter((_, i) => i !== index);
+        setMenuCategories(updated);
+        if (dishCategory === nameToRemove) {
+            setDishCategory(updated[0]);
         }
     };
 
@@ -476,17 +531,25 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                             {/* Categoría, Foto & Descripción */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-on-surface-variant">Categoría del Menú</label>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-bold text-on-surface-variant">Categoría del Menú</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCatModalOpen(true)}
+                                            className="text-[10px] text-primary hover:underline font-bold flex items-center gap-0.5 cursor-pointer"
+                                        >
+                                            <span className="material-symbols-outlined text-[13px]">settings</span>
+                                            Editar Categorías
+                                        </button>
+                                    </div>
                                     <select
                                         value={dishCategory}
                                         onChange={(e) => setDishCategory(e.target.value)}
-                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary cursor-pointer"
+                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary cursor-pointer font-semibold"
                                     >
-                                        <option value="Entradas">Entradas & Snacks</option>
-                                        <option value="Platos Fuertes">Platos Fuertes</option>
-                                        <option value="Salchipapas">Salchipapas & Comida Rápida</option>
-                                        <option value="Bebidas">Bebidas & Coctelería</option>
-                                        <option value="Postres">Postres & Dulces</option>
+                                        {menuCategories.map((cat, idx) => (
+                                            <option key={idx} value={cat}>{cat}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="space-y-1">
@@ -555,58 +618,79 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                             {/* Configuración de Insumos / Gramajes & Merma (BOM) */}
                             <div className="space-y-3 bg-surface/50 border border-outline/10 p-4 rounded-2xl">
                                 <h4 className="text-xs font-extrabold text-primary uppercase flex items-center gap-1.5">
-                                    <span className="material-symbols-outlined text-[16px]">scale</span>
-                                    Insumos, Gramaje & Merma Primaria (Escandallo)
+                                    <span className="material-symbols-outlined text-[16px]">inventory_2</span>
+                                    Insumos del Inventario
                                 </h4>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                                    <select
-                                        value={selectedRawId}
-                                        onChange={(e) => setSelectedRawId(e.target.value)}
-                                        className="sm:col-span-2 bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary cursor-pointer"
-                                    >
-                                        <option value="">-- Insumo de Bodega --</option>
-                                        {rawMaterials.map(m => (
-                                            <option key={m.id} value={m.id}>
-                                                {m.name} (${parseFloat(m.cost_price || '0').toLocaleString()})
-                                            </option>
-                                        ))}
-                                    </select>
+                                <div className="grid grid-cols-1 sm:grid-cols-6 gap-2 items-end">
+                                    <div className="sm:col-span-2 space-y-1">
+                                        <label className="text-[10px] font-bold text-on-surface-variant block">Seleccionar Insumo</label>
+                                        <select
+                                            value={selectedRawId}
+                                            onChange={(e) => setSelectedRawId(e.target.value)}
+                                            className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary cursor-pointer"
+                                        >
+                                            <option value="">-- Insumo de Bodega --</option>
+                                            {rawMaterials.map(m => (
+                                                <option key={m.id} value={m.id}>
+                                                    {m.name} (${parseFloat(m.cost_price || '0').toLocaleString()})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                                    <input
-                                        type="number"
-                                        placeholder="Gramaje (Ej: 300)"
-                                        value={rawQty}
-                                        onChange={(e) => setRawQty(e.target.value)}
-                                        className="bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
-                                    />
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-on-surface-variant block">Cantidad/Gramaje</label>
+                                        <input
+                                            type="number"
+                                            placeholder="Ej: 300"
+                                            value={rawQty}
+                                            onChange={(e) => setRawQty(e.target.value)}
+                                            className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
+                                        />
+                                    </div>
 
-                                    <select
-                                        value={rawUnit}
-                                        onChange={(e) => setRawUnit(e.target.value)}
-                                        className="bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary cursor-pointer"
-                                    >
-                                        <option value="gramos">Gramos (g)</option>
-                                        <option value="ml">Mililitros (ml)</option>
-                                        <option value="unidades">Unidades</option>
-                                    </select>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-on-surface-variant block">Unidad Medida</label>
+                                        <select
+                                            value={rawUnit}
+                                            onChange={(e) => setRawUnit(e.target.value)}
+                                            className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary cursor-pointer"
+                                        >
+                                            <option value="gramos">Gramos (g)</option>
+                                            <option value="ml">Mililitros (ml)</option>
+                                            <option value="unidades">Unidades</option>
+                                        </select>
+                                    </div>
 
-                                    <input
-                                        type="number"
-                                        placeholder="Merma % (Ej: 15)"
-                                        value={rawWaste}
-                                        onChange={(e) => setRawWaste(e.target.value)}
-                                        className="bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
-                                    />
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-on-surface-variant block">% Merma Primaria</label>
+                                        <input
+                                            type="number"
+                                            placeholder="Ej: 15"
+                                            value={rawWaste}
+                                            onChange={(e) => setRawWaste(e.target.value)}
+                                            className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
+                                            title="Porcentaje de desperdicio por deshuesado o limpieza en crudo"
+                                        />
+                                    </div>
+
+                                    <div className="sm:col-span-1">
+                                        <button
+                                            type="button"
+                                            onClick={handleAddIngredientToRecipe}
+                                            disabled={!selectedRawId || !rawQty}
+                                            className={`w-full py-2 px-3 font-extrabold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow ${
+                                                selectedRawId && rawQty
+                                                    ? 'bg-primary text-on-primary hover:opacity-90 border border-primary/30'
+                                                    : 'bg-surface-variant/40 text-on-surface-variant/40 cursor-not-allowed border border-outline/10'
+                                            }`}
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">add</span>
+                                            + Agregar Insumo
+                                        </button>
+                                    </div>
                                 </div>
-
-                                <button
-                                    type="button"
-                                    onClick={handleAddIngredientToRecipe}
-                                    className="w-full py-1.5 bg-surface-variant text-on-surface font-bold text-xs rounded-xl hover:bg-surface-variant/80 transition"
-                                >
-                                    + Agregar Insumo con Merma al Escandallo
-                                </button>
 
                                 {/* Tabla de Insumos Agregados */}
                                 {recipeItems.length > 0 && (
@@ -677,6 +761,123 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal para Gestión y Edición de Categorías del Menú */}
+            {isCatModalOpen && (
+                <div
+                    className="fixed inset-0 z-[10000] backdrop-blur-sm bg-black/80 flex items-center justify-center p-4"
+                    onClick={() => setIsCatModalOpen(false)}
+                >
+                    <div
+                        className="bg-surface-container border border-outline/20 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+                            <h3 className="font-extrabold text-on-surface text-sm flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary text-[18px]">category</span>
+                                Administrar Categorías del Menú
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setIsCatModalOpen(false)}
+                                className="text-on-surface-variant hover:text-on-surface cursor-pointer"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        {/* Nueva Categoría */}
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                placeholder="Nombre de nueva categoría..."
+                                value={newCatInput}
+                                onChange={(e) => setNewCatInput(e.target.value)}
+                                className="flex-1 bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary"
+                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCategory())}
+                            />
+                            <button
+                                type="button"
+                                onClick={handleAddCategory}
+                                className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-xl hover:opacity-90 transition cursor-pointer shrink-0"
+                            >
+                                + Crear
+                            </button>
+                        </div>
+
+                        {/* Lista de Categorías Existentes */}
+                        <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pt-2">
+                            <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Categorías Existentes ({menuCategories.length})</label>
+                            {menuCategories.map((cat, idx) => (
+                                <div key={idx} className="flex items-center justify-between bg-surface p-2.5 rounded-xl border border-outline/10 text-xs">
+                                    {editingCatIdx === idx ? (
+                                        <div className="flex items-center gap-2 w-full">
+                                            <input
+                                                type="text"
+                                                value={editingCatName}
+                                                onChange={(e) => setEditingCatName(e.target.value)}
+                                                className="flex-1 bg-surface-container border border-primary rounded-lg p-1.5 text-xs text-on-surface outline-none"
+                                                autoFocus
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleSaveEditCategory(idx)}
+                                                className="text-emerald-400 font-bold hover:text-emerald-300 px-2"
+                                            >
+                                                Guardar
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditingCatIdx(null)}
+                                                className="text-on-surface-variant hover:text-on-surface"
+                                            >
+                                                Cancelar
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <span className="font-semibold text-on-surface">{cat}</span>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setEditingCatIdx(idx);
+                                                        setEditingCatName(cat);
+                                                    }}
+                                                    className="p-1 text-on-surface-variant hover:text-primary transition"
+                                                    title="Editar nombre"
+                                                >
+                                                    <span className="material-symbols-outlined text-[16px]">edit</span>
+                                                </button>
+                                                {menuCategories.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteCategory(idx)}
+                                                        className="p-1 text-on-surface-variant hover:text-rose-400 transition"
+                                                        title="Eliminar categoría"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="pt-2 border-t border-outline/10 text-right">
+                            <button
+                                type="button"
+                                onClick={() => setIsCatModalOpen(false)}
+                                className="px-5 py-2 bg-surface hover:bg-surface-variant border border-outline/20 text-on-surface font-bold text-xs rounded-xl cursor-pointer"
+                            >
+                                Listo
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
