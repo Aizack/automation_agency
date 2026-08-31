@@ -5,3 +5,9 @@ Api Key.txt
 .wwebjs_cache/
 google-credentials.json
 driveAccess/
+dist/
+dist_output/
+dist_deploy/
+dashboard/dist/
+dashboard/dist_output/
+dashboard/dist_deploy/

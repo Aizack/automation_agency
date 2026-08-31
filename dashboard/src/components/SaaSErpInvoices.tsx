@@ -73,6 +73,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const [crmCustomers, setCrmCustomers] = useState<any[]>([]);
     const [clientProfile, setClientProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
@@ -159,6 +160,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const fetchData = async () => {
         try {
             setLoading(true);
+            setFetchError(null);
             const [invRes, prodRes, catRes, crmRes, clientRes, bankRes, empRes, tblRes] = await Promise.all([
                 fetch(`/api/clients/${clientId}/invoices`),
                 fetch(`/api/clients/${clientId}/products`),
@@ -167,28 +169,37 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 fetch(`/api/clients/${clientId}`),
                 fetch(`/api/clients/${clientId}/bank-accounts`),
                 fetch(`/api/clients/${clientId}/employees`),
-                fetch(`/api/clients/${clientId}/tables`)
+                fetch(`/api/clients/${clientId}/restaurant/tables`)
             ]);
 
-            const invData = await invRes.json();
-            const prodData = await prodRes.json();
-            const catData = await catRes.json();
-            const crmData = await crmRes.json();
-            const clientData = await clientRes.json();
-            const bankData = await bankRes.json();
-            const empData = await empRes.json();
-            const tblData = await tblRes.json();
+            // Detect authentication failures
+            if (invRes.status === 401 || invRes.status === 403 || prodRes.status === 401 || prodRes.status === 403) {
+                setFetchError('Tu sesión ha expirado o no tienes permisos. Por favor recarga la página e inicia sesión nuevamente.');
+                return;
+            }
+
+            const invData = invRes.ok ? await invRes.json() : { success: false };
+            const prodData = prodRes.ok ? await prodRes.json() : { success: false };
+            const catData = catRes.ok ? await catRes.json() : { success: false };
+            const crmData = crmRes.ok ? await crmRes.json() : { success: false };
+            const clientData = clientRes.ok ? await clientRes.json() : { success: false };
+            const bankData = bankRes.ok ? await bankRes.json() : { success: false };
+            const empData = empRes.ok ? await empRes.json() : { success: false };
+            const tblData = tblRes.ok ? await tblRes.json() : { success: false };
 
             if (invData.success) setInvoices(invData.invoices || []);
+            else if (invData.error) console.warn('[Facturas] Error API:', invData.error);
             if (prodData.success) setProducts(prodData.products || []);
+            else if (prodData.error) console.warn('[Productos] Error API:', prodData.error);
             if (catData.success) setCategories(catData.categories || []);
             if (crmData.success) setCrmCustomers(crmData.customers || []);
             if (clientData.success) setClientProfile(clientData.data || null);
             if (bankData.success) setBankAccounts(bankData.accounts || []);
             if (empData.success) setEmployees(empData.employees || []);
             if (tblData.success) setTables(tblData.tables || []);
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error loading billing data:", err);
+            setFetchError(`Error al cargar datos de facturación: ${err?.message || 'Error de red'}`);
         } finally {
             setLoading(false);
         }
@@ -916,63 +927,20 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 </div>
             </div>
 
-            {/* Banner Indicador de Cuota y Plan Activo */}
+            {/* Compact Indicator for Plan & DIAN Quota */}
             {planStatus && (
-                <div className="bg-surface-container/40 border border-outline/15 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="bg-surface-container/30 border border-outline/10 p-3 rounded-xl flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-                            <span className="material-symbols-outlined text-xl">verified</span>
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                            <span className="material-symbols-outlined text-lg">verified</span>
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h4 className="font-bold text-xs text-on-surface uppercase tracking-wider">
-                                    Plan Actual: <span className="text-primary">{planStatus.planTier === 'enterprise' ? '👑 Enterprise IA' : planStatus.planTier === 'pro' ? '🚀 Pro Crecimiento' : '🟢 Básico Micro'}</span>
-                                </h4>
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-white/10 text-on-surface border border-white/10">
-                                    {planStatus.planTier === 'basic' ? 'Hasta 10 Facturas/mes' : 'Ilimitado'}
-                                </span>
-                            </div>
-                            <p className="text-[11px] text-on-surface-variant mt-0.5">
-                                Emisiones DIAN este mes: <strong className="text-on-surface">{planStatus.used}</strong> / {planStatus.limit >= 99999 ? '∞ Ilimitadas' : planStatus.limit}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="w-full sm:w-64 space-y-1">
-                        <div className="flex justify-between text-[10px] font-mono text-on-surface-variant">
-                            <span>Consumo de cuota</span>
-                            <span className="font-bold">{planStatus.limit >= 99999 ? '100% Disponible' : `${Math.round((planStatus.used / planStatus.limit) * 100)}%`}</span>
-                        </div>
-                        <div className="w-full h-2 bg-surface-container-high rounded-full overflow-hidden border border-outline/10">
-                            <div 
-                                className={`h-full transition-all duration-500 ${
-                                    (planStatus.used / planStatus.limit) >= 0.9 ? 'bg-red-500' :
-                                    (planStatus.used / planStatus.limit) >= 0.7 ? 'bg-amber-500' : 'bg-emerald-500'
-                                }`} 
-                                style={{ width: `${planStatus.limit >= 99999 ? 100 : Math.min(100, (planStatus.used / planStatus.limit) * 100)}%` }}
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* BANNER DE CUOTA DE FACTURACIÓN ELECTRÓNICA SEGÚN PLAN */}
-            {planStatus && (
-                <div className="bg-surface-container border border-outline/20 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-primary/10 text-primary rounded-xl flex items-center justify-center">
-                            <span className="material-symbols-outlined text-2xl">electric_bolt</span>
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-on-surface">Plan Actual:</span>
-                                <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase ${planStatus.planTier === 'pro' || planStatus.planTier === 'enterprise' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-primary/20 text-primary border border-primary/30'}`}>
-                                    Plan {planStatus.planTier === 'basic' ? 'Básico (Híbrido)' : planStatus.planTier}
-                                </span>
-                            </div>
-                            <p className="text-xs text-on-surface-variant mt-0.5">
-                                Facturas Electrónicas emitidas este mes: <span className="font-semibold text-on-surface">{planStatus.used}</span> / {planStatus.planTier === 'pro' || planStatus.planTier === 'enterprise' ? 'Ilimitadas' : `${planStatus.limit} incluidas (Micro-cobro habilitado)`}
-                            </p>
+                        <div className="flex items-center gap-2 flex-wrap text-xs">
+                            <span className="font-bold text-on-surface uppercase tracking-wider">
+                                Plan Actual: <span className="text-primary">{planStatus.planTier === 'enterprise' ? '👑 Enterprise IA' : planStatus.planTier === 'pro' ? '🚀 Pro' : '🟢 Básico'}</span>
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-surface-container border border-outline/10 text-on-surface-variant">
+                                Facturas DIAN este mes: <strong className="text-on-surface">{planStatus.used || 0}</strong> / {planStatus.limit >= 99999 ? '∞ Ilimitadas' : (planStatus.limit || 10)}
+                            </span>
                         </div>
                     </div>
 
@@ -980,10 +948,10 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                         <button
                             type="button"
                             onClick={() => setShowUpgradeModal(true)}
-                            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-md cursor-pointer"
+                            className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 font-bold text-[11px] px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer shrink-0"
                         >
-                            <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
-                            Pasar al Plan Pro (Facturas Ilimitadas)
+                            <span className="material-symbols-outlined text-[14px]">workspace_premium</span>
+                            Upgrade a Plan Pro
                         </button>
                     )}
                 </div>
@@ -1403,43 +1371,78 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             </div>
 
                                             <div className="flex flex-col gap-1 relative">
-                                                <label className="text-[10px] text-on-surface-variant font-bold">Seleccionar Artículo del Inventario</label>
-                                                <select
-                                                    value={item.productId || ''}
-                                                    onChange={(e) => {
-                                                        const selectedId = e.target.value;
-                                                        if (!selectedId) {
-                                                            handleItemChange(index, 'productId', '');
-                                                            handleItemChange(index, 'productName', '');
-                                                            handleItemChange(index, 'productSearch', '');
-                                                            return;
-                                                        }
-                                                        const p = products.find(prod => prod.id === selectedId);
-                                                        if (p) {
-                                                            setSelectedItems((prev) => {
-                                                                const copy = [...prev];
-                                                                copy[index] = {
-                                                                    ...copy[index],
-                                                                    productId: p.id,
-                                                                    productName: p.name,
-                                                                    productSearch: p.name,
-                                                                    categoryId: p.category_id || copy[index].categoryId,
-                                                                    price: Number(p.price),
-                                                                    discountPercentage: Number(p.promo_discount || 0)
-                                                                };
-                                                                return copy;
-                                                            });
-                                                        }
-                                                    }}
-                                                    className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs focus:border-primary text-on-surface outline-none h-10 w-full font-medium cursor-pointer"
-                                                >
-                                                    <option value="">-- Seleccionar del Inventario ({products.length} disponibles) --</option>
-                                                    {products.map((p) => (
-                                                        <option key={p.id} value={p.id}>
-                                                            {p.name} {p.sku ? `[${p.sku}]` : ''} - ${Number(p.price).toLocaleString('es-CO')}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                <label className="text-[10px] text-on-surface-variant font-bold">Buscar Artículo del Inventario</label>
+                                                <div className="relative">
+                                                    <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-[14px] pointer-events-none">search</span>
+                                                    <input
+                                                        type="text"
+                                                        placeholder={products.length === 0 ? 'Sin productos en inventario...' : `Buscar entre ${products.length} producto(s)...`}
+                                                        value={item.productSearch}
+                                                        onChange={(e) => handleItemChange(index, 'productSearch', e.target.value)}
+                                                        onBlur={() => setTimeout(() => {
+                                                            if (!item.productId) handleItemChange(index, 'productSearch', '');
+                                                        }, 200)}
+                                                        className={`bg-surface-container border rounded-lg pl-7 pr-3 py-2 text-xs focus:border-primary text-on-surface outline-none h-10 w-full transition ${
+                                                            item.productId ? 'border-primary/60 bg-primary/5 font-semibold' : 'border-outline/20'
+                                                        }`}
+                                                        autoComplete="off"
+                                                    />
+                                                    {item.productId && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { handleItemChange(index, 'productId', ''); handleItemChange(index, 'productSearch', ''); }}
+                                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-red-400 transition cursor-pointer border-0 bg-transparent p-0"
+                                                            title="Limpiar selección"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[14px]">close</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {/* Dropdown de sugerencias */}
+                                                {item.productSearch && !item.productId && (() => {
+                                                    const query = item.productSearch.trim().toLowerCase();
+                                                    const suggestions = products.filter(p =>
+                                                        p.name.toLowerCase().includes(query) ||
+                                                        (p.sku && p.sku.toLowerCase().includes(query))
+                                                    ).slice(0, 8);
+                                                    return (
+                                                        <div className="absolute left-0 right-0 top-full mt-1 bg-surface-container border border-outline/30 rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto">
+                                                            {suggestions.length === 0 ? (
+                                                                <div className="p-3 text-xs text-on-surface-variant italic text-center">No se encontraron productos con ese nombre o SKU.</div>
+                                                            ) : (
+                                                                suggestions.map(p => (
+                                                                    <button
+                                                                        key={p.id}
+                                                                        type="button"
+                                                                        onMouseDown={(e) => e.preventDefault()}
+                                                                        onClick={() => {
+                                                                            setSelectedItems(prev => {
+                                                                                const copy = [...prev];
+                                                                                copy[index] = {
+                                                                                    ...copy[index],
+                                                                                    productId: p.id,
+                                                                                    productName: p.name,
+                                                                                    productSearch: p.name,
+                                                                                    categoryId: p.category_id || copy[index].categoryId,
+                                                                                    price: Number(p.price),
+                                                                                    discountPercentage: Number(p.promo_discount || 0)
+                                                                                };
+                                                                                return copy;
+                                                                            });
+                                                                        }}
+                                                                        className="w-full text-left px-3 py-2 hover:bg-primary/10 flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent border-b border-outline/5 last:border-0"
+                                                                    >
+                                                                        <div>
+                                                                            <p className="text-xs font-semibold text-on-surface">{p.name}</p>
+                                                                            <p className="text-[10px] text-on-surface-variant">{p.sku ? `SKU: ${p.sku} • ` : ''}Stock: {p.stock}</p>
+                                                                        </div>
+                                                                        <span className="text-xs font-bold text-primary font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
+                                                                    </button>
+                                                                ))
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
 
                                             <div className="flex flex-col gap-1">
@@ -1604,9 +1607,28 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 <div className="flex justify-center py-10">
                     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 </div>
+            ) : fetchError ? (
+                <div className="glass-card p-8 text-center space-y-3">
+                    <span className="material-symbols-outlined text-4xl text-red-400">wifi_off</span>
+                    <p className="text-sm font-semibold text-red-400">{fetchError}</p>
+                    <button
+                        onClick={() => fetchData()}
+                        className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer"
+                    >
+                        Reintentar
+                    </button>
+                </div>
             ) : filteredInvoices.length === 0 ? (
-                <div className="glass-card p-12 text-center">
-                    <p className="text-sm text-on-surface-variant">No se encontraron facturas con los filtros seleccionados.</p>
+                <div className="glass-card p-12 text-center space-y-2">
+                    <span className="material-symbols-outlined text-3xl text-on-surface-variant/40">receipt_long</span>
+                    <p className="text-sm text-on-surface-variant">
+                        {invoices.length === 0 ? 'Aún no hay facturas registradas. ¡Crea tu primera factura!' : 'No se encontraron facturas con los filtros seleccionados.'}
+                    </p>
+                    {(searchTerm || statusFilter !== 'all' || dateFrom || dateTo) && (
+                        <button onClick={resetFilters} className="text-xs text-primary hover:underline cursor-pointer border-0 bg-transparent">
+                            Limpiar filtros
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="glass-card overflow-hidden">

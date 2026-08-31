@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { authFetch as fetch } from '../utils/api';
 import { SaaSErpInventory } from './SaaSErpInventory';
 import { SaaSErpInvoices } from './SaaSErpInvoices';
+import { SaaSErpInvoices2 } from './SaaSErpInvoices2';
 import { SaaSErpCartera } from './SaaSErpCartera';
 import { SaaSErpDomicilios } from './SaaSErpDomicilios';
 import { SaaSErpSuppliers } from './SaaSErpSuppliers';
@@ -111,7 +112,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     return 'cartera';
   };
 
-  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(getDefaultTab());
+  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(getDefaultTab());
   const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -991,6 +992,21 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     <span className="font-bold text-xs">Facturación</span>
                   </button>
 
+                  {rawRole === 'admin' && (
+                    <button 
+                      onClick={() => setActiveTab('facturacion2')}
+                      className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                        activeTab === 'facturacion2' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">receipt</span>
+                      <span className="font-bold text-xs flex items-center justify-between w-full">
+                        <span>Facturación v2</span>
+                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-mono uppercase">Admin Respaldo</span>
+                      </span>
+                    </button>
+                  )}
+
                   <button 
                     onClick={() => setActiveTab('documentos_soporte')}
                     className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
@@ -1174,13 +1190,38 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           </div>
 
-          <button 
-            onClick={onBack}
-            className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border-0 cursor-pointer font-sans text-on-surface-variant hover:bg-surface-variant/40 bg-transparent transition-all"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span className="font-bold text-xs">Cerrar Sesión</span>
-          </button>
+          {rawRole === 'admin' ? (
+            <div className="space-y-1">
+              <button 
+                onClick={onBack}
+                className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border border-primary/30 cursor-pointer font-sans text-primary hover:bg-primary/10 bg-transparent transition-all"
+                title="Regresar a la consola de Super Administrador"
+              >
+                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                <span className="font-bold text-xs">Volver al Panel Admin</span>
+              </button>
+              <button 
+                onClick={() => {
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('session_role');
+                  localStorage.removeItem('current_client_id');
+                  window.location.reload();
+                }}
+                className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border-0 cursor-pointer font-sans text-on-surface-variant hover:bg-surface-variant/40 bg-transparent transition-all"
+              >
+                <span className="material-symbols-outlined text-[18px]">logout</span>
+                <span className="font-bold text-xs">Cerrar Sesión</span>
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={onBack}
+              className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border-0 cursor-pointer font-sans text-on-surface-variant hover:bg-surface-variant/40 bg-transparent transition-all"
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              <span className="font-bold text-xs">Cerrar Sesión</span>
+            </button>
+          )}
         </div>
       </aside>
 
@@ -1194,6 +1235,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 {activeTab === 'resumen' ? 'Automatización y Agente IA' :
                  activeTab === 'inventario' ? 'Inventario' :
                  activeTab === 'facturacion' ? 'Facturación' :
+                 activeTab === 'facturacion2' ? 'Facturación v2 (Módulo Paralelo)' :
                  activeTab === 'contabilidad' ? 'Contabilidad y Análisis Financiero' :
                  activeTab === 'cartera' ? 'Cartera' :
                  activeTab === 'domicilios' ? 'Despachos y Domicilios' :
@@ -2266,6 +2308,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         {activeTab === 'facturacion' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
             <SaaSErpInvoices clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'facturacion2' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpInvoices2 clientId={clientId} />
           </div>
         )}
 
