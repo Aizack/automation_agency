@@ -66,12 +66,10 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
     const [aiMimeType, setAiMimeType] = useState<string | null>(null);
     const [aiLoading, setAiLoading] = useState(false);
 
-    // Recipe BOM items for the dish being created/edited
     const [recipeItems, setRecipeItems] = useState<RecipeItem[]>([]);
     const [selectedRawId, setSelectedRawId] = useState('');
     const [rawQty, setRawQty] = useState('');
     const [rawUnit, setRawUnit] = useState('gramos');
-    const [rawWaste, setRawWaste] = useState('0'); // Merma primaria por defecto 0%
 
     const token = localStorage.getItem('auth_token');
 
@@ -146,13 +144,10 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
         if (!rawProd) return;
 
         const qty = parseFloat(rawQty) || 0;
-        const wastePct = parseFloat(rawWaste) || 0;
         const unitCost = parseFloat(rawProd.cost_price || '0');
 
-        // Cálculo del costo base
+        // Cálculo directo del costo según cantidad y unidad
         const baseCost = unitCost * (rawUnit === 'gramos' ? qty / 1000 : qty);
-        // Ajuste del costo financiero por Merma Primaria en crudo
-        const adjustedCost = wastePct > 0 && wastePct < 100 ? baseCost / (1 - wastePct / 100) : baseCost;
 
         setRecipeItems(prev => [
             ...prev,
@@ -161,14 +156,13 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                 raw_product_name: rawProd.name,
                 quantity_required: qty,
                 unit_of_measure: rawUnit,
-                waste_percentage: wastePct,
-                raw_cost: adjustedCost
+                waste_percentage: 0,
+                raw_cost: baseCost
             }
         ]);
 
         setSelectedRawId('');
         setRawQty('');
-        setRawWaste('0');
     };
 
     const handleRemoveIngredient = (index: number) => {
@@ -622,7 +616,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                     Insumos del Inventario
                                 </h4>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-6 gap-2 items-end">
+                                <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
                                     <div className="sm:col-span-2 space-y-1">
                                         <label className="text-[10px] font-bold text-on-surface-variant block">Seleccionar Insumo</label>
                                         <select
@@ -663,18 +657,6 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                         </select>
                                     </div>
 
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-on-surface-variant block">% Merma Primaria</label>
-                                        <input
-                                            type="number"
-                                            placeholder="Ej: 15"
-                                            value={rawWaste}
-                                            onChange={(e) => setRawWaste(e.target.value)}
-                                            className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary"
-                                            title="Porcentaje de desperdicio por deshuesado o limpieza en crudo"
-                                        />
-                                    </div>
-
                                     <div className="sm:col-span-1">
                                         <button
                                             type="button"
@@ -697,14 +679,14 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                     <div className="space-y-1 pt-2">
                                         <div className="text-[11px] font-bold text-on-surface-variant flex justify-between px-1">
                                             <span>Insumo</span>
-                                            <span>Cantidad / Merma / Costo Ajustado</span>
+                                            <span>Cantidad / Costo Calculado</span>
                                         </div>
                                         {recipeItems.map((item, index) => (
                                             <div key={index} className="flex items-center justify-between bg-surface p-2 rounded-xl text-xs border border-outline/5">
                                                 <span>{item.raw_product_name}</span>
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-mono font-bold text-primary">
-                                                        {item.quantity_required} {item.unit_of_measure} {item.waste_percentage > 0 ? `(Merma: ${item.waste_percentage}%)` : ''}
+                                                        {item.quantity_required} {item.unit_of_measure}
                                                     </span>
                                                     <span className="font-bold text-on-surface">${Math.round(item.raw_cost).toLocaleString()}</span>
                                                     <button type="button" onClick={() => handleRemoveIngredient(index)} className="text-rose-400 hover:text-rose-300">

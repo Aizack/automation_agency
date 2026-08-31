@@ -84,9 +84,10 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
 
     const preset = getConversionPreset(purchaseUnit);
     const unitCostNum = parseFloat(purchaseUnitCost) || 0;
-    const qtyPurchasedNum = parseFloat(purchaseQuantity) || 0;
+    const qtyPurchasedNum = parseFloat(purchaseQuantity) || 1;
 
     const totalStockAdded = qtyPurchasedNum * preset.factor;
+    const totalPurchaseSpend = unitCostNum * qtyPurchasedNum;
     const costPerConsumptionUnit = preset.factor > 0 ? unitCostNum / preset.factor : 0;
     const costPerKgOrLiter = preset.consumptionUnit === 'g' ? costPerConsumptionUnit * 1000 : costPerConsumptionUnit * 1000;
 
@@ -388,10 +389,10 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-on-surface-variant">Costo de Compra ($ COP) *</label>
+                                    <label className="text-xs font-bold text-on-surface-variant">Costo Unitario de Compra ($ COP) *</label>
                                     <input
                                         type="number"
-                                        placeholder="Ej: 15000"
+                                        placeholder="Ej: 1800"
                                         value={purchaseUnitCost}
                                         onChange={(e) => setPurchaseUnitCost(e.target.value)}
                                         className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold text-primary outline-none focus:border-primary"
@@ -403,6 +404,7 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                                     <input
                                         type="number"
                                         placeholder="1"
+                                        min="1"
                                         value={purchaseQuantity}
                                         onChange={(e) => setPurchaseQuantity(e.target.value)}
                                         className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none focus:border-primary font-bold"
@@ -434,15 +436,21 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                             </div>
 
                             {/* Resumen de Conversión en Tiempo Real */}
-                            <div className="bg-surface/60 border border-outline/10 p-3 rounded-2xl space-y-1 text-xs">
+                            <div className="bg-surface/60 border border-outline/10 p-3.5 rounded-2xl space-y-1.5 text-xs">
                                 <div className="flex justify-between font-bold">
-                                    <span className="text-on-surface-variant">Conversión a Consumo:</span>
-                                    <span className="text-primary font-bold">
+                                    <span className="text-on-surface-variant">Conversión a Consumo (Stock a Bodega):</span>
+                                    <span className="text-primary font-extrabold text-sm">
                                         +{totalStockAdded.toLocaleString()} {preset.consumptionUnit}
                                     </span>
                                 </div>
-                                <div className="flex justify-between text-[11px] text-on-surface-variant/80">
-                                    <span>Costo Unitario Calculado:</span>
+                                <div className="flex justify-between text-xs border-t border-outline/10 pt-1.5 font-bold">
+                                    <span className="text-on-surface-variant">Total Inversión / Egreso de Caja:</span>
+                                    <span className="text-amber-400 font-mono font-extrabold">
+                                        ${Math.round(totalPurchaseSpend).toLocaleString('es-CO')} COP ({qtyPurchasedNum} × ${unitCostNum.toLocaleString('es-CO')})
+                                    </span>
+                                </div>
+                                <div className="flex justify-between text-[11px] text-on-surface-variant/80 pt-0.5">
+                                    <span>Costo por {preset.consumptionUnit}:</span>
                                     <span>${costPerConsumptionUnit.toFixed(2)} COP por {preset.consumptionUnit} (${Math.round(costPerKgOrLiter).toLocaleString()} COP/kg)</span>
                                 </div>
                             </div>

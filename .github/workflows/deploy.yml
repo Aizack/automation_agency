@@ -1,0 +1,30 @@
+name: Automatic Deploy to VPS
+
+on:
+  push:
+    branches:
+      - feature/initial-architecture-6060039206840083513
+      - main
+
+jobs:
+  deploy:
+    name: Build & Deploy to Contabo VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Execute SSH Commands on VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: '209.145.50.230'
+          username: 'root'
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            cd /app/agency-bot
+            git reset --hard
+            git pull origin feature/initial-architecture-6060039206840083513
+            cd dashboard && npm run build
+            pm2 restart all || pm2 restart agency-bot
+            systemctl reload nginx 2>/dev/null || true
