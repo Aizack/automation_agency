@@ -55,8 +55,9 @@ html[data-theme='obsidian-gold'],
   --shadow-ocre: 0 4px 20px rgba(216, 162, 78, 0.2);
   --accent-glow: 0 0 20px rgba(216, 162, 78, 0.35);
 
-  --font-family-sans: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
-  --font-family-display: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-sans: "Barlow Condensed", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Barlow Condensed", system-ui, -apple-system, sans-serif;
+  --font-family-label: "Oswald", system-ui, -apple-system, sans-serif;
 
   --radius-xs: 4px;
   --radius-sm: 6px;
@@ -375,8 +376,9 @@ html[data-theme='dark'],
   --shadow-accent: 0 4px 25px rgba(216, 162, 78, 0.22);
   --shadow-ocre: 0 4px 20px rgba(216, 162, 78, 0.2);
   --accent-glow: 0 0 20px rgba(216, 162, 78, 0.35);
-  --font-family-sans: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
-  --font-family-display: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-sans: "Barlow Condensed", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Barlow Condensed", system-ui, -apple-system, sans-serif;
+  --font-family-label: "Oswald", system-ui, -apple-system, sans-serif;
 }
 
 html[data-theme='light'],
@@ -545,8 +547,16 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 /* ==========================================================================
-   BUTTONS & MICRO-INTERACTIONS
-   ========================================================================== */
+button,
+label,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.btn-danger,
+.status-badge {
+  font-family: var(--font-family-label, inherit);
+}
+
 .btn-primary {
   background: var(--primary-color);
   color: var(--on-primary);
