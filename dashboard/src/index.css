@@ -278,55 +278,61 @@ html[data-theme='sunset-violet'],
 
 html[data-theme='monolith-noir'],
 [data-theme='monolith-noir'] {
-  /* --- 6. MONOLITH NOIR (Neo-Brutalism & Extreme Minimalism) --- */
+  /* --- 6. MONOLITH NOIR / MIDNIGHT OBSIDIAN (Industrial Sober Minimalism) --- */
   --bg-color: #121414;
-  --bg-secondary: #1b1c1c;
+  --bg-secondary: #1a1c1c;
   --text-color: #e3e2e2;
-  --text-muted: #c6c6c6;
+  --text-muted: #c4c7c7;
 
-  --primary-color: #ffffff;
-  --primary-hover: #d5d4d4;
-  --on-primary: #1b1c1c;
-  --primary-container: #d5d4d4;
-  --on-primary-container: #000000;
+  --primary-color: #c8c6c5;
+  --primary-hover: #e5e2e1;
+  --on-primary: #303030;
+  --primary-container: #1e1e1e;
+  --on-primary-container: #878585;
 
-  --secondary-color: #c7c6c6;
-  --secondary-hover: #e3e2e2;
-  --on-secondary: #1b1c1c;
-  --secondary-container: #464747;
-  --on-secondary-container: #e3e2e2;
+  --secondary-color: #c8c6c6;
+  --secondary-hover: #e4e2e1;
+  --on-secondary: #303030;
+  --secondary-container: #474747;
+  --on-secondary-container: #b6b5b4;
+
+  --tertiary-color: #edc23e;
+  --on-tertiary: #3d2f00;
+  --tertiary-container: #cfa722;
+  --on-tertiary-container: #4f3d00;
 
   --surface-val: #121414;
   --surface-dim-val: #121414;
-  --surface-bright-val: #393939;
-  --surface-container-val: #1f2020;
-  --surface-container-low-val: #1b1c1c;
+  --surface-bright-val: #38393a;
+  --surface-container-val: #1e2020;
+  --surface-container-low-val: #1a1c1c;
   --surface-container-high-val: #292a2a;
-  --surface-container-highest-val: #343535;
+  --surface-container-highest-val: #333535;
 
   --on-surface-val: #e3e2e2;
-  --on-surface-variant-val: #c6c6c6;
-  --outline-color: #919191;
-  --outline-variant-color: #474747;
+  --on-surface-variant-val: #c4c7c7;
+  --outline-color: #8e9192;
+  --outline-variant-color: #444748;
 
-  --card-bg: #1f2020;
-  --card-border: #919191;
+  --card-bg: #1e2020;
+  --card-border: #444748;
   --card-glow: none;
 
-  --glass-bg: #1b1c1c;
-  --glass-border: #919191;
+  --glass-bg: #1a1c1c;
+  --glass-border: #444748;
   --glass-blur: 0px;
   --glass-shadow: none;
 
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-lg: none;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.6);
   --shadow-accent: none;
   --shadow-ocre: none;
   --accent-glow: none;
 
   --font-family-sans: "Barlow Condensed", system-ui, -apple-system, sans-serif;
-  --font-family-display: "Bebas Neue", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Barlow Condensed", system-ui, -apple-system, sans-serif;
+  --font-family-label: "Oswald", system-ui, -apple-system, sans-serif;
 
   --radius-xs: 2px;
   --radius-sm: 2px;

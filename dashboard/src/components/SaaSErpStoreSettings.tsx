@@ -238,12 +238,12 @@ const ThemeSelectorManager: React.FC = () => {
     },
     {
       id: 'monolith-noir',
-      name: 'Monolith Noir',
-      subtitle: 'Neo-Brutalismo & Minimalismo Extremo',
+      name: 'Midnight Obsidian',
+      subtitle: 'Minimalismo Sóbrio & Oro Industrial ERP',
       bg: '#121414',
-      primary: '#ffffff',
-      border: '#919191',
-      tag: 'Neo-Brutalist'
+      primary: '#c8c6c5',
+      border: '#8e9192',
+      tag: 'Pro ERP / Sóbrio'
     }
   ];
 

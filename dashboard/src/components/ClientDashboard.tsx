@@ -130,7 +130,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     { id: 'cyberpunk-neon', name: 'Cyberpunk Neon', icon: 'bolt', color: '#a855f7', desc: 'Neón Morado & Cian' },
     { id: 'royal-light', name: 'Royal Light', icon: 'light_mode', color: '#2563eb', desc: 'Modo Claro Pulcro' },
     { id: 'sunset-violet', name: 'Sunset Violet', icon: 'auto_awesome', color: '#ec4899', desc: 'Violeta & Rosa Neón' },
-    { id: 'monolith-noir', name: 'Monolith Noir', icon: 'architecture', color: '#ffffff', desc: 'Neo-Brutalismo & Minimalismo' },
+    { id: 'monolith-noir', name: 'Midnight Obsidian', icon: 'dark_mode', color: '#c8c6c5', desc: 'Minimalismo Industrial ERP' },
   ];
 
   useEffect(() => {
