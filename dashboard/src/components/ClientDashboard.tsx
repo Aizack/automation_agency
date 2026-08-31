@@ -122,6 +122,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     return localStorage.getItem('app_theme') || localStorage.getItem('theme') || 'obsidian-gold';
   });
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const openDesignThemes = [
     { id: 'obsidian-gold', name: 'Obsidian Gold', icon: 'brightness_7', color: '#d8a24e', desc: 'Oscuro Lujo & Oro' },
@@ -1178,49 +1179,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         </nav>
 
         {/* User Session Info & Back / Logout footer */}
-        <div className="border-t border-outline/10 pt-4 mt-auto space-y-3">
-          <div className="flex items-center gap-3 px-3 py-2.5 bg-surface-container-high/60 rounded-2xl border border-outline/10 shadow-sm">
-            <div className="w-8 h-8 rounded-full bg-primary/20 text-primary font-black text-xs flex items-center justify-center border border-primary/30 shrink-0">
-              {activeUserName.substring(0, 1).toUpperCase()}
-            </div>
-            <div className="flex flex-col min-w-0 flex-1 text-left">
-              <span className="text-xs font-bold text-on-surface truncate leading-tight">{activeUserName}</span>
-              <span className="text-[10px] text-primary font-mono font-medium truncate uppercase tracking-wider">
-                {activeUserRole}
-              </span>
-            </div>
-          </div>
-
-          {rawRole === 'admin' ? (
-            <div className="space-y-1">
-              <button 
-                onClick={onBack}
-                className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border border-primary/30 cursor-pointer font-sans text-primary hover:bg-primary/10 bg-transparent transition-all"
-                title="Regresar a la consola de Super Administrador"
-              >
-                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                <span className="font-bold text-xs">Volver al Panel Admin</span>
-              </button>
-              <button 
-                onClick={() => {
-                  localStorage.removeItem('auth_token');
-                  localStorage.removeItem('session_role');
-                  localStorage.removeItem('current_client_id');
-                  window.location.reload();
-                }}
-                className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border-0 cursor-pointer font-sans text-on-surface-variant hover:bg-surface-variant/40 bg-transparent transition-all"
-              >
-                <span className="material-symbols-outlined text-[18px]">logout</span>
-                <span className="font-bold text-xs">Cerrar Sesión</span>
-              </button>
-            </div>
-          ) : (
+        <div className="border-t border-outline/10 pt-3 mt-auto flex items-center justify-between text-xs text-on-surface-variant">
+          <span className="text-[10px] font-mono opacity-50">Frant SaaS v1.0</span>
+          {rawRole === 'admin' && (
             <button 
               onClick={onBack}
-              className="w-full text-left flex items-center gap-3 p-2.5 rounded-xl border-0 cursor-pointer font-sans text-on-surface-variant hover:bg-surface-variant/40 bg-transparent transition-all"
+              className="text-[10px] text-primary hover:underline font-bold bg-transparent border-0 cursor-pointer flex items-center gap-1"
+              title="Volver a la consola admin"
             >
-              <span className="material-symbols-outlined text-[18px]">logout</span>
-              <span className="font-bold text-xs">Cerrar Sesión</span>
+              <span className="material-symbols-outlined text-[12px]">arrow_back</span>
+              Admin
             </button>
           )}
         </div>
@@ -1260,7 +1228,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             <div className="relative">
               <button 
                 type="button"
-                onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
+                onClick={() => {
+                  setIsThemeDropdownOpen(!isThemeDropdownOpen);
+                  setIsUserMenuOpen(false);
+                }}
                 className="px-3 py-1.5 rounded-xl bg-surface-container/60 hover:bg-surface-container border border-outline/20 flex items-center gap-2 cursor-pointer transition text-on-surface text-xs font-semibold shadow-sm"
                 title="Cambiar Paleta de Tema (Open-Design Tokens)"
               >
@@ -1315,21 +1286,63 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               )}
             </div>
 
-            {/* Business Logo/Profile badge */}
-            <div className="flex items-center gap-2">
-              <div className="text-right hidden sm:block">
-                <p className="font-label-md text-xs font-bold text-on-surface">{clientData.name}</p>
-                <p className="text-[9px] text-on-surface-variant uppercase tracking-tighter">Panel de Gestión</p>
-              </div>
-              {clientData?.logo_url ? (
-                <img 
-                  src={`${clientData.logo_url}?t=${logoBuster}`} 
-                  alt="Perfil" 
-                  className="w-8 h-8 rounded-full object-contain bg-white/5 border border-outline/20 p-0.5" 
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
-                  {clientData?.name.substring(0, 2).toUpperCase()}
+            {/* User Profile Badge & Dropdown Menu */}
+            <div className="relative">
+              <button 
+                type="button"
+                onClick={() => {
+                  setIsUserMenuOpen(!isUserMenuOpen);
+                  setIsThemeDropdownOpen(false);
+                }}
+                className="flex items-center gap-2.5 p-1 px-3 rounded-2xl bg-surface-container/60 hover:bg-surface-container border border-outline/20 transition cursor-pointer text-left shadow-sm"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary/20 text-primary font-black text-xs flex items-center justify-center border border-primary/30 shrink-0">
+                  {activeUserName.substring(0, 1).toUpperCase()}
+                </div>
+                <div className="hidden sm:flex flex-col min-w-0">
+                  <span className="text-xs font-bold text-on-surface truncate leading-tight">{activeUserName}</span>
+                  <span className="text-[9px] text-primary font-mono font-medium truncate uppercase tracking-wider">
+                    {activeUserRole}
+                  </span>
+                </div>
+                <span className="material-symbols-outlined text-[16px] text-on-surface-variant opacity-70">arrow_drop_down</span>
+              </button>
+
+              {/* Menú Desplegable de Usuario */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-60 bg-surface-container-highest border border-outline/20 rounded-2xl shadow-2xl p-2 z-50 divide-y divide-outline/10 backdrop-blur-xl animate-fade-in">
+                  <div className="p-3 space-y-1">
+                    <p className="text-xs font-bold text-on-surface leading-tight">{activeUserName}</p>
+                    <p className="text-[10px] text-primary font-mono uppercase font-semibold">{activeUserRole}</p>
+                    <p className="text-[10px] text-on-surface-variant opacity-70 truncate">{clientData?.name}</p>
+                  </div>
+
+                  <div className="py-1 space-y-1">
+                    {rawRole === 'admin' && (
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          onBack();
+                        }}
+                        className="w-full text-left p-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-primary hover:bg-primary/10 transition cursor-pointer border-0"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                        Volver al Panel Admin
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('auth_token');
+                        localStorage.removeItem('session_role');
+                        localStorage.removeItem('current_client_id');
+                        window.location.reload();
+                      }}
+                      className="w-full text-left p-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-red-400 hover:bg-red-500/10 transition cursor-pointer border-0"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">logout</span>
+                      Cerrar Sesión
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
