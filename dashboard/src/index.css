@@ -275,6 +275,66 @@ html[data-theme='sunset-violet'],
   --accent-glow: 0 0 22px rgba(236, 72, 153, 0.35);
 }
 
+html[data-theme='monolith-noir'],
+[data-theme='monolith-noir'] {
+  /* --- 6. MONOLITH NOIR (Neo-Brutalism & Extreme Minimalism) --- */
+  --bg-color: #121414;
+  --bg-secondary: #1b1c1c;
+  --text-color: #e3e2e2;
+  --text-muted: #c6c6c6;
+
+  --primary-color: #ffffff;
+  --primary-hover: #d5d4d4;
+  --on-primary: #1b1c1c;
+  --primary-container: #d5d4d4;
+  --on-primary-container: #000000;
+
+  --secondary-color: #c7c6c6;
+  --secondary-hover: #e3e2e2;
+  --on-secondary: #1b1c1c;
+  --secondary-container: #464747;
+  --on-secondary-container: #e3e2e2;
+
+  --surface-val: #121414;
+  --surface-dim-val: #121414;
+  --surface-bright-val: #393939;
+  --surface-container-val: #1f2020;
+  --surface-container-low-val: #1b1c1c;
+  --surface-container-high-val: #292a2a;
+  --surface-container-highest-val: #343535;
+
+  --on-surface-val: #e3e2e2;
+  --on-surface-variant-val: #c6c6c6;
+  --outline-color: #919191;
+  --outline-variant-color: #474747;
+
+  --card-bg: #1f2020;
+  --card-border: #919191;
+  --card-glow: none;
+
+  --glass-bg: #1b1c1c;
+  --glass-border: #919191;
+  --glass-blur: 0px;
+  --glass-shadow: none;
+
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-accent: none;
+  --shadow-ocre: none;
+  --accent-glow: none;
+
+  --font-family-sans: "Barlow Condensed", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Anton", system-ui, -apple-system, sans-serif;
+
+  --radius-xs: 2px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-full: 9999px;
+}
+
 /* --- Compatibility Aliases for Legacy Themes --- */
 html[data-theme='dark'],
 [data-theme='dark'] {

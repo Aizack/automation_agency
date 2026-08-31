@@ -235,6 +235,15 @@ const ThemeSelectorManager: React.FC = () => {
       primary: '#ec4899',
       border: 'rgba(236, 72, 153, 0.4)',
       tag: 'Boutique / Moda'
+    },
+    {
+      id: 'monolith-noir',
+      name: 'Monolith Noir',
+      subtitle: 'Neo-Brutalismo & Minimalismo Extremo',
+      bg: '#121414',
+      primary: '#ffffff',
+      border: '#919191',
+      tag: 'Neo-Brutalist'
     }
   ];
 
