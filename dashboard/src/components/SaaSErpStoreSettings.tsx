@@ -194,11 +194,11 @@ const ThemeSelectorManager: React.FC = () => {
     {
       id: 'obsidian-gold',
       name: 'Obsidian Gold',
-      subtitle: 'Oscuro Lujo & Oro (Predeterminado)',
-      bg: '#0d0d0d',
-      primary: '#d8a24e',
-      border: 'rgba(216, 162, 78, 0.4)',
-      tag: 'Lujo / Premium'
+      subtitle: 'Obsidiana Sóbria & Oro Industrial ERP (Predeterminado)',
+      bg: '#121414',
+      primary: '#edc23e',
+      border: 'rgba(237, 194, 62, 0.4)',
+      tag: 'Lujo / Industrial'
     },
     {
       id: 'emerald-lux',

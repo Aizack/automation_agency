@@ -125,7 +125,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const openDesignThemes = [
-    { id: 'obsidian-gold', name: 'Obsidian Gold', icon: 'brightness_7', color: '#d8a24e', desc: 'Oscuro Lujo & Oro' },
+    { id: 'obsidian-gold', name: 'Obsidian Gold', icon: 'brightness_7', color: '#edc23e', desc: 'Oscuro Lujo & Oro Industrial' },
     { id: 'emerald-lux', name: 'Emerald Lux', icon: 'eco', color: '#10b981', desc: 'Esmeralda & Menta' },
     { id: 'cyberpunk-neon', name: 'Cyberpunk Neon', icon: 'bolt', color: '#a855f7', desc: 'Neón Morado & Cian' },
     { id: 'royal-light', name: 'Royal Light', icon: 'light_mode', color: '#2563eb', desc: 'Modo Claro Pulcro' },

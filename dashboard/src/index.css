@@ -8,52 +8,52 @@
 :root,
 html[data-theme='obsidian-gold'],
 [data-theme='obsidian-gold'] {
-  /* --- 1. OBSIDIAN-GOLD (Predeterminado: Oscuro Lujo con Oro/Ámbar #d8a24e) --- */
-  --bg-color: #0d0d0d;
-  --bg-secondary: #141414;
-  --text-color: #f1f5f9;
-  --text-muted: #94a3b8;
+  /* --- 1. OBSIDIAN-GOLD (Midnight Obsidian Base #121414 con Oro Industrial #edc23e) --- */
+  --bg-color: #121414;
+  --bg-secondary: #1a1c1c;
+  --text-color: #e3e2e2;
+  --text-muted: #c4c7c7;
   
-  --primary-color: #d8a24e;
-  --primary-hover: #e5b360;
-  --on-primary: #0d0d0d;
-  --primary-container: #2a2012;
-  --on-primary-container: #f7e7ce;
+  --primary-color: #edc23e;
+  --primary-hover: #f5d365;
+  --on-primary: #3d2f00;
+  --primary-container: #332800;
+  --on-primary-container: #ffe699;
 
-  --secondary-color: #f59e0b;
-  --secondary-hover: #fbbf24;
-  --on-secondary: #0d0d0d;
-  --secondary-container: #332308;
-  --on-secondary-container: #fde68a;
+  --secondary-color: #cfa722;
+  --secondary-hover: #e0b833;
+  --on-secondary: #3d2f00;
+  --secondary-container: #4f3d00;
+  --on-secondary-container: #ffe08d;
 
-  --surface-val: #141414;
-  --surface-dim-val: #0d0d0d;
-  --surface-bright-val: #222222;
-  --surface-container-val: #181818;
-  --surface-container-low-val: #121212;
-  --surface-container-high-val: #1e1e1e;
-  --surface-container-highest-val: #262626;
+  --surface-val: #121414;
+  --surface-dim-val: #121414;
+  --surface-bright-val: #38393a;
+  --surface-container-val: #1e2020;
+  --surface-container-low-val: #1a1c1c;
+  --surface-container-high-val: #292a2a;
+  --surface-container-highest-val: #333535;
 
-  --on-surface-val: #f1f5f9;
-  --on-surface-variant-val: #94a3b8;
-  --outline-color: rgba(216, 162, 78, 0.2);
-  --outline-variant-color: rgba(255, 255, 255, 0.06);
+  --on-surface-val: #e3e2e2;
+  --on-surface-variant-val: #c4c7c7;
+  --outline-color: rgba(237, 194, 62, 0.25);
+  --outline-variant-color: #444748;
 
-  --card-bg: rgba(20, 20, 20, 0.78);
-  --card-border: rgba(216, 162, 78, 0.22);
-  --card-glow: rgba(216, 162, 78, 0.15);
+  --card-bg: rgba(30, 32, 32, 0.85);
+  --card-border: rgba(237, 194, 62, 0.28);
+  --card-glow: rgba(237, 194, 62, 0.15);
 
-  --glass-bg: rgba(18, 18, 18, 0.72);
-  --glass-border: rgba(216, 162, 78, 0.25);
+  --glass-bg: rgba(26, 28, 28, 0.8);
+  --glass-border: rgba(237, 194, 62, 0.3);
   --glass-blur: 16px;
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
 
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
-  --shadow-accent: 0 4px 25px rgba(216, 162, 78, 0.22);
-  --shadow-ocre: 0 4px 20px rgba(216, 162, 78, 0.2);
-  --accent-glow: 0 0 20px rgba(216, 162, 78, 0.35);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.65);
+  --shadow-accent: 0 4px 25px rgba(237, 194, 62, 0.25);
+  --shadow-ocre: 0 4px 20px rgba(237, 194, 62, 0.22);
+  --accent-glow: 0 0 20px rgba(237, 194, 62, 0.35);
 
   --font-family-sans: "Barlow Condensed", system-ui, -apple-system, sans-serif;
   --font-family-display: "Barlow Condensed", system-ui, -apple-system, sans-serif;
@@ -345,43 +345,43 @@ html[data-theme='monolith-noir'],
 /* --- Compatibility Aliases for Legacy Themes --- */
 html[data-theme='dark'],
 [data-theme='dark'] {
-  --bg-color: #0d0d0d;
-  --bg-secondary: #141414;
-  --text-color: #f1f5f9;
-  --text-muted: #94a3b8;
-  --primary-color: #d8a24e;
-  --primary-hover: #e5b360;
-  --on-primary: #0d0d0d;
-  --primary-container: #2a2012;
-  --on-primary-container: #f7e7ce;
-  --secondary-color: #f59e0b;
-  --on-secondary: #0d0d0d;
-  --secondary-container: #332308;
-  --on-secondary-container: #fde68a;
-  --surface-val: #141414;
-  --surface-dim-val: #0d0d0d;
-  --surface-bright-val: #222222;
-  --surface-container-val: #181818;
-  --surface-container-low-val: #121212;
-  --surface-container-high-val: #1e1e1e;
-  --surface-container-highest-val: #262626;
-  --on-surface-val: #f1f5f9;
-  --on-surface-variant-val: #94a3b8;
-  --outline-color: rgba(216, 162, 78, 0.2);
-  --outline-variant-color: rgba(255, 255, 255, 0.06);
-  --card-bg: rgba(20, 20, 20, 0.78);
-  --card-border: rgba(216, 162, 78, 0.22);
-  --card-glow: rgba(216, 162, 78, 0.15);
-  --glass-bg: rgba(18, 18, 18, 0.72);
-  --glass-border: rgba(216, 162, 78, 0.25);
+  --bg-color: #121414;
+  --bg-secondary: #1a1c1c;
+  --text-color: #e3e2e2;
+  --text-muted: #c4c7c7;
+  --primary-color: #edc23e;
+  --primary-hover: #f5d365;
+  --on-primary: #3d2f00;
+  --primary-container: #332800;
+  --on-primary-container: #ffe699;
+  --secondary-color: #cfa722;
+  --on-secondary: #3d2f00;
+  --secondary-container: #4f3d00;
+  --on-secondary-container: #ffe08d;
+  --surface-val: #121414;
+  --surface-dim-val: #121414;
+  --surface-bright-val: #38393a;
+  --surface-container-val: #1e2020;
+  --surface-container-low-val: #1a1c1c;
+  --surface-container-high-val: #292a2a;
+  --surface-container-highest-val: #333535;
+  --on-surface-val: #e3e2e2;
+  --on-surface-variant-val: #c4c7c7;
+  --outline-color: rgba(237, 194, 62, 0.25);
+  --outline-variant-color: #444748;
+  --card-bg: rgba(30, 32, 32, 0.85);
+  --card-border: rgba(237, 194, 62, 0.28);
+  --card-glow: rgba(237, 194, 62, 0.15);
+  --glass-bg: rgba(26, 28, 28, 0.8);
+  --glass-border: rgba(237, 194, 62, 0.3);
   --glass-blur: 16px;
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
-  --shadow-accent: 0 4px 25px rgba(216, 162, 78, 0.22);
-  --shadow-ocre: 0 4px 20px rgba(216, 162, 78, 0.2);
-  --accent-glow: 0 0 20px rgba(216, 162, 78, 0.35);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.65);
+  --shadow-accent: 0 4px 25px rgba(237, 194, 62, 0.25);
+  --shadow-ocre: 0 4px 20px rgba(237, 194, 62, 0.22);
+  --accent-glow: 0 0 20px rgba(237, 194, 62, 0.35);
   --font-family-sans: "Barlow Condensed", system-ui, -apple-system, sans-serif;
   --font-family-display: "Barlow Condensed", system-ui, -apple-system, sans-serif;
   --font-family-label: "Oswald", system-ui, -apple-system, sans-serif;
