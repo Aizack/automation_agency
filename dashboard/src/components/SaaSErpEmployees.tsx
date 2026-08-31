@@ -2964,12 +2964,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                                                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-outline/10 text-xs">
                                                         <div>
-                                                            <span className="text-on-surface-variant text-[11px]">Monto a Recibir: </span>
+                                                            <span className="text-on-surface-variant text-[11px]">Estado de Pago: </span>
                                                             <strong className={`font-bold font-mono text-sm ${del.payment_status === 'paid' ? 'text-green-400' : 'text-amber-400'}`}>
                                                                 ${del.total_amount.toLocaleString('es-CO')} COP
                                                             </strong>
-                                                            <span className="text-[10px] text-on-surface-variant ml-1 font-mono uppercase">
-                                                                ({del.payment_method === 'efectivo' ? '💵 Efectivo Contra-Entrega' : '🏦 Pagado por Nequi/Banco'})
+                                                            <span className="text-[10px] text-on-surface-variant ml-1 font-mono uppercase block">
+                                                                {del.payment_status === 'paid'
+                                                                    ? '✅ Pagado Previamente (Banco/Tienda)'
+                                                                    : `⚠️ Pendiente de Cobro (${del.payment_method === 'efectivo' ? '💵 Efectivo Contra-Entrega' : '🏦 Nequi/Transferencia'})`}
                                                             </span>
                                                         </div>
 

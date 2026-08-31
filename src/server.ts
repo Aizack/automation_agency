@@ -2967,6 +2967,116 @@ app.get('/api/clients/:clientId/employees/:employeeId/deliveries', async (req: R
   }
 });
 
+// Actualizar estado de entrega desde la ruta del domiciliario (Speedie Gonzalez / Repartidor)
+app.put('/api/clients/:clientId/deliveries/:invoiceId/status', async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    const { delivery_status, notes, delivery_date } = req.body;
+
+    if (!delivery_status) {
+      return res.status(400).json({ success: false, error: 'El estado de entrega es requerido.' });
+    }
+
+    // Actualizar factura
+    await pool.query(
+      `UPDATE invoices 
+       SET delivery_status = $1, 
+           delivery_date = COALESCE($2, delivery_date),
+           updated_at = NOW() 
+       WHERE client_id = $3 AND id = $4`,
+      [delivery_status, delivery_date || null, clientId, invoiceId]
+    );
+
+    // Actualizar o crear registro en la tabla deliveries
+    const delUpdate = await pool.query(
+      `UPDATE deliveries 
+       SET status = $1, notes = COALESCE($2, notes) 
+       WHERE client_id = $3 AND invoice_id = $4`,
+      [delivery_status, notes || null, clientId, invoiceId]
+    );
+
+    if (delUpdate.rowCount === 0) {
+      const invRow = await pool.query(
+        `SELECT customer_name, customer_phone, delivery_address, customer_address FROM invoices WHERE id = $1`,
+        [invoiceId]
+      );
+      if (invRow.rows.length > 0) {
+        const inv = invRow.rows[0];
+        await pool.query(
+          `INSERT INTO deliveries (client_id, invoice_id, recipient_name, recipient_phone, address, status, notes)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [clientId, invoiceId, inv.customer_name, inv.customer_phone, inv.delivery_address || inv.customer_address || 'Sin Dirección', delivery_status, notes || null]
+        );
+      }
+    }
+
+    res.json({ success: true, message: `Estado de entrega actualizado correctamente a '${delivery_status}'.` });
+  } catch (err: any) {
+    console.error("Error updating delivery status:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Registrar Cobro en Efectivo o Transferencia recibido por el Domiciliario
+app.post('/api/clients/:clientId/deliveries/:invoiceId/collect-payment', async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    const { payment_method, received_amount, notes, employee_name } = req.body;
+
+    const method = payment_method || 'efectivo';
+    const collectorName = employee_name || 'Repartidor / Domiciliario';
+
+    // 1. Marcar factura como PAGADA y entregada
+    const invRes = await pool.query(
+      `UPDATE invoices 
+       SET status = 'paid', 
+           payment_method = $1, 
+           delivery_status = 'delivered',
+           paid_by_user_name = $2,
+           updated_at = NOW()
+       WHERE client_id = $3 AND id = $4
+       RETURNING id, invoice_number, customer_name, customer_phone, total_amount`,
+      [method, collectorName, clientId, invoiceId]
+    );
+
+    if (invRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
+    }
+
+    const inv = invRes.rows[0];
+
+    // 2. Actualizar estado de entrega a 'delivered'
+    const delUpdate = await pool.query(
+      `UPDATE deliveries 
+       SET status = 'delivered', notes = COALESCE($1, notes) 
+       WHERE client_id = $2 AND invoice_id = $3`,
+      [notes || `Cobro contra-entrega recibido por ${collectorName} (${method.toUpperCase()})`, clientId, invoiceId]
+    );
+
+    if (delUpdate.rowCount === 0) {
+      await pool.query(
+        `INSERT INTO deliveries (client_id, invoice_id, recipient_name, recipient_phone, address, status, notes)
+         VALUES ($1, $2, $3, $4, $5, 'delivered', $6)`,
+        [clientId, invoiceId, inv.customer_name, inv.customer_phone || '', 'Entregado', notes || `Cobro en ${method.toUpperCase()} recibido por ${collectorName}`]
+      );
+    }
+
+    // 3. Marcar cuotas asociadas como pagadas si existen
+    await pool.query(
+      `UPDATE invoice_installments SET status = 'paid', paid_amount = amount, paid_at = NOW() WHERE invoice_id = $1`,
+      [invoiceId]
+    );
+
+    res.json({ 
+      success: true, 
+      message: `✅ Cobro de $${parseFloat(inv.total_amount).toLocaleString('es-CO')} registrado exitosamente (${method.toUpperCase()}). Factura #${inv.invoice_number} marcada como Pagada y Entregada.`
+    });
+  } catch (err: any) {
+    console.error("Error collecting delivery payment:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Endpoint de Prueba: Generar 6 Facturas de Domicilio de Prueba para Speedie Gonzalez
 app.post('/api/clients/:clientId/deliveries/seed-test', async (req: Request, res: Response) => {
   try {

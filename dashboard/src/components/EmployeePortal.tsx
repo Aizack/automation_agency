@@ -101,6 +101,77 @@ export const EmployeePortal: React.FC = () => {
         }
     };
 
+    // Delivery collect payment state
+    const [isCollectPaymentOpen, setIsCollectPaymentOpen] = useState(false);
+    const [selectedCollectDelivery, setSelectedCollectDelivery] = useState<any>(null);
+    const [collectMethod, setCollectMethod] = useState<'efectivo' | 'transferencia'>('efectivo');
+    const [receivedCashAmount, setReceivedCashAmount] = useState('');
+    const [collectNotes, setCollectNotes] = useState('');
+    const [collectLoading, setCollectLoading] = useState(false);
+
+    const handleUpdateDeliveryStatus = async (invoiceId: string, status: string) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/clients/${clientId}/deliveries/${invoiceId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ delivery_status: status })
+            });
+            if (res.ok) {
+                alert(`✅ Estado de entrega actualizado a: ${status.toUpperCase()}`);
+                fetchMyDeliveries();
+            } else {
+                const errData = await res.json();
+                alert(`⚠️ Error: ${errData.error || 'No se pudo actualizar el estado'}`);
+            }
+        } catch (err) {
+            console.error("Error updating delivery status:", err);
+            alert("⚠️ Error de conexión al actualizar entrega");
+        }
+    };
+
+    const handleConfirmCollectPayment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedCollectDelivery) return;
+
+        setCollectLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/clients/${clientId}/deliveries/${selectedCollectDelivery.invoice_id}/collect-payment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    payment_method: collectMethod,
+                    amount_received: collectMethod === 'efectivo' ? (parseFloat(receivedCashAmount) || selectedCollectDelivery.total_amount) : selectedCollectDelivery.total_amount,
+                    notes: collectNotes
+                })
+            });
+
+            if (res.ok) {
+                alert(`✅ Pago de $${selectedCollectDelivery.total_amount.toLocaleString('es-CO')} registrado exitosamente.`);
+                setIsCollectPaymentOpen(false);
+                setSelectedCollectDelivery(null);
+                setReceivedCashAmount('');
+                setCollectNotes('');
+                fetchMyDeliveries();
+            } else {
+                const errData = await res.json();
+                alert(`⚠️ Error: ${errData.error || 'No se pudo registrar el cobro'}`);
+            }
+        } catch (err) {
+            console.error("Error collecting payment:", err);
+            alert("⚠️ Error de conexión al procesar el cobro");
+        } finally {
+            setCollectLoading(false);
+        }
+    };
+
     // Timer Interval ref
     const [timerActive, setTimerActive] = useState(false);
     const [shiftStartTimestamp, setShiftStartTimestamp] = useState<number | null>(null);
@@ -1798,18 +1869,41 @@ export const EmployeePortal: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-outline/10 text-xs">
+                                        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-outline/10 text-xs">
                                             <div>
-                                                <span className="text-on-surface-variant text-[11px]">Monto a Recibir: </span>
-                                                <strong className={`font-bold font-mono text-sm ${del.payment_status === 'paid' ? 'text-green-400' : 'text-amber-400'}`}>
+                                                <span className="text-on-surface-variant text-[11px] block">Monto a Recibir / Cobrar: </span>
+                                                <strong className={`font-bold font-mono text-base ${del.payment_status === 'paid' ? 'text-green-400' : 'text-amber-400'}`}>
                                                     ${del.total_amount.toLocaleString('es-CO')} COP
                                                 </strong>
-                                                <span className="text-[10px] text-on-surface-variant block font-mono uppercase mt-0.5">
-                                                    ({del.payment_method === 'efectivo' ? '💵 Efectivo Contra-Entrega' : '🏦 Pagado por Nequi/Banco'})
-                                                </span>
+                                                <div className="mt-1">
+                                                    {del.payment_status === 'paid' ? (
+                                                        <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-md border border-emerald-500/30 uppercase tracking-wider inline-flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[12px]">verified</span>
+                                                            ✅ PAGADO PREVIAMENTE ({del.payment_method || 'Banco/Nequi'})
+                                                        </span>
+                                                    ) : (
+                                                        <span className="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-500/30 uppercase tracking-wider inline-flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[12px]">payments</span>
+                                                            ⚠️ PENDIENTE DE COBRO CONTRA-ENTREGA
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            <div className="flex gap-2">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {del.payment_status !== 'paid' && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedCollectDelivery(del);
+                                                            setReceivedCashAmount(del.total_amount.toString());
+                                                            setIsCollectPaymentOpen(true);
+                                                        }}
+                                                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg border-0 cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">payments</span>
+                                                        💵 Registrar Cobro
+                                                    </button>
+                                                )}
                                                 <a
                                                     href={`https://maps.google.com/?q=${encodeURIComponent(del.delivery_address)}`}
                                                     target="_blank"
@@ -1817,10 +1911,10 @@ export const EmployeePortal: React.FC = () => {
                                                     className="bg-surface-container-high hover:bg-surface-container text-on-surface font-semibold text-[11px] px-3 py-2 rounded-xl border border-outline/20 transition flex items-center gap-1"
                                                 >
                                                     <span className="material-symbols-outlined text-[15px]">map</span>
-                                                    Navegar Mapa
+                                                    Mapa
                                                 </a>
                                                 <a
-                                                    href={`https://wa.me/${del.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${del.customer_name}, soy Speedie Gonzalez tu domiciliario. Estoy en camino a la dirección ${del.delivery_address} con tu pedido de la Factura #${del.invoice_number}.`)}`}
+                                                    href={`https://wa.me/${del.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${del.customer_name}, soy tu domiciliario de la empresa. Estoy en camino a tu dirección (${del.delivery_address}) con el pedido #${del.invoice_number}.`)}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="bg-green-600 hover:bg-green-500 text-white font-bold text-[11px] px-3 py-2 rounded-xl transition flex items-center gap-1 shadow-md"
@@ -1828,6 +1922,48 @@ export const EmployeePortal: React.FC = () => {
                                                     <span className="material-symbols-outlined text-[15px]">chat</span>
                                                     WhatsApp
                                                 </a>
+                                            </div>
+                                        </div>
+
+                                        {/* Acciones Rápidas de Estado de Entrega */}
+                                        <div className="pt-2.5 border-t border-outline/10 space-y-1.5">
+                                            <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">Notificar Estado de la Entrega:</span>
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                                <button
+                                                    onClick={() => handleUpdateDeliveryStatus(del.invoice_id, 'delivered')}
+                                                    className={`py-1.5 px-2 rounded-xl font-bold text-[10px] transition border cursor-pointer flex items-center justify-center gap-1 ${
+                                                        del.delivery_status === 'delivered' ? 'bg-green-600 text-white border-green-500' : 'bg-surface-container-high/40 text-on-surface hover:bg-green-600/20 border-outline/15'
+                                                    }`}
+                                                >
+                                                    ✅ Entregado
+                                                </button>
+                                                <button
+                                                    onClick={() => handleUpdateDeliveryStatus(del.invoice_id, 'in_transit')}
+                                                    className={`py-1.5 px-2 rounded-xl font-bold text-[10px] transition border cursor-pointer flex items-center justify-center gap-1 ${
+                                                        del.delivery_status === 'in_transit' ? 'bg-amber-600 text-white border-amber-500' : 'bg-surface-container-high/40 text-on-surface hover:bg-amber-600/20 border-outline/15'
+                                                    }`}
+                                                >
+                                                    🚀 En Camino
+                                                </button>
+                                                <button
+                                                    onClick={() => handleUpdateDeliveryStatus(del.invoice_id, 'absent')}
+                                                    className={`py-1.5 px-2 rounded-xl font-bold text-[10px] transition border cursor-pointer flex items-center justify-center gap-1 ${
+                                                        del.delivery_status === 'absent' ? 'bg-orange-600 text-white border-orange-500' : 'bg-surface-container-high/40 text-on-surface hover:bg-orange-600/20 border-outline/15'
+                                                    }`}
+                                                >
+                                                    ⚠️ No Estaba
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        const newDate = prompt("Ingrese nueva fecha de entrega (YYYY-MM-DD):");
+                                                        if (newDate) handleUpdateDeliveryStatus(del.invoice_id, 'rescheduled');
+                                                    }}
+                                                    className={`py-1.5 px-2 rounded-xl font-bold text-[10px] transition border cursor-pointer flex items-center justify-center gap-1 ${
+                                                        del.delivery_status === 'rescheduled' ? 'bg-purple-600 text-white border-purple-500' : 'bg-surface-container-high/40 text-on-surface hover:bg-purple-600/20 border-outline/15'
+                                                    }`}
+                                                >
+                                                    📅 Reprogramar
+                                                </button>
                                             </div>
                                         </div>
 
@@ -2891,6 +3027,115 @@ export const EmployeePortal: React.FC = () => {
                                     className="w-full py-2 bg-primary hover:bg-primary-container text-white font-bold rounded-xl cursor-pointer transition shadow disabled:opacity-50 mt-2"
                                 >
                                     {isSubmittingReport ? 'Programando...' : 'Programar Actividad'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>,
+                    document.body
+                )}
+
+                {/* MODAL REGISTRAR COBRO DE ENTREGA / DOMICILIO */}
+                {isCollectPaymentOpen && selectedCollectDelivery && createPortal(
+                    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+                        <div className="bg-surface p-6 rounded-3xl max-w-md w-full border border-outline/20 shadow-2xl space-y-4 text-left">
+                            <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-emerald-400 text-[24px]">payments</span>
+                                    <h3 className="font-extrabold text-sm text-on-surface uppercase tracking-wider">
+                                        Registrar Cobro de Domicilio
+                                    </h3>
+                                </div>
+                                <button
+                                    onClick={() => setIsCollectPaymentOpen(false)}
+                                    className="text-on-surface-variant hover:text-on-surface bg-transparent border-0 cursor-pointer p-1"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">close</span>
+                                </button>
+                            </div>
+
+                            <div className="bg-surface-container-high/40 p-3.5 rounded-2xl border border-outline/10 space-y-1.5 text-xs">
+                                <p className="text-on-surface font-bold text-sm">Factura #{selectedCollectDelivery.invoice_number}</p>
+                                <p className="text-on-surface-variant">Cliente: <strong className="text-on-surface">{selectedCollectDelivery.customer_name}</strong></p>
+                                <p className="text-on-surface-variant">Dirección: <span className="text-emerald-400 font-semibold">{selectedCollectDelivery.delivery_address}</span></p>
+                                <div className="pt-2 border-t border-outline/10 flex justify-between items-center text-sm">
+                                    <span className="text-on-surface-variant font-medium">Total a Cobrar:</span>
+                                    <strong className="text-emerald-400 font-mono text-base font-extrabold">
+                                        ${selectedCollectDelivery.total_amount.toLocaleString('es-CO')} COP
+                                    </strong>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleConfirmCollectPayment} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="block text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Método de Pago Recibido *</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setCollectMethod('efectivo')}
+                                            className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition border cursor-pointer ${
+                                                collectMethod === 'efectivo' 
+                                                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-md' 
+                                                    : 'bg-surface-container border-outline/20 text-on-surface hover:bg-surface-container-high'
+                                            }`}
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">payments</span>
+                                            💵 Efectivo
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCollectMethod('transferencia')}
+                                            className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition border cursor-pointer ${
+                                                collectMethod === 'transferencia' 
+                                                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-md' 
+                                                    : 'bg-surface-container border-outline/20 text-on-surface hover:bg-surface-container-high'
+                                            }`}
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">account_balance</span>
+                                            🏦 Nequi / Bancolombia
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {collectMethod === 'efectivo' && (
+                                    <div className="space-y-1 bg-surface-container/30 p-3 rounded-2xl border border-outline/10">
+                                        <label className="block text-[11px] font-bold text-on-surface-variant uppercase">Efectivo Entregado por Cliente ($ COP)</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            value={receivedCashAmount}
+                                            onChange={(e) => setReceivedCashAmount(e.target.value)}
+                                            className="w-full bg-surface-container border border-outline/20 p-2.5 rounded-xl text-on-surface text-sm font-mono font-bold outline-none focus:border-emerald-500"
+                                            placeholder="Monto de billete recibido..."
+                                        />
+                                        {parseFloat(receivedCashAmount) > selectedCollectDelivery.total_amount && (
+                                            <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl mt-2 flex justify-between items-center text-xs">
+                                                <span className="text-emerald-400 font-medium">Vueltos / Cambio a dar:</span>
+                                                <strong className="text-emerald-400 font-mono text-sm font-bold">
+                                                    ${(parseFloat(receivedCashAmount) - selectedCollectDelivery.total_amount).toLocaleString('es-CO')} COP
+                                                </strong>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="space-y-1">
+                                    <label className="block text-[11px] font-bold text-on-surface-variant uppercase">Notas / Referencia del Pago</label>
+                                    <textarea
+                                        rows={2}
+                                        value={collectNotes}
+                                        onChange={(e) => setCollectNotes(e.target.value)}
+                                        className="w-full bg-surface-container border border-outline/20 p-2.5 rounded-xl text-on-surface outline-none resize-none font-sans text-xs"
+                                        placeholder="Ej: Cobrado en mano, comprobante Nequi M123456..."
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={collectLoading}
+                                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition shadow-xl border-0 uppercase tracking-wider disabled:opacity-50"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                                    {collectLoading ? 'Registrando Pago...' : '✓ Confirmar y Registrar Pago de Factura'}
                                 </button>
                             </form>
                         </div>
