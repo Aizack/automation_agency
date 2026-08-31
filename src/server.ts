@@ -2878,9 +2878,12 @@ app.get('/api/clients/:clientId/deliveries', authenticateToken as any, authorize
          i.created_at,
          d.id AS delivery_row_id,
          d.invoice_id,
+         d.delivery_guy_id,
+         COALESCE(NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') AS delivery_guy_name,
          d.route_order
        FROM invoices i
        LEFT JOIN deliveries d ON d.client_id = i.client_id AND d.invoice_id = i.id
+       LEFT JOIN employees e ON e.id = d.delivery_guy_id
        WHERE i.client_id = $1 AND i.delivery_method = 'domicilio'
        ORDER BY
          d.route_order ASC NULLS LAST,
@@ -2905,6 +2908,8 @@ app.get('/api/clients/:clientId/deliveries', authenticateToken as any, authorize
         delivery_fee: row.delivery_fee ?? '0',
         delivery_date: row.delivery_date,
         delivery_status: row.delivery_status,
+        delivery_guy_id: row.delivery_guy_id || null,
+        delivery_guy_name: row.delivery_guy_name || 'Sin asignar',
         created_at: row.created_at,
         route_order: row.route_order ?? 0
       }))
@@ -3221,7 +3226,7 @@ app.post('/api/clients/:clientId/deliveries/seed-test', async (req: Request, res
 app.patch('/api/clients/:clientId/invoices/:invoiceId/delivery', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, invoiceId } = req.params;
-    const { deliveryMethod, deliveryFee, deliveryAddress, deliveryDate, deliveryStatus } = req.body;
+    const { deliveryMethod, deliveryFee, deliveryAddress, deliveryDate, deliveryStatus, deliveryGuyId } = req.body;
 
     const result = await pool.query(
       `UPDATE invoices
@@ -3270,6 +3275,7 @@ app.patch('/api/clients/:clientId/invoices/:invoiceId/delivery', authenticateTok
                recipient_phone = $4,
                address = $5,
                status = $6,
+               delivery_guy_id = COALESCE($7, delivery_guy_id),
                notes = COALESCE(notes, 'Sin notas')
            WHERE client_id = $1 AND invoice_id = $2`,
           [
@@ -3278,20 +3284,22 @@ app.patch('/api/clients/:clientId/invoices/:invoiceId/delivery', authenticateTok
             invoice.customer_name,
             invoice.customer_phone,
             destinationAddress,
-            invoice.delivery_status || 'pending'
+            invoice.delivery_status || 'pending',
+            deliveryGuyId !== undefined ? deliveryGuyId : null
           ]
         );
       } else {
         await pool.query(
-          `INSERT INTO deliveries (client_id, invoice_id, recipient_name, recipient_phone, address, status, notes)
-           VALUES ($1, $2, $3, $4, $5, $6, 'Sin notas')`,
+          `INSERT INTO deliveries (client_id, invoice_id, recipient_name, recipient_phone, address, status, delivery_guy_id, notes)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, 'Sin notas')`,
           [
             clientId,
             invoiceId,
             invoice.customer_name,
             invoice.customer_phone,
             destinationAddress,
-            invoice.delivery_status || 'pending'
+            invoice.delivery_status || 'pending',
+            deliveryGuyId || null
           ]
         );
       }
