@@ -215,6 +215,20 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [promoDiscount, setPromoDiscount] = useState<number | ''>('');
     const [productType, setProductType] = useState<'product' | 'service'>('product');
     const [customAttrs, setCustomAttrs] = useState<any>({});
+    const [customColors, setCustomColors] = useState<Array<{ name: string; value: string; preview: string }>>([]);
+
+    const handleAddNewCustomColor = (idx: number) => {
+        const colorName = window.prompt("Escribe el nombre del nuevo color (ej: Verde Esmeralda, Rosa Gold, Azul Rey):");
+        if (!colorName || !colorName.trim()) return;
+        const hexColor = window.prompt("Código de color o HEX (ej: #008080, #ffd700, #ff1493):", "#2e8b57") || "#2e8b57";
+        
+        const newOpt = { name: colorName.trim(), value: colorName.trim(), preview: hexColor.trim() };
+        setCustomColors(prev => [...prev, newOpt]);
+        
+        const updated = [...variantList];
+        updated[idx].color = colorName.trim();
+        setVariantList(updated);
+    };
 
     const [variantList, setVariantList] = useState<Array<{ id?: string; color: string; stock: number | ''; min_stock: number | ''; image_url: string }>>([
         { color: 'Negro', stock: 10, min_stock: 2, image_url: '' }
@@ -1325,105 +1339,168 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     {/* Matriz de Variantes por Referencia Única */}
                                     {productType === 'product' && (
                                         <div className="col-span-1 md:col-span-2 space-y-2 bg-surface-container/20 p-3 rounded-2xl border border-outline/10 my-1">
-                                            <div className="flex justify-between items-center pb-1">
+                                            <div className="flex justify-between items-center pb-1 border-b border-outline/10">
                                                 <label className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
                                                     <span className="material-symbols-outlined text-primary text-[18px]">palette</span>
-                                                    Variantes por Color (Color | Stock Actual | Stock Mínimo | Foto)
+                                                    Matriz de Variantes por Color (Stock / Mínimo / Foto)
                                                 </label>
                                             </div>
 
+                                            {/* Nombres de los Campos / Encabezados de la Tabla */}
+                                            <div className="hidden sm:grid grid-cols-12 gap-2 text-[10px] font-bold uppercase text-on-surface-variant px-2 py-1 tracking-wider border-b border-outline/10">
+                                                <div className="col-span-4">COLOR / VARIANTE</div>
+                                                <div className="col-span-2 text-center">STOCK ACTUAL</div>
+                                                <div className="col-span-2 text-center">STOCK MÍNIMO</div>
+                                                <div className="col-span-3 text-center">FOTO DEL PRODUCTO</div>
+                                                <div className="col-span-1 text-center">ACCIONES</div>
+                                            </div>
+
                                             <div className="space-y-2">
-                                                {variantList.map((v, idx) => (
-                                                    <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-surface-container/60 p-2 rounded-xl border border-outline/10">
-                                                        {/* Color Dropdown con Previsualización */}
-                                                        <div className="sm:col-span-4 flex items-center gap-2">
-                                                            <div 
-                                                                className="w-5 h-5 rounded-full border border-outline/30 flex-shrink-0 shadow-sm"
-                                                                style={{ background: getColorPreview(v.color) }}
-                                                            />
-                                                            <select
-                                                                value={v.color}
-                                                                onChange={(e) => {
-                                                                    const updated = [...variantList];
-                                                                    updated[idx].color = e.target.value;
-                                                                    setVariantList(updated);
-                                                                }}
-                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface font-bold outline-none cursor-pointer"
-                                                            >
-                                                                {colorOptions.map((opt) => (
-                                                                    <option key={opt.value} value={opt.value}>
-                                                                        {opt.name}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
+                                                {variantList.map((v, idx) => {
+                                                    const currentPreview = [...colorOptions, ...customColors].find(
+                                                        o => o.value.toLowerCase() === (v.color || '').toLowerCase() || o.name.toLowerCase() === (v.color || '').toLowerCase()
+                                                    )?.preview || getColorPreview(v.color);
 
-                                                        {/* Stock Actual */}
-                                                        <div className="sm:col-span-2">
-                                                            <input
-                                                                type="number"
-                                                                placeholder="Stock *"
-                                                                value={v.stock}
-                                                                onChange={(e) => {
-                                                                    const updated = [...variantList];
-                                                                    updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
-                                                                    setVariantList(updated);
-                                                                }}
-                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center"
-                                                            />
-                                                        </div>
+                                                    return (
+                                                        <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-surface-container/60 p-2.5 rounded-xl border border-outline/10">
+                                                            {/* 1. Selector de Color con Círculo y Opción de Nuevo Color */}
+                                                            <div className="sm:col-span-4 flex flex-col gap-1">
+                                                                <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Color / Variante</label>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div 
+                                                                        className="w-6 h-6 rounded-full border-2 border-outline/40 flex-shrink-0 shadow-md transition-all"
+                                                                        style={{ background: currentPreview }}
+                                                                        title={`Color: ${v.color}`}
+                                                                    />
+                                                                    <select
+                                                                        value={v.color}
+                                                                        onChange={(e) => {
+                                                                            if (e.target.value === '__NEW_COLOR__') {
+                                                                                handleAddNewCustomColor(idx);
+                                                                            } else {
+                                                                                const updated = [...variantList];
+                                                                                updated[idx].color = e.target.value;
+                                                                                setVariantList(updated);
+                                                                            }
+                                                                        }}
+                                                                        className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface font-bold outline-none cursor-pointer"
+                                                                    >
+                                                                        <optgroup label="Colores Predefinidos">
+                                                                            {colorOptions.map((opt) => (
+                                                                                <option key={opt.value} value={opt.value}>
+                                                                                    {opt.name}
+                                                                                </option>
+                                                                            ))}
+                                                                        </optgroup>
+                                                                        {customColors.length > 0 && (
+                                                                            <optgroup label="Colores Personalizados">
+                                                                                {customColors.map((opt) => (
+                                                                                    <option key={opt.value} value={opt.value}>
+                                                                                        🎨 {opt.name}
+                                                                                    </option>
+                                                                                ))}
+                                                                            </optgroup>
+                                                                        )}
+                                                                        <option value="__NEW_COLOR__" className="text-primary font-bold">
+                                                                            + 🎨 Agregar Nuevo Color...
+                                                                        </option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
 
-                                                        {/* Stock Mínimo */}
-                                                        <div className="sm:col-span-2">
-                                                            <input
-                                                                type="number"
-                                                                placeholder="Mínimo *"
-                                                                value={v.min_stock}
-                                                                onChange={(e) => {
-                                                                    const updated = [...variantList];
-                                                                    updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
-                                                                    setVariantList(updated);
-                                                                }}
-                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center"
-                                                            />
-                                                        </div>
+                                                            {/* 2. Stock Actual */}
+                                                            <div className="sm:col-span-2 flex flex-col gap-1">
+                                                                <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Stock Actual</label>
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="Stock *"
+                                                                    value={v.stock}
+                                                                    onChange={(e) => {
+                                                                        const updated = [...variantList];
+                                                                        updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
+                                                                        setVariantList(updated);
+                                                                    }}
+                                                                    className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                                />
+                                                            </div>
 
-                                                        {/* Foto URL */}
-                                                        <div className="sm:col-span-3">
-                                                            <input
-                                                                type="text"
-                                                                placeholder="URL Foto..."
-                                                                value={v.image_url}
-                                                                onChange={(e) => {
-                                                                    const updated = [...variantList];
-                                                                    updated[idx].image_url = e.target.value;
-                                                                    setVariantList(updated);
-                                                                }}
-                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none"
-                                                            />
-                                                        </div>
+                                                            {/* 3. Stock Mínimo */}
+                                                            <div className="sm:col-span-2 flex flex-col gap-1">
+                                                                <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Stock Mínimo</label>
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="Mínimo *"
+                                                                    value={v.min_stock}
+                                                                    onChange={(e) => {
+                                                                        const updated = [...variantList];
+                                                                        updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
+                                                                        setVariantList(updated);
+                                                                    }}
+                                                                    className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center"
+                                                                />
+                                                            </div>
 
-                                                        {/* Eliminar */}
-                                                        <div className="sm:col-span-1 flex justify-center">
-                                                            {variantList.length > 1 && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setVariantList(variantList.filter((_, i) => i !== idx))}
-                                                                    className="text-rose-400 hover:text-rose-300 p-1 cursor-pointer bg-transparent border-0"
-                                                                    title="Eliminar variante"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                                                                </button>
-                                                            )}
+                                                            {/* 4. Cuadro de Carga de Foto de Producto (Estilo Perfil) */}
+                                                            <div className="sm:col-span-3 flex flex-col items-center gap-1">
+                                                                <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Foto del Producto</label>
+                                                                <label className="relative cursor-pointer flex items-center justify-center w-14 h-14 rounded-xl bg-surface-container border-2 border-dashed border-outline/30 hover:border-primary transition group overflow-hidden shadow-sm">
+                                                                    {v.image_url ? (
+                                                                        <>
+                                                                            <img src={v.image_url} alt={v.color} className="w-full h-full object-cover rounded-lg" />
+                                                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                                                                <span className="material-symbols-outlined text-white text-[18px]">edit</span>
+                                                                            </div>
+                                                                        </>
+                                                                    ) : (
+                                                                        <div className="flex flex-col items-center justify-center text-on-surface-variant group-hover:text-primary transition p-1 text-center">
+                                                                            <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+                                                                            <span className="text-[8px] font-bold leading-none mt-0.5">Cargar Foto</span>
+                                                                        </div>
+                                                                    )}
+                                                                    <input
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        className="hidden"
+                                                                        onChange={(e) => {
+                                                                            const file = e.target.files?.[0];
+                                                                            if (file) {
+                                                                                const reader = new FileReader();
+                                                                                reader.onloadend = () => {
+                                                                                    if (reader.result) {
+                                                                                        const updated = [...variantList];
+                                                                                        updated[idx].image_url = reader.result.toString();
+                                                                                        setVariantList(updated);
+                                                                                    }
+                                                                                };
+                                                                                reader.readAsDataURL(file);
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </label>
+                                                            </div>
+
+                                                            {/* 5. Acciones / Eliminar */}
+                                                            <div className="sm:col-span-1 flex justify-center">
+                                                                {variantList.length > 1 && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setVariantList(variantList.filter((_, i) => i !== idx))}
+                                                                        className="text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/10 cursor-pointer bg-transparent border-0 transition"
+                                                                        title="Eliminar variante"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
 
                                             <button
                                                 type="button"
                                                 onClick={() => setVariantList([...variantList, { color: 'Carey', stock: 5, min_stock: 1, image_url: '' }])}
-                                                className="w-full py-1.5 bg-primary/10 border border-dashed border-primary/40 rounded-xl text-xs font-bold text-primary hover:bg-primary/20 transition cursor-pointer flex items-center justify-center gap-1 mt-1"
+                                                className="w-full py-2 bg-primary/10 border border-dashed border-primary/40 rounded-xl text-xs font-bold text-primary hover:bg-primary/20 transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">add</span>
                                                 + (Si presiono el más abajo se agrega)
