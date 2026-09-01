@@ -1344,7 +1344,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             </div>
                                         </>
                                     )}
-                                    {category === 'optica' && !hiddenFields.has('color') && (
+                                    {productType === 'product' && category === 'optica' && !hiddenFields.has('color') && (
                                         <FieldWrapper 
                                             fieldId="color" 
                                             label="Color de la Montura"

@@ -1177,9 +1177,37 @@ export const initDatabase = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            -- Tabla de Variantes de Producto (Colores, Tallas, Gradaciones)
+            CREATE TABLE IF NOT EXISTS product_variants (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                variant_name VARCHAR(100) NOT NULL,
+                sku VARCHAR(50),
+                price NUMERIC(10,2),
+                cost_price NUMERIC(10,2) DEFAULT 0.00,
+                stock INT NOT NULL DEFAULT 0,
+                min_stock INT NOT NULL DEFAULT 1,
+                image_url TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- Tabla de Comisiones de Vendedores (Cruzadas con Metas)
+            CREATE TABLE IF NOT EXISTS employee_commissions (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL,
+                sale_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+                commission_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+                commission_pct NUMERIC(5,2) DEFAULT 0.00,
+                month_year VARCHAR(7) NOT NULL,
+                status VARCHAR(20) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
-        console.log("[DB Init] ✅ Tablas de Insumos, Historia Clínica, Finanzas, Inversión, Préstamos y Tickets inicializadas.");
+        console.log("[DB Init] ✅ Tablas de Finanzas, Inversión, Préstamos, Tickets, Variantes y Comisiones inicializadas.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 
     } catch (error) {
