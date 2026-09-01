@@ -28,6 +28,7 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
   });
   const [sellersData, setSellersData] = useState<EmployeeSalesTarget[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   // Modal para asignar meta
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,13 +40,17 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
   const fetchSalesAndTargets = async () => {
     try {
       setLoading(true);
+      setErrorMessage('');
       const res = await fetch(`/api/clients/${clientId}/sales-targets?month_year=${monthYear}`);
       const json = await res.json();
       if (json.success) {
         setSellersData(json.sellers || []);
+      } else {
+        setErrorMessage(json.error || `HTTP ${res.status}: Error recuperando datos de la API.`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error cargando metas y ventas de vendedores:", err);
+      setErrorMessage(err?.message || 'Error de conexión con el servidor.');
     } finally {
       setLoading(false);
     }
@@ -133,6 +138,17 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
           />
         </div>
       </div>
+
+      {/* Banner de Diagnóstico de Error SQL / API */}
+      {errorMessage && (
+        <div className="bg-red-500/15 border border-red-500/40 p-4 rounded-2xl flex items-start gap-3 text-red-400">
+          <span className="material-symbols-outlined text-[24px] shrink-0 mt-0.5">warning</span>
+          <div className="space-y-1">
+            <h4 className="text-xs font-bold uppercase tracking-wider">Diagnóstico de Consulta Backend (SQL / API)</h4>
+            <p className="text-xs font-mono break-all">{errorMessage}</p>
+          </div>
+        </div>
+      )}
 
       {/* KPI Consolidado del Equipo */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

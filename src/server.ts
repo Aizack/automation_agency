@@ -8573,6 +8573,36 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const { clientId } = req.params;
       const monthYear = (req.query.month_year as string) || new Date().toISOString().slice(0, 7);
 
+      // Garantizar dinámicamente que las columnas y tablas requeridas existan en PostgreSQL
+      try {
+        await pool.query(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_employee_id UUID;`);
+        await pool.query(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS employee_id UUID;`);
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS employee_targets (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id VARCHAR(50) NOT NULL,
+            employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+            month_year VARCHAR(7) NOT NULL,
+            target_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(employee_id, month_year)
+          );
+        `);
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS employee_commissions (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            client_id VARCHAR(50) NOT NULL,
+            employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+            month_year VARCHAR(7) NOT NULL,
+            sale_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+            commission_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+      } catch (schemaErr: any) {
+        console.error("[SalesTargets Schema Init Error]:", schemaErr?.message);
+      }
+
       let empRes = await pool.query(
         `SELECT e.id, e.name, e.last_name, e.role 
          FROM employees e

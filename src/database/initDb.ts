@@ -697,6 +697,29 @@ export const initDatabase = async () => {
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_address TEXT;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_date TIMESTAMP;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_status VARCHAR(20) DEFAULT 'pending';
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS employee_id UUID REFERENCES employees(id) ON DELETE SET NULL;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_name VARCHAR(150);
+
+            CREATE TABLE IF NOT EXISTS employee_targets (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL,
+                employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                month_year VARCHAR(7) NOT NULL,
+                target_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(employee_id, month_year)
+            );
+
+            CREATE TABLE IF NOT EXISTS employee_commissions (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL,
+                employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                month_year VARCHAR(7) NOT NULL,
+                sale_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+                commission_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
         await pool.query(`
