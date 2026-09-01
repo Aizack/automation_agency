@@ -8554,13 +8554,13 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const monthYear = (req.query.month_year as string) || new Date().toISOString().slice(0, 7);
 
       const empRes = await pool.query(
-        `SELECT id, first_name, last_name, role FROM employees WHERE client_id = $1 AND is_active = true ORDER BY first_name ASC`,
+        `SELECT id, name, last_name, role FROM employees WHERE client_id = $1 ORDER BY name ASC`,
         [clientId]
       );
 
       const sellers = [];
       for (const emp of empRes.rows) {
-        const empName = `${emp.first_name} ${emp.last_name || ''}`.trim();
+        const empName = `${emp.name || ''} ${emp.last_name || ''}`.trim();
         
         // Ventas del mes
         const salesRes = await pool.query(

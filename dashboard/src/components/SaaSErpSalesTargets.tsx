@@ -47,46 +47,7 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
     fetchSalesAndTargets();
   }, [clientId, monthYear]);
 
-  // Modal para crear vendedor rápido
-  const [isCreateEmpOpen, setIsCreateEmpOpen] = useState(false);
-  const [newEmpName, setNewEmpName] = useState('');
-  const [newEmpPhone, setNewEmpPhone] = useState('');
-  const [newEmpRole, setNewEmpRole] = useState('sales');
-  const [creatingEmp, setCreatingEmp] = useState(false);
 
-  const handleCreateSeller = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newEmpName.trim() || !newEmpPhone.trim()) return;
-
-    try {
-      setCreatingEmp(true);
-      const res = await fetch(`/api/clients/${clientId}/employees`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newEmpName.trim(),
-          phone: newEmpPhone.trim(),
-          role: newEmpRole,
-          pin: Math.floor(1000 + Math.random() * 9000).toString(),
-          employee_code: 'EMP-' + Math.floor(100 + Math.random() * 900),
-          is_active: true
-        })
-      });
-      const json = await res.json();
-      if (json.success) {
-        setIsCreateEmpOpen(false);
-        setNewEmpName('');
-        setNewEmpPhone('');
-        fetchSalesAndTargets();
-      } else {
-        alert(json.error || 'Error registrando vendedor.');
-      }
-    } catch (err) {
-      alert('Error de conexión.');
-    } finally {
-      setCreatingEmp(false);
-    }
-  };
 
   const handleSaveTarget = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,26 +114,15 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
           </p>
         </div>
 
-        {/* Filtro Mes / Año & Botón Nuevo Vendedor */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-on-surface-variant">Período:</label>
-            <input
-              type="month"
-              value={monthYear}
-              onChange={(e) => setMonthYear(e.target.value)}
-              className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface font-bold outline-none"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsCreateEmpOpen(true)}
-            className="px-3.5 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl shadow cursor-pointer hover:opacity-90 transition flex items-center gap-1.5"
-          >
-            <span className="material-symbols-outlined text-[16px]">person_add</span>
-            + Registrar Vendedor
-          </button>
+        {/* Filtro Mes / Año */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-bold text-on-surface-variant">Período:</label>
+          <input
+            type="month"
+            value={monthYear}
+            onChange={(e) => setMonthYear(e.target.value)}
+            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface font-bold outline-none"
+          />
         </div>
       </div>
 
@@ -209,20 +159,10 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
           <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : sellersData.length === 0 ? (
-        <div className="p-12 text-center bg-surface-container/30 border border-outline/10 rounded-2xl space-y-4">
+        <div className="p-12 text-center bg-surface-container/30 border border-outline/10 rounded-2xl space-y-2">
           <span className="material-symbols-outlined text-on-surface-variant text-[48px] opacity-40">badge</span>
-          <div>
-            <p className="text-sm font-bold text-on-surface">No hay vendedores o colaboradores registrados en el sistema</p>
-            <p className="text-xs text-on-surface-variant opacity-75 mt-1">Registra a tu personal de ventas para asignarles su meta mensual y calcular sus comisiones.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsCreateEmpOpen(true)}
-            className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl shadow cursor-pointer hover:opacity-90 inline-flex items-center gap-1.5"
-          >
-            <span className="material-symbols-outlined text-[16px]">person_add</span>
-            Registrar Primer Vendedor
-          </button>
+          <p className="text-sm font-bold text-on-surface">No hay vendedores o colaboradores en la nómina para este período</p>
+          <p className="text-xs text-on-surface-variant opacity-75">Los colaboradores registrados en el módulo de Administración de Personal aparecerán aquí automáticamente.</p>
         </div>
       ) : (
         <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-2xl space-y-4">
@@ -359,79 +299,6 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
         </div>
       )}
 
-      {/* Modal Registrar Nuevo Vendedor Rápido */}
-      {isCreateEmpOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-surface-container-highest border border-outline/30 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-3">
-              <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[18px]">person_add</span>
-                Registrar Nuevo Vendedor / Colaborador
-              </h4>
-              <button onClick={() => setIsCreateEmpOpen(false)} className="text-on-surface-variant hover:text-on-surface cursor-pointer bg-transparent border-0">
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateSeller} className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold uppercase text-on-surface-variant">Nombre Completo *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. Juan Pérez"
-                  value={newEmpName}
-                  onChange={(e) => setNewEmpName(e.target.value)}
-                  className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold uppercase text-on-surface-variant">Teléfono / WhatsApp *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. 3001234567"
-                  value={newEmpPhone}
-                  onChange={(e) => setNewEmpPhone(e.target.value)}
-                  className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold uppercase text-on-surface-variant">Rol / Cargo</label>
-                <select
-                  value={newEmpRole}
-                  onChange={(e) => setNewEmpRole(e.target.value)}
-                  className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none"
-                >
-                  <option value="sales">Vendedor / Asesor Comercial</option>
-                  <option value="optometra">Optómetra / Especialista</option>
-                  <option value="cajero">Cajero</option>
-                  <option value="admin">Administrador de Sede</option>
-                </select>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-outline/10">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateEmpOpen(false)}
-                  className="px-4 py-2 border border-outline/20 text-on-surface font-bold text-xs rounded-xl cursor-pointer hover:bg-surface-container-high"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={creatingEmp}
-                  className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl cursor-pointer shadow hover:opacity-90"
-                >
-                  {creatingEmp ? 'Registrando...' : 'Registrar Vendedor'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

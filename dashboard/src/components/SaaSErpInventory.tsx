@@ -1023,20 +1023,22 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             <>
                                                 {/* Brand is for physical products only */}
                                                 {productType === 'product' && (
-                                                    <FieldWrapper 
-                                                        fieldId="brand" 
-                                                        label="Marca / Fabricante"
-                                                        hidden={hiddenFields.has('brand')}
-                                                        onToggleHidden={toggleFieldHidden}
-                                                    >
-                                                        <input 
-                                                            type="text"
-                                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                            value={brand}
-                                                            onChange={(e) => setBrand(e.target.value)}
-                                                            placeholder="Ej: Ray-Ban, Alcon, Bausch + Lomb"
-                                                        />
-                                                    </FieldWrapper>
+                                                    <div className="col-span-1 md:col-span-2">
+                                                        <FieldWrapper 
+                                                            fieldId="brand" 
+                                                            label="Marca / Fabricante"
+                                                            hidden={hiddenFields.has('brand')}
+                                                            onToggleHidden={toggleFieldHidden}
+                                                        >
+                                                            <input 
+                                                                type="text"
+                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                                value={brand}
+                                                                onChange={(e) => setBrand(e.target.value)}
+                                                                placeholder="Ej: Ray-Ban, Alcon, Bausch + Lomb"
+                                                            />
+                                                        </FieldWrapper>
+                                                    </div>
                                                 )}
 
                                                 {/* 1. MONTURAS */}
@@ -1319,89 +1321,78 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             </>
                                         );
                                     })()}
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium">Precio de Costo (COP)</label>
-                                        <input 
-                                            type="number"
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                            value={costPrice}
-                                            onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                                            onFocus={(e) => e.target.select()}
-                                            placeholder="Ej: 80000"
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium">Precio de Venta (COP) *</label>
-                                        <input 
-                                            type="number"
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                            value={price}
-                                            onChange={(e) => setPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                                            onFocus={(e) => e.target.select()}
-                                            required
-                                        />
-                                    </div>
-                                    {/* Matriz de Variantes de Producto con Fotos para Productos Físicos */}
+                                    
+                                    {/* Matriz de Variantes por Referencia Única */}
                                     {productType === 'product' && (
-                                        <div className="col-span-1 md:col-span-2 space-y-3 bg-surface-container/30 p-4 rounded-2xl border border-outline/10 my-2">
-                                            <div className="flex justify-between items-center border-b border-outline/10 pb-2">
+                                        <div className="col-span-1 md:col-span-2 space-y-2 bg-surface-container/20 p-3 rounded-2xl border border-outline/10 my-1">
+                                            <div className="flex justify-between items-center pb-1">
                                                 <label className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
-                                                    <span className="material-symbols-outlined text-primary text-[18px]">style</span>
-                                                    Matriz de Variantes (Color / Stock / Stock Mínimo / Foto)
+                                                    <span className="material-symbols-outlined text-primary text-[18px]">palette</span>
+                                                    Variantes por Color (Color | Stock Actual | Stock Mínimo | Foto)
                                                 </label>
-                                                <span className="text-[10px] text-on-surface-variant font-mono">Referencia Única Multi-Variante</span>
                                             </div>
 
                                             <div className="space-y-2">
                                                 {variantList.map((v, idx) => (
-                                                    <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-surface-container/60 p-2.5 rounded-xl border border-outline/10">
-                                                        <div className="sm:col-span-3">
-                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Color / Variante</label>
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Color (ej: Negro, Rosado, Carey)"
+                                                    <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-surface-container/60 p-2 rounded-xl border border-outline/10">
+                                                        {/* Color Dropdown con Previsualización */}
+                                                        <div className="sm:col-span-4 flex items-center gap-2">
+                                                            <div 
+                                                                className="w-5 h-5 rounded-full border border-outline/30 flex-shrink-0 shadow-sm"
+                                                                style={{ background: getColorPreview(v.color) }}
+                                                            />
+                                                            <select
                                                                 value={v.color}
                                                                 onChange={(e) => {
                                                                     const updated = [...variantList];
                                                                     updated[idx].color = e.target.value;
                                                                     setVariantList(updated);
                                                                 }}
-                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-bold"
-                                                            />
+                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface font-bold outline-none cursor-pointer"
+                                                            >
+                                                                {colorOptions.map((opt) => (
+                                                                    <option key={opt.value} value={opt.value}>
+                                                                        {opt.name}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
                                                         </div>
+
+                                                        {/* Stock Actual */}
                                                         <div className="sm:col-span-2">
-                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Stock Actual</label>
                                                             <input
                                                                 type="number"
-                                                                placeholder="Stock Actual *"
+                                                                placeholder="Stock *"
                                                                 value={v.stock}
                                                                 onChange={(e) => {
                                                                     const updated = [...variantList];
                                                                     updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
                                                                     setVariantList(updated);
                                                                 }}
-                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono"
+                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center"
                                                             />
                                                         </div>
+
+                                                        {/* Stock Mínimo */}
                                                         <div className="sm:col-span-2">
-                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Stock Mínimo</label>
                                                             <input
                                                                 type="number"
-                                                                placeholder="Stock Mínimo *"
+                                                                placeholder="Mínimo *"
                                                                 value={v.min_stock}
                                                                 onChange={(e) => {
                                                                     const updated = [...variantList];
                                                                     updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
                                                                     setVariantList(updated);
                                                                 }}
-                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono"
+                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center"
                                                             />
                                                         </div>
-                                                        <div className="sm:col-span-4">
-                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Foto (URL / Enlace)</label>
+
+                                                        {/* Foto URL */}
+                                                        <div className="sm:col-span-3">
                                                             <input
                                                                 type="text"
-                                                                placeholder="URL Foto de Producto (Opcional)"
+                                                                placeholder="URL Foto..."
                                                                 value={v.image_url}
                                                                 onChange={(e) => {
                                                                     const updated = [...variantList];
@@ -1411,6 +1402,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                 className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none"
                                                             />
                                                         </div>
+
+                                                        {/* Eliminar */}
                                                         <div className="sm:col-span-1 flex justify-center">
                                                             {variantList.length > 1 && (
                                                                 <button
@@ -1429,43 +1422,73 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                                             <button
                                                 type="button"
-                                                onClick={() => setVariantList([...variantList, { color: '', stock: 5, min_stock: 1, image_url: '' }])}
-                                                className="w-full py-2 bg-primary/10 border border-dashed border-primary/40 rounded-xl text-xs font-bold text-primary hover:bg-primary/20 transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
+                                                onClick={() => setVariantList([...variantList, { color: 'Carey', stock: 5, min_stock: 1, image_url: '' }])}
+                                                className="w-full py-1.5 bg-primary/10 border border-dashed border-primary/40 rounded-xl text-xs font-bold text-primary hover:bg-primary/20 transition cursor-pointer flex items-center justify-center gap-1 mt-1"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">add</span>
-                                                + Agregar Nuevo Color / Variante
+                                                + (Si presiono el más abajo se agrega)
                                             </button>
                                         </div>
                                     )}
 
-                                    {productType === 'product' && (
+                                    {/* Fila de Precios (Precio Costo | Precio Venta | Descuento Promocional) */}
+                                    <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-xs text-on-surface-variant font-medium">Descuento de la casa (%)</label>
+                                            <label className="text-xs text-on-surface-variant font-medium">Precio Costo (COP)</label>
                                             <input 
                                                 type="number"
-                                                min={0}
-                                                max={100}
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                value={promoDiscount}
-                                                onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono"
+                                                value={costPrice}
+                                                onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
                                                 onFocus={(e) => e.target.select()}
+                                                placeholder="Ej: 80000"
                                             />
                                         </div>
-                                    )}
-                                    {!hiddenFields.has('description') && (
-                                        <FieldWrapper 
-                                            fieldId="description" 
-                                            label="Descripción"
-                                            hidden={false}
-                                            onToggleHidden={toggleFieldHidden}
-                                            children={
-                                                <textarea 
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition min-h-[60px]"
-                                                    value={description}
-                                                    onChange={(e) => setDescription(e.target.value)}
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-xs text-on-surface-variant font-medium">Precio Venta (COP) *</label>
+                                            <input 
+                                                type="number"
+                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono font-bold"
+                                                value={price}
+                                                onChange={(e) => setPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                                                onFocus={(e) => e.target.select()}
+                                                required
+                                            />
+                                        </div>
+                                        {productType === 'product' && (
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs text-on-surface-variant font-medium">Descuento Promocional (%)</label>
+                                                <input 
+                                                    type="number"
+                                                    min={0}
+                                                    max={100}
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono"
+                                                    value={promoDiscount}
+                                                    onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                                                    onFocus={(e) => e.target.select()}
                                                 />
-                                            }
-                                        />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Fila de Descripción */}
+                                    {!hiddenFields.has('description') && (
+                                        <div className="col-span-1 md:col-span-2">
+                                            <FieldWrapper 
+                                                fieldId="description" 
+                                                label="Descripción"
+                                                hidden={false}
+                                                onToggleHidden={toggleFieldHidden}
+                                                children={
+                                                    <textarea 
+                                                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition min-h-[60px]"
+                                                        value={description}
+                                                        onChange={(e) => setDescription(e.target.value)}
+                                                        placeholder="Escribe la descripción del producto o servicio..."
+                                                    />
+                                                }
+                                            />
+                                        </div>
                                     )}
                                 </div>
 
