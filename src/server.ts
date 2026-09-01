@@ -2007,22 +2007,18 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-  app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
-    try {
-      const { clientId } = req.params;
-      const result = await pool.query(
-        `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_document_type, i.customer_document_number, i.customer_email, i.customer_address, i.total_amount, i.status, i.due_date, i.reminder_sent, i.overdue_sent, i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_by_user_id, i.created_by_user_name, i.created_at, COALESCE(i.seller_name, NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name 
-         FROM invoices i 
-         LEFT JOIN employees e ON i.seller_employee_id = e.id
-         WHERE i.client_id = $1 
-         ORDER BY i.created_at DESC`,
-        [clientId]
-      );
-      res.json({ success: true, invoices: result.rows });
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: err.message });
-    }
-  });
+      `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_document_type, i.customer_document_number, i.customer_email, i.customer_address, i.total_amount, i.status, i.due_date, i.reminder_sent, i.overdue_sent, i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_by_user_id, i.created_by_user_name, i.created_at, COALESCE(i.seller_name, NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name 
+       FROM invoices i 
+       LEFT JOIN employees e ON i.seller_employee_id = e.id
+       WHERE i.client_id = $1 
+       ORDER BY i.created_at DESC`,
+      [clientId]
+    );
+    res.json({ success: true, invoices: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
   app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     const dbClient = await pool.connect();
