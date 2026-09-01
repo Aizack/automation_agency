@@ -109,6 +109,29 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
     }).format(amount);
   };
 
+  // Generar lista dinámica de meses desde el mes actual hacia atrás (24 meses)
+  const monthOptions = React.useMemo(() => {
+    const options = [];
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    const monthNames = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(currentYear, currentMonth - i, 1);
+      const year = d.getFullYear();
+      const monthNum = String(d.getMonth() + 1).padStart(2, '0');
+      const value = `${year}-${monthNum}`;
+      const label = `${monthNames[d.getMonth()]} ${year}${i === 0 ? ' (Mes Actual)' : ''}`;
+      options.push({ value, label });
+    }
+    return options;
+  }, []);
+
   const totalStoreSales = sellersData.reduce((sum, s) => sum + s.sales_amount, 0);
   const totalStoreTargets = sellersData.reduce((sum, s) => sum + s.target_amount, 0);
   const overallPct = totalStoreTargets > 0 ? Math.round((totalStoreSales / totalStoreTargets) * 100) : 0;
@@ -127,15 +150,23 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
           </p>
         </div>
 
-        {/* Filtro Mes / Año */}
+        {/* Filtro Mes / Año en Dropdown Seleccionable */}
         <div className="flex items-center gap-2">
-          <label className="text-xs font-bold text-on-surface-variant">Período:</label>
-          <input
-            type="month"
+          <label className="text-xs font-bold text-on-surface-variant flex items-center gap-1">
+            <span className="material-symbols-outlined text-[16px] text-primary">calendar_month</span>
+            Período:
+          </label>
+          <select
             value={monthYear}
             onChange={(e) => setMonthYear(e.target.value)}
-            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface font-bold outline-none"
-          />
+            className="bg-surface-container border border-outline/30 rounded-xl px-3 py-2 text-xs text-on-surface font-bold outline-none cursor-pointer focus:border-primary transition shadow-sm"
+          >
+            {monthOptions.map(opt => (
+              <option key={opt.value} value={opt.value} className="bg-surface-container-highest text-on-surface">
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
