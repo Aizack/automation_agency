@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 
 interface EmployeeSalesTarget {
@@ -7,6 +8,7 @@ interface EmployeeSalesTarget {
   role: string;
   target_amount: number;
   sales_amount: number;
+  sales_count?: number;
   commissions_earned: number;
   achievement_pct: number;
   bonus_earned: number;
@@ -185,6 +187,7 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
               <thead>
                 <tr className="border-b border-outline/10 text-on-surface-variant uppercase font-bold tracking-wider">
                   <th className="py-3 px-2">Vendedor / Colaborador</th>
+                  <th className="py-3 px-2 text-center">N° Ventas Realizadas</th>
                   <th className="py-3 px-2 text-right">Ventas ($ COP)</th>
                   <th className="py-3 px-2 text-right">Meta Asignada</th>
                   <th className="py-3 px-2 text-center">Avance (%)</th>
@@ -198,6 +201,11 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
                     <td className="py-3.5 px-2">
                       <p className="font-bold text-on-surface">{s.employee_name}</p>
                       <span className="text-[10px] text-primary font-mono uppercase">{s.role}</span>
+                    </td>
+                    <td className="py-3.5 px-2 text-center">
+                      <span className="px-2.5 py-1 bg-surface-container border border-outline/15 rounded-lg text-xs font-mono font-bold text-on-surface">
+                        {s.sales_count || 0} facturas
+                      </span>
                     </td>
                     <td className="py-3.5 px-2 text-right font-mono font-bold text-primary">
                       {formatCOP(s.sales_amount)}
@@ -235,7 +243,7 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
                         }}
                         className="px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-xl text-[11px] font-bold hover:bg-primary/20 transition cursor-pointer"
                       >
-                        🎯 Asignar Meta
+                        🎯 Asignar / Editar Meta
                       </button>
                     </td>
                   </tr>
@@ -246,10 +254,10 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
         </div>
       )}
 
-      {/* Modal Asignar Meta de Ventas */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-surface-container-highest border border-outline/30 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+      {/* Modal Asignar Meta de Ventas (Teleportado a document.body) */}
+      {isModalOpen && createPortal(
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[99999]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-surface-container-highest border border-outline/30 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl relative z-[100000]" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center border-b border-outline/10 pb-3">
               <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-[18px]">flag</span>
@@ -302,7 +310,8 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

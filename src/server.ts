@@ -8578,19 +8578,23 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         [clientId]
       );
 
-      // Si no hay empleados registrados en la BD para este cliente, auto-sembrar la nómina de colaboradores por defecto
+      // Si no hay empleados con el client_id específico de la sesión, consultar TODOS los empleados de la nómina
       if (empRes.rows.length === 0) {
-        const totalEmp = await pool.query(`SELECT COUNT(*) FROM employees`);
-        if (parseInt(totalEmp.rows[0]?.count || '0') === 0) {
-          await pool.query(`
-            INSERT INTO employees (id, client_id, name, last_name, phone, role, employee_code, is_active, basic_salary, hire_date)
-            VALUES 
-              ('emp_laura_001', $1, 'Laura', 'Bermúdez', '3001234567', 'Vendedora Senior', 'EMP-001', TRUE, 1800000, NOW() - INTERVAL '6 months'),
-              ('emp_carlos_002', $1, 'Carlos', 'Ruiz', '3009876543', 'Asesor Comercial', 'EMP-002', TRUE, 1500000, NOW() - INTERVAL '3 months'),
-              ('emp_andres_003', $1, 'Andrés', 'Gómez', '3005554433', 'Optómetra / Ventas', 'EMP-003', TRUE, 2500000, NOW() - INTERVAL '1 year')
-            ON CONFLICT (id) DO NOTHING
-          `, [clientId]);
-        }
+        empRes = await pool.query(
+          `SELECT id, name, last_name, role FROM employees ORDER BY name ASC`
+        );
+      }
+
+      // Si la tabla de empleados sigue vacía, auto-sembrar los colaboradores por defecto
+      if (empRes.rows.length === 0) {
+        await pool.query(`
+          INSERT INTO employees (id, client_id, name, last_name, phone, role, employee_code, is_active, basic_salary, hire_date)
+          VALUES 
+            ('emp_laura_001', $1, 'Laura', 'Bermúdez', '3001234567', 'SALES', 'EMP-001', TRUE, 1800000, NOW() - INTERVAL '6 months'),
+            ('emp_carlos_002', $1, 'Carlos', 'Ruiz', '3009876543', 'SALES', 'EMP-002', TRUE, 1500000, NOW() - INTERVAL '3 months'),
+            ('emp_andres_003', $1, 'Andrés', 'Gómez', '3005554433', 'SALES', 'EMP-003', TRUE, 2500000, NOW() - INTERVAL '1 year')
+          ON CONFLICT (id) DO NOTHING
+        `, [clientId]);
 
         empRes = await pool.query(
           `SELECT id, name, last_name, role FROM employees ORDER BY name ASC`
@@ -8601,9 +8605,9 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       for (const emp of empRes.rows) {
         const empName = `${emp.name || ''} ${emp.last_name || ''}`.trim() || 'Vendedor';
         
-        // 1. Ventas del mes registradas en la tabla invoices (Facturación)
+        // 1. Ventas del mes registradas en la tabla invoices (Facturación) y conteo de ventas realizadas
         const invSalesRes = await pool.query(
-          `SELECT COALESCE(SUM(total_amount), 0) as total_sales
+          `SELECT COALESCE(SUM(total_amount), 0) as total_sales, COUNT(*) as sales_count
            FROM invoices 
            WHERE (seller_employee_id = $1 OR employee_id = $1) 
              AND TO_CHAR(created_at, 'YYYY-MM') = $2 
@@ -8626,12 +8630,13 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         );
 
         const invSales = parseFloat(invSalesRes.rows[0]?.total_sales || '0');
+        const salesCount = parseInt(invSalesRes.rows[0]?.sales_count || '0');
         const commSales = parseFloat(commSalesRes.rows[0]?.total_sales || '0');
         const salesAmount = Math.max(invSales, commSales);
 
         const commEarned = parseFloat(commSalesRes.rows[0]?.total_comm || '0') || (salesAmount * 0.05); // 5% comisión por defecto
         const targetAmount = targetRes.rows.length > 0 ? parseFloat(targetRes.rows[0].target_amount) : 0;
-        const achievementPct = targetAmount > 0 ? Math.round((salesAmount / targetAmount) * 100) : 0;
+        const achievementPct = targetAmount > 0 ? Math.min(999, Math.round((salesAmount / targetAmount) * 100)) : 0;
         const bonusEarned = achievementPct >= 100 ? commEarned * 0.20 : 0;
 
         sellers.push({
@@ -8640,6 +8645,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           role: emp.role || 'Vendedor',
           target_amount: targetAmount,
           sales_amount: salesAmount,
+          sales_count: salesCount,
           commissions_earned: commEarned,
           achievement_pct: achievementPct,
           bonus_earned: bonusEarned
