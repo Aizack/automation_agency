@@ -215,19 +215,80 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [promoDiscount, setPromoDiscount] = useState<number | ''>('');
     const [productType, setProductType] = useState<'product' | 'service'>('product');
     const [customAttrs, setCustomAttrs] = useState<any>({});
-    const [customColors, setCustomColors] = useState<Array<{ name: string; value: string; preview: string }>>([]);
+    // Estructura de Colores con Previsualización y Soporte para Paint Picker
+    const [allColors, setAllColors] = useState<Array<{ id: string; name: string; value: string; preview: string; isCustom?: boolean }>>([
+        { id: 'negro', name: 'Negro', value: 'Negro', preview: '#000000' },
+        { id: 'carey', name: 'Carey (Animal Print)', value: 'Carey', preview: 'repeating-linear-gradient(45deg, #1f1107, #1f1107 4px, #8c5827 4px, #8c5827 8px)' },
+        { id: 'havana', name: 'Havana', value: 'Havana', preview: 'linear-gradient(135deg, #2b180d 0%, #a66a38 50%, #2b180d 100%)' },
+        { id: 'dorado', name: 'Dorado', value: 'Dorado', preview: '#d4af37' },
+        { id: 'plateado', name: 'Plateado', value: 'Plateado', preview: '#c0c0c0' },
+        { id: 'cafe', name: 'Café / Marrón', value: 'Cafe', preview: '#5c4033' },
+        { id: 'azul', name: 'Azul Marino', value: 'Azul Marino', preview: '#000080' },
+        { id: 'rosado', name: 'Rosado', value: 'Rosado', preview: '#ffc0cb' },
+        { id: 'transparente', name: 'Transparente', value: 'Transparente', preview: 'linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 40%, rgba(255,0,0,0.6) 45%, rgba(255,0,0,0.6) 55%, rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.1) 100%)' },
+        { id: 'gris', name: 'Gris', value: 'Gris', preview: '#808080' },
+        { id: 'rojo', name: 'Rojo', value: 'Rojo', preview: '#ff0000' },
+        { id: 'verde', name: 'Verde', value: 'Verde', preview: '#008000' },
+        { id: 'violeta', name: 'Violeta / Morado', value: 'Violeta', preview: '#8a2be2' }
+    ]);
 
-    const handleAddNewCustomColor = (idx: number) => {
-        const colorName = window.prompt("Escribe el nombre del nuevo color (ej: Verde Esmeralda, Rosa Gold, Azul Rey):");
-        if (!colorName || !colorName.trim()) return;
-        const hexColor = window.prompt("Código de color o HEX (ej: #008080, #ffd700, #ff1493):", "#2e8b57") || "#2e8b57";
-        
-        const newOpt = { name: colorName.trim(), value: colorName.trim(), preview: hexColor.trim() };
-        setCustomColors(prev => [...prev, newOpt]);
-        
-        const updated = [...variantList];
-        updated[idx].color = colorName.trim();
-        setVariantList(updated);
+    // Modal para el Selector Interactivo Estilo Paint (Dividido 50% / 50%)
+    const [isPaintModalOpen, setIsPaintModalOpen] = useState(false);
+    const [editingColor, setEditingColor] = useState<{ id: string; name: string; preview: string } | null>(null);
+    const [colorNameInput, setColorNameInput] = useState('');
+    const [colorHexInput, setColorHexInput] = useState('#8a2be2');
+    const [paintTargetVariantIdx, setPaintTargetVariantIdx] = useState<number | null>(null);
+
+    const openCreateColorModal = (targetVariantIdx?: number) => {
+        setEditingColor(null);
+        setColorNameInput('');
+        setColorHexInput('#8a2be2');
+        setPaintTargetVariantIdx(targetVariantIdx !== undefined ? targetVariantIdx : null);
+        setIsPaintModalOpen(true);
+    };
+
+    const openEditColorModal = (item: { id: string; name: string; preview: string }) => {
+        setEditingColor(item);
+        setColorNameInput(item.name);
+        setColorHexInput(item.preview.startsWith('#') ? item.preview : '#8a2be2');
+        setIsPaintModalOpen(true);
+    };
+
+    const handleSavePaintColor = (e: React.FormEvent) => {
+        e.preventDefault();
+        const name = colorNameInput.trim();
+        if (!name) return;
+
+        if (editingColor) {
+            // Actualizar color existente
+            setAllColors(prev => prev.map(c => c.id === editingColor.id ? { ...c, name, value: name, preview: colorHexInput } : c));
+            setVariantList(prev => prev.map(v => v.color === editingColor.name ? { ...v, color: name } : v));
+        } else {
+            // Crear nuevo color personalizado
+            const newColorObj = {
+                id: 'custom_' + Date.now(),
+                name,
+                value: name,
+                preview: colorHexInput,
+                isCustom: true
+            };
+            setAllColors(prev => [...prev, newColorObj]);
+            if (paintTargetVariantIdx !== null && paintTargetVariantIdx >= 0) {
+                setVariantList(prev => {
+                    const updated = [...prev];
+                    if (updated[paintTargetVariantIdx]) {
+                        updated[paintTargetVariantIdx].color = name;
+                    }
+                    return updated;
+                });
+            }
+        }
+        setIsPaintModalOpen(false);
+    };
+
+    const handleDeleteColor = (id: string) => {
+        if (!window.confirm("¿Deseas eliminar este color personalizado?")) return;
+        setAllColors(prev => prev.filter(c => c.id !== id));
     };
 
     const [variantList, setVariantList] = useState<Array<{ id?: string; color: string; stock: number | ''; min_stock: number | ''; image_url: string }>>([
@@ -1356,148 +1417,114 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             </div>
 
                                             <div className="space-y-2">
-                                                {variantList.map((v, idx) => {
-                                                    const currentPreview = [...colorOptions, ...customColors].find(
-                                                        o => o.value.toLowerCase() === (v.color || '').toLowerCase() || o.name.toLowerCase() === (v.color || '').toLowerCase()
-                                                    )?.preview || getColorPreview(v.color);
-
-                                                    return (
-                                                        <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-surface-container/60 p-2.5 rounded-xl border border-outline/10">
-                                                            {/* 1. Selector de Color con Círculo y Opción de Nuevo Color */}
-                                                            <div className="sm:col-span-4 flex flex-col gap-1">
-                                                                <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Color / Variante</label>
-                                                                <div className="flex items-center gap-2">
-                                                                    <div 
-                                                                        className="w-6 h-6 rounded-full border-2 border-outline/40 flex-shrink-0 shadow-md transition-all"
-                                                                        style={{ background: currentPreview }}
-                                                                        title={`Color: ${v.color}`}
-                                                                    />
-                                                                    <select
-                                                                        value={v.color}
-                                                                        onChange={(e) => {
-                                                                            if (e.target.value === '__NEW_COLOR__') {
-                                                                                handleAddNewCustomColor(idx);
-                                                                            } else {
-                                                                                const updated = [...variantList];
-                                                                                updated[idx].color = e.target.value;
-                                                                                setVariantList(updated);
-                                                                            }
-                                                                        }}
-                                                                        className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface font-bold outline-none cursor-pointer"
-                                                                    >
-                                                                        <optgroup label="Colores Predefinidos">
-                                                                            {colorOptions.map((opt) => (
-                                                                                <option key={opt.value} value={opt.value}>
-                                                                                    {opt.name}
-                                                                                </option>
-                                                                            ))}
-                                                                        </optgroup>
-                                                                        {customColors.length > 0 && (
-                                                                            <optgroup label="Colores Personalizados">
-                                                                                {customColors.map((opt) => (
-                                                                                    <option key={opt.value} value={opt.value}>
-                                                                                        🎨 {opt.name}
-                                                                                    </option>
-                                                                                ))}
-                                                                            </optgroup>
-                                                                        )}
-                                                                        <option value="__NEW_COLOR__" className="text-primary font-bold">
-                                                                            + 🎨 Agregar Nuevo Color...
-                                                                        </option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* 2. Stock Actual */}
-                                                            <div className="sm:col-span-2 flex flex-col gap-1">
-                                                                <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Stock Actual</label>
-                                                                <input
-                                                                    type="number"
-                                                                    placeholder="Stock *"
-                                                                    value={v.stock}
-                                                                    onChange={(e) => {
-                                                                        const updated = [...variantList];
-                                                                        updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
-                                                                        setVariantList(updated);
-                                                                    }}
-                                                                    className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
-                                                                />
-                                                            </div>
-
-                                                            {/* 3. Stock Mínimo */}
-                                                            <div className="sm:col-span-2 flex flex-col gap-1">
-                                                                <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Stock Mínimo</label>
-                                                                <input
-                                                                    type="number"
-                                                                    placeholder="Mínimo *"
-                                                                    value={v.min_stock}
-                                                                    onChange={(e) => {
-                                                                        const updated = [...variantList];
-                                                                        updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
-                                                                        setVariantList(updated);
-                                                                    }}
-                                                                    className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center"
-                                                                />
-                                                            </div>
-
-                                                            {/* 4. Cuadro de Carga de Foto de Producto (Estilo Perfil) */}
-                                                            <div className="sm:col-span-3 flex flex-col items-center gap-1">
-                                                                <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Foto del Producto</label>
-                                                                <label className="relative cursor-pointer flex items-center justify-center w-14 h-14 rounded-xl bg-surface-container border-2 border-dashed border-outline/30 hover:border-primary transition group overflow-hidden shadow-sm">
-                                                                    {v.image_url ? (
-                                                                        <>
-                                                                            <img src={v.image_url} alt={v.color} className="w-full h-full object-cover rounded-lg" />
-                                                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                                                                                <span className="material-symbols-outlined text-white text-[18px]">edit</span>
-                                                                            </div>
-                                                                        </>
-                                                                    ) : (
-                                                                        <div className="flex flex-col items-center justify-center text-on-surface-variant group-hover:text-primary transition p-1 text-center">
-                                                                            <span className="material-symbols-outlined text-[20px]">photo_camera</span>
-                                                                            <span className="text-[8px] font-bold leading-none mt-0.5">Cargar Foto</span>
-                                                                        </div>
-                                                                    )}
-                                                                    <input
-                                                                        type="file"
-                                                                        accept="image/*"
-                                                                        className="hidden"
-                                                                        onChange={(e) => {
-                                                                            const file = e.target.files?.[0];
-                                                                            if (file) {
-                                                                                const reader = new FileReader();
-                                                                                reader.onloadend = () => {
-                                                                                    if (reader.result) {
-                                                                                        const updated = [...variantList];
-                                                                                        updated[idx].image_url = reader.result.toString();
-                                                                                        setVariantList(updated);
-                                                                                    }
-                                                                                };
-                                                                                reader.readAsDataURL(file);
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                </label>
-                                                            </div>
-
-                                                            {/* 5. Acciones / Eliminar */}
-                                                            <div className="sm:col-span-1 flex justify-center">
-                                                                {variantList.length > 1 && (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setVariantList(variantList.filter((_, i) => i !== idx))}
-                                                                        className="text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/10 cursor-pointer bg-transparent border-0 transition"
-                                                                        title="Eliminar variante"
-                                                                    >
-                                                                        <span className="material-symbols-outlined text-[18px]">delete</span>
-                                                                    </button>
-                                                                )}
-                                                            </div>
+                                                {variantList.map((v, idx) => (
+                                                    <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-surface-container/60 p-2.5 rounded-xl border border-outline/10">
+                                                        {/* 1. Selector Visual de Color con Círculos en CADA Opción y Edición */}
+                                                        <div className="sm:col-span-4 flex flex-col gap-1">
+                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Color / Variante</label>
+                                                            <VisualColorDropdown
+                                                                selectedColor={v.color}
+                                                                colors={allColors}
+                                                                onSelect={(colorName) => {
+                                                                    const updated = [...variantList];
+                                                                    updated[idx].color = colorName;
+                                                                    setVariantList(updated);
+                                                                }}
+                                                                onOpenPaintNew={() => openCreateColorModal(idx)}
+                                                                onEditColor={(c) => openEditColorModal(c)}
+                                                                onDeleteColor={(id) => handleDeleteColor(id)}
+                                                            />
                                                         </div>
-                                                    );
-                                                })}
+
+                                                        {/* 2. Stock Actual */}
+                                                        <div className="sm:col-span-2 flex flex-col gap-1">
+                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Stock Actual</label>
+                                                            <input
+                                                                type="number"
+                                                                placeholder="Stock *"
+                                                                value={v.stock}
+                                                                onChange={(e) => {
+                                                                    const updated = [...variantList];
+                                                                    updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
+                                                                    setVariantList(updated);
+                                                                }}
+                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                            />
+                                                        </div>
+
+                                                        {/* 3. Stock Mínimo */}
+                                                        <div className="sm:col-span-2 flex flex-col gap-1">
+                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Stock Mínimo</label>
+                                                            <input
+                                                                type="number"
+                                                                placeholder="Mínimo *"
+                                                                value={v.min_stock}
+                                                                onChange={(e) => {
+                                                                    const updated = [...variantList];
+                                                                    updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
+                                                                    setVariantList(updated);
+                                                                }}
+                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center"
+                                                            />
+                                                        </div>
+
+                                                        {/* 4. Cuadro de Carga de Foto de Producto (Estilo Perfil) */}
+                                                        <div className="sm:col-span-3 flex flex-col items-center gap-1">
+                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Foto del Producto</label>
+                                                            <label className="relative cursor-pointer flex items-center justify-center w-14 h-14 rounded-xl bg-surface-container border-2 border-dashed border-outline/30 hover:border-primary transition group overflow-hidden shadow-sm">
+                                                                {v.image_url ? (
+                                                                    <>
+                                                                        <img src={v.image_url} alt={v.color} className="w-full h-full object-cover rounded-lg" />
+                                                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                                                            <span className="material-symbols-outlined text-white text-[18px]">edit</span>
+                                                                        </div>
+                                                                    </>
+                                                                ) : (
+                                                                    <div className="flex flex-col items-center justify-center text-on-surface-variant group-hover:text-primary transition p-1 text-center">
+                                                                        <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+                                                                        <span className="text-[8px] font-bold leading-none mt-0.5">Cargar Foto</span>
+                                                                    </div>
+                                                                )}
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    className="hidden"
+                                                                    onChange={(e) => {
+                                                                        const file = e.target.files?.[0];
+                                                                        if (file) {
+                                                                            const reader = new FileReader();
+                                                                            reader.onloadend = () => {
+                                                                                if (reader.result) {
+                                                                                    const updated = [...variantList];
+                                                                                    updated[idx].image_url = reader.result.toString();
+                                                                                    setVariantList(updated);
+                                                                                }
+                                                                            };
+                                                                            reader.readAsDataURL(file);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </label>
+                                                        </div>
+
+                                                        {/* 5. Acciones / Eliminar */}
+                                                        <div className="sm:col-span-1 flex justify-center">
+                                                            {variantList.length > 1 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setVariantList(variantList.filter((_, i) => i !== idx))}
+                                                                    className="text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/10 cursor-pointer bg-transparent border-0 transition"
+                                                                    title="Eliminar variante"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
 
-                                            <button
+                                                <button
                                                 type="button"
                                                 onClick={() => setVariantList([...variantList, { color: 'Carey', stock: 5, min_stock: 1, image_url: '' }])}
                                                 className="w-full py-2 bg-primary/10 border border-dashed border-primary/40 rounded-xl text-xs font-bold text-primary hover:bg-primary/20 transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
@@ -2116,6 +2143,88 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             {activeTab === 'rotation' && (
                 <InventoryRotationView clientId={clientId} formatPrice={formatPrice} />
             )}
+
+            {/* Modal Estilo Paint para Crear/Editar Colores (Dividido 50% / 50%) */}
+            {isPaintModalOpen && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-surface-container-highest border border-outline/30 rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl">
+                        <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+                            <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary text-[20px]">palette</span>
+                                {editingColor ? 'Editar Color' : 'Crear / Personalizar Nuevo Color (Estilo Paint)'}
+                            </h4>
+                            <button type="button" onClick={() => setIsPaintModalOpen(false)} className="text-on-surface-variant hover:text-on-surface cursor-pointer bg-transparent border-0">
+                                <span className="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSavePaintColor} className="space-y-4">
+                            {/* Campo dividido a la mitad 50% / 50% */}
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Izquierda (50%): Nombre del color */}
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold uppercase text-on-surface-variant">
+                                        Nombre del Color *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="Ej. Violeta, Azul Rey"
+                                        value={colorNameInput}
+                                        onChange={(e) => setColorNameInput(e.target.value)}
+                                        className="w-full bg-surface-container border border-outline/30 rounded-xl p-3 text-xs text-on-surface font-bold outline-none focus:border-primary transition"
+                                    />
+                                </div>
+
+                                {/* Derecha (50%): Selector Interactivo Paint */}
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold uppercase text-on-surface-variant">
+                                        Color Interactivo (Paint) *
+                                    </label>
+                                    <input
+                                        type="color"
+                                        value={colorHexInput}
+                                        onChange={(e) => setColorHexInput(e.target.value)}
+                                        className="w-full h-11 bg-surface-container border border-outline/30 rounded-xl p-1 cursor-pointer outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Previsualización del Color */}
+                            <div className="p-3 bg-surface-container/50 border border-outline/15 rounded-xl flex items-center justify-between">
+                                <span className="text-xs font-bold text-on-surface-variant">Vista Previa:</span>
+                                <div className="flex items-center gap-3">
+                                    <div 
+                                        className="w-8 h-8 rounded-full border-2 border-white/40 shadow-lg transition-all"
+                                        style={{ background: colorHexInput }}
+                                    />
+                                    <div className="text-right">
+                                        <p className="text-xs font-bold text-on-surface">{colorNameInput || 'Sin Nombre'}</p>
+                                        <p className="text-[10px] font-mono text-on-surface-variant uppercase">{colorHexInput}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-3 border-t border-outline/10">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsPaintModalOpen(false)}
+                                    className="px-4 py-2 border border-outline/20 text-on-surface font-bold text-xs rounded-xl cursor-pointer hover:bg-surface-container-high"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl cursor-pointer shadow hover:opacity-90 flex items-center gap-1.5"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">check</span>
+                                    {editingColor ? 'Guardar Cambios' : 'Crear Color'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -2250,6 +2359,116 @@ const InventoryRotationView: React.FC<{ clientId: string; formatPrice: (v: strin
                             ))}
                         </tbody>
                     </table>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// Componente Selector Visual de Color con Círculos al lado de CADA Nombre de la lista desplegada
+const VisualColorDropdown: React.FC<{
+    selectedColor: string;
+    colors: Array<{ id: string; name: string; value: string; preview: string; isCustom?: boolean }>;
+    onSelect: (colorName: string) => void;
+    onOpenPaintNew: () => void;
+    onEditColor: (item: { id: string; name: string; preview: string }) => void;
+    onDeleteColor: (id: string) => void;
+}> = ({ selectedColor, colors, onSelect, onOpenPaintNew, onEditColor, onDeleteColor }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const currentItem = colors.find(
+        c => c.value.toLowerCase() === (selectedColor || '').toLowerCase() || c.name.toLowerCase() === (selectedColor || '').toLowerCase()
+    ) || { name: selectedColor || 'Negro', preview: '#808080' };
+
+    return (
+        <div className="relative w-full">
+            {/* Botón Cerrado con Círculo y Nombre */}
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none cursor-pointer flex items-center justify-between hover:border-primary/50 transition shadow-sm"
+            >
+                <div className="flex items-center gap-2 overflow-hidden">
+                    <div 
+                        className="w-5 h-5 rounded-full border-2 border-outline/40 flex-shrink-0 shadow-sm"
+                        style={{ background: currentItem.preview }}
+                    />
+                    <span className="truncate">{currentItem.name}</span>
+                </div>
+                <span className="material-symbols-outlined text-[16px] text-on-surface-variant">
+                    {isOpen ? 'expand_less' : 'expand_more'}
+                </span>
+            </button>
+
+            {/* Menú Desplegable Abierto con Círculos al Lado de CADA Opciones */}
+            {isOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-surface-container-highest border border-outline/30 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto p-1.5 space-y-1 backdrop-blur-md">
+                    <div className="text-[10px] font-bold text-on-surface-variant uppercase px-2 py-1 tracking-wider border-b border-outline/10">
+                        Colores Disponibles
+                    </div>
+
+                    {colors.map((c) => (
+                        <div
+                            key={c.id}
+                            onClick={() => {
+                                onSelect(c.name);
+                                setIsOpen(false);
+                            }}
+                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition text-xs font-bold ${
+                                (selectedColor || '').toLowerCase() === c.name.toLowerCase()
+                                    ? 'bg-primary/20 text-primary'
+                                    : 'text-on-surface hover:bg-surface-container-high'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2.5 truncate">
+                                <div 
+                                    className="w-5 h-5 rounded-full border border-outline/30 flex-shrink-0 shadow-sm"
+                                    style={{ background: c.preview }}
+                                />
+                                <span>{c.name}</span>
+                            </div>
+
+                            {c.isCustom && (
+                                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsOpen(false);
+                                            onEditColor(c);
+                                        }}
+                                        className="p-1 text-primary hover:bg-primary/20 rounded cursor-pointer border-0 bg-transparent flex items-center"
+                                        title="Editar este color"
+                                    >
+                                        <span className="material-symbols-outlined text-[14px]">edit</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            onDeleteColor(c.id);
+                                        }}
+                                        className="p-1 text-rose-400 hover:bg-rose-500/20 rounded cursor-pointer border-0 bg-transparent flex items-center"
+                                        title="Eliminar este color"
+                                    >
+                                        <span className="material-symbols-outlined text-[14px]">delete</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+
+                    <div className="pt-1 border-t border-outline/10">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsOpen(false);
+                                onOpenPaintNew();
+                            }}
+                            className="w-full py-2 px-2 bg-primary/10 text-primary font-bold text-xs rounded-lg hover:bg-primary/20 transition cursor-pointer flex items-center justify-center gap-1.5 border border-dashed border-primary/40"
+                        >
+                            <span className="material-symbols-outlined text-[16px]">palette</span>
+                            + 🎨 Crear Nuevo Color (Paint)
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

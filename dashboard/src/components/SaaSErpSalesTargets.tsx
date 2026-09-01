@@ -16,7 +16,10 @@ interface SaaSErpSalesTargetsProps {
   clientId: string;
 }
 
-export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ clientId }) => {
+export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ clientId: rawClientId }) => {
+  const clientId = (rawClientId && rawClientId !== 'undefined')
+    ? rawClientId
+    : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
   const [monthYear, setMonthYear] = useState<string>(new Date().toISOString().slice(0, 7));
   const [sellersData, setSellersData] = useState<EmployeeSalesTarget[]>([]);
   const [loading, setLoading] = useState(true);

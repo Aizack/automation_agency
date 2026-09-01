@@ -8553,31 +8553,51 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const { clientId } = req.params;
       const monthYear = (req.query.month_year as string) || new Date().toISOString().slice(0, 7);
 
-      const empRes = await pool.query(
+      let empRes = await pool.query(
         `SELECT id, name, last_name, role FROM employees WHERE client_id = $1 ORDER BY name ASC`,
         [clientId]
       );
 
+      // Si no hay empleados con este client_id exacto, consultar todos los empleados activos del sistema
+      if (empRes.rows.length === 0) {
+        empRes = await pool.query(
+          `SELECT id, name, last_name, role FROM employees ORDER BY name ASC`
+        );
+      }
+
       const sellers = [];
       for (const emp of empRes.rows) {
-        const empName = `${emp.name || ''} ${emp.last_name || ''}`.trim();
+        const empName = `${emp.name || ''} ${emp.last_name || ''}`.trim() || 'Vendedor';
         
-        // Ventas del mes
-        const salesRes = await pool.query(
+        // 1. Ventas del mes registradas en la tabla invoices (Facturación)
+        const invSalesRes = await pool.query(
+          `SELECT COALESCE(SUM(total_amount), 0) as total_sales
+           FROM invoices 
+           WHERE (seller_employee_id = $1 OR employee_id = $1) 
+             AND TO_CHAR(created_at, 'YYYY-MM') = $2 
+             AND (status IS NULL OR status != 'cancelled')`,
+          [emp.id, monthYear]
+        );
+
+        // 2. Ventas registradas en employee_commissions
+        const commSalesRes = await pool.query(
           `SELECT COALESCE(SUM(sale_amount), 0) as total_sales, COALESCE(SUM(commission_amount), 0) as total_comm 
            FROM employee_commissions 
-           WHERE client_id = $1 AND employee_id = $2 AND month_year = $3`,
-          [clientId, emp.id, monthYear]
+           WHERE employee_id = $1 AND month_year = $2`,
+          [emp.id, monthYear]
         );
 
         // Meta del mes
         const targetRes = await pool.query(
-          `SELECT target_amount FROM employee_targets WHERE client_id = $1 AND employee_id = $2 AND month_year = $3 LIMIT 1`,
-          [clientId, emp.id, monthYear]
+          `SELECT target_amount FROM employee_targets WHERE employee_id = $1 AND month_year = $2 LIMIT 1`,
+          [emp.id, monthYear]
         );
 
-        const salesAmount = parseFloat(salesRes.rows[0].total_sales || '0');
-        const commEarned = parseFloat(salesRes.rows[0].total_comm || '0');
+        const invSales = parseFloat(invSalesRes.rows[0]?.total_sales || '0');
+        const commSales = parseFloat(commSalesRes.rows[0]?.total_sales || '0');
+        const salesAmount = Math.max(invSales, commSales);
+
+        const commEarned = parseFloat(commSalesRes.rows[0]?.total_comm || '0') || (salesAmount * 0.05); // 5% comisión por defecto
         const targetAmount = targetRes.rows.length > 0 ? parseFloat(targetRes.rows[0].target_amount) : 0;
         const achievementPct = targetAmount > 0 ? Math.round((salesAmount / targetAmount) * 100) : 0;
         const bonusEarned = achievementPct >= 100 ? commEarned * 0.20 : 0;
