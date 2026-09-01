@@ -700,6 +700,8 @@ export const initDatabase = async () => {
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS employee_id UUID REFERENCES employees(id) ON DELETE SET NULL;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_name VARCHAR(150);
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_id UUID;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_name VARCHAR(150);
 
             CREATE TABLE IF NOT EXISTS employee_targets (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

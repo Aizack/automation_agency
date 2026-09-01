@@ -75,7 +75,7 @@ export const EmployeePortal: React.FC = () => {
     const [crmCustomers, setCrmCustomers] = useState<any[]>([]);
     const [selectedCrmCustomerId, setSelectedCrmCustomerId] = useState<string>('');
     const [showCrmSuggestions, setShowCrmSuggestions] = useState(false);
-    const [activeTab, setActiveTab] = useState<'turnos' | 'mesas' | 'tareas' | 'solicitudes' | 'chat' | 'campanias' | 'finanzas' | 'entregas'>('turnos');
+    const [activeTab, setActiveTab] = useState<'turnos' | 'mesas' | 'tareas' | 'solicitudes' | 'chat' | 'campanias' | 'finanzas' | 'entregas' | 'facturas'>('turnos');
     const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
     const [deliveriesLoading, setDeliveriesLoading] = useState(false);
 
@@ -98,6 +98,34 @@ export const EmployeePortal: React.FC = () => {
             console.error("Error loading employee deliveries:", err);
         } finally {
             setDeliveriesLoading(false);
+        }
+    };
+
+    // Invoices state for Employee Portal
+    const [myInvoices, setMyInvoices] = useState<any[]>([]);
+    const [invoicesSummary, setInvoicesSummary] = useState<{ total_count: number; total_sales_amount: number } | null>(null);
+    const [invoicesLoading, setInvoicesLoading] = useState(false);
+
+    const fetchMyInvoices = async () => {
+        const storedToken = localStorage.getItem('emp_token') || employeeToken;
+        const storedClientId = localStorage.getItem('emp_client_id') || clientId;
+        const storedEmpId = localStorage.getItem('emp_id') || employeeId;
+        if (!storedClientId || !storedEmpId) return;
+
+        try {
+            setInvoicesLoading(true);
+            const res = await fetch(`/api/clients/${storedClientId}/employees/${storedEmpId}/invoices`, {
+                headers: { 'Authorization': `Bearer ${storedToken}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setMyInvoices(json.invoices || []);
+                setInvoicesSummary(json.summary || null);
+            }
+        } catch (err) {
+            console.error("Error loading employee invoices:", err);
+        } finally {
+            setInvoicesLoading(false);
         }
     };
 
@@ -1396,6 +1424,16 @@ export const EmployeePortal: React.FC = () => {
                     )}
 
                     <button 
+                        onClick={() => { setActiveTab('facturas'); fetchMyInvoices(); }}
+                        className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
+                            activeTab === 'facturas' ? 'text-primary font-extrabold' : 'text-on-surface-variant hover:text-on-surface'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined">receipt_long</span>
+                        Mis Ventas
+                    </button>
+
+                    <button 
                         onClick={() => setActiveTab('tareas')}
                         className={`flex flex-col items-center gap-1 py-2 flex-grow border-0 cursor-pointer transition text-[10px] font-bold bg-transparent ${
                             activeTab === 'tareas' ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
@@ -1452,6 +1490,86 @@ export const EmployeePortal: React.FC = () => {
                     {activeTab === 'mesas' && (
                         <div className="space-y-4 text-left">
                             <RestaurantWaiterPortal clientId={clientId} waiterId={employeeId} waiterName={employeeName} />
+                        </div>
+                    )}
+
+                    {/* TAB MIS VENTAS & FACTURAS EMITIDAS */}
+                    {activeTab === 'facturas' && (
+                        <div className="space-y-4 text-left">
+                            <div className="bg-surface-container/40 p-4 rounded-2xl border border-outline/10 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">receipt_long</span>
+                                        Mis Ventas & Facturas Emitidas
+                                    </h3>
+                                    <p className="text-xs text-on-surface-variant opacity-75 mt-0.5">
+                                        Registro de facturas emitidas por ti o asignadas a tu perfil.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={fetchMyInvoices}
+                                    className="p-2 bg-surface-container hover:bg-surface-container-high rounded-xl text-on-surface border border-outline/20 transition cursor-pointer"
+                                    title="Actualizar facturas"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">refresh</span>
+                                </button>
+                            </div>
+
+                            {invoicesSummary && (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-surface-container/30 border border-outline/10 p-3.5 rounded-2xl">
+                                        <p className="text-[10px] font-bold text-on-surface-variant uppercase">Facturas Emitidas</p>
+                                        <p className="text-lg font-black text-primary mt-0.5">{invoicesSummary.total_count}</p>
+                                    </div>
+                                    <div className="bg-surface-container/30 border border-outline/10 p-3.5 rounded-2xl">
+                                        <p className="text-[10px] font-bold text-on-surface-variant uppercase">Monto Total Vendido</p>
+                                        <p className="text-lg font-black text-emerald-400 mt-0.5">${Number(invoicesSummary.total_sales_amount || 0).toLocaleString('es-CO')}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {invoicesLoading ? (
+                                <div className="flex justify-center py-10">
+                                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            ) : myInvoices.length === 0 ? (
+                                <div className="glass-card p-8 text-center space-y-2">
+                                    <span className="material-symbols-outlined text-3xl text-on-surface-variant opacity-40">receipt_long</span>
+                                    <p className="text-xs font-semibold text-on-surface">No has registrado facturas aún</p>
+                                    <p className="text-[11px] text-on-surface-variant opacity-75">Las facturas que emitas o se asignen a tu usuario aparecerán aquí automáticamente.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {myInvoices.map((inv) => (
+                                        <div key={inv.id} className="glass-card p-4 rounded-2xl border border-outline/10 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">
+                                                    {inv.invoice_number}
+                                                </span>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                                    inv.status === 'paid' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                                    inv.status === 'overdue' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                                                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                                }`}>
+                                                    {inv.status === 'paid' ? 'Pagada' : inv.status === 'overdue' ? 'En Mora' : 'Pendiente'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-xs">
+                                                <div>
+                                                    <p className="font-bold text-on-surface">{inv.customer_name}</p>
+                                                    <p className="text-[10px] text-on-surface-variant font-mono">
+                                                        {new Date(inv.created_at).toLocaleString('es-CO')}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-mono font-bold text-emerald-400">${Number(inv.total_amount || 0).toLocaleString('es-CO')}</p>
+                                                    <p className="text-[10px] text-on-surface-variant uppercase">{inv.payment_method || 'Efectivo'}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
 

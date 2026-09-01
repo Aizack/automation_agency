@@ -80,6 +80,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     // Filtros de búsqueda
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
+    const [sellerFilter, setSellerFilter] = useState('all');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
     const [minAmount, setMinAmount] = useState('');
@@ -587,6 +588,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             if (statusFilter === 'overdue' && !(s === 'overdue' || s === 'mora' || s === 'vencida')) return false;
         }
 
+        if (sellerFilter !== 'all') {
+            const isMatch = inv.seller_employee_id === sellerFilter || (inv as any).employee_id === sellerFilter || (inv as any).created_by_user_id === sellerFilter;
+            if (!isMatch) return false;
+        }
+
         if (dateFrom) {
             const dFrom = new Date(`${dateFrom}T00:00:00`);
             const invDate = new Date(inv.created_at || inv.due_date);
@@ -608,6 +614,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const resetFilters = () => {
         setSearchTerm('');
         setStatusFilter('all');
+        setSellerFilter('all');
         setDateFrom('');
         setDateTo('');
         setMinAmount('');
@@ -1534,6 +1541,18 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                             <option value="pending">⏳ Pendientes</option>
                             <option value="overdue">🔴 En Mora</option>
                         </select>
+                        <select
+                            value={sellerFilter}
+                            onChange={(e) => setSellerFilter(e.target.value)}
+                            className="bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface focus:border-primary outline-none transition cursor-pointer"
+                        >
+                            <option value="all">Todos los Vendedores</option>
+                            {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>
+                                    👤 {emp.name} {emp.last_name || ''} ({emp.role || 'Vendedor'})
+                                </option>
+                            ))}
+                        </select>
                         <button
                             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                             className={`px-3 py-2 rounded-xl border text-xs font-medium flex items-center gap-1 transition cursor-pointer ${
@@ -1545,7 +1564,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                             <span className="material-symbols-outlined text-[16px]">tune</span>
                             Filtros
                         </button>
-                        {(searchTerm || statusFilter !== 'all' || dateFrom || dateTo || minAmount || maxAmount) && (
+                        {(searchTerm || statusFilter !== 'all' || sellerFilter !== 'all' || dateFrom || dateTo || minAmount || maxAmount) && (
                             <button
                                 onClick={resetFilters}
                                 className="px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline/20 text-xs text-red-400 font-medium transition cursor-pointer flex items-center gap-1"

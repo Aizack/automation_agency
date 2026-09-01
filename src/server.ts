@@ -2007,46 +2007,67 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_document_type, i.customer_document_number, i.customer_email, i.customer_address, i.total_amount, i.status, i.due_date, i.reminder_sent, i.overdue_sent, i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_at, COALESCE(NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name 
-       FROM invoices i 
-       LEFT JOIN employees e ON i.seller_employee_id = e.id
-       WHERE i.client_id = $1 
-       ORDER BY i.created_at DESC`,
-      [clientId]
-    );
-    res.json({ success: true, invoices: result.rows });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+  app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const result = await pool.query(
+        `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_document_type, i.customer_document_number, i.customer_email, i.customer_address, i.total_amount, i.status, i.due_date, i.reminder_sent, i.overdue_sent, i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_by_user_id, i.created_by_user_name, i.created_at, COALESCE(i.seller_name, NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name 
+         FROM invoices i 
+         LEFT JOIN employees e ON i.seller_employee_id = e.id
+         WHERE i.client_id = $1 
+         ORDER BY i.created_at DESC`,
+        [clientId]
+      );
+      res.json({ success: true, invoices: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
 
-app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
-  const dbClient = await pool.connect();
-  try {
-    await dbClient.query('BEGIN');
-    const { clientId } = req.params;
-    const { 
-      invoiceNumber, 
-      customerName, 
-      customerPhone, 
-      customerDocumentType, 
-      customerDocumentNumber, 
-      customerEmail, 
-      customerAddress, 
-      totalAmount, 
-      dueDate,
-      paymentMethod,
-      installmentsCount,
-      installmentFrequency,
-      abono, // Abono inicial
-      deliveryMethod, // 'local' o 'domicilio'
-      deliveryFee,
-      deliveryAddress,
-      deliveryDate,
-      transferBank,
-      transferDestinationAccount,
-      items 
-    } = req.body;
+  app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    const dbClient = await pool.connect();
+    try {
+      await dbClient.query('BEGIN');
+      const { clientId } = req.params;
+      const reqUser = (req as any).user;
+      const createdByUserId = reqUser?.id || null;
+      const createdByUserName = reqUser?.name || reqUser?.username || reqUser?.email || 'Usuario ERP';
+
+      const { 
+        invoiceNumber, 
+        customerName, 
+        customerPhone, 
+        customerDocumentType, 
+        customerDocumentNumber, 
+        customerEmail, 
+        customerAddress, 
+        totalAmount, 
+        dueDate,
+        paymentMethod,
+        installmentsCount,
+        installmentFrequency,
+        abono, // Abono inicial
+        deliveryMethod, // 'local' o 'domicilio'
+        deliveryFee,
+        deliveryAddress,
+        deliveryDate,
+        transferBank,
+        transferDestinationAccount,
+        sellerEmployeeId,
+        seller_employee_id,
+        sellerName,
+        items 
+      } = req.body;
+
+      const finalSellerEmpId = sellerEmployeeId || seller_employee_id || null;
+      let finalSellerName = sellerName || null;
+
+      if (finalSellerEmpId && !finalSellerName) {
+        const empCheck = await dbClient.query(`SELECT name, last_name FROM employees WHERE id = $1 LIMIT 1`, [finalSellerEmpId]);
+        if (empCheck.rows.length > 0) {
+          finalSellerName = `${empCheck.rows[0].name || ''} ${empCheck.rows[0].last_name || ''}`.trim();
+        }
+      }
 
     if (!invoiceNumber || !customerName || !customerPhone || !customerDocumentNumber || !customerEmail || !dueDate || totalAmount === undefined) {
       return res.status(400).json({ success: false, error: 'Campos obligatorios incompletos.' });
@@ -2107,10 +2128,11 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
         customer_address, total_amount, status, due_date, 
         payment_method, installments_count, installment_frequency,
         delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status,
-        transfer_bank, transfer_destination_account
+        transfer_bank, transfer_destination_account,
+        seller_employee_id, employee_id, seller_name, created_by_user_id, created_by_user_name
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
-      RETURNING id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, transfer_bank, transfer_destination_account, created_at
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+      RETURNING id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, transfer_bank, transfer_destination_account, seller_employee_id, seller_name, created_by_user_id, created_by_user_name, created_at
     `, [
       clientId, 
       invoiceNumber, 
@@ -2132,7 +2154,12 @@ app.post('/api/clients/:clientId/invoices', authenticateToken as any, authorizeC
       deliveryDate || null,
       finalDeliveryMethod === 'domicilio' ? 'pending' : 'entregado',
       transferBank || null,
-      transferDestinationAccount || null
+      transferDestinationAccount || null,
+      finalSellerEmpId,
+      finalSellerEmpId,
+      finalSellerName,
+      createdByUserId,
+      createdByUserName
     ]);
 
     const invoice = invoiceResult.rows[0];
@@ -2536,6 +2563,35 @@ app.put('/api/clients/:clientId/invoices/:invoiceId/pay', authenticateToken as a
     }
 
     res.json({ success: true, message: 'Factura pagada exitosamente.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Obtener historial de facturas emitidas por un empleado específico para su Perfil de Empleado
+app.get('/api/clients/:clientId/employees/:employeeId/invoices', authenticateToken as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, employeeId } = req.params;
+    const result = await pool.query(
+      `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.total_amount, i.status, i.payment_method, i.created_at, COALESCE(i.seller_name, 'Sin asignar') as seller_name
+       FROM invoices i
+       WHERE i.client_id = $1 
+         AND (i.seller_employee_id = $2 OR i.employee_id = $2 OR i.created_by_user_id = $2)
+       ORDER BY i.created_at DESC`,
+      [clientId, employeeId]
+    );
+
+    const totalSales = result.rows.reduce((sum, inv) => sum + parseFloat(inv.total_amount || '0'), 0);
+    const count = result.rows.length;
+
+    res.json({
+      success: true,
+      invoices: result.rows,
+      summary: {
+        total_count: count,
+        total_sales_amount: totalSales
+      }
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
