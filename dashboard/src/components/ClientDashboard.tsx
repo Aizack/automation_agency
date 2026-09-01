@@ -221,6 +221,34 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     roi: 0
   });
 
+  // Estados para Módulo Multi-Sede & Selector de Sucursales
+  const [branches, setBranches] = useState<any[]>([]);
+  const [isAddBranchModalOpen, setIsAddBranchModalOpen] = useState(false);
+  const [branchNameInput, setBranchNameInput] = useState('');
+  const [branchCompanyInput, setBranchCompanyInput] = useState('');
+  const [branchPhoneInput, setBranchPhoneInput] = useState('');
+  const [branchAddressInput, setBranchAddressInput] = useState('');
+  const [savingBranch, setSavingBranch] = useState(false);
+
+  const fetchBranches = async () => {
+    try {
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+      const res = await fetch(`/api/clients/${clientId}/branches`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (json.success) {
+        setBranches(json.branches || []);
+      }
+    } catch (err) {
+      console.error("Error cargando sucursales:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBranches();
+  }, [clientId]);
+
   // Cargar historial de logotipos
   const fetchLogos = async () => {
     try {
@@ -1298,6 +1326,39 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 </div>
               )}
             </div>
+
+            {/* Store Switcher Dropdown (Módulo Multi-Sede) */}
+            {branches.length > 0 && (
+              <div className="relative">
+                <select
+                  value={clientId}
+                  onChange={(e) => {
+                    const newClientId = e.target.value;
+                    localStorage.setItem('current_client_id', newClientId);
+                    window.location.reload();
+                  }}
+                  className="bg-surface-container/60 hover:bg-surface-container border border-outline/20 rounded-2xl px-3 py-1.5 text-xs font-bold text-on-surface focus:border-primary outline-none cursor-pointer shadow-sm"
+                  title="Cambiar de Sede / Puntos de Venta"
+                >
+                  {branches.map(b => (
+                    <option key={b.id} value={b.id} className="bg-surface-container-highest text-on-surface font-semibold">
+                      {b.is_main_branch ? '🏢' : '📍'} {b.branch_name || b.name} {b.is_main_branch ? '(Matriz)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Botón Nueva Sede (Add-on) */}
+            <button
+              type="button"
+              onClick={() => setIsAddBranchModalOpen(true)}
+              className="flex items-center gap-1.5 p-2 px-3 rounded-2xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 transition cursor-pointer text-xs font-bold shadow-sm"
+              title="Agregar Nueva Sede Sucursal (Add-on)"
+            >
+              <span className="material-symbols-outlined text-[16px]">add_business</span>
+              <span className="hidden lg:inline">+ Nueva Sede</span>
+            </button>
 
             {/* Botón Soporte & Tickets AutoFix IA */}
             <button
@@ -2473,6 +2534,131 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
             <div className="bg-surface-container-highest border border-outline/30 rounded-3xl p-6 max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl space-y-4">
               <SaaSErpSupportTickets clientId={clientId} onClose={() => setIsSupportModalOpen(false)} />
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Creación de Nueva Sede / Sucursal (Add-on) */}
+        {isAddBranchModalOpen && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="bg-surface-container-highest border border-outline/30 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+                <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">add_business</span>
+                  Agregar Nueva Sede / Sucursal (Add-on)
+                </h3>
+                <button
+                  onClick={() => setIsAddBranchModalOpen(false)}
+                  className="p-1 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!branchNameInput || !branchCompanyInput) return;
+                  try {
+                    setSavingBranch(true);
+                    const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+                    const res = await fetch(`/api/clients/${clientId}/branches`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({
+                        name: branchCompanyInput,
+                        branch_name: branchNameInput,
+                        phone: branchPhoneInput,
+                        address: branchAddressInput
+                      })
+                    });
+                    const json = await res.json();
+                    if (json.success) {
+                      alert(json.message);
+                      setIsAddBranchModalOpen(false);
+                      setBranchNameInput('');
+                      setBranchCompanyInput('');
+                      setBranchPhoneInput('');
+                      setBranchAddressInput('');
+                      fetchBranches();
+                    } else {
+                      alert(`Error: ${json.error}`);
+                    }
+                  } catch (err: any) {
+                    alert(`Error de conexión: ${err.message}`);
+                  } finally {
+                    setSavingBranch(false);
+                  }
+                }}
+                className="space-y-3 text-xs"
+              >
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-on-surface-variant uppercase">Nombre de la Sede / Punto de Venta *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Sede Ciudadela / Sucursal Norte"
+                    value={branchNameInput}
+                    onChange={(e) => setBranchNameInput(e.target.value)}
+                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-on-surface-variant uppercase">Razón Social / Nombre Comercial *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Óptica La 8 S.A.S"
+                    value={branchCompanyInput}
+                    onChange={(e) => setBranchCompanyInput(e.target.value)}
+                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-on-surface-variant uppercase">Teléfono / WhatsApp</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. 3001234567"
+                      value={branchPhoneInput}
+                      onChange={(e) => setBranchPhoneInput(e.target.value)}
+                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-on-surface-variant uppercase">Dirección</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Calle 45 # 12-34"
+                      value={branchAddressInput}
+                      onChange={(e) => setBranchAddressInput(e.target.value)}
+                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddBranchModalOpen(false)}
+                    className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline/20 font-bold text-on-surface cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingBranch}
+                    className="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    {savingBranch ? 'Guardando...' : 'Crear Sede'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

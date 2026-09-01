@@ -78,6 +78,65 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     const [allAdvances, setAllAdvances] = useState<any[]>([]);
     const [loadingAdvances, setLoadingAdvances] = useState(false);
     
+    // Multi-Sede Branch Transfer states
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [selectedEmpToTransfer, setSelectedEmpToTransfer] = useState<Employee | null>(null);
+    const [branchesList, setBranchesList] = useState<any[]>([]);
+    const [targetBranchId, setTargetBranchId] = useState('');
+    const [transferReason, setTransferReason] = useState('');
+    const [transferringEmp, setTransferringEmp] = useState(false);
+
+    const handleOpenTransferModal = async (emp: Employee) => {
+        setSelectedEmpToTransfer(emp);
+        setIsTransferModalOpen(true);
+        try {
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+            const res = await fetch(`/api/clients/${clientId}/branches`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setBranchesList(json.branches || []);
+            }
+        } catch (err) {
+            console.error("Error cargando sedes:", err);
+        }
+    };
+
+    const handleExecuteEmployeeTransfer = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedEmpToTransfer || !targetBranchId) return;
+        try {
+            setTransferringEmp(true);
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+            const res = await fetch(`/api/clients/${clientId}/employees/${selectedEmpToTransfer.id}/transfer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    to_client_id: targetBranchId,
+                    reason: transferReason
+                })
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert(json.message);
+                setIsTransferModalOpen(false);
+                setSelectedEmpToTransfer(null);
+                setTransferReason('');
+                fetchData();
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (err: any) {
+            alert(`Error de conexión: ${err.message}`);
+        } finally {
+            setTransferringEmp(false);
+        }
+    };
+    
     // Approval process states
     const [processingAdv, setProcessingAdv] = useState<any | null>(null);
     const [adminNotes, setAdminNotes] = useState('');
@@ -2679,6 +2738,19 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                             <span className="text-on-surface-variant block mb-1">Departamento:</span>
                                             <strong className="text-on-surface text-sm">{selectedEmpDetail.department_name || 'Sin Asignar'}</strong>
                                         </div>
+                                        <div className="col-span-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsDetailOpen(false);
+                                                    handleOpenTransferModal(selectedEmpDetail);
+                                                }}
+                                                className="w-full py-2.5 px-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">domain</span>
+                                                🏢 Trasladar de Sede (Reubicar Colaborador)
+                                            </button>
+                                        </div>
                                         <div>
                                             <span className="text-on-surface-variant block mb-1">PIN Marcación Rápida:</span>
                                             <div className="flex items-center gap-2">
@@ -3338,6 +3410,81 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 Cerrar Ficha
                             </button>
                         </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* MODAL TRASLADAR EMPLEADO DE SEDE */}
+            {isTransferModalOpen && selectedEmpToTransfer && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl space-y-4 my-auto">
+                        <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+                            <h3 className="font-bold text-base text-on-surface flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">domain</span>
+                                Trasladar de Sede
+                            </h3>
+                            <button 
+                                onClick={() => setIsTransferModalOpen(false)}
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        <div className="bg-primary/5 border border-primary/20 p-3 rounded-xl space-y-1 text-xs">
+                            <p className="text-on-surface font-bold">Colaborador: {selectedEmpToTransfer.name} {selectedEmpToTransfer.last_name || ''}</p>
+                            <p className="text-[11px] text-on-surface-variant">
+                                Al trasladar este trabajador, su historial pasado (ventas, citas y turnos) se conservará intacto en la sede origen, mientras que sus futuras operaciones se registrarán en la sede destino.
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleExecuteEmployeeTransfer} className="space-y-3 text-xs">
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-on-surface-variant uppercase">Sede Destino *</label>
+                                <select
+                                    required
+                                    value={targetBranchId}
+                                    onChange={(e) => setTargetBranchId(e.target.value)}
+                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface font-bold outline-none focus:border-primary"
+                                >
+                                    <option value="">Seleccione la sede de destino...</option>
+                                    {branchesList.filter(b => b.id !== clientId).map(b => (
+                                        <option key={b.id} value={b.id}>
+                                            {b.is_main_branch ? '🏢' : '📍'} {b.branch_name || b.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-on-surface-variant uppercase">Motivo o Notas de Reubicación</label>
+                                <textarea
+                                    rows={2}
+                                    placeholder="Ej. Cobertura de vacaciones / Reubicación permanente..."
+                                    value={transferReason}
+                                    onChange={(e) => setTransferReason(e.target.value)}
+                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary resize-none"
+                                />
+                            </div>
+
+                            <div className="pt-2 flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsTransferModalOpen(false)}
+                                    className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline/20 font-bold text-on-surface cursor-pointer"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={transferringEmp}
+                                    className="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold transition cursor-pointer flex items-center gap-1.5"
+                                >
+                                    {transferringEmp ? 'Trasladando...' : 'Confirmar Traslado'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>,
                 document.body

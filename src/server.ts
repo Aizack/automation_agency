@@ -8805,6 +8805,161 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
+  // --- MÓDULO MULTI-SEDE & MULTI-BODEGA (PARENT-CHILD TENANT) ---
+
+  // 1. Obtener sedes sucursales asociadas a la empresa matriz
+  app.get('/api/clients/:clientId/branches', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const result = await pool.query(
+        `SELECT id, name, branch_name, is_main_branch, parent_client_id, phone, address, created_at 
+         FROM clients 
+         WHERE id = $1 OR parent_client_id = $1 OR (parent_client_id = (SELECT parent_client_id FROM clients WHERE id = $1 AND parent_client_id IS NOT NULL))
+         ORDER BY is_main_branch DESC, name ASC`,
+        [clientId]
+      );
+      res.json({ success: true, branches: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 2. Crear una nueva sede/sucursal hija
+  app.post('/api/clients/:clientId/branches', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { name, branch_name, phone, address } = req.body;
+
+      if (!name || !branch_name) {
+        return res.status(400).json({ success: false, error: 'Nombre de empresa y nombre de la sede son obligatorios.' });
+      }
+
+      const branchId = `branch_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+      await pool.query(
+        `INSERT INTO clients (id, parent_client_id, name, branch_name, is_main_branch, phone, address, is_activated)
+         VALUES ($1, $2, $3, $4, FALSE, $5, $6, TRUE)`,
+        [branchId, clientId, name, branch_name, phone || null, address || null]
+      );
+
+      res.json({ 
+        success: true, 
+        message: `Sede "${branch_name}" creada exitosamente.`,
+        branch: { id: branchId, name, branch_name, parent_client_id: clientId }
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 3. Consulta de Stock Inter-Sedes de un producto o SKU
+  app.get('/api/clients/:clientId/products/cross-branch-stock', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const productName = (req.query.name as string) || '';
+      const sku = (req.query.sku as string) || '';
+
+      if (!productName && !sku) {
+        return res.status(400).json({ success: false, error: 'Especifique el nombre del producto o SKU para consultar.' });
+      }
+
+      const result = await pool.query(
+        `SELECT p.id as product_id, p.name, p.sku, p.stock, p.price, p.image_url, c.id as client_id, COALESCE(c.branch_name, c.name) as branch_name, c.is_main_branch
+         FROM products p
+         JOIN clients c ON p.client_id = c.id
+         WHERE (c.id = $1 OR c.parent_client_id = $1 OR c.parent_client_id = (SELECT parent_client_id FROM clients WHERE id = $1 AND parent_client_id IS NOT NULL))
+           AND (
+             (LOWER(p.name) LIKE LOWER($2) AND $2 != '') OR 
+             (LOWER(p.sku) = LOWER($3) AND $3 != '')
+           )
+         ORDER BY c.is_main_branch DESC, c.name ASC`,
+        [clientId, `%${productName}%`, sku]
+      );
+
+      res.json({ success: true, cross_stock: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 4. Trasladar un empleado a otra sede registrando auditoría
+  app.post('/api/clients/:clientId/employees/:employeeId/transfer', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, employeeId } = req.params;
+      const { to_client_id, reason } = req.body;
+      const reqUser = (req as any).user;
+      const userName = reqUser?.name || reqUser?.username || reqUser?.email || 'Administrador ERP';
+
+      if (!to_client_id) {
+        return res.status(400).json({ success: false, error: 'Debe especificar la sede de destino.' });
+      }
+
+      await pool.query(
+        `UPDATE employees SET client_id = $1 WHERE id = $2`,
+        [to_client_id, employeeId]
+      );
+
+      await pool.query(
+        `INSERT INTO employee_branch_transfers (employee_id, from_client_id, to_client_id, transferred_by_user_name, reason)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [employeeId, clientId, to_client_id, userName, reason || 'Reubicación de personal']
+      );
+
+      res.json({ success: true, message: 'Empleado trasladado de sede exitosamente conservando su historial previo.' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 5. Traspaso de mercancía e inventario entre sedes
+  app.post('/api/clients/:clientId/inventory/transfer', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { to_client_id, product_id, product_name, quantity, notes } = req.body;
+      const reqUser = (req as any).user;
+      const userName = reqUser?.name || reqUser?.username || reqUser?.email || 'Usuario ERP';
+      const qty = parseFloat(quantity) || 0;
+
+      if (!to_client_id || !product_id || qty <= 0) {
+        return res.status(400).json({ success: false, error: 'Parámetros de traspaso incompletos.' });
+      }
+
+      const transferCode = `TRP-${Date.now().toString().slice(-6)}`;
+
+      await pool.query(
+        `UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2 AND client_id = $3`,
+        [qty, product_id, clientId]
+      );
+
+      const destProdRes = await pool.query(
+        `SELECT id FROM products WHERE client_id = $1 AND (id = $2 OR LOWER(name) = LOWER($3)) LIMIT 1`,
+        [to_client_id, product_id, product_name]
+      );
+
+      if (destProdRes.rows.length > 0) {
+        await pool.query(
+          `UPDATE products SET stock = stock + $1 WHERE id = $2`,
+          [qty, destProdRes.rows[0].id]
+        );
+      } else {
+        await pool.query(
+          `INSERT INTO products (client_id, name, stock, price) VALUES ($1, $2, $3, 0)`,
+          [to_client_id, product_name || 'Producto Traspasado', qty]
+        );
+      }
+
+      await pool.query(
+        `INSERT INTO inventory_transfers (transfer_code, from_client_id, to_client_id, product_id, product_name, quantity, status, requested_by_user, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, 'completed', $7, $8)`,
+        [transferCode, clientId, to_client_id, product_id, product_name || 'Producto', qty, userName, notes || null]
+      );
+
+      res.json({ success: true, message: `Traspaso #${transferCode} completado exitosamente de ${qty} unidad(es).` });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
   app.get(/.*/, (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith('/api')) {

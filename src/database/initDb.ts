@@ -727,6 +727,35 @@ export const initDatabase = async () => {
         await pool.query(`
             ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS birth_date DATE;
             ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS customer_type VARCHAR(20) DEFAULT 'persona';
+
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS parent_client_id VARCHAR(50) REFERENCES clients(id) ON DELETE CASCADE;
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS branch_name VARCHAR(150);
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_main_branch BOOLEAN DEFAULT true;
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;
+
+            CREATE TABLE IF NOT EXISTS employee_branch_transfers (
+                id VARCHAR(50) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                employee_id VARCHAR(50) NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                from_client_id VARCHAR(50) NOT NULL REFERENCES clients(id),
+                to_client_id VARCHAR(50) NOT NULL REFERENCES clients(id),
+                transferred_by_user_name VARCHAR(150) NOT NULL,
+                reason TEXT,
+                transferred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
+
+            CREATE TABLE IF NOT EXISTS inventory_transfers (
+                id VARCHAR(50) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+                transfer_code VARCHAR(50) NOT NULL UNIQUE,
+                from_client_id VARCHAR(50) NOT NULL REFERENCES clients(id),
+                to_client_id VARCHAR(50) NOT NULL REFERENCES clients(id),
+                product_id VARCHAR(50) NOT NULL REFERENCES products(id),
+                product_name VARCHAR(200) NOT NULL,
+                quantity NUMERIC(12,2) NOT NULL,
+                status VARCHAR(30) DEFAULT 'completed',
+                requested_by_user VARCHAR(150) NOT NULL,
+                notes TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
         `);
 
         await pool.query(`
