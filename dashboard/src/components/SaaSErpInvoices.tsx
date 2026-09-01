@@ -2022,7 +2022,6 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                         DIAN Verificada (CUFE OK)
                                     </div>
                                 )}
-
                                 <button
                                     type="button"
                                     onClick={() => handlePrintPOS(selectedInvoice.id)}
@@ -2031,6 +2030,60 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     <span className="material-symbols-outlined text-[16px]">receipt_long</span>
                                     Imprimir POS (80mm)
                                 </button>
+
+                                {/* BOTÓN ENVIAR WHATSAPP */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const cleanPhone = (selectedInvoice.customer_phone || '').replace(/\D/g, '');
+                                        const msg = `📄 *FACTURA DE VENTA #${selectedInvoice.invoice_number}*\nHola ${selectedInvoice.customer_name}, adjuntamos el soporte de tu compra por valor de $${Number(selectedInvoice.total_amount).toLocaleString('es-CO')} COP.\n\n¡Muchas gracias por elegirnos!`;
+                                        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+                                        
+                                        fetch(`/api/clients/${clientId}/invoices/${selectedInvoice.id}/send-whatsapp`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' }
+                                        }).catch(() => {});
+                                        
+                                        window.open(waUrl, '_blank');
+                                    }}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-md border-0"
+                                    title="Enviar soporte de factura al cliente por WhatsApp (Bot / WhatsApp Web)"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">chat</span>
+                                    Enviar por WhatsApp
+                                </button>
+
+                                {/* BOTÓN ENVIAR EMAIL */}
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        if (!selectedInvoice.customer_email) {
+                                            alert("El cliente no posee un correo electrónico registrado.");
+                                            return;
+                                        }
+                                        try {
+                                            const res = await fetch(`/api/clients/${clientId}/invoices/${selectedInvoice.id}/send-email`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ email: selectedInvoice.customer_email })
+                                            });
+                                            const json = await res.json();
+                                            if (json.success) {
+                                                alert(`✅ Factura enviada exitosamente al correo ${selectedInvoice.customer_email}`);
+                                            } else {
+                                                alert(json.error || "No se pudo enviar el correo.");
+                                            }
+                                        } catch (err) {
+                                            alert("Error de conexión al enviar el correo.");
+                                        }
+                                    }}
+                                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-md border-0"
+                                    title="Enviar factura PDF por correo electrónico al cliente"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">mail</span>
+                                    Enviar por Correo
+                                </button>
+
                                 <button
                                     type="button"
                                     onClick={() => setSelectedInvoice(null)}

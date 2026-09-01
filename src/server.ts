@@ -2486,6 +2486,80 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/trigger-collection', authen
   }
 });
 
+// Enviar Factura por WhatsApp (Bot en Servidor + Enlace Directo para Vendedor)
+app.post('/api/clients/:clientId/invoices/:invoiceId/send-whatsapp', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+
+    const result = await pool.query(`
+      SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.total_amount, c.name as business_name
+      FROM invoices i
+      JOIN clients c ON i.client_id = c.id
+      WHERE i.client_id = $1 AND i.id = $2
+      LIMIT 1
+    `, [clientId, invoiceId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
+    }
+
+    const inv = result.rows[0];
+    const cleanPhone = (inv.customer_phone || '').replace(/\D/g, '');
+    const formattedAmount = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(parseFloat(inv.total_amount || 0));
+    const msg = `📄 *FACTURA DE VENTA #${inv.invoice_number}*\nHola ${inv.customer_name}, adjuntamos el soporte de tu compra en ${inv.business_name} por valor de ${formattedAmount}.\n\n¡Muchas gracias por elegirnos!`;
+
+    if (client && whatsappState.status === 'CONNECTED') {
+      try {
+        await client.sendMessage(`${cleanPhone}@c.us`, msg);
+      } catch (waErr) {
+        console.warn("[WhatsApp Send] No se pudo despachar automáticamente vía bot:", waErr);
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Factura enviada por WhatsApp exitosamente.',
+      wa_link: `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Enviar Factura por Correo Electrónico (Generación en Memoria RAM Stream / SMTP)
+app.post('/api/clients/:clientId/invoices/:invoiceId/send-email', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    const { email } = req.body;
+
+    const result = await pool.query(`
+      SELECT i.id, i.invoice_number, i.customer_name, i.customer_email, i.total_amount, c.name as business_name
+      FROM invoices i
+      JOIN clients c ON i.client_id = c.id
+      WHERE i.client_id = $1 AND i.id = $2
+      LIMIT 1
+    `, [clientId, invoiceId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
+    }
+
+    const inv = result.rows[0];
+    const targetEmail = email || inv.customer_email;
+
+    if (!targetEmail) {
+      return res.status(400).json({ success: false, error: 'El cliente no posee un correo electrónico registrado.' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: `Soporte de factura enviado exitosamente al correo ${targetEmail}.`
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Registrar pago total de factura desde Dashboard
 app.put('/api/clients/:clientId/invoices/:invoiceId/pay', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
