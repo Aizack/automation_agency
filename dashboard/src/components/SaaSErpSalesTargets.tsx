@@ -20,7 +20,10 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
   const clientId = (rawClientId && rawClientId !== 'undefined')
     ? rawClientId
     : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
-  const [monthYear, setMonthYear] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [monthYear, setMonthYear] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [sellersData, setSellersData] = useState<EmployeeSalesTarget[]>([]);
   const [loading, setLoading] = useState(true);
 

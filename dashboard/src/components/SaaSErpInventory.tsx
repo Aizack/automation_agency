@@ -2144,10 +2144,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                 <InventoryRotationView clientId={clientId} formatPrice={formatPrice} />
             )}
 
-            {/* Modal Estilo Paint para Crear/Editar Colores (Dividido 50% / 50%) */}
-            {isPaintModalOpen && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-surface-container-highest border border-outline/30 rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl">
+            {/* Modal Estilo Paint para Crear/Editar Colores (Teleportado a document.body con z-[99999]) */}
+            {isPaintModalOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[99999]" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-surface-container-highest border border-outline/30 rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl relative z-[100000]" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3">
                             <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
                                 <span className="material-symbols-outlined text-primary text-[20px]">palette</span>
@@ -2223,7 +2223,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
