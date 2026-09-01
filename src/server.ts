@@ -8694,7 +8694,23 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         });
       }
 
-      res.json({ success: true, month_year: monthYear, sellers });
+      // Obtener meses con datos reales (facturas o metas registradas) + mes actual
+      const currentMonthStr = new Date().toISOString().slice(0, 7);
+      const monthsRes = await pool.query(`
+        SELECT DISTINCT month_year FROM (
+          SELECT TO_CHAR(created_at, 'YYYY-MM') as month_year FROM invoices WHERE created_at IS NOT NULL
+          UNION
+          SELECT month_year FROM employee_targets WHERE month_year IS NOT NULL
+          UNION
+          SELECT $1 as month_year
+        ) sub
+        WHERE month_year IS NOT NULL AND month_year <= $1
+        ORDER BY month_year DESC
+      `, [currentMonthStr]);
+
+      const availableMonths = monthsRes.rows.map(r => r.month_year);
+
+      res.json({ success: true, month_year: monthYear, available_months: availableMonths, sellers });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

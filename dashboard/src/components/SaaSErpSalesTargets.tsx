@@ -30,6 +30,8 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
+
   // Modal para asignar meta
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmpId, setSelectedEmpId] = useState('');
@@ -45,6 +47,9 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
       const json = await res.json();
       if (json.success) {
         setSellersData(json.sellers || []);
+        if (Array.isArray(json.available_months) && json.available_months.length > 0) {
+          setAvailableMonths(json.available_months);
+        }
       } else {
         setErrorMessage(json.error || `HTTP ${res.status}: Error recuperando datos de la API.`);
       }
@@ -109,28 +114,29 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
     }).format(amount);
   };
 
-  // Generar lista dinámica de meses desde el mes actual hacia atrás (24 meses)
+  // Generar lista dinámica basada ÚNICAMENTE en meses con datos reales en el sistema (+ mes actual)
   const monthOptions = React.useMemo(() => {
-    const options = [];
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-
     const monthNames = [
       'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
 
-    for (let i = 0; i < 24; i++) {
-      const d = new Date(currentYear, currentMonth - i, 1);
-      const year = d.getFullYear();
-      const monthNum = String(d.getMonth() + 1).padStart(2, '0');
-      const value = `${year}-${monthNum}`;
-      const label = `${monthNames[d.getMonth()]} ${year}${i === 0 ? ' (Mes Actual)' : ''}`;
-      options.push({ value, label });
+    const currentMonthVal = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    const listToRender = availableMonths.length > 0 ? [...availableMonths] : [currentMonthVal];
+
+    // Asegurar que el mes en curso siempre esté incluido
+    if (!listToRender.includes(currentMonthVal)) {
+      listToRender.unshift(currentMonthVal);
     }
-    return options;
-  }, []);
+
+    return listToRender.map((mVal) => {
+      const [yearStr, monthStr] = mVal.split('-');
+      const mIndex = parseInt(monthStr, 10) - 1;
+      const isCurrent = mVal === currentMonthVal;
+      const label = `${monthNames[mIndex] || monthStr} ${yearStr}${isCurrent ? ' (Mes Actual)' : ''}`;
+      return { value: mVal, label };
+    });
+  }, [availableMonths]);
 
   const totalStoreSales = sellersData.reduce((sum, s) => sum + s.sales_amount, 0);
   const totalStoreTargets = sellersData.reduce((sum, s) => sum + s.target_amount, 0);
