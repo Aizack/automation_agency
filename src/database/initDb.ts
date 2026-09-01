@@ -736,8 +736,6 @@ export const initDatabase = async () => {
             CREATE TABLE IF NOT EXISTS employee_branch_transfers (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-                from_client_id VARCHAR(50) NOT NULL REFERENCES clients(id),
-                to_client_id VARCHAR(50) NOT NULL REFERENCES clients(id),
                 transferred_by_user_name VARCHAR(150) NOT NULL,
                 reason TEXT,
                 transferred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -752,13 +750,29 @@ export const initDatabase = async () => {
                 product_name VARCHAR(200) NOT NULL,
                 quantity NUMERIC(12,2) NOT NULL,
                 status VARCHAR(30) DEFAULT 'completed',
-                requested_by_user VARCHAR(150) NOT NULL,
                 notes TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
+
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS has_variants BOOLEAN DEFAULT false;
+
+            CREATE TABLE IF NOT EXISTS product_variants (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                variant_name VARCHAR(100) NOT NULL,
+                color_hex VARCHAR(30),
+                sku VARCHAR(100),
+                stock INT NOT NULL DEFAULT 0,
+                min_stock INT NOT NULL DEFAULT 2,
+                image_url TEXT,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             );
         `);
 
         await pool.query(`
+            ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS variant_id UUID REFERENCES product_variants(id) ON DELETE SET NULL;
+            ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS variant_name VARCHAR(100);
             ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_name VARCHAR(150);
             ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_type VARCHAR(50) DEFAULT 'inventory';
             ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS lens_design VARCHAR(100);

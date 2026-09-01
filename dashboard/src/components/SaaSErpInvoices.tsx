@@ -47,6 +47,8 @@ interface Product {
 
 interface InvoiceItemInput {
     productId: string;
+    variantId?: string;
+    variantName?: string;
     categoryId: string;
     productSearch: string;
     quantity: number;
@@ -413,6 +415,48 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         : 0;
     const totalAmount = subtotalItems + taxAmount + tipAmount;
 
+    const handleBarcodeScan = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const code = barcodeScanInput.trim();
+            if (!code) return;
+            try {
+                const res = await fetch(`/api/clients/${clientId}/products/sku/${encodeURIComponent(code)}`);
+                const data = await res.json();
+                if (data.success && data.product) {
+                    const prod = data.product;
+                    const displayName = prod.variant_name ? `${prod.name} (${prod.variant_name})` : prod.name;
+                    const newItem: InvoiceItemInput = {
+                        productId: prod.id,
+                        variantId: prod.variant_id || undefined,
+                        variantName: prod.variant_name || undefined,
+                        categoryId: prod.category_id || '',
+                        productSearch: displayName,
+                        productName: displayName,
+                        quantity: 1,
+                        price: parseFloat(prod.price) || 0,
+                        discountPercentage: prod.promo_discount ? parseFloat(prod.promo_discount) : 0,
+                        productType: 'inventory',
+                        lensDesign: '',
+                        lensMaterial: '',
+                        lensTreatment: ''
+                    };
+                    setSelectedItems(prev => {
+                        if (prev.length === 1 && !prev[0].productId && !prev[0].productName) {
+                            return [newItem];
+                        }
+                        return [...prev, newItem];
+                    });
+                    setBarcodeScanInput('');
+                } else {
+                    alert(`Código SKU/Barras "${code}" no encontrado en inventario.`);
+                }
+            } catch (err: any) {
+                alert(`Error escaneando producto: ${err.message}`);
+            }
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -435,6 +479,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         // Apply discount percentage directly to unit price sent to the database
         const itemsPayload = selectedItems.map(item => ({
             productId: item.productId || null,
+            variantId: item.variantId || null,
+            variantName: item.variantName || null,
             productType: item.productType,
             productName: item.productName || (products.find(p => p.id === item.productId)?.name) || 'Producto',
             quantity: item.quantity,
@@ -784,59 +830,6 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             alert('Error al registrar el pago.');
         } finally {
             setActionLoadingId(null);
-        }
-    };
-
-    const handleBarcodeScan = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const scannedSku = barcodeScanInput.trim();
-            if (!scannedSku) return;
-
-            const matchedProd = products.find(p => p.sku && p.sku.toUpperCase() === scannedSku.toUpperCase());
-            if (matchedProd) {
-                const existingIndex = selectedItems.findIndex(item => item.productType === 'inventory' && item.productId === matchedProd.id);
-                if (existingIndex > -1) {
-                    const copy = [...selectedItems];
-                    copy[existingIndex].quantity += 1;
-                    setSelectedItems(copy);
-                } else {
-                    // Si la primera fila está vacía, la reemplazamos
-                    if (selectedItems.length === 1 && !selectedItems[0].productId && selectedItems[0].productType === 'inventory') {
-                        setSelectedItems([{
-                            productId: matchedProd.id,
-                            categoryId: matchedProd.category_id || '',
-                            productSearch: matchedProd.name,
-                            productType: 'inventory',
-                            productName: matchedProd.name,
-                            quantity: 1,
-                            price: parseFloat(matchedProd.price),
-                            discountPercentage: matchedProd.promo_discount ? parseFloat(matchedProd.promo_discount) : 0,
-                            lensDesign: '',
-                            lensMaterial: '',
-                            lensTreatment: ''
-                        }]);
-                    } else {
-                        setSelectedItems([...selectedItems, {
-                            productId: matchedProd.id,
-                            categoryId: matchedProd.category_id || '',
-                            productSearch: matchedProd.name,
-                            productType: 'inventory',
-                            productName: matchedProd.name,
-                            quantity: 1,
-                            price: parseFloat(matchedProd.price),
-                            discountPercentage: matchedProd.promo_discount ? parseFloat(matchedProd.promo_discount) : 0,
-                            lensDesign: '',
-                            lensMaterial: '',
-                            lensTreatment: ''
-                        }]);
-                    }
-                }
-                setBarcodeScanInput('');
-            } else {
-                alert(`Producto con SKU/Código "${scannedSku}" no encontrado.`);
-                setBarcodeScanInput('');
-            }
         }
     };
 

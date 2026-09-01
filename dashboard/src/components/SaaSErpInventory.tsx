@@ -346,8 +346,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         setAllColors(prev => prev.filter(c => c.id !== id));
     };
 
-    const [variantList, setVariantList] = useState<Array<{ id?: string; color: string; stock: number | ''; min_stock: number | ''; image_url: string }>>([
-        { color: 'Negro', stock: 10, min_stock: 2, image_url: '' }
+    const [variantList, setVariantList] = useState<Array<{ id?: string; color: string; sku?: string; stock: number | ''; min_stock: number | ''; image_url: string }>>([
+        { color: 'Negro', sku: '', stock: 10, min_stock: 2, image_url: '' }
     ]);
 
     // Search and filter states
@@ -1464,10 +1464,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                                             {/* Nombres de los Campos / Encabezados de la Tabla */}
                                             <div className="hidden sm:grid grid-cols-12 gap-2 text-[10px] font-bold uppercase text-on-surface-variant px-2 py-1 tracking-wider border-b border-outline/10">
-                                                <div className="col-span-4">COLOR / VARIANTE</div>
+                                                <div className="col-span-3">COLOR / VARIANTE</div>
                                                 <div className="col-span-2 text-center">STOCK ACTUAL</div>
                                                 <div className="col-span-2 text-center">STOCK MÍNIMO</div>
-                                                <div className="col-span-3 text-center">FOTO DEL PRODUCTO</div>
+                                                <div className="col-span-2 text-center">FOTO PRODUCTO</div>
+                                                <div className="col-span-2 text-center">SKU / BARRAS</div>
                                                 <div className="col-span-1 text-center">ACCIONES</div>
                                             </div>
 
@@ -1475,7 +1476,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 {variantList.map((v, idx) => (
                                                     <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-surface-container/60 p-2.5 rounded-xl border border-outline/10">
                                                         {/* 1. Selector Visual de Color con Círculos en CADA Opción y Edición */}
-                                                        <div className="sm:col-span-4 flex flex-col gap-1">
+                                                        <div className="sm:col-span-3 flex flex-col gap-1">
                                                             <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Color / Variante</label>
                                                             <VisualColorDropdown
                                                                 selectedColor={v.color}
@@ -1523,21 +1524,20 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                             />
                                                         </div>
 
-                                                        {/* 4. Cuadro de Carga de Foto de Producto (Estilo Perfil) */}
-                                                        <div className="sm:col-span-3 flex flex-col items-center gap-1">
+                                                        {/* 4. Cuadro de Carga de Foto de Producto */}
+                                                        <div className="sm:col-span-2 flex flex-col items-center gap-1">
                                                             <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Foto del Producto</label>
-                                                            <label className="relative cursor-pointer flex items-center justify-center w-14 h-14 rounded-xl bg-surface-container border-2 border-dashed border-outline/30 hover:border-primary transition group overflow-hidden shadow-sm">
+                                                            <label className="relative cursor-pointer flex items-center justify-center w-12 h-12 rounded-xl bg-surface-container border-2 border-dashed border-outline/30 hover:border-primary transition group overflow-hidden shadow-sm">
                                                                 {v.image_url ? (
                                                                     <>
                                                                         <img src={v.image_url} alt={v.color} className="w-full h-full object-cover rounded-lg" />
                                                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                                                                            <span className="material-symbols-outlined text-white text-[18px]">edit</span>
+                                                                            <span className="material-symbols-outlined text-white text-[16px]">edit</span>
                                                                         </div>
                                                                     </>
                                                                 ) : (
                                                                     <div className="flex flex-col items-center justify-center text-on-surface-variant group-hover:text-primary transition p-1 text-center">
-                                                                        <span className="material-symbols-outlined text-[20px]">photo_camera</span>
-                                                                        <span className="text-[8px] font-bold leading-none mt-0.5">Cargar Foto</span>
+                                                                        <span className="material-symbols-outlined text-[18px]">photo_camera</span>
                                                                     </div>
                                                                 )}
                                                                 <input
@@ -1562,7 +1562,23 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                             </label>
                                                         </div>
 
-                                                        {/* 5. Acciones / Eliminar */}
+                                                        {/* 5. SKU / Código de Barras por Color */}
+                                                        <div className="sm:col-span-2 flex flex-col gap-1">
+                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">SKU / Barras</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Escanear / Vacío"
+                                                                value={v.sku || ''}
+                                                                onChange={(e) => {
+                                                                    const updated = [...variantList];
+                                                                    updated[idx].sku = e.target.value;
+                                                                    setVariantList(updated);
+                                                                }}
+                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-[11px] text-on-surface outline-none font-mono text-center focus:border-primary"
+                                                            />
+                                                        </div>
+
+                                                        {/* 6. Acciones / Eliminar */}
                                                         <div className="sm:col-span-1 flex justify-center">
                                                             {variantList.length > 1 && (
                                                                 <button
