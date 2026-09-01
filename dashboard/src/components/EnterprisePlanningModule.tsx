@@ -70,9 +70,10 @@ export const EnterprisePlanningModule: React.FC<EnterprisePlanningModuleProps> =
   const [loanNotes, setLoanNotes] = useState<string>('');
   const [savingLoan, setSavingLoan] = useState<boolean>(false);
 
-  // Calculadora de Precios
+  // Calculadora de Precios & Ganancia Deseada por el Dueño
   const [bomCost, setBomCost] = useState<string>('15000');
   const [desiredMargin, setDesiredMargin] = useState<string>('50');
+  const [desiredProfit, setDesiredProfit] = useState<string>('2000000');
 
   // Hub Legal & Transparencia IA
   const [businessLegalName, setBusinessLegalName] = useState<string>('Óptica & Servicios S.A.S.');
@@ -366,9 +367,62 @@ export const EnterprisePlanningModule: React.FC<EnterprisePlanningModuleProps> =
                         Facturación mensual requerida para no caer en iliquidez, cubriendo nómina, fijos Y la cuota del banco.
                       </p>
                       <div className="pt-2 text-xs font-mono font-bold text-primary">
-                        Meta Diaria Real (26 días): {formatCOP(breakEvenReal / 26)} / día
+                        Meta Diaria Mínima (26 días): {formatCOP(breakEvenReal / 26)} / día
                       </div>
                     </div>
+                  </div>
+
+                  {/* Simulador de Ganancia Neta Deseada por el Dueño & Meta Oficial de la Sede */}
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-2xl space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <h4 className="font-bold text-xs text-emerald-300 flex items-center gap-1.5 uppercase tracking-wider">
+                          <span className="material-symbols-outlined text-[18px]">payments</span>
+                          Meta de Ganancia Neta Deseada por el Dueño del Negocio
+                        </h4>
+                        <p className="text-xs text-on-surface-variant">
+                          Ingresa cuánto deseas ganarle limpios al negocio este mes por encima del punto de equilibrio real.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <label className="text-[11px] font-bold text-emerald-400 whitespace-nowrap">Ganancia Deseada:</label>
+                        <input
+                          type="number"
+                          value={desiredProfit}
+                          onChange={(e) => setDesiredProfit(e.target.value)}
+                          className="w-36 bg-surface-container border border-emerald-500/30 rounded-xl p-2 text-xs font-mono font-bold text-emerald-300 outline-none"
+                          placeholder="2000000"
+                        />
+                      </div>
+                    </div>
+
+                    {(() => {
+                      const desProfitNum = parseFloat(desiredProfit) || 0;
+                      const mRatio = finModel?.metrics?.avgMarginRatio || 0.40;
+                      const totalSuggestedTarget = breakEvenReal + (desProfitNum / mRatio);
+                      const dailySuggestedTarget = totalSuggestedTarget / 26;
+
+                      return (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-surface/80 border border-emerald-500/20 p-4 rounded-xl">
+                          <div className="space-y-1">
+                            <span className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Meta Oficial Mensual Sugerida para la Sede</span>
+                            <p className="text-2xl font-black text-emerald-400 font-mono">{formatCOP(totalSuggestedTarget)}</p>
+                            <p className="text-[10px] text-on-surface-variant">
+                              Punto de Equilibrio ({formatCOP(breakEvenReal)}) + Ganancia Deseada ({formatCOP(desProfitNum)})
+                            </p>
+                          </div>
+
+                          <div className="space-y-1 border-t md:border-t-0 md:border-l border-outline/10 pt-2 md:pt-0 md:pl-4">
+                            <span className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Facturación Diaria Requerida (26 días)</span>
+                            <p className="text-2xl font-black text-primary font-mono">{formatCOP(dailySuggestedTarget)} / día</p>
+                            <p className="text-[10px] text-on-surface-variant">
+                              Monto que debe vender la sede diariamente para cumplir la meta de utilidad del dueño.
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Resumen de Retorno de Inversión (Payback ROI) */}

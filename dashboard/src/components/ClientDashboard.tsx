@@ -26,6 +26,7 @@ import { RawMaterialsInventory } from './RawMaterialsInventory';
 import { SaaSErpSupportDocuments } from './SaaSErpSupportDocuments';
 import { SaaSErpCashShifts } from './SaaSErpCashShifts';
 import { SaaSErpSupportTickets } from './SaaSErpSupportTickets';
+import { SaaSErpSalesTargets } from './SaaSErpSalesTargets';
 
 interface Client {
   id: string;
@@ -113,7 +114,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     return 'cartera';
   };
 
-  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(getDefaultTab());
+  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(getDefaultTab());
   const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1097,6 +1098,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                   <span className="font-bold text-xs">Difusión Promocional</span>
                 </button>
               )}
+
+              <button 
+                onClick={() => setActiveTab('metas_ventas')}
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  activeTab === 'metas_ventas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">groups</span>
+                <span className="font-bold text-xs">Metas & Ventas Personal</span>
+              </button>
             </div>
           )}
 
@@ -2419,6 +2430,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         {activeTab === 'marketing' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
             <SaaSErpMarketing clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'metas_ventas' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpSalesTargets clientId={clientId} />
           </div>
         )}
 

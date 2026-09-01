@@ -8547,6 +8547,96 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
+  // Obtener metas y ventas de todos los vendedores
+  app.get('/api/clients/:clientId/sales-targets', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const monthYear = (req.query.month_year as string) || new Date().toISOString().slice(0, 7);
+
+      const empRes = await pool.query(
+        `SELECT id, first_name, last_name, role FROM employees WHERE client_id = $1 AND is_active = true ORDER BY first_name ASC`,
+        [clientId]
+      );
+
+      const sellers = [];
+      for (const emp of empRes.rows) {
+        const empName = `${emp.first_name} ${emp.last_name || ''}`.trim();
+        
+        // Ventas del mes
+        const salesRes = await pool.query(
+          `SELECT COALESCE(SUM(sale_amount), 0) as total_sales, COALESCE(SUM(commission_amount), 0) as total_comm 
+           FROM employee_commissions 
+           WHERE client_id = $1 AND employee_id = $2 AND month_year = $3`,
+          [clientId, emp.id, monthYear]
+        );
+
+        // Meta del mes
+        const targetRes = await pool.query(
+          `SELECT target_amount FROM employee_targets WHERE client_id = $1 AND employee_id = $2 AND month_year = $3 LIMIT 1`,
+          [clientId, emp.id, monthYear]
+        );
+
+        const salesAmount = parseFloat(salesRes.rows[0].total_sales || '0');
+        const commEarned = parseFloat(salesRes.rows[0].total_comm || '0');
+        const targetAmount = targetRes.rows.length > 0 ? parseFloat(targetRes.rows[0].target_amount) : 0;
+        const achievementPct = targetAmount > 0 ? Math.round((salesAmount / targetAmount) * 100) : 0;
+        const bonusEarned = achievementPct >= 100 ? commEarned * 0.20 : 0;
+
+        sellers.push({
+          employee_id: emp.id,
+          employee_name: empName,
+          role: emp.role || 'Vendedor',
+          target_amount: targetAmount,
+          sales_amount: salesAmount,
+          commissions_earned: commEarned,
+          achievement_pct: achievementPct,
+          bonus_earned: bonusEarned
+        });
+      }
+
+      res.json({ success: true, month_year: monthYear, sellers });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Guardar/Actualizar meta de ventas de un vendedor
+  app.post('/api/clients/:clientId/sales-targets', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { employee_id, target_amount, month_year } = req.body;
+
+      if (!employee_id || !target_amount) {
+        return res.status(400).json({ success: false, error: 'Debe especificar el empleado y el monto de la meta.' });
+      }
+
+      const mYear = month_year || new Date().toISOString().slice(0, 7);
+
+      // Check if target exists
+      const existing = await pool.query(
+        `SELECT id FROM employee_targets WHERE client_id = $1 AND employee_id = $2 AND month_year = $3`,
+        [clientId, employee_id, mYear]
+      );
+
+      if (existing.rows.length > 0) {
+        await pool.query(
+          `UPDATE employee_targets SET target_amount = $1 WHERE id = $2`,
+          [target_amount, existing.rows[0].id]
+        );
+      } else {
+        await pool.query(
+          `INSERT INTO employee_targets (client_id, employee_id, target_amount, month_year)
+           VALUES ($1, $2, $3, $4)`,
+          [clientId, employee_id, target_amount, mYear]
+        );
+      }
+
+      res.json({ success: true, message: 'Meta de ventas asignada con éxito.' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
   app.get(/.*/, (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith('/api')) {
