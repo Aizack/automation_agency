@@ -8574,11 +8574,23 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const monthYear = (req.query.month_year as string) || new Date().toISOString().slice(0, 7);
 
       let empRes = await pool.query(
-        `SELECT id, name, last_name, role FROM employees WHERE client_id = $1 ORDER BY name ASC`,
-        [clientId]
+        `SELECT e.id, e.name, e.last_name, e.role 
+         FROM employees e
+         LEFT JOIN business_departments d ON e.department_id = d.id
+         WHERE (
+           LOWER(COALESCE(e.role, '')) LIKE '%sale%' OR 
+           LOWER(COALESCE(e.role, '')) LIKE '%venta%' OR 
+           LOWER(COALESCE(e.role, '')) LIKE '%asesor%' OR 
+           LOWER(COALESCE(e.role, '')) LIKE '%comercial%' OR 
+           LOWER(COALESCE(e.role, '')) LIKE '%cajero%' OR 
+           LOWER(COALESCE(e.role, '')) LIKE '%optometra%' OR 
+           LOWER(COALESCE(d.name, '')) LIKE '%venta%' OR 
+           LOWER(COALESCE(d.name, '')) LIKE '%comercial%'
+         )
+         ORDER BY e.name ASC`
       );
 
-      // Si no hay empleados con el client_id específico de la sesión, consultar TODOS los empleados de la nómina
+      // Si ningún empleado tiene explícitamente rol de ventas, consultar todos los colaboradores
       if (empRes.rows.length === 0) {
         empRes = await pool.query(
           `SELECT id, name, last_name, role FROM employees ORDER BY name ASC`
