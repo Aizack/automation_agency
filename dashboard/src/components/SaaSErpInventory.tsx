@@ -986,21 +986,23 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                                         return (
                                             <>
-                                                {/* Brand is general, so we keep it */}
-                                                <FieldWrapper 
-                                                    fieldId="brand" 
-                                                    label="Marca / Fabricante"
-                                                    hidden={hiddenFields.has('brand')}
-                                                    onToggleHidden={toggleFieldHidden}
-                                                >
-                                                    <input 
-                                                        type="text"
-                                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                        value={brand}
-                                                        onChange={(e) => setBrand(e.target.value)}
-                                                        placeholder="Ej: Ray-Ban, Alcon, Bausch + Lomb"
-                                                    />
-                                                </FieldWrapper>
+                                                {/* Brand is for physical products only */}
+                                                {productType === 'product' && (
+                                                    <FieldWrapper 
+                                                        fieldId="brand" 
+                                                        label="Marca / Fabricante"
+                                                        hidden={hiddenFields.has('brand')}
+                                                        onToggleHidden={toggleFieldHidden}
+                                                    >
+                                                        <input 
+                                                            type="text"
+                                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                            value={brand}
+                                                            onChange={(e) => setBrand(e.target.value)}
+                                                            placeholder="Ej: Ray-Ban, Alcon, Bausch + Lomb"
+                                                        />
+                                                    </FieldWrapper>
+                                                )}
 
                                                 {/* 1. MONTURAS */}
                                                 {catLower.includes('montura') && (
