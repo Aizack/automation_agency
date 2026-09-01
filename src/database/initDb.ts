@@ -1126,9 +1126,60 @@ export const initDatabase = async () => {
                 optometrist_name VARCHAR(100),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS monthly_fixed_expenses (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                concept VARCHAR(150) NOT NULL,
+                category VARCHAR(50) DEFAULT 'operativo',
+                amount NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+                period_month_year VARCHAR(7),
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS enterprise_initial_investment (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                category VARCHAR(50) NOT NULL,
+                concept VARCHAR(150) NOT NULL,
+                amount NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS enterprise_loans (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                bank_name VARCHAR(150) NOT NULL,
+                loan_amount NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+                monthly_interest_rate NUMERIC(5,2) NOT NULL DEFAULT 1.50,
+                term_months INT NOT NULL DEFAULT 36,
+                monthly_installment_amount NUMERIC(14,2) NOT NULL DEFAULT 0.00,
+                start_date DATE DEFAULT CURRENT_DATE,
+                is_active BOOLEAN DEFAULT TRUE,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS support_tickets (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                ticket_code VARCHAR(30) UNIQUE NOT NULL,
+                created_by_user_name VARCHAR(150) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                description TEXT NOT NULL,
+                category VARCHAR(50) DEFAULT 'general',
+                status VARCHAR(30) DEFAULT 'open',
+                ai_diagnosis TEXT,
+                ai_action_taken TEXT,
+                stack_trace TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
-        console.log("[DB Init] ✅ Tablas de Insumos, Historia Clínica y Arqueos de Caja inicializadas.");
+        console.log("[DB Init] ✅ Tablas de Insumos, Historia Clínica, Finanzas, Inversión, Préstamos y Tickets inicializadas.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 
     } catch (error) {

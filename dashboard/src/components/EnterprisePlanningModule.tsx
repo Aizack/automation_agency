@@ -1,977 +1,805 @@
 import React, { useState, useEffect } from 'react';
+import { authFetch as fetch } from '../utils/api';
 
-interface Asset {
-    id: string;
-    name: string;
-    asset_type: string;
-    asset_value: number;
-    useful_life_months: number;
+interface InvestmentItem {
+  id: string;
+  category: string;
+  concept: string;
+  amount: string;
+  notes?: string;
+  created_at: string;
 }
 
-interface Liability {
-    id: string;
-    creditor_name: string;
-    liability_type: string;
-    total_debt: number;
-    monthly_payment: number;
+interface LoanItem {
+  id: string;
+  bank_name: string;
+  loan_amount: string;
+  monthly_interest_rate: string;
+  term_months: number;
+  monthly_installment_amount: string;
+  notes?: string;
+  created_at: string;
 }
 
-interface GrowthInsights {
-    real_avg_ticket: number;
-    total_invoices: number;
-    total_revenue: number;
-    lowest_sales_day: string;
-    top_product_name: string;
-    target_suggested_ticket: number;
+interface FinancialModelData {
+  payroll: {
+    basePayroll: number;
+    socialBenefitsRate: number;
+    totalPayrollCost: number;
+  };
+  fixedExpenses: {
+    totalFixedExpenses: number;
+  };
+  investments: {
+    list: InvestmentItem[];
+    totalInitialInvestment: number;
+  };
+  loans: {
+    list: LoanItem[];
+    totalMonthlyDebtService: number;
+  };
+  metrics: {
+    avgMarginRatio: number;
+    totalOperationalFixedCosts: number;
+    breakEvenAccounting: number;
+    breakEvenFinancialReal: number;
+  };
 }
 
 interface EnterprisePlanningModuleProps {
-    clientId: string;
+  clientId: string;
 }
 
 export const EnterprisePlanningModule: React.FC<EnterprisePlanningModuleProps> = ({ clientId }) => {
-    const [activeTab, setActiveTab] = useState<'proyecciones' | 'activos_pasivos' | 'pricing' | 'juridico' | 'crecimiento' | 'legal_hub'>('proyecciones');
+  const [activeTab, setActiveTab] = useState<'financiero_real' | 'inversion_deuda' | 'pricing' | 'juridico' | 'legal_hub'>('financiero_real');
+  const [finModel, setFinModel] = useState<FinancialModelData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-    // 1. Estados Calculadora de Punto de Equilibrio & Proyección
-    const [fixedCosts, setFixedCosts] = useState<string>('8000000'); // Arriendo, Nómina, Servicios
-    const [averageTicket, setAverageTicket] = useState<string>('35000'); // Precio promedio por venta/plato
-    const [costPerUnit, setCostPerUnit] = useState<string>('14000'); // Costo variable unitario promedio
+  // Formulario Inversión Inicial (CAPEX)
+  const [invCategory, setInvCategory] = useState<string>('adecuacion');
+  const [invConcept, setInvConcept] = useState<string>('');
+  const [invAmount, setInvAmount] = useState<string>('');
+  const [invNotes, setInvNotes] = useState<string>('');
+  const [savingInv, setSavingInv] = useState<boolean>(false);
 
-    // 2. Activos y Pasivos Financieros (CAPEX)
-    const [assets, setAssets] = useState<Asset[]>([]);
-    const [liabilities, setLiabilities] = useState<Liability[]>([]);
+  // Formulario Préstamo Bancario
+  const [bankName, setBankName] = useState<string>('');
+  const [loanAmount, setLoanAmount] = useState<string>('');
+  const [interestRate, setInterestRate] = useState<string>('1.5');
+  const [termMonths, setTermMonths] = useState<string>('36');
+  const [loanNotes, setLoanNotes] = useState<string>('');
+  const [savingLoan, setSavingLoan] = useState<boolean>(false);
 
-    // Modales de Activos / Pasivos
-    const [assetName, setAssetName] = useState('');
-    const [assetValue, setAssetValue] = useState('');
-    const [assetLifeMonths, setAssetLifeMonths] = useState('60');
+  // Calculadora de Precios
+  const [bomCost, setBomCost] = useState<string>('15000');
+  const [desiredMargin, setDesiredMargin] = useState<string>('50');
 
-    const [creditorName, setCreditorName] = useState('');
-    const [totalDebt, setTotalDebt] = useState('');
-    const [monthlyPayment, setMonthlyPayment] = useState('');
+  // Hub Legal & Transparencia IA
+  const [businessLegalName, setBusinessLegalName] = useState<string>('Óptica & Servicios S.A.S.');
+  const [businessNit, setBusinessNit] = useState<string>('901.456.789-1');
+  const [businessDomain, setBusinessDomain] = useState<string>('opticaservicios.com');
+  const [activeLegalDocTab, setActiveLegalDocTab] = useState<'terminos' | 'ai_transparency' | 'privacidad'>('terminos');
+  const [copySuccess, setCopySuccess] = useState<string | null>(null);
 
-    // 3. Insights de Crecimiento con Datos Reales
-    const [growthInsights, setGrowthInsights] = useState<GrowthInsights | null>(null);
+  const fetchFinancialModel = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/clients/${clientId}/planning/financial-model`);
+      const json = await res.json();
+      if (json.success) {
+        setFinModel(json.data);
+      }
+    } catch (err) {
+      console.error("Error al cargar modelo financiero:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // 4. Fijación de Precios
-    const [bomCost, setBomCost] = useState<string>('12000');
-    const [desiredMargin, setDesiredMargin] = useState<string>('60');
+  useEffect(() => {
+    fetchFinancialModel();
+  }, [clientId]);
 
-    // 5. Cuestionario Jurídico
-    const [annualRevenue, setAnnualRevenue] = useState<string>('50000000');
-    const [hasPartners, setHasPartners] = useState<boolean>(false);
-    const [protectPersonalAssets, setProtectPersonalAssets] = useState<boolean>(true);
+  const handleAddInvestment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!invConcept || !invAmount) return;
+    try {
+      setSavingInv(true);
+      const res = await fetch(`/api/clients/${clientId}/planning/initial-investment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: invCategory,
+          concept: invConcept,
+          amount: parseFloat(invAmount),
+          notes: invNotes
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setInvConcept('');
+        setInvAmount('');
+        setInvNotes('');
+        fetchFinancialModel();
+      } else {
+        alert(json.error || 'Error guardando inversión inicial.');
+      }
+    } catch (err) {
+      alert('Error de conexión.');
+    } finally {
+      setSavingInv(false);
+    }
+  };
 
-    // 6. Hub Legal, Transparencia IA & Generador de Términos
-    const [businessLegalName, setBusinessLegalName] = useState<string>('Mi Negocio S.A.S.');
-    const [businessNit, setBusinessNit] = useState<string>('901.234.567-8');
-    const [businessDomain, setBusinessDomain] = useState<string>('minegocio.com');
-    const [useAIWhatsApp, setUseAIWhatsApp] = useState<boolean>(true);
-    const [usePaymentGateways, setUsePaymentGateways] = useState<boolean>(true);
-    const [useHabeasData, setUseHabeasData] = useState<boolean>(true);
-    const [activeLegalDocTab, setActiveLegalDocTab] = useState<'terminos' | 'ai_transparency' | 'privacidad'>('terminos');
-    const [copySuccess, setCopySuccess] = useState<string | null>(null);
+  const handleDeleteInvestment = async (id: string) => {
+    if (!confirm('¿Deseas eliminar este ítem de inversión inicial?')) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/planning/initial-investment/${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) fetchFinancialModel();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    const token = localStorage.getItem('auth_token');
+  const handleAddLoan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bankName || !loanAmount || !termMonths) return;
+    try {
+      setSavingLoan(true);
+      const res = await fetch(`/api/clients/${clientId}/planning/loans`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bank_name: bankName,
+          loan_amount: parseFloat(loanAmount),
+          monthly_interest_rate: parseFloat(interestRate || '1.5'),
+          term_months: parseInt(termMonths || '36'),
+          notes: loanNotes
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setBankName('');
+        setLoanAmount('');
+        setLoanNotes('');
+        fetchFinancialModel();
+      } else {
+        alert(json.error || 'Error guardando crédito.');
+      }
+    } catch (err) {
+      alert('Error de conexión.');
+    } finally {
+      setSavingLoan(false);
+    }
+  };
 
-    const fetchData = async () => {
-        try {
-            const [assRes, liabRes, growRes] = await Promise.all([
-                fetch(`/api/clients/${clientId}/financial-planning/assets`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/financial-planning/liabilities`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/clients/${clientId}/financial-planning/growth-insights`, { headers: { 'Authorization': `Bearer ${token}` } })
-            ]);
+  const handleDeleteLoan = async (id: string) => {
+    if (!confirm('¿Deseas eliminar este préstamo bancario?')) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/planning/loans/${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) fetchFinancialModel();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-            const assData = await assRes.json();
-            const liabData = await liabRes.json();
-            const growData = await growRes.json();
+  const formatCOP = (amount: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency', currency: 'COP', minimumFractionDigits: 0
+    }).format(amount);
+  };
 
-            if (assData.success) setAssets(assData.assets || []);
-            if (liabData.success) setLiabilities(liabData.liabilities || []);
-            if (growData.success) {
-                setGrowthInsights(growData.insights);
-                if (growData.insights?.real_avg_ticket > 0) {
-                    setAverageTicket(growData.insights.real_avg_ticket.toString());
-                }
-            }
-        } catch (err) {
-            console.error("Error loading financial planning data:", err);
-        }
-    };
+  // Cálculos de Pricing
+  const bomNum = parseFloat(bomCost) || 0;
+  const marginNum = parseFloat(desiredMargin) || 0;
+  const calculatedPrice = marginNum < 100 ? bomNum / (1 - marginNum / 100) : 0;
+  const grossProfit = calculatedPrice - bomNum;
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+  // Métricas financieras
+  const payrollTotal = finModel?.payroll?.totalPayrollCost || 0;
+  const fixedExpensesTotal = finModel?.fixedExpenses?.totalFixedExpenses || 0;
+  const totalOpFixed = finModel?.metrics?.totalOperationalFixedCosts || 0;
+  const totalDebtService = finModel?.loans?.totalMonthlyDebtService || 0;
+  const breakEvenAccounting = finModel?.metrics?.breakEvenAccounting || 0;
+  const breakEvenReal = finModel?.metrics?.breakEvenFinancialReal || 0;
+  const totalInitialInvestment = finModel?.investments?.totalInitialInvestment || 0;
+  const avgMarginPct = Math.round((finModel?.metrics?.avgMarginRatio || 0.40) * 100);
 
-    // Cálculos de Activos y Pasivos Totales
-    const totalAssetValue = assets.reduce((sum, a) => sum + Number(a.asset_value), 0);
-    const totalMonthlyDepreciation = assets.reduce((sum, a) => sum + (Number(a.asset_value) / (Number(a.useful_life_months) || 60)), 0);
+  // Estimación de Payback en meses
+  const estimatedMonthlyFreeCash = Math.max(0, (breakEvenReal * 1.2) - (totalOpFixed + totalDebtService));
+  const paybackMonths = estimatedMonthlyFreeCash > 0 ? Math.ceil(totalInitialInvestment / estimatedMonthlyFreeCash) : 0;
 
-    const totalDebtValue = liabilities.reduce((sum, l) => sum + Number(l.total_debt), 0);
-    const totalMonthlyLiabilityPayments = liabilities.reduce((sum, l) => sum + Number(l.monthly_payment), 0);
+  return (
+    <div className="space-y-6">
+      {/* Encabezado Principal & Sub-Navegación */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container/40 p-5 rounded-3xl border border-outline/10 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 text-primary">
+            <span className="material-symbols-outlined text-[28px]">query_stats</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-on-surface">Módulo de Finanzas & Planeación Empresarial de Élite</h2>
+            <p className="text-xs text-on-surface-variant">
+              Modelo financiero sin redundancia: Nómina (+ Prestaciones) + Gastos Fijos + Deuda + Punto de Equilibrio REAL.
+            </p>
+          </div>
+        </div>
 
-    // Costos Fijos Operativos + Servicio a la Deuda + Depreciación
-    const fixedCostsNum = parseFloat(fixedCosts) || 0;
-    const totalFixedCostsInclusive = fixedCostsNum + totalMonthlyDepreciation + totalMonthlyLiabilityPayments;
+        {/* Sub-navegación por Pestañas */}
+        <div className="flex flex-wrap gap-1 bg-surface/60 p-1.5 rounded-2xl border border-outline/10">
+          <button
+            type="button"
+            onClick={() => setActiveTab('financiero_real')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'financiero_real' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">analytics</span>
+            Punto de Equilibrio REAL
+          </button>
 
-    const ticketNum = parseFloat(averageTicket) || 0;
-    const unitCostNum = parseFloat(costPerUnit) || 0;
+          <button
+            type="button"
+            onClick={() => setActiveTab('inversion_deuda')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'inversion_deuda' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">account_balance</span>
+            Inversión (CAPEX) & Deuda
+          </button>
 
-    const marginPerUnit = ticketNum - unitCostNum;
-    const marginPercentage = ticketNum > 0 ? (marginPerUnit / ticketNum) * 100 : 0;
+          <button
+            type="button"
+            onClick={() => setActiveTab('pricing')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'pricing' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">sell</span>
+            Calculadora de Precios
+          </button>
 
-    const breakEvenUnits = marginPerUnit > 0 ? Math.ceil(totalFixedCostsInclusive / marginPerUnit) : 0;
-    const breakEvenRevenue = breakEvenUnits * ticketNum;
+          <button
+            type="button"
+            onClick={() => setActiveTab('legal_hub')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'legal_hub' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">balance</span>
+            Legales & Transparencia IA
+          </button>
+        </div>
+      </div>
 
-    // Pricing
-    const bomNum = parseFloat(bomCost) || 0;
-    const marginNum = parseFloat(desiredMargin) || 0;
-    const calculatedPrice = marginNum < 100 ? bomNum / (1 - marginNum / 100) : 0;
-    const grossProfit = calculatedPrice - bomNum;
-
-    // Métodos para guardar Activos y Pasivos
-    const handleAddAsset = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!assetName || !assetValue) return;
-        try {
-            const res = await fetch(`/api/clients/${clientId}/financial-planning/assets`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({
-                    name: assetName,
-                    asset_type: 'equipo',
-                    asset_value: parseFloat(assetValue),
-                    useful_life_months: parseInt(assetLifeMonths) || 60
-                })
-            });
-            const data = await res.json();
-            if (data.success) {
-                setAssetName('');
-                setAssetValue('');
-                fetchData();
-            }
-        } catch (err) {
-            console.error("Error adding asset:", err);
-        }
-    };
-
-    const handleAddLiability = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!creditorName || !monthlyPayment) return;
-        try {
-            const res = await fetch(`/api/clients/${clientId}/financial-planning/liabilities`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({
-                    creditor_name: creditorName,
-                    liability_type: 'bancario',
-                    total_debt: parseFloat(totalDebt) || 0,
-                    monthly_payment: parseFloat(monthlyPayment)
-                })
-            });
-            const data = await res.json();
-            if (data.success) {
-                setCreditorName('');
-                setTotalDebt('');
-                setMonthlyPayment('');
-                fetchData();
-            }
-        } catch (err) {
-            console.error("Error adding liability:", err);
-        }
-    };
-
-    const handleDeleteAsset = async (id: string) => {
-        await fetch(`/api/clients/${clientId}/financial-planning/assets/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        fetchData();
-    };
-
-    const handleDeleteLiability = async (id: string) => {
-        await fetch(`/api/clients/${clientId}/financial-planning/liabilities/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        fetchData();
-    };
-
-    // Recomendación Jurídica
-    const revenueNum = parseFloat(annualRevenue) || 0;
-    const getLegalRecommendation = () => {
-        if (hasPartners) {
-            return {
-                title: "Sociedad por Acciones Simplificada (S.A.S.)",
-                badge: "Recomendado para Múltiples Socios",
-                badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/40",
-                reasons: [
-                    "Permite estructurar estatutos flexibles entre 2 o más socios.",
-                    "Limita la responsabilidad de los socios al capital aportado (protege patrimonio personal).",
-                    "Permite crear diferentes clases de acciones (ordinarias, con voto preferencial, etc.)."
-                ],
-                taxTip: "Inscríbanse en el Régimen Simple de Tributación (RST) para unificar Renta, ICA y Venta en una sola tarifa reducida."
-            };
-        }
-
-        if (revenueNum > 150000000 || protectPersonalAssets) {
-            return {
-                title: "S.A.S. Unipersonal (Sociedad de Accionista Único)",
-                badge: "Recomendado por Seguridad Patrimonial & Escala",
-                badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
-                reasons: [
-                    "Separación total entre el patrimonio del negocio y tu patrimonio personal (casa, vehículo, ahorros).",
-                    "Mayor credibilidad ante bancos, proveedores mayoristas y licitaciones.",
-                    "Facilidad para recibir inversionistas en el futuro vendiendo porcentaje accionario."
-                ],
-                taxTip: "Evalúa acogerte al Régimen Simple de Tributación (RST) si tus costos operativos son bajos."
-            };
-        }
-
-        return {
-            title: "Persona Natural con RUT (Régimen No Responsable de IVA)",
-            badge: "Ideal para Etapa Inicial / Prueba de Concepto",
-            badgeColor: "bg-sky-500/20 text-sky-300 border-sky-500/40",
-            reasons: [
-                "Bajo costo de constitución y menor carga administrativa contable inicial.",
-                "Si vendes menos de 3.500 UVT anuales (~$164 millones), no cobras IVA al cliente final.",
-                "Ideal para validar la idea de negocio en los primeros 6 meses."
-            ],
-            taxTip: "Mantén un control estricto del libro de ingresos para no sobrepasar el tope de UVT sin darte cuenta."
-        };
-    };
-
-    const legalRec = getLegalRecommendation();
-
-    return (
-        <div className="space-y-6">
-            {/* Encabezado Principal */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container/40 p-5 rounded-3xl border border-outline/10 backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 text-primary">
-                        <span className="material-symbols-outlined text-[28px]">query_stats</span>
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : (
+        <>
+          {/* TAB 1: PUNTO DE EQUILIBRIO REAL & COCKPIT FINANCIERO */}
+          {activeTab === 'financiero_real' && (
+            <div className="space-y-6 animate-fade-in">
+              {/* Tarjetas de Cruce Automático de Módulos */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-center text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">
+                      <span>Nómina Total (Empleados)</span>
+                      <span className="text-primary">+49.5% Ley</span>
                     </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-on-surface">Módulo de Planeación Empresarial & Proyecciones</h2>
-                        <p className="text-xs text-on-surface-variant">Herramientas estratégicas de pricing, punto de equilibrio integral, activos/pasivos y crecimiento</p>
-                    </div>
+                    <p className="text-xl font-black text-on-surface mt-1">{formatCOP(payrollTotal)}</p>
+                  </div>
+                  <p className="text-[10px] text-on-surface-variant mt-2 border-t border-outline/5 pt-1.5">
+                    Salarios Base: {formatCOP(finModel?.payroll?.basePayroll || 0)} + Carga prestacional
+                  </p>
                 </div>
 
-                {/* Sub-navegación por Pestañas */}
-                <div className="flex flex-wrap gap-1 bg-surface/60 p-1.5 rounded-2xl border border-outline/10">
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('proyecciones')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'proyecciones' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'}`}
-                    >
-                        <span className="material-symbols-outlined text-[16px]">calculate</span>
-                        Punto de Equilibrio
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('activos_pasivos')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'activos_pasivos' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'}`}
-                    >
-                        <span className="material-symbols-outlined text-[16px]">account_balance</span>
-                        Activos & Pasivos (CAPEX)
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('pricing')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'pricing' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'}`}
-                    >
-                        <span className="material-symbols-outlined text-[16px]">sell</span>
-                        Calculadora Precios
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('juridico')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'juridico' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'}`}
-                    >
-                        <span className="material-symbols-outlined text-[16px]">gavel</span>
-                        Estructura Jurídica
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('crecimiento')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'crecimiento' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'}`}
-                    >
-                        <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                        Plan Crecimiento
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('legal_hub')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${activeTab === 'legal_hub' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:text-on-surface'}`}
-                    >
-                        <span className="material-symbols-outlined text-[16px]">balance</span>
-                        Legales & Transparencia IA
-                    </button>
+                <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Gastos Fijos (Contabilidad)</span>
+                    <p className="text-xl font-black text-amber-400 mt-1">{formatCOP(fixedExpensesTotal)}</p>
+                  </div>
+                  <p className="text-[10px] text-on-surface-variant mt-2 border-t border-outline/5 pt-1.5">
+                    Arriendo, Servicios Públicos, Mantenimiento
+                  </p>
                 </div>
+
+                <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Servicio a Deuda Bancaria</span>
+                    <p className="text-xl font-black text-rose-400 mt-1">{formatCOP(totalDebtService)}</p>
+                  </div>
+                  <p className="text-[10px] text-on-surface-variant mt-2 border-t border-outline/5 pt-1.5">
+                    Cuotas mensuales amortizadas de préstamos
+                  </p>
+                </div>
+
+                <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Margen Promedio Real</span>
+                    <p className="text-xl font-black text-emerald-400 mt-1">{avgMarginPct}%</p>
+                  </div>
+                  <p className="text-[10px] text-on-surface-variant mt-2 border-t border-outline/5 pt-1.5">
+                    Calculado automáticamente de tu Inventario
+                  </p>
+                </div>
+              </div>
+
+              {/* Cockpit Principal de Equilibrio REAL */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Comparación Contable vs Financiero Real */}
+                <div className="lg:col-span-8 bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-6">
+                  <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+                    <h3 className="font-extrabold text-base text-on-surface flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary">scale</span>
+                      Análisis de Solvencia & Punto de Equilibrio
+                    </h3>
+                    <span className="text-xs font-mono font-bold text-primary">Costo Operativo Fijo: {formatCOP(totalOpFixed)}</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Equilibrio Contable */}
+                    <div className="bg-surface-container/60 border border-outline/20 p-5 rounded-2xl space-y-2">
+                      <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Punto de Equilibrio Contable</span>
+                      <p className="text-2xl font-black text-on-surface">{formatCOP(breakEvenAccounting)}</p>
+                      <p className="text-xs text-on-surface-variant">
+                        Facturación mensual mínima para cubrir únicamente salarios (+ prestaciones) y gastos fijos operativos.
+                      </p>
+                      <div className="pt-2 text-xs font-mono font-bold text-on-surface">
+                        Meta Diaria (26 días): {formatCOP(breakEvenAccounting / 26)} / día
+                      </div>
+                    </div>
+
+                    {/* Equilibrio Financiero REAL (Caja Real con Deuda) */}
+                    <div className="bg-primary/10 border border-primary/30 p-5 rounded-2xl space-y-2 relative overflow-hidden">
+                      <span className="text-[11px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">verified</span>
+                        Punto de Equilibrio Financiero REAL (Con Banco)
+                      </span>
+                      <p className="text-2xl font-black text-primary">{formatCOP(breakEvenReal)}</p>
+                      <p className="text-xs text-on-surface-variant">
+                        Facturación mensual requerida para no caer en iliquidez, cubriendo nómina, fijos Y la cuota del banco.
+                      </p>
+                      <div className="pt-2 text-xs font-mono font-bold text-primary">
+                        Meta Diaria Real (26 días): {formatCOP(breakEvenReal / 26)} / día
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Resumen de Retorno de Inversión (Payback ROI) */}
+                  <div className="bg-surface/60 border border-outline/10 p-5 rounded-2xl space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-bold text-xs text-on-surface flex items-center gap-2">
+                        <span className="material-symbols-outlined text-amber-400 text-[18px]">history_edu</span>
+                        Retorno de Inversión Inicial (Payback ROI)
+                      </h4>
+                      <span className="text-xs font-mono font-bold text-amber-400">
+                        Inversión Inicial: {formatCOP(totalInitialInvestment)}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+                      <div>
+                        <p className="text-on-surface-variant">
+                          Con el volumen de ventas proyectado a superar el punto de equilibrio real:
+                        </p>
+                        <p className="text-sm font-bold text-on-surface mt-1">
+                          Tiempo estimado de recuperación total: <strong className="text-primary">{paybackMonths > 0 ? `${paybackMonths} meses` : 'Definir inversión inicial'}</strong>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sidebar Desglose de Gastos Fijos vs Nómina */}
+                <div className="lg:col-span-4 bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4">
+                  <h3 className="font-extrabold text-sm text-on-surface flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-[18px]">pie_chart</span>
+                    Estructura de Gastos Fijos
+                  </h3>
+
+                  <div className="space-y-3 text-xs">
+                    <div className="flex justify-between items-center p-3 bg-surface-container/50 rounded-xl border border-outline/10">
+                      <span className="text-on-surface-variant font-bold">Nómina + Carga Social</span>
+                      <span className="font-mono font-bold text-on-surface">{formatCOP(payrollTotal)}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-surface-container/50 rounded-xl border border-outline/10">
+                      <span className="text-on-surface-variant font-bold">Gastos Fijos Contabilidad</span>
+                      <span className="font-mono font-bold text-amber-400">{formatCOP(fixedExpensesTotal)}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-surface-container/50 rounded-xl border border-outline/10">
+                      <span className="text-on-surface-variant font-bold">Servicio a la Deuda</span>
+                      <span className="font-mono font-bold text-rose-400">{formatCOP(totalDebtService)}</span>
+                    </div>
+
+                    <div className="border-t border-outline/10 pt-3 flex justify-between items-center font-bold text-sm">
+                      <span className="text-on-surface">Total Salidas de Caja:</span>
+                      <span className="text-primary font-mono">{formatCOP(totalOpFixed + totalDebtService)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          )}
 
-            {/* Pestaña 1: Punto de Equilibrio Integral */}
-            {activeTab === 'proyecciones' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-                    {/* Parámetros de Entrada */}
-                    <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4">
-                        <h3 className="text-sm font-extrabold text-on-surface flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary">sliders</span>
-                            Variables Financieras del Negocio
-                        </h3>
-
-                        <div className="space-y-3 text-xs">
-                            <div className="space-y-1">
-                                <label className="font-bold text-on-surface-variant">Costos Fijos Operativos Mensuales ($ COP)</label>
-                                <span className="text-[10px] text-on-surface-variant/70 block">Arriendo, nómina fija, servicios, software</span>
-                                <input
-                                    type="number"
-                                    value={fixedCosts}
-                                    onChange={(e) => setFixedCosts(e.target.value)}
-                                    className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none focus:border-primary"
-                                />
-                            </div>
-
-                            {/* Desglose de Deudas y Depreciaciones */}
-                            <div className="bg-surface/50 p-3 rounded-2xl border border-outline/10 space-y-1.5">
-                                <div className="flex justify-between text-[11px]">
-                                    <span className="text-on-surface-variant">+ Servicio a Deudas (Pasivos):</span>
-                                    <strong className="text-rose-400">+${totalMonthlyLiabilityPayments.toLocaleString()} COP/mes</strong>
-                                </div>
-                                <div className="flex justify-between text-[11px]">
-                                    <span className="text-on-surface-variant">+ Depreciación Activos:</span>
-                                    <strong className="text-amber-400">+${Math.round(totalMonthlyDepreciation).toLocaleString()} COP/mes</strong>
-                                </div>
-                                <div className="border-t border-outline/10 pt-1.5 flex justify-between font-bold text-xs">
-                                    <span className="text-on-surface">Costo Fijo Total Real:</span>
-                                    <span className="text-primary font-black">${Math.round(totalFixedCostsInclusive).toLocaleString()} COP</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="font-bold text-on-surface-variant">Precio Promedio de Venta por Unidad ($ COP)</label>
-                                <input
-                                    type="number"
-                                    value={averageTicket}
-                                    onChange={(e) => setAverageTicket(e.target.value)}
-                                    className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none focus:border-primary text-primary"
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="font-bold text-on-surface-variant">Costo Variable Promedio por Unidad ($ COP)</label>
-                                <input
-                                    type="number"
-                                    value={costPerUnit}
-                                    onChange={(e) => setCostPerUnit(e.target.value)}
-                                    className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none focus:border-primary"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Resultados de Punto de Equilibrio */}
-                    <div className="lg:col-span-2 space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div className="bg-surface-container/40 border border-outline/10 p-5 rounded-3xl space-y-2">
-                                <span className="text-[11px] text-on-surface-variant font-bold block">Ventas Mínimas Necesarias</span>
-                                <strong className="text-2xl font-black text-primary block">{breakEvenUnits.toLocaleString()} unid/mes</strong>
-                                <span className="text-[10px] text-on-surface-variant/80">Incluye pago de deudas y amortización</span>
-                            </div>
-
-                            <div className="bg-surface-container/40 border border-outline/10 p-5 rounded-3xl space-y-2">
-                                <span className="text-[11px] text-on-surface-variant font-bold block">Facturación Mínima Real</span>
-                                <strong className="text-2xl font-black text-emerald-400 block">${breakEvenRevenue.toLocaleString()} COP</strong>
-                                <span className="text-[10px] text-on-surface-variant/80">Monto mensual para no tener iliquidez</span>
-                            </div>
-
-                            <div className="bg-surface-container/40 border border-outline/10 p-5 rounded-3xl space-y-2">
-                                <span className="text-[11px] text-on-surface-variant font-bold block">Margen de Contribución</span>
-                                <strong className="text-2xl font-black text-amber-400 block">{marginPercentage.toFixed(1)}%</strong>
-                                <span className="text-[10px] text-on-surface-variant/80">Margen neto de cada venta</span>
-                            </div>
-                        </div>
-
-                        {/* Proyección Diaria */}
-                        <div className="bg-surface/40 border border-outline/10 p-5 rounded-3xl space-y-3">
-                            <h4 className="text-xs font-extrabold text-on-surface flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-[16px] text-primary">today</span>
-                                Meta Operativa Diaria Real (26 días al mes):
-                            </h4>
-                            <div className="grid grid-cols-2 gap-3 text-xs">
-                                <div className="bg-surface p-3 rounded-2xl border border-outline/5">
-                                    <span className="text-on-surface-variant block text-[10px]">Meta de Ventas por Día:</span>
-                                    <strong className="text-sm font-bold text-on-surface">{Math.ceil(breakEvenUnits / 26)} platos/día</strong>
-                                </div>
-                                <div className="bg-surface p-3 rounded-2xl border border-outline/5">
-                                    <span className="text-on-surface-variant block text-[10px]">Facturación Mínima por Día:</span>
-                                    <strong className="text-sm font-bold text-emerald-400">${Math.ceil(breakEvenRevenue / 26).toLocaleString()} COP/día</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+          {/* TAB 2: INVERSIÓN INICIAL (CAPEX) & DEUDA BANCARIA */}
+          {activeTab === 'inversion_deuda' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+              {/* Sección Inversión Inicial (CAPEX) */}
+              <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4">
+                <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+                  <h3 className="font-extrabold text-sm text-on-surface flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-[18px]">construction</span>
+                    Inversión Inicial de Montaje (CAPEX)
+                  </h3>
+                  <span className="text-xs font-mono font-bold text-primary">{formatCOP(totalInitialInvestment)}</span>
                 </div>
-            )}
 
-            {/* Pestaña 2: Registro de Activos & Pasivos (CAPEX) */}
-            {activeTab === 'activos_pasivos' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-                    {/* Sección Activos Fijos */}
-                    <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4">
-                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
-                            <h3 className="font-extrabold text-on-surface text-sm flex items-center gap-2">
-                                <span className="material-symbols-outlined text-primary">kitchen</span>
-                                Activos Fijos & Maquinaria (Inversión CAPEX)
-                            </h3>
-                            <span className="text-xs font-black text-emerald-400">${totalAssetValue.toLocaleString()} COP</span>
-                        </div>
-
-                        <form onSubmit={handleAddAsset} className="space-y-3 text-xs">
-                            <div className="grid grid-cols-3 gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Nombre (Ej: Horno Industrial)"
-                                    value={assetName}
-                                    onChange={(e) => setAssetName(e.target.value)}
-                                    className="col-span-2 bg-surface border border-outline/20 rounded-xl p-2 text-on-surface"
-                                    required
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Valor ($)"
-                                    value={assetValue}
-                                    onChange={(e) => setAssetValue(e.target.value)}
-                                    className="bg-surface border border-outline/20 rounded-xl p-2 text-on-surface"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] text-on-surface-variant font-bold">Vida Útil Estimada (Meses):</label>
-                                <input
-                                    type="number"
-                                    placeholder="60"
-                                    value={assetLifeMonths}
-                                    onChange={(e) => setAssetLifeMonths(e.target.value)}
-                                    className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-on-surface"
-                                />
-                            </div>
-                            <button type="submit" className="w-full py-2 bg-primary text-on-primary font-bold text-xs rounded-xl hover:opacity-90">
-                                + Agregar Activo
-                            </button>
-                        </form>
-
-                        <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
-                            {assets.map(a => (
-                                <div key={a.id} className="flex items-center justify-between bg-surface/50 p-2.5 rounded-xl border border-outline/5 text-xs">
-                                    <div>
-                                        <span className="font-bold text-on-surface block">{a.name}</span>
-                                        <span className="text-[10px] text-on-surface-variant">Depreciación: ${Math.round(Number(a.asset_value) / 60).toLocaleString()}/mes</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <strong className="text-primary font-bold">${Number(a.asset_value).toLocaleString()}</strong>
-                                        <button type="button" onClick={() => handleDeleteAsset(a.id)} className="text-rose-400 hover:text-rose-300">
-                                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                <form onSubmit={handleAddInvestment} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold uppercase text-on-surface-variant">Categoría</label>
+                      <select
+                        value={invCategory}
+                        onChange={(e) => setInvCategory(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                      >
+                        <option value="adecuacion">Adecuación Local / Obras</option>
+                        <option value="mobiliario">Mobiliario y Vitrinas</option>
+                        <option value="maquinaria">Maquinaria y Equipos</option>
+                        <option value="inventario_inicial">Inventario Inicial Apertura</option>
+                        <option value="licencias">Licencias / Trámites</option>
+                        <option value="reserva_caja">Reserva de Caja Inicial</option>
+                      </select>
                     </div>
 
-                    {/* Sección Pasivos & Deudas */}
-                    <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4">
-                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
-                            <h3 className="font-extrabold text-on-surface text-sm flex items-center gap-2">
-                                <span className="material-symbols-outlined text-rose-400">credit_score</span>
-                                Pasivos, Deudas & Créditos Financieros
-                            </h3>
-                            <span className="text-xs font-black text-rose-400">${totalDebtValue.toLocaleString()} COP</span>
-                        </div>
-
-                        <form onSubmit={handleAddLiability} className="space-y-3 text-xs">
-                            <div className="grid grid-cols-3 gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Acreedor (Ej: Banco / Crédito)"
-                                    value={creditorName}
-                                    onChange={(e) => setCreditorName(e.target.value)}
-                                    className="col-span-2 bg-surface border border-outline/20 rounded-xl p-2 text-on-surface"
-                                    required
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Deuda Total ($)"
-                                    value={totalDebt}
-                                    onChange={(e) => setTotalDebt(e.target.value)}
-                                    className="bg-surface border border-outline/20 rounded-xl p-2 text-on-surface"
-                                />
-                            </div>
-                            <input
-                                type="number"
-                                placeholder="Cuota Mensual a Pagar ($ COP)"
-                                value={monthlyPayment}
-                                onChange={(e) => setMonthlyPayment(e.target.value)}
-                                className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-on-surface font-bold text-rose-400"
-                                required
-                            />
-                            <button type="submit" className="w-full py-2 bg-surface-variant text-on-surface font-bold text-xs rounded-xl hover:bg-surface-variant/80">
-                                + Agregar Deuda / Pasivo
-                            </button>
-                        </form>
-
-                        <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
-                            {liabilities.map(l => (
-                                <div key={l.id} className="flex items-center justify-between bg-surface/50 p-2.5 rounded-xl border border-outline/5 text-xs">
-                                    <div>
-                                        <span className="font-bold text-on-surface block">{l.creditor_name}</span>
-                                        <span className="text-[10px] text-rose-400">Cuota: ${Number(l.monthly_payment).toLocaleString()}/mes</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <strong className="text-on-surface font-bold">${Number(l.total_debt).toLocaleString()}</strong>
-                                        <button type="button" onClick={() => handleDeleteLiability(l.id)} className="text-rose-400 hover:text-rose-300">
-                                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold uppercase text-on-surface-variant">Monto ($ COP)</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        placeholder="5000000"
+                        value={invAmount}
+                        onChange={(e) => setInvAmount(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface font-mono outline-none"
+                      />
                     </div>
-                </div>
-            )}
+                  </div>
 
-            {/* Pestaña 3: Calculadora de Precios (Pricing) */}
-            {activeTab === 'pricing' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-                    <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4">
-                        <h3 className="text-sm font-extrabold text-on-surface flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary">sell</span>
-                            Calculadora de Fijación de Precios basada en Margen Objetivo
-                        </h3>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold uppercase text-on-surface-variant">Concepto / Detalle</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Pintura local, avisos exteriores, autorefractómetro"
+                      value={invConcept}
+                      onChange={(e) => setInvConcept(e.target.value)}
+                      className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                    />
+                  </div>
 
-                        <div className="space-y-4 text-xs">
-                            <div className="space-y-1">
-                                <label className="font-bold text-on-surface-variant">Costo Total del Producto / Insumos BOM ($ COP)</label>
-                                <input
-                                    type="number"
-                                    value={bomCost}
-                                    onChange={(e) => setBomCost(e.target.value)}
-                                    className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none focus:border-primary"
-                                />
-                            </div>
+                  <button
+                    type="submit"
+                    disabled={savingInv}
+                    className="w-full py-2.5 bg-primary text-on-primary font-bold text-xs rounded-xl cursor-pointer hover:opacity-90 transition shadow"
+                  >
+                    {savingInv ? 'Guardando...' : '+ Agregar Ítem de Inversión'}
+                  </button>
+                </form>
 
-                            <div className="space-y-1">
-                                <label className="font-bold text-on-surface-variant">Margen de Ganancia Bruto Deseado (%)</label>
-                                <div className="flex items-center gap-3">
-                                    <input
-                                        type="range"
-                                        min="20"
-                                        max="85"
-                                        value={desiredMargin}
-                                        onChange={(e) => setDesiredMargin(e.target.value)}
-                                        className="flex-grow accent-primary"
-                                    />
-                                    <span className="font-black text-primary text-sm min-w-[50px]">{desiredMargin}%</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-surface-container/40 border border-outline/10 p-6 rounded-3xl space-y-4 flex flex-col justify-between">
+                {/* Lista de Inversión Inicial */}
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                  {finModel?.investments?.list.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant opacity-60 text-center py-6 italic">No hay ítems de inversión registrados.</p>
+                  ) : (
+                    finModel?.investments?.list.map((inv) => (
+                      <div key={inv.id} className="bg-surface-container/50 border border-outline/20 p-3 rounded-xl flex justify-between items-center text-xs">
                         <div>
-                            <span className="text-xs font-bold text-on-surface-variant block uppercase tracking-wider">Precio de Venta Sugerido (PVP):</span>
-                            <strong className="text-3xl font-black text-primary block mt-1">${Math.round(calculatedPrice).toLocaleString()} COP</strong>
-                            <p className="text-xs text-on-surface-variant/80 mt-2">
-                                Para obtener un margen del <strong>{desiredMargin}%</strong> sobre un costo de ${bomNum.toLocaleString()}, este debe ser el precio público.
-                            </p>
+                          <span className="text-[9px] uppercase font-bold text-primary px-2 py-0.5 bg-primary/10 rounded-full border border-primary/20">
+                            {inv.category}
+                          </span>
+                          <p className="font-bold text-on-surface mt-1">{inv.concept}</p>
+                          <p className="font-mono text-primary font-bold">{formatCOP(parseFloat(inv.amount))}</p>
                         </div>
-
-                        <div className="bg-surface p-4 rounded-2xl border border-outline/5 space-y-2 text-xs">
-                            <div className="flex justify-between">
-                                <span className="text-on-surface-variant">Costo Insumos:</span>
-                                <span className="font-bold text-on-surface">${bomNum.toLocaleString()} COP</span>
-                            </div>
-                            <div className="flex justify-between border-t border-outline/10 pt-2">
-                                <span className="text-on-surface-variant">Ganancia Bruta por Unidad:</span>
-                                <span className="font-bold text-emerald-400">+${Math.round(grossProfit).toLocaleString()} COP</span>
-                            </div>
-                        </div>
-                    </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteInvestment(inv.id)}
+                          className="text-on-surface-variant hover:text-red-400 p-1.5 rounded-lg transition cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
-            )}
+              </div>
 
-            {/* Pestaña 4: Asesor Jurídico & Tributario */}
-            {activeTab === 'juridico' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-                    <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4">
-                        <h3 className="text-sm font-extrabold text-on-surface flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary">gavel</span>
-                            Cuestionario Jurídico
-                        </h3>
-
-                        <div className="space-y-4 text-xs">
-                            <div className="space-y-1">
-                                <label className="font-bold text-on-surface-variant">Ventas Anuales Estimadas ($ COP)</label>
-                                <input
-                                    type="number"
-                                    value={annualRevenue}
-                                    onChange={(e) => setAnnualRevenue(e.target.value)}
-                                    className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none focus:border-primary"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="font-bold text-on-surface-variant block">¿Tienes socios en el negocio?</label>
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setHasPartners(false)}
-                                        className={`flex-1 py-2 rounded-xl font-bold transition ${!hasPartners ? 'bg-primary text-on-primary' : 'bg-surface border border-outline/20 text-on-surface-variant'}`}
-                                    >
-                                        No (Unipersonal)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setHasPartners(true)}
-                                        className={`flex-1 py-2 rounded-xl font-bold transition ${hasPartners ? 'bg-primary text-on-primary' : 'bg-surface border border-outline/20 text-on-surface-variant'}`}
-                                    >
-                                        Sí (2+ Socios)
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="font-bold text-on-surface-variant block">¿Deseas blindar tu patrimonio personal?</label>
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setProtectPersonalAssets(true)}
-                                        className={`flex-1 py-2 rounded-xl font-bold transition ${protectPersonalAssets ? 'bg-primary text-on-primary' : 'bg-surface border border-outline/20 text-on-surface-variant'}`}
-                                    >
-                                        Sí (Blindar)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setProtectPersonalAssets(false)}
-                                        className={`flex-1 py-2 rounded-xl font-bold transition ${!protectPersonalAssets ? 'bg-primary text-on-primary' : 'bg-surface border border-outline/20 text-on-surface-variant'}`}
-                                    >
-                                        No prioritario
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="md:col-span-2 bg-surface-container/40 border border-outline/10 p-6 rounded-3xl space-y-4">
-                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
-                            <div>
-                                <span className={`text-[11px] font-extrabold px-3 py-1 rounded-full border ${legalRec.badgeColor}`}>
-                                    {legalRec.badge}
-                                </span>
-                                <h3 className="text-lg font-black text-on-surface mt-2">{legalRec.title}</h3>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2 text-xs">
-                            <h4 className="font-bold text-primary">¿Por qué es la mejor opción para tu negocio?</h4>
-                            <ul className="space-y-1.5 list-disc list-inside text-on-surface-variant">
-                                {legalRec.reasons.map((r, i) => (
-                                    <li key={i}>{r}</li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-xs space-y-1 text-amber-300">
-                            <strong className="font-bold flex items-center gap-1 text-amber-200">
-                                <span className="material-symbols-outlined text-[16px]">lightbulb</span>
-                                Consejería Tributaria Especializada:
-                            </strong>
-                            <p>{legalRec.taxTip}</p>
-                        </div>
-                    </div>
+              {/* Sección Préstamos Bancarios & Deuda */}
+              <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4">
+                <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+                  <h3 className="font-extrabold text-sm text-on-surface flex items-center gap-2">
+                    <span className="material-symbols-outlined text-rose-400 text-[18px]">account_balance</span>
+                    Estructura de Deuda & Préstamos Bancarios
+                  </h3>
+                  <span className="text-xs font-mono font-bold text-rose-400">Cuota Mensual: {formatCOP(totalDebtService)}</span>
                 </div>
-            )}
 
-            {/* Pestaña 5: Plan de Crecimiento Inteligente Basado en Datos Reales */}
-            {activeTab === 'crecimiento' && (
-                <div className="space-y-6 animate-fade-in">
-                    <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-3xl text-xs text-emerald-300 flex items-center gap-3">
-                        <span className="material-symbols-outlined text-[28px]">insights</span>
+                <form onSubmit={handleAddLoan} className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold uppercase text-on-surface-variant">Banco / Entidad Financiera</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Bancolombia, Davivienda, Crédito Libre Inversión"
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold uppercase text-on-surface-variant">Monto ($ COP)</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        placeholder="20000000"
+                        value={loanAmount}
+                        onChange={(e) => setLoanAmount(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface font-mono outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold uppercase text-on-surface-variant">Tasa % E.M.</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        placeholder="1.5"
+                        value={interestRate}
+                        onChange={(e) => setInterestRate(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface font-mono outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold uppercase text-on-surface-variant">Plazo (Meses)</label>
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        placeholder="36"
+                        value={termMonths}
+                        onChange={(e) => setTermMonths(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface font-mono outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingLoan}
+                    className="w-full py-2.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold text-xs rounded-xl cursor-pointer hover:bg-rose-500/30 transition shadow"
+                  >
+                    {savingLoan ? 'Guardando...' : '+ Registrar Crédito Bancario'}
+                  </button>
+                </form>
+
+                {/* Lista de Préstamos */}
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                  {finModel?.loans?.list.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant opacity-60 text-center py-6 italic">No hay créditos bancarios registrados.</p>
+                  ) : (
+                    finModel?.loans?.list.map((loan) => (
+                      <div key={loan.id} className="bg-surface-container/50 border border-outline/20 p-3 rounded-xl flex justify-between items-center text-xs">
                         <div>
-                            <strong className="font-bold text-emerald-200 block text-sm">Plan de Crecimiento Personalizado con Datos Reales de tu Tienda:</strong>
-                            <span>Este plan se calcula en tiempo real analizando tus facturas, tu ticket promedio actual y tu catálogo de productos.</span>
+                          <h4 className="font-bold text-sm text-on-surface">{loan.bank_name}</h4>
+                          <p className="text-on-surface-variant text-[11px]">
+                            Monto: {formatCOP(parseFloat(loan.loan_amount))} | {loan.term_months} meses @ {loan.monthly_interest_rate}% E.M.
+                          </p>
+                          <p className="font-mono text-rose-400 font-bold mt-0.5">
+                            Cuota Mensual: {formatCOP(parseFloat(loan.monthly_installment_amount))}
+                          </p>
                         </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
-                        {/* 1. Estrategia de Ticket Promedio Real */}
-                        <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-3xl space-y-3 flex flex-col justify-between">
-                            <div className="space-y-3">
-                                <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl w-fit">
-                                    <span className="material-symbols-outlined text-[24px]">trending_up</span>
-                                </div>
-                                <h4 className="font-extrabold text-on-surface text-sm">1. Elevar Ticket Promedio Actual</h4>
-                                <div className="bg-surface p-3 rounded-2xl border border-outline/5 space-y-1">
-                                    <span className="text-[10px] text-on-surface-variant block">Ticket Promedio Real de Facturas:</span>
-                                    <strong className="text-base font-black text-primary">
-                                        ${growthInsights?.real_avg_ticket ? growthInsights.real_avg_ticket.toLocaleString() : '28.000'} COP
-                                    </strong>
-                                </div>
-                                <p className="text-on-surface-variant text-[11px]">
-                                    <strong>Acción Práctica:</strong> Al tomar pedidos en caja o comandero, sugiere añadir un acompañante o bebida especial para elevar el ticket objetivo a{' '}
-                                    <strong className="text-emerald-400">${growthInsights?.target_suggested_ticket ? growthInsights.target_suggested_ticket.toLocaleString() : '33.600'} COP (+20%)</strong>.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* 2. Optimización para el Día Lento Real */}
-                        <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-3xl space-y-3 flex flex-col justify-between">
-                            <div className="space-y-3">
-                                <div className="p-3 bg-purple-500/10 text-purple-400 rounded-2xl w-fit">
-                                    <span className="material-symbols-outlined text-[24px]">calendar_month</span>
-                                </div>
-                                <h4 className="font-extrabold text-on-surface text-sm">2. Campaña para el Día Menos Válido</h4>
-                                <div className="bg-surface p-3 rounded-2xl border border-outline/5 space-y-1">
-                                    <span className="text-[10px] text-on-surface-variant block">Día Histórico con Menores Ventas:</span>
-                                    <strong className="text-base font-black text-purple-400">
-                                        {growthInsights?.lowest_sales_day || 'Martes'}
-                                    </strong>
-                                </div>
-                                <p className="text-on-surface-variant text-[11px]">
-                                    <strong>Acción Práctica:</strong> Programa un mensaje masivo por WhatsApp todos los <strong>{growthInsights?.lowest_sales_day || 'Martes'}</strong> proponiendo 2x1 o postre gratis para reactivar el flujo de clientes.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* 3. Combo con Producto Estrella Real */}
-                        <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-3xl space-y-3 flex flex-col justify-between">
-                            <div className="space-y-3">
-                                <div className="p-3 bg-sky-500/10 text-sky-400 rounded-2xl w-fit">
-                                    <span className="material-symbols-outlined text-[24px]">star</span>
-                                </div>
-                                <h4 className="font-extrabold text-on-surface text-sm">3. Impulso a Producto Estrella</h4>
-                                <div className="bg-surface p-3 rounded-2xl border border-outline/5 space-y-1">
-                                    <span className="text-[10px] text-on-surface-variant block">Producto con Mayor Facturación:</span>
-                                    <strong className="text-base font-black text-sky-400">
-                                        {growthInsights?.top_product_name || 'Plato Principal'}
-                                    </strong>
-                                </div>
-                                <p className="text-on-surface-variant text-[11px]">
-                                    <strong>Acción Práctica:</strong> Diseña un paquete "Combo Ejecutivo" emparejando <strong>{growthInsights?.top_product_name || 'tu plato principal'}</strong> con entradas de alto margen neto.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLoan(loan.id)}
+                          className="text-on-surface-variant hover:text-red-400 p-1.5 rounded-lg transition cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
-            )}
+              </div>
+            </div>
+          )}
 
-            {/* Pestaña 6: Legal SaaS Hub, Transparencia IA & Generador de Términos */}
-            {activeTab === 'legal_hub' && (
-                <div className="space-y-6 animate-fade-in">
-                    {/* Banner Informativo */}
-                    <div className="bg-purple-500/10 border border-purple-500/30 p-5 rounded-3xl text-xs text-purple-300 flex items-center justify-between gap-4 backdrop-blur-md">
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-purple-500/20 text-purple-300 rounded-2xl">
-                                <span className="material-symbols-outlined text-[28px]">balance</span>
-                            </div>
-                            <div>
-                                <strong className="font-bold text-purple-200 block text-sm">Hub de Protección Legal, Transparencia IA & Términos a la Medida</strong>
-                                <span>Evita sanciones legales declarando el uso de IA, especificando tus términos de servicio y cumpliendo la ley de tratamiento de datos personales.</span>
-                            </div>
-                        </div>
+          {/* TAB 3: PRICING */}
+          {activeTab === 'pricing' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+              <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4">
+                <h3 className="text-sm font-extrabold text-on-surface flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">sell</span>
+                  Calculadora de Precios basada en Margen Objetivo
+                </h3>
+
+                <div className="space-y-4 text-xs">
+                  <div className="space-y-1">
+                    <label className="font-bold text-on-surface-variant">Costo Insumo / Adquisición del Producto ($ COP)</label>
+                    <input
+                      type="number"
+                      value={bomCost}
+                      onChange={(e) => setBomCost(e.target.value)}
+                      className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-on-surface-variant">Margen de Ganancia Bruta Deseada (%)</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="20"
+                        max="85"
+                        value={desiredMargin}
+                        onChange={(e) => setDesiredMargin(e.target.value)}
+                        className="flex-grow accent-primary cursor-pointer"
+                      />
+                      <span className="font-black text-primary text-sm min-w-[50px]">{desiredMargin}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-surface-container/40 border border-outline/10 p-6 rounded-3xl space-y-4 flex flex-col justify-between">
+                <div>
+                  <span className="text-xs font-bold text-on-surface-variant block uppercase tracking-wider">Precio de Venta Sugerido (PVP):</span>
+                  <strong className="text-3xl font-black text-primary block mt-1">{formatCOP(calculatedPrice)}</strong>
+                  <p className="text-xs text-on-surface-variant/80 mt-2">
+                    Para obtener un margen del <strong>{desiredMargin}%</strong> sobre un costo de {formatCOP(bomNum)}, este debe ser el precio público.
+                  </p>
+                </div>
+
+                <div className="bg-surface p-4 rounded-2xl border border-outline/5 space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-on-surface-variant">Costo Producto:</span>
+                    <span className="font-bold text-on-surface">{formatCOP(bomNum)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-outline/10 pt-2">
+                    <span className="text-on-surface-variant">Ganancia Bruta por Unidad:</span>
+                    <span className="font-bold text-emerald-400">+{formatCOP(grossProfit)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: LEGAL HUB */}
+          {activeTab === 'legal_hub' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-purple-500/10 border border-purple-500/30 p-5 rounded-3xl text-xs text-purple-300 flex items-center justify-between gap-4 backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-purple-500/20 text-purple-300 rounded-2xl">
+                    <span className="material-symbols-outlined text-[28px]">balance</span>
+                  </div>
+                  <div>
+                    <strong className="font-bold text-purple-200 block text-sm">Hub de Protección Legal, Transparencia IA & Términos a la Medida</strong>
+                    <span>Genera de forma automática los documentos legales de tu empresa para la web y facturación.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4 text-xs">
+                  <h3 className="font-extrabold text-on-surface text-sm flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">badge</span>
+                    Datos del Negocio
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Razón Social / Nombre Legal *</label>
+                      <input
+                        type="text"
+                        value={businessLegalName}
+                        onChange={(e) => setBusinessLegalName(e.target.value)}
+                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-on-surface font-bold outline-none"
+                      />
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Configuración del Negocio para Legales */}
-                        <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-3xl space-y-4 text-xs">
-                            <h3 className="font-extrabold text-on-surface text-sm flex items-center gap-2">
-                                <span className="material-symbols-outlined text-primary">badge</span>
-                                Datos del Negocio para Documentos Legales
-                            </h3>
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">NIT / Documento Fiscal *</label>
+                      <input
+                        type="text"
+                        value={businessNit}
+                        onChange={(e) => setBusinessNit(e.target.value)}
+                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-on-surface font-mono outline-none"
+                      />
+                    </div>
 
-                            <div className="space-y-3">
-                                <div className="space-y-1">
-                                    <label className="font-bold text-on-surface-variant">Razón Social / Nombre Legal *</label>
-                                    <input
-                                        type="text"
-                                        value={businessLegalName}
-                                        onChange={(e) => setBusinessLegalName(e.target.value)}
-                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-on-surface font-bold outline-none focus:border-primary"
-                                    />
-                                </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-on-surface-variant">Dominio / Sitio Web Oficial</label>
+                      <input
+                        type="text"
+                        value={businessDomain}
+                        onChange={(e) => setBusinessDomain(e.target.value)}
+                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
 
-                                <div className="space-y-1">
-                                    <label className="font-bold text-on-surface-variant">NIT / Documento Fiscal *</label>
-                                    <input
-                                        type="text"
-                                        value={businessNit}
-                                        onChange={(e) => setBusinessNit(e.target.value)}
-                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-on-surface font-mono outline-none focus:border-primary"
-                                    />
-                                </div>
+                <div className="lg:col-span-2 bg-surface-container/40 border border-outline/10 p-6 rounded-3xl space-y-4 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2 border-b border-outline/10 pb-3">
+                      <button
+                        type="button"
+                        onClick={() => setActiveLegalDocTab('terminos')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${activeLegalDocTab === 'terminos' ? 'bg-primary text-on-primary' : 'bg-surface/60 text-on-surface-variant hover:text-on-surface'}`}
+                      >
+                        📄 Términos y Condiciones
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveLegalDocTab('ai_transparency')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${activeLegalDocTab === 'ai_transparency' ? 'bg-purple-500 text-white' : 'bg-surface/60 text-on-surface-variant hover:text-on-surface'}`}
+                      >
+                        🤖 Declaración de IA
+                      </button>
+                    </div>
 
-                                <div className="space-y-1">
-                                    <label className="font-bold text-on-surface-variant">Dominio / Sitio Web Oficial</label>
-                                    <input
-                                        type="text"
-                                        value={businessDomain}
-                                        onChange={(e) => setBusinessDomain(e.target.value)}
-                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="border-t border-outline/10 pt-4 space-y-2">
-                                <span className="font-extrabold text-on-surface block text-xs">Variables Operativas de la Plataforma:</span>
-                                
-                                <label className="flex items-center gap-2 p-2 bg-surface/40 rounded-xl border border-outline/5 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={useAIWhatsApp}
-                                        onChange={(e) => setUseAIWhatsApp(e.target.checked)}
-                                        className="accent-primary"
-                                    />
-                                    <span className="text-[11px] text-on-surface">Usamos Agentes de IA en WhatsApp / Web</span>
-                                </label>
-
-                                <label className="flex items-center gap-2 p-2 bg-surface/40 rounded-xl border border-outline/5 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={usePaymentGateways}
-                                        onChange={(e) => setUsePaymentGateways(e.target.checked)}
-                                        className="accent-primary"
-                                    />
-                                    <span className="text-[11px] text-on-surface">Procesamos Pagos Digitales (Stripe / Wompi)</span>
-                                </label>
-
-                                <label className="flex items-center gap-2 p-2 bg-surface/40 rounded-xl border border-outline/5 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={useHabeasData}
-                                        onChange={(e) => setUseHabeasData(e.target.checked)}
-                                        className="accent-primary"
-                                    />
-                                    <span className="text-[11px] text-on-surface">Almacenamos Datos de Clientes (Ley 1581)</span>
-                                </label>
-                            </div>
-
-                            {/* Checklist Auditoría Legal */}
-                            <div className="bg-surface/60 p-3.5 rounded-2xl border border-outline/10 space-y-1.5 text-[11px]">
-                                <strong className="text-on-surface font-bold block text-xs">Estado de Cumplimiento Legal:</strong>
-                                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-                                    <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                    <span>Transparencia de IA Configurada</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-                                    <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                    <span>Términos de Servicio Específicos Generados</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-                                    <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                                    <span>Habeas Data & Privacidad Listas</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Visor de Documentos Legales Generados */}
-                        <div className="lg:col-span-2 bg-surface-container/40 border border-outline/10 p-6 rounded-3xl space-y-4 flex flex-col justify-between">
-                            <div className="space-y-4">
-                                {/* Selector de Documento Legal */}
-                                <div className="flex flex-wrap gap-2 border-b border-outline/10 pb-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveLegalDocTab('terminos')}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${activeLegalDocTab === 'terminos' ? 'bg-primary text-on-primary' : 'bg-surface/60 text-on-surface-variant hover:text-on-surface'}`}
-                                    >
-                                        📄 Términos y Condiciones
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveLegalDocTab('ai_transparency')}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${activeLegalDocTab === 'ai_transparency' ? 'bg-purple-500 text-white' : 'bg-surface/60 text-on-surface-variant hover:text-on-surface'}`}
-                                    >
-                                        🤖 Declaración de IA (Footer/Landing)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveLegalDocTab('privacidad')}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${activeLegalDocTab === 'privacidad' ? 'bg-sky-500 text-white' : 'bg-surface/60 text-on-surface-variant hover:text-on-surface'}`}
-                                    >
-                                        🔒 Habeas Data & Privacidad
-                                    </button>
-                                </div>
-
-                                {/* Texto Generado en Tiempo Real */}
-                                <div className="bg-surface/80 border border-outline/10 p-4 rounded-2xl max-h-[350px] overflow-y-auto font-mono text-xs text-on-surface leading-relaxed whitespace-pre-wrap">
-                                    {activeLegalDocTab === 'terminos' && `TÉRMINOS Y CONDICIONES DE SERVICIO
+                    <div className="bg-surface/80 border border-outline/10 p-4 rounded-2xl max-h-[300px] overflow-y-auto font-mono text-xs text-on-surface leading-relaxed whitespace-pre-wrap">
+                      {activeLegalDocTab === 'terminos' && `TÉRMINOS Y CONDICIONES DE SERVICIO
 Razón Social: ${businessLegalName}
 NIT / Registro: ${businessNit}
 Dominio / Sitio Web: ${businessDomain}
 
 1. OBJETO Y ACEPTACIÓN
-El presente contrato regula la prestación de servicios comerciales por parte de ${businessLegalName}. Al acceder a nuestras plataformas, pedidos en comandero o atención directa, el cliente acepta expresamente los presentes Términos de Servicio especificamente diseñados para nuestro sistema.
-
-2. OPERACIÓN Y ASISTENCIA CON INTELIGENCIA ARTIFICIAL
-${useAIWhatsApp ? `[✓ DECLARADO EN TÉRMINOS] ${businessLegalName} implementa asistentes virtuales y agentes automatizados basados en Inteligencia Artificial (IA) a través de WhatsApp y plataformas web. Los usuarios comprenden que la atención inicial y toma de pedidos es procesada por algoritmos de IA diseñados para optimizar el servicio.` : 'No se utilizan agentes automatizados de IA en la atención directa al público.'}
-
-3. PROCESAMIENTO DE PAGOS Y TRANSACCIONES
-${usePaymentGateways ? `[✓ DECLARADO EN TÉRMINOS] Las transacciones electrónicas, pasarelas de pago y tarjetas son procesadas a través de proveedores certificados (Stripe, Wompi, MercadoPago). ${businessLegalName} no almacena datos de tarjetas de crédito ni códigos CVV.` : 'Los pagos se realizan directamente en efectivo o transferencia bancaria directa.'}
-
-4. LIMITACIÓN DE RESPONSABILIDAD
-${businessLegalName} garantiza la calidad e inocuidad de sus productos y servicios. No asumimos responsabilidad por interrupciones en proveedores de servicios de internet o causas de fuerza mayor.
+El presente contrato regula la prestación de servicios comerciales por parte de ${businessLegalName}. Al acceder a nuestras plataformas y canal de ventas, el cliente acepta expresamente los presentes Términos de Servicio.
 
 Fecha de actualización: ${new Date().toLocaleDateString()}`}
 
-                                    {activeLegalDocTab === 'ai_transparency' && `🤖 AVISO LEGAL DE TRANSPARENCIA EN INTELIGENCIA ARTIFICIAL (AI DISCLOSURE)
+                      {activeLegalDocTab === 'ai_transparency' && `🤖 AVISO LEGAL DE TRANSPARENCIA EN INTELIGENCIA ARTIFICIAL
 
-En cumplimiento de las directrices internacionales de transparencia algorítmica y protección al consumidor:
-
-1. USO DE AGENTES VIRTUALES CON IA: Informamos a nuestros clientes que ${businessLegalName} (NIT ${businessNit}) utiliza tecnología de Inteligencia Artificial (modelos de lenguaje e información procesada en tiempo real) para brindar soporte al cliente, confirmar reservaciones y procesar pedidos por WhatsApp y plataformas digitales en ${businessDomain}.
-
-2. SUPERVISIÓN HUMANA: Todos nuestros procesos automatizados cuentan con supervisión del equipo humano de ${businessLegalName}. En cualquier momento, el usuario puede solicitar hablar con un operador humano durante el horario de atención.
-
-3. TRATAMIENTO ÉTICO DE DATOS: Los datos procesados por la Inteligencia Artificial no son utilizados para entrenar modelos de terceros ni comercializados a empresas externas.`}
-
-                                    {activeLegalDocTab === 'privacidad' && `🔒 POLÍTICA DE TRATAMIENTO DE DATOS PERSONALES (HABEAS DATA - LEY 1581)
-Empresa: ${businessLegalName} | NIT: ${businessNit}
-
-1. TRATAMIENTO Y FINALIDAD: Los datos personales recolectados (nombre, teléfono, dirección, correo electrónico e historial de compras) serán utilizados exclusivamente para la facturación, expedición de facturas electrónicas, despacho de pedidos y envío de promociones personalizadas de ${businessLegalName}.
-
-2. DERECHOS DEL TITULAR (ARCO): De acuerdo con la legislación vigente de Habeas Data, el titular de la información tiene derecho a conocer, actualizar, rectificar y solicitar la supresión de sus datos personales de nuestras bases de datos en cualquier momento enviando una solicitud a soporte@${businessDomain}.
-
-3. SEGURIDAD DE PAGOS Y DATOS: ${businessLegalName} implementa encriptación SSL y medidas técnicas estrictas para proteger la confidencialidad de la información de sus usuarios.`}
-                                </div>
-                            </div>
-
-                            {/* Botón de Copiado Rápido */}
-                            <div className="pt-3 border-t border-outline/10 flex items-center justify-between">
-                                <span className="text-xs text-on-surface-variant">
-                                    {copySuccess ? `✅ ${copySuccess}` : 'Copia el texto legal para tu página web o políticas.'}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        let textToCopy = '';
-                                        if (activeLegalDocTab === 'terminos') {
-                                            textToCopy = `TÉRMINOS Y CONDICIONES DE SERVICIO\nRazón Social: ${businessLegalName}\nNIT: ${businessNit}\nDominio: ${businessDomain}\n\n1. OBJETO Y ACEPTACIÓN\nEl presente contrato regula la prestación de servicios comerciales por parte de ${businessLegalName}...`;
-                                        } else if (activeLegalDocTab === 'ai_transparency') {
-                                            textToCopy = `🤖 AVISO LEGAL DE TRANSPARENCIA EN INTELIGENCIA ARTIFICIAL\nEn cumplimiento de las directrices internacionales de transparencia algorítmica:\nInformamos que ${businessLegalName} (NIT ${businessNit}) utiliza tecnología de Inteligencia Artificial para soporte y procesar pedidos por WhatsApp en ${businessDomain}.`;
-                                        } else {
-                                            textToCopy = `🔒 POLÍTICA DE TRATAMIENTO DE DATOS PERSONALES (HABEAS DATA)\nEmpresa: ${businessLegalName} | NIT: ${businessNit}\nLos datos personales recolectados serán utilizados exclusivamente para la facturación y gestión comercial de ${businessLegalName}.`;
-                                        }
-                                        navigator.clipboard.writeText(textToCopy);
-                                        setCopySuccess('Copiado al portapapeles con éxito');
-                                        setTimeout(() => setCopySuccess(null), 3000);
-                                    }}
-                                    className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl hover:opacity-90 transition flex items-center gap-2 cursor-pointer shadow-md"
-                                >
-                                    <span className="material-symbols-outlined text-[16px]">content_copy</span>
-                                    Copiar Documento Legal Seleccionado
-                                </button>
-                            </div>
-                        </div>
+Informamos a nuestros usuarios que ${businessLegalName} (NIT ${businessNit}) utiliza tecnología de Inteligencia Artificial para la atención conversacional en WhatsApp y optimización de procesos administrativos.`}
                     </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-outline/10 flex items-center justify-between">
+                    <span className="text-xs text-on-surface-variant">
+                      {copySuccess ? `✅ ${copySuccess}` : 'Copia el texto legal para tu sitio web.'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`TÉRMINOS Y CONDICIONES DE SERVICIO\n${businessLegalName} | NIT ${businessNit}`);
+                        setCopySuccess('Copiado al portapapeles');
+                        setTimeout(() => setCopySuccess(null), 3000);
+                      }}
+                      className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl hover:opacity-90 transition flex items-center gap-2 cursor-pointer shadow-md"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                      Copiar Documento Legal
+                    </button>
+                  </div>
                 </div>
-            )}
-        </div>
-    );
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 };

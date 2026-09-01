@@ -25,6 +25,7 @@ import { EnterprisePlanningModule } from './EnterprisePlanningModule';
 import { RawMaterialsInventory } from './RawMaterialsInventory';
 import { SaaSErpSupportDocuments } from './SaaSErpSupportDocuments';
 import { SaaSErpCashShifts } from './SaaSErpCashShifts';
+import { SaaSErpSupportTickets } from './SaaSErpSupportTickets';
 
 interface Client {
   id: string;
@@ -174,6 +175,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   const [employeeList, setEmployeeList] = useState<Array<{id: string, name: string, last_name?: string, phone: string}>>([]);
   const [employeeSearchQuery, setEmployeeSearchQuery] = useState('');
   const [isEmployeeSearchOpen, setIsEmployeeSearchOpen] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
   const fetchEmployees = async () => {
     try {
@@ -1285,6 +1287,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 </div>
               )}
             </div>
+
+            {/* Botón Soporte & Tickets AutoFix IA */}
+            <button
+              type="button"
+              onClick={() => setIsSupportModalOpen(true)}
+              className="flex items-center gap-1.5 p-2 px-3 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 transition cursor-pointer text-xs font-bold shadow-sm"
+              title="Reportar Problema / Tickets AutoFix IA"
+            >
+              <span className="material-symbols-outlined text-[16px]">support_agent</span>
+              <span className="hidden md:inline">Soporte & AutoFix</span>
+            </button>
 
             {/* User Profile Badge & Dropdown Menu */}
             <div className="relative">
@@ -2436,8 +2449,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             <SystemAlertsPanel clientId={clientId} />
           </div>
         )}
-      </main>
+        </main>
+
+        {/* Modal / Drawer de Soporte Técnico & Tickets AutoFix IA */}
+        {isSupportModalOpen && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="bg-surface-container-highest border border-outline/30 rounded-3xl p-6 max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl space-y-4">
+              <SaaSErpSupportTickets clientId={clientId} onClose={() => setIsSupportModalOpen(false)} />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 };

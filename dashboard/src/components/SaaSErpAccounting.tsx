@@ -29,33 +29,51 @@ interface DailyTrendItem {
   count: number;
 }
 
+interface FixedExpense {
+  id: string;
+  concept: string;
+  category: string;
+  amount: string;
+  period_month_year?: string;
+  notes?: string;
+  created_at: string;
+}
+
 export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }) => {
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year'>('month');
   const [summary, setSummary] = useState<AccountingSummary | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [dailyTrend, setDailyTrend] = useState<DailyTrendItem[]>([]);
+  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const token = localStorage.getItem('auth_token');
+  // Modal para agregar gasto fijo
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [expenseConcept, setExpenseConcept] = useState('');
+  const [expenseCategory, setExpenseCategory] = useState('operativo');
+  const [expenseAmount, setExpenseAmount] = useState('');
+  const [expenseNotes, setExpenseNotes] = useState('');
+  const [savingExpense, setSavingExpense] = useState(false);
 
   const fetchAccountingData = async () => {
     try {
       setLoading(true);
-      const headers = { 'Authorization': `Bearer ${token}` };
-
-      const [sumRes, topRes, trendRes] = await Promise.all([
-        fetch(`/api/clients/${clientId}/accounting/summary?period=${period}`, { headers }),
-        fetch(`/api/clients/${clientId}/accounting/top-products?period=${period}&limit=10`, { headers }),
-        fetch(`/api/clients/${clientId}/accounting/daily-trend?period=${period}`, { headers })
+      const [sumRes, topRes, trendRes, expRes] = await Promise.all([
+        fetch(`/api/clients/${clientId}/accounting/summary?period=${period}`),
+        fetch(`/api/clients/${clientId}/accounting/top-products?period=${period}&limit=10`),
+        fetch(`/api/clients/${clientId}/accounting/daily-trend?period=${period}`),
+        fetch(`/api/clients/${clientId}/fixed-expenses`)
       ]);
 
       const sumJson = await sumRes.json();
       const topJson = await topRes.json();
       const trendJson = await trendRes.json();
+      const expJson = await expRes.json();
 
       if (sumJson.success) setSummary(sumJson);
       if (topJson.success) setTopProducts(topJson.products || []);
       if (trendJson.success) setDailyTrend(trendJson.trend || []);
+      if (expJson.success) setFixedExpenses(expJson.expenses || []);
     } catch (err) {
       console.error("Error al cargar módulo de contabilidad:", err);
     } finally {
@@ -66,6 +84,51 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
   useEffect(() => {
     fetchAccountingData();
   }, [clientId, period]);
+
+  const handleAddFixedExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expenseConcept || !expenseAmount) return;
+    try {
+      setSavingExpense(true);
+      const res = await fetch(`/api/clients/${clientId}/fixed-expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          concept: expenseConcept,
+          category: expenseCategory,
+          amount: parseFloat(expenseAmount),
+          notes: expenseNotes
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setIsExpenseModalOpen(false);
+        setExpenseConcept('');
+        setExpenseAmount('');
+        setExpenseNotes('');
+        fetchAccountingData();
+      } else {
+        alert(json.error || 'Error al guardar gasto fijo.');
+      }
+    } catch (err) {
+      alert('Error de conexión.');
+    } finally {
+      setSavingExpense(false);
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!confirm('¿Deseas eliminar este registro de gasto fijo?')) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/fixed-expenses/${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) {
+        fetchAccountingData();
+      }
+    } catch (err) {
+      console.error('Error borrando gasto:', err);
+    }
+  };
 
   const formatCOP = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -85,6 +148,7 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
   };
 
   const maxTrendRevenue = Math.max(1, ...dailyTrend.map(t => t.revenue));
+  const totalFixedExpensesSum = fixedExpenses.reduce((acc, curr) => acc + parseFloat(curr.amount || '0'), 0);
 
   return (
     <div className="space-y-6">
@@ -96,26 +160,37 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
             Contabilidad y Análisis Financiero
           </h2>
           <p className="text-xs text-on-surface-variant opacity-75">
-            Reporte consolidado de ingresos, desglose por métodos de pago, productos más vendidos y tendencias.
+            Reporte consolidado de ingresos, gastos fijos operativos, desglose por métodos de pago y tendencias.
           </p>
         </div>
 
-        {/* Período Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline/20 p-1 rounded-xl">
-          {(['day', 'week', 'month', 'quarter', 'semester', 'year'] as const).map((p) => {
-            const labels = { day: 'Hoy', week: 'Semana', month: 'Mes', quarter: 'Trimestre', semester: 'Semestre', year: 'Año' };
-            return (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer border-0 ${
-                  period === p ? 'bg-primary text-white shadow' : 'bg-transparent text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                {labels[p]}
-              </button>
-            );
-          })}
+        {/* Período Tabs & Botón Agregar Gasto Fijo */}
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsExpenseModalOpen(true)}
+            className="px-3.5 py-1.5 bg-primary text-on-primary font-bold text-xs rounded-xl flex items-center gap-1.5 hover:opacity-90 transition cursor-pointer shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[16px]">add_circle</span>
+            Registrar Gasto Fijo
+          </button>
+
+          <div className="flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline/20 p-1 rounded-xl">
+            {(['day', 'week', 'month', 'quarter', 'semester', 'year'] as const).map((p) => {
+              const labels = { day: 'Hoy', week: 'Semana', month: 'Mes', quarter: 'Trimestre', semester: 'Semestre', year: 'Año' };
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer border-0 ${
+                    period === p ? 'bg-primary text-on-primary shadow' : 'bg-transparent text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  {labels[p]}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -137,10 +212,10 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
 
             <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex justify-between items-center">
               <div>
-                <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Facturas Emitidas</p>
-                <p className="text-xl font-black text-on-surface mt-1">{summary?.total_invoices || 0}</p>
+                <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Gastos Fijos Mensuales</p>
+                <p className="text-xl font-black text-amber-400 mt-1">{formatCOP(totalFixedExpensesSum)}</p>
               </div>
-              <span className="material-symbols-outlined text-secondary text-[32px] opacity-80">receipt_long</span>
+              <span className="material-symbols-outlined text-amber-400 text-[32px] opacity-80">account_balance_wallet</span>
             </div>
 
             <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex justify-between items-center">
@@ -153,18 +228,55 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
 
             <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex justify-between items-center">
               <div>
-                <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Rango Analizado</p>
-                <p className="text-xs font-bold text-on-surface mt-1">
-                  {summary?.date_range.from} ➔ {summary?.date_range.to}
-                </p>
+                <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Facturas Emitidas</p>
+                <p className="text-xl font-black text-on-surface mt-1">{summary?.total_invoices || 0}</p>
               </div>
-              <span className="material-symbols-outlined text-orange-500 text-[32px] opacity-80">calendar_month</span>
+              <span className="material-symbols-outlined text-secondary text-[32px] opacity-80">receipt_long</span>
             </div>
+          </div>
+
+          {/* Sección de Gastos Fijos Operativos (Arriendo, Servicios, Internet) */}
+          <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-2xl space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-sm text-on-surface flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400 text-[18px]">domain</span>
+                Gastos Fijos Operativos Recurrentes (Arriendo, Servicios, Mantenimiento)
+              </h3>
+              <span className="text-[11px] text-on-surface-variant font-mono">Alimenta automáticamente la Planeación Financiera</span>
+            </div>
+
+            {fixedExpenses.length === 0 ? (
+              <p className="text-xs text-on-surface-variant opacity-60 text-center py-6 italic">
+                No hay gastos fijos registrados. Haz clic en "Registrar Gasto Fijo" para agregar arriendo, agua, luz o internet.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {fixedExpenses.map((item) => (
+                  <div key={item.id} className="bg-surface-container/50 border border-outline/20 p-4 rounded-xl flex justify-between items-center">
+                    <div>
+                      <span className="text-[9px] uppercase font-bold text-primary px-2 py-0.5 bg-primary/10 rounded-full border border-primary/20">
+                        {item.category}
+                      </span>
+                      <h4 className="font-bold text-sm text-on-surface mt-1">{item.concept}</h4>
+                      <p className="text-xs font-mono font-bold text-amber-400 mt-0.5">{formatCOP(parseFloat(item.amount))}</p>
+                      {item.notes && <p className="text-[10px] text-on-surface-variant mt-1">{item.notes}</p>}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteExpense(item.id)}
+                      className="text-on-surface-variant hover:text-red-400 p-1.5 rounded-lg hover:bg-surface-container-high transition cursor-pointer"
+                      title="Eliminar gasto fijo"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Gráfico de Tendencia Diaria y Desglose de Métodos de Pago */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Gráfico de Barras CSS para Tendencia */}
             <div className="lg:col-span-8 bg-surface-container/30 border border-outline/10 p-6 rounded-2xl space-y-4 overflow-visible">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-sm text-on-surface flex items-center gap-2">
@@ -181,48 +293,31 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
                   <div className="h-64 flex items-end gap-3 sm:gap-5 border-b border-outline/15 pb-2 overflow-x-auto custom-scrollbar pt-16">
                     {dailyTrend.map((t, idx) => {
                       const heightPct = Math.max(12, Math.round((t.revenue / maxTrendRevenue) * 100));
-                      // Formatear fecha bonita
                       const dateObj = new Date(t.date + 'T00:00:00');
                       const dateFormatted = isNaN(dateObj.getTime()) ? t.date : dateObj.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
-
-                      // Evitar recortes en los bordes laterales
                       const isFirst = idx === 0;
                       const isLast = idx === dailyTrend.length - 1;
-                      const tooltipPosClass = isFirst 
-                        ? 'left-0 translate-x-0' 
-                        : isLast 
-                          ? 'right-0 left-auto translate-x-0' 
-                          : 'left-1/2 -translate-x-1/2';
-                      const arrowPosClass = isFirst 
-                        ? 'left-4 translate-x-0' 
-                        : isLast 
-                          ? 'right-4 left-auto translate-x-0' 
-                          : 'left-1/2 -translate-x-1/2';
+                      const tooltipPosClass = isFirst ? 'left-0 translate-x-0' : isLast ? 'right-0 left-auto translate-x-0' : 'left-1/2 -translate-x-1/2';
+                      const arrowPosClass = isFirst ? 'left-4 translate-x-0' : isLast ? 'right-4 left-auto translate-x-0' : 'left-1/2 -translate-x-1/2';
 
                       return (
                         <div key={t.date} className="flex-1 max-w-[64px] min-w-[36px] flex flex-col items-center gap-1 group relative h-full justify-end cursor-pointer">
-                          
-                          {/* TOOLTIP FLOTANTE TIPO NOTA SOBRE EL CURSOR */}
                           <div className={`absolute -top-14 ${tooltipPosClass} opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-200 bg-[#1e1926] border border-primary/40 p-2 rounded-xl text-xs font-bold text-on-surface whitespace-nowrap z-50 pointer-events-none shadow-[0_10px_30px_rgba(0,0,0,0.9)] flex flex-col items-center gap-0.5`}>
                             <span className="text-[10px] text-on-surface-variant font-medium">{dateFormatted}</span>
                             <span className="text-[#00ff88] font-mono text-xs font-bold">{formatCOP(t.revenue)}</span>
                             <span className="text-[9px] text-primary/90 font-mono bg-primary/10 px-1.5 py-0.5 rounded">{t.count} venta(s)</span>
-                            {/* Flecha apuntando a la barra */}
                             <div className={`absolute -bottom-1.5 ${arrowPosClass} w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-primary/40`}></div>
                           </div>
 
-                          {/* MONTO O TEXTO VISIBLE SOBRE LA BARRA */}
                           <span className="text-[9px] font-mono font-bold text-primary opacity-80 group-hover:opacity-100 transition truncate max-w-full text-center mb-0.5">
                             {t.revenue >= 1000000 ? `$${(t.revenue / 1000000).toFixed(1)}M` : t.revenue >= 1000 ? `$${Math.round(t.revenue / 1000)}k` : `$${t.revenue}`}
                           </span>
 
-                          {/* BARRA DE GRADIENTE DE COLOR */}
                           <div 
                             style={{ height: `${heightPct}%` }} 
                             className="w-full bg-gradient-to-t from-primary/50 via-primary/80 to-primary group-hover:from-primary group-hover:to-[#ffe0a3] rounded-t-xl transition-all duration-300 relative shadow-md group-hover:shadow-[0_0_15px_rgba(216,162,78,0.5)] border-t border-primary/30"
                           />
 
-                          {/* FECHA / DÍA ABAJO EN EL EJE X */}
                           <span className="text-[10px] text-on-surface-variant font-mono truncate w-full text-center font-bold group-hover:text-on-surface transition mt-1">
                             {dateFormatted}
                           </span>
@@ -272,11 +367,11 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
                 <span className="material-symbols-outlined text-primary text-[18px]">workspace_premium</span>
                 Top Productos Más Vendidos
               </h3>
-              <span className="text-[11px] text-on-surface-variant font-mono">Ranking en el período</span>
+              <span className="text-[11px] text-on-surface-variant font-mono">Ranking del período</span>
             </div>
 
             {topProducts.length === 0 ? (
-              <p className="text-xs text-on-surface-variant opacity-60 text-center py-8 italic">No hay registros de ventas de productos en este período.</p>
+              <p className="text-xs text-on-surface-variant opacity-60 text-center py-8 italic">No hay ventas registradas en este período.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
@@ -305,6 +400,94 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
             )}
           </div>
         </>
+      )}
+
+      {/* Modal Registrar Gasto Fijo */}
+      {isExpenseModalOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-surface-container-highest border border-outline/30 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+              <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-[18px]">domain</span>
+                Registrar Gasto Fijo Operativo
+              </h4>
+              <button onClick={() => setIsExpenseModalOpen(false)} className="text-on-surface-variant hover:text-on-surface cursor-pointer bg-transparent border-0">
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleAddFixedExpense} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold uppercase text-on-surface-variant">Concepto del Gasto</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. Arriendo de Local, Luz/Agua, Internet"
+                  value={expenseConcept}
+                  onChange={(e) => setExpenseConcept(e.target.value)}
+                  className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold uppercase text-on-surface-variant">Categoría</label>
+                  <select
+                    value={expenseCategory}
+                    onChange={(e) => setExpenseCategory(e.target.value)}
+                    className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                  >
+                    <option value="operativo">Arriendo / Local</option>
+                    <option value="servicios">Servicios Públicos</option>
+                    <option value="tecnologia">Internet / Software</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="otros">Otros Gastos Fijos</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold uppercase text-on-surface-variant">Monto Mensual ($ COP)</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    placeholder="2000000"
+                    value={expenseAmount}
+                    onChange={(e) => setExpenseAmount(e.target.value)}
+                    className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface font-mono outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold uppercase text-on-surface-variant">Notas Adicionales</label>
+                <textarea
+                  placeholder="Detalles del contrato de arriendo o vencimiento de pago"
+                  value={expenseNotes}
+                  onChange={(e) => setExpenseNotes(e.target.value)}
+                  className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none resize-none h-16"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-outline/10">
+                <button
+                  type="button"
+                  onClick={() => setIsExpenseModalOpen(false)}
+                  className="px-4 py-2 border border-outline/20 text-on-surface font-bold text-xs rounded-xl cursor-pointer hover:bg-surface-container-high"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingExpense}
+                  className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl cursor-pointer shadow hover:opacity-90"
+                >
+                  {savingExpense ? 'Guardando...' : 'Guardar Gasto Fijo'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -40,6 +40,7 @@ import { StructuredLogger } from './utils/structuredLogger';
 import { initDatabase } from './database/initDb';
 import { validateEnv } from './utils/envValidator';
 import { verifyPassword, hashPassword, isHashedPassword } from './utils/passwordUtils';
+import { runAutoFixAgent } from './agents/autoFixAgent';
 
 // Validar variables de entorno antes de cualquier otra cosa
 validateEnv();
@@ -8079,6 +8080,309 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       }
 
       res.json({ success: true, shift: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ==========================================
+  // ENDPOINTS DE FINANZAS Y GASTOS FIJOS (CONTABILIDAD)
+  // ==========================================
+
+  // Obtener Gastos Fijos Operativos (Contabilidad)
+  app.get('/api/clients/:clientId/fixed-expenses', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const result = await pool.query(
+        `SELECT * FROM monthly_fixed_expenses WHERE client_id = $1 ORDER BY created_at DESC`,
+        [clientId]
+      );
+      res.json({ success: true, expenses: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Agregar Gasto Fijo Operativo
+  app.post('/api/clients/:clientId/fixed-expenses', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { concept, category, amount, notes, period_month_year } = req.body;
+
+      if (!concept || !amount) {
+        return res.status(400).json({ success: false, error: 'Concepto y monto son obligatorios.' });
+      }
+
+      const result = await pool.query(
+        `INSERT INTO monthly_fixed_expenses (client_id, concept, category, amount, notes, period_month_year)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [clientId, concept, category || 'operativo', parseFloat(amount), notes || null, period_month_year || null]
+      );
+
+      res.json({ success: true, expense: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Eliminar Gasto Fijo Operativo
+  app.delete('/api/clients/:clientId/fixed-expenses/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, id } = req.params;
+      await pool.query(`DELETE FROM monthly_fixed_expenses WHERE id = $1 AND client_id = $2`, [id, clientId]);
+      res.json({ success: true, message: 'Gasto fijo eliminado.' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ==========================================
+  // ENDPOINTS DE PLANEACIÓN EMPRESARIAL DE ÉLITE (FINANZAS Y DEUDA)
+  // ==========================================
+
+  // Modelo financiero consolidado
+  app.get('/api/clients/:clientId/planning/financial-model', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+
+      // 1. Calcular Nómina Total (Salario base + 49.5% Prestaciones de Ley y Carga Empleador)
+      const empRes = await pool.query(
+        `SELECT COALESCE(SUM(COALESCE(basic_salary, 0) + COALESCE(allowances, 0) + COALESCE(transport_allowance, 0)), 0) as total_base
+         FROM employees
+         WHERE client_id = $1 AND is_active = true`,
+        [clientId]
+      );
+      const totalBasePayroll = parseFloat(empRes.rows[0]?.total_base || '0');
+      // Prestaciones sociales + Seguridad Social empleador = ~49.5% adicional sobre el salario base
+      const totalPayrollCost = totalBasePayroll * 1.495;
+
+      // 2. Sumar Gastos Fijos de Contabilidad
+      const fixedRes = await pool.query(
+        `SELECT COALESCE(SUM(amount), 0) as total_fixed
+         FROM monthly_fixed_expenses
+         WHERE client_id = $1`,
+        [clientId]
+      );
+      const totalFixedExpenses = parseFloat(fixedRes.rows[0]?.total_fixed || '0');
+
+      // 3. Obtener Inversiones Iniciales (CAPEX)
+      const invRes = await pool.query(
+        `SELECT * FROM enterprise_initial_investment WHERE client_id = $1 ORDER BY created_at ASC`,
+        [clientId]
+      );
+      const investments = invRes.rows;
+      const totalInitialInvestment = investments.reduce((acc: number, item: any) => acc + parseFloat(item.amount || '0'), 0);
+
+      // 4. Obtener Préstamos Bancarios & Deuda
+      const loanRes = await pool.query(
+        `SELECT * FROM enterprise_loans WHERE client_id = $1 AND is_active = true ORDER BY created_at ASC`,
+        [clientId]
+      );
+      const loans = loanRes.rows;
+      const totalMonthlyDebtService = loans.reduce((acc: number, item: any) => acc + parseFloat(item.monthly_installment_amount || '0'), 0);
+
+      // 5. Calcular Margen de Ganancia Promedio del Inventario
+      const prodRes = await pool.query(
+        `SELECT price, cost_price FROM products WHERE client_id = $1 AND price > 0`,
+        [clientId]
+      );
+      let avgMarginRatio = 0.40; // Default 40%
+      if (prodRes.rows.length > 0) {
+        let totalMarginSum = 0;
+        let validProductsCount = 0;
+        for (const p of prodRes.rows) {
+          const price = parseFloat(p.price || '0');
+          const cost = parseFloat(p.cost_price || '0');
+          if (price > 0 && cost >= 0) {
+            const margin = (price - cost) / price;
+            totalMarginSum += margin;
+            validProductsCount++;
+          }
+        }
+        if (validProductsCount > 0) {
+          avgMarginRatio = Math.max(0.10, Math.min(0.90, totalMarginSum / validProductsCount));
+        }
+      }
+
+      // 6. Indicadores Clave de Equilibrio
+      const totalOperationalFixedCosts = totalPayrollCost + totalFixedExpenses;
+      const breakEvenAccounting = avgMarginRatio > 0 ? (totalOperationalFixedCosts / avgMarginRatio) : 0;
+      const breakEvenFinancialReal = avgMarginRatio > 0 ? ((totalOperationalFixedCosts + totalMonthlyDebtService) / avgMarginRatio) : 0;
+
+      res.json({
+        success: true,
+        data: {
+          payroll: {
+            basePayroll: totalBasePayroll,
+            socialBenefitsRate: 0.495,
+            totalPayrollCost: totalPayrollCost
+          },
+          fixedExpenses: {
+            totalFixedExpenses: totalFixedExpenses
+          },
+          investments: {
+            list: investments,
+            totalInitialInvestment: totalInitialInvestment
+          },
+          loans: {
+            list: loans,
+            totalMonthlyDebtService: totalMonthlyDebtService
+          },
+          metrics: {
+            avgMarginRatio: avgMarginRatio,
+            totalOperationalFixedCosts: totalOperationalFixedCosts,
+            breakEvenAccounting: breakEvenAccounting,
+            breakEvenFinancialReal: breakEvenFinancialReal
+          }
+        }
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Agregar Inversión Inicial (CAPEX)
+  app.post('/api/clients/:clientId/planning/initial-investment', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { category, concept, amount, notes } = req.body;
+
+      if (!category || !concept || !amount) {
+        return res.status(400).json({ success: false, error: 'Categoría, concepto y monto son obligatorios.' });
+      }
+
+      const result = await pool.query(
+        `INSERT INTO enterprise_initial_investment (client_id, category, concept, amount, notes)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING *`,
+        [clientId, category, concept, parseFloat(amount), notes || null]
+      );
+
+      res.json({ success: true, investment: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Eliminar Inversión Inicial
+  app.delete('/api/clients/:clientId/planning/initial-investment/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, id } = req.params;
+      await pool.query(`DELETE FROM enterprise_initial_investment WHERE id = $1 AND client_id = $2`, [id, clientId]);
+      res.json({ success: true, message: 'Ítem de inversión inicial eliminado.' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Agregar Préstamo Bancario / Deuda
+  app.post('/api/clients/:clientId/planning/loans', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { bank_name, loan_amount, monthly_interest_rate, term_months, notes } = req.body;
+
+      if (!bank_name || !loan_amount || !term_months) {
+        return res.status(400).json({ success: false, error: 'Entidad, monto del préstamo y plazo en meses son obligatorios.' });
+      }
+
+      const P = parseFloat(loan_amount);
+      const i = parseFloat(monthly_interest_rate || '1.5') / 100;
+      const n = parseInt(term_months);
+
+      let monthlyInstallment = 0;
+      if (i > 0) {
+        monthlyInstallment = P * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
+      } else {
+        monthlyInstallment = P / n;
+      }
+
+      const result = await pool.query(
+        `INSERT INTO enterprise_loans (client_id, bank_name, loan_amount, monthly_interest_rate, term_months, monthly_installment_amount, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [clientId, bank_name, P, parseFloat(monthly_interest_rate || '1.5'), n, monthlyInstallment, notes || null]
+      );
+
+      res.json({ success: true, loan: result.rows[0] });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Eliminar Préstamo Bancario
+  app.delete('/api/clients/:clientId/planning/loans/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, id } = req.params;
+      await pool.query(`DELETE FROM enterprise_loans WHERE id = $1 AND client_id = $2`, [id, clientId]);
+      res.json({ success: true, message: 'Préstamo bancario eliminado.' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ==========================================
+  // ENDPOINTS DE TICKETS DE SOPORTE E IA AUTOFIX
+  // ==========================================
+
+  // Obtener lista de tickets de soporte
+  app.get('/api/clients/:clientId/support-tickets', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const result = await pool.query(
+        `SELECT * FROM support_tickets WHERE client_id = $1 ORDER BY created_at DESC`,
+        [clientId]
+      );
+      res.json({ success: true, tickets: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Crear ticket de soporte (Manual o por Captura de Excepción) y disparar AutoFix por IA
+  app.post('/api/clients/:clientId/support-tickets', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { title, description, category, stackTrace } = req.body;
+
+      if (!title || !description) {
+        return res.status(400).json({ success: false, error: 'Título y descripción del problema son obligatorios.' });
+      }
+
+      const ticketCode = `TCK-${Date.now().toString().slice(-6)}`;
+      const userObj = (req as any).user;
+      const userName = userObj?.username || userObj?.phone || 'Usuario ERP';
+
+      const result = await pool.query(
+        `INSERT INTO support_tickets (client_id, ticket_code, created_by_user_name, title, description, category, status, stack_trace)
+         VALUES ($1, $2, $3, $4, $5, $6, 'ai_fixing', $7)
+         RETURNING *`,
+        [clientId, ticketCode, userName, title, description, category || 'general', stackTrace || null]
+      );
+
+      const ticket = result.rows[0];
+
+      // Disparar IA AutoFix en segundo plano
+      runAutoFixAgent(clientId as string, ticket.id).catch(err => {
+        console.error(`[AutoFix Background Error]:`, err);
+      });
+
+      res.json({
+        success: true,
+        message: 'Ticket creado exitosamente. La IA AutoFix está evaluando el caso.',
+        ticket: ticket
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Reintento manual de AutoFix por IA en un ticket
+  app.post('/api/clients/:clientId/support-tickets/:ticketId/autofix', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, ticketId } = req.params;
+      const fixResult = await runAutoFixAgent(clientId as string, ticketId as string);
+      res.json({ success: true, result: fixResult });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
