@@ -84,5 +84,5 @@ graph TD
 | **3. Re-engagement 3/8 Meses** | 🟡 Siguiente Paso | `scheduler.ts`, `whatsapp.ts` |
 | **4. Alerta Stock + Proveedor IA** | 🟡 Pendiente | `SystemAlertsPanel.tsx`, `autoFixAgent.ts` |
 | **5. POS PWA Offline-First** | 🟡 Pendiente | `dashboard/public/sw.js`, `IndexedDB` |
-| **6. Multi-Sede & Multi-Bodega** | 🟡 Pendiente | `clients`, `branches`, `server.ts` |
+| **6. Multi-Sede & Multi-Bodega** | 🟡 Especificado | `docs/ARQUITECTURA_MULTI_SEDE_Y_TRASLADO_EMPLEADOS.md` |
 | **7. E-Commerce Integration** | 🟡 Pendiente | `src/services/ecommerce.ts` |
