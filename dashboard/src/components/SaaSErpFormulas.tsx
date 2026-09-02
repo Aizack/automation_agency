@@ -800,6 +800,35 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
               >
                 Limpiar paciente
               </button>
+
+              <div className="space-y-2 pt-2 border-t border-[#2d3036]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingClinicalRecordId(null);
+                    setClinPatientName(`${selectedCustomer.name} ${selectedCustomer.last_name || ''}`.trim());
+                    setClinPatientDoc(selectedCustomer.document_number || '');
+                    setClinPatientPhone(selectedCustomer.phone || '');
+                    setIsClinicalFormOpen(true);
+                  }}
+                  className="w-full py-2 px-3 bg-primary text-on-primary font-bold text-xs rounded-md shadow hover:opacity-90 transition flex items-center justify-center gap-1.5 cursor-pointer border-0"
+                >
+                  <span className="material-symbols-outlined text-[16px]">add</span>
+                  + Nueva Historia Clínica
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormulasSubTab('historia_clinica');
+                    setClinicalSearch(selectedCustomer.document_number || selectedCustomer.name);
+                    fetchClinicalRecords();
+                  }}
+                  className="w-full py-2 px-3 bg-blue-500/20 text-blue-400 font-bold text-xs rounded-md border border-blue-500/30 hover:bg-blue-500/30 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">visibility</span>
+                  Ver Historia Clínica
+                </button>
+              </div>
             </div>
           ) : (
             <div className="text-[11px] text-on-surface-variant p-3 rounded-md border border-dashed border-[#2d3036] bg-[#181a1c]">

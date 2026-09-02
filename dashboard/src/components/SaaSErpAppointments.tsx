@@ -430,6 +430,24 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         return localDate.toLocaleDateString('es-CO', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
     };
 
+    const GENERATED_30MIN_SLOTS = [
+        '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+        '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+        '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+        '17:00', '17:30', '18:00'
+    ];
+
+    const isSlotBusy = (dateStr: string, slotTime: string, currentApptId?: string) => {
+        return appointments.some(appt => {
+            if (currentApptId && appt.id === currentApptId) return false;
+            if (appt.status === 'cancelled') return false;
+            const [dPart, tPart] = appt.appointment_date.split('T');
+            if (dPart !== dateStr) return false;
+            const apptTime = tPart ? tPart.slice(0, 5) : '';
+            return apptTime === slotTime;
+        });
+    };
+
     const getAppointmentsForDay = (date: Date) => {
         const targetStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         return appointments.filter(appt => {
@@ -613,7 +631,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                     <div className="space-y-2 mt-4 text-xs text-on-surface-variant">
                                         <div className="flex items-center gap-2">
                                             <span className="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
-                                            <span>{new Date(appt.appointment_date.split('T')[0]).toLocaleDateString('es-CO', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                                            <span>{formatApptDate(appt.appointment_date)}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="material-symbols-outlined text-[16px] text-secondary">schedule</span>
@@ -909,14 +927,23 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Hora de Cita</label>
-                                    <input 
-                                        type="time"
+                                    <label className="block text-xs font-bold text-on-surface-variant">Hora de Cita (Slot 30 min)</label>
+                                    <select 
                                         required
                                         value={apptOnlyTime}
                                         onChange={(e) => setApptOnlyTime(e.target.value)}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
-                                    />
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono cursor-pointer"
+                                    >
+                                        {GENERATED_30MIN_SLOTS.map(slot => {
+                                            const busy = isSlotBusy(apptOnlyDate, slot);
+                                            const formatted = formatApptTime(`2000-01-01T${slot}:00`);
+                                            return (
+                                                <option key={slot} value={slot} disabled={busy}>
+                                                    {formatted} {busy ? '🔴 (Ocupado / Busy)' : '🟢 (Disponible / Free)'}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
                                 </div>
                             </div>
 
@@ -1138,14 +1165,23 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Hora de Cita</label>
-                                    <input 
-                                        type="time"
+                                    <label className="block text-xs font-bold text-on-surface-variant">Hora de Cita (Slot 30 min)</label>
+                                    <select 
                                         required
                                         value={apptOnlyTime}
                                         onChange={(e) => setApptOnlyTime(e.target.value)}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
-                                    />
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono cursor-pointer"
+                                    >
+                                        {GENERATED_30MIN_SLOTS.map(slot => {
+                                            const busy = isSlotBusy(apptOnlyDate, slot, selectedAppt?.id);
+                                            const formatted = formatApptTime(`2000-01-01T${slot}:00`);
+                                            return (
+                                                <option key={slot} value={slot} disabled={busy}>
+                                                    {formatted} {busy ? '🔴 (Ocupado / Busy)' : '🟢 (Disponible / Free)'}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
                                 </div>
                             </div>
 
