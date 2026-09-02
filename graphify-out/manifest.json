@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpFormulas.tsx": {
-    "mtime": 1788332297.3643486,
-    "seen": 1788332354.5050333,
-    "ast_hash": "212b6f90dd270e405f9c94c4b81a774d",
+    "mtime": 1788332916.5378647,
+    "seen": 1788332967.9846377,
+    "ast_hash": "b3f55c6b26243aa72d66b9dcba2df9c5",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
@@ -1104,15 +1104,15 @@
     "semantic_hash": ""
   },
   ".agents/rules/optometry_rules.md": {
-    "mtime": 1788332502.315024,
-    "seen": 1788332522.5832927,
-    "ast_hash": "900565bd7bfb6212583efb3d9acf90f0",
+    "mtime": 1788332942.4963417,
+    "seen": 1788332967.984874,
+    "ast_hash": "2c5ad21cf6a19c0f818280d0ca0e1aaa",
     "semantic_hash": ""
   },
   "docs/HISTORIA_CLINICA_Y_OPTOMETRIA_RULES.md": {
-    "mtime": 1788332497.9883592,
-    "seen": 1788332522.5833578,
-    "ast_hash": "67ac1f0191d7c7e34c685742beaeabee",
+    "mtime": 1788332936.9122584,
+    "seen": 1788332967.9849348,
+    "ast_hash": "cdcc79ea4aff0d2fca453987a41d5ec6",
     "semantic_hash": ""
   }
 }

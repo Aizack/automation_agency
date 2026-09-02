@@ -1102,5 +1102,17 @@
     "seen": 1788326508.3671694,
     "ast_hash": "f9776a2c0605677f51f95cebaa578c16",
     "semantic_hash": ""
+  },
+  ".agents/rules/optometry_rules.md": {
+    "mtime": 1788332502.315024,
+    "seen": 1788332522.5832927,
+    "ast_hash": "900565bd7bfb6212583efb3d9acf90f0",
+    "semantic_hash": ""
+  },
+  "docs/HISTORIA_CLINICA_Y_OPTOMETRIA_RULES.md": {
+    "mtime": 1788332497.9883592,
+    "seen": 1788332522.5833578,
+    "ast_hash": "67ac1f0191d7c7e34c685742beaeabee",
+    "semantic_hash": ""
   }
 }

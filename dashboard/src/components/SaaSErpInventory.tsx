@@ -82,6 +82,28 @@ const BarcodeSVG: React.FC<{ value: string; size?: 'sm' | 'md' }> = ({ value, si
         </div>
     );
 };
+const getColorHex = (colorName?: string, colorHex?: string) => {
+    if (colorHex && colorHex.startsWith('#')) return colorHex;
+    if (!colorName) return '#6b7280';
+    const name = colorName.toLowerCase();
+    if (name.includes('negro') || name.includes('black')) return '#111111';
+    if (name.includes('café') || name.includes('cafe') || name.includes('marrón') || name.includes('marron') || name.includes('brown')) return '#5c3a21';
+    if (name.includes('carey') || name.includes('tortoise')) return '#8b5a2b';
+    if (name.includes('azul') || name.includes('blue')) return '#1e40af';
+    if (name.includes('rojo') || name.includes('red')) return '#b91c1c';
+    if (name.includes('verde') || name.includes('green')) return '#15803d';
+    if (name.includes('amarillo') || name.includes('yellow')) return '#eab308';
+    if (name.includes('dorado') || name.includes('gold')) return '#d97706';
+    if (name.includes('plateado') || name.includes('silver')) return '#9ca3af';
+    if (name.includes('rosa') || name.includes('pink')) return '#ec4899';
+    if (name.includes('gris') || name.includes('gray')) return '#6b7280';
+    if (name.includes('morado') || name.includes('purple')) return '#7e22ce';
+    if (name.includes('blanco') || name.includes('white')) return '#ffffff';
+    if (name.includes('habano') || name.includes('beige')) return '#d2b48c';
+    if (name.includes('transparente') || name.includes('clear')) return '#e5e7eb';
+    return '#6b7280';
+};
+
 interface ColorOption {
     name: string;
     value: string;
@@ -375,8 +397,57 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     // Barcode Printing States
     const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
     const [printProduct, setPrintProduct] = useState<Product | null>(null);
+    const [selectedPrintVariant, setSelectedPrintVariant] = useState<any>(null);
     const [printQuantity, setPrintQuantity] = useState(1);
     const [isRefillPrompt, setIsRefillPrompt] = useState(false);
+
+    const openPrintModal = (prod: Product, targetVariant?: any) => {
+        setPrintProduct(prod);
+        setIsRefillPrompt(false);
+        if (targetVariant) {
+            setSelectedPrintVariant(targetVariant);
+            setPrintQuantity(targetVariant.stock || 1);
+        } else if (prod.variants && prod.variants.length > 0) {
+            setSelectedPrintVariant(prod.variants[0]);
+            setPrintQuantity(prod.variants[0].stock || 1);
+        } else {
+            setSelectedPrintVariant(null);
+            setPrintQuantity(prod.stock || 1);
+        }
+        setIsPrintModalOpen(true);
+    };
+
+    const handlePrintBarcodes = () => {
+        if (!printProduct) return;
+        const activeSku = selectedPrintVariant ? (selectedPrintVariant.sku || printProduct.sku || '') : (printProduct.sku || '');
+        const activeVariantName = selectedPrintVariant ? (selectedPrintVariant.variant_name || selectedPrintVariant.color) : '';
+        const activeName = activeVariantName ? `${printProduct.name} (${activeVariantName})` : printProduct.name;
+        const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
+        
+        printBarcodes([{
+            name: activeName,
+            sku: activeSku,
+            price: printProduct.price,
+            quantity: parseInt(printQuantity.toString()) || 1
+        }], selectedSettings);
+
+        setIsPrintModalOpen(false);
+    };
+
+    const handlePreviewBarcodes = () => {
+        if (!printProduct) return;
+        const activeSku = selectedPrintVariant ? (selectedPrintVariant.sku || printProduct.sku || '') : (printProduct.sku || '');
+        const activeVariantName = selectedPrintVariant ? (selectedPrintVariant.variant_name || selectedPrintVariant.color) : '';
+        const activeName = activeVariantName ? `${printProduct.name} (${activeVariantName})` : printProduct.name;
+        const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
+
+        previewBarcodes([{
+            name: activeName,
+            sku: activeSku,
+            price: printProduct.price,
+            quantity: parseInt(printQuantity.toString()) || 1
+        }], selectedSettings);
+    };
 
     // Categories and Refill States
     const [categories, setCategories] = useState<any[]>([]);
@@ -682,26 +753,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             setImporting(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
-    };
-
-    const openPrintModal = (prod: Product, defaultQty: number = 1) => {
-        setPrintProduct(prod);
-        setPrintQuantity(defaultQty);
-        setPrintProfileId('two-column');
-        setIsRefillPrompt(defaultQty > 1);
-        setIsPrintModalOpen(true);
-    };
-
-    const handlePrintBarcodes = () => {
-        if (!printProduct || !printProduct.sku) return;
-        const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
-        printBarcodes([{
-            name: printProduct.name,
-            sku: printProduct.sku,
-            price: printProduct.price,
-            quantity: parseInt(printQuantity.toString()) || 1
-        }], selectedSettings);
-        setIsPrintModalOpen(false);
     };
 
     const openEdit = (prod: Product) => {
@@ -2171,10 +2222,40 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         )}
 
                         <div className="space-y-4">
+                            {/* Selector de Variante / Color si el producto tiene variantes */}
+                            {printProduct.variants && printProduct.variants.length > 0 && (
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-on-surface-variant uppercase ml-1 block">Variante / Color de la Referencia</label>
+                                    <select
+                                        value={selectedPrintVariant?.sku || selectedPrintVariant?.variant_name || selectedPrintVariant?.color || ''}
+                                        onChange={(e) => {
+                                            const found = printProduct.variants?.find((v: any) => (
+                                                v.sku === e.target.value || 
+                                                v.variant_name === e.target.value || 
+                                                v.color === e.target.value
+                                            ));
+                                            if (found) {
+                                                setSelectedPrintVariant(found);
+                                                setPrintQuantity(found.stock || 1);
+                                            }
+                                        }}
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] rounded-md p-2.5 text-xs font-bold text-on-surface outline-none focus:border-primary cursor-pointer"
+                                    >
+                                        {printProduct.variants.map((v: any, idx: number) => (
+                                            <option key={idx} value={v.sku || v.variant_name || v.color}>
+                                                {v.variant_name || v.color} — (SKU: {v.sku || 'N/A'}) — Stock: {v.stock} uds
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
                             <div className="bg-surface-container p-3 rounded-lg border border-outline/10 flex items-center gap-3">
                                 <div className="flex-grow">
                                     <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Código SKU</p>
-                                    <p className="text-sm font-mono text-on-surface font-semibold mt-0.5">{printProduct.sku}</p>
+                                    <p className="text-sm font-mono text-on-surface font-semibold mt-0.5">
+                                        {selectedPrintVariant ? (selectedPrintVariant.sku || printProduct.sku || 'Sin SKU') : (printProduct.sku || 'Sin SKU')}
+                                    </p>
                                 </div>
                                 <div className="w-px h-8 bg-outline/10" />
                                 <div>
@@ -2219,10 +2300,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     )}
                                     <button 
                                         type="button"
-                                        onClick={() => setPrintQuantity(printProduct.stock)}
-                                        className={`flex-1 py-2 px-3 border rounded-md text-xs font-bold transition cursor-pointer ${printQuantity === printProduct.stock ? 'bg-primary/15 border-primary text-primary' : 'bg-transparent border-outline/20 text-on-surface hover:bg-surface-container'}`}
+                                        onClick={() => setPrintQuantity(selectedPrintVariant ? (selectedPrintVariant.stock || 1) : printProduct.stock)}
+                                        className={`flex-1 py-2 px-3 border rounded-md text-xs font-bold transition cursor-pointer ${printQuantity === (selectedPrintVariant ? selectedPrintVariant.stock : printProduct.stock) ? 'bg-primary/15 border-primary text-primary' : 'bg-transparent border-outline/20 text-on-surface hover:bg-surface-container'}`}
                                     >
-                                        Stock Completo ({printProduct.stock})
+                                        Stock Completo ({selectedPrintVariant ? selectedPrintVariant.stock : printProduct.stock})
                                     </button>
                                 </div>
                             </div>
@@ -2246,15 +2327,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         <div className="flex justify-end gap-3 pt-6 border-t border-outline/10 mt-6">
                             <button
                                 type="button"
-                                onClick={() => {
-                                    const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
-                                    previewBarcodes([{
-                                        name: printProduct.name,
-                                        sku: printProduct.sku || '',
-                                        price: printProduct.price,
-                                        quantity: parseInt(printQuantity.toString()) || 1
-                                    }], selectedSettings);
-                                }}
+                                onClick={handlePreviewBarcodes}
                                 className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-md transition cursor-pointer"
                             >
                                 Vista previa
@@ -2547,7 +2620,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         <div className="flex items-center gap-3">
                                             <div
                                                 className="w-5 h-5 rounded-full border border-white/20 shrink-0 shadow-sm"
-                                                style={{ background: v.color_hex || '#808080' }}
+                                                style={{ background: getColorHex(v.color || v.variant_name, v.color_hex) }}
                                             />
                                             <div>
                                                 <p className="font-bold text-xs text-on-surface">{v.variant_name || v.color}</p>
@@ -2557,7 +2630,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         <div className="flex items-center gap-2">
                                             {v.sku && <BarcodeSVG value={v.sku} size="sm" />}
                                             <button
-                                                onClick={() => openPrintModal(selectedVariantProduct)}
+                                                onClick={() => openPrintModal(selectedVariantProduct, v)}
                                                 className="px-2.5 py-1.5 bg-primary/20 text-primary font-bold text-xs rounded-lg hover:bg-primary/30 transition border border-primary/30 cursor-pointer flex items-center gap-1"
                                                 title="Imprimir código de barras"
                                             >

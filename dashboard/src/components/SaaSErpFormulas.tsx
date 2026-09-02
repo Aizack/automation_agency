@@ -106,6 +106,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
   const [clinTreatmentPlan, setClinTreatmentPlan] = useState('');
   const [clinOptometrist, setClinOptometrist] = useState('Dr. Optómetra Especialista');
   const [clinFamAntecedents, setClinFamAntecedents] = useState('');
+  const [clinAllergiesNotes, setClinAllergiesNotes] = useState('');
   // Checkboxes de Posibles Enfermedades / Antecedentes
   const [diseaseCheckboxes, setDiseaseCheckboxes] = useState({
     estrabismo: false,
@@ -1379,35 +1380,45 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant">Notas Antecedentes Médicos</label>
+                    <label className="font-bold text-on-surface-variant block text-xs">Antecedentes Médicos</label>
                     <input
                       type="text"
                       placeholder="Ej: Hipertensión en tratamiento..."
                       value={clinMedAntecedents}
                       onChange={(e) => setClinMedAntecedents(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface text-xs outline-none focus:border-primary"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant">Notas Antecedentes Oculares</label>
+                    <label className="font-bold text-on-surface-variant block text-xs">Antecedentes Oculares</label>
                     <input
                       type="text"
                       placeholder="Ej: Cirugía Láser en 2020..."
                       value={clinOcuAntecedents}
                       onChange={(e) => setClinOcuAntecedents(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface text-xs outline-none focus:border-primary"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant">Alergias & Antecedentes Familiares</label>
+                    <label className="font-bold text-on-surface-variant block text-xs">Alergias Medicamentosas / Ambientales</label>
                     <input
                       type="text"
-                      placeholder="Ej: Glaucoma familiar / Alergia a gotas..."
+                      placeholder="Ej: Alergia a colirios, polen..."
+                      value={clinAllergiesNotes}
+                      onChange={(e) => setClinAllergiesNotes(e.target.value)}
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface text-xs outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-bold text-on-surface-variant block text-xs">Antecedentes Familiares</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Glaucoma en padre, cataratas..."
                       value={clinFamAntecedents}
                       onChange={(e) => setClinFamAntecedents(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface text-xs outline-none focus:border-primary"
                     />
                   </div>
                 </div>

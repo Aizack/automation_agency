@@ -3460,7 +3460,7 @@
       "file_type": "code",
       "norm_label": "phoneinput()",
       "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L47"
+      "source_location": "L49"
     },
     {
       "id": "dashboard_src_components_saaserpformulas_saaserpformulas",
@@ -3472,7 +3472,7 @@
       "file_type": "code",
       "norm_label": "saaserpformulas()",
       "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L68"
+      "source_location": "L70"
     },
     {
       "id": "dashboard_src_components_saaserpinvoices2_saaserpinvoices2",
@@ -12998,7 +12998,7 @@
       "node_kind": "heading",
       "norm_label": "3. sistema de impresion institucional (membrete oficial)",
       "source_file": "docs/HISTORIA_CLINICA_Y_OPTOMETRIA_RULES.md",
-      "source_location": "L33"
+      "source_location": "L37"
     },
     {
       "id": "docs_historia_clinica_y_optometria_rules_4_reglas_est\u00e9ticas_universales",
@@ -13010,7 +13010,7 @@
       "node_kind": "heading",
       "norm_label": "4. reglas esteticas universales",
       "source_file": "docs/HISTORIA_CLINICA_Y_OPTOMETRIA_RULES.md",
-      "source_location": "L46"
+      "source_location": "L50"
     },
     {
       "id": "docs_historia_clinica_y_optometria_rules_normas_permanentes_y_documentaci\u00f3n_t\u00e9cnica_optometr\u00eda_historia_cl\u00ednica_e_impresi\u00f3n",
@@ -23988,7 +23988,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -24010,7 +24010,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L68",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -26287,7 +26287,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/HISTORIA_CLINICA_Y_OPTOMETRIA_RULES.md",
-      "source_location": "L33",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -26298,7 +26298,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/HISTORIA_CLINICA_Y_OPTOMETRIA_RULES.md",
-      "source_location": "L46",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -33163,5 +33163,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8dc1234bcdd0acbdf4256bfd33b7f2960651cc3d"
+  "built_at_commit": "a0f08ad348641774faf7a8d2b77af4408b8a1b4c"
 }
