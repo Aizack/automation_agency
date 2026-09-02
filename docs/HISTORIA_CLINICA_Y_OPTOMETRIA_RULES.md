@@ -22,10 +22,14 @@ Este documento constituye la fuente autoritativa y permanente de reglas, estruct
   - **`+ Nueva Historia Clínica`:** Abre el formulario de la historia clínica. **Los campos de refracción se autocompletan solos** tomando la fórmula médica ingresada en la pantalla de optometría o la última registrada. **CERO re-digitación manual.**
 * **Estructura del Formulario:**
   1. **Información del Paciente:** Nombre, Cédula, Teléfono.
-  2. **Anamnesis & Antecedentes:** Motivo de Consulta + Grilla de Checkboxes interactiva (`Estrabismo`, `Carnosidad / Pterigión`, `Cataratas`, `Hipertensión`, `Diabetes`, `Cirugía Ocular`) + Notas de antecedentes médicos y oculares.
-  3. **Examen Físico Ocular & Comparativa:**
-     - **Recuadro Examen Anterior:** Renderiza automáticamente la fórmula previa del historial (`Fecha`, OD/OI: `Esf | Cil | Eje | AV`).
-     - **Recuadro Examen Actual / Consulta de Hoy:** Campos de AV OD/OI, Tonometría PIO OD/OI, Refracción Prescrita OD/OI (autocompletada) y Oftalmoscopía/Biomicroscopía.
+  2. **Anamnesis & Antecedentes:** 
+     - Motivo de Consulta.
+     - Grilla de Checkboxes interactiva (`Estrabismo`, `Carnosidad / Pterigión`, `Cataratas`, `Hipertensión`, `Diabetes`, `Cirugía Ocular`, `Alergias Medicamentosas/Ambientales`, `Antecedentes Familiares`).
+     - Notas separadas para **Antecedentes Médicos**, **Antecedentes Oculares** y **Alergias & Antecedentes Familiares**.
+  3. **Examen Físico Ocular & Comparativa Estructurada en Columnas:**
+     - **Recuadro Examen Anterior (Fórmula previa):** Estructura en cuadrícula de 6 columnas legibles con cabeceras explícitas (`ESF | CIL | EJE | ADD | PRISMA | AV`) para Ojo Derecho (OD) y Ojo Izquierdo (OI).
+     - **Recuadro Examen Reciente / Actual (Consulta de Hoy):** Campos de entrada en cuadrícula de 6 columnas con cabeceras explícitas (`ESF | CIL | EJE | ADD | PRISMA | AV`) para Ojo Derecho (OD) y Ojo Izquierdo (OI), autocompletados automáticamente.
+     - **Campos Complementarios:** Tonometría PIO OD/OI (mmHg) y Oftalmoscopía / Biomicroscopía.
   4. **Diagnóstico & Conducta:** Diagnóstico Clínico, Optómetra Tratante (vinculado a Registro/TP) y Plan de Manejo.
 
 ---
@@ -39,7 +43,7 @@ Este documento constituye la fuente autoritativa y permanente de reglas, estruct
   - NIT / Identificación Tributaria (`nit`).
   - Dirección Principal (`address`).
   - Teléfono / Celular (`phone`).
-  - Formato limpio tipo recetario con tabla OD/OI, distancia pupilar, altura, observaciones y línea de firma con Registro Profesional.
+  - Formato limpio tipo recetario con tabla OD/OI (`ESF | CIL | EJE | ADD | PRISMA | AV`), distancia pupilar, altura, observaciones y línea de firma con Registro Profesional.
 
 ---
 

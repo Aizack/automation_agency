@@ -32,11 +32,13 @@ interface Formula {
   od_cylinder: string | null;
   od_axis: string | null;
   od_addition: string | null;
+  od_prism?: string | null;
   od_av?: string | null;
   oi_sphere: string | null;
   oi_cylinder: string | null;
   oi_axis: string | null;
   oi_addition: string | null;
+  oi_prism?: string | null;
   oi_av?: string | null;
   dp_distance: string | null;
   height: string | null;
@@ -103,6 +105,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
   const [clinDiagnosis, setClinDiagnosis] = useState('');
   const [clinTreatmentPlan, setClinTreatmentPlan] = useState('');
   const [clinOptometrist, setClinOptometrist] = useState('Dr. Optómetra Especialista');
+  const [clinFamAntecedents, setClinFamAntecedents] = useState('');
   // Checkboxes de Posibles Enfermedades / Antecedentes
   const [diseaseCheckboxes, setDiseaseCheckboxes] = useState({
     estrabismo: false,
@@ -111,6 +114,8 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
     hipertension: false,
     diabetes: false,
     cirugia: false,
+    alergias: false,
+    familiares: false
   });
 
   const token = localStorage.getItem('auth_token');
@@ -806,7 +811,10 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
       hipertension: false,
       diabetes: false,
       cirugia: false,
+      alergias: false,
+      familiares: false
     });
+    setClinFamAntecedents('');
 
     setIsClinicalFormOpen(true);
   };
@@ -1335,7 +1343,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 </div>
                 <div className="space-y-1.5 pt-1">
                   <label className="font-bold text-on-surface-variant block text-xs">Posibles Enfermedades / Antecedentes (Marcar las que apliquen)</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#141517] p-3 rounded-md border border-[#2d3036]">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#141517] p-3 rounded-md border border-[#2d3036]">
                     <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
                       <input type="checkbox" checked={diseaseCheckboxes.estrabismo} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, estrabismo: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
                       <span>Estrabismo</span>
@@ -1360,10 +1368,18 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       <input type="checkbox" checked={diseaseCheckboxes.cirugia} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, cirugia: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
                       <span>Cirugía Ocular</span>
                     </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
+                      <input type="checkbox" checked={diseaseCheckboxes.alergias} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, alergias: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
+                      <span>Alergias</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
+                      <input type="checkbox" checked={diseaseCheckboxes.familiares} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, familiares: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
+                      <span>Antecedentes Familiares</span>
+                    </label>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <label className="font-bold text-on-surface-variant">Notas Antecedentes Médicos</label>
                     <input
@@ -1371,7 +1387,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="Ej: Hipertensión en tratamiento..."
                       value={clinMedAntecedents}
                       onChange={(e) => setClinMedAntecedents(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1381,103 +1397,135 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="Ej: Cirugía Láser en 2020..."
                       value={clinOcuAntecedents}
                       onChange={(e) => setClinOcuAntecedents(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-bold text-on-surface-variant">Alergias & Antecedentes Familiares</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Glaucoma familiar / Alergia a gotas..."
+                      value={clinFamAntecedents}
+                      onChange={(e) => setClinFamAntecedents(e.target.value)}
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* 3. Examen Físico Ocular */}
-              <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-3">
-                <h4 className="font-bold text-xs text-primary uppercase tracking-wider">3. Examen Clínico (Agudeza Visual & Tonometría)</h4>
+              {/* 3. Examen Físico Ocular & Refracción */}
+              <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-4">
+                <h4 className="font-bold text-xs text-primary uppercase tracking-wider">3. Examen Clínico Ocular (Comparativa Examen Anterior vs Examen Reciente)</h4>
                 
-                {/* Examen Anterior (Fórmula previa del paciente) */}
-                {formulasHistory.length > 0 && (
-                  <div className="bg-[#141517] p-3 rounded-md border border-[#2d3036] space-y-2">
-                    <div className="flex justify-between items-center border-b border-[#2d3036] pb-1">
-                      <span className="font-bold text-[10px] uppercase text-amber-400">Examen Anterior ({new Date(formulasHistory[0].created_at).toLocaleDateString('es-CO')})</span>
+                {/* BLOQUE EXAMEN ANTERIOR */}
+                <div className="bg-[#141517] p-3.5 rounded-md border border-[#2d3036] space-y-3">
+                  <div className="flex justify-between items-center border-b border-[#2d3036] pb-1.5">
+                    <span className="font-bold text-xs uppercase text-amber-400 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px]">history</span>
+                      Examen Anterior {formulasHistory.length > 0 ? `(${new Date(formulasHistory[0].created_at).toLocaleDateString('es-CO')})` : ''}
+                    </span>
+                  </div>
+
+                  {formulasHistory.length > 0 ? (
+                    <div className="space-y-3.5 text-xs">
+                      {/* OD Anterior */}
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-primary uppercase font-mono">OJO DERECHO (O.D.)</p>
+                        <div className="grid grid-cols-6 gap-1 text-center text-[10px] font-bold text-on-surface-variant uppercase font-mono border-b border-[#2d3036] pb-1">
+                          <span>Esf</span><span>Cil</span><span>Eje</span><span>Add</span><span>Prisma</span><span>AV</span>
+                        </div>
+                        <div className="grid grid-cols-6 gap-1 text-center font-bold font-mono text-on-surface pt-1 bg-[#181a1c] p-2 rounded-md border border-[#2d3036]">
+                          <span>{formulasHistory[0].od_sphere || '---'}</span>
+                          <span>{formulasHistory[0].od_cylinder || '---'}</span>
+                          <span>{formulasHistory[0].od_axis ? `${formulasHistory[0].od_axis}°` : '---'}</span>
+                          <span>{formulasHistory[0].od_addition || '---'}</span>
+                          <span>{formulasHistory[0].od_prism || '---'}</span>
+                          <span>{formulasHistory[0].od_av || '---'}</span>
+                        </div>
+                      </div>
+
+                      {/* OI Anterior */}
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-secondary uppercase font-mono">OJO IZQUIERDO (O.I.)</p>
+                        <div className="grid grid-cols-6 gap-1 text-center text-[10px] font-bold text-on-surface-variant uppercase font-mono border-b border-[#2d3036] pb-1">
+                          <span>Esf</span><span>Cil</span><span>Eje</span><span>Add</span><span>Prisma</span><span>AV</span>
+                        </div>
+                        <div className="grid grid-cols-6 gap-1 text-center font-bold font-mono text-on-surface pt-1 bg-[#181a1c] p-2 rounded-md border border-[#2d3036]">
+                          <span>{formulasHistory[0].oi_sphere || '---'}</span>
+                          <span>{formulasHistory[0].oi_cylinder || '---'}</span>
+                          <span>{formulasHistory[0].oi_axis ? `${formulasHistory[0].oi_axis}°` : '---'}</span>
+                          <span>{formulasHistory[0].oi_addition || '---'}</span>
+                          <span>{formulasHistory[0].oi_prism || '---'}</span>
+                          <span>{formulasHistory[0].oi_av || '---'}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono text-on-surface">
-                      <div><strong>OD:</strong> Esf: {formulasHistory[0].od_sphere || '---'} | Cil: {formulasHistory[0].od_cylinder || '---'} | Eje: {formulasHistory[0].od_axis ? `${formulasHistory[0].od_axis}°` : '---'} | AV: {formulasHistory[0].od_av || '---'}</div>
-                      <div><strong>OI:</strong> Esf: {formulasHistory[0].oi_sphere || '---'} | Cil: {formulasHistory[0].oi_cylinder || '---'} | Eje: {formulasHistory[0].oi_axis ? `${formulasHistory[0].oi_axis}°` : '---'} | AV: {formulasHistory[0].oi_av || '---'}</div>
+                  ) : (
+                    <div className="p-3 text-center text-xs text-on-surface-variant italic border border-dashed border-[#2d3036] rounded-md">
+                      Sin exámenes anteriores registrados en el historial de este paciente.
                     </div>
+                  )}
+                </div>
+
+                {/* BLOQUE EXAMEN RECIENTE / ACTUAL */}
+                <div className="bg-[#141517] p-3.5 rounded-md border border-[#2d3036] space-y-3">
+                  <div className="flex justify-between items-center border-b border-[#2d3036] pb-1.5">
+                    <span className="font-bold text-xs uppercase text-primary flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px]">edit_note</span>
+                      Examen Reciente / Actual ({new Date().toLocaleDateString('es-CO')})
+                    </span>
                   </div>
-                )}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
-                  <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant text-[10px]">AV OD</label>
-                    <input
-                      type="text"
-                      placeholder="20/20"
-                      value={clinAvOd}
-                      onChange={(e) => setClinAvOd(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant text-[10px]">AV OI</label>
-                    <input
-                      type="text"
-                      placeholder="20/20"
-                      value={clinAvOi}
-                      onChange={(e) => setClinAvOi(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant text-[10px]">Tonometría OD (PIO)</label>
-                    <input
-                      type="text"
-                      placeholder="14 mmHg"
-                      value={clinTonoOd}
-                      onChange={(e) => setClinTonoOd(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant text-[10px]">Tonometría OI (PIO)</label>
-                    <input
-                      type="text"
-                      placeholder="14 mmHg"
-                      value={clinTonoOi}
-                      onChange={(e) => setClinTonoOi(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
-                    />
+
+                  <div className="space-y-3.5">
+                    {/* OD Actual */}
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold text-primary uppercase font-mono">OJO DERECHO (O.D.)</p>
+                      <div className="grid grid-cols-6 gap-1.5 text-center text-[10px] font-bold text-on-surface-variant uppercase font-mono">
+                        <div>Esf</div><div>Cil</div><div>Eje</div><div>Add</div><div>Prisma</div><div>AV</div>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1.5 font-mono">
+                        <input type="text" placeholder="-1.50" value={odSphere} onChange={(e) => setOdSphere(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                        <input type="text" placeholder="-0.75" value={odCylinder} onChange={(e) => setOdCylinder(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                        <input type="text" placeholder="90°" value={odAxis} onChange={(e) => setOdAxis(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                        <input type="text" placeholder="+1.50" value={odAddition} onChange={(e) => setOdAddition(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                        <input type="text" placeholder="Prisma" value={odPrism} onChange={(e) => setOdPrism(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                        <input type="text" placeholder="20/20" value={clinAvOd} onChange={(e) => setClinAvOd(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                      </div>
+                    </div>
+
+                    {/* OI Actual */}
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold text-secondary uppercase font-mono">OJO IZQUIERDO (O.I.)</p>
+                      <div className="grid grid-cols-6 gap-1.5 text-center text-[10px] font-bold text-on-surface-variant uppercase font-mono">
+                        <div>Esf</div><div>Cil</div><div>Eje</div><div>Add</div><div>Prisma</div><div>AV</div>
+                      </div>
+                      <div className="grid grid-cols-6 gap-1.5 font-mono">
+                        <input type="text" placeholder="-1.75" value={oiSphere} onChange={(e) => setOiSphere(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                        <input type="text" placeholder="-0.50" value={oiCylinder} onChange={(e) => setOiCylinder(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                        <input type="text" placeholder="85°" value={oiAxis} onChange={(e) => setOiAxis(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                        <input type="text" placeholder="+1.50" value={oiAddition} onChange={(e) => setOiAddition(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                        <input type="text" placeholder="Prisma" value={oiPrism} onChange={(e) => setOiPrism(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                        <input type="text" placeholder="20/20" value={clinAvOi} onChange={(e) => setClinAvOi(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs text-center text-on-surface outline-none focus:border-primary" />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* TONOMETRÍA PIO & OFTALMOSCOPÍA */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant">Refracción Prescrita OD</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: -1.50 -0.50 x 180°"
-                      value={clinRefrOd}
-                      onChange={(e) => setClinRefrOd(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary font-mono"
-                    />
+                    <label className="font-bold text-on-surface-variant text-[10px]">Tonometría OD (PIO)</label>
+                    <input type="text" placeholder="14 mmHg" value={clinTonoOd} onChange={(e) => setClinTonoOd(e.target.value)} className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary font-mono" />
                   </div>
                   <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant">Refracción Prescrita OI</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: -1.25 -0.75 x 175°"
-                      value={clinRefrOi}
-                      onChange={(e) => setClinRefrOi(e.target.value)}
-                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary font-mono"
-                    />
+                    <label className="font-bold text-on-surface-variant text-[10px]">Tonometría OI (PIO)</label>
+                    <input type="text" placeholder="14 mmHg" value={clinTonoOi} onChange={(e) => setClinTonoOi(e.target.value)} className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary font-mono" />
                   </div>
                 </div>
 
                 <div className="space-y-1">
                   <label className="font-bold text-on-surface-variant">Oftalmoscopía / Biomicroscopía (Fondo de ojo, cristalino)</label>
-                  <input
-                    type="text"
-                    placeholder="Ej: Medios transparentes, papila de bordes nítidos..."
-                    value={clinOphthalNotes}
-                    onChange={(e) => setClinOphthalNotes(e.target.value)}
-                    className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary"
-                  />
+                  <input type="text" placeholder="Ej: Medios transparentes, papila de bordes nítidos..." value={clinOphthalNotes} onChange={(e) => setClinOphthalNotes(e.target.value)} className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary" />
                 </div>
               </div>
 

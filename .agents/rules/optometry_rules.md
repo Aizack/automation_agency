@@ -7,10 +7,10 @@ Toda modificación al módulo de Optometría (`SaaSErpFormulas.tsx`), CRM (`SaaS
    - **NO** colocar recuadros de "Examen Anterior" en la pantalla principal externa.
 
 2. **Modal Emergente de Historia Clínica:**
-   - La comparativa de **Examen Anterior (Fecha previa)** debe ir **DENTRO** de la Sección 3 del modal de Historia Clínica.
+   - **Comparativa Estructurada en Columnas:** En la Sección 3, tanto el Examen Anterior como el Examen Reciente DEBEN estructurarse en 6 columnas con cabeceras explícitas (`ESF | CIL | EJE | ADD | PRISMA | AV`) para OD y OI.
    - **Autocompletado de Fórmula:** Al hacer clic en `+ Nueva Historia Clínica`, los campos de refracción se cargan automáticamente sin re-digitación manual.
    - **Visualización Directa:** `👁️ Ver Historia Clínica` abre directamente el overlay emergente sin cambiar de pestaña.
-   - **Antecedentes:** Debe incluir la grilla de checkboxes (`Estrabismo`, `Carnosidad / Pterigión`, `Cataratas`, `Hipertensión`, `Diabetes`, `Cirugía Ocular`).
+   - **Antecedentes:** Debe incluir la grilla de checkboxes (`Estrabismo`, `Carnosidad / Pterigión`, `Cataratas`, `Hipertensión`, `Diabetes`, `Cirugía Ocular`, `Alergias`, `Antecedentes Familiares`) y notas para Alergias / Familiares.
 
 3. **Impresión Institucional:**
    - La fórmula debe poder imprimirse desde Optometría y desde el perfil del cliente en Recepción/CRM (`SaaSErpCRM.tsx`).

@@ -1,16 +1,16 @@
 # Graph Report - Bot multi-tenant  (2026-09-02)
 
 ## Corpus Check
-- 160 files · ~298,498 words
+- 162 files · ~300,156 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1227 nodes · 1620 edges · 117 communities (98 shown, 19 thin omitted)
+- 1235 nodes · 1626 edges · 112 communities (95 shown, 17 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 7 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a7b396d2`
+- Built from commit: `8dc1234b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -43,9 +43,9 @@
 - 🧪 GUÍA DE TESTING: Sistema de Gestión de Errores y Logging
 - Plan de Implementación: Módulo Contable, Métodos de Pago y Rotación de Inventario
 - shutdownManager.ts
-- scripts
+- pdfGeneratorService.ts
 - 🚨 Error 502 Bad Gateway - Diagnosis & Solutions
-- server
+- scheduler.ts
 - SaaSErpMarketing.tsx
 - SaaSErpSuppliers.tsx
 - logger.ts
@@ -89,7 +89,7 @@
 - stitch_unified_client_platform dark mode/DESIGN.md
 - Arquitectura del Sistema: Agencia de Automatización con IA
 - 4. Modelo de base de datos recomendado
-- scheduler.ts
+- Normas Permanentes y Documentación Técnica: Optometría, Historia Clínica e Impresión
 - Calibración de impresión térmica - rollo de 2 stickers por fila
 - 2. Capas del sistema
 - 📜 Sistema de Trazabilidad Global y Bitácora de Auditoría (Audit Trail 360°)
@@ -118,13 +118,8 @@
 - 7. Optimización de ruta
 - rules/graphify.md
 - workflows/graphify.md
-- package.json
-- localKnowledge.ts
-- envValidator.ts
+- optometry_rules.md
 - QUICK_START.md
-- dotenv
-- qrcode-terminal
-- @types/bcrypt
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 40 edges
@@ -147,25 +142,25 @@
   dashboard/src/components/AdminDashboard.tsx → dashboard/src/utils/api.ts
 - `BankAccountsManager()` --calls--> `authFetch()`  [EXTRACTED]
   dashboard/src/components/SaaSErpStoreSettings.tsx → dashboard/src/utils/api.ts
-- `initializeWhatsAppClient()` --calls--> `routeIncomingMessage()`  [EXTRACTED]
-  src/services/whatsapp.ts → src/core/router.ts
+- `server` --calls--> `initDatabase()`  [EXTRACTED]
+  src/server.ts → src/database/initDb.ts
 
 ## Import Cycles
 - 2-file cycle: `src/server.ts -> src/services/shutdownManager.ts -> src/server.ts`
 
-## Communities (117 total, 19 thin omitted)
+## Communities (112 total, 17 thin omitted)
 
 ### Community 0 - "postgres.ts"
-Cohesion: 0.07
-Nodes (44): runValidation(), AIAgent, genAI, ClientConfig, getClientConfigById(), getClientConfigByPhone(), pendingAgentConfirmations, pendingCustomerConfirmations (+36 more)
+Cohesion: 0.06
+Nodes (46): runValidation(), AIAgent, genAI, ClientConfig, getClientConfigById(), getClientConfigByPhone(), pendingAgentConfirmations, pendingCustomerConfirmations (+38 more)
 
 ### Community 1 - "whatsapp.ts"
-Cohesion: 0.19
-Nodes (16): updateClient(), main(), getS3Client(), isR2Configured(), uploadTenantFile(), autoRestoreSavedWhatsAppSessions(), connectWhatsApp(), getWhatsAppState() (+8 more)
+Cohesion: 0.15
+Nodes (15): KNOWLEDGE_BASE_DIR, listLocalFiles(), saveLocalFile(), autoRestoreSavedWhatsAppSessions(), client, connectWhatsApp(), getWhatsAppState(), logoutWhatsApp() (+7 more)
 
 ### Community 2 - "dependencies"
-Cohesion: 0.11
-Nodes (19): @aws-sdk/client-s3, bcrypt, express, @google/generative-ai, googleapis, jsonwebtoken, multer, dependencies (+11 more)
+Cohesion: 0.08
+Nodes (25): @aws-sdk/client-s3, bcrypt, dotenv, express, @google/generative-ai, googleapis, jsonwebtoken, multer (+17 more)
 
 ### Community 3 - "SaaSErpInventory.tsx"
 Cohesion: 0.09
@@ -204,8 +199,8 @@ Cohesion: 0.05
 Nodes (37): 1. Levantar el Contenedor, 2. Confirmar que Está Funcionando, 3. Probar en Frontend, 4 Nuevos Endpoints REST, 4. Verificar en BD, ✅ Admin ve alerta de desconexión WhatsApp, ✅ Alerta falsa (false positive), Antes vs Después (+29 more)
 
 ### Community 12 - "devDependencies"
-Cohesion: 0.10
-Nodes (21): nodemon, devDependencies, nodemon, ssh2, ts-node, @types/express, @types/jsonwebtoken, @types/multer (+13 more)
+Cohesion: 0.06
+Nodes (33): nodemon, description, devDependencies, nodemon, ssh2, ts-node, @types/express, @types/jsonwebtoken (+25 more)
 
 ### Community 13 - "StructuredLogger"
 Cohesion: 0.23
@@ -267,17 +262,17 @@ Nodes (23): 1.1 Cambio de nomenclatura en la UI y BD, 1.2 Campos adicionales par
 Cohesion: 0.29
 Nodes (9): runTest(), STATE_FILE_PATH, stopEscalationService(), captureSystemState(), gracefulShutdown(), registerShutdownHandlers(), restoreSystemState(), STATE_FILE_PATH (+1 more)
 
-### Community 28 - "scripts"
-Cohesion: 0.25
-Nodes (8): scripts, build:frontend, dev, dev:api, start, start:api, start:api:ui, start:ui
+### Community 28 - "pdfGeneratorService.ts"
+Cohesion: 0.36
+Nodes (7): main(), generatePOSThermalTicketHTML(), getInvoicePrintData(), InvoicePrintData, getS3Client(), isR2Configured(), uploadTenantFile()
 
 ### Community 29 - "🚨 Error 502 Bad Gateway - Diagnosis & Solutions"
 Cohesion: 0.10
 Nodes (20): **1. Nginx Proxy NO está corriendo**, **2. Configuración de Nginx incorrecta**, **3. Firewall bloqueando puerto 3000**, **4. DNS/Hosts file mal configurado**, 🔧 Configuración Nginx de Referencia, 📊 Diagrama del Flujo, 🚨 Error 502 Bad Gateway - Diagnosis & Solutions, **PASO 1: Confirmar que localhost funciona** (+12 more)
 
-### Community 30 - "server"
-Cohesion: 0.33
-Nodes (5): runAutoFixAgent(), TicketFixResult, resolveProductClientId(), server, startEscalationService()
+### Community 30 - "scheduler.ts"
+Cohesion: 0.24
+Nodes (9): runAutoFixAgent(), TicketFixResult, resolveProductClientId(), server, startEscalationService(), checkAndSendReminders(), delay(), formatCurrency() (+1 more)
 
 ### Community 31 - "SaaSErpMarketing.tsx"
 Cohesion: 0.40
@@ -403,9 +398,9 @@ Nodes (7): 1. Diseño General (Multi-tenant), 2. Estructura de Directorios Modul
 Cohesion: 0.25
 Nodes (8): 4.1. Tabla `clients`, 4.2. Tabla `users`, 4.3. Tabla `user_client_roles`, 4.4. Tabla `employees`, 4.5. Tabla `crm_customers`, 4.6. Tabla `invoices`, 4.7. Tabla `lab_jobs`, 4. Modelo de base de datos recomendado
 
-### Community 76 - "scheduler.ts"
+### Community 76 - "Normas Permanentes y Documentación Técnica: Optometría, Historia Clínica e Impresión"
 Cohesion: 0.33
-Nodes (6): checkAndSendReminders(), delay(), formatCurrency(), startScheduler(), client, whatsappState
+Nodes (5): 1. Pestaña "Optometría y Diagnósticos" (Formulario de Trabajo Rápido), 2. Modal Emergente "Historia Clínica Optométrica", 3. Sistema de Impresión Institucional (Membrete Oficial), 4. Reglas Estéticas Universales, Normas Permanentes y Documentación Técnica: Optometría, Historia Clínica e Impresión
 
 ### Community 77 - "Calibración de impresión térmica - rollo de 2 stickers por fila"
 Cohesion: 0.25
@@ -507,37 +502,25 @@ Nodes (4): 3.1. Usuario global vs negocio, 3.2. Empleado vs usuario, 3.3. Client
 Cohesion: 0.67
 Nodes (3): 7. Optimización de ruta, Cuándo sí usar Google Maps, Método recomendado
 
-### Community 106 - "package.json"
-Cohesion: 0.40
-Nodes (4): description, main, name, version
-
-### Community 107 - "localKnowledge.ts"
-Cohesion: 0.50
-Nodes (3): KNOWLEDGE_BASE_DIR, listLocalFiles(), saveLocalFile()
-
-### Community 108 - "envValidator.ts"
-Cohesion: 0.50
-Nodes (3): REQUIRED_VARS, validateEnv(), WARN_VARS
-
 ## Knowledge Gaps
-- **696 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+691 more)
+- **701 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+696 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `SaaSErpInventory.tsx`, `ClientDashboard.tsx`, `authFetch`, `RestaurantWaiterPortal.tsx`, `SaaSErpEmployees.tsx`, `plugins`, `EnterprisePlanningModule.tsx`, `SaaSErpAccounting.tsx`, `SaaSErpAppointments.tsx`, `SaaSErpInvoices.tsx`, `SaaSErpMarketing.tsx`, `SaaSErpSuppliers.tsx`, `AdminDashboard.tsx`, `SaaSErpFormulas.tsx`, `SaaSErpInvoices2.tsx`, `SaaSErpCampaigns.tsx`, `SaaSErpUsers.tsx`, `SaaSErpDomicilios.tsx`, `SaaSErpSupportDocuments.tsx`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Why does `Implementación técnica del flujo de laboratorio y domicilios óptica` connect `Implementación técnica del flujo de laboratorio y domicilios óptica` to `INFORME_ANALISIS_FASES.md`?**
-  _High betweenness centrality (0.006) - this node is a cross-community bridge._
-- **Why does `Informe de análisis técnico por fases` connect `Informe de análisis técnico por fases` to `INFORME_ANALISIS_FASES.md`, `12. Recomendación de optimización por prioridad`, `10. Fase 8: WhatsApp, IA y automatización`, `11. Fase 9: Frontend, navegación y experiencia de usuario`, `3. Fase 1: Infraestructura base y arranque del sistema`, `4. Fase 2: Multi-tenancy, usuarios, roles y permisos`, `5. Fase 3: CRM, clientes y relación con facturación`, `6. Fase 4: Facturación, cartera y pagos`, `7. Fase 5: Inventario, proveedores y compras`, `8. Fase 6: Laboratorio y domicilios`, `9. Fase 7: Empleados, departments, roles y RRHH`?**
-  _High betweenness centrality (0.004) - this node is a cross-community bridge._
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
+- **Why does `Modelo multi-tenant: usuarios, roles, negocio y CRM` connect `Modelo multi-tenant: usuarios, roles, negocio y CRM` to `INFORME_ANALISIS_FASES.md`, `4. Modelo de base de datos recomendado`, `3. Relación entre conceptos`, `2. Capas del sistema`?**
+  _High betweenness centrality (0.005) - this node is a cross-community bridge._
 - **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
-  _696 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _701 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `postgres.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.0654320987654321 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06347340581839553 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08 - nodes in this community are weakly interconnected._
 - **Should `SaaSErpInventory.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
