@@ -945,11 +945,6 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         })}
                                     </select>
                                 </div>
-                            </div>
-
-                            {/* Visit Reason Labels */}
-                            <div className="space-y-1.5">
-                                <label className="block text-xs font-bold text-on-surface-variant">Motivo de la Visita</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {[
                                         { key: 'examen_vista', label: 'Examen Vista' },
@@ -1182,31 +1177,6 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                             );
                                         })}
                                     </select>
-                                </div>
-                            </div>
-
-                            {/* Visit Reason Labels */}
-                            <div className="space-y-1.5">
-                                <label className="block text-xs font-bold text-on-surface-variant">Motivo de la Visita</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { key: 'examen_vista', label: 'Examen Vista' },
-                                        { key: 'venta_lentes', label: 'Venta Lentes' },
-                                        { key: 'otros', label: 'Otros' }
-                                    ].map(opt => (
-                                        <button
-                                            key={opt.key}
-                                            type="button"
-                                            onClick={() => setVisitReason(opt.key)}
-                                            className={`py-2 px-3 rounded-md border text-xs font-bold transition cursor-pointer text-center ${
-                                                visitReason === opt.key 
-                                                    ? 'bg-primary text-white border-primary shadow' 
-                                                    : 'bg-[#181a1c] border-[#2d3036] text-on-surface-variant hover:bg-surface-variant/30'
-                                            }`}
-                                        >
-                                            {opt.label}
-                                        </button>
-                                    ))}
                                 </div>
                             </div>
 

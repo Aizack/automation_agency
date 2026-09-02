@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAppointments.tsx": {
-    "mtime": 1788329642.2987306,
-    "seen": 1788329762.649434,
-    "ast_hash": "6d1b37992c53300af4a2ee9508b5eaf5",
+    "mtime": 1788330241.1786878,
+    "seen": 1788330275.4613883,
+    "ast_hash": "b3e8ed488b71352c8a64238f890221d4",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAuditLogs.tsx": {
@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpFormulas.tsx": {
-    "mtime": 1788329729.9753754,
-    "seen": 1788329762.6494496,
-    "ast_hash": "fc6bbc0e64e27844e7733b92e0f70deb",
+    "mtime": 1788330199.532012,
+    "seen": 1788330275.461405,
+    "ast_hash": "ac3781a16d9355ab50adef8b4af6ba2c",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {

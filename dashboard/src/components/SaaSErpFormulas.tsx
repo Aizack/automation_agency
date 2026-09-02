@@ -32,10 +32,12 @@ interface Formula {
   od_cylinder: string | null;
   od_axis: string | null;
   od_addition: string | null;
+  od_av?: string | null;
   oi_sphere: string | null;
   oi_cylinder: string | null;
   oi_axis: string | null;
   oi_addition: string | null;
+  oi_av?: string | null;
   dp_distance: string | null;
   height: string | null;
   notes: string | null;
@@ -840,13 +842,76 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
         <div className="lg:col-span-2 space-y-6">
           {selectedCustomer ? (
             <>
-              <form onSubmit={handleSaveFormula} className="bg-[#141517] p-5 rounded-2xl border border-[#2d3036] space-y-4">
-                <h4 className="font-bold text-sm text-on-surface border-b border-[#2d3036] pb-2 flex justify-between items-center">
-                  <span>Nueva Fórmula Óptica</span>
-                  {saveSuccess && <span className="text-xs text-green-500 font-normal">¡Guardado con éxito!</span>}
-                </h4>
+              {/* EXAMEN ANTERIOR (FECHA PREVIA) */}
+              <div className="bg-[#141517] p-5 rounded-2xl border border-[#2d3036] space-y-3">
+                <div className="flex justify-between items-center border-b border-[#2d3036] pb-2">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px]">history</span>
+                    <span>Examen Anterior {formulasHistory.length > 0 ? `(${new Date(formulasHistory[0].created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })})` : ''}</span>
+                  </h4>
+                  {formulasHistory.length > 0 && (
+                    <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-md font-mono font-bold">
+                      Fórmula Anterior
+                    </span>
+                  )}
+                </div>
 
-                {/* Examen Reciente/Nuevo con encabezados estructurados */}
+                {formulasHistory.length > 0 ? (
+                  <div className="space-y-3 font-mono text-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* O.D. Anterior */}
+                      <div className="bg-[#181a1c] p-3 rounded-md border border-[#2d3036] space-y-1.5">
+                        <p className="font-bold text-primary text-[10px] uppercase">OJO DERECHO (O.D.)</p>
+                        <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-bold text-on-surface-variant uppercase border-b border-[#2d3036] pb-1">
+                          <span>Esf</span>
+                          <span>Cil</span>
+                          <span>Eje</span>
+                          <span>AV</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1 text-center font-bold text-on-surface pt-1">
+                          <span>{formulasHistory[0].od_sphere || '---'}</span>
+                          <span>{formulasHistory[0].od_cylinder || '---'}</span>
+                          <span>{formulasHistory[0].od_axis ? `${formulasHistory[0].od_axis}°` : '---'}</span>
+                          <span>{formulasHistory[0].od_av || '---'}</span>
+                        </div>
+                      </div>
+
+                      {/* O.I. Anterior */}
+                      <div className="bg-[#181a1c] p-3 rounded-md border border-[#2d3036] space-y-1.5">
+                        <p className="font-bold text-secondary text-[10px] uppercase">OJO IZQUIERDO (O.I.)</p>
+                        <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-bold text-on-surface-variant uppercase border-b border-[#2d3036] pb-1">
+                          <span>Esf</span>
+                          <span>Cil</span>
+                          <span>Eje</span>
+                          <span>AV</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1 text-center font-bold text-on-surface pt-1">
+                          <span>{formulasHistory[0].oi_sphere || '---'}</span>
+                          <span>{formulasHistory[0].oi_cylinder || '---'}</span>
+                          <span>{formulasHistory[0].oi_axis ? `${formulasHistory[0].oi_axis}°` : '---'}</span>
+                          <span>{formulasHistory[0].oi_av || '---'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-xs text-on-surface-variant italic border border-dashed border-[#2d3036] rounded-md bg-[#181a1c]">
+                    No registra exámenes anteriores en el historial de este paciente.
+                  </div>
+                )}
+              </div>
+
+              {/* EXAMEN RECIENTE / NUEVO (FECHA ACTUAL) */}
+              <form onSubmit={handleSaveFormula} className="bg-[#141517] p-5 rounded-2xl border border-[#2d3036] space-y-4">
+                <div className="flex justify-between items-center border-b border-[#2d3036] pb-2">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-primary flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px]">edit_note</span>
+                    <span>Examen Reciente / Actual ({new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })})</span>
+                  </h4>
+                  {saveSuccess && <span className="text-xs text-green-500 font-bold">¡Guardado con éxito!</span>}
+                </div>
+
+                {/* Encabezados estructurados */}
                 <div className="space-y-4">
                   {/* Ojo Derecho */}
                   <div className="space-y-2">
