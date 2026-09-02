@@ -268,14 +268,14 @@ export const initDatabase = async () => {
         await pool.query(`
             UPDATE appointments
             SET status = 'scheduled'
-            WHERE status IS NULL OR status NOT IN ('scheduled', 'completed', 'cancelled', 'no_show');
+            WHERE status IS NULL OR status NOT IN ('scheduled', 'confirmed', 'completed', 'cancelled', 'no_show');
         `);
 
         await pool.query(`
             ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointments_status_check;
             ALTER TABLE appointments
               ADD CONSTRAINT appointments_status_check
-              CHECK (status IN ('scheduled', 'completed', 'cancelled', 'no_show'));
+              CHECK (status IN ('scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'));
         `);
 
         await pool.query(`
@@ -759,15 +759,27 @@ export const initDatabase = async () => {
             CREATE TABLE IF NOT EXISTS product_variants (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                client_id VARCHAR(50) REFERENCES clients(id) ON DELETE CASCADE,
                 variant_name VARCHAR(100) NOT NULL,
                 color_hex VARCHAR(30),
                 sku VARCHAR(100),
+                price NUMERIC(10,2),
+                cost_price NUMERIC(10,2) DEFAULT 0.00,
                 stock INT NOT NULL DEFAULT 0,
                 min_stock INT NOT NULL DEFAULT 2,
                 image_url TEXT,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             );
+
+            ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS client_id VARCHAR(50) REFERENCES clients(id) ON DELETE CASCADE;
+            ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS color_hex VARCHAR(30);
+            ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS price NUMERIC(10,2);
+            ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10,2) DEFAULT 0.00;
+
+            UPDATE product_variants pv 
+            SET client_id = p.client_id 
+            FROM products p 
+            WHERE pv.product_id = p.id AND (pv.client_id IS NULL OR pv.client_id = '');
         `);
 
         await pool.query(`
@@ -1171,6 +1183,7 @@ export const initDatabase = async () => {
             ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS client_timestamp TIMESTAMP;
             ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS server_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
             ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS clock_drift_seconds INT DEFAULT 0;
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS professional_license VARCHAR(50);
 
             CREATE TABLE IF NOT EXISTS patient_clinical_records (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1182,18 +1195,59 @@ export const initDatabase = async () => {
                 consultation_reason TEXT,
                 medical_antecedents TEXT,
                 ocular_antecedents TEXT,
+                has_strabismus BOOLEAN DEFAULT FALSE,
+                strabismus_notes TEXT,
+                has_pterygium BOOLEAN DEFAULT FALSE,
+                pterygium_notes TEXT,
+                has_cataract BOOLEAN DEFAULT FALSE,
+                cataract_notes TEXT,
+                surgeries_antecedents TEXT,
+                allergies_antecedents TEXT,
+                systemic_antecedents TEXT,
+                family_antecedents TEXT,
+                previous_rx_od VARCHAR(100),
+                previous_rx_oi VARCHAR(100),
                 visual_acuity_od VARCHAR(50),
                 visual_acuity_oi VARCHAR(50),
                 refraction_od VARCHAR(100),
                 refraction_oi VARCHAR(100),
+                retinoscopy_od VARCHAR(100),
+                retinoscopy_oi VARCHAR(100),
+                subjective_od VARCHAR(100),
+                subjective_oi VARCHAR(100),
                 tonometry_od VARCHAR(50),
                 tonometry_oi VARCHAR(50),
+                biomicroscopy_notes TEXT,
+                pupillary_reflexes TEXT,
                 ophthalmoscopy_notes TEXT,
                 diagnosis TEXT,
+                cie10_code VARCHAR(20),
                 treatment_plan TEXT,
                 optometrist_name VARCHAR(100),
+                professional_license VARCHAR(50),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS has_strabismus BOOLEAN DEFAULT FALSE;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS strabismus_notes TEXT;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS has_pterygium BOOLEAN DEFAULT FALSE;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS pterygium_notes TEXT;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS has_cataract BOOLEAN DEFAULT FALSE;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS cataract_notes TEXT;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS surgeries_antecedents TEXT;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS allergies_antecedents TEXT;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS systemic_antecedents TEXT;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS family_antecedents TEXT;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS previous_rx_od VARCHAR(100);
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS previous_rx_oi VARCHAR(100);
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS retinoscopy_od VARCHAR(100);
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS retinoscopy_oi VARCHAR(100);
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS subjective_od VARCHAR(100);
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS subjective_oi VARCHAR(100);
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS biomicroscopy_notes TEXT;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS pupillary_reflexes TEXT;
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS cie10_code VARCHAR(20);
+            ALTER TABLE patient_clinical_records ADD COLUMN IF NOT EXISTS professional_license VARCHAR(50);
 
             CREATE TABLE IF NOT EXISTS monthly_fixed_expenses (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1244,20 +1298,6 @@ export const initDatabase = async () => {
                 stack_trace TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-
-            -- Tabla de Variantes de Producto (Colores, Tallas, Gradaciones)
-            CREATE TABLE IF NOT EXISTS product_variants (
-                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-                variant_name VARCHAR(100) NOT NULL,
-                sku VARCHAR(50),
-                price NUMERIC(10,2),
-                cost_price NUMERIC(10,2) DEFAULT 0.00,
-                stock INT NOT NULL DEFAULT 0,
-                min_stock INT NOT NULL DEFAULT 1,
-                image_url TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
             -- Tabla de Comisiones de Vendedores (Cruzadas con Metas)

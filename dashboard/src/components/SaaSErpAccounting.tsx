@@ -151,28 +151,28 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
   const totalFixedExpensesSum = fixedExpenses.reduce((acc, curr) => acc + parseFloat(curr.amount || '0'), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-white">
       {/* Header & Período Selector */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-outline/10 pb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#222428] pb-4">
         <div>
-          <h2 className="text-xl font-bold text-on-surface flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">bar_chart</span>
-            Contabilidad y Análisis Financiero
+          <h2 className="text-xl font-extrabold text-[#eab308] flex items-center gap-2" style={{ color: '#eab308' }}>
+            <span className="material-symbols-outlined text-[#eab308]">bar_chart</span>
+            CONTABILIDAD Y ANÁLISIS FINANCIERO
           </h2>
-          <p className="text-xs text-on-surface-variant opacity-75">
+          <p className="text-xs text-gray-400">
             Reporte consolidado de ingresos, gastos fijos operativos, desglose por métodos de pago y tendencias.
           </p>
         </div>
 
         {/* Período Tabs & Botón Agregar Gasto Fijo */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setIsExpenseModalOpen(true)}
-            className="px-3.5 py-1.5 bg-primary text-on-primary font-bold text-xs rounded-xl flex items-center gap-1.5 hover:opacity-90 transition cursor-pointer shadow-sm"
+            className="px-3 py-1.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] rounded-md flex items-center gap-1 transition cursor-pointer shadow border-0"
           >
             <span className="material-symbols-outlined text-[16px]">add_circle</span>
-            Registrar Gasto Fijo
+            REGISTRAR GASTO FIJO
           </button>
 
           <div className="flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline/20 p-1 rounded-xl">

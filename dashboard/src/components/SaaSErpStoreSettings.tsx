@@ -71,31 +71,31 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center border-b border-outline/10 pb-4">
+    <div className="space-y-6 text-white">
+      <div className="flex justify-between items-center border-b border-[#222428] pb-4">
         <div>
-          <h3 className="font-headline-md text-headline-md text-on-surface">Configuración de Perfil Comercial</h3>
-          <p className="text-on-surface-variant text-body-md opacity-70">
+          <h3 className="font-extrabold text-xl text-[#eab308]" style={{ color: '#eab308' }}>CONFIGURACIÓN DE PERFIL COMERCIAL</h3>
+          <p className="text-xs text-gray-400">
             Define la información tributaria y de contacto que aparecerá en tus facturas impresas.
           </p>
         </div>
       </div>
 
       {success && (
-        <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-500 rounded-xl text-xs font-semibold flex items-center gap-2">
+        <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-xs font-semibold flex items-center gap-2">
           <span className="material-symbols-outlined text-[16px]">check_circle</span>
           ¡Configuración guardada exitosamente!
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-semibold flex items-center gap-2">
+        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-xs font-semibold flex items-center gap-2">
           <span className="material-symbols-outlined text-[16px]">error</span>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl bg-surface-container/30 border border-outline/10 p-6 rounded-2xl">
+      <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl bg-[#141517] border border-[#222428] p-6 rounded-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1">
             <label className="font-label-md text-on-surface-variant ml-1">NIT / RUT del Negocio</label>

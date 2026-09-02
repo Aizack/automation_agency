@@ -524,10 +524,11 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 /* Ítems activos del Sidebar */
 .sidebar-item-active {
-  background: var(--primary-container);
-  border-left: 3px solid var(--primary-color);
-  color: var(--primary-color);
-  font-weight: 600;
+  background: rgba(234, 179, 8, 0.12) !important;
+  border-left: 3px solid #eab308 !important;
+  color: #eab308 !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
   box-shadow: var(--shadow-sm);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

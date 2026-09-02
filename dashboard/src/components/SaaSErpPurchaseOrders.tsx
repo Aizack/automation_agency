@@ -221,20 +221,20 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-4">
+        <div className="space-y-6 text-white">
+            <div className="flex justify-between items-center border-b border-[#222428] pb-4">
                 <div>
-                    <h3 className="font-headline-md text-headline-md text-on-surface">Órdenes de Compra</h3>
-                    <p className="text-on-surface-variant text-body-md opacity-70">
+                    <h3 className="font-extrabold text-xl text-[#eab308]" style={{ color: '#eab308' }}>ÓRDENES DE COMPRA</h3>
+                    <p className="text-xs text-gray-400">
                         Genera pedidos a laboratorios o proveedores, registra costos de flete, y actualiza el stock al recibir la mercancía.
                     </p>
                 </div>
                 <button 
                     onClick={handleOpenCreateModal}
-                    className="bg-primary text-on-primary font-label-md px-4 py-2.5 rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                    className="bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] px-3 py-1.5 rounded-md shadow transition cursor-pointer flex items-center gap-1"
                 >
-                    <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-                    Nueva Orden
+                    <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                    NUEVA ORDEN
                 </button>
             </div>
 

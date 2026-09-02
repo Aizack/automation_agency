@@ -152,25 +152,25 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
   const pendingShifts = shifts.filter(s => s.status === 'pending_confirmation');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-white">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-outline/10 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#222428] pb-4">
         <div>
-          <h2 className="text-xl font-bold text-on-surface flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">point_of_sale</span>
-            Arqueo & Relevo de Caja Diario
+          <h2 className="text-xl font-extrabold text-[#eab308] flex items-center gap-2" style={{ color: '#eab308' }}>
+            <span className="material-symbols-outlined text-[#eab308]">point_of_sale</span>
+            ARQUEO & RELEVO DE CAJA DIARIO
           </h2>
-          <p className="text-xs text-on-surface-variant opacity-75">
+          <p className="text-xs text-gray-400">
             Mantiene las cuentas claras entre turnos de empleados (Entrega de caja, ventas registradas y confirmación del relevo).
           </p>
         </div>
 
         <button
           onClick={() => setIsFormOpen(true)}
-          className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-xl shadow-lg hover:opacity-90 transition flex items-center gap-2 cursor-pointer border-0"
+          className="px-3 py-1.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] rounded-md shadow transition flex items-center gap-1.5 cursor-pointer border-0"
         >
-          <span className="material-symbols-outlined text-[18px]">currency_exchange</span>
-          Entregar Caja / Cambio de Turno
+          <span className="material-symbols-outlined text-[16px]">currency_exchange</span>
+          ENTREGAR CAJA / CAMBIO DE TURNO
         </button>
       </div>
 

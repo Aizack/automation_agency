@@ -4,6 +4,17 @@ import { authFetch as fetch } from '../utils/api';
 import JsBarcode from 'jsbarcode';
 import { printBarcodes, previewBarcodes, LABEL_PRINT_PROFILES, DEFAULT_LABEL_PRINT_SETTINGS, type LabelProfileId } from '../utils/barcodePrinter';
 
+interface ProductVariant {
+    id?: string;
+    variant_name?: string;
+    color: string;
+    color_hex?: string;
+    sku: string;
+    stock: number;
+    min_stock?: number;
+    image_url?: string | null;
+}
+
 interface Product {
     id: string;
     client_id: string;
@@ -23,6 +34,7 @@ interface Product {
     promo_discount: string;
     category_id?: string | null;
     product_type?: 'product' | 'service';
+    variants?: ProductVariant[];
     created_at: string;
 }
 
@@ -204,6 +216,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [crossStockLoading, setCrossStockLoading] = useState(false);
     const [transferringBranchId, setTransferringBranchId] = useState<string | null>(null);
     const [transferQty, setTransferQty] = useState<number>(1);
+
+    // Variant View Barcodes Modal State
+    const [isVariantViewModalOpen, setIsVariantViewModalOpen] = useState(false);
+    const [selectedVariantProduct, setSelectedVariantProduct] = useState<Product | null>(null);
 
     const handleOpenCrossStock = async (prod: Product) => {
         setSelectedCrossProduct(prod);
@@ -814,15 +830,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     });
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 text-white">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-bold">Inventario y Promociones</h2>
+                    <h2 className="text-xl font-extrabold text-[#eab308]" style={{ color: '#eab308' }}>INVENTARIO Y PROMOCIONES</h2>
                     <p className="text-xs text-gray-400 font-medium font-sans">Administra los productos, precios de costo, venta y descuentos.</p>
                 </div>
                 {activeTab === 'catalog' && (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                         <input 
                             type="file" 
                             ref={fileInputRef} 
@@ -833,25 +849,26 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={importing}
-                            className="bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                            className="bg-[#181a1c] hover:bg-[#222528] text-white border border-[#2d3036] text-[11px] font-bold py-1.5 px-3 rounded-md flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
                         >
-                            <span className="material-symbols-outlined text-[16px]">publish</span>
+                            <span className="material-symbols-outlined text-[15px]">publish</span>
                             {importing ? 'Importando...' : 'Importar CSV'}
                         </button>
                         <button
                             type="button"
                             onClick={fetchProducts}
-                            className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow shrink-0"
+                            className="h-8 px-3 bg-[#181a1c] hover:bg-[#222528] text-white rounded-md flex items-center justify-center border border-[#2d3036] cursor-pointer transition text-xs font-semibold shrink-0"
                             title="Refrescar catálogo"
                         >
-                            <span className="material-symbols-outlined text-[18px]">refresh</span>
+                            <span className="material-symbols-outlined text-[16px] mr-1">refresh</span>
+                            Refrescar
                         </button>
                         <button
                             onClick={() => { resetForm(); setAddProductStep('open'); }}
-                            className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer border-0"
+                            className="bg-[#eab308] hover:bg-amber-300 text-black text-[11px] font-extrabold py-1.5 px-3 rounded-md flex items-center gap-1 transition-colors cursor-pointer shadow border-0"
                         >
-                            <span className="material-symbols-outlined text-[16px]">add</span>
-                            Agregar Producto
+                            <span className="material-symbols-outlined text-[15px]">add</span>
+                            AGREGAR PRODUCTO
                         </button>
                     </div>
                 )}
@@ -868,6 +885,51 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     ⚠️ {importErrorMsg}
                 </div>
             )}
+
+            {/* METRICAS Y RESUMEN DE INVENTARIO */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Productos en Catálogo */}
+                <div className="bg-[#141517] border border-[#222428] p-5 rounded-lg flex flex-col justify-between shadow-md">
+                    <div className="flex items-center justify-between">
+                        <p className="font-bold text-xs uppercase tracking-wider flex items-center gap-2" style={{ color: '#eab308' }}>
+                            <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+                            PRODUCTOS EN CATÁLOGO
+                        </p>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#1a170a] border border-amber-500/40 font-mono font-bold" style={{ color: '#eab308' }}>Existencias activas</span>
+                    </div>
+                    <div className="mt-3">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-mono">
+                            {products.length} Ítems
+                        </h2>
+                        <p className="text-gray-400 text-xs mt-1">
+                            {products.reduce((acc, p) => acc + (p.stock || 0), 0)} unidades físicas registradas en stock
+                        </p>
+                    </div>
+                </div>
+
+                {/* Valor Total del Inventario & ROI */}
+                <div className="bg-[#141517] border border-[#222428] p-5 rounded-lg flex flex-col justify-between shadow-md">
+                    <div className="flex items-center justify-between">
+                        <p className="font-bold text-xs uppercase tracking-wider flex items-center gap-2" style={{ color: '#eab308' }}>
+                            <span className="material-symbols-outlined text-[18px]">trending_up</span>
+                            VALOR DEL INVENTARIO & ROI
+                        </p>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#1a170a] border border-amber-500/40 font-mono font-bold" style={{ color: '#eab308' }}>
+                            +{(
+                                products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.cost_price || '0') || 0)), 0) > 0
+                                ? (((products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.price || '0') || 0)), 0) - products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.cost_price || '0') || 0)), 0)) / products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.cost_price || '0') || 0)), 0)) * 100).toFixed(1)
+                                : '150.0'
+                            )}% ROI Est.
+                        </span>
+                    </div>
+                    <div className="mt-3">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-mono">
+                            ${products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.price || '0') || 0)), 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </h2>
+                        <p className="text-gray-400 text-xs mt-1">Valor potencial de venta en catálogo</p>
+                    </div>
+                </div>
+            </div>
 
             {/* Tabs selection */}
             <div className="flex border-b border-outline/10">
@@ -1839,13 +1901,26 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     )}
                                                 </div>
                                             </td>
-                                            <td 
+                                             <td 
                                                 className="p-4 cursor-pointer"
-                                                onClick={() => prod.sku && openPrintModal(prod)}
-                                                title={prod.sku ? "Haga clic para imprimir etiquetas" : undefined}
+                                                onClick={() => (prod.sku || (prod.variants && prod.variants.length > 0)) && openPrintModal(prod)}
+                                                title={prod.sku ? "Haga clic para imprimir etiquetas" : prod.variants?.length ? "Ver códigos de barra por variante" : undefined}
                                             >
                                                 {prod.sku ? (
                                                     <BarcodeSVG value={prod.sku} size="sm" />
+                                                ) : prod.variants && prod.variants.length > 0 ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedVariantProduct(prod);
+                                                            setIsVariantViewModalOpen(true);
+                                                        }}
+                                                        className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-md text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[14px]">visibility</span>
+                                                        {prod.variants.length} Barcodes
+                                                    </button>
                                                 ) : (
                                                     <span className="text-xs text-on-surface-variant/50 font-mono">-</span>
                                                 )}
@@ -1867,12 +1942,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 onClick={() => openEdit(prod)}
                                             >
                                                 {prod.product_type === 'service' || prod.stock >= 999999 ? (
-                                                    <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1 w-fit">
+                                                    <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1 w-fit">
                                                         <span className="material-symbols-outlined text-[14px]">medical_services</span>
                                                         Servicio (Infinito)
                                                     </span>
                                                 ) : (
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                    <span className={`px-2.5 py-1 rounded-md text-xs font-bold font-mono ${
                                                         prod.stock <= (prod.min_stock !== undefined ? prod.min_stock : 5)
                                                             ? 'bg-red-500/10 text-red-400 border border-red-500/20'
                                                             : prod.stock <= (prod.min_stock !== undefined ? prod.min_stock : 5) * 2
@@ -1887,22 +1962,22 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 <div className="flex justify-end gap-1.5">
                                                     <button 
                                                         onClick={() => handleOpenCrossStock(prod)}
-                                                        className="p-1.5 hover:bg-blue-500/10 text-blue-400 rounded transition cursor-pointer border-0 bg-transparent"
+                                                        className="p-1.5 hover:bg-blue-500/10 text-blue-400 rounded-md transition cursor-pointer border-0 bg-transparent"
                                                         title="Ver Stock en Otras Sedes / Solicitar Traspaso"
                                                     >
                                                         <span className="material-symbols-outlined text-[16px]">domain</span>
                                                     </button>
                                                     <button 
                                                         onClick={() => openRefillModal(prod)}
-                                                        className="p-1.5 hover:bg-green-500/10 text-green-400 rounded transition cursor-pointer border-0 bg-transparent"
+                                                        className="p-1.5 hover:bg-green-500/10 text-green-400 rounded-md transition cursor-pointer border-0 bg-transparent"
                                                         title="Rellenar Stock (Refill)"
                                                     >
                                                         <span className="material-symbols-outlined text-[16px]">add_box</span>
                                                     </button>
-                                                    {prod.sku && (
+                                                    {(prod.sku || (prod.variants && prod.variants.length > 0)) && (
                                                         <button 
                                                             onClick={() => openPrintModal(prod)}
-                                                            className="p-1.5 hover:bg-secondary/10 text-secondary rounded transition cursor-pointer border-0 bg-transparent"
+                                                            className="p-1.5 hover:bg-secondary/10 text-secondary rounded-md transition cursor-pointer border-0 bg-transparent"
                                                             title="Imprimir Código de Barras"
                                                         >
                                                             <span className="material-symbols-outlined text-[16px]">print</span>
@@ -1910,14 +1985,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     )}
                                                     <button 
                                                         onClick={() => openEdit(prod)}
-                                                        className="p-1.5 hover:bg-primary/10 text-primary rounded transition cursor-pointer border-0 bg-transparent"
+                                                        className="p-1.5 hover:bg-primary/10 text-primary rounded-md transition cursor-pointer border-0 bg-transparent"
                                                         title="Editar"
                                                     >
                                                         <span className="material-symbols-outlined text-[16px]">edit</span>
                                                     </button>
                                                     <button 
                                                         onClick={() => handleDelete(prod.id)}
-                                                        className="p-1.5 hover:bg-red-500/20 text-red-400 rounded transition cursor-pointer border-0 bg-transparent"
+                                                        className="p-1.5 hover:bg-red-500/20 text-red-400 rounded-md transition cursor-pointer border-0 bg-transparent"
                                                         title="Eliminar"
                                                     >
                                                         <span className="material-symbols-outlined text-[16px]">delete</span>
@@ -2355,8 +2430,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             )}
 
             {/* Modal de Stock Inter-Sedes & Traspasos Directos */}
-            {crossStockModalOpen && selectedCrossProduct && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+            {crossStockModalOpen && selectedCrossProduct && createPortal(
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-[99999] animate-fade-in">
                     <div className="bg-surface-container-highest border border-outline/30 rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-4">
                         <div className="flex items-center justify-between border-b border-outline/10 pb-3">
                             <div>
@@ -2438,7 +2513,72 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             </div>
                         )}
                     </div>
-                </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Modal de Detalle de Variantes (Ojito Barcodes) */}
+            {isVariantViewModalOpen && selectedVariantProduct && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
+                    <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl max-w-xl w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+                            <div>
+                                <h3 className="font-bold text-sm text-on-surface flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-amber-400">qr_code_2</span>
+                                    Códigos de Barras por Variante
+                                </h3>
+                                <p className="text-[11px] text-on-surface-variant">{selectedVariantProduct.name}</p>
+                            </div>
+                            <button
+                                onClick={() => { setIsVariantViewModalOpen(false); setSelectedVariantProduct(null); }}
+                                className="text-on-surface-variant hover:text-on-surface bg-transparent border-0 cursor-pointer"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-3">
+                            {selectedVariantProduct.variants && selectedVariantProduct.variants.length > 0 ? (
+                                selectedVariantProduct.variants.map((v: any, idx: number) => (
+                                    <div key={idx} className="p-3 bg-[#181a1c] border border-[#2d3036] rounded-xl flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className="w-5 h-5 rounded-full border border-white/20 shrink-0 shadow-sm"
+                                                style={{ background: v.color_hex || '#808080' }}
+                                            />
+                                            <div>
+                                                <p className="font-bold text-xs text-on-surface">{v.variant_name || v.color}</p>
+                                                <p className="text-[10px] font-mono text-on-surface-variant">Stock: {v.stock} uds</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {v.sku && <BarcodeSVG value={v.sku} size="sm" />}
+                                            <button
+                                                onClick={() => openPrintModal(selectedVariantProduct)}
+                                                className="px-2.5 py-1.5 bg-primary/20 text-primary font-bold text-xs rounded-lg hover:bg-primary/30 transition border border-primary/30 cursor-pointer flex items-center gap-1"
+                                                title="Imprimir código de barras"
+                                            >
+                                                <span className="material-symbols-outlined text-[14px]">print</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-xs text-on-surface-variant italic">No hay variantes registradas.</p>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-3 border-t border-outline/10">
+                            <button
+                                onClick={() => { setIsVariantViewModalOpen(false); setSelectedVariantProduct(null); }}
+                                className="px-4 py-2 border border-outline/20 rounded-xl text-on-surface text-xs hover:bg-surface-container cursor-pointer bg-transparent"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );

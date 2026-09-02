@@ -226,28 +226,29 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-white">
       {/* Cabecera Principal de Gestión */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-outline/10 pb-4 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#222428] pb-4 gap-4">
         <div>
-          <h3 className="font-headline-md text-headline-md text-on-surface">Logística de Despachos y Rutas de Entrega</h3>
-          <p className="text-on-surface-variant text-body-md opacity-70">
+          <h3 className="font-extrabold text-xl text-[#eab308]" style={{ color: '#eab308' }}>LOGÍSTICA DE DESPACHOS Y RUTAS DE ENTREGA</h3>
+          <p className="text-xs text-gray-400">
             Asigna repartidores, organiza lotes de 10 direcciones por cercanía Haversine y gestiona o reagenda entregas.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <button 
             type="button"
             onClick={fetchDeliveries}
-            className="w-9 h-9 bg-surface-container-high/60 hover:bg-surface-container text-on-surface rounded-xl flex items-center justify-center border border-outline/20 cursor-pointer transition shadow-sm shrink-0"
+            className="h-8 px-3 bg-[#181a1c] hover:bg-[#222528] text-white rounded-md flex items-center justify-center border border-[#2d3036] cursor-pointer transition text-xs font-semibold shrink-0"
             title="Refrescar Lista de Despachos"
           >
-            <span className="material-symbols-outlined text-[18px]">refresh</span>
+            <span className="material-symbols-outlined text-[16px] mr-1">refresh</span>
+            Refrescar
           </button>
 
           {/* Filtro por Repartidor */}
-          <div className="flex items-center gap-2 bg-surface-container/60 px-3 py-1.5 rounded-xl border border-outline/20">
+          <div className="flex items-center gap-2 bg-[#141517] px-3 py-1.5 rounded-md border border-[#222428]">
             <span className="material-symbols-outlined text-primary text-[16px]">two_wheeler</span>
             <select
               value={selectedGuyFilter}
@@ -449,10 +450,10 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
                         type="button"
                         disabled={updatingId === dev.id}
                         onClick={() => handleOpenReagendaModal(dev)}
-                        className="px-3 py-2 bg-surface-container-high/80 hover:bg-surface-container border border-outline/20 text-on-surface font-bold rounded-xl text-xs cursor-pointer flex items-center gap-1.5 transition-all"
+                        className="px-3 py-1.5 bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white font-bold rounded-md text-[11px] cursor-pointer flex items-center gap-1 transition-all"
                         title="Cambiar fecha de entrega"
                       >
-                        <span className="material-symbols-outlined text-[16px] text-amber-400">calendar_month</span>
+                        <span className="material-symbols-outlined text-[15px] text-amber-400" style={{ color: '#eab308' }}>calendar_month</span>
                         Reagendar
                       </button>
 
@@ -461,10 +462,10 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
                         type="button"
                         disabled={updatingId === dev.id}
                         onClick={() => handleUpdateStatus(dev.id, 'entregado')}
-                        className="px-4 py-2 bg-primary text-on-primary font-bold rounded-xl hover:opacity-90 active:scale-95 text-xs cursor-pointer flex items-center gap-1.5 transition-all shadow"
+                        className="px-3 py-1.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold rounded-md text-[11px] cursor-pointer flex items-center gap-1 transition-all shadow"
                       >
-                        <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                        Entregado
+                        <span className="material-symbols-outlined text-[15px]">check_circle</span>
+                        ENTREGADO
                       </button>
                     </>
                   ) : (

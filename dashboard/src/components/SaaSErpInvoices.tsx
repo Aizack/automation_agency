@@ -295,6 +295,28 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         window.open(`/api/clients/${clientId}/invoices/${invoiceId}/pos-print`, '_blank', 'width=400,height=600');
     };
 
+    const handleSendInvoiceWhatsApp = (invoice: Invoice) => {
+        if (!invoice.customer_phone) {
+            alert('El cliente no posee un número de teléfono de WhatsApp registrado en esta factura.');
+            return;
+        }
+        const cleanPhone = invoice.customer_phone.replace(/[^0-9]/g, '');
+        const message = `Hola ${invoice.customer_name || 'Cliente'}! 📄 Te compartimos el resumen de tu Factura #${invoice.invoice_number} por un valor total de ${formatPrice(parseFloat(invoice.total_amount))}.\n\nPara consultar o descargar el detalle de tu compra, puedes ingresar a nuestro portal: ${window.location.origin}\n\n¡Gracias por tu compra!`;
+        const waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+        window.open(waUrl, '_blank');
+    };
+
+    const handleSendInvoiceEmail = (invoice: Invoice) => {
+        if (!invoice.customer_email) {
+            alert('El cliente no posee una dirección de correo electrónico registrada en esta factura.');
+            return;
+        }
+        const subject = `Factura #${invoice.invoice_number} - ${clientProfile?.name || 'Comprobante de Venta'}`;
+        const body = `Hola ${invoice.customer_name || 'Cliente'},\n\nAdjuntamos el resumen de tu Factura #${invoice.invoice_number}.\n\nDetalles de la transacción:\n- Factura N°: ${invoice.invoice_number}\n- Fecha de Emisión: ${new Date(invoice.created_at || Date.now()).toLocaleDateString('es-CO')}\n- Total Facturado: ${formatPrice(parseFloat(invoice.total_amount))}\n- Estado: ${invoice.status === 'paid' ? 'PAGADO' : 'PENDIENTE'}\n\n¡Gracias por elegirnos!`;
+        const mailtoUrl = `mailto:${invoice.customer_email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.open(mailtoUrl, '_blank');
+    };
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -903,59 +925,82 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 text-white">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-xl font-bold text-on-surface">Ventas y Facturación Electrónica DIAN</h2>
-                    <p className="text-xs text-on-surface-variant">Emite facturas POS y Electrónicas DIAN con CUFE, QR fiscal y tiquetes térmicos 80mm.</p>
+                    <h2 className="text-xl font-extrabold text-[#eab308]" style={{ color: '#eab308' }}>VENTAS Y FACTURACIÓN ELECTRÓNICA DIAN</h2>
+                    <p className="text-xs text-gray-400">Emite facturas POS y Electrónicas DIAN con CUFE, QR fiscal y tiquetes térmicos 80mm.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <button
                         onClick={() => setShowUpgradeModal(true)}
-                        className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold py-2 px-3.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow"
+                        className="bg-[#181a1c] hover:bg-[#222528] text-white border border-[#2d3036] text-[11px] font-bold py-1.5 px-3 rounded-md flex items-center gap-1 transition cursor-pointer shadow"
                     >
-                        <span className="material-symbols-outlined text-[16px]">workspace_premium</span>
+                        <span className="material-symbols-outlined text-[15px]">workspace_premium</span>
                         Planes & Upgrade
                     </button>
                     <button
                         onClick={() => { resetForm(); setIsFormOpen(true); }}
-                        className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                        className="bg-[#eab308] hover:bg-amber-300 text-black text-[11px] font-extrabold py-1.5 px-3 rounded-md flex items-center gap-1 transition-colors cursor-pointer shadow"
                     >
-                        <span className="material-symbols-outlined text-[16px]">add</span>
-                        Crear Factura
+                        <span className="material-symbols-outlined text-[15px]">add</span>
+                        CREAR FACTURA
                     </button>
                 </div>
             </div>
 
-            {/* Compact Indicator for Plan & DIAN Quota */}
-            {planStatus && (
-                <div className="bg-surface-container/30 border border-outline/10 p-3 rounded-xl flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-                            <span className="material-symbols-outlined text-lg">verified</span>
+            {/* METRICAS Y PROGRESO DE FACTURACIÓN */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Tarjeta Ventas Totales */}
+                <div className="bg-[#141517] border border-[#222428] p-5 rounded-lg flex flex-col justify-between shadow-md">
+                    <div className="flex items-center justify-between">
+                        <p className="font-bold text-xs uppercase tracking-wider flex items-center gap-2" style={{ color: '#eab308' }}>
+                            <span className="material-symbols-outlined text-[18px]">payments</span>
+                            VENTAS TOTALES
+                        </p>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#1a170a] border border-amber-500/40 font-mono font-bold" style={{ color: '#eab308' }}>Suma de facturación</span>
+                    </div>
+                    <div className="mt-3">
+                        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-mono">
+                            ${invoices.reduce((sum, inv) => sum + (parseFloat(inv.total_amount) || 0), 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </h2>
+                        <p className="text-gray-400 text-xs mt-1">Total acumulado de ventas facturadas</p>
+                    </div>
+                </div>
+
+                {/* Tarjeta Plan & DIAN Quota */}
+                {planStatus && (
+                    <div className="bg-[#141517] border border-[#222428] p-5 rounded-lg flex flex-col justify-between shadow-md">
+                        <div className="flex items-center justify-between">
+                            <p className="font-bold text-xs uppercase tracking-wider flex items-center gap-2" style={{ color: '#eab308' }}>
+                                <span className="material-symbols-outlined text-[18px]">verified</span>
+                                PLAN ACTUAL & DIAN
+                            </p>
+                            <span className="text-xs font-extrabold uppercase text-[#eab308]" style={{ color: '#eab308' }}>
+                                {planStatus.planTier === 'enterprise' ? '👑 Enterprise IA' : planStatus.planTier === 'pro' ? '🚀 Pro' : '🟢 Básico'}
+                            </span>
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap text-xs">
-                            <span className="font-bold text-on-surface uppercase tracking-wider">
-                                Plan Actual: <span className="text-primary">{planStatus.planTier === 'enterprise' ? '👑 Enterprise IA' : planStatus.planTier === 'pro' ? '🚀 Pro' : '🟢 Básico'}</span>
-                            </span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-surface-container border border-outline/10 text-on-surface-variant">
-                                Facturas DIAN este mes: <strong className="text-on-surface">{planStatus.used || 0}</strong> / {planStatus.limit >= 99999 ? '∞ Ilimitadas' : (planStatus.limit || 10)}
-                            </span>
+                        <div className="mt-3 flex items-end justify-between gap-2">
+                            <div>
+                                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-mono">
+                                    {planStatus.used || 0} <span className="text-sm font-sans text-gray-400 font-normal">/ {planStatus.limit >= 99999 ? '∞' : (planStatus.limit || 10)}</span>
+                                </h2>
+                                <p className="text-gray-400 text-xs mt-1">Facturas electrónicas DIAN emitidas este mes</p>
+                            </div>
+                            {planStatus.planTier === 'basic' && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUpgradeModal(true)}
+                                    className="bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] px-3 py-1.5 rounded-md transition shadow flex items-center gap-1 shrink-0 cursor-pointer"
+                                >
+                                    <span className="material-symbols-outlined text-[15px]">workspace_premium</span>
+                                    Upgrade Pro
+                                </button>
+                            )}
                         </div>
                     </div>
-
-                    {planStatus.planTier === 'basic' && (
-                        <button
-                            type="button"
-                            onClick={() => setShowUpgradeModal(true)}
-                            className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 font-bold text-[11px] px-3 py-1.5 rounded-lg transition flex items-center gap-1 cursor-pointer shrink-0"
-                        >
-                            <span className="material-symbols-outlined text-[14px]">workspace_premium</span>
-                            Upgrade a Plan Pro
-                        </button>
-                    )}
-                </div>
-            )}
+                )}
+            </div>
 
             {isFormOpen && (
                 <div className="glass-card p-6 space-y-4">
@@ -1767,86 +1812,92 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
             {/* MODAL DETALLE COMPLETO DE FACTURA */}
             {selectedInvoice && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="relative bg-[#16131c] border border-outline/20 w-full max-w-3xl max-h-[85vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
-                        {/* Header Fijo Sticky del Modal */}
-                        <div className="sticky top-0 z-30 bg-[#16131c]/95 backdrop-blur-md border-b border-outline/10 p-4 sm:p-5 flex items-center justify-between shadow-md shrink-0">
+                <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="relative bg-[#0a0b0c] border border-[#222428] w-full max-w-3xl max-h-[88vh] flex flex-col rounded-xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
+                        {/* Header Fijo Sticky del Modal - Casi Negro */}
+                        <div className="sticky top-0 z-30 bg-[#070708] border-b border-[#1e2023] p-4 sm:p-5 flex items-center justify-between shadow-md shrink-0">
                             <div>
-                                <div className="flex items-center gap-3">
-                                    <h2 className="text-lg sm:text-xl font-bold text-on-surface font-mono">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="material-symbols-outlined text-amber-400 text-2xl" style={{ color: '#eab308' }}>description</span>
+                                    <h2 className="text-lg sm:text-xl font-bold text-white font-mono">
                                         Factura #{selectedInvoice.invoice_number}
                                     </h2>
-                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${
-                                        selectedInvoice.status === 'paid' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                                        selectedInvoice.status === 'overdue' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                                        'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                    }`}>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                                        selectedInvoice.status === 'paid' ? 'bg-[#1a170a] text-amber-400 border border-amber-500/40' :
+                                        selectedInvoice.status === 'overdue' ? 'bg-[#220d0d] text-red-400 border border-red-500/40' :
+                                        'bg-[#1a170a] text-amber-400 border border-amber-500/40'
+                                    }`} style={{ color: selectedInvoice.status === 'paid' ? '#eab308' : undefined }}>
                                         {selectedInvoice.status === 'paid' ? 'PAGADO' : selectedInvoice.status === 'overdue' ? 'VENCIDO' : 'PENDIENTE'}
                                     </span>
                                 </div>
-                                <p className="text-xs text-on-surface-variant mt-0.5">
+                                <p className="text-xs text-gray-400 mt-1 font-medium">
                                     Emisión: {new Date(selectedInvoice.created_at || Date.now()).toLocaleString('es-CO')} | Vencimiento: {new Date(selectedInvoice.due_date).toLocaleDateString('es-CO')}
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setSelectedInvoice(null)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface transition"
+                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 border-0 cursor-pointer text-gray-400 hover:text-white transition"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
                         {/* Cuerpo Escroleable del Modal */}
-                        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar space-y-6 flex-grow">
+                        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar space-y-4 flex-grow bg-[#0a0b0c]">
                             {/* INFORMACIÓN DEL CLIENTE & CONDICIONES */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="bg-surface-container/30 border border-outline/10 p-4 rounded-2xl space-y-2">
-                                    <h3 className="font-semibold text-on-surface text-xs uppercase flex items-center gap-1.5">
-                                        <span className="material-symbols-outlined text-[16px] text-primary">person</span>
-                                        Información del Cliente
+                                <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg space-y-3">
+                                    <h3 className="font-extrabold text-[#eab308] text-xs uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#eab308' }}>
+                                        <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>person</span>
+                                        INFORMACIÓN DEL CLIENTE
                                     </h3>
-                                    <div className="text-xs space-y-1 text-on-surface-variant">
-                                        <p><strong className="text-on-surface">Nombre:</strong> {selectedInvoice.customer_name}</p>
-                                        <p><strong className="text-on-surface">Documento:</strong> {selectedInvoice.customer_document_type} {selectedInvoice.customer_document_number}</p>
-                                        <p><strong className="text-on-surface">WhatsApp:</strong> +{selectedInvoice.customer_phone}</p>
-                                        <p><strong className="text-on-surface">Email:</strong> {selectedInvoice.customer_email}</p>
+                                    <div className="text-xs space-y-2 text-gray-300">
+                                        <p><strong className="text-white">Nombre:</strong> {selectedInvoice.customer_name}</p>
+                                        <p><strong className="text-white">Documento:</strong> {selectedInvoice.customer_document_type || 'CC'} {selectedInvoice.customer_document_number || 'N/A'}</p>
+                                        <p><strong className="text-white">WhatsApp:</strong> <span className="font-mono text-white">+{selectedInvoice.customer_phone}</span></p>
+                                        <p><strong className="text-white">Email:</strong> <span className="font-mono text-white">{selectedInvoice.customer_email || 'Sin correo'}</span></p>
                                         {selectedInvoice.customer_address && (
-                                            <p><strong className="text-on-surface">Dirección:</strong> {selectedInvoice.customer_address}</p>
+                                            <p className="border-t border-[#1f2125] pt-1.5"><strong className="text-white">Dirección:</strong> {selectedInvoice.customer_address}</p>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="bg-surface-container/30 border border-outline/10 p-4 rounded-2xl space-y-2">
-                                    <h3 className="font-semibold text-on-surface text-xs uppercase flex items-center gap-1.5">
-                                        <span className="material-symbols-outlined text-[16px] text-primary">payments</span>
-                                        Condiciones de Pago & Envío
+                                <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg space-y-3">
+                                    <h3 className="font-extrabold text-[#eab308] text-xs uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#eab308' }}>
+                                        <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>local_shipping</span>
+                                        CONDICIONES DE PAGO & ENVÍO
                                     </h3>
-                                    <div className="text-xs space-y-1 text-on-surface-variant">
-                                        <p><strong className="text-on-surface">Método de Pago:</strong> <span className="uppercase font-semibold text-primary">{selectedInvoice.payment_method || 'Efectivo'}</span></p>
+                                    <div className="text-xs space-y-2 text-gray-300">
+                                        <p className="flex items-center gap-2">
+                                            <strong className="text-white">Método de Pago:</strong> 
+                                            <span className="uppercase font-extrabold bg-[#1a170a] text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded text-[10px]" style={{ color: '#eab308' }}>
+                                                {selectedInvoice.payment_method || 'Efectivo'}
+                                            </span>
+                                        </p>
                                         {selectedInvoice.transfer_bank && (
-                                            <p><strong className="text-on-surface">Banco Origen:</strong> {selectedInvoice.transfer_bank}</p>
+                                            <p><strong className="text-white">Banco Origen:</strong> {selectedInvoice.transfer_bank}</p>
                                         )}
                                         {selectedInvoice.transfer_destination_account && (
-                                            <p><strong className="text-on-surface">Cuenta Destino:</strong> {selectedInvoice.transfer_destination_account}</p>
+                                            <p><strong className="text-white">Cuenta Destino:</strong> {selectedInvoice.transfer_destination_account}</p>
                                         )}
                                         {selectedInvoice.installments_count && selectedInvoice.installments_count > 1 && (
-                                            <p><strong className="text-on-surface">Plan Cuotas:</strong> {selectedInvoice.installments_count} cuotas ({selectedInvoice.installment_frequency})</p>
+                                            <p><strong className="text-white">Plan Cuotas:</strong> {selectedInvoice.installments_count} cuotas ({selectedInvoice.installment_frequency})</p>
                                         )}
-                                        <p><strong className="text-on-surface">Logística:</strong> {selectedInvoice.delivery_method === 'domicilio' ? '🚚 Envío a Domicilio' : '🏪 Entrega en Tienda / Local'}</p>
+                                        <p><strong className="text-white">Logística:</strong> {selectedInvoice.delivery_method === 'domicilio' ? '🚚 Envío a Domicilio' : '🏪 Entrega en Tienda / Local'}</p>
                                         {selectedInvoice.delivery_address && (
-                                            <p><strong className="text-on-surface">Dirección Envío:</strong> {selectedInvoice.delivery_address}</p>
+                                            <p><strong className="text-white">Dirección Envío:</strong> {selectedInvoice.delivery_address}</p>
                                         )}
 
-                                        <div className="border-t border-outline/10 pt-2.5 mt-2 space-y-1.5">
+                                        <div className="border-t border-[#1f2125] pt-2 mt-2 space-y-1.5">
                                             <div className="flex items-center justify-between text-xs">
-                                                <strong className="text-on-surface">Vendedor Asignado:</strong>
-                                                <span className="text-primary font-bold">{selectedInvoice.seller_name || 'Sin asignar'}</span>
+                                                <strong className="text-white">Vendedor Asignado:</strong>
+                                                <span className="text-amber-400 font-bold" style={{ color: '#eab308' }}>{selectedInvoice.seller_name || 'Sin asignar'}</span>
                                             </div>
                                             <select
                                                 value={selectedInvoice.seller_employee_id || ''}
                                                 onChange={(e) => handleAssignSellerToInvoice(selectedInvoice.id, e.target.value)}
-                                                className="w-full bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none focus:border-primary cursor-pointer font-medium"
+                                                className="w-full bg-[#0a0b0c] border border-[#26282d] rounded-lg p-2 text-xs text-white outline-none focus:border-amber-400 cursor-pointer font-medium"
                                             >
                                                 <option value="">-- Cambiar / Asignar Vendedor --</option>
                                                 {employees.map(emp => (
@@ -1861,10 +1912,10 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                             </div>
 
                             {/* COMPROBANTE ADJUNTO */}
-                            <div className="bg-surface-container/30 border border-outline/10 p-4 rounded-2xl space-y-3">
-                                <h3 className="font-semibold text-on-surface text-xs uppercase flex items-center gap-1.5">
-                                    <span className="material-symbols-outlined text-[16px] text-primary">receipt</span>
-                                    Comprobante de Pago / Soporte de Transferencia
+                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg space-y-3">
+                                <h3 className="font-extrabold text-[#eab308] text-xs uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#eab308' }}>
+                                    <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>receipt</span>
+                                    COMPROBANTE DE PAGO / SOPORTE DE TRANSFERENCIA
                                 </h3>
 
                                 {selectedInvoice.payment_receipt_url ? (
@@ -1873,7 +1924,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             src={selectedInvoice.payment_receipt_url}
                                             alt="Comprobante"
                                             onClick={() => setLightboxUrl(selectedInvoice.payment_receipt_url || null)}
-                                            className="w-20 h-20 object-cover rounded-xl border border-outline/20 cursor-pointer hover:scale-105 transition"
+                                            className="w-20 h-20 object-cover rounded-lg border border-outline/20 cursor-pointer hover:scale-105 transition"
                                             title="Clic para ampliar"
                                         />
                                         <div className="text-xs space-y-1">
@@ -1884,169 +1935,163 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                 href={selectedInvoice.payment_receipt_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="text-primary hover:underline font-mono text-[11px] block"
+                                                className="text-amber-400 hover:underline font-mono text-[11px] block"
+                                                style={{ color: '#eab308' }}
                                             >
                                                 Ver foto en tamaño completo ↗
                                             </a>
                                         </div>
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-on-surface-variant italic">No hay comprobante de pago adjunto aún a esta factura.</p>
+                                    <p className="text-xs text-gray-400 italic">No hay comprobante de pago adjunto aún a esta factura.</p>
                                 )}
 
-                                <div className="flex gap-2 pt-2 border-t border-outline/5">
+                                <div className="flex gap-2 pt-2 border-t border-[#1f2125]">
                                     <input
                                         type="text"
                                         placeholder="Pegar URL o enlace de la foto del comprobante..."
                                         value={receiptInputUrl}
                                         onChange={(e) => setReceiptInputUrl(e.target.value)}
-                                        className="flex-grow bg-surface-container border border-outline/20 rounded-xl px-3 py-1.5 text-xs text-on-surface outline-none focus:border-primary"
+                                        className="flex-grow bg-[#0a0b0c] border border-[#26282d] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-amber-400 font-medium"
                                     />
                                     <button
                                         type="button"
                                         onClick={handleSaveReceiptUrl}
                                         disabled={isUpdatingReceipt || !receiptInputUrl.trim()}
-                                        className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold px-4 py-1.5 rounded-xl transition disabled:opacity-50 cursor-pointer"
+                                        className="border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-xs font-bold px-4 py-2 rounded-lg transition disabled:opacity-50 cursor-pointer shrink-0"
+                                        style={{ color: '#eab308' }}
                                     >
                                         {isUpdatingReceipt ? 'Guardando...' : 'Guardar Comprobante'}
                                     </button>
                                 </div>
                             </div>
+
                             {/* DETALLE DE ÍTEMS COMPRADOS */}
                             <div className="space-y-2">
-                                <h3 className="font-semibold text-on-surface text-xs uppercase flex items-center gap-1.5">
-                                    <span className="material-symbols-outlined text-[16px] text-primary">shopping_bag</span>
-                                    Productos e Ítems de la Factura
+                                <h3 className="font-extrabold text-[#eab308] text-xs uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#eab308' }}>
+                                    <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>shopping_bag</span>
+                                    PRODUCTOS E ÍTEMS DE LA FACTURA
                                 </h3>
                                 {loadingDetail ? (
-                                    <div className="py-6 text-center text-xs text-on-surface-variant animate-pulse">Cargando productos de la factura...</div>
+                                    <div className="py-6 text-center text-xs text-gray-400 animate-pulse">Cargando productos de la factura...</div>
                                 ) : invoiceDetail?.items?.length > 0 ? (
-                                    <div className="glass-card overflow-hidden border border-outline/10">
+                                    <div className="bg-[#141517] overflow-hidden border border-[#222428] rounded-lg">
                                         <table className="w-full text-left text-xs border-collapse">
                                             <thead>
-                                                <tr className="bg-surface-container/60 border-b border-outline/10 text-on-surface-variant uppercase font-semibold">
-                                                    <th className="p-3">Producto / Descripción</th>
-                                                    <th className="p-3 text-center">Cant.</th>
-                                                    <th className="p-3 text-right">Precio Unit.</th>
-                                                    <th className="p-3 text-right">Total</th>
+                                                <tr className="bg-[#0e0f11] border-b border-[#222428] text-white uppercase font-extrabold tracking-wider text-[11px]">
+                                                    <th className="p-3">PRODUCTO / DESCRIPCIÓN</th>
+                                                    <th className="p-3 text-center">CANT.</th>
+                                                    <th className="p-3 text-right">PRECIO UNIT.</th>
+                                                    <th className="p-3 text-right">TOTAL</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-outline/10">
+                                            <tbody className="divide-y divide-[#1f2125]">
                                                 {invoiceDetail.items.map((item: any) => (
                                                     <tr key={item.id}>
                                                         <td className="p-3">
-                                                            <p className="font-semibold text-on-surface">{item.product_name || item.inventory_name}</p>
+                                                            <p className="font-bold text-white">{item.product_name || item.inventory_name}</p>
                                                             {item.product_type === 'optical_lens' && (
                                                                 <div className="flex gap-1.5 mt-1 flex-wrap">
-                                                                    {item.lens_design && <span className="bg-primary/10 text-primary text-[9px] px-1.5 py-0.5 rounded font-mono">Diseño: {item.lens_design}</span>}
-                                                                    {item.lens_material && <span className="bg-primary/10 text-primary text-[9px] px-1.5 py-0.5 rounded font-mono">Mat: {item.lens_material}</span>}
-                                                                    {item.lens_treatment && <span className="bg-primary/10 text-primary text-[9px] px-1.5 py-0.5 rounded font-mono">Trat: {item.lens_treatment}</span>}
+                                                                    {item.lens_design && <span className="bg-amber-500/10 text-amber-400 text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ color: '#eab308' }}>Diseño: {item.lens_design}</span>}
+                                                                    {item.lens_material && <span className="bg-amber-500/10 text-amber-400 text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ color: '#eab308' }}>Mat: {item.lens_material}</span>}
+                                                                    {item.lens_treatment && <span className="bg-amber-500/10 text-amber-400 text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ color: '#eab308' }}>Trat: {item.lens_treatment}</span>}
                                                                 </div>
                                                             )}
                                                         </td>
-                                                        <td className="p-3 text-center font-mono">{item.quantity}</td>
-                                                        <td className="p-3 text-right font-mono">{formatPrice(parseFloat(item.price))}</td>
-                                                        <td className="p-3 text-right font-bold text-on-surface font-mono">{formatPrice(parseFloat(item.price) * item.quantity)}</td>
+                                                        <td className="p-3 text-center font-mono font-bold text-white">{item.quantity}</td>
+                                                        <td className="p-3 text-right font-mono text-gray-400">{formatPrice(parseFloat(item.price))}</td>
+                                                        <td className="p-3 text-right font-bold text-white font-mono">{formatPrice(parseFloat(item.price) * item.quantity)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-on-surface-variant italic">No se encontraron ítems detallados.</p>
+                                    <p className="text-xs text-gray-400 italic">No se encontraron ítems detallados.</p>
                                 )}
                             </div>
                         </div>
 
-                        {/* Pie Fijo Sticky del Modal */}
-                        <div className="sticky bottom-0 z-30 bg-[#16131c]/95 backdrop-blur-md border-t border-outline/10 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shrink-0">
-                            <div>
-                                <p className="text-xs text-on-surface-variant">
-                                    Envío Domicilio: <span className="font-semibold">{formatPrice(parseFloat(selectedInvoice.delivery_fee || '0'))}</span>
+                        {/* Pie Fijo Sticky del Modal con Grid de Botones Ultra Compacto */}
+                        <div className="sticky bottom-0 z-30 bg-[#070708] border-t border-[#1e2023] p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg shrink-0">
+                            <div className="shrink-0 min-w-[160px]">
+                                <p className="text-xs text-gray-400">
+                                    Envío Domicilio: <span className="font-semibold text-white">{formatPrice(parseFloat(selectedInvoice.delivery_fee || '0'))}</span>
                                 </p>
-                                <p className="text-lg sm:text-xl font-bold text-[#00ff88]">
-                                    Total Factura: {formatPrice(parseFloat(selectedInvoice.total_amount) + parseFloat(selectedInvoice.delivery_fee || '0'))}
+                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-0.5">TOTAL FACTURA</p>
+                                <p className="text-xl sm:text-2xl font-extrabold text-amber-400 font-mono tracking-tight" style={{ color: '#eab308' }}>
+                                    {formatPrice(parseFloat(selectedInvoice.total_amount) + parseFloat(selectedInvoice.delivery_fee || '0'))}
                                 </p>
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                                {selectedInvoice.status !== 'paid' && (
-                                    <>
-                                        <button
-                                            type="button"
-                                            onClick={async () => {
-                                                try {
-                                                    const res = await fetch(`/api/clients/${clientId}/invoices/${selectedInvoice.id}/approve-payment`, {
-                                                        method: 'POST'
-                                                    });
-                                                    const data = await res.json();
-                                                    if (data.success) {
-                                                        alert('✅ Pago aprobado exitosamente.');
-                                                        setInvoices(prev => prev.map(inv => inv.id === selectedInvoice.id ? { ...inv, status: 'paid' } : inv));
-                                                        setSelectedInvoice(prev => prev ? { ...prev, status: 'paid' } : null);
-                                                    } else {
-                                                        alert(`Error: ${data.error}`);
-                                                    }
-                                                } catch (err: any) {
-                                                    alert(`Error procesando pago: ${err.message}`);
-                                                }
-                                            }}
-                                            className="bg-green-600 hover:bg-green-500 text-white font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
-                                        >
-                                            <span className="material-symbols-outlined text-[16px]">check</span>
-                                            Confirmar Pago
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleTriggerCollection(selectedInvoice.id)}
-                                            className="bg-primary hover:opacity-90 text-on-primary font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
-                                        >
-                                            <span className="material-symbols-outlined text-[16px]">send</span>
-                                            Notificar por WhatsApp
-                                        </button>
-                                    </>
-                                )}
+
+                            {/* Grid 2x3 de Botones de Acción Ultra Compactos */}
+                            <div className="grid grid-cols-3 gap-1.5 max-w-[430px] shrink-0 w-full sm:w-auto">
+                                {/* Fila 1 */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleSendInvoiceWhatsApp(selectedInvoice)}
+                                    className="bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white font-semibold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer flex items-center justify-center gap-1 truncate"
+                                    title="Enviar factura por WhatsApp"
+                                >
+                                    <span className="material-symbols-outlined text-[14px] text-emerald-400 shrink-0">chat</span>
+                                    <span className="truncate">Enviar WhatsApp</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleSendInvoiceEmail(selectedInvoice)}
+                                    className="bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white font-semibold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer flex items-center justify-center gap-1 truncate"
+                                    title="Enviar factura por Correo Electrónico"
+                                >
+                                    <span className="material-symbols-outlined text-[14px] text-blue-400 shrink-0">mail</span>
+                                    <span className="truncate">Enviar Email</span>
+                                </button>
+
                                 <button
                                     type="button"
                                     onClick={() => handlePrintInvoice(selectedInvoice)}
-                                    className="bg-surface-container hover:bg-surface-container-high border border-outline/20 text-on-surface font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
+                                    className="bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white font-semibold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer flex items-center justify-center gap-1 truncate"
                                 >
-                                    <span className="material-symbols-outlined text-[16px]">print</span>
-                                    Imprimir (80mm)
+                                    <span className="material-symbols-outlined text-[14px] shrink-0">print</span>
+                                    <span className="truncate">Imprimir (80mm)</span>
                                 </button>
-                                {/* BOTÓN EMITIR FACTURA ELECTRÓNICA DIAN */}
+
+                                {/* Fila 2 */}
                                 {!selectedInvoice.cufe ? (
                                     <button
                                         type="button"
                                         disabled={generatingElectronicId === selectedInvoice.id}
                                         onClick={() => handleGenerateElectronicInvoice(selectedInvoice.id)}
-                                        className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:opacity-90 text-white font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-md disabled:opacity-50"
-                                        title="Genera CUFE, QR fiscal DIAN y despacha PDF automáticamente a WhatsApp / Email del cliente"
+                                        className="bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer flex items-center justify-center gap-1 shadow-md disabled:opacity-50 truncate"
+                                        title="Emitir factura electrónica DIAN oficial"
                                     >
-                                        <span className="material-symbols-outlined text-[16px]">electric_bolt</span>
-                                        {generatingElectronicId === selectedInvoice.id ? 'Emitiendo y enviando...' : 'Emitir Factura Electrónica DIAN'}
+                                        <span className="material-symbols-outlined text-[14px] shrink-0">bolt</span>
+                                        <span className="truncate">{generatingElectronicId === selectedInvoice.id ? 'Emitiendo...' : 'Emitir Factura Electrónica DIAN'}</span>
                                     </button>
                                 ) : (
                                     <div 
-                                        className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 select-none"
-                                        title="Factura validada y emitida electrónicamente ante la DIAN con CUFE oficial"
+                                        className="bg-[#1a170a] text-amber-400 border border-amber-500/40 font-extrabold text-[11px] py-1.5 px-2 rounded-md flex items-center justify-center gap-1 select-none truncate"
+                                        style={{ color: '#eab308' }}
+                                        title="Factura validada ante la DIAN"
                                     >
-                                        <span className="material-symbols-outlined text-[16px]">verified</span>
-                                        DIAN Verificada (CUFE OK)
+                                        <span className="material-symbols-outlined text-[14px] shrink-0">verified</span>
+                                        <span className="truncate">DIAN Verificada</span>
                                     </div>
                                 )}
 
                                 <button
                                     type="button"
                                     onClick={() => handlePrintPOS(selectedInvoice.id)}
-                                    className="bg-surface-container hover:bg-surface-container-high border border-outline/20 text-on-surface font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
+                                    className="bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white font-semibold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer flex items-center justify-center gap-1 truncate"
                                 >
-                                    <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-                                    Imprimir POS (80mm)
+                                    <span className="material-symbols-outlined text-[14px] shrink-0">receipt_long</span>
+                                    <span className="truncate">Imprimir POS (80mm)</span>
                                 </button>
+
                                 <button
                                     type="button"
                                     onClick={() => setSelectedInvoice(null)}
-                                    className="bg-surface-container border border-outline/20 text-on-surface-variant hover:text-on-surface font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer"
+                                    className="bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-gray-400 hover:text-white font-semibold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer text-center truncate"
                                 >
                                     Cerrar
                                 </button>

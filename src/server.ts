@@ -1389,10 +1389,11 @@ app.get('/api/clients/:clientId/products', authenticateToken as any, authorizeCl
     );
 
     const variantsRes = await pool.query(
-      `SELECT id, product_id, variant_name, color_hex, sku, stock, min_stock, image_url 
-       FROM product_variants 
-       WHERE client_id = $1 
-       ORDER BY variant_name ASC`,
+      `SELECT pv.id, pv.product_id, pv.variant_name, pv.color_hex, pv.sku, pv.stock, pv.min_stock, pv.image_url 
+       FROM product_variants pv
+       JOIN products p ON pv.product_id = p.id
+       WHERE p.client_id = $1 
+       ORDER BY pv.variant_name ASC`,
       [targetClientId]
     );
 
@@ -3878,7 +3879,7 @@ app.get('/api/clients/:clientId/appointments/availability', authenticateToken as
        FROM appointments
        WHERE client_id = $1
          AND DATE(appointment_date) = $2
-         AND status IN ('scheduled', 'completed')`,
+         AND status IN ('scheduled', 'confirmed', 'completed')`,
       [clientId, date]
     );
 
@@ -4148,13 +4149,29 @@ app.post('/api/clients/:clientId/appointments', authenticateToken as any, author
       }
     }
 
+    // 1.5. Verificar conflicto de horario
+    const conflictCheck = await pool.query(
+      `SELECT id FROM appointments 
+       WHERE client_id = $1 
+         AND appointment_date = $2 
+         AND status IN ('scheduled', 'confirmed') 
+       LIMIT 1`,
+      [clientId, appointment_date]
+    );
+    if (conflictCheck.rows.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'El horario seleccionado ya se encuentra reservado por otra cita.' 
+      });
+    }
+
     // 2. Insertar la cita
     const result = await pool.query(
       `INSERT INTO appointments (
         client_id, customer_name, customer_phone, appointment_date, status, 
         customer_document_number, crm_customer_id, visit_reason, visit_reason_details
       )
-      VALUES ($1, $2, $3, $4, 'confirmed', $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, 'scheduled', $5, $6, $7, $8)
       RETURNING id, customer_name, customer_phone, to_char(appointment_date, 'YYYY-MM-DD"T"HH24:MI:SS') as appointment_date, status, customer_document_number, crm_customer_id, visit_reason, visit_reason_details`,
       [
         clientId, 
@@ -4180,6 +4197,24 @@ app.put('/api/clients/:clientId/appointments/:appointmentId', authenticateToken 
   try {
     const { clientId, appointmentId } = req.params;
     const { customer_name, customer_phone, appointment_date, status, visit_reason, visit_reason_details } = req.body;
+
+    if (appointment_date && (status === 'scheduled' || status === 'confirmed' || !status)) {
+      const conflictCheck = await pool.query(
+        `SELECT id FROM appointments 
+         WHERE client_id = $1 
+           AND appointment_date = $2 
+           AND id != $3 
+           AND status IN ('scheduled', 'confirmed') 
+         LIMIT 1`,
+        [clientId, appointment_date, appointmentId]
+      );
+      if (conflictCheck.rows.length > 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'El horario seleccionado ya se encuentra reservado por otra cita.' 
+        });
+      }
+    }
 
     const result = await pool.query(
       `UPDATE appointments 
@@ -4573,12 +4608,12 @@ app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeC
 app.post('/api/clients/:clientId/employees', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { 
-      name, last_name, phone, role, department_id, pin, employee_code,
-      hire_date, basic_salary, payment_type, pay_period,
-      cutoff_days, pay_days, cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
-      vacation_days_accumulated, hourly_rate, transport_allowance, employment_status,
-      activity_status, payment_method, bank_name, bank_account_number, contract_type
+    const {
+      name, last_name, phone, role, department_id, pin, hire_date, basic_salary,
+      payment_type, pay_period, cutoff_days, pay_days, cutoff_day_1, cutoff_day_2,
+      pay_day_1, pay_day_2, vacation_days_accumulated, hourly_rate, transport_allowance,
+      employment_status, activity_status, payment_method, bank_name, bank_account_number,
+      contract_type, employee_code, professional_license
     } = req.body;
 
     if (!name || !phone) {
@@ -8202,16 +8237,36 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         consultationReason,
         medicalAntecedents,
         ocularAntecedents,
+        hasStrabismus,
+        strabismusNotes,
+        hasPterygium,
+        pterygiumNotes,
+        hasCataract,
+        cataractNotes,
+        surgeriesAntecedents,
+        allergiesAntecedents,
+        systemicAntecedents,
+        familyAntecedents,
+        previousRxOd,
+        previousRxOi,
         visualAcuityOd,
         visualAcuityOi,
         refractionOd,
         refractionOi,
+        retinoscopyOd,
+        retinoscopyOi,
+        subjectiveOd,
+        subjectiveOi,
         tonometryOd,
         tonometryOi,
+        biomicroscopyNotes,
+        pupillaryReflexes,
         ophthalmoscopyNotes,
         diagnosis,
+        cie10Code,
         treatmentPlan,
-        optometristName
+        optometristName,
+        professionalLicense
       } = req.body;
 
       if (!customerName) {
@@ -8222,9 +8277,18 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         `INSERT INTO patient_clinical_records (
            client_id, customer_id, customer_name, customer_document, customer_phone,
            consultation_reason, medical_antecedents, ocular_antecedents,
+           has_strabismus, strabismus_notes, has_pterygium, pterygium_notes,
+           has_cataract, cataract_notes, surgeries_antecedents, allergies_antecedents,
+           systemic_antecedents, family_antecedents, previous_rx_od, previous_rx_oi,
            visual_acuity_od, visual_acuity_oi, refraction_od, refraction_oi,
-           tonometry_od, tonometry_oi, ophthalmoscopy_notes, diagnosis, treatment_plan, optometrist_name
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+           retinoscopy_od, retinoscopy_oi, subjective_od, subjective_oi,
+           tonometry_od, tonometry_oi, biomicroscopy_notes, pupillary_reflexes,
+           ophthalmoscopy_notes, diagnosis, cie10_code, treatment_plan, optometrist_name, professional_license
+         ) VALUES (
+           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
+           $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32,
+           $33, $34, $35, $36, $37, $38
+         )
          RETURNING *`,
         [
           clientId,
@@ -8235,16 +8299,36 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           consultationReason || '',
           medicalAntecedents || '',
           ocularAntecedents || '',
+          Boolean(hasStrabismus),
+          strabismusNotes || '',
+          Boolean(hasPterygium),
+          pterygiumNotes || '',
+          Boolean(hasCataract),
+          cataractNotes || '',
+          surgeriesAntecedents || '',
+          allergiesAntecedents || '',
+          systemicAntecedents || '',
+          familyAntecedents || '',
+          previousRxOd || '',
+          previousRxOi || '',
           visualAcuityOd || '',
           visualAcuityOi || '',
           refractionOd || '',
           refractionOi || '',
+          retinoscopyOd || '',
+          retinoscopyOi || '',
+          subjectiveOd || '',
+          subjectiveOi || '',
           tonometryOd || '',
           tonometryOi || '',
+          biomicroscopyNotes || '',
+          pupillaryReflexes || '',
           ophthalmoscopyNotes || '',
           diagnosis || '',
+          cie10Code || '',
           treatmentPlan || '',
-          optometristName || 'Optómetra General'
+          optometristName || 'Optómetra General',
+          professionalLicense || ''
         ]
       );
 
@@ -8259,6 +8343,52 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const { clientId, recordId } = req.params;
       await pool.query(`DELETE FROM patient_clinical_records WHERE id = $1 AND client_id = $2`, [recordId, clientId]);
       res.json({ success: true, message: 'Registro clínico eliminado' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.put('/api/clients/:clientId/clinical-records/:recordId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, recordId } = req.params;
+      const {
+        customerName, customerDocument, customerPhone, consultationReason,
+        medicalAntecedents, ocularAntecedents, hasStrabismus, strabismusNotes,
+        hasPterygium, pterygiumNotes, hasCataract, cataractNotes,
+        surgeriesAntecedents, allergiesAntecedents, systemicAntecedents, familyAntecedents,
+        previousRxOd, previousRxOi, visualAcuityOd, visualAcuityOi, refractionOd, refractionOi,
+        tonometryOd, tonometryOi, retinoscopyOd, retinoscopyOi, subjectiveOd, subjectiveOi,
+        biomicroscopyNotes, pupillaryReflexes, ophthalmoscopyNotes, diagnosis, cie10Code,
+        treatmentPlan, optometristName, professionalLicense
+      } = req.body;
+
+      const result = await pool.query(
+        `UPDATE patient_clinical_records SET
+          customer_name = $1, customer_document = $2, customer_phone = $3, consultation_reason = $4,
+          medical_antecedents = $5, ocular_antecedents = $6, has_strabismus = $7, strabismus_notes = $8,
+          has_pterygium = $9, pterygium_notes = $10, has_cataract = $11, cataract_notes = $12,
+          surgeries_antecedents = $13, allergies_antecedents = $14, systemic_antecedents = $15, family_antecedents = $16,
+          previous_rx_od = $17, previous_rx_oi = $18, visual_acuity_od = $19, visual_acuity_oi = $20,
+          refraction_od = $21, refraction_oi = $22, tonometry_od = $23, tonometry_oi = $24,
+          retinoscopy_od = $25, retinoscopy_oi = $26, subjective_od = $27, subjective_oi = $28,
+          biomicroscopy_notes = $29, pupillary_reflexes = $30, ophthalmoscopy_notes = $31, diagnosis = $32,
+          cie10_code = $33, treatment_plan = $34, optometrist_name = $35, professional_license = $36
+         WHERE id = $37 AND client_id = $38 RETURNING *`,
+        [
+          customerName || 'Paciente', customerDocument || '', customerPhone || '', consultationReason || '',
+          medicalAntecedents || '', ocularAntecedents || '', !!hasStrabismus, strabismusNotes || '',
+          !!hasPterygium, pterygiumNotes || '', !!hasCataract, cataractNotes || '',
+          surgeriesAntecedents || '', allergiesAntecedents || '', systemicAntecedents || '', familyAntecedents || '',
+          previousRxOd || '', previousRxOi || '', visualAcuityOd || '20/20', visualAcuityOi || '20/20',
+          refractionOd || '', refractionOi || '', tonometryOd || '14 mmHg', tonometryOi || '14 mmHg',
+          retinoscopyOd || '', retinoscopyOi || '', subjectiveOd || '', subjectiveOi || '',
+          biomicroscopyNotes || '', pupillaryReflexes || '', ophthalmoscopyNotes || '', diagnosis || '',
+          cie10Code || '', treatmentPlan || '', optometristName || 'Optómetra General', professionalLicense || '',
+          recordId, clientId
+        ]
+      );
+
+      res.json({ success: true, record: result.rows[0] });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
@@ -8609,6 +8739,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
   // Crear o actualizar variante de producto
   app.post('/api/clients/:clientId/products/:productId/variants', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
+      const targetClientId = resolveProductClientId(req.params.clientId);
       const { productId } = req.params;
       const { id, variant_name, sku, price, cost_price, stock, min_stock, image_url } = req.body;
 
@@ -8626,9 +8757,9 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         );
       } else {
         result = await pool.query(
-          `INSERT INTO product_variants (product_id, variant_name, sku, price, cost_price, stock, min_stock, image_url)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-          [productId, variant_name, sku || null, price || null, cost_price || 0, stock || 0, min_stock || 1, image_url || null]
+          `INSERT INTO product_variants (product_id, client_id, variant_name, sku, price, cost_price, stock, min_stock, image_url)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+          [productId, targetClientId, variant_name, sku || null, price || null, cost_price || 0, stock || 0, min_stock || 1, image_url || null]
         );
       }
 

@@ -241,28 +241,28 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-4">
+        <div className="space-y-6 text-white">
+            <div className="flex justify-between items-center border-b border-[#222428] pb-4">
                 <div>
-                    <h3 className="font-headline-md text-headline-md text-on-surface">Proveedores y Categorías</h3>
-                    <p className="text-on-surface-variant text-body-md opacity-70">
+                    <h3 className="font-extrabold text-xl text-[#eab308]" style={{ color: '#eab308' }}>PROVEEDORES Y CATEGORÍAS</h3>
+                    <p className="text-xs text-gray-400">
                         Administra tu directorio de proveedores y clasifica tus líneas de productos.
                     </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                     <button 
                         onClick={() => setIsCategoryModalOpen(true)}
-                        className="bg-surface-container hover:bg-surface-container-highest text-on-surface border border-outline/20 font-label-md px-4 py-2.5 rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                        className="bg-[#181a1c] hover:bg-[#222528] text-white border border-[#2d3036] text-[11px] font-bold px-3 py-1.5 rounded-md transition cursor-pointer flex items-center gap-1"
                     >
-                        <span className="material-symbols-outlined text-[18px]">tag</span>
-                        Categorías
+                        <span className="material-symbols-outlined text-[16px]">category</span>
+                        CATEGORÍAS
                     </button>
                     <button 
-                        onClick={() => handleOpenSupplierModal()}
-                        className="bg-primary text-on-primary font-label-md px-4 py-2.5 rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                        onClick={() => handleOpenSupplierModal(null)}
+                        className="bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] px-3 py-1.5 rounded-md shadow transition cursor-pointer flex items-center gap-1"
                     >
-                        <span className="material-symbols-outlined text-[18px]">add</span>
-                        Nuevo Proveedor
+                        <span className="material-symbols-outlined text-[16px]">add</span>
+                        NUEVO PROVEEDOR
                     </button>
                 </div>
             </div>

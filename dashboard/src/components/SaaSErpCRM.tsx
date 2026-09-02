@@ -114,6 +114,134 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, c
         return prescriptionStr;
     };
 
+    const [businessInfo, setBusinessInfo] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchBusiness = async () => {
+            try {
+                const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+                const res = await fetch(`/api/clients/${clientId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const json = await res.json();
+                if (json.success && json.data) {
+                    setBusinessInfo(json.data);
+                }
+            } catch (err) {
+                console.error("Error al cargar info de la empresa en CRM:", err);
+            }
+        };
+        fetchBusiness();
+    }, [clientId]);
+
+    const handlePrintFormulaFromCrm = (parsed: any, cust: Customer | null) => {
+        const printWin = window.open('', '_blank', 'width=850,height=800');
+        if (!printWin) return;
+
+        const patientName = cust ? `${cust.name} ${cust.last_name || ''}`.trim() : 'Paciente';
+        const docNum = cust?.document_number || 'N/A';
+        const phone = cust?.phone || 'N/A';
+
+        const companyName = businessInfo?.name || localStorage.getItem('company_name') || 'ÓPTICA & CENTRO OPTOMÉTRICO';
+        const companyNit = businessInfo?.nit || localStorage.getItem('company_nit') || 'N/A';
+        const companyAddress = businessInfo?.address || localStorage.getItem('company_address') || '';
+        const companyPhone = businessInfo?.phone_number || businessInfo?.agent_phone || localStorage.getItem('company_phone') || phone;
+        const companyLogo = businessInfo?.logo_url || localStorage.getItem('company_logo') || '';
+
+        printWin.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Fórmula Óptica - ${patientName}</title>
+              <style>
+                body { font-family: system-ui, -apple-system, sans-serif; padding: 30px; color: #111; font-size: 13px; line-height: 1.5; }
+                .header { text-align: center; border-bottom: 2px solid #eab308; padding-bottom: 14px; margin-bottom: 20px; }
+                .logo { max-height: 70px; margin-bottom: 6px; object-fit: contain; }
+                .brand { font-size: 22px; font-weight: 900; text-transform: uppercase; color: #111; letter-spacing: 1px; }
+                .subbrand { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #555; font-weight: 600; margin-top: 3px; }
+                .title { font-size: 13px; font-weight: bold; text-transform: uppercase; margin-top: 10px; background: #111; color: #fff; padding: 4px 14px; display: inline-block; border-radius: 4px; }
+                .patient-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+                .table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                .table th, .table td { border: 1px solid #d1d5db; padding: 10px; text-align: center; font-size: 12px; }
+                .table th { background: #f3f4f6; font-weight: 800; text-transform: uppercase; font-size: 10px; }
+                .table td.od { font-weight: bold; color: #0284c7; }
+                .table td.oi { font-weight: bold; color: #16a34a; }
+                .dp-box { margin-top: 15px; padding: 10px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; font-weight: bold; display: flex; justify-content: space-between; }
+                .footer { margin-top: 50px; text-align: center; }
+                .sig-line { display: inline-block; border-top: 1px solid #111; width: 280px; padding-top: 6px; font-weight: bold; text-align: center; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                ${companyLogo ? `<img src="${companyLogo}" class="logo" />` : ''}
+                <div class="brand">${companyName}</div>
+                <div class="subbrand">
+                  ${companyNit !== 'N/A' ? `NIT: ${companyNit} &nbsp;|&nbsp; ` : ''}
+                  ${companyAddress ? `Dirección: ${companyAddress} &nbsp;|&nbsp; ` : ''}
+                  Tel: ${companyPhone}
+                </div>
+                <div class="title">FÓRMULA MÉDICA DE LENTES FORMULADOS</div>
+              </div>
+
+              <div class="patient-box">
+                <div><strong>Paciente:</strong> ${patientName}</div>
+                <div><strong>Cédula / Doc:</strong> ${docNum}</div>
+                <div><strong>Teléfono (WhatsApp):</strong> ${phone}</div>
+                <div><strong>Fecha Emisión:</strong> ${new Date().toLocaleDateString('es-CO')}</div>
+              </div>
+
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>OJO</th>
+                    <th>ESFERA (ESF)</th>
+                    <th>CILINDRO (CIL)</th>
+                    <th>EJE (°)</th>
+                    <th>ADICIÓN (ADD)</th>
+                    <th>PRISMA</th>
+                    <th>AGUDEZA VISUAL (AV)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="od">OD (Ojo Derecho)</td>
+                    <td>${parsed.od?.esf || '0.00'}</td>
+                    <td>${parsed.od?.cil || '0.00'}</td>
+                    <td>${parsed.od?.eje || '0°'}</td>
+                    <td>${parsed.od?.adi || '0.00'}</td>
+                    <td>${parsed.od?.prism || '--'}</td>
+                    <td>${parsed.od?.av || '20/20'}</td>
+                  </tr>
+                  <tr>
+                    <td class="oi">OI (Ojo Izquierdo)</td>
+                    <td>${parsed.oi?.esf || '0.00'}</td>
+                    <td>${parsed.oi?.cil || '0.00'}</td>
+                    <td>${parsed.oi?.eje || '0°'}</td>
+                    <td>${parsed.oi?.adi || '0.00'}</td>
+                    <td>${parsed.oi?.prism || '--'}</td>
+                    <td>${parsed.oi?.av || '20/20'}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="dp-box">
+                <span>Distancia Pupilar (DP): <strong>${parsed.dp || 'N/A'} mm</strong></span>
+              </div>
+
+              <div class="footer">
+                <div class="sig-line">
+                  Optómetra Especialista Tratante<br>
+                  <span style="font-size:10px; font-weight:normal; color:#666;">Firma y Registro Profesional (T.P.)</span>
+                </div>
+              </div>
+
+              <script>window.print();</script>
+            </body>
+          </html>
+        `);
+        printWin.document.close();
+    };
+
     const renderPrescriptionDetail = (prescriptionStr: string | null) => {
         if (!prescriptionStr) {
             return (
@@ -165,17 +293,25 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, c
                                     </tbody>
                                 </table>
                             </div>
-                            {parsed.dp && (
-                                <div className="text-xs bg-surface-container/20 p-2.5 rounded-xl border border-outline/5 flex items-center justify-between">
-                                    <span className="text-on-surface-variant font-bold">Distancia Pupilar (DP):</span>
-                                    <span className="font-mono font-bold text-primary">{parsed.dp}</span>
-                                </div>
-                            )}
+                            <div className="flex items-center justify-between gap-3">
+                                {parsed.dp && (
+                                    <div className="text-xs bg-surface-container/20 p-2 rounded-xl border border-outline/5 font-mono">
+                                        DP: <strong>{parsed.dp} mm</strong>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => handlePrintFormulaFromCrm(parsed, selectedCust)}
+                                    className="px-3 py-1.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] rounded-md shadow transition flex items-center gap-1 cursor-pointer border-0"
+                                >
+                                    <span className="material-symbols-outlined text-[15px]">print</span>
+                                    Imprimir Fórmula Óptica
+                                </button>
+                            </div>
                         </div>
                     );
                 }
             } catch (e) {
-                // fallback a texto plano abajo
+                // fallback
             }
         }
 
@@ -451,27 +587,28 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, c
     });
 
     return (
-        <div className="space-y-6 text-on-surface">
+        <div className="space-y-6 text-white">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-bold text-on-surface">Directorio de Clientes (CRM)</h2>
-                    <p className="text-xs text-on-surface-variant">Registra historias clínicas, prescripción de lentes y audita deudas de pacientes.</p>
+                    <h2 className="text-xl font-extrabold text-[#eab308]" style={{ color: '#eab308' }}>DIRECTORIO DE CLIENTES (CRM)</h2>
+                    <p className="text-xs text-gray-400">Registra historias clínicas, prescripción de lentes y audita deudas de pacientes.</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button 
                         onClick={fetchData}
-                        className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow"
+                        className="h-8 px-3 bg-[#181a1c] hover:bg-[#222528] text-white rounded-md flex items-center justify-center border border-[#2d3036] cursor-pointer transition text-xs font-semibold"
                         title="Refrescar CRM"
                     >
-                        <span className="material-symbols-outlined text-[18px]">refresh</span>
+                        <span className="material-symbols-outlined text-[16px] mr-1">refresh</span>
+                        Refrescar
                     </button>
                     <button 
                         onClick={openCreateModal}
-                        className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition"
+                        className="px-3 py-1.5 bg-[#eab308] hover:bg-amber-300 text-black text-[11px] font-extrabold rounded-md flex items-center gap-1 cursor-pointer shadow transition"
                     >
-                        <span className="material-symbols-outlined text-[16px]">add</span>
-                        {crmTab === 'empresas' ? 'Nueva Empresa' : 'Nuevo Cliente'}
+                        <span className="material-symbols-outlined text-[15px]">add</span>
+                        {crmTab === 'empresas' ? 'NUEVA EMPRESA' : 'NUEVO CLIENTE'}
                     </button>
                 </div>
             </div>

@@ -210,6 +210,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     const [empDeptId, setEmpDeptId] = useState('');
     const [empPin, setEmpPin] = useState('');
     const [empCode, setEmpCode] = useState('');
+    const [empProfLicense, setEmpProfLicense] = useState('');
 
     const [docFilterQuery, setDocFilterQuery] = useState('');
     const [docFilterMonth, setDocFilterMonth] = useState('');
@@ -742,6 +743,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                     department_id: empDeptId || null,
                     pin: empPin,
                     employee_code: finalEmployeeCode,
+                    professional_license: empProfLicense || null,
                     is_active: true
                 })
             });
@@ -950,18 +952,18 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         return (
             <div className="space-y-6">
                 {/* Header of Shifts View */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container/20 border border-outline/10 p-5 rounded-2xl">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#141517] border border-[#222428] p-5 rounded-lg">
                     <div>
-                        <h3 className="font-bold text-lg text-on-surface flex items-center gap-2">
-                            <span className="material-symbols-outlined text-green-500">work_history</span>
-                            Control de Asistencia y Turnos
+                        <h3 className="font-extrabold text-lg flex items-center gap-2" style={{ color: '#eab308' }}>
+                            <span className="material-symbols-outlined text-[#eab308]">work_history</span>
+                            CONTROL DE ASISTENCIA Y TURNOS
                         </h3>
-                        <p className="text-xs text-on-surface-variant">Monitorea en tiempo real los registros de entrada, almuerzos, salidas y puntualidad.</p>
+                        <p className="text-xs text-gray-400">Monitorea en tiempo real los registros de entrada, almuerzos, salidas y puntualidad.</p>
                     </div>
                     {viewMode !== 'turnos' && (
                         <button 
                             onClick={() => { setActiveView('list'); setSelectedEmpForShifts(null); }}
-                            className="px-4 py-2 border border-outline/20 hover:bg-surface-variant/20 text-on-surface text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition"
+                            className="px-3 py-1.5 bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white text-[11px] font-bold rounded-md flex items-center gap-1.5 cursor-pointer transition"
                         >
                             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
                             Volver a Lista
@@ -970,20 +972,22 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                 </div>
 
                 {/* Tabs for Shifts View */}
-                <div className="flex border-b border-outline/10 gap-4 text-xs font-bold">
+                <div className="flex border-b border-[#222428] gap-4 text-xs font-bold">
                     <button 
                         onClick={() => { setShiftsTab('hoy'); fetchTodayShifts(); }}
                         className={`pb-3 cursor-pointer transition-all border-b-2 px-1 ${
-                            shiftsTab === 'hoy' ? 'border-primary text-primary font-black' : 'border-transparent text-on-surface-variant/70 hover:text-on-surface'
+                            shiftsTab === 'hoy' ? 'border-[#eab308] text-[#eab308] font-black' : 'border-transparent text-gray-400 hover:text-white'
                         }`}
+                        style={{ color: shiftsTab === 'hoy' ? '#eab308' : undefined }}
                     >
                         Asistencia de Hoy
                     </button>
                     <button 
                         onClick={() => { setShiftsTab('historial'); }}
                         className={`pb-3 cursor-pointer transition-all border-b-2 px-1 ${
-                            shiftsTab === 'historial' ? 'border-primary text-primary font-black' : 'border-transparent text-on-surface-variant/70 hover:text-on-surface'
+                            shiftsTab === 'historial' ? 'border-[#eab308] text-[#eab308] font-black' : 'border-transparent text-gray-400 hover:text-white'
                         }`}
+                        style={{ color: shiftsTab === 'historial' ? '#eab308' : undefined }}
                     >
                         Historial de Fichajes
                     </button>
@@ -994,24 +998,24 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                     <div className="space-y-6">
                         {/* Summary indicators */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-surface-container/40 border border-outline/10 p-4 rounded-xl flex justify-between items-center">
+                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg flex justify-between items-center">
                                 <div>
-                                    <p className="text-[10px] text-on-surface-variant uppercase font-mono font-bold">Fichajes de Hoy</p>
-                                    <p className="text-xl font-black text-on-surface mt-1">{todayShifts.length}</p>
+                                    <p className="text-[10px] text-[#eab308] uppercase font-mono font-bold" style={{ color: '#eab308' }}>Fichajes de Hoy</p>
+                                    <p className="text-xl font-black text-white mt-1">{todayShifts.length}</p>
                                 </div>
-                                <span className="material-symbols-outlined text-primary text-[28px] opacity-70">badge</span>
+                                <span className="material-symbols-outlined text-[#eab308] text-[28px]">badge</span>
                             </div>
-                            <div className="bg-surface-container/40 border border-outline/10 p-4 rounded-xl flex justify-between items-center">
+                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg flex justify-between items-center">
                                 <div>
-                                    <p className="text-[10px] text-on-surface-variant uppercase font-mono font-bold">En Turno Activo</p>
-                                    <p className="text-xl font-black text-green-500 mt-1">{todayShifts.filter(s => !s.clock_out).length}</p>
+                                    <p className="text-[10px] text-green-400 uppercase font-mono font-bold">En Turno Activo</p>
+                                    <p className="text-xl font-black text-green-400 mt-1">{todayShifts.filter(s => !s.clock_out).length}</p>
                                 </div>
-                                <span className="material-symbols-outlined text-green-500 text-[28px] opacity-70">play_circle</span>
+                                <span className="material-symbols-outlined text-green-400 text-[28px]">play_circle</span>
                             </div>
-                            <div className="bg-surface-container/40 border border-outline/10 p-4 rounded-xl flex justify-between items-center">
+                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg flex justify-between items-center">
                                 <div>
-                                    <p className="text-[10px] text-on-surface-variant uppercase font-mono font-bold">Retardos (Tarde)</p>
-                                    <p className="text-xl font-black text-orange-500 mt-1">
+                                    <p className="text-[10px] text-orange-400 uppercase font-mono font-bold">Retardos (Tarde)</p>
+                                    <p className="text-xl font-black text-orange-400 mt-1">
                                         {todayShifts.filter(s => {
                                             const date = new Date(s.clock_in);
                                             const hour = date.getHours();
@@ -1020,7 +1024,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                         }).length}
                                     </p>
                                 </div>
-                                <span className="material-symbols-outlined text-orange-500 text-[28px] opacity-70">schedule</span>
+                                <span className="material-symbols-outlined text-orange-400 text-[28px]">schedule</span>
                             </div>
                         </div>
 
@@ -2414,6 +2418,17 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                         placeholder="Ej: EMP-001"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-on-surface-variant">Registro / Tarjeta Profesional (T.P. Optómetra / Salud)</label>
+                                <input 
+                                    type="text"
+                                    value={empProfLicense}
+                                    onChange={(e) => setEmpProfLicense(e.target.value)}
+                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono text-xs"
+                                    placeholder="Ej: TP-1098234-OPT (Opcional)"
+                                />
                             </div>
 
                             <div className="flex gap-3 justify-end pt-4 border-t border-outline/10">

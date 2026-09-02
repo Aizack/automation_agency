@@ -124,27 +124,28 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center border-b border-outline/10 pb-4">
+    <div className="space-y-6 text-white">
+      <div className="flex justify-between items-center border-b border-[#222428] pb-4">
         <div>
-          <h3 className="font-headline-md text-headline-md text-on-surface">Módulo de Cartera y Cobranza</h3>
-          <p className="text-on-surface-variant text-body-md opacity-70">
+          <h3 className="font-extrabold text-xl text-[#eab308]" style={{ color: '#eab308' }}>MÓDULO DE CARTERA & COBRANZA</h3>
+          <p className="text-xs text-gray-400">
             Monitorea el plan de amortización, abonos iniciales y acciones negociables de clientes con compras a cuotas.
           </p>
         </div>
         <button 
           onClick={fetchCreditInvoices}
-          className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow"
+          className="h-8 px-3 bg-[#181a1c] hover:bg-[#222528] text-white rounded-md flex items-center justify-center border border-[#2d3036] cursor-pointer transition text-xs font-semibold"
           title="Refrescar Cartera"
         >
-          <span className="material-symbols-outlined text-[18px]">refresh</span>
+          <span className="material-symbols-outlined text-[16px] mr-1">refresh</span>
+          Refrescar
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lista de deudores */}
-        <div className="lg:col-span-1 glass-card p-4 rounded-2xl border border-outline/10 space-y-4">
-          <h4 className="font-bold text-xs uppercase tracking-wider text-on-surface-variant ml-1">Facturas Financiadas</h4>
+        <div className="lg:col-span-1 bg-[#141517] p-4 rounded-lg border border-[#222428] space-y-4">
+          <h4 className="font-bold text-xs uppercase tracking-wider text-[#eab308]" style={{ color: '#eab308' }}>FACTURAS FINANCIADAS</h4>
           
           {loading ? (
             <div className="p-8 text-center text-xs text-on-surface-variant">Cargando cuentas...</div>

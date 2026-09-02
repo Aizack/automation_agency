@@ -292,6 +292,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         setVisitReasonDetails(appt.visit_reason_details || '');
         setApptStatus(appt.status);
         setErrorMsg('');
+        if (dPart) fetchAvailability(dPart);
         setIsEditOpen(true);
     };
 
@@ -419,6 +420,15 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         const ampm = hh >= 12 ? 'p.m.' : 'a.m.';
         const hour12 = hh % 12 === 0 ? 12 : hh % 12;
         return `${String(hour12).padStart(2, '0')}:${minStr || '00'} ${ampm}`;
+    };
+
+    const formatApptDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        const [dPart] = dateStr.split('T');
+        const [yyyy, mm, dd] = dPart.split('-');
+        if (!yyyy || !mm || !dd) return dateStr;
+        const localDate = new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
+        return localDate.toLocaleDateString('es-CO', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
     };
 
     const getAppointmentsForDay = (date: Date) => {
@@ -719,7 +729,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                             <div>
                                 <span className="text-[10px] text-primary uppercase font-bold font-mono tracking-wider">Agenda Diaria</span>
                                 <h3 className="font-bold text-base text-on-surface capitalize mt-0.5">
-                                    {selectedDate.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                    {formatApptDate(formatLocalDateInput(selectedDate))}
                                 </h3>
                             </div>
                             <button 

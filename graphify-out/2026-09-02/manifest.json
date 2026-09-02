@@ -36,9 +36,9 @@
     "semantic_hash": "f834bd66a9e6ce8d0cccebe56e8a1027"
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1788316771.0645165,
-    "seen": 1788317332.717968,
-    "ast_hash": "91e070242cf0299ac1523bcbaf716c36",
+    "mtime": 1788325239.483151,
+    "seen": 1788326508.3671117,
+    "ast_hash": "3f2ce4e952cad9994e16b1fa4472d3ef",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAppointments.tsx": {
-    "mtime": 1788323461.2035022,
-    "seen": 1788323488.2028277,
-    "ast_hash": "f10bb6ceb24c46d3b4c3ec2d1d98d697",
+    "mtime": 1788324427.4504735,
+    "seen": 1788324562.4041917,
+    "ast_hash": "bfc2930ddb66651d82fad625fc8d465a",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAuditLogs.tsx": {
@@ -120,8 +120,8 @@
     "semantic_hash": "ff87a8032ce041d05e91b7463c8ba9de"
   },
   "dashboard/src/components/SaaSErpCRM.tsx": {
-    "mtime": 1788323172.2019665,
-    "seen": 1788323390.9581864,
+    "mtime": 1788324172.3112917,
+    "seen": 1788324562.404201,
     "ast_hash": "b06ccadf90ce900c070bd05a30fcd439",
     "semantic_hash": ""
   },
@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpFormulas.tsx": {
-    "mtime": 1788323465.5312016,
-    "seen": 1788323488.2028518,
-    "ast_hash": "9240e85c7682f03a120137dc9feafcc7",
+    "mtime": 1788326479.6364653,
+    "seen": 1788326508.3671598,
+    "ast_hash": "95c6e7b98ca8a13b28350536e39ad53d",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
@@ -474,9 +474,9 @@
     "semantic_hash": "b3024c4e4260cc821458cbe2a3a5d9e1"
   },
   "src/server.ts": {
-    "mtime": 1788322439.1053946,
-    "seen": 1788323390.9583058,
-    "ast_hash": "842a405f310765bc459e127521e8fe8d",
+    "mtime": 1788325239.4881513,
+    "seen": 1788326508.3673007,
+    "ast_hash": "e89496cc41a94989e3531a5bf214ea29",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -1095,6 +1095,12 @@
     "mtime": 1786404224.228384,
     "seen": 1788303826.426559,
     "ast_hash": "361677a8c3b769df5880b25b5e2cdb00",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/SaaSErpLabJobs.tsx": {
+    "mtime": 1788325239.483151,
+    "seen": 1788326508.3671694,
+    "ast_hash": "f9776a2c0605677f51f95cebaa578c16",
     "semantic_hash": ""
   }
 }

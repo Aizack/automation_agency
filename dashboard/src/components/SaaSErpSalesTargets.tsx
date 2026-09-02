@@ -143,32 +143,32 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
   const overallPct = totalStoreTargets > 0 ? Math.round((totalStoreSales / totalStoreTargets) * 100) : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-white">
       {/* Header & Filtros por Fecha */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline/10 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#222428] pb-4">
         <div>
-          <h2 className="text-xl font-bold text-on-surface flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">groups</span>
-            Ventas por Vendedor & Asignación de Metas
+          <h2 className="text-xl font-extrabold text-[#eab308] flex items-center gap-2" style={{ color: '#eab308' }}>
+            <span className="material-symbols-outlined text-[#eab308]">groups</span>
+            VENTAS POR VENDEDOR & ASIGNACIÓN DE METAS
           </h2>
-          <p className="text-xs text-on-surface-variant opacity-75">
+          <p className="text-xs text-gray-400">
             Monitorea el rendimiento individual, comisiones y nivel de cumplimiento de metas mensuales del equipo.
           </p>
         </div>
 
         {/* Filtro Mes / Año en Dropdown Seleccionable */}
         <div className="flex items-center gap-2">
-          <label className="text-xs font-bold text-on-surface-variant flex items-center gap-1">
-            <span className="material-symbols-outlined text-[16px] text-primary">calendar_month</span>
+          <label className="text-xs font-bold text-gray-400 flex items-center gap-1">
+            <span className="material-symbols-outlined text-[16px] text-[#eab308]" style={{ color: '#eab308' }}>calendar_month</span>
             Período:
           </label>
           <select
             value={monthYear}
             onChange={(e) => setMonthYear(e.target.value)}
-            className="bg-surface-container border border-outline/30 rounded-xl px-3 py-2 text-xs text-on-surface font-bold outline-none cursor-pointer focus:border-primary transition shadow-sm"
+            className="bg-[#0a0b0c] border border-[#26282d] rounded-lg px-3 py-1.5 text-xs text-white font-bold outline-none cursor-pointer focus:border-amber-400 transition shadow-sm"
           >
             {monthOptions.map(opt => (
-              <option key={opt.value} value={opt.value} className="bg-surface-container-highest text-on-surface">
+              <option key={opt.value} value={opt.value} className="bg-[#141517] text-white">
                 {opt.label}
               </option>
             ))}
@@ -178,7 +178,7 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
 
       {/* Banner de Diagnóstico de Error SQL / API */}
       {errorMessage && (
-        <div className="bg-red-500/15 border border-red-500/40 p-4 rounded-2xl flex items-start gap-3 text-red-400">
+        <div className="bg-red-500/15 border border-red-500/40 p-4 rounded-lg flex items-start gap-3 text-red-400">
           <span className="material-symbols-outlined text-[24px] shrink-0 mt-0.5">warning</span>
           <div className="space-y-1">
             <h4 className="text-xs font-bold uppercase tracking-wider">Diagnóstico de Consulta Backend (SQL / API)</h4>
@@ -189,15 +189,15 @@ export const SaaSErpSalesTargets: React.FC<SaaSErpSalesTargetsProps> = ({ client
 
       {/* KPI Consolidado del Equipo */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex justify-between items-center">
+        <div className="bg-[#141517] border border-[#222428] p-5 rounded-lg flex justify-between items-center">
           <div>
-            <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Ventas Totales del Vendedor</p>
-            <p className="text-xl font-black text-primary mt-1">{formatCOP(totalStoreSales)}</p>
+            <p className="text-[10px] text-[#eab308] font-bold uppercase tracking-wider" style={{ color: '#eab308' }}>VENTAS TOTALES DEL VENDEDOR</p>
+            <p className="text-xl font-black text-white font-mono mt-1">{formatCOP(totalStoreSales)}</p>
           </div>
-          <span className="material-symbols-outlined text-primary text-[32px]">point_of_sale</span>
+          <span className="material-symbols-outlined text-[#eab308] text-[32px]" style={{ color: '#eab308' }}>point_of_sale</span>
         </div>
 
-        <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex justify-between items-center">
+        <div className="bg-[#141517] border border-[#222428] p-5 rounded-lg flex justify-between items-center">
           <div>
             <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Meta Total Asignada</p>
             <p className="text-xl font-black text-amber-400 mt-1">{formatCOP(totalStoreTargets)}</p>

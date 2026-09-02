@@ -1,16 +1,16 @@
 # Graph Report - Bot multi-tenant  (2026-09-01)
 
 ## Corpus Check
-- 159 files · ~294,905 words
+- 159 files · ~297,687 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1222 nodes · 1610 edges · 110 communities (94 shown, 16 thin omitted)
+- 1222 nodes · 1611 edges · 110 communities (94 shown, 16 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 7 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `99d442f4`
+- Built from commit: `2beec644`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -42,7 +42,7 @@
 - SaaSErpInvoices.tsx
 - 🧪 GUÍA DE TESTING: Sistema de Gestión de Errores y Logging
 - Plan de Implementación: Módulo Contable, Métodos de Pago y Rotación de Inventario
-- scheduler.ts
+- shutdownManager.ts
 - SaaSErpCashShifts.tsx
 - 🚨 Error 502 Bad Gateway - Diagnosis & Solutions
 - SaaSErpFormulas.tsx
@@ -72,7 +72,7 @@
 - stitch_unified_admin_platform light mode/DESIGN.md
 - stitch_unified_client_platform light mode/DESIGN.md
 - 🏢 Especificación Técnica: Módulo Multi-Sede, Fotos de Producto & Traslado de Personal
-- shutdownManager.ts
+- envValidator.ts
 - 🎯 Plan Estratégico: Monetización, Seguridad Zero-Trust y Sistema de Temas Visuales
 - 🎯 Módulo de Metas Mensuales de Ventas & Rendimiento Comercial
 - 1. Esquema de Propiedades y Base de Datos
@@ -89,7 +89,7 @@
 - stitch_unified_client_platform dark mode/DESIGN.md
 - Arquitectura del Sistema: Agencia de Automatización con IA
 - 4. Modelo de base de datos recomendado
-- envValidator.ts
+- scheduler.ts
 - Calibración de impresión térmica - rollo de 2 stickers por fila
 - 2. Capas del sistema
 - 📜 Sistema de Trazabilidad Global y Bitácora de Auditoría (Audit Trail 360°)
@@ -181,8 +181,8 @@ Cohesion: 0.08
 Nodes (23): compilerOptions, allowArbitraryExtensions, allowImportingTsExtensions, erasableSyntaxOnly, jsx, lib, module, moduleDetection (+15 more)
 
 ### Community 8 - "server.ts"
-Cohesion: 0.10
-Nodes (18): deleteClient(), updateClientStatus(), AuthenticatedRequest, authenticateToken(), authorizeClientAccess(), requireRole(), authRateLimiter, generalApiLimiter (+10 more)
+Cohesion: 0.09
+Nodes (23): runAutoFixAgent(), TicketFixResult, deleteClient(), updateClientStatus(), AuthenticatedRequest, authenticateToken(), authorizeClientAccess(), requireRole() (+15 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.10
@@ -201,8 +201,8 @@ Cohesion: 0.06
 Nodes (33): nodemon, description, devDependencies, nodemon, ssh2, ts-node, @types/express, @types/jsonwebtoken (+25 more)
 
 ### Community 13 - "StructuredLogger"
-Cohesion: 0.17
-Nodes (9): correlationIdMiddleware(), Express, Request, AppError, asyncHandler(), errorHandler(), generateCorrelationId(), LogContext (+1 more)
+Cohesion: 0.25
+Nodes (6): correlationIdMiddleware(), Express, Request, generateCorrelationId(), LogContext, StructuredLogger
 
 ### Community 14 - "Implementación técnica del flujo de laboratorio y domicilios óptica"
 Cohesion: 0.06
@@ -256,9 +256,9 @@ Nodes (24): 1. Backend - Confirmar Endpoints, 2. Frontend - Panel de Alertas, 3.
 Cohesion: 0.08
 Nodes (23): 1.1 Cambio de nomenclatura en la UI y BD, 1.2 Campos adicionales para Transferencia Bancaria, 1.3 Actualizar formulario de factura, 2.1 Backend — Endpoints necesarios, 2.2 Frontend — `SaaSErpAccounting.tsx`, 2.3 Integrar en `ClientDashboard.tsx`, 3.1 Migración de BD, 3.2 Endpoints CRUD (+15 more)
 
-### Community 27 - "scheduler.ts"
-Cohesion: 0.27
-Nodes (8): runAutoFixAgent(), TicketFixResult, server, startEscalationService(), checkAndSendReminders(), delay(), formatCurrency(), startScheduler()
+### Community 27 - "shutdownManager.ts"
+Cohesion: 0.29
+Nodes (9): runTest(), STATE_FILE_PATH, stopEscalationService(), captureSystemState(), gracefulShutdown(), registerShutdownHandlers(), restoreSystemState(), STATE_FILE_PATH (+1 more)
 
 ### Community 28 - "SaaSErpCashShifts.tsx"
 Cohesion: 0.40
@@ -281,8 +281,8 @@ Cohesion: 0.40
 Nodes (4): Category, SaaSErpSuppliers(), Supplier, SuppliersProps
 
 ### Community 33 - "logger.ts"
-Cohesion: 0.25
-Nodes (3): alertThrottleMap, logger, LOGS_DIR
+Cohesion: 0.17
+Nodes (6): AppError, asyncHandler(), errorHandler(), alertThrottleMap, logger, LOGS_DIR
 
 ### Community 34 - "Plan de Mejoras Arquitectónicas"
 Cohesion: 0.10
@@ -328,9 +328,9 @@ Nodes (12): Brand & Style, Buttons, Cards, Chips & Tags, Colors, Components, Ele
 Cohesion: 0.15
 Nodes (12): 📌 1. Visión General y Objetivos, 🗄️ 2. Diseño de Base de Datos y Esquemas SQL, 🔍 3. Consulta de Stock Inter-Sedes & Reserva Exprés, 🖼️ 4. Fotografía Opcional de Producto, 5.1. Creación de Nueva Sede (`SaaSErpStoreSettings.tsx`), 5.2. Selector de Sede ("Store Switcher") en `ClientDashboard.tsx`, 5.3. Reubicación / Traslado de Empleados (`SaaSErpEmployees.tsx`), 🖥️ 5. Componentes Frontend & Flujo de Usuario (+4 more)
 
-### Community 59 - "shutdownManager.ts"
-Cohesion: 0.29
-Nodes (9): runTest(), STATE_FILE_PATH, stopEscalationService(), captureSystemState(), gracefulShutdown(), registerShutdownHandlers(), restoreSystemState(), STATE_FILE_PATH (+1 more)
+### Community 59 - "envValidator.ts"
+Cohesion: 0.50
+Nodes (3): REQUIRED_VARS, validateEnv(), WARN_VARS
 
 ### Community 60 - "🎯 Plan Estratégico: Monetización, Seguridad Zero-Trust y Sistema de Temas Visuales"
 Cohesion: 0.17
@@ -396,9 +396,9 @@ Nodes (7): 1. Diseño General (Multi-tenant), 2. Estructura de Directorios Modul
 Cohesion: 0.25
 Nodes (8): 4.1. Tabla `clients`, 4.2. Tabla `users`, 4.3. Tabla `user_client_roles`, 4.4. Tabla `employees`, 4.5. Tabla `crm_customers`, 4.6. Tabla `invoices`, 4.7. Tabla `lab_jobs`, 4. Modelo de base de datos recomendado
 
-### Community 76 - "envValidator.ts"
-Cohesion: 0.50
-Nodes (3): REQUIRED_VARS, validateEnv(), WARN_VARS
+### Community 76 - "scheduler.ts"
+Cohesion: 0.70
+Nodes (4): checkAndSendReminders(), delay(), formatCurrency(), startScheduler()
 
 ### Community 77 - "Calibración de impresión térmica - rollo de 2 stickers por fila"
 Cohesion: 0.25
@@ -508,7 +508,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
 - **Why does `Informe de análisis técnico por fases` connect `Informe de análisis técnico por fases` to `INFORME_ANALISIS_FASES.md`, `12. Recomendación de optimización por prioridad`, `10. Fase 8: WhatsApp, IA y automatización`, `11. Fase 9: Frontend, navegación y experiencia de usuario`, `3. Fase 1: Infraestructura base y arranque del sistema`, `4. Fase 2: Multi-tenancy, usuarios, roles y permisos`, `5. Fase 3: CRM, clientes y relación con facturación`, `6. Fase 4: Facturación, cartera y pagos`, `7. Fase 5: Inventario, proveedores y compras`, `8. Fase 6: Laboratorio y domicilios`, `9. Fase 7: Empleados, departments, roles y RRHH`?**
   _High betweenness centrality (0.006) - this node is a cross-community bridge._
-- **Why does `pool` connect `postgres.ts` to `logger.ts`, `whatsapp.ts`, `pdfGeneratorService.ts`, `server.ts`, `shutdownManager.ts`, `electronicInvoiceService.ts`, `scheduler.ts`?**
+- **Why does `pool` connect `postgres.ts` to `logger.ts`, `whatsapp.ts`, `pdfGeneratorService.ts`, `server.ts`, `scheduler.ts`, `electronicInvoiceService.ts`, `shutdownManager.ts`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
 - **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
   _694 weakly-connected nodes found - possible documentation gaps or missing edges._

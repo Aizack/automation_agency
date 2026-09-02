@@ -36,9 +36,9 @@
     "semantic_hash": "f834bd66a9e6ce8d0cccebe56e8a1027"
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1788302556.363454,
-    "seen": 1788303826.4259415,
-    "ast_hash": "773e0a471656239600c20f769d911912",
+    "mtime": 1788325239.483151,
+    "seen": 1788326508.3671117,
+    "ast_hash": "3f2ce4e952cad9994e16b1fa4472d3ef",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
@@ -102,16 +102,16 @@
     "semantic_hash": "5eecaf8480fc982cf871e0ead1f0ba3d"
   },
   "dashboard/src/components/SaaSErpAccounting.tsx": {
-    "mtime": 1788221531.0793688,
-    "seen": 1788303826.4259965,
-    "ast_hash": "413d9605cc53e07a84748918e9f1985c",
+    "mtime": 1788316362.4417577,
+    "seen": 1788317332.7179906,
+    "ast_hash": "4688fd7f8d2bc1d5d8aa19d10e67b7df",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAppointments.tsx": {
-    "mtime": 1787979245.270394,
-    "seen": 1788044146.8913112,
-    "ast_hash": "8bf3a5398d8328bb985f2bf58c0e146f",
-    "semantic_hash": "8bf3a5398d8328bb985f2bf58c0e146f"
+    "mtime": 1788324427.4504735,
+    "seen": 1788324562.4041917,
+    "ast_hash": "bfc2930ddb66651d82fad625fc8d465a",
+    "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAuditLogs.tsx": {
     "mtime": 1788049575.6400118,
@@ -120,10 +120,10 @@
     "semantic_hash": "ff87a8032ce041d05e91b7463c8ba9de"
   },
   "dashboard/src/components/SaaSErpCRM.tsx": {
-    "mtime": 1788055626.23758,
-    "seen": 1788055653.804096,
-    "ast_hash": "3f30a8ef41883ab0711307c57a877a53",
-    "semantic_hash": "3f30a8ef41883ab0711307c57a877a53"
+    "mtime": 1788324172.3112917,
+    "seen": 1788324562.404201,
+    "ast_hash": "b06ccadf90ce900c070bd05a30fcd439",
+    "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpCampaigns.tsx": {
     "mtime": 1787979229.247305,
@@ -132,39 +132,39 @@
     "semantic_hash": "390f4c1dfc9819e20a06df9b87d178ff"
   },
   "dashboard/src/components/SaaSErpCartera.tsx": {
-    "mtime": 1788055599.3287966,
-    "seen": 1788055653.8042443,
-    "ast_hash": "81b144f55aa553203f7389ea62c1456d",
-    "semantic_hash": "81b144f55aa553203f7389ea62c1456d"
+    "mtime": 1788316362.4640503,
+    "seen": 1788317332.718001,
+    "ast_hash": "f73e35a2066cdccb0b753003b8e6536c",
+    "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpDomicilios.tsx": {
-    "mtime": 1788149827.7938423,
-    "seen": 1788303826.4260306,
-    "ast_hash": "6b983f7a407d739c60813d07701b1387",
+    "mtime": 1788316771.0609856,
+    "seen": 1788317332.7180042,
+    "ast_hash": "a6016b7a1e3d70f5657e9987ef775424",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpEmployees.tsx": {
-    "mtime": 1788302556.366583,
-    "seen": 1788303826.4260356,
-    "ast_hash": "f49ec9fe34fde5d2da3ba17d270a6f1b",
+    "mtime": 1788322439.1074152,
+    "seen": 1788323390.9581957,
+    "ast_hash": "5976ffc8585dcbafb1c709ca338a9d10",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpFormulas.tsx": {
-    "mtime": 1788055590.3881245,
-    "seen": 1788055653.8043969,
-    "ast_hash": "87f480647f5ced9f6a64bb791ec49b79",
-    "semantic_hash": "87f480647f5ced9f6a64bb791ec49b79"
+    "mtime": 1788327304.654188,
+    "seen": 1788327328.577114,
+    "ast_hash": "22f254094057ea35c84aaac0610e4c9a",
+    "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
-    "mtime": 1788309829.722673,
-    "seen": 1788309878.6077862,
-    "ast_hash": "5e663ecaf471a22522b69774b69c1a0b",
+    "mtime": 1788316771.067508,
+    "seen": 1788317332.7180092,
+    "ast_hash": "326287743b2071f4665571f2fe80db2a",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
-    "mtime": 1788307189.790974,
-    "seen": 1788307377.3383508,
-    "ast_hash": "fa37528ecca7a29fa94c2ac622c99262",
+    "mtime": 1788316771.070508,
+    "seen": 1788317332.7180107,
+    "ast_hash": "71eb2e60cb398de78193aba74954105e",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpMarketing.tsx": {
@@ -174,22 +174,22 @@
     "semantic_hash": "3a34dc59acae6b92d2fda0a7818d638a"
   },
   "dashboard/src/components/SaaSErpPurchaseOrders.tsx": {
-    "mtime": 1787979214.1820228,
-    "seen": 1788044146.8913245,
-    "ast_hash": "e077e1e835e6003ad727027d602f348e",
-    "semantic_hash": "e077e1e835e6003ad727027d602f348e"
+    "mtime": 1788316362.472055,
+    "seen": 1788317332.7180166,
+    "ast_hash": "7866fee69a7e049f46a03f9ba248b101",
+    "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpStoreSettings.tsx": {
-    "mtime": 1788149429.6835501,
-    "seen": 1788303826.426065,
-    "ast_hash": "4cb3a05709b9fa0969ea9d97ab746e6a",
+    "mtime": 1788316362.472055,
+    "seen": 1788317332.7180202,
+    "ast_hash": "bb2f3ea2ac2508f23dd5e012bbb20fc9",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSuppliers.tsx": {
-    "mtime": 1787979206.4972143,
-    "seen": 1788044146.8913267,
-    "ast_hash": "92e6ca1133bbf4c32ccf4413f3fd2af0",
-    "semantic_hash": "92e6ca1133bbf4c32ccf4413f3fd2af0"
+    "mtime": 1788316362.4750493,
+    "seen": 1788317332.7180219,
+    "ast_hash": "65764249069245f102536f1ef4c36f16",
+    "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpUsers.tsx": {
     "mtime": 1787343247.0931869,
@@ -210,8 +210,8 @@
     "semantic_hash": "787e5a07efeb2bf6209d5937195f2f68"
   },
   "dashboard/src/utils/api.ts": {
-    "mtime": 1788309794.2013307,
-    "seen": 1788309878.6078248,
+    "mtime": 1788310060.410683,
+    "seen": 1788311560.8731298,
     "ast_hash": "1c12a9ab00796c534501da09815a76d6",
     "semantic_hash": ""
   },
@@ -288,9 +288,9 @@
     "semantic_hash": "d78a1b3ba48df623a32fb0fb29e7757f"
   },
   "src/database/initDb.ts": {
-    "mtime": 1788307189.7924798,
-    "seen": 1788307377.3385122,
-    "ast_hash": "54cfa93b63bee147f3555176c44d2be2",
+    "mtime": 1788322439.1139555,
+    "seen": 1788323390.9582562,
+    "ast_hash": "1902ffa31416ec0c3cc656f1838157c7",
     "semantic_hash": ""
   },
   "src/database/postgres.ts": {
@@ -474,9 +474,9 @@
     "semantic_hash": "b3024c4e4260cc821458cbe2a3a5d9e1"
   },
   "src/server.ts": {
-    "mtime": 1788309320.5334706,
-    "seen": 1788309878.6079617,
-    "ast_hash": "71ed807a1e7087db0b41af55ec6e37a4",
+    "mtime": 1788325239.4881513,
+    "seen": 1788326508.3673007,
+    "ast_hash": "e89496cc41a94989e3531a5bf214ea29",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -630,10 +630,10 @@
     "semantic_hash": "52add3bf42447472d11447a646a56a1e"
   },
   "dashboard/src/components/SaaSErpCashShifts.tsx": {
-    "mtime": 1788051696.2928412,
-    "seen": 1788052017.4409544,
-    "ast_hash": "96fe554ffb54d83ea3a1e26e93793f17",
-    "semantic_hash": "96fe554ffb54d83ea3a1e26e93793f17"
+    "mtime": 1788316362.4640503,
+    "seen": 1788317332.7180028,
+    "ast_hash": "48bccc8e7ff8479dc0c6604814a8d7a9",
+    "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSupportDocuments.tsx": {
     "mtime": 1788047443.0131733,
@@ -666,9 +666,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSalesTargets.tsx": {
-    "mtime": 1788287618.952949,
-    "seen": 1788303826.4260619,
-    "ast_hash": "5fda09f3e164abb42698354e75a9921c",
+    "mtime": 1788316362.4575315,
+    "seen": 1788317332.7180183,
+    "ast_hash": "f479266e129ff1bcb770b61a067601ef",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSupportTickets.tsx": {
@@ -1095,6 +1095,12 @@
     "mtime": 1786404224.228384,
     "seen": 1788303826.426559,
     "ast_hash": "361677a8c3b769df5880b25b5e2cdb00",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/SaaSErpLabJobs.tsx": {
+    "mtime": 1788325239.483151,
+    "seen": 1788326508.3671694,
+    "ast_hash": "f9776a2c0605677f51f95cebaa578c16",
     "semantic_hash": ""
   }
 }

@@ -8,6 +8,7 @@ import { SaaSErpDomicilios } from './SaaSErpDomicilios';
 import { SaaSErpSuppliers } from './SaaSErpSuppliers';
 import { SaaSErpPurchaseOrders } from './SaaSErpPurchaseOrders';
 import { SaaSErpFormulas } from './SaaSErpFormulas';
+import { SaaSErpLabJobs } from './SaaSErpLabJobs';
 import { SaaSErpStoreSettings } from './SaaSErpStoreSettings';
 import { SaaSErpAppointments } from './SaaSErpAppointments';
 import { SaaSErpEmployees } from './SaaSErpEmployees';
@@ -849,11 +850,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   const activeUserRole = rawRole === 'admin' ? 'Super Admin' : rawRole === 'employee' ? (localStorage.getItem('employee_role') || 'Colaborador') : 'Administrador de Tienda';
 
   return (
-    <div className="flex min-h-screen bg-background text-on-surface transition-colors duration-200">
-      {/* Sidebar Navigation */}
-      <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container border-r border-outline/20 flex flex-col py-6 px-6 z-[100]">
+    <div className="flex min-h-screen bg-[#0a0b0c] text-white transition-colors duration-200">
+      <aside className="h-screen w-64 fixed left-0 top-0 bg-[#070708] border-r border-[#1e2023] flex flex-col py-6 px-6 z-[100]">
         {/* Header/Logo Empresa */}
-        <div className="flex flex-col items-center text-center py-4 mb-8">
+        <div className="flex flex-col items-center mb-6 text-center">
           <input 
             type="file" 
             accept="image/*" 
@@ -893,7 +893,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             <div className="space-y-1">
               <button 
                 onClick={() => setActiveTab('resumen')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                   activeTab === 'resumen' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
@@ -908,7 +908,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Información Empresa</div>
               <button 
                 onClick={() => setActiveTab('configuracion')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                   activeTab === 'configuracion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
@@ -917,7 +917,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               </button>
               <button 
                 onClick={() => setActiveTab('planeacion_empresarial')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                   activeTab === 'planeacion_empresarial' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
@@ -932,7 +932,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Gastronomía & Mesas</div>
               <button 
                 onClick={() => setActiveTab('restaurante_menu')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                   activeTab === 'restaurante_menu' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
@@ -941,7 +941,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               </button>
               <button 
                 onClick={() => setActiveTab('inventario_insumos')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                   activeTab === 'inventario_insumos' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
@@ -950,7 +950,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               </button>
               <button 
                 onClick={() => setActiveTab('restaurante_mesas')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                   activeTab === 'restaurante_mesas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
@@ -959,7 +959,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               </button>
               <button 
                 onClick={() => setActiveTab('restaurante_kds')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                   activeTab === 'restaurante_kds' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
@@ -975,7 +975,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('inventory') && clientData?.enabledModules?.inventory !== false && clientData?.category !== 'restaurante' && (
                 <button 
                   onClick={() => setActiveTab('inventario')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'inventario' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -987,7 +987,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('lab') && clientData?.category === 'optica' && (
                 <button 
                   onClick={() => setActiveTab('lab_jobs')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'lab_jobs' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -999,7 +999,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('domicilios') && clientData?.enabledModules?.billing !== false && (
                 <button 
                   onClick={() => setActiveTab('domicilios')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'domicilios' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -1017,7 +1017,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 <>
                   <button 
                     onClick={() => setActiveTab('facturacion')}
-                    className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                       activeTab === 'facturacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                     }`}
                   >
@@ -1028,7 +1028,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                   {rawRole === 'admin' && (
                     <button 
                       onClick={() => setActiveTab('facturacion2')}
-                      className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                      className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                         activeTab === 'facturacion2' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                       }`}
                     >
@@ -1042,7 +1042,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
                   <button 
                     onClick={() => setActiveTab('documentos_soporte')}
-                    className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                       activeTab === 'documentos_soporte' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                     }`}
                   >
@@ -1052,7 +1052,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
                   <button 
                     onClick={() => setActiveTab('arqueo_caja')}
-                    className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                       activeTab === 'arqueo_caja' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                     }`}
                   >
@@ -1065,7 +1065,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('contabilidad') && (
                 <button 
                   onClick={() => setActiveTab('contabilidad')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'contabilidad' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -1077,7 +1077,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('cartera') && (
                 <button 
                   onClick={() => setActiveTab('cartera')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'cartera' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -1094,7 +1094,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('crm') && clientData?.enabledModules?.crm !== false && (
                 <button 
                   onClick={() => setActiveTab('clientes')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'clientes' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -1106,7 +1106,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('campaigns') && clientData?.enabledModules?.field_visits !== false && clientData?.category === 'optica' && (
                 <button 
                   onClick={() => setActiveTab('campanias')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'campanias' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -1118,7 +1118,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('marketing') && clientData?.enabledModules?.marketing !== false && (
                 <button 
                   onClick={() => setActiveTab('marketing')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'marketing' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -1129,7 +1129,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
               <button 
                 onClick={() => setActiveTab('metas_ventas')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                   activeTab === 'metas_ventas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
@@ -1145,7 +1145,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('appointments') && clientData?.enabledModules?.appointments !== false && (
                 <button 
                   onClick={() => setActiveTab('agenda')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'agenda' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -1160,7 +1160,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('formulas') && clientData?.category === 'optica' && (
                 <button 
                   onClick={() => setActiveTab('formulas')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'formulas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -1177,7 +1177,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {clientData?.enabledModules?.employees !== false && (
                 <button 
                   onClick={() => setActiveTab('empleados')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                     activeTab === 'empleados' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                   }`}
                 >
@@ -1187,7 +1187,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               )}
               <button 
                 onClick={() => setActiveTab('usuarios')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                   activeTab === 'usuarios' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
@@ -1196,7 +1196,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               </button>
               <button 
                 onClick={() => setActiveTab('trazabilidad')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                   activeTab === 'trazabilidad' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
                 }`}
               >
@@ -1209,7 +1209,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           <div className="space-y-1 pt-1">
             <button 
               onClick={() => setActiveTab('logs')}
-              className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border-0 cursor-pointer font-sans transition-all duration-200 ${
+              className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
                 activeTab === 'logs' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
               }`}
             >
@@ -1236,14 +1236,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-grow pl-64 min-h-screen flex flex-col">
+      <div className="flex-grow pl-64 min-h-screen flex flex-col bg-[#0a0b0c]">
         {/* Header Bar */}
-        <header className="h-16 border-b border-outline/10 flex items-center justify-between px-8 bg-surface-container/20 backdrop-blur sticky top-0 z-40">
-          <div>
+        <header className="h-16 border-b border-[#1e2023] flex items-center justify-between px-8 bg-[#070708] backdrop-blur sticky top-0 z-40">
             <h2 className="font-extrabold text-base sm:text-lg text-on-surface flex items-center gap-2">
-              <span className="font-sans">
-                {activeTab === 'resumen' ? 'Automatización y Agente IA' :
-                 activeTab === 'inventario' ? 'Inventario' :
+              <span className="font-sans" style={{ color: '#eab308' }}>
+                {activeTab === 'inventario' ? 'Inventario' :
                  activeTab === 'facturacion' ? 'Facturación' :
                  activeTab === 'facturacion2' ? 'Facturación v2 (Módulo Paralelo)' :
                  activeTab === 'contabilidad' ? 'Contabilidad y Análisis Financiero' :
@@ -1262,7 +1260,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                  'Estado del Sistema'}
               </span>
             </h2>
-          </div>
 
           <div className="flex items-center gap-4">
             {/* Quick Open-Design Theme Switcher Popover */}
@@ -1273,14 +1270,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                   setIsThemeDropdownOpen(!isThemeDropdownOpen);
                   setIsUserMenuOpen(false);
                 }}
-                className="px-3 py-1.5 rounded-xl bg-surface-container/60 hover:bg-surface-container border border-outline/20 flex items-center gap-2 cursor-pointer transition text-on-surface text-xs font-semibold shadow-sm"
+                className="px-3 py-1.5 rounded-md bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] flex items-center gap-2 cursor-pointer transition text-white text-xs font-semibold shadow-sm"
                 title="Cambiar Paleta de Tema (Open-Design Tokens)"
               >
-                <span className="material-symbols-outlined text-[16px] text-primary">palette</span>
+                <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>palette</span>
                 <span className="hidden md:inline font-mono text-[11px]">
                   {openDesignThemes.find(t => t.id === theme)?.name || 'Temas'}
                 </span>
-                <span className="material-symbols-outlined text-[14px] opacity-70">arrow_drop_down</span>
+                <span className="material-symbols-outlined text-[14px] text-gray-400">arrow_drop_down</span>
               </button>
 
               {/* Menú Desplegable de 5 Temas Open-Design */}
@@ -1353,7 +1350,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             <button
               type="button"
               onClick={() => setIsAddBranchModalOpen(true)}
-              className="flex items-center gap-1.5 p-2 px-3 rounded-2xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 transition cursor-pointer text-xs font-bold shadow-sm"
+              className="flex items-center gap-1.5 p-1.5 px-3 rounded-md bg-[#181a1c] hover:bg-[#222528] text-amber-400 border border-amber-500/40 transition cursor-pointer text-xs font-extrabold shadow-sm"
+              style={{ color: '#eab308' }}
               title="Agregar Nueva Sede Sucursal (Add-on)"
             >
               <span className="material-symbols-outlined text-[16px]">add_business</span>
@@ -1364,10 +1362,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             <button
               type="button"
               onClick={() => setIsSupportModalOpen(true)}
-              className="flex items-center gap-1.5 p-2 px-3 rounded-2xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 transition cursor-pointer text-xs font-bold shadow-sm"
+              className="flex items-center gap-1.5 p-1.5 px-3 rounded-md bg-[#181a1c] hover:bg-[#222528] text-white border border-[#2d3036] hover:border-amber-400/50 transition cursor-pointer text-xs font-bold shadow-sm"
               title="Reportar Problema / Tickets AutoFix IA"
             >
-              <span className="material-symbols-outlined text-[16px]">support_agent</span>
+              <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>support_agent</span>
               <span className="hidden md:inline">Soporte & AutoFix</span>
             </button>
 
@@ -1379,18 +1377,18 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                   setIsUserMenuOpen(!isUserMenuOpen);
                   setIsThemeDropdownOpen(false);
                 }}
-                className="flex items-center gap-2.5 p-1 px-3 rounded-2xl bg-surface-container/60 hover:bg-surface-container border border-outline/20 transition cursor-pointer text-left shadow-sm"
+                className="flex items-center gap-2 p-1 px-2.5 rounded-md bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] transition cursor-pointer text-left shadow-sm"
               >
-                <div className="w-8 h-8 rounded-full bg-primary/20 text-primary font-black text-xs flex items-center justify-center border border-primary/30 shrink-0">
+                <div className="w-7 h-7 rounded-md bg-[#1a170a] text-amber-400 font-extrabold text-xs flex items-center justify-center border border-amber-500/40 shrink-0" style={{ color: '#eab308' }}>
                   {activeUserName.substring(0, 1).toUpperCase()}
                 </div>
                 <div className="hidden sm:flex flex-col min-w-0">
-                  <span className="text-xs font-bold text-on-surface truncate leading-tight">{activeUserName}</span>
-                  <span className="text-[9px] text-primary font-mono font-medium truncate uppercase tracking-wider">
+                  <span className="text-xs font-bold text-white truncate leading-tight">{activeUserName}</span>
+                  <span className="text-[9px] text-amber-400 font-mono font-medium truncate uppercase tracking-wider" style={{ color: '#eab308' }}>
                     {activeUserRole}
                   </span>
                 </div>
-                <span className="material-symbols-outlined text-[16px] text-on-surface-variant opacity-70">arrow_drop_down</span>
+                <span className="material-symbols-outlined text-[16px] text-gray-400">arrow_drop_down</span>
               </button>
 
               {/* Menú Desplegable de Usuario */}
@@ -1478,40 +1476,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               </div>
             </div>
 
-            {/* Metricas de Negocio Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 mb-8">
-              {/* Ventas en Dinero */}
-              <div className="glass-card p-5 rounded-xl flex flex-col justify-between border-primary/10">
-                <div>
-                  <p className="font-medium text-xs text-on-surface-variant flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-primary">payments</span>
-                    Ventas Totales
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <h2 className="text-xl font-bold tracking-tight text-primary">
-                    ${metrics.totalSales.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </h2>
-                  <p className="text-on-surface-variant text-[10px] opacity-75 mt-0.5">Suma de facturación</p>
-                </div>
-              </div>
-
-              {/* Productos en Existencia */}
-              <div className="glass-card p-5 rounded-xl flex flex-col justify-between border-secondary/10">
-                <div>
-                  <p className="font-medium text-xs text-on-surface-variant flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-secondary">inventory_2</span>
-                    Productos en Catálogo
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <h2 className="text-xl font-bold tracking-tight text-secondary">
-                    {metrics.totalProducts} Ítems
-                  </h2>
-                  <p className="text-on-surface-variant text-[10px] opacity-75 mt-0.5">Existencias activas</p>
-                </div>
-              </div>
-
+            {/* Métricas de Agente IA Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-8">
               {/* ROI de Automatización */}
               <div className="glass-card p-5 rounded-xl flex flex-col justify-between border-success/10">
                 <div>
@@ -2448,13 +2414,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
         {activeTab === 'formulas' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
-            <SaaSErpFormulas clientId={clientId} defaultSubTab="formulas" showSubTabs={false} />
+            <SaaSErpFormulas clientId={clientId} />
           </div>
         )}
 
         {activeTab === 'lab_jobs' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
-            <SaaSErpFormulas clientId={clientId} defaultSubTab="lab_jobs" showSubTabs={false} />
+            <SaaSErpLabJobs clientId={clientId} />
           </div>
         )}
 
