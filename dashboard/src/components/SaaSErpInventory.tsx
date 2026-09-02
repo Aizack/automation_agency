@@ -493,20 +493,41 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         }
     }, [loading, isFormOpen, activeTab]);
 
+    const [hasVariants, setHasVariants] = useState<boolean>(true);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Generate automatic SKU if left blank
-        const finalSku = sku.trim() || 'OP' + Math.floor(100000 + Math.random() * 900000);
         
+        const hasVarBool = hasVariants && productType === 'product' && variantList.length > 0;
+
+        const formattedVariants = hasVarBool ? variantList.map(v => ({
+            variant_name: v.color || 'Variante',
+            color_hex: null,
+            sku: v.sku ? v.sku.trim() : '',
+            stock: v.stock === '' ? 0 : (parseInt(v.stock.toString()) || 0),
+            min_stock: v.min_stock === '' ? 2 : (parseInt(v.min_stock.toString()) || 2),
+            image_url: v.image_url || null
+        })) : [];
+
         const calculatedTotalStock = productType === 'service'
             ? 999999
-            : variantList.reduce((sum, v) => sum + (parseInt(v.stock?.toString() || '0') || 0), 0);
+            : (hasVarBool 
+                ? variantList.reduce((sum, v) => sum + (parseInt(v.stock?.toString() || '0') || 0), 0)
+                : (stock === '' ? 0 : (parseInt(stock.toString()) || 0)));
 
         const calculatedMinStock = productType === 'service'
             ? 1
-            : (variantList.length > 0 ? (parseInt(variantList[0].min_stock?.toString() || '1') || 1) : 5);
+            : (hasVarBool 
+                ? (variantList.length > 0 ? (parseInt(variantList[0].min_stock?.toString() || '1') || 1) : 2)
+                : (minStock === '' ? 2 : (parseInt(minStock.toString()) || 2)));
 
-        const primaryImageUrl = variantList.find(v => v.image_url?.trim())?.image_url || null;
+        const finalSku = hasVarBool 
+            ? null 
+            : (sku.trim() || 'OP' + Math.floor(100000 + Math.random() * 900000));
+
+        const primaryImageUrl = hasVarBool 
+            ? (variantList.find(v => v.image_url?.trim())?.image_url || null) 
+            : null;
 
         const body = { 
             name, 
@@ -519,11 +540,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             brand: brand.trim() || null,
             material: material || null,
             style: style || null,
-            color: variantList.map(v => v.color).filter(Boolean).join(', ') || null,
+            color: hasVarBool ? variantList.map(v => v.color).filter(Boolean).join(', ') : (color || null),
             image_url: primaryImageUrl,
             promo_discount: promoDiscount === '' ? 0 : promoDiscount,
             category_id: categoryId || null,
             product_type: productType,
+            has_variants: hasVarBool,
+            variants: formattedVariants,
             attributes: customAttrs
         };
 
@@ -535,53 +558,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
             const res = await fetch(url, {
                 method,
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
             const data = await res.json();
 
             if (data.success) {
-                const prodId = data.product?.id || editingProduct?.id;
-                if (prodId && productType === 'product' && variantList.length > 0) {
-                    for (const v of variantList) {
-                        if (v.color?.trim()) {
-                            await fetch(`/api/clients/${clientId}/products/${prodId}/variants`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                                body: JSON.stringify({
-                                    variant_name: v.color,
-                                    stock: v.stock === '' ? 0 : v.stock,
-                                    min_stock: v.min_stock === '' ? 1 : v.min_stock,
-                                    image_url: v.image_url || null
-                                })
-                            });
-                        }
-                    }
-                }
-
-                if (editingProduct) {
-                    const oldStock = editingProduct.stock;
-                    const newStock = parseInt(body.stock.toString());
-                    if (newStock > oldStock) {
-                        const addedStock = newStock - oldStock;
-                        const updatedProduct: Product = { 
-                            ...editingProduct, 
-                            ...body, 
-                            price: body.price.toString(),
-                            cost_price: body.cost_price.toString(),
-                            promo_discount: body.promo_discount.toString(),
-                            category_id: body.category_id,
-                            stock: newStock 
-                        };
-                        setTimeout(() => {
-                            openPrintModal(updatedProduct, addedStock);
-                        }, 300);
-                    }
-                }
-                fetchProducts();
+                await fetchProducts();
                 if (editingProduct) {
                     resetForm();
                 } else {
@@ -594,15 +577,16 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     setBrand('');
                     setMaterial('');
                     setStyle('');
+                    setColor('');
                     setPromoDiscount('');
                     setCustomAttrs({});
-                    alert('Producto guardado con éxito. El formulario continúa activo para seguir registrando bajo esta categoría.');
+                    alert('✓ Producto guardado con éxito y añadido al catálogo del inventario.');
                 }
             } else {
-                alert(`Error: ${data.error}`);
+                alert(`Error al guardar producto: ${data.error}`);
             }
-        } catch (err) {
-            alert('Error al guardar el producto.');
+        } catch (err: any) {
+            alert(`Error de conexión al guardar el producto: ${err.message}`);
         }
     };
 
@@ -1112,33 +1096,81 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             required
                                         />
                                     </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium flex items-center justify-between">
-                                            <span>SKU / Código de Barras</span>
-                                            <span className="text-[10px] text-primary font-semibold flex items-center gap-0.5">
-                                                <span className="material-symbols-outlined text-[13px]">barcode_scanner</span>
-                                                Listo para Pistola Lectora
-                                            </span>
-                                        </label>
-                                        <div className="relative">
-                                            <input 
-                                                type="text"
-                                                className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 pr-10 text-sm focus:border-primary text-on-surface outline-none transition font-mono uppercase"
-                                                value={sku}
-                                                onChange={(e) => setSku(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                    }
-                                                }}
-                                                placeholder="Disparar pistola lectora o dejar en blanco..."
-                                            />
-                                            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">
-                                                barcode_scanner
-                                            </span>
+                                    {(!hasVariants || productType === 'service') ? (
+                                        <div className="flex flex-col gap-1.5">
+                                            <label className="text-xs text-on-surface-variant font-medium flex items-center justify-between">
+                                                <span>SKU / Código de Barras (Producto Simple)</span>
+                                                <span className="text-[10px] text-primary font-semibold flex items-center gap-0.5">
+                                                    <span className="material-symbols-outlined text-[13px]">barcode_scanner</span>
+                                                    Listo para Pistola Lectora
+                                                </span>
+                                            </label>
+                                            <div className="relative">
+                                                <input 
+                                                    type="text"
+                                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 pr-10 text-sm focus:border-primary text-on-surface outline-none transition font-mono uppercase"
+                                                    value={sku}
+                                                    onChange={(e) => setSku(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
+                                                    placeholder="Disparar pistola lectora o dejar en blanco..."
+                                                />
+                                                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">
+                                                    barcode_scanner
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] text-on-surface-variant">Si lo dejas en blanco, el sistema autogenerará un código único.</p>
                                         </div>
-                                        <p className="text-[10px] text-on-surface-variant">Si lo dejas en blanco, el sistema autogenerará un código único.</p>
-                                    </div>
+                                    ) : (
+                                        <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-primary text-[20px]">palette</span>
+                                                <div>
+                                                    <p className="text-xs font-bold text-on-surface">Producto con Variantes de Color</p>
+                                                    <p className="text-[10px] text-on-surface-variant">Los códigos de barras y stock se definen individualmente por cada color abajo.</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setHasVariants(false)}
+                                                className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
+                                                title="Convertir a Producto Simple"
+                                            >
+                                                <span className="material-symbols-outlined text-[14px]">close</span>
+                                                Producto Simple
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {(!hasVariants && productType === 'product') && (
+                                        <>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs text-on-surface-variant font-medium">Stock Actual *</label>
+                                                <input 
+                                                    type="number"
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono font-bold"
+                                                    value={stock}
+                                                    onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
+                                                    placeholder="Ej: 10"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs text-on-surface-variant font-medium">Stock Mínimo Alerta *</label>
+                                                <input 
+                                                    type="number"
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono"
+                                                    value={minStock}
+                                                    onChange={(e) => setMinStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 1))}
+                                                    placeholder="Ej: 2"
+                                                    required
+                                                />
+                                            </div>
+                                        </>
+                                    )}
 
                                     {(() => {
                                         const selectedCat = categories.find((cat: any) => cat.id.toString() === categoryId.toString());
@@ -1452,28 +1484,56 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         );
                                     })()}
                                     
-                                    {/* Matriz de Variantes por Referencia Única */}
-                                    {productType === 'product' && (
-                                        <div className="col-span-1 md:col-span-2 space-y-2 bg-surface-container/20 p-3 rounded-2xl border border-outline/10 my-1">
-                                            <div className="flex justify-between items-center pb-1 border-b border-outline/10">
-                                                <label className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
-                                                    <span className="material-symbols-outlined text-primary text-[18px]">palette</span>
-                                                    Matriz de Variantes por Color (Stock / Mínimo / Foto)
-                                                </label>
-                                            </div>
+                                     {/* Matriz de Variantes por Referencia Única */}
+                                     {productType === 'product' && (
+                                         <div className="col-span-1 md:col-span-2 space-y-3 bg-surface-container/20 p-3.5 rounded-2xl border border-outline/10 my-1">
+                                             <div className="flex justify-between items-center pb-2 border-b border-outline/10">
+                                                 <label className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+                                                     <span className="material-symbols-outlined text-primary text-[18px]">palette</span>
+                                                     Matriz de Variantes por Color (Stock / Mínimo / Foto / SKU)
+                                                 </label>
 
-                                            {/* Nombres de los Campos / Encabezados de la Tabla */}
-                                            <div className="hidden sm:grid grid-cols-12 gap-2 text-[10px] font-bold uppercase text-on-surface-variant px-2 py-1 tracking-wider border-b border-outline/10">
-                                                <div className="col-span-3">COLOR / VARIANTE</div>
-                                                <div className="col-span-2 text-center">STOCK ACTUAL</div>
-                                                <div className="col-span-2 text-center">STOCK MÍNIMO</div>
-                                                <div className="col-span-2 text-center">FOTO PRODUCTO</div>
-                                                <div className="col-span-2 text-center">SKU / BARRAS</div>
-                                                <div className="col-span-1 text-center">ACCIONES</div>
-                                            </div>
+                                                 {hasVariants ? (
+                                                     <button
+                                                         type="button"
+                                                         onClick={() => setHasVariants(false)}
+                                                         className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                                                         title="Desactivar variantes y convertir en Producto Simple"
+                                                     >
+                                                         <span className="material-symbols-outlined text-[16px]">close</span>
+                                                         Desactivar Variantes (Producto Simple)
+                                                     </button>
+                                                 ) : (
+                                                     <button
+                                                         type="button"
+                                                         onClick={() => {
+                                                             setHasVariants(true);
+                                                             if (variantList.length === 0) {
+                                                                 setVariantList([{ color: 'Negro', sku: '', stock: stock === '' ? 10 : stock, min_stock: 2, image_url: '' }]);
+                                                             }
+                                                         }}
+                                                         className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                                                     >
+                                                         <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                                                         + Activar Variantes por Color
+                                                     </button>
+                                                 )}
+                                             </div>
 
-                                            <div className="space-y-2">
-                                                {variantList.map((v, idx) => (
+                                             {hasVariants && (
+                                                 <>
+                                                     {/* Nombres de los Campos / Encabezados de la Tabla */}
+                                                     <div className="hidden sm:grid grid-cols-12 gap-2 text-[10px] font-bold uppercase text-on-surface-variant px-2 py-1 tracking-wider border-b border-outline/10">
+                                                         <div className="col-span-3">COLOR / VARIANTE</div>
+                                                         <div className="col-span-2 text-center">STOCK ACTUAL</div>
+                                                         <div className="col-span-2 text-center">STOCK MÍNIMO</div>
+                                                         <div className="col-span-2 text-center">FOTO PRODUCTO</div>
+                                                         <div className="col-span-2 text-center">SKU / BARRAS</div>
+                                                         <div className="col-span-1 text-center">ACCIONES</div>
+                                                     </div>
+
+                                                     <div className="space-y-2">
+                                                         {variantList.map((v, idx) => (
                                                     <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-surface-container/60 p-2.5 rounded-xl border border-outline/10">
                                                         {/* 1. Selector Visual de Color con Círculos en CADA Opción y Edición */}
                                                         <div className="sm:col-span-3 flex flex-col gap-1">
@@ -1595,14 +1655,16 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 ))}
                                             </div>
 
-                                                <button
+                                            <button
                                                 type="button"
-                                                onClick={() => setVariantList([...variantList, { color: 'Carey', stock: 5, min_stock: 1, image_url: '' }])}
+                                                onClick={() => setVariantList([...variantList, { color: 'Carey', sku: '', stock: 5, min_stock: 1, image_url: '' }])}
                                                 className="w-full py-2 bg-primary/10 border border-dashed border-primary/40 rounded-xl text-xs font-bold text-primary hover:bg-primary/20 transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">add</span>
                                                 + (Si presiono el más abajo se agrega)
                                             </button>
+                                            </>
+                                            )}
                                         </div>
                                     )}
 
