@@ -103,6 +103,15 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
   const [clinDiagnosis, setClinDiagnosis] = useState('');
   const [clinTreatmentPlan, setClinTreatmentPlan] = useState('');
   const [clinOptometrist, setClinOptometrist] = useState('Dr. Optómetra Especialista');
+  // Checkboxes de Posibles Enfermedades / Antecedentes
+  const [diseaseCheckboxes, setDiseaseCheckboxes] = useState({
+    estrabismo: false,
+    carnosidad: false,
+    cataratas: false,
+    hipertension: false,
+    diabetes: false,
+    cirugia: false,
+  });
 
   const token = localStorage.getItem('auth_token');
 
@@ -431,6 +440,17 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
       return;
     }
 
+    const checkedDiseases = [
+      diseaseCheckboxes.estrabismo && 'Estrabismo',
+      diseaseCheckboxes.carnosidad && 'Carnosidad/Pterigión',
+      diseaseCheckboxes.cataratas && 'Cataratas',
+      diseaseCheckboxes.hipertension && 'Hipertensión',
+      diseaseCheckboxes.diabetes && 'Diabetes',
+      diseaseCheckboxes.cirugia && 'Cirugía Ocular',
+    ].filter(Boolean).join(', ');
+
+    const finalMedAntecedents = [checkedDiseases, clinMedAntecedents].filter(Boolean).join(' | ');
+
     try {
       setLoadingClinical(true);
       const res = await fetch(`/api/clients/${clientId}/clinical-records`, {
@@ -445,7 +465,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
           customerDocument: clinPatientDoc,
           customerPhone: clinPatientPhone,
           consultationReason: clinReason,
-          medicalAntecedents: clinMedAntecedents,
+          medicalAntecedents: finalMedAntecedents,
           ocularAntecedents: clinOcuAntecedents,
           visualAcuityOd: clinAvOd,
           visualAcuityOi: clinAvOi,
@@ -587,6 +607,57 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
           <script>window.print();</script>
     `);
     printWin.document.close();
+  };
+
+  const handleViewPatientClinicalRecord = async (cust: Customer) => {
+    try {
+      const searchParam = cust.document_number || cust.name;
+      const res = await fetch(`/api/clients/${clientId}/clinical-records?search=${encodeURIComponent(searchParam)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (json.success && json.records && json.records.length > 0) {
+        setViewingClinicalRecord(json.records[0]);
+      } else {
+        alert(`El paciente ${cust.name} no registra una historia clínica guardada aún. Haz clic en '+ Nueva Historia Clínica' para registrarla.`);
+      }
+    } catch (err) {
+      alert("Error al intentar consultar la historia clínica.");
+    }
+  };
+
+  const handleNewClinicalRecordForCustomer = (cust: Customer) => {
+    setEditingClinicalRecordId(null);
+    setClinPatientName(`${cust.name} ${cust.last_name || ''}`.trim());
+    setClinPatientDoc(cust.document_number || '');
+    setClinPatientPhone(cust.phone || '');
+
+    // Cargar automáticamente los valores de fórmula previa si existen
+    if (formulasHistory && formulasHistory.length > 0) {
+      const latestForm = formulasHistory[0];
+      const odStr = `Esf: ${latestForm.od_sphere || '---'} | Cil: ${latestForm.od_cylinder || '---'} | Eje: ${latestForm.od_axis ? `${latestForm.od_axis}°` : '---'} | Add: ${latestForm.od_addition || '---'}`;
+      const oiStr = `Esf: ${latestForm.oi_sphere || '---'} | Cil: ${latestForm.oi_cylinder || '---'} | Eje: ${latestForm.oi_axis ? `${latestForm.oi_axis}°` : '---'} | Add: ${latestForm.oi_addition || '---'}`;
+      setClinRefrOd(odStr);
+      setClinRefrOi(oiStr);
+      if (latestForm.od_av) setClinAvOd(latestForm.od_av);
+      if (latestForm.oi_av) setClinAvOi(latestForm.oi_av);
+    } else {
+      setClinRefrOd('');
+      setClinRefrOi('');
+      setClinAvOd('20/20');
+      setClinAvOi('20/20');
+    }
+
+    setDiseaseCheckboxes({
+      estrabismo: false,
+      carnosidad: false,
+      cataratas: false,
+      hipertension: false,
+      diabetes: false,
+      cirugia: false,
+    });
+
+    setIsClinicalFormOpen(true);
   };
 
   const handleEditClinicalRecord = (rec: any) => {
@@ -806,13 +877,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
               <div className="space-y-2 pt-2 border-t border-[#2d3036]">
                 <button
                   type="button"
-                  onClick={() => {
-                    setEditingClinicalRecordId(null);
-                    setClinPatientName(`${selectedCustomer.name} ${selectedCustomer.last_name || ''}`.trim());
-                    setClinPatientDoc(selectedCustomer.document_number || '');
-                    setClinPatientPhone(selectedCustomer.phone || '');
-                    setIsClinicalFormOpen(true);
-                  }}
+                  onClick={() => handleNewClinicalRecordForCustomer(selectedCustomer)}
                   className="w-full py-2 px-3 bg-primary text-on-primary font-bold text-xs rounded-md shadow hover:opacity-90 transition flex items-center justify-center gap-1.5 cursor-pointer border-0"
                 >
                   <span className="material-symbols-outlined text-[16px]">add</span>
@@ -820,11 +885,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setFormulasSubTab('historia_clinica');
-                    setClinicalSearch(selectedCustomer.document_number || selectedCustomer.name);
-                    fetchClinicalRecords();
-                  }}
+                  onClick={() => handleViewPatientClinicalRecord(selectedCustomer)}
                   className="w-full py-2 px-3 bg-blue-500/20 text-blue-400 font-bold text-xs rounded-md border border-blue-500/30 hover:bg-blue-500/30 transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[16px]">visibility</span>
@@ -1174,9 +1235,39 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
                   />
                 </div>
+                <div className="space-y-1.5 pt-1">
+                  <label className="font-bold text-on-surface-variant block text-xs">Posibles Enfermedades / Antecedentes (Marcar las que apliquen)</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#181a1c] p-3 rounded-md border border-[#2d3036]">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
+                      <input type="checkbox" checked={diseaseCheckboxes.estrabismo} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, estrabismo: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
+                      <span>Estrabismo</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
+                      <input type="checkbox" checked={diseaseCheckboxes.carnosidad} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, carnosidad: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
+                      <span>Carnosidad / Pterigión</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
+                      <input type="checkbox" checked={diseaseCheckboxes.cataratas} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, cataratas: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
+                      <span>Cataratas</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
+                      <input type="checkbox" checked={diseaseCheckboxes.hipertension} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, hipertension: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
+                      <span>Hipertensión</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
+                      <input type="checkbox" checked={diseaseCheckboxes.diabetes} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, diabetes: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
+                      <span>Diabetes</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
+                      <input type="checkbox" checked={diseaseCheckboxes.cirugia} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, cirugia: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
+                      <span>Cirugía Ocular</span>
+                    </label>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant">Antecedentes Médicos (Diabetes, HT, Alergias)</label>
+                    <label className="font-bold text-on-surface-variant">Notas Antecedentes Médicos</label>
                     <input
                       type="text"
                       placeholder="Ej: Hipertensión en tratamiento..."
@@ -1186,7 +1277,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="font-bold text-on-surface-variant">Antecedentes Oculares (Cirugías, Glaucoma)</label>
+                    <label className="font-bold text-on-surface-variant">Notas Antecedentes Oculares</label>
                     <input
                       type="text"
                       placeholder="Ej: Cirugía Láser en 2020..."

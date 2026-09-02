@@ -599,7 +599,7 @@
       "file_type": "code",
       "norm_label": "rotationproduct",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2587"
+      "source_location": "L2590"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_saaserpinventoryprops",
@@ -2728,7 +2728,7 @@
       "file_type": "code",
       "norm_label": "inventoryrotationview()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2598"
+      "source_location": "L2601"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_promodiscountrow",
@@ -2764,7 +2764,7 @@
       "file_type": "code",
       "norm_label": "visualcolordropdown()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2724"
+      "source_location": "L2727"
     },
     {
       "id": "dashboard_src_components_saaserppurchaseorders_saaserppurchaseorders",
@@ -14626,7 +14626,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2607",
+      "source_location": "L2610",
       "weight": 1.0
     },
     {
@@ -14674,7 +14674,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2249",
+      "source_location": "L2251",
       "weight": 1.0
     },
     {
@@ -23969,7 +23969,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2587",
+      "source_location": "L2590",
       "weight": 1.0
     },
     {
@@ -23980,7 +23980,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2598",
+      "source_location": "L2601",
       "weight": 1.0
     },
     {
@@ -23991,7 +23991,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2724",
+      "source_location": "L2727",
       "weight": 1.0
     },
     {
@@ -33001,5 +33001,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "fbf345d12c637bc25f2967fb21b3e82e10de56ea"
+  "built_at_commit": "5303fbe51d3eef9314287b611b06a4e8dfe28940"
 }
