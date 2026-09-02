@@ -382,14 +382,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
     const searchInputRef = useRef<HTMLInputElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const token = localStorage.getItem('auth_token');
-
     const fetchProducts = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/clients/${clientId}/products`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const res = await fetch(`/api/clients/${clientId}/products`);
             const json = await res.json();
             if (json.success) {
                 setProducts(json.products || []);
@@ -403,9 +399,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
     const fetchCategories = async () => {
         try {
-            const res = await fetch(`/api/clients/${clientId}/categories`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const res = await fetch(`/api/clients/${clientId}/categories`);
             const json = await res.json();
             if (json.success) {
                 setCategories(json.categories || []);
@@ -452,8 +446,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             const res = await fetch(`/api/clients/${clientId}/categories`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ name: newCategoryName })
             });
@@ -610,8 +603,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             const res = await fetch(`/api/clients/${clientId}/products/${prod.id}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(body)
             });
@@ -631,8 +623,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         if (!confirm('¿Estás seguro de eliminar este producto?')) return;
         try {
             const res = await fetch(`/api/clients/${clientId}/products/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                method: 'DELETE'
             });
             const data = await res.json();
             if (data.success) {
@@ -659,9 +650,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
             const res = await fetch(`/api/clients/${clientId}/products/import`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
                 body: formData
             });
             const json = await res.json();
@@ -779,8 +767,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             const res = await fetch(`/api/clients/${clientId}/products/${refillProduct.id}`, {
                 method: 'PUT',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(body)
             });
