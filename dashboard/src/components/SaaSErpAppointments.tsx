@@ -533,16 +533,16 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                 </div>
                 <div className="flex items-center gap-3 self-start md:self-auto">
                     {/* View selector toggle */}
-                    <div className="flex bg-surface-container-high/40 p-1 rounded-xl border border-outline/10 text-xs">
+                    <div className="flex bg-[#181a1c] p-1 rounded-md border border-[#2d3036] text-xs">
                         <button 
                             onClick={() => setViewMode('calendar')}
-                            className={`px-3 py-1.5 rounded-lg font-bold cursor-pointer transition ${viewMode === 'calendar' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                            className={`px-3 py-1.5 rounded-md font-bold cursor-pointer transition ${viewMode === 'calendar' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
                         >
                             Calendario
                         </button>
                         <button 
                             onClick={() => setViewMode('list')}
-                            className={`px-3 py-1.5 rounded-lg font-bold cursor-pointer transition ${viewMode === 'list' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
+                            className={`px-3 py-1.5 rounded-md font-bold cursor-pointer transition ${viewMode === 'list' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
                         >
                             Lista
                         </button>
@@ -550,7 +550,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
 
                     <button 
                         onClick={() => { fetchAppointments(); fetchCustomers(); }}
-                        className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow"
+                        className="w-9 h-9 bg-[#181a1c] hover:bg-surface-variant/40 text-on-surface rounded-md flex items-center justify-center border border-[#2d3036] cursor-pointer transition shadow"
                         title="Refrescar Citas"
                     >
                         <span className="material-symbols-outlined text-[18px]">refresh</span>
@@ -566,13 +566,13 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                             setBlockReason('Bloqueo administrativo');
                             setIsBlockOpen(true);
                         }}
-                        className="px-3 py-2 border border-outline/20 bg-surface-container-high/40 text-on-surface text-xs font-bold rounded-xl cursor-pointer shadow transition"
+                        className="px-3 py-2 border border-[#2d3036] bg-[#181a1c] text-on-surface text-xs font-bold rounded-md cursor-pointer shadow transition"
                     >
                         Bloquear horario
                     </button>
                     <button 
                         onClick={handleCreateOpen}
-                        className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition"
+                        className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-md flex items-center gap-1.5 cursor-pointer shadow transition"
                     >
                         <span className="material-symbols-outlined text-[16px]">add</span>
                         Nueva Cita
@@ -621,7 +621,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="material-symbols-outlined text-[16px] text-on-surface-variant">call</span>
-                                            <span className="font-mono">+{appt.customer_phone}</span>
+                                            <span className="font-mono">{appt.customer_phone ? `+57 ${appt.customer_phone.replace(/^\+?57\s*/, '')}` : 'N/A'}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="material-symbols-outlined text-[16px] text-amber-500">label</span>
@@ -843,12 +843,12 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                             setShowSuggestions(true);
                                         }}
                                         onFocus={() => setShowSuggestions(true)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 pl-10 pr-4 py-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] pl-10 pr-4 py-2.5 rounded-md text-on-surface focus:border-primary outline-none"
                                         placeholder="Escribe nombre, cédula o celular..."
                                     />
                                 </div>
                                 {showSuggestions && getFilteredCustomers().length > 0 && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 bg-surface-container border border-outline/30 rounded-xl shadow-xl z-50 max-h-52 overflow-y-auto divide-y divide-outline/10">
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-[#181a1c] border border-[#2d3036] rounded-md shadow-xl z-50 max-h-52 overflow-y-auto divide-y divide-[#2d3036]">
                                         {getFilteredCustomers().map(c => (
                                             <button
                                                 key={c.id}
@@ -860,7 +860,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                                     <p className="font-semibold">{c.name} {c.last_name || ''}</p>
                                                     <p className="text-[10px] text-on-surface-variant opacity-70">{c.phone}</p>
                                                 </div>
-                                                <span className="text-[9px] bg-primary/20 text-primary px-2 py-0.5 rounded font-mono font-bold uppercase shrink-0">
+                                                <span className="text-[9px] bg-primary/20 text-primary px-2 py-0.5 rounded-md font-mono font-bold uppercase shrink-0">
                                                     C.C.: {c.document_number}
                                                 </span>
                                             </button>
@@ -877,7 +877,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         required
                                         value={customerDocumentNumber}
                                         onChange={(e) => setCustomerDocumentNumber(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
                                         placeholder="Ej: 10203040"
                                     />
                                 </div>
@@ -889,7 +889,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         required
                                         value={customerPhone}
                                         onChange={(e) => setCustomerPhone(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
                                         placeholder="Ej: 573001112222"
                                     />
                                 </div>
@@ -904,7 +904,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         required
                                         value={apptOnlyDate}
                                         onChange={(e) => setApptOnlyDate(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
                                     />
                                 </div>
 
@@ -915,7 +915,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         required
                                         value={apptOnlyTime}
                                         onChange={(e) => setApptOnlyTime(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
                                     />
                                 </div>
                             </div>
@@ -933,10 +933,10 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                             key={opt.key}
                                             type="button"
                                             onClick={() => setVisitReason(opt.key)}
-                                            className={`py-2 px-3 rounded-xl border text-xs font-bold transition cursor-pointer text-center ${
+                                            className={`py-2 px-3 rounded-md border text-xs font-bold transition cursor-pointer text-center ${
                                                 visitReason === opt.key 
                                                     ? 'bg-primary text-white border-primary shadow' 
-                                                    : 'bg-surface-container-high/30 border-outline/10 text-on-surface-variant hover:bg-surface-variant/30'
+                                                    : 'bg-[#181a1c] border-[#2d3036] text-on-surface-variant hover:bg-surface-variant/30'
                                             }`}
                                         >
                                             {opt.label}
@@ -953,23 +953,23 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         value={visitReasonDetails}
                                         onChange={(e) => setVisitReasonDetails(e.target.value)}
                                         placeholder="Ej: Mantenimiento de montura anterior..."
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none resize-none"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none resize-none"
                                     />
                                 </div>
                             )}
 
-                            <div className="flex gap-3 justify-end pt-4 border-t border-outline/10">
+                            <div className="flex justify-end gap-2 pt-3 border-t border-[#2d3036]">
                                 <button 
                                     type="button"
                                     onClick={() => setIsCreateOpen(false)}
-                                    className="px-4 py-2 border border-outline/20 text-on-surface hover:bg-surface-variant/20 rounded-xl font-bold cursor-pointer text-xs transition"
+                                    className="px-4 py-2 border border-[#2d3036] text-on-surface hover:bg-surface-variant/20 rounded-md font-bold cursor-pointer text-xs transition"
                                 >
                                     Cancelar
                                 </button>
                                 <button 
                                     type="submit"
                                     disabled={actionLoading}
-                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-xl font-bold cursor-pointer text-xs transition flex items-center gap-1.5 disabled:opacity-50"
+                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-md font-bold cursor-pointer text-xs transition flex items-center gap-1.5 disabled:opacity-50"
                                 >
                                     {actionLoading ? 'Guardando...' : 'Crear Cita'}
                                 </button>
@@ -1098,7 +1098,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                     required
                                     value={customerName}
                                     onChange={(e) => setCustomerName(e.target.value)}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                    className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none"
                                 />
                             </div>
 
@@ -1109,7 +1109,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         type="text"
                                         disabled
                                         value={customerDocumentNumber}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface font-mono opacity-60 cursor-not-allowed"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface font-mono opacity-60 cursor-not-allowed"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -1119,7 +1119,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         required
                                         value={customerPhone}
                                         onChange={(e) => setCustomerPhone(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
                                     />
                                 </div>
                             </div>
@@ -1133,7 +1133,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         required
                                         value={apptOnlyDate}
                                         onChange={(e) => setApptOnlyDate(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
                                     />
                                 </div>
 
@@ -1144,7 +1144,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         required
                                         value={apptOnlyTime}
                                         onChange={(e) => setApptOnlyTime(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
                                     />
                                 </div>
                             </div>
@@ -1162,10 +1162,10 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                             key={opt.key}
                                             type="button"
                                             onClick={() => setVisitReason(opt.key)}
-                                            className={`py-2 px-3 rounded-xl border text-xs font-bold transition cursor-pointer text-center ${
+                                            className={`py-2 px-3 rounded-md border text-xs font-bold transition cursor-pointer text-center ${
                                                 visitReason === opt.key 
                                                     ? 'bg-primary text-white border-primary shadow' 
-                                                    : 'bg-surface-container-high/30 border-outline/10 text-on-surface-variant hover:bg-surface-variant/30'
+                                                    : 'bg-[#181a1c] border-[#2d3036] text-on-surface-variant hover:bg-surface-variant/30'
                                             }`}
                                         >
                                             {opt.label}
@@ -1182,7 +1182,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         value={visitReasonDetails}
                                         onChange={(e) => setVisitReasonDetails(e.target.value)}
                                         placeholder="Ej: Mantenimiento de montura anterior..."
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none resize-none"
+                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none resize-none"
                                     />
                                 </div>
                             )}
@@ -1192,7 +1192,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                 <select 
                                     value={apptStatus}
                                     onChange={(e) => setApptStatus(e.target.value)}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none cursor-pointer"
+                                    className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none cursor-pointer font-mono"
                                 >
                                     <option value="scheduled">Programada / Agendada</option>
                                     <option value="completed">Completada / Atendida</option>
@@ -1200,11 +1200,11 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                 </select>
                             </div>
 
-                            <div className="flex gap-2 justify-between pt-4 border-t border-outline/10">
+                            <div className="flex gap-2 justify-between pt-4 border-t border-[#2d3036]">
                                 <button 
                                     type="button"
                                     onClick={handleDeleteAppt}
-                                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold cursor-pointer text-xs transition flex items-center gap-1"
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-bold cursor-pointer text-xs transition flex items-center gap-1"
                                 >
                                     <span className="material-symbols-outlined text-[16px]">delete</span>
                                     Eliminar
@@ -1213,14 +1213,14 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                     <button 
                                         type="button"
                                         onClick={() => setIsEditOpen(false)}
-                                        className="px-4 py-2 border border-outline/20 text-on-surface hover:bg-surface-variant/20 rounded-xl font-bold cursor-pointer text-xs transition"
+                                        className="px-4 py-2 border border-[#2d3036] text-on-surface hover:bg-surface-variant/20 rounded-md font-bold cursor-pointer text-xs transition"
                                     >
                                         Cerrar
                                     </button>
                                     <button 
                                         type="submit"
                                         disabled={actionLoading}
-                                        className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-xl font-bold cursor-pointer text-xs transition flex items-center gap-1 disabled:opacity-50"
+                                        className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-md font-bold cursor-pointer text-xs transition flex items-center gap-1 disabled:opacity-50"
                                     >
                                         {actionLoading ? 'Guardando...' : 'Guardar Cambios'}
                                     </button>

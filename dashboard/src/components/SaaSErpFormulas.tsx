@@ -75,9 +75,6 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
 
   // Subpestañas
   const [formulasSubTab, setFormulasSubTab] = useState<'formulas' | 'lab_jobs' | 'historia_clinica'>(defaultSubTab);
-  const [labJobs, setLabJobs] = useState<any[]>([]);
-  const [loadingLabJobs, setLoadingLabJobs] = useState(false);
-  const [laboratories, setLaboratories] = useState<any[]>([]);
   
   // Historia Clínica
   const [clinicalRecords, setClinicalRecords] = useState<any[]>([]);
@@ -104,12 +101,6 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
   const [clinDiagnosis, setClinDiagnosis] = useState('');
   const [clinTreatmentPlan, setClinTreatmentPlan] = useState('');
   const [clinOptometrist, setClinOptometrist] = useState('Dr. Optómetra Especialista');
-  
-  // Asignación de laboratorios
-  const [assigningJob, setAssigningJob] = useState<any | null>(null);
-  const [selectedLabId, setSelectedLabId] = useState('');
-  const [assignJobValue, setAssignJobValue] = useState('');
-  const [assignJobNotes, setAssignJobNotes] = useState('');
 
   const token = localStorage.getItem('auth_token');
 
@@ -173,41 +164,8 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
     }
   };
 
-  const fetchLabJobs = async () => {
-    setLoadingLabJobs(true);
-    try {
-      const res = await fetch(`/api/clients/${clientId}/lab-jobs`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const json = await res.json();
-      if (json.success) {
-        setLabJobs(json.labJobs || []);
-      }
-    } catch (err) {
-      console.error("Error fetching lab jobs:", err);
-    } finally {
-      setLoadingLabJobs(false);
-    }
-  };
-
-  const fetchLaboratories = async () => {
-    try {
-      const res = await fetch(`/api/clients/${clientId}/suppliers`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const json = await res.json();
-      if (json.success) {
-        setLaboratories((json.suppliers || []).filter((s: any) => s.is_laboratory));
-      }
-    } catch (err) {
-      console.error("Error fetching laboratories:", err);
-    }
-  };
-
   useEffect(() => {
     fetchCustomers();
-    fetchLaboratories();
-    fetchLabJobs();
     fetchAgendaAppointments(agendaDate);
   }, [clientId]);
 
@@ -425,27 +383,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
     }
   };
 
-  const handleUpdateLabJob = async (jobId: string, payload: any) => {
-    try {
-      const res = await fetch(`/api/clients/${clientId}/lab-jobs/${jobId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-      const json = await res.json();
-      if (json.success) {
-        fetchLabJobs();
-        setAssigningJob(null);
-      } else {
-        alert(`Error: ${json.error}`);
-      }
-    } catch (err) {
-      alert('Error de conexión al actualizar el trabajo de laboratorio.');
-    }
-  };
+
 
   const getFilteredCustomers = () => {
     const query = searchQuery.toLowerCase().trim();
@@ -459,205 +397,6 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
   };
 
   const filtered = getFilteredCustomers();
-
-  const renderLabJobColumn = (title: string, list: any[], colStatus: string) => {
-    return (
-      <div className="bg-surface-container/15 border border-outline/5 rounded-2xl p-4 flex flex-col space-y-3 min-h-[450px]">
-        <div className="flex justify-between items-center pb-2 border-b border-outline/5">
-          <h4 className="font-bold text-xs text-on-surface flex items-center gap-1.5 uppercase tracking-wider">
-            {title}
-            <span className="text-[10px] bg-surface-container-highest px-2 py-0.5 rounded-full text-on-surface-variant font-mono">{list.length}</span>
-          </h4>
-        </div>
-
-        <div className="flex-1 space-y-3 overflow-y-auto max-h-[500px] pr-1 custom-scrollbar">
-          {list.length === 0 ? (
-            <p className="text-[10px] text-on-surface-variant/40 italic py-6 text-center">Sin trabajos en este estado</p>
-          ) : (
-            list.map(job => (
-              <div key={job.id} className="glass-card p-3.5 rounded-xl border border-outline/5 hover:border-primary/10 transition-all space-y-2 text-xs">
-                <div>
-                  <h5 className="font-bold text-on-surface leading-tight text-xs">{job.customer_name} {job.customer_last_name}</h5>
-                  <p className="text-[9px] text-on-surface-variant opacity-75">{job.customer_phone}</p>
-                </div>
-
-                <div className="p-2 bg-surface-container/30 rounded-lg space-y-1 font-mono text-[9px] text-on-surface-variant leading-tight">
-                  <p>Lente: <strong>{job.product_name}</strong></p>
-                  {job.lens_design && <p>Diseño: <strong>{job.lens_design}</strong></p>}
-                  {job.lens_material && <p>Mat: <strong>{job.lens_material}</strong></p>}
-                  {job.lens_treatment && <p>Trat: <strong>{job.lens_treatment}</strong></p>}
-                </div>
-
-                {job.od_sphere && (
-                  <div className="text-[9px] text-on-surface-variant border-t border-outline/5 pt-1.5 grid grid-cols-2 gap-1 font-mono leading-tight">
-                    <div>OD: {job.od_sphere}|{job.od_cylinder}|{job.od_axis}</div>
-                    <div>OI: {job.oi_sphere}|{job.oi_cylinder}|{job.oi_axis}</div>
-                  </div>
-                )}
-
-                {job.supplier_name && (
-                  <div className="text-[9px] text-on-surface-variant border-t border-outline/5 pt-1.5 space-y-0.5">
-                    <p>Lab: <strong>{job.supplier_name}</strong></p>
-                    <p>Costo: <strong>${Number(job.job_value || 0).toLocaleString('es-CO')}</strong></p>
-                  </div>
-                )}
-
-                {job.notes && (
-                  <p className="text-[9px] text-on-surface-variant/70 italic bg-surface-container/20 p-1.5 rounded">
-                    "{job.notes}"
-                  </p>
-                )}
-
-                <div className="flex flex-col gap-1.5 pt-1">
-                  {colStatus === 'pending' && (
-                    <button 
-                      onClick={() => {
-                        setAssigningJob(job);
-                        setSelectedLabId('');
-                        setAssignJobValue('');
-                        setAssignJobNotes('');
-                      }}
-                      className="w-full py-1.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-[9px] uppercase tracking-wider rounded-lg border-0 transition cursor-pointer"
-                    >
-                      Asignar Taller
-                    </button>
-                  )}
-
-                  {colStatus === 'assigned' && (
-                    <button 
-                      onClick={() => handleUpdateLabJob(job.id, { status: 'sent' })}
-                      className="w-full py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 font-bold text-[9px] uppercase tracking-wider rounded-lg border-0 transition cursor-pointer"
-                    >
-                      Enviar a Laboratorio
-                    </button>
-                  )}
-
-                  {colStatus === 'sent' && (
-                    <button 
-                      onClick={() => handleUpdateLabJob(job.id, { status: 'received' })}
-                      className="w-full py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 font-bold text-[9px] uppercase tracking-wider rounded-lg border-0 transition cursor-pointer"
-                    >
-                      ✓ Recibido en Óptica
-                    </button>
-                  )}
-
-                  {colStatus === 'received' && (
-                    <button 
-                      onClick={() => handleUpdateLabJob(job.id, { status: 'delivered' })}
-                      className="w-full py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-500 font-bold text-[9px] uppercase tracking-wider rounded-lg border-0 transition cursor-pointer"
-                    >
-                      ✓ Entregado a Paciente
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderLabJobsTab = () => {
-    if (loadingLabJobs) {
-      return (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      );
-    }
-
-    const pending = labJobs.filter(j => j.status === 'pending');
-    const assigned = labJobs.filter(j => j.status === 'assigned');
-    const sent = labJobs.filter(j => j.status === 'sent');
-    const received = labJobs.filter(j => j.status === 'received');
-    const delivered = labJobs.filter(j => j.status === 'delivered');
-
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-          {renderLabJobColumn("Por Asignar", pending, "pending")}
-          {renderLabJobColumn("Laboratorio Asignado", assigned, "assigned")}
-          {renderLabJobColumn("En Laboratorio", sent, "sent")}
-          {renderLabJobColumn("Recibidos en Tienda", received, "received")}
-          {renderLabJobColumn("Entregados", delivered, "delivered")}
-        </div>
-
-        {assigningJob && createPortal(
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 text-left">
-            <div className="bg-surface border border-outline/10 p-6 rounded-3xl w-full max-w-md shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-              <h3 className="font-bold text-sm text-on-surface">Asignar Laboratorio a Orden</h3>
-              <p className="text-xs text-on-surface-variant font-mono">Lente: {assigningJob.product_name}</p>
-              
-              <div className="space-y-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-on-surface-variant font-medium">Laboratorio / Taller *</label>
-                  <select 
-                    value={selectedLabId} 
-                    onChange={(e) => setSelectedLabId(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none cursor-pointer"
-                  >
-                    <option value="">Selecciona un Laboratorio...</option>
-                    {laboratories.map(lab => (
-                      <option key={lab.id} value={lab.id}>{lab.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-on-surface-variant font-medium">Costo Interno ($ COP) *</label>
-                  <input 
-                    type="number" 
-                    value={assignJobValue} 
-                    onChange={(e) => setAssignJobValue(e.target.value)}
-                    placeholder="Ej: 45000"
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-on-surface-variant font-medium">Indicaciones / Observaciones</label>
-                  <textarea 
-                    value={assignJobNotes} 
-                    onChange={(e) => setAssignJobNotes(e.target.value)}
-                    placeholder="Biselado especial, filtros..."
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none h-20 resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button 
-                  onClick={() => setAssigningJob(null)}
-                  className="px-4 py-2 border border-outline/20 text-on-surface rounded-xl hover:bg-surface-container text-xs cursor-pointer bg-transparent"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  onClick={() => {
-                    if (!selectedLabId) {
-                      alert('Selecciona un laboratorio.');
-                      return;
-                    }
-                    handleUpdateLabJob(assigningJob.id, {
-                      supplierId: selectedLabId,
-                      jobValue: assignJobValue,
-                      notes: assignJobNotes,
-                      status: 'assigned'
-                    });
-                  }}
-                  className="px-5 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold cursor-pointer border-0 hover:opacity-90 transition"
-                >
-                  Confirmar Asignación
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
-      </div>
-    );
-  };
 
   // Cargar Historias Clínicas
   const fetchClinicalRecords = async () => {
@@ -998,8 +737,8 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
 
   const renderFormulaForm = () => {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 glass-card p-5 rounded-2xl border border-outline/10 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+        <div className="lg:col-span-1 bg-[#141517] p-5 rounded-2xl border border-[#2d3036] space-y-4">
           <div className="space-y-1.5 relative" ref={dropdownRef}>
             <label className="font-bold text-xs uppercase tracking-wider text-on-surface-variant ml-1">Buscar Paciente en CRM</label>
             <div className="relative">
@@ -1013,12 +752,12 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   setShowSuggestions(true);
                 }}
                 onFocus={() => setShowSuggestions(true)}
-                className="w-full bg-surface-container border border-outline/20 rounded-xl pl-10 pr-4 py-2.5 text-xs text-on-surface outline-none focus:border-primary"
+                className="w-full bg-[#181a1c] border border-[#2d3036] rounded-md pl-10 pr-4 py-2.5 text-xs text-on-surface outline-none focus:border-primary font-mono"
               />
             </div>
 
             {showSuggestions && filtered.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 bg-surface-container border border-outline/30 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto divide-y divide-outline/5">
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#181a1c] border border-[#2d3036] rounded-md shadow-xl z-50 max-h-60 overflow-y-auto divide-y divide-[#2d3036]">
                 {filtered.map(c => (
                   <button
                     key={c.id}
@@ -1033,7 +772,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       <p className="font-semibold text-on-surface truncate">{c.name} {c.last_name || ''}</p>
                       <p className="text-[10px] text-on-surface-variant opacity-75 truncate">{c.phone}</p>
                     </div>
-                    <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded font-bold font-mono uppercase shrink-0">
+                    <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-md font-bold font-mono uppercase shrink-0">
                       C.C.: {c.document_number}
                     </span>
                   </button>
@@ -1044,10 +783,10 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
 
           {selectedCustomer ? (
             <div className="space-y-3">
-              <div className="rounded-xl border border-outline/10 bg-surface-container/60 p-3">
+              <div className="rounded-md border border-[#2d3036] bg-[#181a1c] p-3">
                 <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Paciente seleccionado</p>
                 <p className="text-sm font-bold text-on-surface mt-1">{selectedCustomer.name} {selectedCustomer.last_name}</p>
-                <p className="text-[11px] text-on-surface-variant">{selectedCustomer.phone}</p>
+                <p className="text-[11px] text-on-surface-variant font-mono">{selectedCustomer.phone}</p>
               </div>
 
               <button
@@ -1057,13 +796,13 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   setSearchQuery('');
                   setFormulasHistory([]);
                 }}
-                className="w-full border border-outline/20 bg-transparent text-on-surface hover:bg-surface-container text-xs font-semibold rounded-xl py-2 cursor-pointer"
+                className="w-full border border-[#2d3036] bg-transparent text-on-surface hover:bg-[#181a1c] text-xs font-semibold rounded-md py-2 cursor-pointer transition"
               >
                 Limpiar paciente
               </button>
             </div>
           ) : (
-            <div className="text-[11px] text-on-surface-variant p-3 rounded-xl border border-dashed border-outline/20 bg-surface-container/30">
+            <div className="text-[11px] text-on-surface-variant p-3 rounded-md border border-dashed border-[#2d3036] bg-[#181a1c]">
               Selecciona un paciente para cargar su historial clínico.
             </div>
           )}
@@ -1072,61 +811,80 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
         <div className="lg:col-span-2 space-y-6">
           {selectedCustomer ? (
             <>
-              <form onSubmit={handleSaveFormula} className="glass-card p-5 rounded-2xl border border-outline/10 space-y-4">
-                <h4 className="font-bold text-sm text-on-surface border-b border-outline/10 pb-2 flex justify-between items-center">
+              <form onSubmit={handleSaveFormula} className="bg-[#141517] p-5 rounded-2xl border border-[#2d3036] space-y-4">
+                <h4 className="font-bold text-sm text-on-surface border-b border-[#2d3036] pb-2 flex justify-between items-center">
                   <span>Nueva Fórmula Óptica</span>
                   {saveSuccess && <span className="text-xs text-green-500 font-normal">¡Guardado con éxito!</span>}
                 </h4>
 
+                {/* Examen Reciente/Nuevo con encabezados estructurados */}
                 <div className="space-y-4">
+                  {/* Ojo Derecho */}
                   <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Ojo Derecho (O.D.)</p>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      <input type="text" placeholder="Esfera (ESF)" value={odSphere} onChange={(e) => setOdSphere(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
-                      <input type="text" placeholder="Cilindro (CIL)" value={odCylinder} onChange={(e) => setOdCylinder(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
-                      <input type="text" placeholder="Eje (EJE)" value={odAxis} onChange={(e) => setOdAxis(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
-                      <input type="text" placeholder="Adición (ADD)" value={odAddition} onChange={(e) => setOdAddition(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
-                      <input type="text" placeholder="Prisma" value={odPrism} onChange={(e) => setOdPrism(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
-                      <input type="text" placeholder="AV (Agudeza)" value={odAv} onChange={(e) => setOdAv(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
+                    <p className="text-[11px] font-bold text-primary uppercase tracking-wider">OJO DERECHO (O.D.)</p>
+                    <div className="grid grid-cols-6 gap-2 text-center text-[10px] font-bold text-on-surface-variant uppercase font-mono">
+                      <div>Esf</div>
+                      <div>Cil</div>
+                      <div>Eje</div>
+                      <div>Add</div>
+                      <div>Prisma</div>
+                      <div>AV</div>
+                    </div>
+                    <div className="grid grid-cols-6 gap-2 font-mono">
+                      <input type="text" placeholder="-1.50" value={odSphere} onChange={(e) => setOdSphere(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
+                      <input type="text" placeholder="-0.75" value={odCylinder} onChange={(e) => setOdCylinder(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
+                      <input type="text" placeholder="90°" value={odAxis} onChange={(e) => setOdAxis(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
+                      <input type="text" placeholder="+1.50" value={odAddition} onChange={(e) => setOdAddition(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
+                      <input type="text" placeholder="Prisma" value={odPrism} onChange={(e) => setOdPrism(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
+                      <input type="text" placeholder="20/20" value={odAv} onChange={(e) => setOdAv(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
                     </div>
                   </div>
 
+                  {/* Ojo Izquierdo */}
                   <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-secondary uppercase tracking-wider">Ojo Izquierdo (O.I.)</p>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      <input type="text" placeholder="Esfera (ESF)" value={oiSphere} onChange={(e) => setOiSphere(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
-                      <input type="text" placeholder="Cilindro (CIL)" value={oiCylinder} onChange={(e) => setOiCylinder(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
-                      <input type="text" placeholder="Eje (EJE)" value={oiAxis} onChange={(e) => setOiAxis(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
-                      <input type="text" placeholder="Adición (ADD)" value={oiAddition} onChange={(e) => setOiAddition(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
-                      <input type="text" placeholder="Prisma" value={oiPrism} onChange={(e) => setOiPrism(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
-                      <input type="text" placeholder="AV (Agudeza)" value={oiAv} onChange={(e) => setOiAv(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
+                    <p className="text-[11px] font-bold text-secondary uppercase tracking-wider">OJO IZQUIERDO (O.I.)</p>
+                    <div className="grid grid-cols-6 gap-2 text-center text-[10px] font-bold text-on-surface-variant uppercase font-mono">
+                      <div>Esf</div>
+                      <div>Cil</div>
+                      <div>Eje</div>
+                      <div>Add</div>
+                      <div>Prisma</div>
+                      <div>AV</div>
+                    </div>
+                    <div className="grid grid-cols-6 gap-2 font-mono">
+                      <input type="text" placeholder="-1.75" value={oiSphere} onChange={(e) => setOiSphere(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
+                      <input type="text" placeholder="-0.50" value={oiCylinder} onChange={(e) => setOiCylinder(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
+                      <input type="text" placeholder="85°" value={oiAxis} onChange={(e) => setOiAxis(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
+                      <input type="text" placeholder="+1.50" value={oiAddition} onChange={(e) => setOiAddition(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
+                      <input type="text" placeholder="Prisma" value={oiPrism} onChange={(e) => setOiPrism(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
+                      <input type="text" placeholder="20/20" value={oiAv} onChange={(e) => setOiAv(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2 text-xs focus:border-primary text-on-surface outline-none text-center" />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 border-t border-outline/5 pt-2">
+                  <div className="grid grid-cols-2 gap-3 border-t border-[#2d3036] pt-3">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-on-surface-variant">DP (mm)</label>
-                      <input type="text" placeholder="Distancia Pupilar" value={dpDistance} onChange={(e) => setDpDistance(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
+                      <label className="text-[10px] font-bold text-on-surface-variant uppercase">DP (mm)</label>
+                      <input type="text" placeholder="Distancia Pupilar (Ej: 63)" value={dpDistance} onChange={(e) => setDpDistance(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2.5 text-xs focus:border-primary text-on-surface outline-none font-mono" />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-on-surface-variant">ALT (mm)</label>
-                      <input type="text" placeholder="Altura de lente" value={height} onChange={(e) => setHeight(e.target.value)} className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none" />
+                      <label className="text-[10px] font-bold text-on-surface-variant uppercase">ALT (mm)</label>
+                      <input type="text" placeholder="Altura de lente" value={height} onChange={(e) => setHeight(e.target.value)} className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2.5 text-xs focus:border-primary text-on-surface outline-none font-mono" />
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-on-surface-variant font-bold">Diagnóstico & Indicaciones</label>
-                    <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones de lentes, filtros, astigmatismo..." className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs focus:border-primary text-on-surface outline-none h-20 resize-none" />
+                    <label className="text-[10px] text-on-surface-variant font-bold uppercase">Diagnóstico & Indicaciones</label>
+                    <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observaciones de lentes, filtros, astigmatismo..." className="bg-[#181a1c] border border-[#2d3036] rounded-md p-2.5 text-xs focus:border-primary text-on-surface outline-none h-20 resize-none" />
                   </div>
                 </div>
 
-                <button type="submit" disabled={saving} className="w-full py-2.5 bg-primary text-on-primary font-bold text-xs rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer border-0 mt-2">
+                <button type="submit" disabled={saving} className="w-full py-3 bg-primary text-on-primary font-bold text-xs rounded-md hover:opacity-90 active:scale-95 transition-all cursor-pointer border-0 mt-2">
                   {saving ? 'Guardando...' : 'Guardar Examen'}
                 </button>
               </form>
 
-              <div className="glass-card p-5 rounded-2xl border border-outline/10 space-y-4">
-                <h4 className="font-bold text-sm text-on-surface border-b border-outline/10 pb-2">Historial de Recetas</h4>
+              <div className="bg-[#141517] p-5 rounded-2xl border border-[#2d3036] space-y-4">
+                <h4 className="font-bold text-sm text-on-surface border-b border-[#2d3036] pb-2">Historial de Recetas</h4>
                 {loadingHistory ? (
                   <div className="p-8 text-center text-xs text-on-surface-variant">Cargando recetas clínicas...</div>
                 ) : formulasHistory.length === 0 ? (
@@ -1134,20 +892,20 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 ) : (
                   <div className="space-y-3">
                     {formulasHistory.map(form => (
-                      <div key={form.id} className="p-4 bg-surface-container/20 border border-outline/10 rounded-xl space-y-3 relative group">
+                      <div key={form.id} className="p-4 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-3 relative group">
                         <div className="flex justify-between items-start">
                           <span className="text-[10px] text-primary font-bold">Fórmula del {new Date(form.created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                           <button onClick={() => handleDeleteFormula(form.id)} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 bg-transparent border-none cursor-pointer outline-none transition-opacity duration-150"><span className="material-symbols-outlined text-[16px]">delete</span></button>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-xs">
-                          <div className="bg-surface-container/50 p-2.5 rounded-lg space-y-0.5">
+                        <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                          <div className="bg-[#141517] p-2.5 rounded-md space-y-0.5">
                             <p className="font-bold text-primary text-[10px]">OJO DERECHO (O.D.)</p>
                             <p>ESF: <strong>{form.od_sphere || '---'}</strong></p>
                             <p>CIL: <strong>{form.od_cylinder || '---'}</strong></p>
                             <p>EJE: <strong>{form.od_axis ? `${form.od_axis}` : '---'}</strong></p>
                             <p>ADD: <strong>{form.od_addition || '---'}</strong></p>
                           </div>
-                          <div className="bg-surface-container/50 p-2.5 rounded-lg space-y-0.5">
+                          <div className="bg-[#141517] p-2.5 rounded-md space-y-0.5">
                             <p className="font-bold text-secondary text-[10px]">OJO IZQUIERDO (O.I.)</p>
                             <p>ESF: <strong>{form.oi_sphere || '---'}</strong></p>
                             <p>CIL: <strong>{form.oi_cylinder || '---'}</strong></p>
@@ -1155,12 +913,12 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                             <p>ADD: <strong>{form.oi_addition || '---'}</strong></p>
                           </div>
                         </div>
-                        <div className="flex justify-between text-[11px] text-on-surface-variant font-mono bg-surface-container/30 px-3 py-1.5 rounded-lg">
+                        <div className="flex justify-between text-[11px] text-on-surface-variant font-mono bg-[#141517] px-3 py-1.5 rounded-md">
                           <span>DP: <strong>{form.dp_distance || '---'}</strong></span>
                           <span>ALT: <strong>{form.height || '---'}</strong></span>
                         </div>
                         {form.notes && (
-                          <div className="text-[11px] text-on-surface-variant leading-relaxed p-2.5 bg-surface-container/40 rounded-lg">
+                          <div className="text-[11px] text-on-surface-variant leading-relaxed p-2.5 bg-[#141517] rounded-md">
                             <strong>Indicaciones:</strong> {form.notes}
                           </div>
                         )}
@@ -1189,24 +947,24 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
             </div>
           </div>
 
-          <div className="glass-card p-5 rounded-2xl border border-outline/10 space-y-4">
+          <div className="bg-[#141517] p-5 rounded-2xl border border-[#2d3036] space-y-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Agenda de Citas</p>
                 <h4 className="font-bold text-base text-on-surface">Citas del día</h4>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <button type="button" onClick={() => setAgendaDate((prev) => { const next = new Date(`${prev}T12:00:00`); next.setDate(next.getDate() - 1); return toLocalDateInputValue(next); })} className="px-2.5 py-1.5 rounded-lg border border-outline/20 bg-transparent text-xs text-on-surface hover:bg-surface-container cursor-pointer">Anterior</button>
-                <button type="button" onClick={() => setAgendaDate(toLocalDateInputValue(new Date()))} className="px-2.5 py-1.5 rounded-lg border border-outline/20 bg-transparent text-xs text-on-surface hover:bg-surface-container cursor-pointer">Hoy</button>
-                <button type="button" onClick={() => setAgendaDate((prev) => { const next = new Date(`${prev}T12:00:00`); next.setDate(next.getDate() + 1); return toLocalDateInputValue(next); })} className="px-2.5 py-1.5 rounded-lg border border-outline/20 bg-transparent text-xs text-on-surface hover:bg-surface-container cursor-pointer">Siguiente</button>
-                <input type="date" value={agendaDate} onChange={(e) => setAgendaDate(e.target.value)} className="rounded-lg border border-outline/20 bg-surface-container text-xs text-on-surface px-2 py-1.5 outline-none" />
+                <button type="button" onClick={() => setAgendaDate((prev) => { const next = new Date(`${prev}T12:00:00`); next.setDate(next.getDate() - 1); return toLocalDateInputValue(next); })} className="px-2.5 py-1.5 rounded-md border border-[#2d3036] bg-transparent text-xs text-on-surface hover:bg-[#181a1c] cursor-pointer">Anterior</button>
+                <button type="button" onClick={() => setAgendaDate(toLocalDateInputValue(new Date()))} className="px-2.5 py-1.5 rounded-md border border-[#2d3036] bg-transparent text-xs text-on-surface hover:bg-[#181a1c] cursor-pointer">Hoy</button>
+                <button type="button" onClick={() => setAgendaDate((prev) => { const next = new Date(`${prev}T12:00:00`); next.setDate(next.getDate() + 1); return toLocalDateInputValue(next); })} className="px-2.5 py-1.5 rounded-md border border-[#2d3036] bg-transparent text-xs text-on-surface hover:bg-[#181a1c] cursor-pointer">Siguiente</button>
+                <input type="date" value={agendaDate} onChange={(e) => setAgendaDate(e.target.value)} className="rounded-md border border-[#2d3036] bg-[#181a1c] text-xs text-on-surface px-2 py-1.5 outline-none font-mono" />
               </div>
             </div>
 
             {loadingAgendaAppointments ? (
               <div className="py-6 text-center text-xs text-on-surface-variant">Cargando agenda...</div>
             ) : agendaAppointments.length === 0 ? (
-              <div className="py-6 text-center text-xs text-on-surface-variant border border-dashed border-outline/20 rounded-xl">No hay citas programadas para este día.</div>
+              <div className="py-6 text-center text-xs text-on-surface-variant border border-dashed border-[#2d3036] rounded-md">No hay citas programadas para este día.</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {agendaAppointments.map((appointment) => {
@@ -1215,13 +973,13 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   const isCancelled = appointment.status === 'cancelled';
                   const isNoShow = appointment.status === 'no_show';
                   return (
-                    <div key={appointment.id} className="rounded-2xl border border-outline/10 bg-surface-container/50 p-4 space-y-3 hover:border-primary/30 transition cursor-pointer">
+                    <div key={appointment.id} className="rounded-md border border-[#2d3036] bg-[#181a1c] p-4 space-y-3 hover:border-primary/30 transition cursor-pointer">
                       <div className="flex items-start justify-between gap-2">
                         <button type="button" onClick={() => handleAgendaPatientSelect(appointment)} className="text-left flex-1 cursor-pointer bg-transparent border-0 p-0">
                           <div className="font-bold text-sm text-on-surface">{appointment.customer_name || 'Paciente'}</div>
-                          <div className="text-[11px] text-on-surface-variant mt-1">{appointmentTime} · {appointment.customer_phone || 'Sin teléfono'}</div>
+                          <div className="text-[11px] text-on-surface-variant mt-1 font-mono">{appointmentTime} · {appointment.customer_phone || 'Sin teléfono'}</div>
                         </button>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${isCompleted ? 'bg-green-500/10 text-green-500' : isCancelled ? 'bg-red-500/10 text-red-500' : isNoShow ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'}`}>
+                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold ${isCompleted ? 'bg-green-500/10 text-green-500' : isCancelled ? 'bg-red-500/10 text-red-500' : isNoShow ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'}`}>
                           {appointment.status === 'scheduled' ? 'Programada' : appointment.status === 'completed' ? 'Completada' : appointment.status === 'cancelled' ? 'Cancelada' : appointment.status === 'no_show' ? 'No asistió' : appointment.status}
                         </span>
                       </div>
@@ -1229,10 +987,10 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         <div><strong>Motivo:</strong> {appointment.visit_reason || 'Consulta'}</div>
                         {appointment.visit_reason_details && <div className="italic text-on-surface-variant/80">{appointment.visit_reason_details}</div>}
                       </div>
-                      <div className="flex flex-wrap gap-2 pt-2 border-t border-outline/10">
-                        <button type="button" onClick={() => updateAgendaAppointmentStatus(appointment.id, 'completed')} className="px-2 py-1 text-[10px] rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 cursor-pointer border-0">Completa</button>
-                        <button type="button" onClick={() => updateAgendaAppointmentStatus(appointment.id, 'cancelled')} className="px-2 py-1 text-[10px] rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 cursor-pointer border-0">Cancelar</button>
-                        <button type="button" onClick={() => updateAgendaAppointmentStatus(appointment.id, 'no_show')} className="px-2 py-1 text-[10px] rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 cursor-pointer border-0">No asistió</button>
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-[#2d3036]">
+                        <button type="button" onClick={() => updateAgendaAppointmentStatus(appointment.id, 'completed')} className="px-2 py-1 text-[10px] rounded-md bg-green-500/10 text-green-500 hover:bg-green-500/20 cursor-pointer border-0 font-bold">Completa</button>
+                        <button type="button" onClick={() => updateAgendaAppointmentStatus(appointment.id, 'cancelled')} className="px-2 py-1 text-[10px] rounded-md bg-red-500/10 text-red-500 hover:bg-red-500/20 cursor-pointer border-0 font-bold">Cancelar</button>
+                        <button type="button" onClick={() => updateAgendaAppointmentStatus(appointment.id, 'no_show')} className="px-2 py-1 text-[10px] rounded-md bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 cursor-pointer border-0 font-bold">No asistió</button>
                       </div>
                     </div>
                   );
@@ -1247,20 +1005,16 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
         <div className="flex border-b border-outline/10 gap-6">
           <button onClick={() => setFormulasSubTab('formulas')} className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${formulasSubTab === 'formulas' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'}`}>
             Optometría y Diagnósticos
-            {formulasSubTab === 'formulas' && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />}
+            {formulasSubTab === 'formulas' && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" />}
           </button>
           <button onClick={() => { setFormulasSubTab('historia_clinica'); fetchClinicalRecords(); }} className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${formulasSubTab === 'historia_clinica' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'}`}>
             Historia Clínica
-            {formulasSubTab === 'historia_clinica' && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />}
-          </button>
-          <button onClick={() => { setFormulasSubTab('lab_jobs'); fetchLabJobs(); }} className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${formulasSubTab === 'lab_jobs' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'}`}>
-            Trabajos de laboratorio
-            {formulasSubTab === 'lab_jobs' && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />}
+            {formulasSubTab === 'historia_clinica' && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" />}
           </button>
         </div>
       )}
 
-      {formulasSubTab === 'lab_jobs' ? renderLabJobsTab() : formulasSubTab === 'historia_clinica' ? renderClinicalHistoryTab() : renderFormulaForm()}
+      {formulasSubTab === 'historia_clinica' ? renderClinicalHistoryTab() : renderFormulaForm()}
 
       {/* Modal Nueva Historia Clínica (Global para todas las pestañas) */}
       {isClinicalFormOpen && createPortal(
