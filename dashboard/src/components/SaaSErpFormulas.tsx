@@ -1174,8 +1174,8 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
       {/* Modal Nueva Historia Clínica (Global para todas las pestañas) */}
       {isClinicalFormOpen && createPortal(
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
-          <div className="bg-surface border border-outline/20 p-6 rounded-3xl w-full max-w-2xl shadow-2xl space-y-4 max-h-[88vh] overflow-y-auto custom-scrollbar my-auto text-left">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+          <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl w-full max-w-2xl shadow-2xl space-y-4 max-h-[88vh] overflow-y-auto custom-scrollbar my-auto text-left">
+            <div className="flex justify-between items-center border-b border-[#2d3036] pb-3">
               <h3 className="font-bold text-sm text-on-surface flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">post_add</span>
                 {editingClinicalRecordId ? 'Editar Historia Clínica Optométrica' : 'Nueva Historia Clínica Optométrica'}
@@ -1187,7 +1187,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
 
             <form onSubmit={handleCreateClinicalRecord} className="space-y-4 text-xs">
               {/* 1. Datos del Paciente */}
-              <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-3">
+              <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-3">
                 <h4 className="font-bold text-xs text-primary uppercase tracking-wider">1. Información del Paciente</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
@@ -1197,7 +1197,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="Ej: Juan Pérez"
                       value={clinPatientName}
                       onChange={(e) => setClinPatientName(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary"
                       required
                     />
                   </div>
@@ -1208,7 +1208,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="Ej: 1098234567"
                       value={clinPatientDoc}
                       onChange={(e) => setClinPatientDoc(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary font-mono"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1223,7 +1223,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
               </div>
 
               {/* 2. Anamnesis y Antecedentes */}
-              <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-3">
+              <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-3">
                 <h4 className="font-bold text-xs text-primary uppercase tracking-wider">2. Anamnesis & Antecedentes</h4>
                 <div className="space-y-1">
                   <label className="font-bold text-on-surface-variant">Motivo de Consulta</label>
@@ -1232,12 +1232,12 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     placeholder="Ej: Visión borrosa de lejos / Cansancio ocular..."
                     value={clinReason}
                     onChange={(e) => setClinReason(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                    className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary"
                   />
                 </div>
                 <div className="space-y-1.5 pt-1">
                   <label className="font-bold text-on-surface-variant block text-xs">Posibles Enfermedades / Antecedentes (Marcar las que apliquen)</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#181a1c] p-3 rounded-md border border-[#2d3036]">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#141517] p-3 rounded-md border border-[#2d3036]">
                     <label className="flex items-center gap-2 cursor-pointer text-xs select-none">
                       <input type="checkbox" checked={diseaseCheckboxes.estrabismo} onChange={(e) => setDiseaseCheckboxes(prev => ({ ...prev, estrabismo: e.target.checked }))} className="accent-primary w-4 h-4 rounded cursor-pointer" />
                       <span>Estrabismo</span>
@@ -1273,7 +1273,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="Ej: Hipertensión en tratamiento..."
                       value={clinMedAntecedents}
                       onChange={(e) => setClinMedAntecedents(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1283,14 +1283,14 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="Ej: Cirugía Láser en 2020..."
                       value={clinOcuAntecedents}
                       onChange={(e) => setClinOcuAntecedents(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary"
                     />
                   </div>
                 </div>
               </div>
 
               {/* 3. Examen Físico Ocular */}
-              <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-3">
+              <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-3">
                 <h4 className="font-bold text-xs text-primary uppercase tracking-wider">3. Examen Clínico (Agudeza Visual & Tonometría)</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
                   <div className="space-y-1">
@@ -1300,7 +1300,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="20/20"
                       value={clinAvOd}
                       onChange={(e) => setClinAvOd(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1310,7 +1310,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="20/20"
                       value={clinAvOi}
                       onChange={(e) => setClinAvOi(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1320,7 +1320,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="14 mmHg"
                       value={clinTonoOd}
                       onChange={(e) => setClinTonoOd(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1330,7 +1330,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="14 mmHg"
                       value={clinTonoOi}
                       onChange={(e) => setClinTonoOi(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2 text-on-surface outline-none focus:border-primary"
                     />
                   </div>
                 </div>
@@ -1343,7 +1343,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="Ej: -1.50 -0.50 x 180°"
                       value={clinRefrOd}
                       onChange={(e) => setClinRefrOd(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary font-mono"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1353,7 +1353,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="Ej: -1.25 -0.75 x 175°"
                       value={clinRefrOi}
                       onChange={(e) => setClinRefrOi(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary font-mono"
                     />
                   </div>
                 </div>
@@ -1365,13 +1365,13 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     placeholder="Ej: Medios transparentes, papila de bordes nítidos..."
                     value={clinOphthalNotes}
                     onChange={(e) => setClinOphthalNotes(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                    className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary"
                   />
                 </div>
               </div>
 
               {/* 4. Diagnóstico y Conducta */}
-              <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-3">
+              <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-3">
                 <h4 className="font-bold text-xs text-primary uppercase tracking-wider">4. Diagnóstico & Conducta</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -1381,7 +1381,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="Ej: Astigmatismo Miópico Compuesto"
                       value={clinDiagnosis}
                       onChange={(e) => setClinDiagnosis(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-bold"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary font-bold"
                       required
                     />
                   </div>
@@ -1392,7 +1392,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                       placeholder="Ej: Dr. Fernando Gómez"
                       value={clinOptometrist}
                       onChange={(e) => setClinOptometrist(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary"
                     />
                   </div>
                 </div>
@@ -1402,22 +1402,22 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     placeholder="Ej: Lentes progresivos digital con filtro luz azul y antirreflejo verde. Control en 1 año..."
                     value={clinTreatmentPlan}
                     onChange={(e) => setClinTreatmentPlan(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary h-16 resize-none"
+                    className="w-full bg-[#141517] border border-[#2d3036] rounded-md p-2.5 text-on-surface outline-none focus:border-primary h-16 resize-none"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-outline/10">
+              <div className="flex justify-end gap-3 pt-3 border-t border-[#2d3036]">
                 <button
                   type="button"
                   onClick={() => setIsClinicalFormOpen(false)}
-                  className="px-4 py-2 border border-outline/20 rounded-xl text-on-surface text-xs hover:bg-surface-container cursor-pointer bg-transparent"
+                  className="px-4 py-2 border border-[#2d3036] rounded-md text-on-surface text-xs hover:bg-[#181a1c] cursor-pointer bg-transparent"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-primary text-on-primary font-bold rounded-xl text-xs hover:opacity-90 transition cursor-pointer border-0 flex items-center gap-1.5"
+                  className="px-5 py-2 bg-primary text-on-primary font-bold rounded-md text-xs hover:opacity-90 transition cursor-pointer border-0 flex items-center gap-1.5"
                 >
                   <span className="material-symbols-outlined text-[16px]">save</span>
                   Guardar Historia Clínica
@@ -1432,8 +1432,8 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
       {/* Modal Ver Historia Clínica (Detalle Lectura) */}
       {viewingClinicalRecord && createPortal(
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
-          <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-3xl w-full max-w-2xl shadow-2xl space-y-4 max-h-[88vh] overflow-y-auto custom-scrollbar my-auto text-left">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+          <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl w-full max-w-2xl shadow-2xl space-y-4 max-h-[88vh] overflow-y-auto custom-scrollbar my-auto text-left">
+            <div className="flex justify-between items-center border-b border-[#2d3036] pb-3">
               <h3 className="font-bold text-sm text-on-surface flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">clinical_notes</span>
                 Historia Clínica Optométrica
@@ -1444,7 +1444,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-2">
+              <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-2">
                 <h4 className="font-bold text-xs text-primary uppercase tracking-wider">1. Información del Paciente</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div><strong>Nombre:</strong> {viewingClinicalRecord.customer_name}</div>
@@ -1453,7 +1453,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 </div>
               </div>
 
-              <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-2">
+              <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-2">
                 <h4 className="font-bold text-xs text-primary uppercase tracking-wider">2. Anamnesis & Antecedentes</h4>
                 <div><strong>Motivo de Consulta:</strong> {viewingClinicalRecord.consultation_reason || 'Control visual'}</div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
@@ -1462,7 +1462,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 </div>
               </div>
 
-              <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-2">
+              <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-2">
                 <h4 className="font-bold text-xs text-primary uppercase tracking-wider">3. Examen Físico Ocular</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono">
                   <div><strong>AV OD:</strong> {viewingClinicalRecord.visual_acuity_od || '20/20'}</div>
@@ -1479,15 +1479,15 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 )}
               </div>
 
-              <div className="p-3.5 bg-surface-container/30 border border-outline/10 rounded-2xl space-y-2">
+              <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-2">
                 <h4 className="font-bold text-xs text-primary uppercase tracking-wider">4. Diagnóstico & Conducta</h4>
                 <div><strong>Diagnóstico:</strong> {viewingClinicalRecord.diagnosis || 'Refracción'}</div>
                 <div><strong>Plan de Manejo:</strong> {viewingClinicalRecord.treatment_plan || 'Prescripción de lentes y control en 1 año.'}</div>
-                <div className="pt-2 border-t border-outline/10"><strong>Optómetra:</strong> {viewingClinicalRecord.optometrist_name || 'Especialista'}</div>
+                <div className="pt-2 border-t border-[#2d3036]"><strong>Optómetra:</strong> {viewingClinicalRecord.optometrist_name || 'Especialista'}</div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-3 border-t border-outline/10">
+            <div className="flex justify-end gap-3 pt-3 border-t border-[#2d3036]">
               <button
                 type="button"
                 onClick={() => {
@@ -1495,7 +1495,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   setViewingClinicalRecord(null);
                   handleEditClinicalRecord(rec);
                 }}
-                className="px-4 py-2 bg-amber-500/20 text-amber-400 font-bold rounded-xl text-xs hover:bg-amber-500/30 transition cursor-pointer border border-amber-500/30 flex items-center gap-1.5"
+                className="px-4 py-2 bg-amber-500/20 text-amber-400 font-bold rounded-md text-xs hover:bg-amber-500/30 transition cursor-pointer border border-amber-500/30 flex items-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-[16px]">edit</span>
                 Editar
@@ -1503,7 +1503,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
               <button
                 type="button"
                 onClick={() => handlePrintClinicalRecord(viewingClinicalRecord)}
-                className="px-4 py-2 bg-primary text-on-primary font-bold rounded-xl text-xs hover:opacity-90 transition cursor-pointer border-0 flex items-center gap-1.5"
+                className="px-4 py-2 bg-primary text-on-primary font-bold rounded-md text-xs hover:opacity-90 transition cursor-pointer border-0 flex items-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-[16px]">print</span>
                 Imprimir
@@ -1511,7 +1511,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
               <button
                 type="button"
                 onClick={() => setViewingClinicalRecord(null)}
-                className="px-4 py-2 border border-outline/20 rounded-xl text-on-surface text-xs hover:bg-surface-container cursor-pointer bg-transparent"
+                className="px-4 py-2 border border-[#2d3036] rounded-md text-on-surface text-xs hover:bg-[#181a1c] cursor-pointer bg-transparent"
               >
                 Cerrar
               </button>
