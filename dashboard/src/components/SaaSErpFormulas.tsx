@@ -175,8 +175,151 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
     }
   };
 
+  const [businessInfo, setBusinessInfo] = useState({
+    name: 'ÓPTICA Y CENTRO VISUAL',
+    nit: 'NIT 900.123.456-7',
+    address: 'Dirección Principal # 12 - 34',
+    phone: '+57 300 123 4567'
+  });
+
+  const fetchBusinessInfo = async () => {
+    try {
+      const res = await fetch(`/api/clients/${clientId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (json.success && json.client) {
+        setBusinessInfo({
+          name: json.client.company_name || json.client.name || 'ÓPTICA Y CENTRO VISUAL',
+          nit: json.client.nit || json.client.tax_id || 'NIT 900.123.456-7',
+          address: json.client.address || 'Dirección Principal',
+          phone: json.client.phone || '+57 300 123 4567'
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching business info:", err);
+    }
+  };
+
+  const handlePrintFormula = (formulaData: any, customerData?: any) => {
+    const printWin = window.open('', '_blank', 'width=750,height=850');
+    if (!printWin) return;
+
+    const custName = customerData ? `${customerData.name} ${customerData.last_name || ''}` : formulaData.customer_name || selectedCustomer?.name || 'Paciente';
+    const custDoc = customerData?.document_number || formulaData.customer_document_number || selectedCustomer?.document_number || 'N/A';
+    const custPhone = customerData?.phone || formulaData.customer_phone || selectedCustomer?.phone || 'N/A';
+    const dateStr = formulaData.created_at ? new Date(formulaData.created_at).toLocaleDateString('es-CO') : new Date().toLocaleDateString('es-CO');
+
+    const odSph = formulaData.od_sphere || odSphere || '---';
+    const odCyl = formulaData.od_cylinder || odCylinder || '---';
+    const odAx = formulaData.od_axis || odAxis || '---';
+    const odAdd = formulaData.od_addition || odAddition || '---';
+    const odPrs = formulaData.od_prism || odPrism || '---';
+    const odVisualAcuity = formulaData.od_av || odAv || '20/20';
+
+    const oiSph = formulaData.oi_sphere || oiSphere || '---';
+    const oiCyl = formulaData.oi_cylinder || oiCylinder || '---';
+    const oiAx = formulaData.oi_axis || oiAxis || '---';
+    const oiAdd = formulaData.oi_addition || oiAddition || '---';
+    const oiPrs = formulaData.oi_prism || oiPrism || '---';
+    const oiVisualAcuity = formulaData.oi_av || oiAv || '20/20';
+
+    const dp = formulaData.dp_distance || dpDistance || '---';
+    const alt = formulaData.height || height || '---';
+    const obs = formulaData.notes || notes || 'Ninguna';
+
+    printWin.document.write(`
+      <html>
+        <head>
+          <title>Fórmula Óptica - ${custName}</title>
+          <style>
+            body { font-family: 'Arial', sans-serif; padding: 25px; color: #111; font-size: 12px; line-height: 1.4; }
+            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+            .biz-name { font-size: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+            .biz-details { font-size: 11px; color: #444; margin-top: 3px; }
+            .title { font-size: 14px; font-weight: bold; text-align: center; margin-top: 10px; text-transform: uppercase; background: #f0f0f0; padding: 4px; border: 1px solid #ccc; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; margin-bottom: 10px; }
+            .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            .table th, .table td { border: 1px solid #333; padding: 6px; text-align: center; }
+            .table th { background: #e8e8e8; font-size: 11px; }
+            .footer { margin-top: 40px; text-align: center; border-top: 1px solid #ccc; padding-top: 15px; }
+            .signature { margin-top: 50px; display: inline-block; border-top: 1px solid #000; width: 220px; padding-top: 5px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="biz-name">${businessInfo.name}</div>
+            <div class="biz-details">${businessInfo.nit} | Dir: ${businessInfo.address} | Tel: ${businessInfo.phone}</div>
+          </div>
+
+          <div class="title">PRESCRIPCIÓN ÓPTICA / FÓRMULA DE GAFAS</div>
+
+          <div class="grid">
+            <div><strong>Paciente:</strong> ${custName}</div>
+            <div><strong>Fecha:</strong> ${dateStr}</div>
+            <div><strong>Cédula:</strong> ${custDoc}</div>
+            <div><strong>Teléfono:</strong> ${custPhone}</div>
+          </div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>OJO</th>
+                <th>ESFERA (ESF)</th>
+                <th>CILINDRO (CIL)</th>
+                <th>EJE</th>
+                <th>ADICIÓN (ADD)</th>
+                <th>PRISMA</th>
+                <th>AV</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>O.D. (Derecho)</strong></td>
+                <td>${odSph}</td>
+                <td>${odCyl}</td>
+                <td>${odAx ? `${odAx}°` : '---'}</td>
+                <td>${odAdd}</td>
+                <td>${odPrs}</td>
+                <td>${odVisualAcuity}</td>
+              </tr>
+              <tr>
+                <td><strong>O.I. (Izquierdo)</strong></td>
+                <td>${oiSph}</td>
+                <td>${oiCyl}</td>
+                <td>${oiAx ? `${oiAx}°` : '---'}</td>
+                <td>${oiAdd}</td>
+                <td>${oiPrs}</td>
+                <td>${oiVisualAcuity}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="margin-top:12px; font-family:monospace; display:flex; justify-content:space-between; background:#f9f9f9; padding:8px; border:1px solid #ddd;">
+            <span><strong>DP (Distancia Pupilar):</strong> ${dp} mm</span>
+            <span><strong>ALT (Altura de Montaje):</strong> ${alt} mm</span>
+          </div>
+
+          <div style="margin-top:12px;">
+            <strong>Indicaciones & Observaciones:</strong> ${obs}
+          </div>
+
+          <div class="footer">
+            <div class="signature">
+              Dr. Optómetra Especialista<br>
+              <span style="font-size:10px; font-weight:normal; color:#666;">Firma y Registro Profesional</span>
+            </div>
+          </div>
+          <script>window.print();</script>
+        </body>
+      </html>
+    `);
+    printWin.document.close();
+  };
+
   useEffect(() => {
     fetchCustomers();
+    fetchBusinessInfo();
     fetchAgendaAppointments(agendaDate);
   }, [clientId]);
 
@@ -632,8 +775,16 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
     setClinPatientDoc(cust.document_number || '');
     setClinPatientPhone(cust.phone || '');
 
-    // Cargar automáticamente los valores de fórmula previa si existen
-    if (formulasHistory && formulasHistory.length > 0) {
+    // Cargar automáticamente los valores de fórmula actuales (o de la última fórmula registrada)
+    const hasCurrentFormula = odSphere || oiSphere;
+    if (hasCurrentFormula) {
+      const odStr = `Esf: ${odSphere || '---'} | Cil: ${odCylinder || '---'} | Eje: ${odAxis ? `${odAxis}°` : '---'} | Add: ${odAddition || '---'}`;
+      const oiStr = `Esf: ${oiSphere || '---'} | Cil: ${oiCylinder || '---'} | Eje: ${oiAxis ? `${oiAxis}°` : '---'} | Add: ${oiAddition || '---'}`;
+      setClinRefrOd(odStr);
+      setClinRefrOi(oiStr);
+      if (odAv) setClinAvOd(odAv);
+      if (oiAv) setClinAvOi(oiAv);
+    } else if (formulasHistory && formulasHistory.length > 0) {
       const latestForm = formulasHistory[0];
       const odStr = `Esf: ${latestForm.od_sphere || '---'} | Cil: ${latestForm.od_cylinder || '---'} | Eje: ${latestForm.od_axis ? `${latestForm.od_axis}°` : '---'} | Add: ${latestForm.od_addition || '---'}`;
       const oiStr = `Esf: ${latestForm.oi_sphere || '---'} | Cil: ${latestForm.oi_cylinder || '---'} | Eje: ${latestForm.oi_axis ? `${latestForm.oi_axis}°` : '---'} | Add: ${latestForm.oi_addition || '---'}`;
@@ -903,71 +1054,12 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
         <div className="lg:col-span-2 space-y-6">
           {selectedCustomer ? (
             <>
-              {/* EXAMEN ANTERIOR (FECHA PREVIA) */}
-              <div className="bg-[#141517] p-5 rounded-2xl border border-[#2d3036] space-y-3">
-                <div className="flex justify-between items-center border-b border-[#2d3036] pb-2">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[16px]">history</span>
-                    <span>Examen Anterior {formulasHistory.length > 0 ? `(${new Date(formulasHistory[0].created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })})` : ''}</span>
-                  </h4>
-                  {formulasHistory.length > 0 && (
-                    <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-md font-mono font-bold">
-                      Fórmula Anterior
-                    </span>
-                  )}
-                </div>
-
-                {formulasHistory.length > 0 ? (
-                  <div className="space-y-3 font-mono text-xs">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* O.D. Anterior */}
-                      <div className="bg-[#181a1c] p-3 rounded-md border border-[#2d3036] space-y-1.5">
-                        <p className="font-bold text-primary text-[10px] uppercase">OJO DERECHO (O.D.)</p>
-                        <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-bold text-on-surface-variant uppercase border-b border-[#2d3036] pb-1">
-                          <span>Esf</span>
-                          <span>Cil</span>
-                          <span>Eje</span>
-                          <span>AV</span>
-                        </div>
-                        <div className="grid grid-cols-4 gap-1 text-center font-bold text-on-surface pt-1">
-                          <span>{formulasHistory[0].od_sphere || '---'}</span>
-                          <span>{formulasHistory[0].od_cylinder || '---'}</span>
-                          <span>{formulasHistory[0].od_axis ? `${formulasHistory[0].od_axis}°` : '---'}</span>
-                          <span>{formulasHistory[0].od_av || '---'}</span>
-                        </div>
-                      </div>
-
-                      {/* O.I. Anterior */}
-                      <div className="bg-[#181a1c] p-3 rounded-md border border-[#2d3036] space-y-1.5">
-                        <p className="font-bold text-secondary text-[10px] uppercase">OJO IZQUIERDO (O.I.)</p>
-                        <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-bold text-on-surface-variant uppercase border-b border-[#2d3036] pb-1">
-                          <span>Esf</span>
-                          <span>Cil</span>
-                          <span>Eje</span>
-                          <span>AV</span>
-                        </div>
-                        <div className="grid grid-cols-4 gap-1 text-center font-bold text-on-surface pt-1">
-                          <span>{formulasHistory[0].oi_sphere || '---'}</span>
-                          <span>{formulasHistory[0].oi_cylinder || '---'}</span>
-                          <span>{formulasHistory[0].oi_axis ? `${formulasHistory[0].oi_axis}°` : '---'}</span>
-                          <span>{formulasHistory[0].oi_av || '---'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-4 text-center text-xs text-on-surface-variant italic border border-dashed border-[#2d3036] rounded-md bg-[#181a1c]">
-                    No registra exámenes anteriores en el historial de este paciente.
-                  </div>
-                )}
-              </div>
-
-              {/* EXAMEN RECIENTE / NUEVO (FECHA ACTUAL) */}
+              {/* FORMULARIO DE PRESCRIPCIÓN ÓPTICA */}
               <form onSubmit={handleSaveFormula} className="bg-[#141517] p-5 rounded-2xl border border-[#2d3036] space-y-4">
                 <div className="flex justify-between items-center border-b border-[#2d3036] pb-2">
                   <h4 className="font-bold text-xs uppercase tracking-wider text-primary flex items-center gap-2">
                     <span className="material-symbols-outlined text-[16px]">edit_note</span>
-                    <span>Examen Reciente / Actual ({new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })})</span>
+                    <span>Nueva Prescripción Óptica ({new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })})</span>
                   </h4>
                   {saveSuccess && <span className="text-xs text-green-500 font-bold">¡Guardado con éxito!</span>}
                 </div>
@@ -1033,9 +1125,15 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   </div>
                 </div>
 
-                <button type="submit" disabled={saving} className="w-full py-3 bg-primary text-on-primary font-bold text-xs rounded-md hover:opacity-90 active:scale-95 transition-all cursor-pointer border-0 mt-2">
-                  {saving ? 'Guardando...' : 'Guardar Examen'}
-                </button>
+                <div className="flex gap-2 mt-2">
+                  <button type="submit" disabled={saving} className="flex-1 py-3 bg-primary text-on-primary font-bold text-xs rounded-md hover:opacity-90 active:scale-95 transition-all cursor-pointer border-0">
+                    {saving ? 'Guardando...' : 'Guardar Examen'}
+                  </button>
+                  <button type="button" onClick={() => handlePrintFormula({ od_sphere: odSphere, od_cylinder: odCylinder, od_axis: odAxis, od_addition: odAddition, od_prism: odPrism, od_av: odAv, oi_sphere: oiSphere, oi_cylinder: oiCylinder, oi_axis: oiAxis, oi_addition: oiAddition, oi_prism: oiPrism, oi_av: oiAv, dp_distance: dpDistance, height, notes })} className="py-3 px-4 bg-[#181a1c] border border-[#2d3036] hover:bg-[#22252a] text-on-surface font-bold text-xs rounded-md transition-all cursor-pointer flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px]">print</span>
+                    Imprimir Fórmula
+                  </button>
+                </div>
               </form>
 
               <div className="bg-[#141517] p-5 rounded-2xl border border-[#2d3036] space-y-4">
@@ -1292,6 +1390,19 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
               {/* 3. Examen Físico Ocular */}
               <div className="p-3.5 bg-[#181a1c] border border-[#2d3036] rounded-md space-y-3">
                 <h4 className="font-bold text-xs text-primary uppercase tracking-wider">3. Examen Clínico (Agudeza Visual & Tonometría)</h4>
+                
+                {/* Examen Anterior (Fórmula previa del paciente) */}
+                {formulasHistory.length > 0 && (
+                  <div className="bg-[#141517] p-3 rounded-md border border-[#2d3036] space-y-2">
+                    <div className="flex justify-between items-center border-b border-[#2d3036] pb-1">
+                      <span className="font-bold text-[10px] uppercase text-amber-400">Examen Anterior ({new Date(formulasHistory[0].created_at).toLocaleDateString('es-CO')})</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono text-on-surface">
+                      <div><strong>OD:</strong> Esf: {formulasHistory[0].od_sphere || '---'} | Cil: {formulasHistory[0].od_cylinder || '---'} | Eje: {formulasHistory[0].od_axis ? `${formulasHistory[0].od_axis}°` : '---'} | AV: {formulasHistory[0].od_av || '---'}</div>
+                      <div><strong>OI:</strong> Esf: {formulasHistory[0].oi_sphere || '---'} | Cil: {formulasHistory[0].oi_cylinder || '---'} | Eje: {formulasHistory[0].oi_axis ? `${formulasHistory[0].oi_axis}°` : '---'} | AV: {formulasHistory[0].oi_av || '---'}</div>
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
                   <div className="space-y-1">
                     <label className="font-bold text-on-surface-variant text-[10px]">AV OD</label>
