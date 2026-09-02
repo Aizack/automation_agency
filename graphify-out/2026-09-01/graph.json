@@ -625,7 +625,7 @@
       "file_type": "code",
       "norm_label": "rotationproduct",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2398"
+      "source_location": "L2460"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_saaserpinventoryprops",
@@ -2570,7 +2570,7 @@
       "file_type": "code",
       "norm_label": "inventoryrotationview()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2409"
+      "source_location": "L2471"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_promodiscountrow",
@@ -2606,7 +2606,7 @@
       "file_type": "code",
       "norm_label": "visualcolordropdown()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2535"
+      "source_location": "L2597"
     },
     {
       "id": "dashboard_src_components_saaserppurchaseorders_saaserppurchaseorders",
@@ -14553,7 +14553,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2418",
+      "source_location": "L2480",
       "weight": 1.0
     },
     {
@@ -14577,7 +14577,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L1784",
+      "source_location": "L1846",
       "weight": 1.0
     },
     {
@@ -14589,7 +14589,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L1808",
+      "source_location": "L1870",
       "weight": 1.0
     },
     {
@@ -14601,7 +14601,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2125",
+      "source_location": "L2187",
       "weight": 1.0
     },
     {
@@ -14613,7 +14613,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L710",
+      "source_location": "L694",
       "weight": 1.0
     },
     {
@@ -23780,7 +23780,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2398",
+      "source_location": "L2460",
       "weight": 1.0
     },
     {
@@ -23791,7 +23791,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2409",
+      "source_location": "L2471",
       "weight": 1.0
     },
     {
@@ -23802,7 +23802,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2535",
+      "source_location": "L2597",
       "weight": 1.0
     },
     {
@@ -32801,5 +32801,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8306882094ed20de0a2a8e86573f625a95baf206"
+  "built_at_commit": "1656773a36ae4d83e3d7da3a46de63e197115284"
 }

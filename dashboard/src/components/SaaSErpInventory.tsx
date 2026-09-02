@@ -184,7 +184,7 @@ const PromoDiscountRow: React.FC<{
 };
 
 export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: rawClientId, category = 'optica' }) => {
-    const clientId = (rawClientId && rawClientId !== 'undefined')
+    const clientId = (rawClientId && rawClientId !== 'undefined' && rawClientId !== 'admin')
         ? rawClientId
         : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
     const [products, setProducts] = useState<Product[]>([]);

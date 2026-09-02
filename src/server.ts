@@ -1368,16 +1368,24 @@ app.post('/api/payments/webhook', async (req: Request, res: Response) => {
 
 
 // --- SAAS ERP: PRODUCTOS / INVENTARIO ---
+const resolveProductClientId = (clientId: string | string[] | undefined): string => {
+  const strId = Array.isArray(clientId) ? clientId[0] : (clientId || '');
+  if (!strId || strId === 'undefined' || strId === 'admin') {
+    return 'client_test_optica';
+  }
+  return strId;
+};
+
 // Obtener todos los productos (con columnas de costo, alarmas de stock, descuentos promocionales y variantes)
 app.get('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
-    const { clientId } = req.params;
+    const targetClientId = resolveProductClientId(req.params.clientId);
     const result = await pool.query(
       `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, has_variants, image_url, product_type, created_at 
        FROM products 
        WHERE client_id = $1 
        ORDER BY created_at DESC`,
-      [clientId]
+      [targetClientId]
     );
 
     const variantsRes = await pool.query(
@@ -1385,7 +1393,7 @@ app.get('/api/clients/:clientId/products', authenticateToken as any, authorizeCl
        FROM product_variants 
        WHERE client_id = $1 
        ORDER BY variant_name ASC`,
-      [clientId]
+      [targetClientId]
     );
 
     const variantsMap = new Map<string, any[]>();
@@ -1413,7 +1421,8 @@ app.get('/api/clients/:clientId/products', authenticateToken as any, authorizeCl
 // Buscar producto individual por SKU (soporta producto base o variante específica)
 app.get('/api/clients/:clientId/products/sku/:sku', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
-    const { clientId, sku } = req.params;
+    const targetClientId = resolveProductClientId(req.params.clientId);
+    const { sku } = req.params;
 
     // 1. Buscar primero en variantes específicas de producto
     const varResult = await pool.query(
@@ -1422,7 +1431,7 @@ app.get('/api/clients/:clientId/products/sku/:sku', authenticateToken as any, au
        FROM product_variants pv
        JOIN products p ON pv.product_id = p.id
        WHERE pv.client_id = $1 AND LOWER(pv.sku) = LOWER($2) LIMIT 1`,
-      [clientId, sku]
+      [targetClientId, sku]
     );
 
     if (varResult.rows.length > 0) {
@@ -1445,7 +1454,7 @@ app.get('/api/clients/:clientId/products/sku/:sku', authenticateToken as any, au
       `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, attributes, has_variants, image_url, product_type 
        FROM products 
        WHERE client_id = $1 AND LOWER(sku) = LOWER($2) LIMIT 1`,
-      [clientId, sku]
+      [targetClientId, sku]
     );
 
     if (result.rows.length === 0) {
@@ -1460,13 +1469,13 @@ app.get('/api/clients/:clientId/products/sku/:sku', authenticateToken as any, au
 // Reporte de alerta de stock mínimo
 app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
-    const { clientId } = req.params;
+    const targetClientId = resolveProductClientId(req.params.clientId);
     const result = await pool.query(
       `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, attributes, created_at 
        FROM products 
        WHERE client_id = $1 AND stock <= min_stock 
        ORDER BY stock ASC`,
-      [clientId]
+      [targetClientId]
     );
     res.json({ success: true, products: result.rows });
   } catch (err: any) {
@@ -1477,7 +1486,7 @@ app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, a
 // Crear nuevo producto en inventario (soporta modo simple y modo con variantes de color)
 app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
-    const { clientId } = req.params;
+    const targetClientId = resolveProductClientId(req.params.clientId);
     const { 
       name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, 
       brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, 
@@ -1500,7 +1509,7 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) 
        RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type, has_variants, created_at`,
       [
-        clientId, name, sku || null, description || null, price, finalStock, 
+        targetClientId, name, sku || null, description || null, price, finalStock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null,
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
@@ -1523,7 +1532,7 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
         await pool.query(
           `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, stock, min_stock, image_url)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [insertedProduct.id, clientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null]
+          [insertedProduct.id, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null]
         );
       }
     }
@@ -1537,7 +1546,8 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 // Editar datos del producto (y sus variantes de color)
 app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
-    const { clientId, productId } = req.params;
+    const targetClientId = resolveProductClientId(req.params.clientId);
+    const { productId } = req.params;
     const { 
       name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, 
       brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, 
@@ -1569,7 +1579,7 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
         modsJson, image_url || null, resolvedType, hasVarBool,
-        clientId, productId
+        targetClientId, productId
       ]
     );
 
@@ -1579,7 +1589,7 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
 
     // Actualizar variantes
     if (hasVarBool && Array.isArray(variants)) {
-      await pool.query(`DELETE FROM product_variants WHERE product_id = $1 AND client_id = $2`, [productId, clientId]);
+      await pool.query(`DELETE FROM product_variants WHERE product_id = $1 AND client_id = $2`, [productId, targetClientId]);
       for (const v of variants) {
         let vSku = v.sku ? v.sku.trim() : '';
         if (!vSku) {
@@ -1591,11 +1601,11 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
         await pool.query(
           `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, stock, min_stock, image_url)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [productId, clientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null]
+          [productId, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null]
         );
       }
     } else if (!hasVarBool) {
-      await pool.query(`DELETE FROM product_variants WHERE product_id = $1 AND client_id = $2`, [productId, clientId]);
+      await pool.query(`DELETE FROM product_variants WHERE product_id = $1 AND client_id = $2`, [productId, targetClientId]);
     }
 
     const updatedProd = result.rows[0];
@@ -1604,7 +1614,7 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
       await logger.resolveAlert(
         `stock_low_${productId}`, 
         `El stock del producto "${updatedProd.name}" se ha restablecido a ${updatedProd.stock} unidades (Mínimo: ${updatedProd.min_stock}).`, 
-        clientId as string
+        targetClientId as string
       );
     } else {
       // Si el stock configurado sigue siendo crítico, levantar/actualizar alerta
@@ -1613,7 +1623,7 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
         'orange', 
         `El producto "${updatedProd.name}" tiene stock crítico de ${updatedProd.stock} unidades (Mínimo: ${updatedProd.min_stock}).`,
         `ID: ${productId} | Stock actual: ${updatedProd.stock} | Mínimo: ${updatedProd.min_stock}`,
-        clientId as string
+        targetClientId as string
       );
     }
 

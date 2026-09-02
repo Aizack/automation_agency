@@ -4,6 +4,45 @@
   "graph": {},
   "nodes": [
     {
+      "id": "src_agents_base_aiagent",
+      "label": "AIAgent",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "aiagent",
+      "source_file": "src/agents/base.ts",
+      "source_location": "L21"
+    },
+    {
+      "id": "src_core_config_clientconfig",
+      "label": "ClientConfig",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "clientconfig",
+      "source_file": "src/core/config.ts",
+      "source_location": "L3"
+    },
+    {
+      "id": "src_database_vectordb_vectordatabase",
+      "label": "VectorDatabase",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "vectordatabase",
+      "source_file": "src/database/vectorDb.ts",
+      "source_location": "L7"
+    },
+    {
       "id": "src_middlewares_modulemiddleware_extendedrequest",
       "label": "ExtendedRequest",
       "_callable": true,
@@ -101,7 +140,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "request",
       "source_file": "src/middlewares/correlationIdMiddleware.ts",
@@ -114,7 +153,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "apperror",
       "source_file": "src/middlewares/errorHandler.ts",
@@ -127,7 +166,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "logcontext",
       "source_file": "src/utils/correlationId.ts",
@@ -140,7 +179,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "structuredlogger",
       "source_file": "src/utils/structuredLogger.ts",
@@ -524,29 +563,16 @@
       "source_location": "L64"
     },
     {
-      "id": "src_agents_base_aiagent",
-      "label": "AIAgent",
+      "id": "src_agents_autofixagent_ticketfixresult",
+      "label": "TicketFixResult",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 27,
-      "community_name": "clientsCrud.ts",
+      "community_name": "scheduler.ts",
       "file_type": "code",
-      "norm_label": "aiagent",
-      "source_file": "src/agents/base.ts",
-      "source_location": "L21"
-    },
-    {
-      "id": "src_core_config_clientconfig",
-      "label": "ClientConfig",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "clientconfig",
-      "source_file": "src/core/config.ts",
+      "norm_label": "ticketfixresult",
+      "source_file": "src/agents/autoFixAgent.ts",
       "source_location": "L3"
     },
     {
@@ -860,19 +886,6 @@
       "norm_label": "suppliersprops",
       "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
       "source_location": "L23"
-    },
-    {
-      "id": "src_database_vectordb_vectordatabase",
-      "label": "VectorDatabase",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "vectordatabase",
-      "source_file": "src/database/vectorDb.ts",
-      "source_location": "L7"
     },
     {
       "id": "dashboard_src_components_activateaccount_activateaccountprops",
@@ -1590,19 +1603,6 @@
       "source_location": "L73"
     },
     {
-      "id": "src_agents_autofixagent_ticketfixresult",
-      "label": "TicketFixResult",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "ticketfixresult",
-      "source_file": "src/agents/autoFixAgent.ts",
-      "source_location": "L3"
-    },
-    {
       "id": "src_middlewares_authmiddleware_authenticatedrequest",
       "label": "AuthenticatedRequest",
       "_callable": true,
@@ -1745,6 +1745,114 @@
       "source_location": "L5"
     },
     {
+      "id": "src_agents_base_aiagent_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "src/agents/base.ts",
+      "source_location": "L24"
+    },
+    {
+      "id": "src_agents_base_aiagent_processmessage",
+      "label": ".processMessage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": ".processmessage()",
+      "source_file": "src/agents/base.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_core_config_getclientconfigbyid",
+      "label": "getClientConfigById()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "getclientconfigbyid()",
+      "source_file": "src/core/config.ts",
+      "source_location": "L71"
+    },
+    {
+      "id": "src_core_config_getclientconfigbyphone",
+      "label": "getClientConfigByPhone()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "getclientconfigbyphone()",
+      "source_file": "src/core/config.ts",
+      "source_location": "L31"
+    },
+    {
+      "id": "src_core_router_routeincomingmessage",
+      "label": "routeIncomingMessage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "routeincomingmessage()",
+      "source_file": "src/core/router.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_database_clientscrud_createclient",
+      "label": "createClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "createclient()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_database_clientscrud_getclientbyid",
+      "label": "getClientById()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "getclientbyid()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L56"
+    },
+    {
+      "id": "src_database_clientscrud_listclients",
+      "label": "listClients()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "listclients()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L171"
+    },
+    {
+      "id": "src_database_clientscrud_updateclient",
+      "label": "updateClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "updateclient()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L99"
+    },
+    {
       "id": "src_database_initdb_initdatabase",
       "label": "initDatabase()",
       "_callable": true,
@@ -1755,6 +1863,42 @@
       "norm_label": "initdatabase()",
       "source_file": "src/database/initDb.ts",
       "source_location": "L5"
+    },
+    {
+      "id": "src_database_vectordb_vectordatabase_getembedding",
+      "label": ".getEmbedding()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": ".getembedding()",
+      "source_file": "src/database/vectorDb.ts",
+      "source_location": "L13"
+    },
+    {
+      "id": "src_database_vectordb_vectordatabase_searchrelevantcontext",
+      "label": ".searchRelevantContext()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": ".searchrelevantcontext()",
+      "source_file": "src/database/vectorDb.ts",
+      "source_location": "L70"
+    },
+    {
+      "id": "src_database_vectordb_vectordatabase_storedocumentvectors",
+      "label": ".storeDocumentVectors()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": ".storedocumentvectors()",
+      "source_file": "src/database/vectorDb.ts",
+      "source_location": "L32"
     },
     {
       "id": "src_middlewares_modulemiddleware_requiremodule",
@@ -1793,6 +1937,78 @@
       "source_location": "L3"
     },
     {
+      "id": "src_scratch_test_db_test",
+      "label": "test()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "test()",
+      "source_file": "src/scratch/test-db.ts",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_scratch_test_drive_writer_testdrivewriter",
+      "label": "testDriveWriter()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "testdrivewriter()",
+      "source_file": "src/scratch/test-drive-writer.ts",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_scratch_test_function_calling_test",
+      "label": "test()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "test()",
+      "source_file": "src/scratch/test-function-calling.ts",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_scratch_test_onboarding_flow_sleep",
+      "label": "sleep()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "sleep()",
+      "source_file": "src/scratch/test-onboarding-flow.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_scratch_test_onboarding_flow_test",
+      "label": "test()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "test()",
+      "source_file": "src/scratch/test-onboarding-flow.ts",
+      "source_location": "L9"
+    },
+    {
+      "id": "src_scratch_test_optica_onboarding_testopticaflow",
+      "label": "testOpticaFlow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "testopticaflow()",
+      "source_file": "src/scratch/test-optica-onboarding.ts",
+      "source_location": "L7"
+    },
+    {
       "id": "src_scratch_test_pre_recorded_voice_run",
       "label": "run()",
       "_callable": true,
@@ -1805,16 +2021,100 @@
       "source_location": "L5"
     },
     {
-      "id": "src_database_clientscrud_updateclient",
-      "label": "updateClient()",
+      "id": "src_scratch_test_rag_runtest",
+      "label": "runTest()",
       "_callable": true,
       "_origin": "ast",
-      "community": 1,
-      "community_name": "whatsapp.ts",
+      "community": 0,
+      "community_name": "postgres.ts",
       "file_type": "code",
-      "norm_label": "updateclient()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L99"
+      "norm_label": "runtest()",
+      "source_file": "src/scratch/test-rag.ts",
+      "source_location": "L10"
+    },
+    {
+      "id": "src_services_drive_createclientfolder",
+      "label": "createClientFolder()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "createclientfolder()",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L158"
+    },
+    {
+      "id": "src_services_drive_fetchdocumentsfromdrive",
+      "label": "fetchDocumentsFromDrive()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "fetchdocumentsfromdrive()",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L43"
+    },
+    {
+      "id": "src_services_drive_getdriveclient",
+      "label": "getDriveClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "getdriveclient()",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_services_drive_listfilesfromfolder",
+      "label": "listFilesFromFolder()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "listfilesfromfolder()",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L232"
+    },
+    {
+      "id": "src_services_drive_uploadfiletofolder",
+      "label": "uploadFileToFolder()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "uploadfiletofolder()",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L196"
+    },
+    {
+      "id": "src_services_localknowledge_fetchlocaldocuments",
+      "label": "fetchLocalDocuments()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "fetchlocaldocuments()",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L58"
+    },
+    {
+      "id": "src_services_whatsapp_initializewhatsappclient",
+      "label": "initializeWhatsAppClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "initializewhatsappclient()",
+      "source_file": "src/services/whatsapp.ts",
+      "source_location": "L60"
     },
     {
       "id": "src_scratch_check_wa_state_check",
@@ -1829,52 +2129,28 @@
       "source_location": "L3"
     },
     {
-      "id": "src_services_scheduler_checkandsendreminders",
-      "label": "checkAndSendReminders()",
+      "id": "src_services_localknowledge_listlocalfiles",
+      "label": "listLocalFiles()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "checkandsendreminders()",
-      "source_file": "src/services/scheduler.ts",
-      "source_location": "L24"
+      "norm_label": "listlocalfiles()",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L28"
     },
     {
-      "id": "src_services_scheduler_delay",
-      "label": "delay()",
+      "id": "src_services_localknowledge_savelocalfile",
+      "label": "saveLocalFile()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "delay()",
-      "source_file": "src/services/scheduler.ts",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_services_scheduler_formatcurrency",
-      "label": "formatCurrency()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "whatsapp.ts",
-      "file_type": "code",
-      "norm_label": "formatcurrency()",
-      "source_file": "src/services/scheduler.ts",
-      "source_location": "L12"
-    },
-    {
-      "id": "src_services_scheduler_startscheduler",
-      "label": "startScheduler()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "whatsapp.ts",
-      "file_type": "code",
-      "norm_label": "startscheduler()",
-      "source_file": "src/services/scheduler.ts",
-      "source_location": "L152"
+      "norm_label": "savelocalfile()",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L14"
     },
     {
       "id": "src_services_whatsapp_autorestoresavedwhatsappsessions",
@@ -1911,18 +2187,6 @@
       "norm_label": "getwhatsappstate()",
       "source_file": "src/services/whatsapp.ts",
       "source_location": "L35"
-    },
-    {
-      "id": "src_services_whatsapp_initializewhatsappclient",
-      "label": "initializeWhatsAppClient()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "whatsapp.ts",
-      "file_type": "code",
-      "norm_label": "initializewhatsappclient()",
-      "source_file": "src/services/whatsapp.ts",
-      "source_location": "L60"
     },
     {
       "id": "src_services_whatsapp_logoutwhatsapp",
@@ -1990,7 +2254,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "correlationidmiddleware()",
       "source_file": "src/middlewares/correlationIdMiddleware.ts",
@@ -2002,7 +2266,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": ".constructor()",
       "source_file": "src/middlewares/errorHandler.ts",
@@ -2014,7 +2278,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "asynchandler()",
       "source_file": "src/middlewares/errorHandler.ts",
@@ -2026,59 +2290,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "errorhandler()",
       "source_file": "src/middlewares/errorHandler.ts",
       "source_location": "L23"
-    },
-    {
-      "id": "src_services_logger_isalertthrottled",
-      "label": "isAlertThrottled()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "logger.ts",
-      "file_type": "code",
-      "norm_label": "isalertthrottled()",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L19"
-    },
-    {
-      "id": "src_services_logger_senddiscordalert",
-      "label": "sendDiscordAlert()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "logger.ts",
-      "file_type": "code",
-      "norm_label": "senddiscordalert()",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L54"
-    },
-    {
-      "id": "src_services_logger_senddiscordrecovery",
-      "label": "sendDiscordRecovery()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "logger.ts",
-      "file_type": "code",
-      "norm_label": "senddiscordrecovery()",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L90"
-    },
-    {
-      "id": "src_services_logger_writetofile",
-      "label": "writeToFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "logger.ts",
-      "file_type": "code",
-      "norm_label": "writetofile()",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L44"
     },
     {
       "id": "src_utils_correlationid_createlogcontext",
@@ -2086,7 +2302,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "createlogcontext()",
       "source_file": "src/utils/correlationId.ts",
@@ -2098,7 +2314,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "generatecorrelationid()",
       "source_file": "src/utils/correlationId.ts",
@@ -2110,7 +2326,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": ".debug()",
       "source_file": "src/utils/structuredLogger.ts",
@@ -2122,7 +2338,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": ".error()",
       "source_file": "src/utils/structuredLogger.ts",
@@ -2134,7 +2350,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": ".info()",
       "source_file": "src/utils/structuredLogger.ts",
@@ -2146,7 +2362,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": ".operation()",
       "source_file": "src/utils/structuredLogger.ts",
@@ -2158,7 +2374,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": ".warn()",
       "source_file": "src/utils/structuredLogger.ts",
@@ -2345,172 +2561,76 @@
       "source_location": "L68"
     },
     {
-      "id": "src_agents_base_aiagent_constructor",
-      "label": ".constructor()",
+      "id": "src_agents_autofixagent_runautofixagent",
+      "label": "runAutoFixAgent()",
       "_callable": true,
       "_origin": "ast",
       "community": 27,
-      "community_name": "clientsCrud.ts",
+      "community_name": "scheduler.ts",
       "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/agents/base.ts",
+      "norm_label": "runautofixagent()",
+      "source_file": "src/agents/autoFixAgent.ts",
+      "source_location": "L19"
+    },
+    {
+      "id": "src_services_escalation_startescalationservice",
+      "label": "startEscalationService()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "scheduler.ts",
+      "file_type": "code",
+      "norm_label": "startescalationservice()",
+      "source_file": "src/services/escalation.ts",
+      "source_location": "L5"
+    },
+    {
+      "id": "src_services_scheduler_checkandsendreminders",
+      "label": "checkAndSendReminders()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "scheduler.ts",
+      "file_type": "code",
+      "norm_label": "checkandsendreminders()",
+      "source_file": "src/services/scheduler.ts",
       "source_location": "L24"
     },
     {
-      "id": "src_agents_base_aiagent_processmessage",
-      "label": ".processMessage()",
+      "id": "src_services_scheduler_delay",
+      "label": "delay()",
       "_callable": true,
       "_origin": "ast",
       "community": 27,
-      "community_name": "clientsCrud.ts",
+      "community_name": "scheduler.ts",
       "file_type": "code",
-      "norm_label": ".processmessage()",
-      "source_file": "src/agents/base.ts",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_core_config_getclientconfigbyid",
-      "label": "getClientConfigById()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "getclientconfigbyid()",
-      "source_file": "src/core/config.ts",
-      "source_location": "L71"
-    },
-    {
-      "id": "src_core_config_getclientconfigbyphone",
-      "label": "getClientConfigByPhone()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "getclientconfigbyphone()",
-      "source_file": "src/core/config.ts",
-      "source_location": "L31"
-    },
-    {
-      "id": "src_core_router_routeincomingmessage",
-      "label": "routeIncomingMessage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "routeincomingmessage()",
-      "source_file": "src/core/router.ts",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_database_clientscrud_deleteclient",
-      "label": "deleteClient()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "deleteclient()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L158"
-    },
-    {
-      "id": "src_database_clientscrud_getclientbyid",
-      "label": "getClientById()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "getclientbyid()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L56"
-    },
-    {
-      "id": "src_database_clientscrud_listclients",
-      "label": "listClients()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "listclients()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L171"
-    },
-    {
-      "id": "src_database_clientscrud_updateclientstatus",
-      "label": "updateClientStatus()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "updateclientstatus()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L145"
-    },
-    {
-      "id": "src_scratch_test_db_test",
-      "label": "test()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "test()",
-      "source_file": "src/scratch/test-db.ts",
-      "source_location": "L4"
-    },
-    {
-      "id": "src_scratch_test_function_calling_test",
-      "label": "test()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "test()",
-      "source_file": "src/scratch/test-function-calling.ts",
-      "source_location": "L6"
-    },
-    {
-      "id": "src_scratch_test_onboarding_flow_sleep",
-      "label": "sleep()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "sleep()",
-      "source_file": "src/scratch/test-onboarding-flow.ts",
+      "norm_label": "delay()",
+      "source_file": "src/services/scheduler.ts",
       "source_location": "L7"
     },
     {
-      "id": "src_scratch_test_onboarding_flow_test",
-      "label": "test()",
+      "id": "src_services_scheduler_formatcurrency",
+      "label": "formatCurrency()",
       "_callable": true,
       "_origin": "ast",
       "community": 27,
-      "community_name": "clientsCrud.ts",
+      "community_name": "scheduler.ts",
       "file_type": "code",
-      "norm_label": "test()",
-      "source_file": "src/scratch/test-onboarding-flow.ts",
-      "source_location": "L9"
+      "norm_label": "formatcurrency()",
+      "source_file": "src/services/scheduler.ts",
+      "source_location": "L12"
     },
     {
-      "id": "src_scratch_test_optica_onboarding_testopticaflow",
-      "label": "testOpticaFlow()",
+      "id": "src_services_scheduler_startscheduler",
+      "label": "startScheduler()",
       "_callable": true,
       "_origin": "ast",
       "community": 27,
-      "community_name": "clientsCrud.ts",
+      "community_name": "scheduler.ts",
       "file_type": "code",
-      "norm_label": "testopticaflow()",
-      "source_file": "src/scratch/test-optica-onboarding.ts",
-      "source_location": "L7"
+      "norm_label": "startscheduler()",
+      "source_file": "src/services/scheduler.ts",
+      "source_location": "L152"
     },
     {
       "id": "dashboard_src_components_saaserpcashshifts_saaserpcashshifts",
@@ -2741,172 +2861,52 @@
       "source_location": "L27"
     },
     {
-      "id": "src_database_clientscrud_createclient",
-      "label": "createClient()",
+      "id": "src_services_logger_isalertthrottled",
+      "label": "isAlertThrottled()",
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "drive.ts",
+      "community_name": "logger.ts",
       "file_type": "code",
-      "norm_label": "createclient()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L7"
+      "norm_label": "isalertthrottled()",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L19"
     },
     {
-      "id": "src_database_vectordb_vectordatabase_getembedding",
-      "label": ".getEmbedding()",
+      "id": "src_services_logger_senddiscordalert",
+      "label": "sendDiscordAlert()",
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "drive.ts",
+      "community_name": "logger.ts",
       "file_type": "code",
-      "norm_label": ".getembedding()",
-      "source_file": "src/database/vectorDb.ts",
-      "source_location": "L13"
+      "norm_label": "senddiscordalert()",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L54"
     },
     {
-      "id": "src_database_vectordb_vectordatabase_searchrelevantcontext",
-      "label": ".searchRelevantContext()",
+      "id": "src_services_logger_senddiscordrecovery",
+      "label": "sendDiscordRecovery()",
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "drive.ts",
+      "community_name": "logger.ts",
       "file_type": "code",
-      "norm_label": ".searchrelevantcontext()",
-      "source_file": "src/database/vectorDb.ts",
-      "source_location": "L70"
+      "norm_label": "senddiscordrecovery()",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L90"
     },
     {
-      "id": "src_database_vectordb_vectordatabase_storedocumentvectors",
-      "label": ".storeDocumentVectors()",
+      "id": "src_services_logger_writetofile",
+      "label": "writeToFile()",
       "_callable": true,
       "_origin": "ast",
       "community": 33,
-      "community_name": "drive.ts",
+      "community_name": "logger.ts",
       "file_type": "code",
-      "norm_label": ".storedocumentvectors()",
-      "source_file": "src/database/vectorDb.ts",
-      "source_location": "L32"
-    },
-    {
-      "id": "src_scratch_test_drive_writer_testdrivewriter",
-      "label": "testDriveWriter()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "testdrivewriter()",
-      "source_file": "src/scratch/test-drive-writer.ts",
-      "source_location": "L6"
-    },
-    {
-      "id": "src_scratch_test_rag_runtest",
-      "label": "runTest()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "runtest()",
-      "source_file": "src/scratch/test-rag.ts",
-      "source_location": "L10"
-    },
-    {
-      "id": "src_services_drive_createclientfolder",
-      "label": "createClientFolder()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "createclientfolder()",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L158"
-    },
-    {
-      "id": "src_services_drive_fetchdocumentsfromdrive",
-      "label": "fetchDocumentsFromDrive()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "fetchdocumentsfromdrive()",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L43"
-    },
-    {
-      "id": "src_services_drive_getdriveclient",
-      "label": "getDriveClient()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "getdriveclient()",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L15"
-    },
-    {
-      "id": "src_services_drive_listfilesfromfolder",
-      "label": "listFilesFromFolder()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "listfilesfromfolder()",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L232"
-    },
-    {
-      "id": "src_services_drive_uploadfiletofolder",
-      "label": "uploadFileToFolder()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "uploadfiletofolder()",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L196"
-    },
-    {
-      "id": "src_services_localknowledge_fetchlocaldocuments",
-      "label": "fetchLocalDocuments()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "fetchlocaldocuments()",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L58"
-    },
-    {
-      "id": "src_services_localknowledge_listlocalfiles",
-      "label": "listLocalFiles()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "listlocalfiles()",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_services_localknowledge_savelocalfile",
-      "label": "saveLocalFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "savelocalfile()",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L14"
+      "norm_label": "writetofile()",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L44"
     },
     {
       "id": "scratch_seed_10_sales_seed10sales",
@@ -3437,16 +3437,40 @@
       "source_location": "L77"
     },
     {
-      "id": "src_agents_autofixagent_runautofixagent",
-      "label": "runAutoFixAgent()",
+      "id": "src_utils_envvalidator_validateenv",
+      "label": "validateEnv()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 76,
+      "community_name": "envValidator.ts",
+      "file_type": "code",
+      "norm_label": "validateenv()",
+      "source_file": "src/utils/envValidator.ts",
+      "source_location": "L17"
+    },
+    {
+      "id": "src_database_clientscrud_deleteclient",
+      "label": "deleteClient()",
       "_callable": true,
       "_origin": "ast",
       "community": 8,
       "community_name": "server.ts",
       "file_type": "code",
-      "norm_label": "runautofixagent()",
-      "source_file": "src/agents/autoFixAgent.ts",
-      "source_location": "L19"
+      "norm_label": "deleteclient()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L158"
+    },
+    {
+      "id": "src_database_clientscrud_updateclientstatus",
+      "label": "updateClientStatus()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "updateclientstatus()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L145"
     },
     {
       "id": "src_middlewares_authmiddleware_authenticatetoken",
@@ -3506,7 +3530,19 @@
       "file_type": "code",
       "norm_label": "minutestotime()",
       "source_file": "src/server.ts",
-      "source_location": "L3747"
+      "source_location": "L3757"
+    },
+    {
+      "id": "src_server_resolveproductclientid",
+      "label": "resolveProductClientId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "resolveproductclientid()",
+      "source_file": "src/server.ts",
+      "source_location": "L1371"
     },
     {
       "id": "src_server_startmarketingcampaignworker",
@@ -3518,7 +3554,7 @@
       "file_type": "code",
       "norm_label": "startmarketingcampaignworker()",
       "source_file": "src/server.ts",
-      "source_location": "L5802"
+      "source_location": "L5812"
     },
     {
       "id": "src_server_timetominutes",
@@ -3530,31 +3566,7 @@
       "file_type": "code",
       "norm_label": "timetominutes()",
       "source_file": "src/server.ts",
-      "source_location": "L3741"
-    },
-    {
-      "id": "src_services_escalation_startescalationservice",
-      "label": "startEscalationService()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "startescalationservice()",
-      "source_file": "src/services/escalation.ts",
-      "source_location": "L5"
-    },
-    {
-      "id": "src_utils_envvalidator_validateenv",
-      "label": "validateEnv()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "validateenv()",
-      "source_file": "src/utils/envValidator.ts",
-      "source_location": "L17"
+      "source_location": "L3751"
     },
     {
       "id": "src_utils_passwordutils_hashpassword",
@@ -3662,6 +3674,61 @@
       "source_location": "L19"
     },
     {
+      "id": "src_core_config",
+      "label": "config.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "config.ts",
+      "source_file": "src/core/config.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_core_router",
+      "label": "router.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "router.ts",
+      "source_file": "src/core/router.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_core_router_pendingagentconfirmations",
+      "label": "pendingAgentConfirmations",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "pendingagentconfirmations",
+      "source_file": "src/core/router.ts",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_core_router_pendingcustomerconfirmations",
+      "label": "pendingCustomerConfirmations",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "pendingcustomerconfirmations",
+      "source_file": "src/core/router.ts",
+      "source_location": "L16"
+    },
+    {
+      "id": "src_database_clientscrud",
+      "label": "clientsCrud.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "clientscrud.ts",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "src_database_initdb",
       "label": "initDb.ts",
       "_origin": "ast",
@@ -3750,6 +3817,50 @@
       "source_location": "L1"
     },
     {
+      "id": "src_scratch_test_db",
+      "label": "test-db.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "test-db.ts",
+      "source_file": "src/scratch/test-db.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_scratch_test_drive_writer",
+      "label": "test-drive-writer.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "test-drive-writer.ts",
+      "source_file": "src/scratch/test-drive-writer.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_scratch_test_function_calling",
+      "label": "test-function-calling.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "test-function-calling.ts",
+      "source_file": "src/scratch/test-function-calling.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_scratch_test_onboarding_flow",
+      "label": "test-onboarding-flow.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "test-onboarding-flow.ts",
+      "source_file": "src/scratch/test-onboarding-flow.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "src_scratch_test_optica_onboarding",
       "label": "test-optica-onboarding.ts",
       "_origin": "ast",
@@ -3770,6 +3881,39 @@
       "norm_label": "test-pre-recorded-voice.ts",
       "source_file": "src/scratch/test-pre-recorded-voice.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "src_scratch_test_rag",
+      "label": "test-rag.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "test-rag.ts",
+      "source_file": "src/scratch/test-rag.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_services_drive",
+      "label": "drive.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "drive.ts",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_services_drive_key_file_path",
+      "label": "KEY_FILE_PATH",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "key_file_path",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L8"
     },
     {
       "id": "src_tools_agendarcita",
@@ -3981,15 +4125,26 @@
       "source_location": "L1"
     },
     {
-      "id": "src_services_scheduler",
-      "label": "scheduler.ts",
+      "id": "src_services_localknowledge",
+      "label": "localKnowledge.ts",
       "_origin": "ast",
       "community": 1,
       "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "scheduler.ts",
-      "source_file": "src/services/scheduler.ts",
+      "norm_label": "localknowledge.ts",
+      "source_file": "src/services/localKnowledge.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "src_services_localknowledge_knowledge_base_dir",
+      "label": "KNOWLEDGE_BASE_DIR",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "knowledge_base_dir",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L4"
     },
     {
       "id": "src_services_whatsapp",
@@ -4722,72 +4877,6 @@
       "source_location": "L6"
     },
     {
-      "id": "package_dependencies_dotenv",
-      "label": "dotenv",
-      "_origin": "ast",
-      "community": 106,
-      "community_name": "dotenv",
-      "file_type": "code",
-      "norm_label": "dotenv",
-      "source_file": "package.json",
-      "source_location": "L20"
-    },
-    {
-      "id": "dotenv",
-      "label": "dotenv",
-      "_origin": "ast",
-      "community": 106,
-      "community_name": "dotenv",
-      "file_type": "concept",
-      "norm_label": "dotenv",
-      "source_file": "package.json",
-      "source_location": "L20"
-    },
-    {
-      "id": "package_dependencies_qrcode_terminal",
-      "label": "qrcode-terminal",
-      "_origin": "ast",
-      "community": 107,
-      "community_name": "qrcode-terminal",
-      "file_type": "code",
-      "norm_label": "qrcode-terminal",
-      "source_file": "package.json",
-      "source_location": "L26"
-    },
-    {
-      "id": "qrcode_terminal",
-      "label": "qrcode-terminal",
-      "_origin": "ast",
-      "community": 107,
-      "community_name": "qrcode-terminal",
-      "file_type": "concept",
-      "norm_label": "qrcode-terminal",
-      "source_file": "package.json",
-      "source_location": "L26"
-    },
-    {
-      "id": "package_dependencies_types_bcrypt",
-      "label": "@types/bcrypt",
-      "_origin": "ast",
-      "community": 108,
-      "community_name": "@types/bcrypt",
-      "file_type": "code",
-      "norm_label": "@types/bcrypt",
-      "source_file": "package.json",
-      "source_location": "L18"
-    },
-    {
-      "id": "types_bcrypt",
-      "label": "@types/bcrypt",
-      "_origin": "ast",
-      "community": 108,
-      "community_name": "@types/bcrypt",
-      "file_type": "concept",
-      "norm_label": "@types/bcrypt",
-      "source_file": "package.json",
-      "source_location": "L18"
-    },
-    {
       "id": "quick_start",
       "label": "QUICK_START.md",
       "_origin": "ast",
@@ -5312,6 +5401,28 @@
       "source_location": "L1"
     },
     {
+      "id": "package",
+      "label": "package.json",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "package.json",
+      "source_file": "package.json",
+      "source_location": "L1"
+    },
+    {
+      "id": "package_description",
+      "label": "description",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "description",
+      "source_file": "package.json",
+      "source_location": "L4"
+    },
+    {
       "id": "package_devdependencies",
       "label": "devDependencies",
       "_origin": "ast",
@@ -5433,6 +5544,127 @@
       "source_location": "L39"
     },
     {
+      "id": "package_main",
+      "label": "main",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "main",
+      "source_file": "package.json",
+      "source_location": "L5"
+    },
+    {
+      "id": "package_name",
+      "label": "name",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "name",
+      "source_file": "package.json",
+      "source_location": "L2"
+    },
+    {
+      "id": "package_scripts",
+      "label": "scripts",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "scripts",
+      "source_file": "package.json",
+      "source_location": "L6"
+    },
+    {
+      "id": "package_scripts_build_frontend",
+      "label": "build:frontend",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "build:frontend",
+      "source_file": "package.json",
+      "source_location": "L10"
+    },
+    {
+      "id": "package_scripts_dev",
+      "label": "dev",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "dev",
+      "source_file": "package.json",
+      "source_location": "L8"
+    },
+    {
+      "id": "package_scripts_dev_api",
+      "label": "dev:api",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "dev:api",
+      "source_file": "package.json",
+      "source_location": "L9"
+    },
+    {
+      "id": "package_scripts_start",
+      "label": "start",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "start",
+      "source_file": "package.json",
+      "source_location": "L7"
+    },
+    {
+      "id": "package_scripts_start_api",
+      "label": "start:api",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "start:api",
+      "source_file": "package.json",
+      "source_location": "L12"
+    },
+    {
+      "id": "package_scripts_start_api_ui",
+      "label": "start:api:ui",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "start:api:ui",
+      "source_file": "package.json",
+      "source_location": "L13"
+    },
+    {
+      "id": "package_scripts_start_ui",
+      "label": "start:ui",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "start:ui",
+      "source_file": "package.json",
+      "source_location": "L11"
+    },
+    {
+      "id": "package_version",
+      "label": "version",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "devDependencies",
+      "file_type": "code",
+      "norm_label": "version",
+      "source_file": "package.json",
+      "source_location": "L3"
+    },
+    {
       "id": "nodemon",
       "label": "nodemon",
       "_origin": "ast",
@@ -5547,7 +5779,7 @@
       "label": "correlationIdMiddleware.ts",
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "correlationidmiddleware.ts",
       "source_file": "src/middlewares/correlationIdMiddleware.ts",
@@ -5558,7 +5790,7 @@
       "label": "Express",
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "express",
       "source_file": "src/middlewares/correlationIdMiddleware.ts",
@@ -5569,62 +5801,18 @@
       "label": "middlewares/errorHandler.ts",
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "middlewares/errorhandler.ts",
       "source_file": "src/middlewares/errorHandler.ts",
       "source_location": "L1"
     },
     {
-      "id": "src_services_logger",
-      "label": "logger.ts",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "logger.ts",
-      "file_type": "code",
-      "norm_label": "logger.ts",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_logger_alertthrottlemap",
-      "label": "alertThrottleMap",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "logger.ts",
-      "file_type": "code",
-      "norm_label": "alertthrottlemap",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L9"
-    },
-    {
-      "id": "src_services_logger_logger",
-      "label": "logger",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "logger.ts",
-      "file_type": "code",
-      "norm_label": "logger",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L116"
-    },
-    {
-      "id": "src_services_logger_logs_dir",
-      "label": "LOGS_DIR",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "logger.ts",
-      "file_type": "code",
-      "norm_label": "logs_dir",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L5"
-    },
-    {
       "id": "src_utils_correlationid",
       "label": "correlationId.ts",
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "correlationid.ts",
       "source_file": "src/utils/correlationId.ts",
@@ -5635,7 +5823,7 @@
       "label": "structuredLogger.ts",
       "_origin": "ast",
       "community": 13,
-      "community_name": "logger.ts",
+      "community_name": "StructuredLogger",
       "file_type": "code",
       "norm_label": "structuredlogger.ts",
       "source_file": "src/utils/structuredLogger.ts",
@@ -6676,6 +6864,17 @@
       "source_location": "L19"
     },
     {
+      "id": "package_dependencies_dotenv",
+      "label": "dotenv",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "dotenv",
+      "source_file": "package.json",
+      "source_location": "L20"
+    },
+    {
       "id": "package_dependencies_express",
       "label": "express",
       "_origin": "ast",
@@ -6742,6 +6941,28 @@
       "source_location": "L25"
     },
     {
+      "id": "package_dependencies_qrcode_terminal",
+      "label": "qrcode-terminal",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "qrcode-terminal",
+      "source_file": "package.json",
+      "source_location": "L26"
+    },
+    {
+      "id": "package_dependencies_types_bcrypt",
+      "label": "@types/bcrypt",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "@types/bcrypt",
+      "source_file": "package.json",
+      "source_location": "L18"
+    },
+    {
       "id": "package_dependencies_whatsapp_web_js",
       "label": "whatsapp-web.js",
       "_origin": "ast",
@@ -6773,6 +6994,17 @@
       "norm_label": "bcrypt",
       "source_file": "package.json",
       "source_location": "L19"
+    },
+    {
+      "id": "dotenv",
+      "label": "dotenv",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "dependencies",
+      "file_type": "concept",
+      "norm_label": "dotenv",
+      "source_file": "package.json",
+      "source_location": "L20"
     },
     {
       "id": "express",
@@ -6839,6 +7071,28 @@
       "norm_label": "pg",
       "source_file": "package.json",
       "source_location": "L25"
+    },
+    {
+      "id": "qrcode_terminal",
+      "label": "qrcode-terminal",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "dependencies",
+      "file_type": "concept",
+      "norm_label": "qrcode-terminal",
+      "source_file": "package.json",
+      "source_location": "L26"
+    },
+    {
+      "id": "types_bcrypt",
+      "label": "@types/bcrypt",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "dependencies",
+      "file_type": "concept",
+      "norm_label": "@types/bcrypt",
+      "source_file": "package.json",
+      "source_location": "L18"
     },
     {
       "id": "whatsapp_web_js",
@@ -7583,91 +7837,36 @@
       "source_location": "L259"
     },
     {
-      "id": "src_core_config",
-      "label": "config.ts",
+      "id": "src_agents_autofixagent",
+      "label": "autoFixAgent.ts",
       "_origin": "ast",
       "community": 27,
-      "community_name": "clientsCrud.ts",
+      "community_name": "scheduler.ts",
       "file_type": "code",
-      "norm_label": "config.ts",
-      "source_file": "src/core/config.ts",
+      "norm_label": "autofixagent.ts",
+      "source_file": "src/agents/autoFixAgent.ts",
       "source_location": "L1"
     },
     {
-      "id": "src_core_router",
-      "label": "router.ts",
+      "id": "src_server_server",
+      "label": "server",
       "_origin": "ast",
       "community": 27,
-      "community_name": "clientsCrud.ts",
+      "community_name": "scheduler.ts",
       "file_type": "code",
-      "norm_label": "router.ts",
-      "source_file": "src/core/router.ts",
-      "source_location": "L1"
+      "norm_label": "server",
+      "source_file": "src/server.ts",
+      "source_location": "L6964"
     },
     {
-      "id": "src_core_router_pendingagentconfirmations",
-      "label": "pendingAgentConfirmations",
+      "id": "src_services_scheduler",
+      "label": "scheduler.ts",
       "_origin": "ast",
       "community": 27,
-      "community_name": "clientsCrud.ts",
+      "community_name": "scheduler.ts",
       "file_type": "code",
-      "norm_label": "pendingagentconfirmations",
-      "source_file": "src/core/router.ts",
-      "source_location": "L8"
-    },
-    {
-      "id": "src_core_router_pendingcustomerconfirmations",
-      "label": "pendingCustomerConfirmations",
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "pendingcustomerconfirmations",
-      "source_file": "src/core/router.ts",
-      "source_location": "L16"
-    },
-    {
-      "id": "src_database_clientscrud",
-      "label": "clientsCrud.ts",
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "clientscrud.ts",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_scratch_test_db",
-      "label": "test-db.ts",
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "test-db.ts",
-      "source_file": "src/scratch/test-db.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_scratch_test_function_calling",
-      "label": "test-function-calling.ts",
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "test-function-calling.ts",
-      "source_file": "src/scratch/test-function-calling.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_scratch_test_onboarding_flow",
-      "label": "test-onboarding-flow.ts",
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "clientsCrud.ts",
-      "file_type": "code",
-      "norm_label": "test-onboarding-flow.ts",
-      "source_file": "src/scratch/test-onboarding-flow.ts",
+      "norm_label": "scheduler.ts",
+      "source_file": "src/services/scheduler.ts",
       "source_location": "L1"
     },
     {
@@ -8033,70 +8232,48 @@
       "source_location": "L1"
     },
     {
-      "id": "src_scratch_test_drive_writer",
-      "label": "test-drive-writer.ts",
+      "id": "src_services_logger",
+      "label": "logger.ts",
       "_origin": "ast",
       "community": 33,
-      "community_name": "drive.ts",
+      "community_name": "logger.ts",
       "file_type": "code",
-      "norm_label": "test-drive-writer.ts",
-      "source_file": "src/scratch/test-drive-writer.ts",
+      "norm_label": "logger.ts",
+      "source_file": "src/services/logger.ts",
       "source_location": "L1"
     },
     {
-      "id": "src_scratch_test_rag",
-      "label": "test-rag.ts",
+      "id": "src_services_logger_alertthrottlemap",
+      "label": "alertThrottleMap",
       "_origin": "ast",
       "community": 33,
-      "community_name": "drive.ts",
+      "community_name": "logger.ts",
       "file_type": "code",
-      "norm_label": "test-rag.ts",
-      "source_file": "src/scratch/test-rag.ts",
-      "source_location": "L1"
+      "norm_label": "alertthrottlemap",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L9"
     },
     {
-      "id": "src_services_drive",
-      "label": "drive.ts",
+      "id": "src_services_logger_logger",
+      "label": "logger",
       "_origin": "ast",
       "community": 33,
-      "community_name": "drive.ts",
+      "community_name": "logger.ts",
       "file_type": "code",
-      "norm_label": "drive.ts",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L1"
+      "norm_label": "logger",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L116"
     },
     {
-      "id": "src_services_drive_key_file_path",
-      "label": "KEY_FILE_PATH",
+      "id": "src_services_logger_logs_dir",
+      "label": "LOGS_DIR",
       "_origin": "ast",
       "community": 33,
-      "community_name": "drive.ts",
+      "community_name": "logger.ts",
       "file_type": "code",
-      "norm_label": "key_file_path",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L8"
-    },
-    {
-      "id": "src_services_localknowledge",
-      "label": "localKnowledge.ts",
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "localknowledge.ts",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_localknowledge_knowledge_base_dir",
-      "label": "KNOWLEDGE_BASE_DIR",
-      "_origin": "ast",
-      "community": 33,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "knowledge_base_dir",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L4"
+      "norm_label": "logs_dir",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L5"
     },
     {
       "id": "docs_plan_mejoras_arquitectonicas",
@@ -12724,92 +12901,37 @@
       "source_location": "L244"
     },
     {
-      "id": "package_scripts",
-      "label": "scripts",
+      "id": "src_utils_envvalidator",
+      "label": "envValidator.ts",
       "_origin": "ast",
       "community": 76,
-      "community_name": "scripts",
+      "community_name": "envValidator.ts",
       "file_type": "code",
-      "norm_label": "scripts",
-      "source_file": "package.json",
-      "source_location": "L6"
+      "norm_label": "envvalidator.ts",
+      "source_file": "src/utils/envValidator.ts",
+      "source_location": "L1"
     },
     {
-      "id": "package_scripts_build_frontend",
-      "label": "build:frontend",
+      "id": "src_utils_envvalidator_required_vars",
+      "label": "REQUIRED_VARS",
       "_origin": "ast",
       "community": 76,
-      "community_name": "scripts",
+      "community_name": "envValidator.ts",
       "file_type": "code",
-      "norm_label": "build:frontend",
-      "source_file": "package.json",
-      "source_location": "L10"
-    },
-    {
-      "id": "package_scripts_dev",
-      "label": "dev",
-      "_origin": "ast",
-      "community": 76,
-      "community_name": "scripts",
-      "file_type": "code",
-      "norm_label": "dev",
-      "source_file": "package.json",
-      "source_location": "L8"
-    },
-    {
-      "id": "package_scripts_dev_api",
-      "label": "dev:api",
-      "_origin": "ast",
-      "community": 76,
-      "community_name": "scripts",
-      "file_type": "code",
-      "norm_label": "dev:api",
-      "source_file": "package.json",
-      "source_location": "L9"
-    },
-    {
-      "id": "package_scripts_start",
-      "label": "start",
-      "_origin": "ast",
-      "community": 76,
-      "community_name": "scripts",
-      "file_type": "code",
-      "norm_label": "start",
-      "source_file": "package.json",
+      "norm_label": "required_vars",
+      "source_file": "src/utils/envValidator.ts",
       "source_location": "L7"
     },
     {
-      "id": "package_scripts_start_api",
-      "label": "start:api",
+      "id": "src_utils_envvalidator_warn_vars",
+      "label": "WARN_VARS",
       "_origin": "ast",
       "community": 76,
-      "community_name": "scripts",
+      "community_name": "envValidator.ts",
       "file_type": "code",
-      "norm_label": "start:api",
-      "source_file": "package.json",
+      "norm_label": "warn_vars",
+      "source_file": "src/utils/envValidator.ts",
       "source_location": "L12"
-    },
-    {
-      "id": "package_scripts_start_api_ui",
-      "label": "start:api:ui",
-      "_origin": "ast",
-      "community": 76,
-      "community_name": "scripts",
-      "file_type": "code",
-      "norm_label": "start:api:ui",
-      "source_file": "package.json",
-      "source_location": "L13"
-    },
-    {
-      "id": "package_scripts_start_ui",
-      "label": "start:ui",
-      "_origin": "ast",
-      "community": 76,
-      "community_name": "scripts",
-      "file_type": "code",
-      "norm_label": "start:ui",
-      "source_file": "package.json",
-      "source_location": "L11"
     },
     {
       "id": "printer_layout_calibration",
@@ -13076,17 +13198,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_agents_autofixagent",
-      "label": "autoFixAgent.ts",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "autofixagent.ts",
-      "source_file": "src/agents/autoFixAgent.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "src_middlewares_authmiddleware",
       "label": "authMiddleware.ts",
       "_origin": "ast",
@@ -13172,7 +13283,7 @@
       "file_type": "code",
       "norm_label": "diskupload",
       "source_file": "src/server.ts",
-      "source_location": "L1627"
+      "source_location": "L1637"
     },
     {
       "id": "src_server_mediadir",
@@ -13184,17 +13295,6 @@
       "norm_label": "mediadir",
       "source_file": "src/server.ts",
       "source_location": "L80"
-    },
-    {
-      "id": "src_server_server",
-      "label": "server",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "server",
-      "source_file": "src/server.ts",
-      "source_location": "L6954"
     },
     {
       "id": "src_server_upload",
@@ -13217,39 +13317,6 @@
       "norm_label": "uploadsdir",
       "source_file": "src/server.ts",
       "source_location": "L87"
-    },
-    {
-      "id": "src_utils_envvalidator",
-      "label": "envValidator.ts",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "envvalidator.ts",
-      "source_file": "src/utils/envValidator.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_utils_envvalidator_required_vars",
-      "label": "REQUIRED_VARS",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "required_vars",
-      "source_file": "src/utils/envValidator.ts",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_utils_envvalidator_warn_vars",
-      "label": "WARN_VARS",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "warn_vars",
-      "source_file": "src/utils/envValidator.ts",
-      "source_location": "L12"
     },
     {
       "id": "src_utils_passwordutils",
@@ -14249,61 +14316,6 @@
       "source_location": "L58"
     },
     {
-      "id": "package",
-      "label": "package.json",
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "package.json",
-      "source_file": "package.json",
-      "source_location": "L1"
-    },
-    {
-      "id": "package_description",
-      "label": "description",
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "description",
-      "source_file": "package.json",
-      "source_location": "L4"
-    },
-    {
-      "id": "package_main",
-      "label": "main",
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "main",
-      "source_file": "package.json",
-      "source_location": "L5"
-    },
-    {
-      "id": "package_name",
-      "label": "name",
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "name",
-      "source_file": "package.json",
-      "source_location": "L2"
-    },
-    {
-      "id": "package_version",
-      "label": "version",
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "package.json",
-      "file_type": "code",
-      "norm_label": "version",
-      "source_file": "package.json",
-      "source_location": "L3"
-    },
-    {
       "id": "dashboard_readme",
       "label": "README.md",
       "_origin": "ast",
@@ -15093,7 +15105,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L6962",
+      "source_location": "L6972",
       "weight": 1.0
     },
     {
@@ -15105,7 +15117,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L8556",
+      "source_location": "L8566",
       "weight": 1.0
     },
     {
@@ -15117,7 +15129,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9091",
+      "source_location": "L9101",
       "weight": 1.0
     },
     {
@@ -15129,7 +15141,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9094",
+      "source_location": "L9104",
       "weight": 1.0
     },
     {
@@ -18393,7 +18405,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/server.ts",
-      "source_location": "L7057",
+      "source_location": "L7067",
       "weight": 1.0
     },
     {
@@ -21117,7 +21129,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/server.ts",
-      "source_location": "L7057",
+      "source_location": "L7067",
       "weight": 1.0
     },
     {
@@ -31056,13 +31068,24 @@
     },
     {
       "source": "src_server",
+      "target": "src_server_resolveproductclientid",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/server.ts",
+      "source_location": "L1371",
+      "weight": 1.0
+    },
+    {
+      "source": "src_server",
       "target": "src_server_diskupload",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L1627",
+      "source_location": "L1637",
       "weight": 1.0
     },
     {
@@ -31073,7 +31096,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L3741",
+      "source_location": "L3751",
       "weight": 1.0
     },
     {
@@ -31084,7 +31107,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L3747",
+      "source_location": "L3757",
       "weight": 1.0
     },
     {
@@ -31106,7 +31129,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L5802",
+      "source_location": "L5812",
       "weight": 1.0
     },
     {
@@ -31128,7 +31151,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L6954",
+      "source_location": "L6964",
       "weight": 1.0
     },
     {
@@ -32796,10 +32819,10 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "src/server.ts",
-      "source_location": "L6951",
+      "source_location": "L6961",
       "weight": 1.0
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1656773a36ae4d83e3d7da3a46de63e197115284"
+  "built_at_commit": "99d442f44451cee70faea4c0de1550fb5536e597"
 }
