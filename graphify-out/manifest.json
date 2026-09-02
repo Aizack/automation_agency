@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAppointments.tsx": {
-    "mtime": 1788324427.4504735,
-    "seen": 1788324562.4041917,
-    "ast_hash": "bfc2930ddb66651d82fad625fc8d465a",
+    "mtime": 1788328738.671543,
+    "seen": 1788328787.4863646,
+    "ast_hash": "89063871d128b4e18565b0c53419e98f",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAuditLogs.tsx": {
@@ -150,15 +150,15 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpFormulas.tsx": {
-    "mtime": 1788327304.654188,
-    "seen": 1788327328.577114,
-    "ast_hash": "22f254094057ea35c84aaac0610e4c9a",
+    "mtime": 1788328715.4750495,
+    "seen": 1788328787.486381,
+    "ast_hash": "74c5bfe356a164cdd2ea9b13b6e5ed9b",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
-    "mtime": 1788316771.067508,
-    "seen": 1788317332.7180092,
-    "ast_hash": "326287743b2071f4665571f2fe80db2a",
+    "mtime": 1788328679.2798407,
+    "seen": 1788328787.486383,
+    "ast_hash": "fb840ea14c1659023e9f9a78a35a0a2c",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {

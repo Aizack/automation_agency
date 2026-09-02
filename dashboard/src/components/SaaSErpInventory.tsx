@@ -2047,10 +2047,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             )}
 
             {/* Modal para Agregar Color Nuevo */}
-            {showNewColorPrompt && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-                    <div className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center mb-2">
+            {showNewColorPrompt && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
+                    <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center mb-2 border-b border-outline/10 pb-3">
                             <h3 className="font-bold text-base text-on-surface flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-primary text-[20px]">palette</span>
                                 Agregar Color Nuevo
@@ -2058,7 +2058,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             <button 
                                 type="button"
                                 onClick={() => setShowNewColorPrompt(false)}
-                                className="p-1 hover:bg-surface-container-highest rounded-full border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
+                                className="p-1 hover:bg-surface-container-highest rounded-lg border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
@@ -2072,7 +2072,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     value={newColorName}
                                     onChange={(e) => setNewColorName(e.target.value)}
                                     placeholder="Ej: Azul Océano, Púrpura Metalizado"
-                                    className="bg-surface-container border border-outline/20 rounded-lg p-2.5 text-xs focus:border-primary text-on-surface outline-none transition"
+                                    className="bg-surface-container border border-outline/20 rounded-md p-2.5 text-xs focus:border-primary text-on-surface outline-none transition"
                                     onKeyPress={(e) => {
                                         if (e.key === 'Enter') {
                                             handleAddCustomColor();
@@ -2088,7 +2088,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         type="color"
                                         value={newColorHex}
                                         onChange={(e) => setNewColorHex(e.target.value)}
-                                        className="w-12 h-10 rounded-lg cursor-pointer border border-outline/20"
+                                        className="w-12 h-10 rounded-md cursor-pointer border border-outline/20"
                                     />
                                     <input 
                                         type="text"
@@ -2100,26 +2100,26 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             }
                                         }}
                                         placeholder="#3b82f6"
-                                        className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs font-mono focus:border-primary text-on-surface outline-none transition flex-grow"
+                                        className="bg-surface-container border border-outline/20 rounded-md p-2 text-xs font-mono focus:border-primary text-on-surface outline-none transition flex-grow"
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 p-3 bg-surface-container/30 rounded-lg border border-outline/10">
+                            <div className="flex items-center gap-3 p-3 bg-surface-container/30 rounded-md border border-outline/10">
                                 <span className="text-xs text-on-surface-variant font-medium">Vista previa:</span>
                                 <span 
-                                    className="w-6 h-6 rounded-lg border-2 border-white/30"
+                                    className="w-6 h-6 rounded-md border-2 border-white/30"
                                     style={{ backgroundColor: newColorHex }}
                                 />
                                 <span className="text-xs text-on-surface-variant">{newColorName || 'Tu color'}</span>
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-3 border-t border-outline/5">
+                        <div className="flex justify-end gap-3 pt-3 border-t border-outline/10">
                             <button 
                                 type="button"
                                 onClick={() => setShowNewColorPrompt(false)}
-                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-lg transition cursor-pointer"
+                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-md transition cursor-pointer"
                             >
                                 Cancelar
                             </button>
@@ -2127,39 +2127,41 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                 type="button"
                                 onClick={handleAddCustomColor}
                                 disabled={!newColorName.trim()}
-                                className="px-4 py-2 bg-primary hover:opacity-90 disabled:opacity-50 text-on-primary text-xs font-bold rounded-lg transition cursor-pointer border-0 flex items-center gap-1.5"
+                                className="px-4 py-2 bg-primary hover:opacity-90 disabled:opacity-50 text-on-primary text-xs font-bold rounded-md transition cursor-pointer border-0 flex items-center gap-1.5"
                             >
                                 <span className="material-symbols-outlined text-[14px]">add</span>
                                 Agregar Color
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Modal de Impresión de Códigos de Barras */}
-            {isPrintModalOpen && printProduct && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-                    <div className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-start mb-4">
+            {isPrintModalOpen && printProduct && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
+                    <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl max-w-md w-full shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-start mb-4 border-b border-outline/10 pb-3">
                             <div>
-                                <h3 className="font-bold text-base text-on-surface">
-                                    {isRefillPrompt ? 'ðŸ“¦ Impresión por Reabastecimiento' : 'ðŸ–¨ï¸ Imprimir Código de Barras'}
+                                <h3 className="font-bold text-base text-on-surface flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary text-[20px]">print</span>
+                                    {isRefillPrompt ? 'Impresión por Reabastecimiento' : 'Imprimir Código de Barras'}
                                 </h3>
-                                <p className="text-xs text-on-surface-variant opacity-75 mt-1">
+                                <p className="text-xs text-on-surface-variant opacity-75 mt-1 font-mono">
                                     {printProduct.name}
                                 </p>
                             </div>
                             <button 
                                 onClick={() => setIsPrintModalOpen(false)}
-                                className="p-1 hover:bg-surface-container-highest rounded-full border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
+                                className="p-1 hover:bg-surface-container-highest rounded-lg border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
                         {isRefillPrompt ? (
-                            <div className="bg-primary/10 border border-primary/20 p-3 rounded-xl mb-4 text-xs text-on-surface-variant leading-relaxed">
+                            <div className="bg-primary/10 border border-primary/20 p-3 rounded-lg mb-4 text-xs text-on-surface-variant leading-relaxed">
                                 <strong className="text-primary">¡Reabastecimiento detectado!</strong> Se han añadido nuevas unidades al stock. ¿Cuántas etiquetas de códigos de barras deseas imprimir para esta tanda?
                             </div>
                         ) : (
@@ -2169,7 +2171,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         )}
 
                         <div className="space-y-4">
-                            <div className="bg-surface-container p-3 rounded-xl border border-outline/5 flex items-center gap-3">
+                            <div className="bg-surface-container p-3 rounded-lg border border-outline/10 flex items-center gap-3">
                                 <div className="flex-grow">
                                     <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Código SKU</p>
                                     <p className="text-sm font-mono text-on-surface font-semibold mt-0.5">{printProduct.sku}</p>
@@ -2186,7 +2188,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                 <select
                                     value={printProfileId}
                                     onChange={(e) => setPrintProfileId(e.target.value as LabelProfileId)}
-                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-sm text-on-surface outline-none focus:border-primary"
+                                    className="w-full bg-surface-container border border-outline/20 rounded-md p-2.5 text-sm text-on-surface outline-none focus:border-primary"
                                 >
                                     {Object.values(LABEL_PRINT_PROFILES).map((profile) => (
                                         <option key={profile.id} value={profile.id}>
@@ -2202,7 +2204,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     <button 
                                         type="button"
                                         onClick={() => setPrintQuantity(1)}
-                                        className={`flex-1 py-2 px-3 border rounded-xl text-xs font-bold transition cursor-pointer ${printQuantity === 1 ? 'bg-primary/15 border-primary text-primary' : 'bg-transparent border-outline/20 text-on-surface hover:bg-surface-container'}`}
+                                        className={`flex-1 py-2 px-3 border rounded-md text-xs font-bold transition cursor-pointer ${printQuantity === 1 ? 'bg-primary/15 border-primary text-primary' : 'bg-transparent border-outline/20 text-on-surface hover:bg-surface-container'}`}
                                     >
                                         1 Copia (Prueba)
                                     </button>
@@ -2210,7 +2212,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         <button 
                                             type="button"
                                             onClick={() => setPrintQuantity(printQuantity)}
-                                            className={`flex-1 py-2 px-3 border rounded-xl text-xs font-bold transition cursor-pointer bg-primary/15 border-primary text-primary`}
+                                            className={`flex-1 py-2 px-3 border rounded-md text-xs font-bold transition cursor-pointer bg-primary/15 border-primary text-primary`}
                                         >
                                             {printQuantity} Copias (Refill)
                                         </button>
@@ -2218,7 +2220,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     <button 
                                         type="button"
                                         onClick={() => setPrintQuantity(printProduct.stock)}
-                                        className={`flex-1 py-2 px-3 border rounded-xl text-xs font-bold transition cursor-pointer ${printQuantity === printProduct.stock ? 'bg-primary/15 border-primary text-primary' : 'bg-transparent border-outline/20 text-on-surface hover:bg-surface-container'}`}
+                                        className={`flex-1 py-2 px-3 border rounded-md text-xs font-bold transition cursor-pointer ${printQuantity === printProduct.stock ? 'bg-primary/15 border-primary text-primary' : 'bg-transparent border-outline/20 text-on-surface hover:bg-surface-container'}`}
                                     >
                                         Stock Completo ({printProduct.stock})
                                     </button>
@@ -2234,14 +2236,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         max="500"
                                         value={printQuantity}
                                         onChange={(e) => setPrintQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                        className="bg-surface-container border border-outline/20 p-2 rounded-xl text-sm font-semibold text-on-surface outline-none w-28 text-center"
+                                        className="bg-surface-container border border-outline/20 p-2 rounded-md text-sm font-semibold text-on-surface outline-none w-28 text-center font-mono"
                                     />
                                     <span className="text-xs text-on-surface-variant opacity-60 font-sans">etiquetas autoadhesivas</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-6 border-t border-outline/5 mt-6">
+                        <div className="flex justify-end gap-3 pt-6 border-t border-outline/10 mt-6">
                             <button
                                 type="button"
                                 onClick={() => {
@@ -2253,32 +2255,33 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         quantity: parseInt(printQuantity.toString()) || 1
                                     }], selectedSettings);
                                 }}
-                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-xl transition cursor-pointer"
+                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-md transition cursor-pointer"
                             >
                                 Vista previa
                             </button>
                             <button 
                                 onClick={() => setIsPrintModalOpen(false)}
-                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-xl transition cursor-pointer"
+                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-md transition cursor-pointer"
                             >
                                 Cancelar
                             </button>
                             <button 
                                 onClick={handlePrintBarcodes}
-                                className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                                className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-md primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 border-0"
                             >
                                 <span className="material-symbols-outlined text-[16px]">print</span>
                                 Confirmar e Imprimir
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
             {/* Modal de Reabastecimiento Rápido (Refill) */}
             {isRefillModalOpen && refillProduct && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <form onSubmit={handleSaveRefill} className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center mb-2">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
+                    <form onSubmit={handleSaveRefill} className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center mb-2 border-b border-outline/10 pb-3">
                             <h3 className="font-bold text-base text-on-surface flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-green-400">add_box</span>
                                 Rellenar Inventario
@@ -2286,13 +2289,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             <button 
                                 type="button"
                                 onClick={() => setIsRefillModalOpen(false)}
-                                className="p-1 hover:bg-surface-container-highest rounded-full border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
+                                className="p-1 hover:bg-surface-container-highest rounded-lg border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
-                        <div className="bg-surface-container p-3 rounded-xl border border-outline/5 text-xs space-y-1">
+                        <div className="bg-surface-container p-3 rounded-md border border-outline/10 text-xs space-y-1">
                             <p className="text-on-surface font-semibold">{refillProduct.name}</p>
                             <p className="text-on-surface-variant opacity-75 font-mono">SKU: {refillProduct.sku || 'N/A'}</p>
                             <p className="text-on-surface-variant opacity-75">Stock Actual: <strong className="text-on-surface">{refillProduct.stock} uds</strong> (Mínimo: {refillProduct.min_stock !== undefined ? refillProduct.min_stock : 5} uds)</p>
@@ -2307,7 +2310,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                 placeholder="Ej: 50"
                                 value={refillQuantity}
                                 onChange={(e) => setRefillQuantity(e.target.value === '' ? '' : parseInt(e.target.value))}
-                                className="bg-surface-container border border-outline/20 p-3 rounded-xl text-sm font-semibold text-on-surface outline-none w-full"
+                                className="bg-surface-container border border-outline/20 p-3 rounded-md text-sm font-semibold text-on-surface outline-none w-full font-mono"
                             />
                         </div>
 
@@ -2321,17 +2324,17 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             <span>Imprimir códigos de barra para estas nuevas unidades</span>
                         </label>
 
-                        <div className="flex justify-end gap-3 pt-4 border-t border-outline/5 mt-4">
+                        <div className="flex justify-end gap-3 pt-4 border-t border-outline/10 mt-4">
                             <button 
                                 type="button"
                                 onClick={() => setIsRefillModalOpen(false)}
-                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-xl transition cursor-pointer"
+                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-md transition cursor-pointer"
                             >
                                 Cancelar
                             </button>
                             <button 
                                 type="submit"
-                                className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 border-0"
+                                className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-md primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 border-0"
                             >
                                 <span className="material-symbols-outlined text-[16px]">done</span>
                                 Confirmar Refill

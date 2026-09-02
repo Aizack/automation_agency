@@ -550,45 +550,6 @@
       "source_location": "L64"
     },
     {
-      "id": "dashboard_src_components_saaserpcashshifts_cashshift",
-      "label": "CashShift",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "SaaSErpCashShifts.tsx",
-      "file_type": "code",
-      "norm_label": "cashshift",
-      "source_file": "dashboard/src/components/SaaSErpCashShifts.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcashshifts_employee",
-      "label": "Employee",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "SaaSErpCashShifts.tsx",
-      "file_type": "code",
-      "norm_label": "employee",
-      "source_file": "dashboard/src/components/SaaSErpCashShifts.tsx",
-      "source_location": "L27"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcashshifts_saaserpcashshiftsprops",
-      "label": "SaaSErpCashShiftsProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "SaaSErpCashShifts.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpcashshiftsprops",
-      "source_file": "dashboard/src/components/SaaSErpCashShifts.tsx",
-      "source_location": "L4"
-    },
-    {
       "id": "dashboard_src_components_saaserpinventory_coloroption",
       "label": "ColorOption",
       "_callable": true,
@@ -599,7 +560,7 @@
       "file_type": "code",
       "norm_label": "coloroption",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L73"
+      "source_location": "L85"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_product",
@@ -611,6 +572,19 @@
       "community_name": "SaaSErpInventory.tsx",
       "file_type": "code",
       "norm_label": "product",
+      "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
+      "source_location": "L18"
+    },
+    {
+      "id": "dashboard_src_components_saaserpinventory_productvariant",
+      "label": "ProductVariant",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "SaaSErpInventory.tsx",
+      "file_type": "code",
+      "norm_label": "productvariant",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
       "source_location": "L7"
     },
@@ -625,7 +599,7 @@
       "file_type": "code",
       "norm_label": "rotationproduct",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2493"
+      "source_location": "L2587"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_saaserpinventoryprops",
@@ -638,7 +612,7 @@
       "file_type": "code",
       "norm_label": "saaserpinventoryprops",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L29"
+      "source_location": "L41"
     },
     {
       "id": "dashboard_src_components_saaserppurchaseorders_product",
@@ -1369,43 +1343,43 @@
       "source_location": "L9"
     },
     {
-      "id": "dashboard_src_components_saaserpformulas_customer",
-      "label": "Customer",
+      "id": "dashboard_src_components_saaserpcashshifts_cashshift",
+      "label": "CashShift",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
       "community_name": "authFetch",
       "file_type": "code",
-      "norm_label": "customer",
-      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L11"
+      "norm_label": "cashshift",
+      "source_file": "dashboard/src/components/SaaSErpCashShifts.tsx",
+      "source_location": "L8"
     },
     {
-      "id": "dashboard_src_components_saaserpformulas_formula",
-      "label": "Formula",
+      "id": "dashboard_src_components_saaserpcashshifts_employee",
+      "label": "Employee",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
       "community_name": "authFetch",
       "file_type": "code",
-      "norm_label": "formula",
-      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L24"
+      "norm_label": "employee",
+      "source_file": "dashboard/src/components/SaaSErpCashShifts.tsx",
+      "source_location": "L27"
     },
     {
-      "id": "dashboard_src_components_saaserpformulas_formulasprops",
-      "label": "FormulasProps",
+      "id": "dashboard_src_components_saaserpcashshifts_saaserpcashshiftsprops",
+      "label": "SaaSErpCashShiftsProps",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
       "community_name": "authFetch",
       "file_type": "code",
-      "norm_label": "formulasprops",
-      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L5"
+      "norm_label": "saaserpcashshiftsprops",
+      "source_file": "dashboard/src/components/SaaSErpCashShifts.tsx",
+      "source_location": "L4"
     },
     {
       "id": "dashboard_src_components_saaserpsalestargets_employeesalestarget",
@@ -1486,17 +1460,43 @@
       "source_location": "L4"
     },
     {
-      "id": "src_services_pdfgeneratorservice_invoiceprintdata",
-      "label": "InvoicePrintData",
+      "id": "dashboard_src_components_saaserpformulas_customer",
+      "label": "Customer",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "pdfGeneratorService.ts",
+      "community_name": "SaaSErpFormulas.tsx",
       "file_type": "code",
-      "norm_label": "invoiceprintdata",
-      "source_file": "src/services/pdfGeneratorService.ts",
-      "source_location": "L4"
+      "norm_label": "customer",
+      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "dashboard_src_components_saaserpformulas_formula",
+      "label": "Formula",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "SaaSErpFormulas.tsx",
+      "file_type": "code",
+      "norm_label": "formula",
+      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
+      "source_location": "L24"
+    },
+    {
+      "id": "dashboard_src_components_saaserpformulas_formulasprops",
+      "label": "FormulasProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 67,
+      "community_name": "SaaSErpFormulas.tsx",
+      "file_type": "code",
+      "norm_label": "formulasprops",
+      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
+      "source_location": "L5"
     },
     {
       "id": "dashboard_src_components_saaserpinvoices2_bankaccount",
@@ -1614,6 +1614,19 @@
       "norm_label": "ratelimitstore",
       "source_file": "src/middlewares/rateLimiter.ts",
       "source_location": "L3"
+    },
+    {
+      "id": "src_services_pdfgeneratorservice_invoiceprintdata",
+      "label": "InvoicePrintData",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "invoiceprintdata",
+      "source_file": "src/services/pdfGeneratorService.ts",
+      "source_location": "L4"
     },
     {
       "id": "dashboard_src_components_saaserpcampaigns_employee",
@@ -1746,6 +1759,18 @@
       "source_location": "L8"
     },
     {
+      "id": "scratch_test_restaurant_validation_runvalidation",
+      "label": "runValidation()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "runvalidation()",
+      "source_file": "scratch/test_restaurant_validation.ts",
+      "source_location": "L5"
+    },
+    {
       "id": "src_agents_base_aiagent_constructor",
       "label": ".constructor()",
       "_callable": true,
@@ -1840,6 +1865,18 @@
       "norm_label": "listclients()",
       "source_file": "src/database/clientsCrud.ts",
       "source_location": "L171"
+    },
+    {
+      "id": "src_database_initdb_initdatabase",
+      "label": "initDatabase()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "initdatabase()",
+      "source_file": "src/database/initDb.ts",
+      "source_location": "L5"
     },
     {
       "id": "src_database_vectordb_vectordatabase_getembedding",
@@ -2094,28 +2131,52 @@
       "source_location": "L99"
     },
     {
-      "id": "src_services_localknowledge_listlocalfiles",
-      "label": "listLocalFiles()",
+      "id": "src_scratch_testr2_main",
+      "label": "main()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "listlocalfiles()",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L28"
+      "norm_label": "main()",
+      "source_file": "src/scratch/testR2.ts",
+      "source_location": "L6"
     },
     {
-      "id": "src_services_localknowledge_savelocalfile",
-      "label": "saveLocalFile()",
+      "id": "src_services_storageservice_gets3client",
+      "label": "getS3Client()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "savelocalfile()",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L14"
+      "norm_label": "gets3client()",
+      "source_file": "src/services/storageService.ts",
+      "source_location": "L18"
+    },
+    {
+      "id": "src_services_storageservice_isr2configured",
+      "label": "isR2Configured()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "isr2configured()",
+      "source_file": "src/services/storageService.ts",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_services_storageservice_uploadtenantfile",
+      "label": "uploadTenantFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "uploadtenantfile()",
+      "source_file": "src/services/storageService.ts",
+      "source_location": "L46"
     },
     {
       "id": "src_services_whatsapp_autorestoresavedwhatsappsessions",
@@ -2188,6 +2249,42 @@
       "norm_label": "sendwhatsapptextmessage()",
       "source_file": "src/services/whatsapp.ts",
       "source_location": "L415"
+    },
+    {
+      "id": "src_services_localknowledge_listlocalfiles",
+      "label": "listLocalFiles()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 107,
+      "community_name": "localKnowledge.ts",
+      "file_type": "code",
+      "norm_label": "listlocalfiles()",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_services_localknowledge_savelocalfile",
+      "label": "saveLocalFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 107,
+      "community_name": "localKnowledge.ts",
+      "file_type": "code",
+      "norm_label": "savelocalfile()",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L14"
+    },
+    {
+      "id": "src_utils_envvalidator_validateenv",
+      "label": "validateEnv()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "envValidator.ts",
+      "file_type": "code",
+      "norm_label": "validateenv()",
+      "source_file": "src/utils/envValidator.ts",
+      "source_location": "L17"
     },
     {
       "id": "scratch_do_vps_update_run_cmd",
@@ -2586,18 +2683,6 @@
       "source_location": "L110"
     },
     {
-      "id": "dashboard_src_components_saaserpcashshifts_saaserpcashshifts",
-      "label": "SaaSErpCashShifts()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "SaaSErpCashShifts.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpcashshifts()",
-      "source_file": "dashboard/src/components/SaaSErpCashShifts.tsx",
-      "source_location": "L34"
-    },
-    {
       "id": "dashboard_src_components_saaserpinventory_barcodesvg",
       "label": "BarcodeSVG()",
       "_callable": true,
@@ -2607,7 +2692,7 @@
       "file_type": "code",
       "norm_label": "barcodesvg()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L35"
+      "source_location": "L47"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_fieldwrapper",
@@ -2619,7 +2704,7 @@
       "file_type": "code",
       "norm_label": "fieldwrapper()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L99"
+      "source_location": "L111"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_getcolorpreview",
@@ -2631,7 +2716,7 @@
       "file_type": "code",
       "norm_label": "getcolorpreview()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L93"
+      "source_location": "L105"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_inventoryrotationview",
@@ -2643,7 +2728,7 @@
       "file_type": "code",
       "norm_label": "inventoryrotationview()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2504"
+      "source_location": "L2598"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_promodiscountrow",
@@ -2655,7 +2740,7 @@
       "file_type": "code",
       "norm_label": "promodiscountrow()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L129"
+      "source_location": "L141"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_saaserpinventory",
@@ -2667,7 +2752,7 @@
       "file_type": "code",
       "norm_label": "saaserpinventory()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L186"
+      "source_location": "L198"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_visualcolordropdown",
@@ -2679,7 +2764,7 @@
       "file_type": "code",
       "norm_label": "visualcolordropdown()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2630"
+      "source_location": "L2724"
     },
     {
       "id": "dashboard_src_components_saaserppurchaseorders_saaserppurchaseorders",
@@ -2778,18 +2863,6 @@
       "source_location": "L3"
     },
     {
-      "id": "scratch_test_restaurant_validation_runvalidation",
-      "label": "runValidation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "server",
-      "file_type": "code",
-      "norm_label": "runvalidation()",
-      "source_file": "scratch/test_restaurant_validation.ts",
-      "source_location": "L5"
-    },
-    {
       "id": "src_agents_autofixagent_runautofixagent",
       "label": "runAutoFixAgent()",
       "_callable": true,
@@ -2800,18 +2873,6 @@
       "norm_label": "runautofixagent()",
       "source_file": "src/agents/autoFixAgent.ts",
       "source_location": "L19"
-    },
-    {
-      "id": "src_database_initdb_initdatabase",
-      "label": "initDatabase()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "server",
-      "file_type": "code",
-      "norm_label": "initdatabase()",
-      "source_file": "src/database/initDb.ts",
-      "source_location": "L5"
     },
     {
       "id": "src_server_resolveproductclientid",
@@ -3234,16 +3295,16 @@
       "source_location": "L33"
     },
     {
-      "id": "dashboard_src_components_saaserpformulas_saaserpformulas",
-      "label": "SaaSErpFormulas()",
+      "id": "dashboard_src_components_saaserpcashshifts_saaserpcashshifts",
+      "label": "SaaSErpCashShifts()",
       "_callable": true,
       "_origin": "ast",
       "community": 6,
       "community_name": "authFetch",
       "file_type": "code",
-      "norm_label": "saaserpformulas()",
-      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L45"
+      "norm_label": "saaserpcashshifts()",
+      "source_file": "dashboard/src/components/SaaSErpCashShifts.tsx",
+      "source_location": "L34"
     },
     {
       "id": "dashboard_src_components_saaserpsalestargets_saaserpsalestargets",
@@ -3318,76 +3379,28 @@
       "source_location": "L5"
     },
     {
-      "id": "src_scratch_testr2_main",
-      "label": "main()",
+      "id": "dashboard_src_components_saaserpformulas_phoneinput",
+      "label": "PhoneInput()",
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "pdfGeneratorService.ts",
+      "community_name": "SaaSErpFormulas.tsx",
       "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "src/scratch/testR2.ts",
-      "source_location": "L6"
+      "norm_label": "phoneinput()",
+      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
+      "source_location": "L45"
     },
     {
-      "id": "src_services_pdfgeneratorservice_generateposthermaltickethtml",
-      "label": "generatePOSThermalTicketHTML()",
+      "id": "dashboard_src_components_saaserpformulas_saaserpformulas",
+      "label": "SaaSErpFormulas()",
       "_callable": true,
       "_origin": "ast",
       "community": 67,
-      "community_name": "pdfGeneratorService.ts",
+      "community_name": "SaaSErpFormulas.tsx",
       "file_type": "code",
-      "norm_label": "generateposthermaltickethtml()",
-      "source_file": "src/services/pdfGeneratorService.ts",
-      "source_location": "L51"
-    },
-    {
-      "id": "src_services_pdfgeneratorservice_getinvoiceprintdata",
-      "label": "getInvoicePrintData()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "pdfGeneratorService.ts",
-      "file_type": "code",
-      "norm_label": "getinvoiceprintdata()",
-      "source_file": "src/services/pdfGeneratorService.ts",
-      "source_location": "L14"
-    },
-    {
-      "id": "src_services_storageservice_gets3client",
-      "label": "getS3Client()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "pdfGeneratorService.ts",
-      "file_type": "code",
-      "norm_label": "gets3client()",
-      "source_file": "src/services/storageService.ts",
-      "source_location": "L18"
-    },
-    {
-      "id": "src_services_storageservice_isr2configured",
-      "label": "isR2Configured()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "pdfGeneratorService.ts",
-      "file_type": "code",
-      "norm_label": "isr2configured()",
-      "source_file": "src/services/storageService.ts",
-      "source_location": "L6"
-    },
-    {
-      "id": "src_services_storageservice_uploadtenantfile",
-      "label": "uploadTenantFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "pdfGeneratorService.ts",
-      "file_type": "code",
-      "norm_label": "uploadtenantfile()",
-      "source_file": "src/services/storageService.ts",
-      "source_location": "L46"
+      "norm_label": "saaserpformulas()",
+      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
+      "source_location": "L66"
     },
     {
       "id": "dashboard_src_components_saaserpinvoices2_saaserpinvoices2",
@@ -3570,16 +3583,28 @@
       "source_location": "L3752"
     },
     {
-      "id": "src_utils_envvalidator_validateenv",
-      "label": "validateEnv()",
+      "id": "src_services_pdfgeneratorservice_generateposthermaltickethtml",
+      "label": "generatePOSThermalTicketHTML()",
       "_callable": true,
       "_origin": "ast",
       "community": 8,
       "community_name": "server.ts",
       "file_type": "code",
-      "norm_label": "validateenv()",
-      "source_file": "src/utils/envValidator.ts",
-      "source_location": "L17"
+      "norm_label": "generateposthermaltickethtml()",
+      "source_file": "src/services/pdfGeneratorService.ts",
+      "source_location": "L51"
+    },
+    {
+      "id": "src_services_pdfgeneratorservice_getinvoiceprintdata",
+      "label": "getInvoicePrintData()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "getinvoiceprintdata()",
+      "source_file": "src/services/pdfGeneratorService.ts",
+      "source_location": "L14"
     },
     {
       "id": "src_utils_passwordutils_hashpassword",
@@ -3666,6 +3691,17 @@
       "source_location": "L25"
     },
     {
+      "id": "scratch_test_restaurant_validation",
+      "label": "test_restaurant_validation.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "test_restaurant_validation.ts",
+      "source_file": "scratch/test_restaurant_validation.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "src_agents_base",
       "label": "base.ts",
       "_origin": "ast",
@@ -3740,6 +3776,17 @@
       "file_type": "code",
       "norm_label": "clientscrud.ts",
       "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_database_initdb",
+      "label": "initDb.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "postgres.ts",
+      "file_type": "code",
+      "norm_label": "initdb.ts",
+      "source_file": "src/database/initDb.ts",
       "source_location": "L1"
     },
     {
@@ -4117,26 +4164,26 @@
       "source_location": "L8"
     },
     {
-      "id": "src_services_localknowledge",
-      "label": "localKnowledge.ts",
+      "id": "src_scratch_testr2",
+      "label": "testR2.ts",
       "_origin": "ast",
       "community": 1,
       "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "localknowledge.ts",
-      "source_file": "src/services/localKnowledge.ts",
+      "norm_label": "testr2.ts",
+      "source_file": "src/scratch/testR2.ts",
       "source_location": "L1"
     },
     {
-      "id": "src_services_localknowledge_knowledge_base_dir",
-      "label": "KNOWLEDGE_BASE_DIR",
+      "id": "src_services_storageservice",
+      "label": "storageService.ts",
       "_origin": "ast",
       "community": 1,
       "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "knowledge_base_dir",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L4"
+      "norm_label": "storageservice.ts",
+      "source_file": "src/services/storageService.ts",
+      "source_location": "L1"
     },
     {
       "id": "src_services_whatsapp",
@@ -4847,6 +4894,116 @@
       "source_location": "L6"
     },
     {
+      "id": "package",
+      "label": "package.json",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "package.json",
+      "file_type": "code",
+      "norm_label": "package.json",
+      "source_file": "package.json",
+      "source_location": "L1"
+    },
+    {
+      "id": "package_description",
+      "label": "description",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "package.json",
+      "file_type": "code",
+      "norm_label": "description",
+      "source_file": "package.json",
+      "source_location": "L4"
+    },
+    {
+      "id": "package_main",
+      "label": "main",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "package.json",
+      "file_type": "code",
+      "norm_label": "main",
+      "source_file": "package.json",
+      "source_location": "L5"
+    },
+    {
+      "id": "package_name",
+      "label": "name",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "package.json",
+      "file_type": "code",
+      "norm_label": "name",
+      "source_file": "package.json",
+      "source_location": "L2"
+    },
+    {
+      "id": "package_version",
+      "label": "version",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "package.json",
+      "file_type": "code",
+      "norm_label": "version",
+      "source_file": "package.json",
+      "source_location": "L3"
+    },
+    {
+      "id": "src_services_localknowledge",
+      "label": "localKnowledge.ts",
+      "_origin": "ast",
+      "community": 107,
+      "community_name": "localKnowledge.ts",
+      "file_type": "code",
+      "norm_label": "localknowledge.ts",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_services_localknowledge_knowledge_base_dir",
+      "label": "KNOWLEDGE_BASE_DIR",
+      "_origin": "ast",
+      "community": 107,
+      "community_name": "localKnowledge.ts",
+      "file_type": "code",
+      "norm_label": "knowledge_base_dir",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_utils_envvalidator",
+      "label": "envValidator.ts",
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "envValidator.ts",
+      "file_type": "code",
+      "norm_label": "envvalidator.ts",
+      "source_file": "src/utils/envValidator.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_utils_envvalidator_required_vars",
+      "label": "REQUIRED_VARS",
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "envValidator.ts",
+      "file_type": "code",
+      "norm_label": "required_vars",
+      "source_file": "src/utils/envValidator.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_utils_envvalidator_warn_vars",
+      "label": "WARN_VARS",
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "envValidator.ts",
+      "file_type": "code",
+      "norm_label": "warn_vars",
+      "source_file": "src/utils/envValidator.ts",
+      "source_location": "L12"
+    },
+    {
       "id": "quick_start",
       "label": "QUICK_START.md",
       "_origin": "ast",
@@ -5371,26 +5528,70 @@
       "source_location": "L1"
     },
     {
-      "id": "package",
-      "label": "package.json",
+      "id": "package_dependencies_dotenv",
+      "label": "dotenv",
       "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
+      "community": 114,
+      "community_name": "dotenv",
       "file_type": "code",
-      "norm_label": "package.json",
+      "norm_label": "dotenv",
       "source_file": "package.json",
-      "source_location": "L1"
+      "source_location": "L20"
     },
     {
-      "id": "package_description",
-      "label": "description",
+      "id": "dotenv",
+      "label": "dotenv",
       "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "description",
+      "community": 114,
+      "community_name": "dotenv",
+      "file_type": "concept",
+      "norm_label": "dotenv",
       "source_file": "package.json",
-      "source_location": "L4"
+      "source_location": "L20"
+    },
+    {
+      "id": "package_dependencies_qrcode_terminal",
+      "label": "qrcode-terminal",
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "qrcode-terminal",
+      "file_type": "code",
+      "norm_label": "qrcode-terminal",
+      "source_file": "package.json",
+      "source_location": "L26"
+    },
+    {
+      "id": "qrcode_terminal",
+      "label": "qrcode-terminal",
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "qrcode-terminal",
+      "file_type": "concept",
+      "norm_label": "qrcode-terminal",
+      "source_file": "package.json",
+      "source_location": "L26"
+    },
+    {
+      "id": "package_dependencies_types_bcrypt",
+      "label": "@types/bcrypt",
+      "_origin": "ast",
+      "community": 116,
+      "community_name": "@types/bcrypt",
+      "file_type": "code",
+      "norm_label": "@types/bcrypt",
+      "source_file": "package.json",
+      "source_location": "L18"
+    },
+    {
+      "id": "types_bcrypt",
+      "label": "@types/bcrypt",
+      "_origin": "ast",
+      "community": 116,
+      "community_name": "@types/bcrypt",
+      "file_type": "concept",
+      "norm_label": "@types/bcrypt",
+      "source_file": "package.json",
+      "source_location": "L18"
     },
     {
       "id": "package_devdependencies",
@@ -5512,127 +5713,6 @@
       "norm_label": "typescript",
       "source_file": "package.json",
       "source_location": "L39"
-    },
-    {
-      "id": "package_main",
-      "label": "main",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "main",
-      "source_file": "package.json",
-      "source_location": "L5"
-    },
-    {
-      "id": "package_name",
-      "label": "name",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "name",
-      "source_file": "package.json",
-      "source_location": "L2"
-    },
-    {
-      "id": "package_scripts",
-      "label": "scripts",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "scripts",
-      "source_file": "package.json",
-      "source_location": "L6"
-    },
-    {
-      "id": "package_scripts_build_frontend",
-      "label": "build:frontend",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "build:frontend",
-      "source_file": "package.json",
-      "source_location": "L10"
-    },
-    {
-      "id": "package_scripts_dev",
-      "label": "dev",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "dev",
-      "source_file": "package.json",
-      "source_location": "L8"
-    },
-    {
-      "id": "package_scripts_dev_api",
-      "label": "dev:api",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "dev:api",
-      "source_file": "package.json",
-      "source_location": "L9"
-    },
-    {
-      "id": "package_scripts_start",
-      "label": "start",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "start",
-      "source_file": "package.json",
-      "source_location": "L7"
-    },
-    {
-      "id": "package_scripts_start_api",
-      "label": "start:api",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "start:api",
-      "source_file": "package.json",
-      "source_location": "L12"
-    },
-    {
-      "id": "package_scripts_start_api_ui",
-      "label": "start:api:ui",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "start:api:ui",
-      "source_file": "package.json",
-      "source_location": "L13"
-    },
-    {
-      "id": "package_scripts_start_ui",
-      "label": "start:ui",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "start:ui",
-      "source_file": "package.json",
-      "source_location": "L11"
-    },
-    {
-      "id": "package_version",
-      "label": "version",
-      "_origin": "ast",
-      "community": 12,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "version",
-      "source_file": "package.json",
-      "source_location": "L3"
     },
     {
       "id": "nodemon",
@@ -6823,17 +6903,6 @@
       "source_location": "L19"
     },
     {
-      "id": "package_dependencies_dotenv",
-      "label": "dotenv",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "dependencies",
-      "file_type": "code",
-      "norm_label": "dotenv",
-      "source_file": "package.json",
-      "source_location": "L20"
-    },
-    {
       "id": "package_dependencies_express",
       "label": "express",
       "_origin": "ast",
@@ -6900,28 +6969,6 @@
       "source_location": "L25"
     },
     {
-      "id": "package_dependencies_qrcode_terminal",
-      "label": "qrcode-terminal",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "dependencies",
-      "file_type": "code",
-      "norm_label": "qrcode-terminal",
-      "source_file": "package.json",
-      "source_location": "L26"
-    },
-    {
-      "id": "package_dependencies_types_bcrypt",
-      "label": "@types/bcrypt",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "dependencies",
-      "file_type": "code",
-      "norm_label": "@types/bcrypt",
-      "source_file": "package.json",
-      "source_location": "L18"
-    },
-    {
       "id": "package_dependencies_whatsapp_web_js",
       "label": "whatsapp-web.js",
       "_origin": "ast",
@@ -6953,17 +7000,6 @@
       "norm_label": "bcrypt",
       "source_file": "package.json",
       "source_location": "L19"
-    },
-    {
-      "id": "dotenv",
-      "label": "dotenv",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "dependencies",
-      "file_type": "concept",
-      "norm_label": "dotenv",
-      "source_file": "package.json",
-      "source_location": "L20"
     },
     {
       "id": "express",
@@ -7030,28 +7066,6 @@
       "norm_label": "pg",
       "source_file": "package.json",
       "source_location": "L25"
-    },
-    {
-      "id": "qrcode_terminal",
-      "label": "qrcode-terminal",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "dependencies",
-      "file_type": "concept",
-      "norm_label": "qrcode-terminal",
-      "source_file": "package.json",
-      "source_location": "L26"
-    },
-    {
-      "id": "types_bcrypt",
-      "label": "@types/bcrypt",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "dependencies",
-      "file_type": "concept",
-      "norm_label": "@types/bcrypt",
-      "source_file": "package.json",
-      "source_location": "L18"
     },
     {
       "id": "whatsapp_web_js",
@@ -7873,15 +7887,92 @@
       "source_location": "L31"
     },
     {
-      "id": "dashboard_src_components_saaserpcashshifts",
-      "label": "SaaSErpCashShifts.tsx",
+      "id": "package_scripts",
+      "label": "scripts",
       "_origin": "ast",
       "community": 28,
-      "community_name": "SaaSErpCashShifts.tsx",
+      "community_name": "scripts",
       "file_type": "code",
-      "norm_label": "saaserpcashshifts.tsx",
-      "source_file": "dashboard/src/components/SaaSErpCashShifts.tsx",
-      "source_location": "L1"
+      "norm_label": "scripts",
+      "source_file": "package.json",
+      "source_location": "L6"
+    },
+    {
+      "id": "package_scripts_build_frontend",
+      "label": "build:frontend",
+      "_origin": "ast",
+      "community": 28,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "build:frontend",
+      "source_file": "package.json",
+      "source_location": "L10"
+    },
+    {
+      "id": "package_scripts_dev",
+      "label": "dev",
+      "_origin": "ast",
+      "community": 28,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "dev",
+      "source_file": "package.json",
+      "source_location": "L8"
+    },
+    {
+      "id": "package_scripts_dev_api",
+      "label": "dev:api",
+      "_origin": "ast",
+      "community": 28,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "dev:api",
+      "source_file": "package.json",
+      "source_location": "L9"
+    },
+    {
+      "id": "package_scripts_start",
+      "label": "start",
+      "_origin": "ast",
+      "community": 28,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "start",
+      "source_file": "package.json",
+      "source_location": "L7"
+    },
+    {
+      "id": "package_scripts_start_api",
+      "label": "start:api",
+      "_origin": "ast",
+      "community": 28,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "start:api",
+      "source_file": "package.json",
+      "source_location": "L12"
+    },
+    {
+      "id": "package_scripts_start_api_ui",
+      "label": "start:api:ui",
+      "_origin": "ast",
+      "community": 28,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "start:api:ui",
+      "source_file": "package.json",
+      "source_location": "L13"
+    },
+    {
+      "id": "package_scripts_start_ui",
+      "label": "start:ui",
+      "_origin": "ast",
+      "community": 28,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "start:ui",
+      "source_file": "package.json",
+      "source_location": "L11"
     },
     {
       "id": "502_bad_gateway_diagnosis",
@@ -8155,7 +8246,7 @@
       "file_type": "code",
       "norm_label": "coloroptions",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L79"
+      "source_location": "L91"
     },
     {
       "id": "dashboard_src_components_saaserppurchaseorders",
@@ -8202,17 +8293,6 @@
       "source_location": "L45"
     },
     {
-      "id": "scratch_test_restaurant_validation",
-      "label": "test_restaurant_validation.ts",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "server",
-      "file_type": "code",
-      "norm_label": "test_restaurant_validation.ts",
-      "source_file": "scratch/test_restaurant_validation.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "src_agents_autofixagent",
       "label": "autoFixAgent.ts",
       "_origin": "ast",
@@ -8221,17 +8301,6 @@
       "file_type": "code",
       "norm_label": "autofixagent.ts",
       "source_file": "src/agents/autoFixAgent.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_database_initdb",
-      "label": "initDb.ts",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "server",
-      "file_type": "code",
-      "norm_label": "initdb.ts",
-      "source_file": "src/database/initDb.ts",
       "source_location": "L1"
     },
     {
@@ -10895,14 +10964,14 @@
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_saaserpformulas",
-      "label": "SaaSErpFormulas.tsx",
+      "id": "dashboard_src_components_saaserpcashshifts",
+      "label": "SaaSErpCashShifts.tsx",
       "_origin": "ast",
       "community": 6,
       "community_name": "authFetch",
       "file_type": "code",
-      "norm_label": "saaserpformulas.tsx",
-      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
+      "norm_label": "saaserpcashshifts.tsx",
+      "source_file": "dashboard/src/components/SaaSErpCashShifts.tsx",
       "source_location": "L1"
     },
     {
@@ -11838,36 +11907,14 @@
       "source_location": "L89"
     },
     {
-      "id": "src_scratch_testr2",
-      "label": "testR2.ts",
+      "id": "dashboard_src_components_saaserpformulas",
+      "label": "SaaSErpFormulas.tsx",
       "_origin": "ast",
       "community": 67,
-      "community_name": "pdfGeneratorService.ts",
+      "community_name": "SaaSErpFormulas.tsx",
       "file_type": "code",
-      "norm_label": "testr2.ts",
-      "source_file": "src/scratch/testR2.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_pdfgeneratorservice",
-      "label": "pdfGeneratorService.ts",
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "pdfGeneratorService.ts",
-      "file_type": "code",
-      "norm_label": "pdfgeneratorservice.ts",
-      "source_file": "src/services/pdfGeneratorService.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_storageservice",
-      "label": "storageService.ts",
-      "_origin": "ast",
-      "community": 67,
-      "community_name": "pdfGeneratorService.ts",
-      "file_type": "code",
-      "norm_label": "storageservice.ts",
-      "source_file": "src/services/storageService.ts",
+      "norm_label": "saaserpformulas.tsx",
+      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
       "source_location": "L1"
     },
     {
@@ -13289,37 +13336,15 @@
       "source_location": "L87"
     },
     {
-      "id": "src_utils_envvalidator",
-      "label": "envValidator.ts",
+      "id": "src_services_pdfgeneratorservice",
+      "label": "pdfGeneratorService.ts",
       "_origin": "ast",
       "community": 8,
       "community_name": "server.ts",
       "file_type": "code",
-      "norm_label": "envvalidator.ts",
-      "source_file": "src/utils/envValidator.ts",
+      "norm_label": "pdfgeneratorservice.ts",
+      "source_file": "src/services/pdfGeneratorService.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "src_utils_envvalidator_required_vars",
-      "label": "REQUIRED_VARS",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "required_vars",
-      "source_file": "src/utils/envValidator.ts",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_utils_envvalidator_warn_vars",
-      "label": "WARN_VARS",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "warn_vars",
-      "source_file": "src/utils/envValidator.ts",
-      "source_location": "L12"
     },
     {
       "id": "src_utils_passwordutils",
@@ -14601,7 +14626,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2513",
+      "source_location": "L2607",
       "weight": 1.0
     },
     {
@@ -14613,7 +14638,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L150",
+      "source_location": "L162",
       "weight": 1.0
     },
     {
@@ -14625,7 +14650,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L1879",
+      "source_location": "L1895",
       "weight": 1.0
     },
     {
@@ -14637,7 +14662,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L1903",
+      "source_location": "L1932",
       "weight": 1.0
     },
     {
@@ -14649,7 +14674,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2220",
+      "source_location": "L2249",
       "weight": 1.0
     },
     {
@@ -14661,7 +14686,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L682",
+      "source_location": "L698",
       "weight": 1.0
     },
     {
@@ -23850,7 +23875,7 @@
     },
     {
       "source": "dashboard_src_components_saaserpformulas",
-      "target": "dashboard_src_components_saaserpformulas_saaserpformulas",
+      "target": "dashboard_src_components_saaserpformulas_phoneinput",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -23871,6 +23896,39 @@
       "weight": 1.0
     },
     {
+      "source": "dashboard_src_components_saaserpformulas",
+      "target": "dashboard_src_components_saaserpformulas_saaserpformulas",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
+      "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_saaserpinventory",
+      "target": "dashboard_src_components_saaserpinventory_getcolorpreview",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_saaserpinventory",
+      "target": "dashboard_src_components_saaserpinventory_fieldwrapper",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
+      "source_location": "L111",
+      "weight": 1.0
+    },
+    {
       "source": "dashboard_src_components_saaserpinventory",
       "target": "dashboard_src_components_saaserpinventory_promodiscountrow",
       "relation": "contains",
@@ -23878,7 +23936,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L129",
+      "source_location": "L141",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_saaserpinventory",
+      "target": "dashboard_src_components_saaserpinventory_product",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -23889,7 +23958,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L186",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -23900,7 +23969,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2493",
+      "source_location": "L2587",
       "weight": 1.0
     },
     {
@@ -23911,7 +23980,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2504",
+      "source_location": "L2598",
       "weight": 1.0
     },
     {
@@ -23922,7 +23991,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2630",
+      "source_location": "L2724",
       "weight": 1.0
     },
     {
@@ -23933,7 +24002,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L29",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -23944,12 +24013,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L35",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
       "source": "dashboard_src_components_saaserpinventory",
-      "target": "dashboard_src_components_saaserpinventory_product",
+      "target": "dashboard_src_components_saaserpinventory_productvariant",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -23966,7 +24035,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L73",
+      "source_location": "L85",
       "weight": 1.0
     },
     {
@@ -23977,29 +24046,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L79",
-      "weight": 1.0
-    },
-    {
-      "source": "dashboard_src_components_saaserpinventory",
-      "target": "dashboard_src_components_saaserpinventory_getcolorpreview",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L93",
-      "weight": 1.0
-    },
-    {
-      "source": "dashboard_src_components_saaserpinventory",
-      "target": "dashboard_src_components_saaserpinventory_fieldwrapper",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L99",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -32954,5 +33001,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2beec644eacbc169b149c2c3dfb63b33072dc86f"
+  "built_at_commit": "fbf345d12c637bc25f2967fb21b3e82e10de56ea"
 }

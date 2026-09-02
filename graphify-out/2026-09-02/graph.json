@@ -1379,7 +1379,7 @@
       "file_type": "code",
       "norm_label": "customer",
       "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L9"
+      "source_location": "L11"
     },
     {
       "id": "dashboard_src_components_saaserpformulas_formula",
@@ -1392,7 +1392,7 @@
       "file_type": "code",
       "norm_label": "formula",
       "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L22"
+      "source_location": "L24"
     },
     {
       "id": "dashboard_src_components_saaserpformulas_formulasprops",
@@ -3243,7 +3243,7 @@
       "file_type": "code",
       "norm_label": "saaserpformulas()",
       "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L43"
+      "source_location": "L45"
     },
     {
       "id": "dashboard_src_components_saaserpsalestargets_saaserpsalestargets",
@@ -23828,13 +23828,24 @@
     },
     {
       "source": "dashboard_src_components_saaserpformulas",
+      "target": "dashboard_src_components_saaserpformulas_customer",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_saaserpformulas",
       "target": "dashboard_src_components_saaserpformulas_formula",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L22",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -23845,7 +23856,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L43",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -23857,17 +23868,6 @@
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
       "source_location": "L5",
-      "weight": 1.0
-    },
-    {
-      "source": "dashboard_src_components_saaserpformulas",
-      "target": "dashboard_src_components_saaserpformulas_customer",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "dashboard/src/components/SaaSErpFormulas.tsx",
-      "source_location": "L9",
       "weight": 1.0
     },
     {

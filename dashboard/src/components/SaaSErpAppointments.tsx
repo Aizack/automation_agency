@@ -292,7 +292,6 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         setVisitReasonDetails(appt.visit_reason_details || '');
         setApptStatus(appt.status);
         setErrorMsg('');
-        if (dPart) fetchAvailability(dPart);
         setIsEditOpen(true);
     };
 
@@ -811,8 +810,8 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
 
             {/* CREATE APPOINTMENT MODAL */}
             {isCreateOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
+                    <div className="bg-[#141517] border border-[#2d3036] max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Agendar Cita Manual</h3>
                             <button 
@@ -982,8 +981,8 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
             )}
 
             {isBlockOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
+                    <div className="bg-[#141517] border border-[#2d3036] max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Bloquear Horario / Día</h3>
                             <button 
@@ -1019,42 +1018,32 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                 <label className="block text-xs font-bold text-on-surface-variant">Fecha</label>
                                 <input
                                     type="date"
-                                    value={blockDate || apptOnlyDate || formatLocalDateInput(selectedDate)}
+                                    value={blockDate}
                                     onChange={(e) => setBlockDate(e.target.value)}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                    className="w-full bg-surface-container border border-outline/20 p-2.5 rounded-xl text-xs text-on-surface font-semibold outline-none focus:border-primary"
                                 />
                             </div>
 
                             {blockType === 'slot' && (
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                        <label className="block text-xs font-bold text-on-surface-variant">Hora inicio</label>
-                                        <input
-                                            type="time"
-                                            value={blockStartTime}
-                                            onChange={(e) => setBlockStartTime(e.target.value)}
-                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="block text-xs font-bold text-on-surface-variant">Hora fin</label>
-                                        <input
-                                            type="time"
-                                            value={blockEndTime}
-                                            onChange={(e) => setBlockEndTime(e.target.value)}
-                                            className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
-                                        />
-                                    </div>
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold text-on-surface-variant">Hora del Slot</label>
+                                    <input
+                                        type="time"
+                                        value={blockStartTime}
+                                        onChange={(e) => setBlockStartTime(e.target.value)}
+                                        className="w-full bg-surface-container border border-outline/20 p-2.5 rounded-xl text-xs text-on-surface font-semibold outline-none focus:border-primary"
+                                    />
                                 </div>
                             )}
 
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Motivo</label>
-                                <textarea
-                                    rows={2}
+                                <label className="block text-xs font-bold text-on-surface-variant">Motivo / Notas del Bloqueo</label>
+                                <input
+                                    type="text"
+                                    placeholder="Ej: Mantenimiento, Ausencia médica..."
                                     value={blockReason}
                                     onChange={(e) => setBlockReason(e.target.value)}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none resize-none"
+                                    className="w-full bg-surface-container border border-outline/20 p-2.5 rounded-xl text-xs text-on-surface outline-none focus:border-primary"
                                 />
                             </div>
 
@@ -1083,8 +1072,8 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
 
             {/* EDIT APPOINTMENT MODAL */}
             {isEditOpen && selectedAppt && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
+                    <div className="bg-[#141517] border border-[#2d3036] max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
                             <h3 className="font-bold text-lg text-on-surface">Gestionar Cita</h3>
                             <button 
