@@ -983,7 +983,7 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
 
     // Buscar detalles del cliente directo
     const result = await pool.query(
-      `SELECT id, name, username, is_activated FROM clients WHERE id = $1 LIMIT 1`,
+      `SELECT id, name, username, contact_name, is_activated FROM clients WHERE id = $1 LIMIT 1`,
       [authReq.user.id]
     );
 
@@ -999,7 +999,8 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
       success: true,
       data: {
         id: client.id,
-        name: client.name,
+        name: client.contact_name || client.name,
+        clientName: client.name,
         username: client.username,
         role: role,
         clientId: client.id

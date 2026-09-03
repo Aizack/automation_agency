@@ -1,16 +1,16 @@
 # Graph Report - Bot multi-tenant  (2026-09-02)
 
 ## Corpus Check
-- 164 files · ~307,742 words
+- 165 files · ~308,430 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1249 nodes · 1644 edges · 123 communities (103 shown, 20 thin omitted)
+- 1267 nodes · 1661 edges · 122 communities (102 shown, 20 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 7 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f0fa5e48`
+- Built from commit: `adcaf2d8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -19,7 +19,7 @@
 - whatsapp.ts
 - dependencies
 - SaaSErpInventory.tsx
-- App.tsx
+- react
 - ClientDashboard.tsx
 - authFetch
 - compilerOptions
@@ -45,9 +45,9 @@
 - shutdownManager.ts
 - pdfGeneratorService.ts
 - 🚨 Error 502 Bad Gateway - Diagnosis & Solutions
-- scheduler.ts
-- SaaSErpMarketing.tsx
-- SaaSErpSuppliers.tsx
+- server
+- Documentación Permanente de Cambios, Seguridad y Módulo de Cotizaciones (2026)
+- SaaSErpCRM.tsx
 - logger.ts
 - Plan de Mejoras Arquitectónicas
 - dashboard/tsconfig.json
@@ -72,7 +72,7 @@
 - stitch_unified_admin_platform light mode/DESIGN.md
 - stitch_unified_client_platform light mode/DESIGN.md
 - 🏢 Especificación Técnica: Módulo Multi-Sede, Fotos de Producto & Traslado de Personal
-- react
+- AdminDashboard.tsx
 - 🎯 Plan Estratégico: Monetización, Seguridad Zero-Trust y Sistema de Temas Visuales
 - 🎯 Módulo de Metas Mensuales de Ventas & Rendimiento Comercial
 - 1. Esquema de Propiedades y Base de Datos
@@ -107,7 +107,7 @@
 - 8. Fase 6: Laboratorio y domicilios
 - 9. Fase 7: Empleados, departments, roles y RRHH
 - PLAN_FACTURACION_ELECTRONICA_PLANES_Y_PAGOS.md
-- SaaSErpDomicilios.tsx
+- scheduler.ts
 - React + TypeScript + Vite
 - scripts
 - 2. Separación de responsabilidades
@@ -120,13 +120,12 @@
 - workflows/graphify.md
 - optometry_rules.md
 - SaaSErpQuotes.tsx
-- envValidator.ts
+- SaaSErpAuditLogs.tsx
 - QUICK_START.md
 - 🛡️ Reglas de Seguridad de Git y Estrategia de Ramas
 - RestaurantKdsDisplay.tsx
 - RestaurantMenuBuilder.tsx
 - SaaSErpCartera.tsx
-- SaaSErpCashShifts.tsx
 - package.json
 - dotenv
 - qrcode-terminal
@@ -149,25 +148,25 @@
   scratch/test_restaurant_validation.ts → src/database/initDb.ts
 - `InventoryRotationView()` --calls--> `authFetch()`  [EXTRACTED]
   dashboard/src/components/SaaSErpInventory.tsx → dashboard/src/utils/api.ts
+- `AdminDashboard()` --calls--> `authFetch()`  [EXTRACTED]
+  dashboard/src/components/AdminDashboard.tsx → dashboard/src/utils/api.ts
 - `BankAccountsManager()` --calls--> `authFetch()`  [EXTRACTED]
   dashboard/src/components/SaaSErpStoreSettings.tsx → dashboard/src/utils/api.ts
-- `initializeWhatsAppClient()` --calls--> `routeIncomingMessage()`  [EXTRACTED]
-  src/services/whatsapp.ts → src/core/router.ts
-- `initializeWhatsAppClient()` --calls--> `getClientById()`  [EXTRACTED]
-  src/services/whatsapp.ts → src/database/clientsCrud.ts
+- `server` --calls--> `initDatabase()`  [EXTRACTED]
+  src/server.ts → src/database/initDb.ts
 
 ## Import Cycles
 - 2-file cycle: `src/server.ts -> src/services/shutdownManager.ts -> src/server.ts`
 
-## Communities (123 total, 20 thin omitted)
+## Communities (122 total, 20 thin omitted)
 
 ### Community 0 - "postgres.ts"
 Cohesion: 0.06
 Nodes (46): runValidation(), AIAgent, genAI, ClientConfig, getClientConfigById(), getClientConfigByPhone(), pendingAgentConfirmations, pendingCustomerConfirmations (+38 more)
 
 ### Community 1 - "whatsapp.ts"
-Cohesion: 0.19
-Nodes (14): updateClient(), autoRestoreSavedWhatsAppSessions(), client, connectWhatsApp(), getWhatsAppState(), initializeWhatsAppClient(), logoutWhatsApp(), sendWhatsAppTextMessage() (+6 more)
+Cohesion: 0.15
+Nodes (15): KNOWLEDGE_BASE_DIR, listLocalFiles(), saveLocalFile(), autoRestoreSavedWhatsAppSessions(), client, connectWhatsApp(), getWhatsAppState(), logoutWhatsApp() (+7 more)
 
 ### Community 2 - "dependencies"
 Cohesion: 0.11
@@ -177,25 +176,25 @@ Nodes (19): @aws-sdk/client-s3, bcrypt, express, @google/generative-ai, googleap
 Cohesion: 0.09
 Nodes (29): ColorOption, colorOptions, getColorHex(), getColorPreview(), InventoryRotationView(), Product, ProductVariant, PromoDiscountRow() (+21 more)
 
-### Community 4 - "App.tsx"
-Cohesion: 0.09
-Nodes (21): App(), ActivateAccount(), ActivateAccountProps, AuthFast(), AuthFastProps, ClientDashboard(), EmployeePortal(), LandingPage() (+13 more)
+### Community 4 - "react"
+Cohesion: 0.11
+Nodes (21): App(), ActivateAccount(), ActivateAccountProps, AuthFast(), AuthFastProps, ClientDashboard(), LandingPage(), LandingPageProps (+13 more)
 
 ### Community 5 - "ClientDashboard.tsx"
-Cohesion: 0.12
-Nodes (16): AgentContact, AudioContact, Client, ClientDashboardProps, Interaction, WhatsappStatus, RawMaterial, RawMaterialsInventory() (+8 more)
+Cohesion: 0.09
+Nodes (20): AgentContact, AudioContact, Client, ClientDashboardProps, Interaction, WhatsappStatus, RawMaterial, RawMaterialsInventory() (+12 more)
 
 ### Community 6 - "authFetch"
-Cohesion: 0.11
-Nodes (17): AdminDashboard(), AuditLog, SaaSErpAuditLogs(), SaaSErpAuditLogsProps, LabJobsProps, SaaSErpLabJobs(), EmployeeSalesTarget, SaaSErpSalesTargets() (+9 more)
+Cohesion: 0.09
+Nodes (21): CashShift, Employee, SaaSErpCashShifts(), SaaSErpCashShiftsProps, LabJobsProps, SaaSErpLabJobs(), BankAccount, BankAccountsManager() (+13 more)
 
 ### Community 7 - "compilerOptions"
 Cohesion: 0.08
 Nodes (23): compilerOptions, allowArbitraryExtensions, allowImportingTsExtensions, erasableSyntaxOnly, jsx, lib, module, moduleDetection (+15 more)
 
 ### Community 8 - "server.ts"
-Cohesion: 0.10
-Nodes (19): AuthenticatedRequest, authenticateToken(), authorizeClientAccess(), requireRole(), authRateLimiter, generalApiLimiter, RateLimitStore, seedRateLimiter (+11 more)
+Cohesion: 0.09
+Nodes (21): deleteClient(), updateClientStatus(), AuthenticatedRequest, authenticateToken(), authorizeClientAccess(), requireRole(), authRateLimiter, generalApiLimiter (+13 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.10
@@ -226,8 +225,8 @@ Cohesion: 0.17
 Nodes (11): compilerOptions, esModuleInterop, forceConsistentCasingInFileNames, module, outDir, rootDir, skipLibCheck, strict (+3 more)
 
 ### Community 16 - "RestaurantWaiterPortal.tsx"
-Cohesion: 0.22
-Nodes (8): DocRequest, Task, Employee, Product, RestaurantWaiterPortal(), RestaurantWaiterPortalProps, SelectedOrderItem, Table
+Cohesion: 0.20
+Nodes (9): DocRequest, EmployeePortal(), Task, Employee, Product, RestaurantWaiterPortal(), RestaurantWaiterPortalProps, SelectedOrderItem (+1 more)
 
 ### Community 17 - "electronicInvoiceService.ts"
 Cohesion: 0.33
@@ -281,17 +280,17 @@ Nodes (7): main(), generatePOSThermalTicketHTML(), getInvoicePrintData(), Invoic
 Cohesion: 0.10
 Nodes (20): **1. Nginx Proxy NO está corriendo**, **2. Configuración de Nginx incorrecta**, **3. Firewall bloqueando puerto 3000**, **4. DNS/Hosts file mal configurado**, 🔧 Configuración Nginx de Referencia, 📊 Diagrama del Flujo, 🚨 Error 502 Bad Gateway - Diagnosis & Solutions, **PASO 1: Confirmar que localhost funciona** (+12 more)
 
-### Community 30 - "scheduler.ts"
-Cohesion: 0.24
-Nodes (9): runAutoFixAgent(), TicketFixResult, resolveProductClientId(), server, startEscalationService(), checkAndSendReminders(), delay(), formatCurrency() (+1 more)
+### Community 30 - "server"
+Cohesion: 0.33
+Nodes (5): runAutoFixAgent(), TicketFixResult, resolveProductClientId(), server, startEscalationService()
 
-### Community 31 - "SaaSErpMarketing.tsx"
-Cohesion: 0.40
-Nodes (4): Campaign, CampaignLog, SaaSErpMarketing(), SaaSErpMarketingProps
+### Community 31 - "Documentación Permanente de Cambios, Seguridad y Módulo de Cotizaciones (2026)"
+Cohesion: 0.11
+Nodes (17): 1. 🛡️ Seguridad y Aislamiento Multi-Tenant, 2. 🔐 Reglas de Permisos de Empleados en Inventario, 3. 📋 Módulo de Cotizaciones y Prospectos Comerciales (CRM), 4. 🎨 Sistema de Diseño Obsidian Gold & Escalado Tipográfico, 5. ⚙️ Reglas Git y Despliegue Automático en VPS, Componentes y Esquema de Base de Datos, Despliegue Continuo (CI/CD), Documentación Permanente de Cambios, Seguridad y Módulo de Cotizaciones (2026) (+9 more)
 
-### Community 32 - "SaaSErpSuppliers.tsx"
+### Community 32 - "SaaSErpCRM.tsx"
 Cohesion: 0.40
-Nodes (4): Category, SaaSErpSuppliers(), Supplier, SuppliersProps
+Nodes (4): Customer, Invoice, SaaSErpCRM(), SaaSErpCRMProps
 
 ### Community 33 - "logger.ts"
 Cohesion: 0.18
@@ -341,9 +340,9 @@ Nodes (12): Brand & Style, Buttons, Cards, Chips & Tags, Colors, Components, Ele
 Cohesion: 0.15
 Nodes (12): 📌 1. Visión General y Objetivos, 🗄️ 2. Diseño de Base de Datos y Esquemas SQL, 🔍 3. Consulta de Stock Inter-Sedes & Reserva Exprés, 🖼️ 4. Fotografía Opcional de Producto, 5.1. Creación de Nueva Sede (`SaaSErpStoreSettings.tsx`), 5.2. Selector de Sede ("Store Switcher") en `ClientDashboard.tsx`, 5.3. Reubicación / Traslado de Empleados (`SaaSErpEmployees.tsx`), 🖥️ 5. Componentes Frontend & Flujo de Usuario (+4 more)
 
-### Community 59 - "react"
-Cohesion: 0.28
-Nodes (7): AdminDashboardProps, Client, Metrics, SystemAlert, SystemAlertsPanel(), SystemAlertsPanelProps, react
+### Community 59 - "AdminDashboard.tsx"
+Cohesion: 0.25
+Nodes (7): AdminDashboard(), AdminDashboardProps, Client, Metrics, SystemAlert, SystemAlertsPanel(), SystemAlertsPanelProps
 
 ### Community 60 - "🎯 Plan Estratégico: Monetización, Seguridad Zero-Trust y Sistema de Temas Visuales"
 Cohesion: 0.17
@@ -481,9 +480,9 @@ Nodes (5): 9.1 Lo bueno, 9.2 Lo malo, 9.3 Lo feo, 9.4 Cómo reparar y optimizar,
 Cohesion: 0.40
 Nodes (4): 🎯 1. Objetivos del Módulo, 🏗️ 2. Arquitectura de Base de Datos Propuesta, 🔄 3. Flujo de Facturación Electrónica y Representación Gráfica, 📅 Componentes a Crear / Modificar
 
-### Community 94 - "SaaSErpDomicilios.tsx"
-Cohesion: 0.40
-Nodes (4): DomiciliosProps, Employee, Invoice, SaaSErpDomicilios()
+### Community 94 - "scheduler.ts"
+Cohesion: 0.70
+Nodes (4): checkAndSendReminders(), delay(), formatCurrency(), startScheduler()
 
 ### Community 95 - "React + TypeScript + Vite"
 Cohesion: 0.50
@@ -517,9 +516,9 @@ Nodes (3): 7. Optimización de ruta, Cuándo sí usar Google Maps, Método recom
 Cohesion: 0.33
 Nodes (5): Product, Quote, QuoteItem, SaaSErpQuotes(), SaaSErpQuotesProps
 
-### Community 108 - "envValidator.ts"
+### Community 108 - "SaaSErpAuditLogs.tsx"
 Cohesion: 0.50
-Nodes (3): REQUIRED_VARS, validateEnv(), WARN_VARS
+Nodes (3): AuditLog, SaaSErpAuditLogs(), SaaSErpAuditLogsProps
 
 ### Community 114 - "🛡️ Reglas de Seguridad de Git y Estrategia de Ramas"
 Cohesion: 0.33
@@ -537,32 +536,28 @@ Nodes (4): Product, RecipeItem, RestaurantMenuBuilder(), RestaurantMenuBuilderPr
 Cohesion: 0.40
 Nodes (4): CarteraProps, Installment, Invoice, SaaSErpCartera()
 
-### Community 118 - "SaaSErpCashShifts.tsx"
-Cohesion: 0.40
-Nodes (4): CashShift, Employee, SaaSErpCashShifts(), SaaSErpCashShiftsProps
-
 ### Community 119 - "package.json"
 Cohesion: 0.40
 Nodes (4): description, main, name, version
 
 ## Knowledge Gaps
-- **708 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+703 more)
+- **719 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+714 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `SaaSErpInventory.tsx`, `App.tsx`, `ClientDashboard.tsx`, `authFetch`, `RestaurantWaiterPortal.tsx`, `SaaSErpEmployees.tsx`, `plugins`, `EnterprisePlanningModule.tsx`, `SaaSErpAccounting.tsx`, `SaaSErpAppointments.tsx`, `SaaSErpInvoices.tsx`, `SaaSErpMarketing.tsx`, `SaaSErpSuppliers.tsx`, `SaaSErpFormulas.tsx`, `SaaSErpInvoices2.tsx`, `SaaSErpCampaigns.tsx`, `SaaSErpUsers.tsx`, `SaaSErpDomicilios.tsx`, `SaaSErpQuotes.tsx`, `RestaurantKdsDisplay.tsx`, `RestaurantMenuBuilder.tsx`, `SaaSErpCartera.tsx`, `SaaSErpCashShifts.tsx`?**
+- **Why does `react` connect `react` to `SaaSErpInventory.tsx`, `ClientDashboard.tsx`, `authFetch`, `RestaurantWaiterPortal.tsx`, `SaaSErpEmployees.tsx`, `plugins`, `EnterprisePlanningModule.tsx`, `SaaSErpAccounting.tsx`, `SaaSErpAppointments.tsx`, `SaaSErpInvoices.tsx`, `SaaSErpCRM.tsx`, `AdminDashboard.tsx`, `SaaSErpFormulas.tsx`, `SaaSErpInvoices2.tsx`, `SaaSErpCampaigns.tsx`, `SaaSErpUsers.tsx`, `SaaSErpQuotes.tsx`, `SaaSErpAuditLogs.tsx`, `RestaurantKdsDisplay.tsx`, `RestaurantMenuBuilder.tsx`, `SaaSErpCartera.tsx`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **Why does `pool` connect `postgres.ts` to `logger.ts`, `whatsapp.ts`, `server.ts`, `electronicInvoiceService.ts`, `shutdownManager.ts`, `pdfGeneratorService.ts`, `scheduler.ts`?**
+- **Why does `pool` connect `postgres.ts` to `logger.ts`, `whatsapp.ts`, `server.ts`, `electronicInvoiceService.ts`, `scheduler.ts`, `shutdownManager.ts`, `pdfGeneratorService.ts`, `server`?**
   _High betweenness centrality (0.005) - this node is a cross-community bridge._
 - **Why does `Modelo multi-tenant: usuarios, roles, negocio y CRM` connect `Modelo multi-tenant: usuarios, roles, negocio y CRM` to `INFORME_ANALISIS_FASES.md`, `4. Modelo de base de datos recomendado`, `3. Relación entre conceptos`, `2. Capas del sistema`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
 - **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
-  _708 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _719 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `postgres.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.06288568909785483 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06347340581839553 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
 - **Should `SaaSErpInventory.tsx` be split into smaller, more focused modules?**

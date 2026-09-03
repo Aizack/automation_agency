@@ -58,7 +58,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         const json = await res.json();
 
         if (json.success) {
-          onLoginSuccess(json.data.id, json.data.role, json.data.token);
+          onLoginSuccess(json.data.id, json.data.role, json.data.token, json.data);
         } else {
           setError(json.error || 'Credenciales incorrectas.');
         }

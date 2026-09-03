@@ -194,6 +194,12 @@ function App() {
   const handleLoginSuccess = (id: string, role: string, token: string, extra?: Record<string, any>) => {
     localStorage.setItem('auth_token', token);
     localStorage.setItem('session_role', role);
+    const resolvedName = extra?.name || extra?.username || '';
+    if (resolvedName) {
+      localStorage.setItem('session_name', resolvedName);
+    } else {
+      localStorage.removeItem('session_name');
+    }
 
     if (role === 'superadmin') {
       setView('admin');
@@ -201,14 +207,13 @@ function App() {
       localStorage.removeItem('current_client_id');
     } else if (role === 'employee') {
       // Guardar sesión principal y sesión nativa de EmployeePortal
-      localStorage.setItem('session_name', extra?.name || '');
       localStorage.setItem('employee_role', extra?.employeeRole || '');
       localStorage.setItem('employee_permissions', JSON.stringify(extra?.permissions || []));
       localStorage.setItem('current_client_id', id);
 
       localStorage.setItem('emp_token', token);
       localStorage.setItem('emp_id', extra?.employeeId || id);
-      localStorage.setItem('emp_name', extra?.name || '');
+      localStorage.setItem('emp_name', resolvedName);
       localStorage.setItem('emp_role', extra?.employeeRole || 'employee');
       localStorage.setItem('emp_client_id', id);
 

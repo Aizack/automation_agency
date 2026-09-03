@@ -288,9 +288,9 @@
     "semantic_hash": "d78a1b3ba48df623a32fb0fb29e7757f"
   },
   "src/database/initDb.ts": {
-    "mtime": 1788402616.6432245,
-    "seen": 1788403710.1665773,
-    "ast_hash": "bb12303136a2f45ecf2f7fdf41c5b2c3",
+    "mtime": 1788405406.4426355,
+    "seen": 1788405521.7421672,
+    "ast_hash": "80d043583446a365283c3a0106cc992b",
     "semantic_hash": ""
   },
   "src/database/postgres.ts": {
@@ -474,9 +474,9 @@
     "semantic_hash": "b3024c4e4260cc821458cbe2a3a5d9e1"
   },
   "src/server.ts": {
-    "mtime": 1788402629.241053,
-    "seen": 1788403710.1666868,
-    "ast_hash": "0e73347fd99864516b964459ba3992af",
+    "mtime": 1788405436.753512,
+    "seen": 1788405521.7422214,
+    "ast_hash": "a7bcbdb91edb6d6dd49c04a73e6acf4f",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -1131,6 +1131,12 @@
     "mtime": 1788404312.4642403,
     "seen": 1788404337.191265,
     "ast_hash": "569d5a00f0d839ac4d7f73e25020e573",
+    "semantic_hash": ""
+  },
+  "scratch/execute_vps_update.py": {
+    "mtime": 1788404595.110716,
+    "seen": 1788405521.7421458,
+    "ast_hash": "8a51d704f8f227e68f19b5113179080b",
     "semantic_hash": ""
   }
 }
