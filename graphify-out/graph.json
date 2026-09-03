@@ -4,58 +4,6 @@
   "graph": {},
   "nodes": [
     {
-      "id": "src_agents_autofixagent_ticketfixresult",
-      "label": "TicketFixResult",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "ticketfixresult",
-      "source_file": "src/agents/autoFixAgent.ts",
-      "source_location": "L3"
-    },
-    {
-      "id": "src_agents_base_aiagent",
-      "label": "AIAgent",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "aiagent",
-      "source_file": "src/agents/base.ts",
-      "source_location": "L21"
-    },
-    {
-      "id": "src_core_config_clientconfig",
-      "label": "ClientConfig",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "clientconfig",
-      "source_file": "src/core/config.ts",
-      "source_location": "L3"
-    },
-    {
-      "id": "src_database_vectordb_vectordatabase",
-      "label": "VectorDatabase",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "vectordatabase",
-      "source_file": "src/database/vectorDb.ts",
-      "source_location": "L7"
-    },
-    {
       "id": "src_middlewares_modulemiddleware_extendedrequest",
       "label": "ExtendedRequest",
       "_callable": true,
@@ -225,43 +173,69 @@
       "source_location": "L20"
     },
     {
-      "id": "dashboard_src_components_restaurantkdsdisplay_kdsitem",
-      "label": "KdsItem",
+      "id": "dashboard_src_components_publicrestaurantmenu_cartitem",
+      "label": "CartItem",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 115,
-      "community_name": "RestaurantKdsDisplay.tsx",
+      "community_name": "PublicRestaurantMenu.tsx",
       "file_type": "code",
-      "norm_label": "kdsitem",
-      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
+      "norm_label": "cartitem",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L18"
+    },
+    {
+      "id": "dashboard_src_components_publicrestaurantmenu_menuitem",
+      "label": "MenuItem",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "PublicRestaurantMenu.tsx",
+      "file_type": "code",
+      "norm_label": "menuitem",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "dashboard_src_components_publicrestaurantmenu_modifier",
+      "label": "Modifier",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "PublicRestaurantMenu.tsx",
+      "file_type": "code",
+      "norm_label": "modifier",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
       "source_location": "L3"
     },
     {
-      "id": "dashboard_src_components_restaurantkdsdisplay_kdsorder",
-      "label": "KdsOrder",
+      "id": "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenuprops",
+      "label": "PublicRestaurantMenuProps",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 115,
-      "community_name": "RestaurantKdsDisplay.tsx",
+      "community_name": "PublicRestaurantMenu.tsx",
       "file_type": "code",
-      "norm_label": "kdsorder",
-      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
-      "source_location": "L11"
+      "norm_label": "publicrestaurantmenuprops",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L37"
     },
     {
-      "id": "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplayprops",
-      "label": "RestaurantKdsDisplayProps",
+      "id": "dashboard_src_components_publicrestaurantmenu_restaurantinfo",
+      "label": "RestaurantInfo",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 115,
-      "community_name": "RestaurantKdsDisplay.tsx",
+      "community_name": "PublicRestaurantMenu.tsx",
       "file_type": "code",
-      "norm_label": "restaurantkdsdisplayprops",
-      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
-      "source_location": "L27"
+      "norm_label": "restaurantinfo",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L28"
     },
     {
       "id": "dashboard_src_components_restaurantmenubuilder_product",
@@ -433,6 +407,84 @@
       "source_location": "L4"
     },
     {
+      "id": "dashboard_src_components_saaserpcampaigns_employee",
+      "label": "Employee",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 125,
+      "community_name": "SaaSErpCampaigns.tsx",
+      "file_type": "code",
+      "norm_label": "employee",
+      "source_file": "dashboard/src/components/SaaSErpCampaigns.tsx",
+      "source_location": "L27"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcampaigns_saaserpcampaignsprops",
+      "label": "SaaSErpCampaignsProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 125,
+      "community_name": "SaaSErpCampaigns.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpcampaignsprops",
+      "source_file": "dashboard/src/components/SaaSErpCampaigns.tsx",
+      "source_location": "L32"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcampaigns_visit",
+      "label": "Visit",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 125,
+      "community_name": "SaaSErpCampaigns.tsx",
+      "file_type": "code",
+      "norm_label": "visit",
+      "source_file": "dashboard/src/components/SaaSErpCampaigns.tsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcrm_customer",
+      "label": "Customer",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 126,
+      "community_name": "SaaSErpCRM.tsx",
+      "file_type": "code",
+      "norm_label": "customer",
+      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcrm_invoice",
+      "label": "Invoice",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 126,
+      "community_name": "SaaSErpCRM.tsx",
+      "file_type": "code",
+      "norm_label": "invoice",
+      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
+      "source_location": "L19"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcrm_saaserpcrmprops",
+      "label": "SaaSErpCRMProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 126,
+      "community_name": "SaaSErpCRM.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpcrmprops",
+      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
+      "source_location": "L28"
+    },
+    {
       "id": "src_middlewares_correlationidmiddleware_request",
       "label": "Request",
       "_callable": true,
@@ -483,32 +535,6 @@
       "norm_label": "structuredlogger",
       "source_file": "src/utils/structuredLogger.ts",
       "source_location": "L7"
-    },
-    {
-      "id": "dashboard_src_components_employeeportal_docrequest",
-      "label": "DocRequest",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "RestaurantWaiterPortal.tsx",
-      "file_type": "code",
-      "norm_label": "docrequest",
-      "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L17"
-    },
-    {
-      "id": "dashboard_src_components_employeeportal_task",
-      "label": "Task",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "RestaurantWaiterPortal.tsx",
-      "file_type": "code",
-      "norm_label": "task",
-      "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L5"
     },
     {
       "id": "dashboard_src_components_restaurantwaiterportal_employee",
@@ -1057,69 +1083,30 @@
       "source_location": "L3"
     },
     {
-      "id": "dashboard_src_components_publicrestaurantmenu_cartitem",
-      "label": "CartItem",
+      "id": "dashboard_src_components_employeeportal_docrequest",
+      "label": "DocRequest",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 32,
       "community_name": "api.ts",
       "file_type": "code",
-      "norm_label": "cartitem",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "norm_label": "docrequest",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
       "source_location": "L18"
     },
     {
-      "id": "dashboard_src_components_publicrestaurantmenu_menuitem",
-      "label": "MenuItem",
+      "id": "dashboard_src_components_employeeportal_task",
+      "label": "Task",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 32,
       "community_name": "api.ts",
       "file_type": "code",
-      "norm_label": "menuitem",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "dashboard_src_components_publicrestaurantmenu_modifier",
-      "label": "Modifier",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "modifier",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L3"
-    },
-    {
-      "id": "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenuprops",
-      "label": "PublicRestaurantMenuProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "publicrestaurantmenuprops",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L37"
-    },
-    {
-      "id": "dashboard_src_components_publicrestaurantmenu_restaurantinfo",
-      "label": "RestaurantInfo",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "restaurantinfo",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L28"
+      "norm_label": "task",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
+      "source_location": "L6"
     },
     {
       "id": "dashboard_src_components_authfast_authfastprops",
@@ -1304,82 +1291,43 @@
       "source_location": "L19"
     },
     {
-      "id": "dashboard_src_components_saaserpcampaigns_employee",
-      "label": "Employee",
+      "id": "dashboard_src_components_restaurantkdsdisplay_kdsitem",
+      "label": "KdsItem",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 5,
       "community_name": "ClientDashboard.tsx",
       "file_type": "code",
-      "norm_label": "employee",
-      "source_file": "dashboard/src/components/SaaSErpCampaigns.tsx",
+      "norm_label": "kdsitem",
+      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
+      "source_location": "L3"
+    },
+    {
+      "id": "dashboard_src_components_restaurantkdsdisplay_kdsorder",
+      "label": "KdsOrder",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "ClientDashboard.tsx",
+      "file_type": "code",
+      "norm_label": "kdsorder",
+      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplayprops",
+      "label": "RestaurantKdsDisplayProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "ClientDashboard.tsx",
+      "file_type": "code",
+      "norm_label": "restaurantkdsdisplayprops",
+      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
       "source_location": "L27"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcampaigns_saaserpcampaignsprops",
-      "label": "SaaSErpCampaignsProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpcampaignsprops",
-      "source_file": "dashboard/src/components/SaaSErpCampaigns.tsx",
-      "source_location": "L32"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcampaigns_visit",
-      "label": "Visit",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "visit",
-      "source_file": "dashboard/src/components/SaaSErpCampaigns.tsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcrm_customer",
-      "label": "Customer",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "customer",
-      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcrm_invoice",
-      "label": "Invoice",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "invoice",
-      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
-      "source_location": "L19"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcrm_saaserpcrmprops",
-      "label": "SaaSErpCRMProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpcrmprops",
-      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
-      "source_location": "L28"
     },
     {
       "id": "dashboard_src_components_saaserplabjobs_labjobsprops",
@@ -1497,6 +1445,45 @@
       "norm_label": "metrics",
       "source_file": "dashboard/src/components/AdminDashboard.tsx",
       "source_location": "L16"
+    },
+    {
+      "id": "dashboard_src_components_saaserpdomicilios_domiciliosprops",
+      "label": "DomiciliosProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "authFetch",
+      "file_type": "code",
+      "norm_label": "domiciliosprops",
+      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "dashboard_src_components_saaserpdomicilios_employee",
+      "label": "Employee",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "authFetch",
+      "file_type": "code",
+      "norm_label": "employee",
+      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
+      "source_location": "L25"
+    },
+    {
+      "id": "dashboard_src_components_saaserpdomicilios_invoice",
+      "label": "Invoice",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "authFetch",
+      "file_type": "code",
+      "norm_label": "invoice",
+      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
+      "source_location": "L8"
     },
     {
       "id": "dashboard_src_components_saaserpstoresettings_bankaccount",
@@ -1720,6 +1707,19 @@
       "source_location": "L73"
     },
     {
+      "id": "src_agents_autofixagent_ticketfixresult",
+      "label": "TicketFixResult",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "ticketfixresult",
+      "source_file": "src/agents/autoFixAgent.ts",
+      "source_location": "L3"
+    },
+    {
       "id": "src_middlewares_authmiddleware_authenticatedrequest",
       "label": "AuthenticatedRequest",
       "_callable": true,
@@ -1746,43 +1746,30 @@
       "source_location": "L3"
     },
     {
-      "id": "dashboard_src_components_saaserpdomicilios_domiciliosprops",
-      "label": "DomiciliosProps",
+      "id": "src_agents_base_aiagent",
+      "label": "AIAgent",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 82,
-      "community_name": "SaaSErpDomicilios.tsx",
+      "community_name": "clientsCrud.ts",
       "file_type": "code",
-      "norm_label": "domiciliosprops",
-      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
-      "source_location": "L4"
+      "norm_label": "aiagent",
+      "source_file": "src/agents/base.ts",
+      "source_location": "L21"
     },
     {
-      "id": "dashboard_src_components_saaserpdomicilios_employee",
-      "label": "Employee",
+      "id": "src_core_config_clientconfig",
+      "label": "ClientConfig",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 82,
-      "community_name": "SaaSErpDomicilios.tsx",
+      "community_name": "clientsCrud.ts",
       "file_type": "code",
-      "norm_label": "employee",
-      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
-      "source_location": "L25"
-    },
-    {
-      "id": "dashboard_src_components_saaserpdomicilios_invoice",
-      "label": "Invoice",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 82,
-      "community_name": "SaaSErpDomicilios.tsx",
-      "file_type": "code",
-      "norm_label": "invoice",
-      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
-      "source_location": "L8"
+      "norm_label": "clientconfig",
+      "source_file": "src/core/config.ts",
+      "source_location": "L3"
     },
     {
       "id": "dashboard_src_components_saaserpusers_saaserpusersprops",
@@ -1811,6 +1798,19 @@
       "source_location": "L4"
     },
     {
+      "id": "src_database_vectordb_vectordatabase",
+      "label": "VectorDatabase",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "vectordatabase",
+      "source_file": "src/database/vectorDb.ts",
+      "source_location": "L7"
+    },
+    {
       "id": "scratch_test_restaurant_validation_runvalidation",
       "label": "runValidation()",
       "_callable": true,
@@ -1821,90 +1821,6 @@
       "norm_label": "runvalidation()",
       "source_file": "scratch/test_restaurant_validation.ts",
       "source_location": "L5"
-    },
-    {
-      "id": "src_agents_base_aiagent_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "src/agents/base.ts",
-      "source_location": "L24"
-    },
-    {
-      "id": "src_agents_base_aiagent_processmessage",
-      "label": ".processMessage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": ".processmessage()",
-      "source_file": "src/agents/base.ts",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_core_config_getclientconfigbyid",
-      "label": "getClientConfigById()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "getclientconfigbyid()",
-      "source_file": "src/core/config.ts",
-      "source_location": "L71"
-    },
-    {
-      "id": "src_core_config_getclientconfigbyphone",
-      "label": "getClientConfigByPhone()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "getclientconfigbyphone()",
-      "source_file": "src/core/config.ts",
-      "source_location": "L31"
-    },
-    {
-      "id": "src_core_router_routeincomingmessage",
-      "label": "routeIncomingMessage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "routeincomingmessage()",
-      "source_file": "src/core/router.ts",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_database_clientscrud_createclient",
-      "label": "createClient()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "createclient()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_database_clientscrud_getclientbyid",
-      "label": "getClientById()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "getclientbyid()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L56"
     },
     {
       "id": "src_database_clientscrud_listclients",
@@ -1929,42 +1845,6 @@
       "norm_label": "initdatabase()",
       "source_file": "src/database/initDb.ts",
       "source_location": "L5"
-    },
-    {
-      "id": "src_database_vectordb_vectordatabase_getembedding",
-      "label": ".getEmbedding()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": ".getembedding()",
-      "source_file": "src/database/vectorDb.ts",
-      "source_location": "L13"
-    },
-    {
-      "id": "src_database_vectordb_vectordatabase_searchrelevantcontext",
-      "label": ".searchRelevantContext()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": ".searchrelevantcontext()",
-      "source_file": "src/database/vectorDb.ts",
-      "source_location": "L70"
-    },
-    {
-      "id": "src_database_vectordb_vectordatabase_storedocumentvectors",
-      "label": ".storeDocumentVectors()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": ".storedocumentvectors()",
-      "source_file": "src/database/vectorDb.ts",
-      "source_location": "L32"
     },
     {
       "id": "src_middlewares_modulemiddleware_requiremodule",
@@ -2015,66 +1895,6 @@
       "source_location": "L4"
     },
     {
-      "id": "src_scratch_test_drive_writer_testdrivewriter",
-      "label": "testDriveWriter()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "testdrivewriter()",
-      "source_file": "src/scratch/test-drive-writer.ts",
-      "source_location": "L6"
-    },
-    {
-      "id": "src_scratch_test_function_calling_test",
-      "label": "test()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "test()",
-      "source_file": "src/scratch/test-function-calling.ts",
-      "source_location": "L6"
-    },
-    {
-      "id": "src_scratch_test_onboarding_flow_sleep",
-      "label": "sleep()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "sleep()",
-      "source_file": "src/scratch/test-onboarding-flow.ts",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_scratch_test_onboarding_flow_test",
-      "label": "test()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "test()",
-      "source_file": "src/scratch/test-onboarding-flow.ts",
-      "source_location": "L9"
-    },
-    {
-      "id": "src_scratch_test_optica_onboarding_testopticaflow",
-      "label": "testOpticaFlow()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "testopticaflow()",
-      "source_file": "src/scratch/test-optica-onboarding.ts",
-      "source_location": "L7"
-    },
-    {
       "id": "src_scratch_test_pre_recorded_voice_run",
       "label": "run()",
       "_callable": true,
@@ -2085,150 +1905,6 @@
       "norm_label": "run()",
       "source_file": "src/scratch/test-pre-recorded-voice.ts",
       "source_location": "L5"
-    },
-    {
-      "id": "src_scratch_test_rag_runtest",
-      "label": "runTest()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "runtest()",
-      "source_file": "src/scratch/test-rag.ts",
-      "source_location": "L10"
-    },
-    {
-      "id": "src_services_drive_createclientfolder",
-      "label": "createClientFolder()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "createclientfolder()",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L158"
-    },
-    {
-      "id": "src_services_drive_fetchdocumentsfromdrive",
-      "label": "fetchDocumentsFromDrive()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "fetchdocumentsfromdrive()",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L43"
-    },
-    {
-      "id": "src_services_drive_getdriveclient",
-      "label": "getDriveClient()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "getdriveclient()",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L15"
-    },
-    {
-      "id": "src_services_drive_listfilesfromfolder",
-      "label": "listFilesFromFolder()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "listfilesfromfolder()",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L232"
-    },
-    {
-      "id": "src_services_drive_uploadfiletofolder",
-      "label": "uploadFileToFolder()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "uploadfiletofolder()",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L196"
-    },
-    {
-      "id": "src_services_localknowledge_fetchlocaldocuments",
-      "label": "fetchLocalDocuments()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "fetchlocaldocuments()",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L58"
-    },
-    {
-      "id": "src_services_logger_isalertthrottled",
-      "label": "isAlertThrottled()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "isalertthrottled()",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L19"
-    },
-    {
-      "id": "src_services_logger_senddiscordalert",
-      "label": "sendDiscordAlert()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "senddiscordalert()",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L54"
-    },
-    {
-      "id": "src_services_logger_senddiscordrecovery",
-      "label": "sendDiscordRecovery()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "senddiscordrecovery()",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L90"
-    },
-    {
-      "id": "src_services_logger_writetofile",
-      "label": "writeToFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "writetofile()",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L44"
-    },
-    {
-      "id": "src_database_clientscrud_updateclient",
-      "label": "updateClient()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "whatsapp.ts",
-      "file_type": "code",
-      "norm_label": "updateclient()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L99"
     },
     {
       "id": "src_scratch_check_wa_state_check",
@@ -2243,28 +1919,52 @@
       "source_location": "L3"
     },
     {
-      "id": "src_services_localknowledge_listlocalfiles",
-      "label": "listLocalFiles()",
+      "id": "src_services_scheduler_checkandsendreminders",
+      "label": "checkAndSendReminders()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "listlocalfiles()",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L28"
+      "norm_label": "checkandsendreminders()",
+      "source_file": "src/services/scheduler.ts",
+      "source_location": "L24"
     },
     {
-      "id": "src_services_localknowledge_savelocalfile",
-      "label": "saveLocalFile()",
+      "id": "src_services_scheduler_delay",
+      "label": "delay()",
       "_callable": true,
       "_origin": "ast",
       "community": 1,
       "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "savelocalfile()",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L14"
+      "norm_label": "delay()",
+      "source_file": "src/services/scheduler.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_services_scheduler_formatcurrency",
+      "label": "formatCurrency()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "formatcurrency()",
+      "source_file": "src/services/scheduler.ts",
+      "source_location": "L12"
+    },
+    {
+      "id": "src_services_scheduler_startscheduler",
+      "label": "startScheduler()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "startscheduler()",
+      "source_file": "src/services/scheduler.ts",
+      "source_location": "L152"
     },
     {
       "id": "src_services_whatsapp_autorestoresavedwhatsappsessions",
@@ -2301,18 +2001,6 @@
       "norm_label": "getwhatsappstate()",
       "source_file": "src/services/whatsapp.ts",
       "source_location": "L35"
-    },
-    {
-      "id": "src_services_whatsapp_initializewhatsappclient",
-      "label": "initializeWhatsAppClient()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "whatsapp.ts",
-      "file_type": "code",
-      "norm_label": "initializewhatsappclient()",
-      "source_file": "src/services/whatsapp.ts",
-      "source_location": "L60"
     },
     {
       "id": "src_services_whatsapp_logoutwhatsapp",
@@ -2399,16 +2087,16 @@
       "source_location": "L12"
     },
     {
-      "id": "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplay",
-      "label": "RestaurantKdsDisplay()",
+      "id": "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenu",
+      "label": "PublicRestaurantMenu()",
       "_callable": true,
       "_origin": "ast",
       "community": 115,
-      "community_name": "RestaurantKdsDisplay.tsx",
+      "community_name": "PublicRestaurantMenu.tsx",
       "file_type": "code",
-      "norm_label": "restaurantkdsdisplay()",
-      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
-      "source_location": "L31"
+      "norm_label": "publicrestaurantmenu()",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L41"
     },
     {
       "id": "dashboard_src_components_restaurantmenubuilder_restaurantmenubuilder",
@@ -2469,6 +2157,30 @@
       "norm_label": "saaserpsupporttickets()",
       "source_file": "dashboard/src/components/SaaSErpSupportTickets.tsx",
       "source_location": "L23"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcampaigns_saaserpcampaigns",
+      "label": "SaaSErpCampaigns()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 125,
+      "community_name": "SaaSErpCampaigns.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpcampaigns()",
+      "source_file": "dashboard/src/components/SaaSErpCampaigns.tsx",
+      "source_location": "L36"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcrm_saaserpcrm",
+      "label": "SaaSErpCRM()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 126,
+      "community_name": "SaaSErpCRM.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpcrm()",
+      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
+      "source_location": "L33"
     },
     {
       "id": "src_middlewares_correlationidmiddleware_correlationidmiddleware",
@@ -2601,18 +2313,6 @@
       "norm_label": ".warn()",
       "source_file": "src/utils/structuredLogger.ts",
       "source_location": "L24"
-    },
-    {
-      "id": "dashboard_src_components_employeeportal_employeeportal",
-      "label": "EmployeePortal()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "RestaurantWaiterPortal.tsx",
-      "file_type": "code",
-      "norm_label": "employeeportal()",
-      "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L29"
     },
     {
       "id": "dashboard_src_components_restaurantwaiterportal_restaurantwaiterportal",
@@ -2817,6 +2517,54 @@
       "norm_label": "stopescalationservice()",
       "source_file": "src/services/escalation.ts",
       "source_location": "L113"
+    },
+    {
+      "id": "src_services_logger_isalertthrottled",
+      "label": "isAlertThrottled()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "isalertthrottled()",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L19"
+    },
+    {
+      "id": "src_services_logger_senddiscordalert",
+      "label": "sendDiscordAlert()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "senddiscordalert()",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L54"
+    },
+    {
+      "id": "src_services_logger_senddiscordrecovery",
+      "label": "sendDiscordRecovery()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "senddiscordrecovery()",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L90"
+    },
+    {
+      "id": "src_services_logger_writetofile",
+      "label": "writeToFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "writetofile()",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L44"
     },
     {
       "id": "src_services_shutdownmanager_capturesystemstate",
@@ -3179,16 +2927,16 @@
       "source_location": "L81"
     },
     {
-      "id": "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenu",
-      "label": "PublicRestaurantMenu()",
+      "id": "dashboard_src_components_employeeportal_employeeportal",
+      "label": "EmployeePortal()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
       "community_name": "api.ts",
       "file_type": "code",
-      "norm_label": "publicrestaurantmenu()",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L41"
+      "norm_label": "employeeportal()",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
+      "source_location": "L30"
     },
     {
       "id": "dashboard_src_utils_api_clearallsessiondata",
@@ -3371,28 +3119,16 @@
       "source_location": "L23"
     },
     {
-      "id": "dashboard_src_components_saaserpcampaigns_saaserpcampaigns",
-      "label": "SaaSErpCampaigns()",
+      "id": "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplay",
+      "label": "RestaurantKdsDisplay()",
       "_callable": true,
       "_origin": "ast",
       "community": 5,
       "community_name": "ClientDashboard.tsx",
       "file_type": "code",
-      "norm_label": "saaserpcampaigns()",
-      "source_file": "dashboard/src/components/SaaSErpCampaigns.tsx",
-      "source_location": "L36"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcrm_saaserpcrm",
-      "label": "SaaSErpCRM()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpcrm()",
-      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
-      "source_location": "L33"
+      "norm_label": "restaurantkdsdisplay()",
+      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
+      "source_location": "L31"
     },
     {
       "id": "dashboard_src_components_saaserplabjobs_saaserplabjobs",
@@ -3441,6 +3177,18 @@
       "norm_label": "admindashboard()",
       "source_file": "dashboard/src/components/AdminDashboard.tsx",
       "source_location": "L28"
+    },
+    {
+      "id": "dashboard_src_components_saaserpdomicilios_saaserpdomicilios",
+      "label": "SaaSErpDomicilios()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "authFetch",
+      "file_type": "code",
+      "norm_label": "saaserpdomicilios()",
+      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
+      "source_location": "L36"
     },
     {
       "id": "dashboard_src_components_saaserpstoresettings_bankaccountsmanager",
@@ -3551,28 +3299,16 @@
       "source_location": "L77"
     },
     {
-      "id": "src_database_clientscrud_deleteclient",
-      "label": "deleteClient()",
+      "id": "src_agents_autofixagent_runautofixagent",
+      "label": "runAutoFixAgent()",
       "_callable": true,
       "_origin": "ast",
       "community": 8,
       "community_name": "server.ts",
       "file_type": "code",
-      "norm_label": "deleteclient()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L158"
-    },
-    {
-      "id": "src_database_clientscrud_updateclientstatus",
-      "label": "updateClientStatus()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "updateclientstatus()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L145"
+      "norm_label": "runautofixagent()",
+      "source_file": "src/agents/autoFixAgent.ts",
+      "source_location": "L19"
     },
     {
       "id": "src_middlewares_authmiddleware_authenticatetoken",
@@ -3647,6 +3383,18 @@
       "source_location": "L14"
     },
     {
+      "id": "src_server_resolveproductclientid",
+      "label": "resolveProductClientId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "resolveproductclientid()",
+      "source_file": "src/server.ts",
+      "source_location": "L1623"
+    },
+    {
       "id": "src_server_startmarketingcampaignworker",
       "label": "startMarketingCampaignWorker()",
       "_callable": true,
@@ -3669,6 +3417,18 @@
       "norm_label": "timetominutes()",
       "source_file": "src/server.ts",
       "source_location": "L4203"
+    },
+    {
+      "id": "src_services_escalation_startescalationservice",
+      "label": "startEscalationService()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "startescalationservice()",
+      "source_file": "src/services/escalation.ts",
+      "source_location": "L5"
     },
     {
       "id": "src_utils_envvalidator_validateenv",
@@ -3719,16 +3479,172 @@
       "source_location": "L23"
     },
     {
-      "id": "dashboard_src_components_saaserpdomicilios_saaserpdomicilios",
-      "label": "SaaSErpDomicilios()",
+      "id": "src_agents_base_aiagent_constructor",
+      "label": ".constructor()",
       "_callable": true,
       "_origin": "ast",
       "community": 82,
-      "community_name": "SaaSErpDomicilios.tsx",
+      "community_name": "clientsCrud.ts",
       "file_type": "code",
-      "norm_label": "saaserpdomicilios()",
-      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
-      "source_location": "L36"
+      "norm_label": ".constructor()",
+      "source_file": "src/agents/base.ts",
+      "source_location": "L24"
+    },
+    {
+      "id": "src_agents_base_aiagent_processmessage",
+      "label": ".processMessage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": ".processmessage()",
+      "source_file": "src/agents/base.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_core_config_getclientconfigbyid",
+      "label": "getClientConfigById()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "getclientconfigbyid()",
+      "source_file": "src/core/config.ts",
+      "source_location": "L71"
+    },
+    {
+      "id": "src_core_config_getclientconfigbyphone",
+      "label": "getClientConfigByPhone()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "getclientconfigbyphone()",
+      "source_file": "src/core/config.ts",
+      "source_location": "L31"
+    },
+    {
+      "id": "src_core_router_routeincomingmessage",
+      "label": "routeIncomingMessage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "routeincomingmessage()",
+      "source_file": "src/core/router.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_database_clientscrud_deleteclient",
+      "label": "deleteClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "deleteclient()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L158"
+    },
+    {
+      "id": "src_database_clientscrud_getclientbyid",
+      "label": "getClientById()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "getclientbyid()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L56"
+    },
+    {
+      "id": "src_database_clientscrud_updateclient",
+      "label": "updateClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "updateclient()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L99"
+    },
+    {
+      "id": "src_database_clientscrud_updateclientstatus",
+      "label": "updateClientStatus()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "updateclientstatus()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L145"
+    },
+    {
+      "id": "src_scratch_test_function_calling_test",
+      "label": "test()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "test()",
+      "source_file": "src/scratch/test-function-calling.ts",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_scratch_test_onboarding_flow_sleep",
+      "label": "sleep()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "sleep()",
+      "source_file": "src/scratch/test-onboarding-flow.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_scratch_test_onboarding_flow_test",
+      "label": "test()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "test()",
+      "source_file": "src/scratch/test-onboarding-flow.ts",
+      "source_location": "L9"
+    },
+    {
+      "id": "src_scratch_test_optica_onboarding_testopticaflow",
+      "label": "testOpticaFlow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "testopticaflow()",
+      "source_file": "src/scratch/test-optica-onboarding.ts",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_services_whatsapp_initializewhatsappclient",
+      "label": "initializeWhatsAppClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "initializewhatsappclient()",
+      "source_file": "src/services/whatsapp.ts",
+      "source_location": "L60"
     },
     {
       "id": "dashboard_src_components_saaserpusers_saaserpusers",
@@ -3743,88 +3659,172 @@
       "source_location": "L46"
     },
     {
-      "id": "src_agents_autofixagent_runautofixagent",
-      "label": "runAutoFixAgent()",
+      "id": "src_database_clientscrud_createclient",
+      "label": "createClient()",
       "_callable": true,
       "_origin": "ast",
       "community": 94,
-      "community_name": "scheduler.ts",
+      "community_name": "drive.ts",
       "file_type": "code",
-      "norm_label": "runautofixagent()",
-      "source_file": "src/agents/autoFixAgent.ts",
-      "source_location": "L19"
-    },
-    {
-      "id": "src_server_resolveproductclientid",
-      "label": "resolveProductClientId()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "scheduler.ts",
-      "file_type": "code",
-      "norm_label": "resolveproductclientid()",
-      "source_file": "src/server.ts",
-      "source_location": "L1623"
-    },
-    {
-      "id": "src_services_escalation_startescalationservice",
-      "label": "startEscalationService()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "scheduler.ts",
-      "file_type": "code",
-      "norm_label": "startescalationservice()",
-      "source_file": "src/services/escalation.ts",
-      "source_location": "L5"
-    },
-    {
-      "id": "src_services_scheduler_checkandsendreminders",
-      "label": "checkAndSendReminders()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "scheduler.ts",
-      "file_type": "code",
-      "norm_label": "checkandsendreminders()",
-      "source_file": "src/services/scheduler.ts",
-      "source_location": "L24"
-    },
-    {
-      "id": "src_services_scheduler_delay",
-      "label": "delay()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "scheduler.ts",
-      "file_type": "code",
-      "norm_label": "delay()",
-      "source_file": "src/services/scheduler.ts",
+      "norm_label": "createclient()",
+      "source_file": "src/database/clientsCrud.ts",
       "source_location": "L7"
     },
     {
-      "id": "src_services_scheduler_formatcurrency",
-      "label": "formatCurrency()",
+      "id": "src_database_vectordb_vectordatabase_getembedding",
+      "label": ".getEmbedding()",
       "_callable": true,
       "_origin": "ast",
       "community": 94,
-      "community_name": "scheduler.ts",
+      "community_name": "drive.ts",
       "file_type": "code",
-      "norm_label": "formatcurrency()",
-      "source_file": "src/services/scheduler.ts",
-      "source_location": "L12"
+      "norm_label": ".getembedding()",
+      "source_file": "src/database/vectorDb.ts",
+      "source_location": "L13"
     },
     {
-      "id": "src_services_scheduler_startscheduler",
-      "label": "startScheduler()",
+      "id": "src_database_vectordb_vectordatabase_searchrelevantcontext",
+      "label": ".searchRelevantContext()",
       "_callable": true,
       "_origin": "ast",
       "community": 94,
-      "community_name": "scheduler.ts",
+      "community_name": "drive.ts",
       "file_type": "code",
-      "norm_label": "startscheduler()",
-      "source_file": "src/services/scheduler.ts",
-      "source_location": "L152"
+      "norm_label": ".searchrelevantcontext()",
+      "source_file": "src/database/vectorDb.ts",
+      "source_location": "L70"
+    },
+    {
+      "id": "src_database_vectordb_vectordatabase_storedocumentvectors",
+      "label": ".storeDocumentVectors()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": ".storedocumentvectors()",
+      "source_file": "src/database/vectorDb.ts",
+      "source_location": "L32"
+    },
+    {
+      "id": "src_scratch_test_drive_writer_testdrivewriter",
+      "label": "testDriveWriter()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "testdrivewriter()",
+      "source_file": "src/scratch/test-drive-writer.ts",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_scratch_test_rag_runtest",
+      "label": "runTest()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "runtest()",
+      "source_file": "src/scratch/test-rag.ts",
+      "source_location": "L10"
+    },
+    {
+      "id": "src_services_drive_createclientfolder",
+      "label": "createClientFolder()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "createclientfolder()",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L158"
+    },
+    {
+      "id": "src_services_drive_fetchdocumentsfromdrive",
+      "label": "fetchDocumentsFromDrive()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "fetchdocumentsfromdrive()",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L43"
+    },
+    {
+      "id": "src_services_drive_getdriveclient",
+      "label": "getDriveClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "getdriveclient()",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_services_drive_listfilesfromfolder",
+      "label": "listFilesFromFolder()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "listfilesfromfolder()",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L232"
+    },
+    {
+      "id": "src_services_drive_uploadfiletofolder",
+      "label": "uploadFileToFolder()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "uploadfiletofolder()",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L196"
+    },
+    {
+      "id": "src_services_localknowledge_fetchlocaldocuments",
+      "label": "fetchLocalDocuments()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "fetchlocaldocuments()",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L58"
+    },
+    {
+      "id": "src_services_localknowledge_listlocalfiles",
+      "label": "listLocalFiles()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "listlocalfiles()",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_services_localknowledge_savelocalfile",
+      "label": "saveLocalFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "savelocalfile()",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L14"
     },
     {
       "id": "scratch_test_restaurant_validation",
@@ -3835,17 +3835,6 @@
       "file_type": "code",
       "norm_label": "test_restaurant_validation.ts",
       "source_file": "scratch/test_restaurant_validation.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agents_autofixagent",
-      "label": "autoFixAgent.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "autofixagent.ts",
-      "source_file": "src/agents/autoFixAgent.ts",
       "source_location": "L1"
     },
     {
@@ -3869,61 +3858,6 @@
       "norm_label": "genai",
       "source_file": "src/agents/base.ts",
       "source_location": "L19"
-    },
-    {
-      "id": "src_core_config",
-      "label": "config.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "config.ts",
-      "source_file": "src/core/config.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_core_router",
-      "label": "router.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "router.ts",
-      "source_file": "src/core/router.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_core_router_pendingagentconfirmations",
-      "label": "pendingAgentConfirmations",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "pendingagentconfirmations",
-      "source_file": "src/core/router.ts",
-      "source_location": "L8"
-    },
-    {
-      "id": "src_core_router_pendingcustomerconfirmations",
-      "label": "pendingCustomerConfirmations",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "pendingcustomerconfirmations",
-      "source_file": "src/core/router.ts",
-      "source_location": "L16"
-    },
-    {
-      "id": "src_database_clientscrud",
-      "label": "clientsCrud.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "clientscrud.ts",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L1"
     },
     {
       "id": "src_database_initdb",
@@ -4025,39 +3959,6 @@
       "source_location": "L1"
     },
     {
-      "id": "src_scratch_test_drive_writer",
-      "label": "test-drive-writer.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "test-drive-writer.ts",
-      "source_file": "src/scratch/test-drive-writer.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_scratch_test_function_calling",
-      "label": "test-function-calling.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "test-function-calling.ts",
-      "source_file": "src/scratch/test-function-calling.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_scratch_test_onboarding_flow",
-      "label": "test-onboarding-flow.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "test-onboarding-flow.ts",
-      "source_file": "src/scratch/test-onboarding-flow.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "src_scratch_test_optica_onboarding",
       "label": "test-optica-onboarding.ts",
       "_origin": "ast",
@@ -4078,72 +3979,6 @@
       "norm_label": "test-pre-recorded-voice.ts",
       "source_file": "src/scratch/test-pre-recorded-voice.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "src_scratch_test_rag",
-      "label": "test-rag.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "test-rag.ts",
-      "source_file": "src/scratch/test-rag.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_drive",
-      "label": "drive.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "drive.ts",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_drive_key_file_path",
-      "label": "KEY_FILE_PATH",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "key_file_path",
-      "source_file": "src/services/drive.ts",
-      "source_location": "L8"
-    },
-    {
-      "id": "src_services_logger",
-      "label": "logger.ts",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "logger.ts",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_logger_alertthrottlemap",
-      "label": "alertThrottleMap",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "alertthrottlemap",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L9"
-    },
-    {
-      "id": "src_services_logger_logs_dir",
-      "label": "LOGS_DIR",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "logs_dir",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L5"
     },
     {
       "id": "src_tools_agendarcita",
@@ -4355,26 +4190,15 @@
       "source_location": "L1"
     },
     {
-      "id": "src_services_localknowledge",
-      "label": "localKnowledge.ts",
+      "id": "src_services_scheduler",
+      "label": "scheduler.ts",
       "_origin": "ast",
       "community": 1,
       "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "localknowledge.ts",
-      "source_file": "src/services/localKnowledge.ts",
+      "norm_label": "scheduler.ts",
+      "source_file": "src/services/scheduler.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "src_services_localknowledge_knowledge_base_dir",
-      "label": "KNOWLEDGE_BASE_DIR",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "whatsapp.ts",
-      "file_type": "code",
-      "norm_label": "knowledge_base_dir",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L4"
     },
     {
       "id": "src_services_whatsapp",
@@ -5749,14 +5573,14 @@
       "source_location": "L42"
     },
     {
-      "id": "dashboard_src_components_restaurantkdsdisplay",
-      "label": "RestaurantKdsDisplay.tsx",
+      "id": "dashboard_src_components_publicrestaurantmenu",
+      "label": "PublicRestaurantMenu.tsx",
       "_origin": "ast",
       "community": 115,
-      "community_name": "RestaurantKdsDisplay.tsx",
+      "community_name": "PublicRestaurantMenu.tsx",
       "file_type": "code",
-      "norm_label": "restaurantkdsdisplay.tsx",
-      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
+      "norm_label": "publicrestaurantmenu.tsx",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
       "source_location": "L1"
     },
     {
@@ -6167,6 +5991,28 @@
       "source_location": "L1"
     },
     {
+      "id": "dashboard_src_components_saaserpcampaigns",
+      "label": "SaaSErpCampaigns.tsx",
+      "_origin": "ast",
+      "community": 125,
+      "community_name": "SaaSErpCampaigns.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpcampaigns.tsx",
+      "source_file": "dashboard/src/components/SaaSErpCampaigns.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcrm",
+      "label": "SaaSErpCRM.tsx",
+      "_origin": "ast",
+      "community": 126,
+      "community_name": "SaaSErpCRM.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpcrm.tsx",
+      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "src_middlewares_correlationidmiddleware",
       "label": "correlationIdMiddleware.ts",
       "_origin": "ast",
@@ -6198,17 +6044,6 @@
       "norm_label": "middlewares/errorhandler.ts",
       "source_file": "src/middlewares/errorHandler.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "src_services_logger_logger",
-      "label": "logger",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "StructuredLogger",
-      "file_type": "code",
-      "norm_label": "logger",
-      "source_file": "src/services/logger.ts",
-      "source_location": "L116"
     },
     {
       "id": "src_utils_correlationid",
@@ -6783,17 +6618,6 @@
       "norm_label": "src/**/*",
       "source_file": "tsconfig.json",
       "source_location": "L12"
-    },
-    {
-      "id": "dashboard_src_components_employeeportal",
-      "label": "EmployeePortal.tsx",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "RestaurantWaiterPortal.tsx",
-      "file_type": "code",
-      "norm_label": "employeeportal.tsx",
-      "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L1"
     },
     {
       "id": "dashboard_src_components_restaurantwaiterportal",
@@ -8218,6 +8042,50 @@
       "source_location": "L1"
     },
     {
+      "id": "src_services_logger",
+      "label": "logger.ts",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "logger.ts",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_services_logger_alertthrottlemap",
+      "label": "alertThrottleMap",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "alertthrottlemap",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L9"
+    },
+    {
+      "id": "src_services_logger_logger",
+      "label": "logger",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "logger",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L116"
+    },
+    {
+      "id": "src_services_logger_logs_dir",
+      "label": "LOGS_DIR",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "logs_dir",
+      "source_file": "src/services/logger.ts",
+      "source_location": "L5"
+    },
+    {
       "id": "src_services_shutdownmanager",
       "label": "shutdownManager.ts",
       "_origin": "ast",
@@ -8851,14 +8719,14 @@
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_publicrestaurantmenu",
-      "label": "PublicRestaurantMenu.tsx",
+      "id": "dashboard_src_components_employeeportal",
+      "label": "EmployeePortal.tsx",
       "_origin": "ast",
       "community": 32,
       "community_name": "api.ts",
       "file_type": "code",
-      "norm_label": "publicrestaurantmenu.tsx",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "norm_label": "employeeportal.tsx",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
       "source_location": "L1"
     },
     {
@@ -9878,25 +9746,14 @@
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_saaserpcampaigns",
-      "label": "SaaSErpCampaigns.tsx",
+      "id": "dashboard_src_components_restaurantkdsdisplay",
+      "label": "RestaurantKdsDisplay.tsx",
       "_origin": "ast",
       "community": 5,
       "community_name": "ClientDashboard.tsx",
       "file_type": "code",
-      "norm_label": "saaserpcampaigns.tsx",
-      "source_file": "dashboard/src/components/SaaSErpCampaigns.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcrm",
-      "label": "SaaSErpCRM.tsx",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpcrm.tsx",
-      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
+      "norm_label": "restaurantkdsdisplay.tsx",
+      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
       "source_location": "L1"
     },
     {
@@ -11507,6 +11364,17 @@
       "file_type": "code",
       "norm_label": "admindashboard.tsx",
       "source_file": "dashboard/src/components/AdminDashboard.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "dashboard_src_components_saaserpdomicilios",
+      "label": "SaaSErpDomicilios.tsx",
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "authFetch",
+      "file_type": "code",
+      "norm_label": "saaserpdomicilios.tsx",
+      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
       "source_location": "L1"
     },
     {
@@ -13767,6 +13635,17 @@
       "source_location": "L1"
     },
     {
+      "id": "src_agents_autofixagent",
+      "label": "autoFixAgent.ts",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "autofixagent.ts",
+      "source_file": "src/agents/autoFixAgent.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "src_middlewares_authmiddleware",
       "label": "authMiddleware.ts",
       "_origin": "ast",
@@ -13864,6 +13743,17 @@
       "norm_label": "mediadir",
       "source_file": "src/server.ts",
       "source_location": "L105"
+    },
+    {
+      "id": "src_server_server",
+      "label": "server",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "server",
+      "source_file": "src/server.ts",
+      "source_location": "L7505"
     },
     {
       "id": "src_server_upload",
@@ -14076,14 +13966,80 @@
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_saaserpdomicilios",
-      "label": "SaaSErpDomicilios.tsx",
+      "id": "src_core_config",
+      "label": "config.ts",
       "_origin": "ast",
       "community": 82,
-      "community_name": "SaaSErpDomicilios.tsx",
+      "community_name": "clientsCrud.ts",
       "file_type": "code",
-      "norm_label": "saaserpdomicilios.tsx",
-      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
+      "norm_label": "config.ts",
+      "source_file": "src/core/config.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_core_router",
+      "label": "router.ts",
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "router.ts",
+      "source_file": "src/core/router.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_core_router_pendingagentconfirmations",
+      "label": "pendingAgentConfirmations",
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "pendingagentconfirmations",
+      "source_file": "src/core/router.ts",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_core_router_pendingcustomerconfirmations",
+      "label": "pendingCustomerConfirmations",
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "pendingcustomerconfirmations",
+      "source_file": "src/core/router.ts",
+      "source_location": "L16"
+    },
+    {
+      "id": "src_database_clientscrud",
+      "label": "clientsCrud.ts",
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "clientscrud.ts",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_scratch_test_function_calling",
+      "label": "test-function-calling.ts",
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "test-function-calling.ts",
+      "source_file": "src/scratch/test-function-calling.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_scratch_test_onboarding_flow",
+      "label": "test-onboarding-flow.ts",
+      "_origin": "ast",
+      "community": 82,
+      "community_name": "clientsCrud.ts",
+      "file_type": "code",
+      "norm_label": "test-onboarding-flow.ts",
+      "source_file": "src/scratch/test-onboarding-flow.ts",
       "source_location": "L1"
     },
     {
@@ -14940,26 +14896,70 @@
       "source_location": "L58"
     },
     {
-      "id": "src_server_server",
-      "label": "server",
+      "id": "src_scratch_test_drive_writer",
+      "label": "test-drive-writer.ts",
       "_origin": "ast",
       "community": 94,
-      "community_name": "scheduler.ts",
+      "community_name": "drive.ts",
       "file_type": "code",
-      "norm_label": "server",
-      "source_file": "src/server.ts",
-      "source_location": "L7505"
+      "norm_label": "test-drive-writer.ts",
+      "source_file": "src/scratch/test-drive-writer.ts",
+      "source_location": "L1"
     },
     {
-      "id": "src_services_scheduler",
-      "label": "scheduler.ts",
+      "id": "src_scratch_test_rag",
+      "label": "test-rag.ts",
       "_origin": "ast",
       "community": 94,
-      "community_name": "scheduler.ts",
+      "community_name": "drive.ts",
       "file_type": "code",
-      "norm_label": "scheduler.ts",
-      "source_file": "src/services/scheduler.ts",
+      "norm_label": "test-rag.ts",
+      "source_file": "src/scratch/test-rag.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "src_services_drive",
+      "label": "drive.ts",
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "drive.ts",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_services_drive_key_file_path",
+      "label": "KEY_FILE_PATH",
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "key_file_path",
+      "source_file": "src/services/drive.ts",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_services_localknowledge",
+      "label": "localKnowledge.ts",
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "localknowledge.ts",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_services_localknowledge_knowledge_base_dir",
+      "label": "KNOWLEDGE_BASE_DIR",
+      "_origin": "ast",
+      "community": 94,
+      "community_name": "drive.ts",
+      "file_type": "code",
+      "norm_label": "knowledge_base_dir",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L4"
     },
     {
       "id": "dashboard_readme",
@@ -15277,6 +15277,30 @@
       "context": "call",
       "source_file": "dashboard/src/components/AdminDashboard.tsx",
       "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_clientdashboard_clientdashboard",
+      "target": "dashboard_src_utils_api_clearallsessiondata",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "dashboard/src/components/ClientDashboard.tsx",
+      "source_location": "L1429",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_employeeportal_employeeportal",
+      "target": "dashboard_src_utils_api_clearallsessiondata",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
+      "source_location": "L625",
       "weight": 1.0
     },
     {
@@ -16961,6 +16985,18 @@
     },
     {
       "source": "dashboard_src_components_clientdashboard",
+      "target": "dashboard_src_utils_api_clearallsessiondata",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "dashboard/src/components/ClientDashboard.tsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_clientdashboard",
       "target": "dashboard_src_components_saaserpaccounting_saaserpaccounting",
       "relation": "imports",
       "_origin": "ast",
@@ -17197,6 +17233,18 @@
       "context": "import",
       "source_file": "dashboard/src/components/EmployeePortal.tsx",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_employeeportal",
+      "target": "dashboard_src_utils_api_clearallsessiondata",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -20329,6 +20377,18 @@
       "context": "import",
       "source_file": "dashboard/src/components/EmployeePortal.tsx",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_employeeportal",
+      "target": "dashboard_src_utils_api",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
+      "source_location": "L4",
       "weight": 1.0
     },
     {
@@ -23831,7 +23891,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -23842,7 +23902,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -23853,7 +23913,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -34359,5 +34419,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "6962a337663f2c9f7eb795055dfcf9557e8c5569"
+  "built_at_commit": "0a80c038e4e3a872796237c7e3c3765bd90dfcb9"
 }

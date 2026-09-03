@@ -81,7 +81,7 @@
   "79": "📜 Sistema de Trazabilidad Global y Bitácora de Auditoría (Audit Trail 360°)",
   "80": "🚀 Configuración de Despliegue VPS, GitHub Actions y Secretos",
   "81": "Guía de Diagnóstico y Resolución de Problemas (Troubleshooting Log)",
-  "82": "SaaSErpDomicilios.tsx",
+  "82": "clientsCrud.ts",
   "83": "SaaSErpUsers.tsx",
   "84": "10. Fase 8: WhatsApp, IA y automatización",
   "85": "11. Fase 9: Frontend, navegación y experiencia de usuario",
@@ -93,7 +93,7 @@
   "91": "8. Fase 6: Laboratorio y domicilios",
   "92": "9. Fase 7: Empleados, departments, roles y RRHH",
   "93": "PLAN_FACTURACION_ELECTRONICA_PLANES_Y_PAGOS.md",
-  "94": "scheduler.ts",
+  "94": "drive.ts",
   "95": "React + TypeScript + Vite",
   "96": "scripts",
   "97": "INFORME_ANALISIS_FASES.md",
@@ -114,7 +114,7 @@
   "112": "vps_update.py",
   "113": "deploy-dashboard.ps1",
   "114": "🛡️ Reglas de Seguridad de Git y Estrategia de Ramas",
-  "115": "RestaurantKdsDisplay.tsx",
+  "115": "PublicRestaurantMenu.tsx",
   "116": "RestaurantMenuBuilder.tsx",
   "117": "SaaSErpCartera.tsx",
   "118": "SaaSErpSuppliers.tsx",
@@ -123,5 +123,7 @@
   "121": "qrcode-terminal",
   "122": "@types/bcrypt",
   "123": "SaaSErpSupportDocuments.tsx",
-  "124": "SaaSErpSupportTickets.tsx"
+  "124": "SaaSErpSupportTickets.tsx",
+  "125": "SaaSErpCampaigns.tsx",
+  "126": "SaaSErpCRM.tsx"
 }

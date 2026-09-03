@@ -36,15 +36,15 @@
     "semantic_hash": "f834bd66a9e6ce8d0cccebe56e8a1027"
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1788402658.3673823,
-    "seen": 1788403710.1663585,
-    "ast_hash": "f9dee0e83962284a1c194ff23ee5c738",
+    "mtime": 1788407685.2386277,
+    "seen": 1788407775.8228002,
+    "ast_hash": "a8810ce5e66f74274d7c907981a69d9e",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
-    "mtime": 1788290988.0777488,
-    "seen": 1788303826.4259467,
-    "ast_hash": "ed95af37081f2dcea6eb79a759412a73",
+    "mtime": 1788407698.8787026,
+    "seen": 1788407775.8228033,
+    "ast_hash": "b0f9df336e07a4631c1afe243061587f",
     "semantic_hash": ""
   },
   "dashboard/src/components/EnterprisePlanningModule.tsx": {
@@ -1134,9 +1134,9 @@
     "semantic_hash": ""
   },
   "scratch/execute_vps_update.py": {
-    "mtime": 1788404595.110716,
-    "seen": 1788405521.7421458,
-    "ast_hash": "8a51d704f8f227e68f19b5113179080b",
+    "mtime": 1788407331.4348185,
+    "seen": 1788407775.8228896,
+    "ast_hash": "968a8f73835377428dffc61e4359c216",
     "semantic_hash": ""
   },
   "docs/SEGURIDAD_SESION_UNICA_Y_PROTECCION_MEMORIA.md": {

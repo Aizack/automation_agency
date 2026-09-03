@@ -722,7 +722,7 @@ app.post('/api/login', async (req: Request, res: Response) => {
 
     // 1. Consultar el cliente por usuario en PostgreSQL (Inquilino principal)
     const result = await pool.query(
-      `SELECT id, name, username, password, is_activated 
+      `SELECT id, name, username, password, contact_name, is_activated 
        FROM clients 
        WHERE LOWER(REPLACE(username, '@', '')) = $1 OR LOWER(username) = $2
        LIMIT 1`,

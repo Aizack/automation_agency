@@ -12,9 +12,9 @@
     "semantic_hash": "0649eb6aa485ca40777181f08fec66a9"
   },
   "dashboard/src/App.tsx": {
-    "mtime": 1788406202.2016032,
-    "seen": 1788406279.8953137,
-    "ast_hash": "6d03734b81c7760e09fd8fd8a4b43a51",
+    "mtime": 1788407041.413501,
+    "seen": 1788407103.5798016,
+    "ast_hash": "e7cd0f4af09d65066f521886486f5c59",
     "semantic_hash": ""
   },
   "dashboard/src/components/ActivateAccount.tsx": {
@@ -210,9 +210,9 @@
     "semantic_hash": "787e5a07efeb2bf6209d5937195f2f68"
   },
   "dashboard/src/utils/api.ts": {
-    "mtime": 1788310060.410683,
-    "seen": 1788311560.8731298,
-    "ast_hash": "1c12a9ab00796c534501da09815a76d6",
+    "mtime": 1788406644.0744588,
+    "seen": 1788407103.5798726,
+    "ast_hash": "e1010374c02d1a7e6b9e0679dc269fb2",
     "semantic_hash": ""
   },
   "dashboard/src/utils/barcodePrinter.ts": {
@@ -288,9 +288,9 @@
     "semantic_hash": "d78a1b3ba48df623a32fb0fb29e7757f"
   },
   "src/database/initDb.ts": {
-    "mtime": 1788405406.4426355,
-    "seen": 1788405521.7421672,
-    "ast_hash": "80d043583446a365283c3a0106cc992b",
+    "mtime": 1788406983.0472503,
+    "seen": 1788407103.579909,
+    "ast_hash": "2941892590727121695233efbb37c9a9",
     "semantic_hash": ""
   },
   "src/database/postgres.ts": {
@@ -312,9 +312,9 @@
     "semantic_hash": "67d26ee695c9455d018bb25f95fe58d3"
   },
   "src/middlewares/authMiddleware.ts": {
-    "mtime": 1788400334.153533,
-    "seen": 1788403710.1665938,
-    "ast_hash": "c05353cbd28c975e83ca5f3a8ad5a7d6",
+    "mtime": 1788406996.468535,
+    "seen": 1788407103.5799158,
+    "ast_hash": "da52a0ba7de425626b5ad4639c76346c",
     "semantic_hash": ""
   },
   "src/middlewares/correlationIdMiddleware.ts": {
@@ -474,9 +474,9 @@
     "semantic_hash": "b3024c4e4260cc821458cbe2a3a5d9e1"
   },
   "src/server.ts": {
-    "mtime": 1788406157.2141778,
-    "seen": 1788406279.8954926,
-    "ast_hash": "4c95296117d87925efb28497a446e9fc",
+    "mtime": 1788407031.4216719,
+    "seen": 1788407103.579958,
+    "ast_hash": "da6449718904734b544236ac8dd4f6a2",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -1137,6 +1137,12 @@
     "mtime": 1788404595.110716,
     "seen": 1788405521.7421458,
     "ast_hash": "8a51d704f8f227e68f19b5113179080b",
+    "semantic_hash": ""
+  },
+  "docs/SEGURIDAD_SESION_UNICA_Y_PROTECCION_MEMORIA.md": {
+    "mtime": 1788406971.3809824,
+    "seen": 1788407103.580069,
+    "ast_hash": "0331cacdc80e01a6c9942f4477ff22a5",
     "semantic_hash": ""
   }
 }
