@@ -1296,11 +1296,16 @@ export const initDatabase = async () => {
                 client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
                 concept VARCHAR(150) NOT NULL,
                 category VARCHAR(50) DEFAULT 'operativo',
+                expense_type VARCHAR(20) DEFAULT 'fijo',
+                expense_date DATE DEFAULT CURRENT_DATE,
                 amount NUMERIC(14,2) NOT NULL DEFAULT 0.00,
                 period_month_year VARCHAR(7),
                 notes TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            ALTER TABLE monthly_fixed_expenses ADD COLUMN IF NOT EXISTS expense_type VARCHAR(20) DEFAULT 'fijo';
+            ALTER TABLE monthly_fixed_expenses ADD COLUMN IF NOT EXISTS expense_date DATE DEFAULT CURRENT_DATE;
 
             CREATE TABLE IF NOT EXISTS enterprise_initial_investment (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

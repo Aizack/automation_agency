@@ -1522,26 +1522,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                                         return (
                                             <>
-                                                {/* Brand is for physical products only */}
-                                                {productType === 'product' && (
-                                                    <div className="col-span-1 md:col-span-2">
-                                                        <FieldWrapper 
-                                                            fieldId="brand" 
-                                                            label="Marca / Fabricante"
-                                                            hidden={hiddenFields.has('brand')}
-                                                            onToggleHidden={toggleFieldHidden}
-                                                        >
-                                                            <input 
-                                                                type="text"
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={brand}
-                                                                onChange={(e) => setBrand(e.target.value)}
-                                                                placeholder="Ej: Ray-Ban, Alcon, Bausch + Lomb"
-                                                            />
-                                                        </FieldWrapper>
-                                                    </div>
-                                                )}
-
                                                 {/* 1. MONTURAS */}
                                                 {catLower.includes('montura') && (
                                                     <>
@@ -2003,7 +1983,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 className="w-full py-2 bg-primary/10 border border-dashed border-primary/40 rounded-xl text-xs font-bold text-primary hover:bg-primary/20 transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">add</span>
-                                                + (Si presiono el más abajo se agrega)
+                                                Agregar Color
                                             </button>
                                             </>
                                             )}

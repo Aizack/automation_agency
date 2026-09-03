@@ -22,10 +22,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   // Pestaña Negocio - Modo Admin
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Pestaña Negocio - Modo Empleado ERP & Pestaña Empleado Personal
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -285,14 +287,41 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     Contraseña
                   </label>
-                  <input
-                    type="password"
-                    className="input-field"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                  />
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="input-field"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                      style={{ paddingRight: '40px', width: '100%' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '4px',
+                        borderRadius: '4px',
+                      }}
+                      title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                        {showPassword ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </>
             ) : (
@@ -316,15 +345,41 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     PIN de acceso (6 dígitos)
                   </label>
-                  <input
-                    type="password"
-                    className="input-field"
-                    maxLength={6}
-                    placeholder="● ● ● ● ● ●"
-                    value={pin}
-                    onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    style={{ textAlign: 'center', fontSize: '1.4rem', letterSpacing: '0.4em', fontWeight: 700 }}
-                  />
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <input
+                      type={showPin ? 'text' : 'password'}
+                      className="input-field"
+                      maxLength={6}
+                      placeholder="● ● ● ● ● ●"
+                      value={pin}
+                      onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      style={{ textAlign: 'center', fontSize: '1.4rem', letterSpacing: '0.4em', fontWeight: 700, paddingRight: '40px', width: '100%' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPin(!showPin)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '4px',
+                        borderRadius: '4px',
+                      }}
+                      title={showPin ? 'Ocultar PIN' : 'Mostrar PIN'}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                        {showPin ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -363,15 +418,41 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 PIN de acceso (6 dígitos)
               </label>
-              <input
-                type="password"
-                className="input-field"
-                maxLength={6}
-                placeholder="● ● ● ● ● ●"
-                value={pin}
-                onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                style={{ textAlign: 'center', fontSize: '1.4rem', letterSpacing: '0.4em', fontWeight: 700 }}
-              />
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input
+                  type={showPin ? 'text' : 'password'}
+                  className="input-field"
+                  maxLength={6}
+                  placeholder="● ● ● ● ● ●"
+                  value={pin}
+                  onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  style={{ textAlign: 'center', fontSize: '1.4rem', letterSpacing: '0.4em', fontWeight: 700, paddingRight: '40px', width: '100%' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPin(!showPin)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '4px',
+                    borderRadius: '4px',
+                  }}
+                  title={showPin ? 'Ocultar PIN' : 'Mostrar PIN'}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                    {showPin ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center', margin: '4px 0 0' }}>
                 Accede a tu turno, tareas asignadas, RRHH y Chat IA
               </p>

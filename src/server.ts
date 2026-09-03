@@ -8938,7 +8938,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     try {
       const { clientId } = req.params;
       const result = await pool.query(
-        `SELECT * FROM monthly_fixed_expenses WHERE client_id = $1 ORDER BY created_at DESC`,
+        `SELECT *, COALESCE(expense_date, created_at::date) as effective_date FROM monthly_fixed_expenses WHERE client_id = $1 ORDER BY COALESCE(expense_date, created_at::date) DESC, created_at DESC`,
         [clientId]
       );
       res.json({ success: true, expenses: result.rows });
@@ -8947,21 +8947,24 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
-  // Agregar Gasto Fijo Operativo
+  // Agregar Gasto Operativo (Fijo u Ocasional)
   app.post('/api/clients/:clientId/fixed-expenses', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
-      const { concept, category, amount, notes, period_month_year } = req.body;
+      const { concept, category, expense_type, expense_date, amount, notes, period_month_year } = req.body;
 
       if (!concept || !amount) {
         return res.status(400).json({ success: false, error: 'Concepto y monto son obligatorios.' });
       }
 
+      const effDate = expense_date || new Date().toISOString().split('T')[0];
+      const periodMY = period_month_year || effDate.substring(0, 7);
+
       const result = await pool.query(
-        `INSERT INTO monthly_fixed_expenses (client_id, concept, category, amount, notes, period_month_year)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING *`,
-        [clientId, concept, category || 'operativo', parseFloat(amount), notes || null, period_month_year || null]
+        `INSERT INTO monthly_fixed_expenses (client_id, concept, category, expense_type, expense_date, amount, notes, period_month_year)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING *, COALESCE(expense_date, created_at::date) as effective_date`,
+        [clientId, concept, category || 'operativo', expense_type || 'fijo', effDate, parseFloat(amount), notes || null, periodMY]
       );
 
       res.json({ success: true, expense: result.rows[0] });

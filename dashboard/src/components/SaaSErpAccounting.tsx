@@ -34,6 +34,9 @@ interface FixedExpense {
   id: string;
   concept: string;
   category: string;
+  expense_type?: 'fijo' | 'ocasional';
+  expense_date?: string;
+  effective_date?: string;
   amount: string;
   period_month_year?: string;
   notes?: string;
@@ -48,10 +51,12 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal para agregar gasto fijo
+  // Modal para agregar gasto (Fijo u Ocasional)
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [expenseConcept, setExpenseConcept] = useState('');
   const [expenseCategory, setExpenseCategory] = useState('operativo');
+  const [expenseType, setExpenseType] = useState<'fijo' | 'ocasional'>('fijo');
+  const [expenseDate, setExpenseDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseNotes, setExpenseNotes] = useState('');
   const [savingExpense, setSavingExpense] = useState(false);
@@ -97,6 +102,8 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
         body: JSON.stringify({
           concept: expenseConcept,
           category: expenseCategory,
+          expense_type: expenseType,
+          expense_date: expenseDate,
           amount: parseFloat(expenseAmount),
           notes: expenseNotes
         })
@@ -107,9 +114,11 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
         setExpenseConcept('');
         setExpenseAmount('');
         setExpenseNotes('');
+        setExpenseDate(new Date().toISOString().split('T')[0]);
+        setExpenseType('fijo');
         fetchAccountingData();
       } else {
-        alert(json.error || 'Error al guardar gasto fijo.');
+        alert(json.error || 'Error al guardar gasto.');
       }
     } catch (err) {
       alert('Error de conexión.');
@@ -170,10 +179,10 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
           <button
             type="button"
             onClick={() => setIsExpenseModalOpen(true)}
-            className="px-3 py-1.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] rounded-md flex items-center gap-1 transition cursor-pointer shadow border-0"
+            className="px-3.5 py-1.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] rounded-md flex items-center gap-1.5 transition cursor-pointer shadow border-0"
           >
             <span className="material-symbols-outlined text-[16px]">add_circle</span>
-            REGISTRAR GASTO FIJO
+            REGISTRAR GASTO
           </button>
 
           <div className="flex flex-wrap items-center gap-1.5 bg-surface-container border border-outline/20 p-1 rounded-xl">
@@ -222,9 +231,9 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
             <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex justify-between items-center">
               <div>
                 <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Ticket Promedio</p>
-                <p className="text-xl font-black text-green-500 mt-1">{formatCOP(summary?.average_ticket || 0)}</p>
+                <p className="text-xl font-black text-on-surface mt-1">{formatCOP(summary?.average_ticket || 0)}</p>
               </div>
-              <span className="material-symbols-outlined text-green-500 text-[32px] opacity-80">shopping_bag</span>
+              <span className="material-symbols-outlined text-tertiary text-[32px] opacity-80">analytics</span>
             </div>
 
             <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl flex justify-between items-center">
@@ -236,42 +245,61 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
             </div>
           </div>
 
-          {/* Sección de Gastos Fijos Operativos (Arriendo, Servicios, Internet) */}
+          {/* Sección de Gastos Operativos (Fijos y Ocasionales) */}
           <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-2xl space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-bold text-sm text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-400 text-[18px]">domain</span>
-                Gastos Fijos Operativos Recurrentes (Arriendo, Servicios, Mantenimiento)
+                <span className="material-symbols-outlined text-amber-400 text-[18px]">account_balance_wallet</span>
+                Gastos Operativos del Negocio (Fijos y Ocasionales)
               </h3>
-              <span className="text-[11px] text-on-surface-variant font-mono">Alimenta automáticamente la Planeación Financiera</span>
+              <span className="text-[11px] text-on-surface-variant font-mono">Alimenta la Planeación Financiera y Flujo de Caja</span>
             </div>
 
             {fixedExpenses.length === 0 ? (
               <p className="text-xs text-on-surface-variant opacity-60 text-center py-6 italic">
-                No hay gastos fijos registrados. Haz clic en "Registrar Gasto Fijo" para agregar arriendo, agua, luz o internet.
+                No hay gastos registrados. Haz clic en "Registrar Gasto" para agregar arriendos, servicios o imprevistos ocasionales.
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {fixedExpenses.map((item) => (
-                  <div key={item.id} className="bg-surface-container/50 border border-outline/20 p-4 rounded-xl flex justify-between items-center">
-                    <div>
-                      <span className="text-[9px] uppercase font-bold text-primary px-2 py-0.5 bg-primary/10 rounded-full border border-primary/20">
-                        {item.category}
-                      </span>
-                      <h4 className="font-bold text-sm text-on-surface mt-1">{item.concept}</h4>
-                      <p className="text-xs font-mono font-bold text-amber-400 mt-0.5">{formatCOP(parseFloat(item.amount))}</p>
-                      {item.notes && <p className="text-[10px] text-on-surface-variant mt-1">{item.notes}</p>}
+                {fixedExpenses.map((item) => {
+                  const isOccasional = item.expense_type === 'ocasional';
+                  const dateStr = item.effective_date || item.expense_date || item.created_at;
+                  const formattedDate = dateStr ? dateStr.substring(0, 10) : '';
+
+                  return (
+                    <div key={item.id} className="bg-surface-container/50 border border-outline/20 p-4 rounded-xl flex justify-between items-center">
+                      <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${
+                            isOccasional 
+                              ? 'bg-purple-500/10 text-purple-300 border-purple-500/30' 
+                              : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                          }`}>
+                            {isOccasional ? '⚡ Ocasional' : '📌 Fijo Recurrente'}
+                          </span>
+                          <span className="text-[9px] uppercase font-bold text-primary px-2 py-0.5 bg-primary/10 rounded-full border border-primary/20">
+                            {item.category}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-sm text-on-surface mt-1">{item.concept}</h4>
+                        <p className="text-xs font-mono font-bold text-amber-400 mt-0.5">{formatCOP(parseFloat(item.amount))}</p>
+                        <p className="text-[10px] text-on-surface-variant/70 font-mono mt-0.5 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[12px]">calendar_today</span>
+                          Fecha: {formattedDate}
+                        </p>
+                        {item.notes && <p className="text-[10px] text-on-surface-variant mt-1 italic">{item.notes}</p>}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteExpense(item.id)}
+                        className="text-on-surface-variant hover:text-red-400 p-1.5 rounded-lg hover:bg-surface-container-high transition cursor-pointer"
+                        title="Eliminar gasto"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteExpense(item.id)}
-                      className="text-on-surface-variant hover:text-red-400 p-1.5 rounded-lg hover:bg-surface-container-high transition cursor-pointer"
-                      title="Eliminar gasto fijo"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">delete</span>
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -403,7 +431,7 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
         </>
       )}
 
-      {/* Modal Registrar Gasto Fijo Operativo (Teleportado a document.body) */}
+      {/* Modal Registrar Gasto Operativo (Teleportado a document.body) */}
       {isExpenseModalOpen && createPortal(
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[99999]" onClick={(e) => e.stopPropagation()}>
           <div className="bg-[#141517] border border-[#2a2c32] rounded-2xl p-6 max-w-md w-full space-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.9)] relative z-[100000]" onClick={(e) => e.stopPropagation()}>
@@ -411,8 +439,8 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
             {/* Header del Modal */}
             <div className="flex justify-between items-center border-b border-[#222428] pb-3">
               <h4 className="font-extrabold text-sm text-[#eab308] flex items-center gap-2" style={{ color: '#eab308' }}>
-                <span className="material-symbols-outlined text-[20px] text-[#eab308]">domain</span>
-                Registrar Gasto Fijo Operativo
+                <span className="material-symbols-outlined text-[20px] text-[#eab308]">account_balance_wallet</span>
+                Registrar Gasto del Negocio
               </h4>
               <button 
                 type="button"
@@ -424,12 +452,42 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
             </div>
 
             <form onSubmit={handleAddFixedExpense} className="space-y-4">
+              {/* Selector de Tipo de Gasto */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Tipo de Gasto *</label>
+                <div className="grid grid-cols-2 gap-2 p-1 bg-[#0a0b0c] border border-[#26282d] rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setExpenseType('fijo')}
+                    className={`py-2 px-3 text-xs font-bold rounded-lg transition border-0 cursor-pointer flex items-center justify-center gap-1.5 ${
+                      expenseType === 'fijo' 
+                        ? 'bg-[#eab308] text-black shadow-md' 
+                        : 'bg-transparent text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <span>📌 Fijo Recurrente</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExpenseType('ocasional')}
+                    className={`py-2 px-3 text-xs font-bold rounded-lg transition border-0 cursor-pointer flex items-center justify-center gap-1.5 ${
+                      expenseType === 'ocasional' 
+                        ? 'bg-purple-500 text-white shadow-md' 
+                        : 'bg-transparent text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <span>⚡ Ocasional / Variable</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Concepto del Gasto */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Concepto del Gasto *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Ej. Arriendo de Local, Luz/Agua, Internet"
+                  placeholder={expenseType === 'fijo' ? "Ej. Arriendo de Local, Luz/Agua, Internet" : "Ej. Reparación de Exhibidor, Mantenimiento, Papelería"}
                   value={expenseConcept}
                   onChange={(e) => setExpenseConcept(e.target.value)}
                   className="w-full bg-[#0a0b0c] border border-[#26282d] rounded-xl p-3 text-xs text-white placeholder-gray-600 outline-none focus:border-[#eab308] transition"
@@ -448,12 +506,14 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
                     <option value="servicios" className="bg-[#141517] text-white">Servicios Públicos</option>
                     <option value="tecnologia" className="bg-[#141517] text-white">Internet / Software</option>
                     <option value="mantenimiento" className="bg-[#141517] text-white">Mantenimiento</option>
-                    <option value="otros" className="bg-[#141517] text-white">Otros Gastos Fijos</option>
+                    <option value="insumos" className="bg-[#141517] text-white">Insumos / Materiales</option>
+                    <option value="transporte" className="bg-[#141517] text-white">Transporte / Fletes</option>
+                    <option value="otros" className="bg-[#141517] text-white">Otros Gastos</option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Monto Mensual ($ COP) *</label>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Monto ($ COP) *</label>
                   <input
                     type="number"
                     required
@@ -466,13 +526,34 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
                 </div>
               </div>
 
+              {/* Fecha del Gasto (Permite Imputar a Periodos Anteriores) */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400 flex items-center justify-between">
+                  <span>Fecha del Gasto *</span>
+                  <span className="text-[10px] text-amber-400 font-semibold flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[13px]">history</span>
+                    Imputación Histórica
+                  </span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={expenseDate}
+                  onChange={(e) => setExpenseDate(e.target.value)}
+                  className="w-full bg-[#0a0b0c] border border-[#26282d] rounded-xl p-3 text-xs text-white outline-none focus:border-[#eab308] transition font-mono"
+                />
+                <p className="text-[10px] text-gray-400 bg-[#0a0b0c] p-2 rounded-lg border border-[#26282d]/60 leading-relaxed">
+                  💡 <strong>¿Gasto olvidado de un periodo anterior?</strong> Selecciona la fecha exacta (ej. mes pasado) y el sistema imputará este gasto al periodo correspondiente en el estado financiero.
+                </p>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Notas Adicionales</label>
                 <textarea
-                  placeholder="Detalles del contrato de arriendo o vencimiento de pago"
+                  placeholder="Detalles del gasto, número de factura o justificación"
                   value={expenseNotes}
                   onChange={(e) => setExpenseNotes(e.target.value)}
-                  className="w-full bg-[#0a0b0c] border border-[#26282d] rounded-xl p-3 text-xs text-white placeholder-gray-600 outline-none resize-none h-20 focus:border-[#eab308] transition"
+                  className="w-full bg-[#0a0b0c] border border-[#26282d] rounded-xl p-3 text-xs text-white placeholder-gray-600 outline-none resize-none h-16 focus:border-[#eab308] transition"
                 />
               </div>
 
@@ -492,7 +573,7 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
                   {savingExpense ? (
                     <><span className="material-symbols-outlined text-[16px] animate-spin">sync</span> Guardando...</>
                   ) : (
-                    <><span className="material-symbols-outlined text-[16px]">save</span> Guardar Gasto Fijo</>
+                    <><span className="material-symbols-outlined text-[16px]">save</span> Guardar Gasto</>
                   )}
                 </button>
               </div>
