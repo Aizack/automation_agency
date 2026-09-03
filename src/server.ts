@@ -957,12 +957,15 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
         laboratorio:  ['lab'],
         recepcion:    ['appointments', 'crm'],
         contabilidad: ['billing', 'cartera', 'inventory', 'contabilidad'],
-        domicilios:   ['domicilios', 'cartera', 'billing'],
-        agent:        ['crm', 'billing'],
+        domicilios:   ['domicilios', 'cartera'],
+        agent:        ['crm'],
       };
 
       const employeeRoleLower = (emp.role || '').toLowerCase().trim();
-      const permissions = ROLE_PERMISSIONS[employeeRoleLower] ?? ['billing', 'cartera'];
+      const defaultPerms = ROLE_PERMISSIONS[employeeRoleLower] ?? ['domicilios', 'cartera'];
+      const permissions = (Array.isArray(emp.allowed_modules) && emp.allowed_modules.length > 0)
+        ? emp.allowed_modules
+        : defaultPerms;
 
       return res.json({
         success: true,
