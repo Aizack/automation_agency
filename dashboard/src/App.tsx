@@ -150,13 +150,7 @@ function App() {
 
           const savedView = localStorage.getItem('current_view') || sessionStorage.getItem('current_view');
 
-          if (savedView === 'employee') {
-            if (user.clientId) {
-              localStorage.setItem('current_client_id', user.clientId);
-              setClientId(user.clientId);
-            }
-            setView('employee');
-          } else if (user.role === 'superadmin') {
+          if (user.role === 'superadmin') {
             const savedClientId = localStorage.getItem('current_client_id');
             if (savedView === 'client' && savedClientId) {
               setClientId(savedClientId);
@@ -173,7 +167,13 @@ function App() {
               setClientId(user.clientId);
             }
 
-            if (!user.hasErpAccess) {
+            if (savedView === 'client' && user.hasErpAccess) {
+              setView('client');
+              localStorage.setItem('current_view', 'client');
+            } else if (savedView === 'employee') {
+              setView('employee');
+              localStorage.setItem('current_view', 'employee');
+            } else if (!user.hasErpAccess) {
               setView('employee');
               localStorage.setItem('current_view', 'employee');
             } else {
