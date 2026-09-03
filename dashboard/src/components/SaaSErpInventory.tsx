@@ -658,7 +658,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                 await fetchProducts();
                 if (editingProduct) {
                     resetForm();
+                    alert('✓ Producto actualizado con éxito.');
                 } else {
+                    // Formulario en blanco listo para ingresar otro producto nuevo
                     setName('');
                     setSku('');
                     setDescription('');
@@ -671,7 +673,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     setColor('');
                     setPromoDiscount('');
                     setCustomAttrs({});
-                    alert('✓ Producto guardado con éxito y añadido al catálogo del inventario.');
+                    setHasVariants(true);
+                    setVariantList([{ color: 'Negro', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
+                    setAddProductStep('open');
+                    alert('✓ Producto guardado con éxito y añadido al inventario.\n\nFormulario despejado para ingresar un nuevo producto.');
                 }
             } else {
                 alert(`Error al guardar producto: ${data.error}`);
@@ -1343,9 +1348,22 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                     {isFormOpen && (
                         <div className="glass-card p-6 space-y-4">
-                            <h3 className="text-sm font-semibold tracking-tight text-on-surface">
-                                {editingProduct ? 'Editar Producto / Servicio' : 'Nuevo Producto / Servicio'}
-                            </h3>
+                            <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+                                <h3 className="text-sm font-bold tracking-tight text-on-surface flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary text-[20px]">
+                                        {editingProduct ? 'edit' : 'add_box'}
+                                    </span>
+                                    {editingProduct ? 'Editar Producto / Servicio' : 'Nuevo Producto / Servicio'}
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={resetForm}
+                                    className="p-1.5 hover:bg-surface-container-highest rounded-lg text-on-surface-variant hover:text-white transition cursor-pointer border-0 bg-transparent flex items-center gap-1 text-xs font-bold"
+                                    title="Cerrar formulario"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">close</span>
+                                </button>
+                            </div>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="space-y-1.5">
                                     <label className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Tipo de Ítem *</label>
@@ -1990,6 +2008,23 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         </div>
                                     )}
 
+                                    {/* Indicador de Stock Total (Sumatoria por Colores) */}
+                                    <div className="col-span-1 md:col-span-2 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-amber-400 text-[20px]">inventory_2</span>
+                                            <div>
+                                                <p className="text-xs font-bold text-on-surface uppercase tracking-wider">Stock Total (Sumatoria por Colores)</p>
+                                                <p className="text-[10px] text-on-surface-variant">Suma total de unidades físicas calculada automáticamente por cada color.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 bg-amber-500/20 px-3.5 py-1.5 rounded-lg border border-amber-500/40">
+                                            <span className="text-base font-black text-amber-400 font-mono">
+                                                {hasVariants ? variantList.reduce((sum, v) => sum + (Number(v.stock) || 0), 0) : (Number(stock) || 0)}
+                                            </span>
+                                            <span className="text-[11px] font-bold text-amber-400/90 uppercase">uds.</span>
+                                        </div>
+                                    </div>
+
                                     {/* Fila de Precios (Precio Costo | Precio Venta | Descuento Promocional) */}
                                     <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         <div className="flex flex-col gap-1.5">
@@ -2184,7 +2219,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     )}
                                                 </div>
                                             </td>
-                                             <td 
+                                            <td 
                                                 className="p-4 cursor-pointer"
                                                 onClick={() => (prod.sku || (prod.variants && prod.variants.length > 0)) && openPrintModal(prod)}
                                                 title={prod.sku ? "Haga clic para imprimir etiquetas" : prod.variants?.length ? "Ver códigos de barra por variante" : undefined}
