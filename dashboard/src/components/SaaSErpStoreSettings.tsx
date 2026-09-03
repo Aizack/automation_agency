@@ -7,6 +7,7 @@ interface StoreSettingsProps {
 }
 
 export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, onProfileUpdated }) => {
+  const [storeName, setStoreName] = useState('');
   const [nit, setNit] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
@@ -22,6 +23,7 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
       .then(res => res.json())
       .then(json => {
         if (json.success && json.data) {
+          setStoreName(json.data.name || '');
           setNit(json.data.nit || '');
           setAddress(json.data.address || '');
           setPhone(json.data.phoneNumber || ''); // Guardado originalmente como phoneNumber
@@ -46,6 +48,7 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          name: storeName,
           nit,
           address,
           phone_number: phone,
@@ -97,6 +100,18 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
 
       <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl bg-[#141517] border border-[#222428] p-6 rounded-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-1 md:col-span-2">
+            <label className="font-label-md text-on-surface-variant ml-1">Nombre / Razón Social Legal del Negocio *</label>
+            <input
+              type="text"
+              required
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+              placeholder="ej. 1 Óptica Nuevo Horizonte"
+              className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all font-bold"
+            />
+          </div>
+
           <div className="space-y-1">
             <label className="font-label-md text-on-surface-variant ml-1">NIT / RUT del Negocio</label>
             <input
