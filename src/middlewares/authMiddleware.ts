@@ -8,8 +8,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_fallback_key_123';
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
+    userId?: string;
     username: string;
-    role: 'admin' | 'client' | 'tenant_admin' | 'employee';
+    role: 'superadmin' | 'admin' | 'client' | 'tenant_admin' | 'employee';
     clientId?: string;
     permissions?: string[];
   };
@@ -42,9 +43,9 @@ export const authenticateToken = (
 };
 
 /**
- * Middleware para restringir accesos según el rol de la cuenta (admin o client)
+ * Middleware para restringir accesos según el rol de la cuenta
  */
-export const requireRole = (allowedRoles: Array<'admin' | 'client' | 'tenant_admin' | 'employee'>) => {
+export const requireRole = (allowedRoles: Array<'superadmin' | 'admin' | 'client' | 'tenant_admin' | 'employee'>) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'No autorizado. Sesión no iniciada.' });
@@ -60,7 +61,7 @@ export const requireRole = (allowedRoles: Array<'admin' | 'client' | 'tenant_adm
 };
 
 /**
- * Middleware para asegurar que el cliente que accede sea el dueño de los datos o un administrador
+ * Middleware para asegurar que el cliente que accede sea el dueño de los datos o el SuperAdmin global
  */
 export const authorizeClientAccess = (
   req: AuthenticatedRequest,
@@ -73,18 +74,14 @@ export const authorizeClientAccess = (
 
   const targetClientId = req.params.id || req.params.clientId;
 
-  // Si es administrador global, tiene acceso completo
-  if (req.user.role === 'admin') {
+  // Si es SuperAdministrador Global de la plataforma, tiene acceso completo
+  if (req.user.role === 'superadmin') {
     return next();
   }
 
-  // Si es admin del tenant, tiene acceso a ese negocio específico
-  if (req.user.role === 'tenant_admin' && targetClientId && req.user.clientId === targetClientId) {
-    return next();
-  }
-
-  // Si es un cliente y está consultando sus propios datos, permitir
-  if (targetClientId && req.user.id === targetClientId) {
+  // Si es admin o usuario del tenant, verificar que su clientId o id coincida exactamente con targetClientId
+  const userTenantId = req.user.clientId || req.user.id;
+  if (targetClientId && userTenantId && userTenantId === targetClientId) {
     return next();
   }
 
@@ -93,7 +90,7 @@ export const authorizeClientAccess = (
     return next();
   }
 
-  console.warn(`[Auth Middleware] Acceso denegado: El usuario ${req.user.username} (ID: ${req.user.id}) intentó acceder a los recursos del cliente (ID: ${targetClientId}).`);
-  return res.status(403).json({ success: false, error: 'Acceso denegado. No tienes permisos para gestionar este cliente.' });
+  console.warn(`[Auth Middleware] Acceso denegado: El usuario ${req.user.username} (Tenant User ID: ${req.user.id}) intentó acceder a recursos del cliente (${targetClientId}).`);
+  return res.status(403).json({ success: false, error: 'Acceso denegado. No tienes permisos para gestionar este negocio o tienda.' });
 };
 

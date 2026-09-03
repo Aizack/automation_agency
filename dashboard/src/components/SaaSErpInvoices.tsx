@@ -71,7 +71,6 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
-    const [categories, setCategories] = useState<any[]>([]);
     const [crmCustomers, setCrmCustomers] = useState<any[]>([]);
     const [clientProfile, setClientProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
@@ -164,10 +163,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         try {
             setLoading(true);
             setFetchError(null);
-            const [invRes, prodRes, catRes, crmRes, clientRes, bankRes, empRes, tblRes] = await Promise.all([
+            const [invRes, prodRes, crmRes, clientRes, bankRes, empRes, tblRes] = await Promise.all([
                 fetch(`/api/clients/${clientId}/invoices`),
                 fetch(`/api/clients/${clientId}/products`),
-                fetch(`/api/clients/${clientId}/categories`),
                 fetch(`/api/clients/${clientId}/crm-customers`),
                 fetch(`/api/clients/${clientId}`),
                 fetch(`/api/clients/${clientId}/bank-accounts`),
@@ -183,7 +181,6 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
             const invData = invRes.ok ? await invRes.json() : { success: false };
             const prodData = prodRes.ok ? await prodRes.json() : { success: false };
-            const catData = catRes.ok ? await catRes.json() : { success: false };
             const crmData = crmRes.ok ? await crmRes.json() : { success: false };
             const clientData = clientRes.ok ? await clientRes.json() : { success: false };
             const bankData = bankRes.ok ? await bankRes.json() : { success: false };
@@ -194,7 +191,6 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             else if (invData.error) console.warn('[Facturas] Error API:', invData.error);
             if (prodData.success) setProducts(prodData.products || []);
             else if (prodData.error) console.warn('[Productos] Error API:', prodData.error);
-            if (catData.success) setCategories(catData.categories || []);
             if (crmData.success) setCrmCustomers(crmData.customers || []);
             if (clientData.success) setClientProfile(clientData.data || null);
             if (bankData.success) setBankAccounts(bankData.accounts || []);
@@ -1003,93 +999,111 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             </div>
 
             {isFormOpen && (
-                <div className="glass-card p-6 space-y-4">
-                    <h3 className="text-sm font-semibold tracking-tight text-on-surface">Generar Nueva Factura</h3>
+                <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl shadow-2xl space-y-6 text-left font-sans">
+                    <div className="flex justify-between items-center border-b border-[#2d3036] pb-3">
+                        <h3 className="font-extrabold text-base text-[#eab308] flex items-center gap-2" style={{ color: '#eab308' }}>
+                            <span className="material-symbols-outlined text-[24px]">receipt_long</span>
+                            GENERAR NUEVA FACTURA DE VENTA
+                        </h3>
+                        <button
+                            type="button"
+                            onClick={() => setIsFormOpen(false)}
+                            className="p-1 hover:bg-[#222528] rounded-lg border-0 bg-transparent text-gray-400 cursor-pointer transition"
+                        >
+                            <span className="material-symbols-outlined text-[20px]">close</span>
+                        </button>
+                    </div>
                     
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-5">
                         {/* Datos del cliente */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4" ref={dropdownRef}>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-on-surface-variant font-medium">Factura N° *</label>
-                                <input type="text" className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} required />
-                            </div>
-                            <div className="flex flex-col gap-1.5 relative">
-                                <label className="text-xs text-on-surface-variant font-medium">Nombre del Cliente *</label>
-                                <input 
-                                    type="text" 
-                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition w-full" 
-                                    value={customerName} 
-                                    onChange={(e) => {
-                                        setCustomerName(e.target.value);
-                                        setActiveDropdownField('name');
-                                    }}
-                                    onFocus={() => setActiveDropdownField('name')}
-                                    placeholder="Buscar por nombre o cédula..."
-                                    required 
-                                />
-                                {activeDropdownField === 'name' && renderSuggestions(customerName, customerName, () => setActiveDropdownField(null))}
-                            </div>
-                            <div className="flex flex-col gap-1.5 relative">
-                                <label className="text-xs text-on-surface-variant font-medium">Documento de Identidad *</label>
-                                <div className="flex gap-1">
-                                    <select className="bg-surface-container border border-outline/20 rounded-xl px-2 text-xs focus:border-primary outline-none text-on-surface" value={customerDocumentType} onChange={(e) => setCustomerDocumentType(e.target.value)}>
-                                        <option value="CC" className="bg-surface-container">CC</option>
-                                        <option value="NIT" className="bg-surface-container">NIT</option>
-                                        <option value="CE" className="bg-surface-container">CE</option>
-                                    </select>
+                        <div className="bg-[#1c1e22] border border-[#2d3036] p-4 rounded-xl space-y-3" ref={dropdownRef}>
+                            <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[16px]">person_add</span>
+                                Datos del Cliente / Comprador
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-[11px] text-gray-300 font-medium">Factura N° *</label>
+                                    <input type="text" className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none font-mono font-bold" value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} required />
+                                </div>
+                                <div className="flex flex-col gap-1.5 relative">
+                                    <label className="text-[11px] text-gray-300 font-medium">Nombre del Cliente *</label>
                                     <input 
                                         type="text" 
-                                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" 
-                                        value={customerDocumentNumber} 
+                                        className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none w-full" 
+                                        value={customerName} 
                                         onChange={(e) => {
-                                            setCustomerDocumentNumber(e.target.value);
-                                            setActiveDropdownField('document');
-                                        }} 
-                                        onFocus={() => setActiveDropdownField('document')}
-                                        placeholder="Número..."
+                                            setCustomerName(e.target.value);
+                                            setActiveDropdownField('name');
+                                        }}
+                                        onFocus={() => setActiveDropdownField('name')}
+                                        placeholder="Buscar por nombre o cédula..."
                                         required 
                                     />
+                                    {activeDropdownField === 'name' && renderSuggestions(customerName, customerName, () => setActiveDropdownField(null))}
                                 </div>
-                                {activeDropdownField === 'document' && renderSuggestions(customerDocumentNumber, customerDocumentNumber, () => setActiveDropdownField(null))}
-                            </div>
-                            <div className="flex flex-col gap-1.5 relative">
-                                <label className="text-xs text-on-surface-variant font-medium">WhatsApp *</label>
-                                <input 
-                                    type="text" 
-                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition w-full" 
-                                    value={customerPhone} 
-                                    onChange={(e) => {
-                                        setCustomerPhone(e.target.value);
-                                        setActiveDropdownField('phone');
-                                    }} 
-                                    onFocus={() => setActiveDropdownField('phone')}
-                                    placeholder="57300..."
-                                    required 
-                                />
-                                {activeDropdownField === 'phone' && renderSuggestions(customerPhone, customerPhone, () => setActiveDropdownField(null))}
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-on-surface-variant font-medium">Correo Electrónico *</label>
-                                <input type="email" className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} required />
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs text-on-surface-variant font-medium">Dirección de Residencia</label>
-                                <input type="text" className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
+                                <div className="flex flex-col gap-1.5 relative">
+                                    <label className="text-[11px] text-gray-300 font-medium">Documento de Identidad *</label>
+                                    <div className="flex gap-1">
+                                        <select className="bg-[#141517] border border-[#2d3036] rounded-lg px-2 text-xs focus:border-[#eab308] outline-none text-white font-bold" value={customerDocumentType} onChange={(e) => setCustomerDocumentType(e.target.value)}>
+                                            <option value="CC" className="bg-[#141517]">CC</option>
+                                            <option value="NIT" className="bg-[#141517]">NIT</option>
+                                            <option value="CE" className="bg-[#141517]">CE</option>
+                                        </select>
+                                        <input 
+                                            type="text" 
+                                            className="w-full bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none font-mono" 
+                                            value={customerDocumentNumber} 
+                                            onChange={(e) => {
+                                                setCustomerDocumentNumber(e.target.value);
+                                                setActiveDropdownField('document');
+                                            }} 
+                                            onFocus={() => setActiveDropdownField('document')}
+                                            placeholder="Número..."
+                                            required 
+                                        />
+                                    </div>
+                                    {activeDropdownField === 'document' && renderSuggestions(customerDocumentNumber, customerDocumentNumber, () => setActiveDropdownField(null))}
+                                </div>
+                                <div className="flex flex-col gap-1.5 relative">
+                                    <label className="text-[11px] text-gray-300 font-medium">WhatsApp *</label>
+                                    <input 
+                                        type="text" 
+                                        className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none w-full font-mono" 
+                                        value={customerPhone} 
+                                        onChange={(e) => {
+                                            setCustomerPhone(e.target.value);
+                                            setActiveDropdownField('phone');
+                                        }} 
+                                        onFocus={() => setActiveDropdownField('phone')}
+                                        placeholder="57300..."
+                                        required 
+                                    />
+                                    {activeDropdownField === 'phone' && renderSuggestions(customerPhone, customerPhone, () => setActiveDropdownField(null))}
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-[11px] text-gray-300 font-medium">Correo Electrónico *</label>
+                                    <input type="email" className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} required />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-[11px] text-gray-300 font-medium">Dirección de Residencia</label>
+                                    <input type="text" className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
+                                </div>
                             </div>
                         </div>
 
                         {/* Configuración Específica de Restaurantes & Gastronomía */}
                         {clientProfile?.category === 'restaurante' && (
-                            <div className="border border-primary/20 p-4 rounded-2xl space-y-3 bg-primary/5">
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                            <div className="border border-amber-500/30 p-4 rounded-xl space-y-3 bg-[#1c1e22]">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                                     <span className="material-symbols-outlined text-[16px]">restaurant</span>
                                     Servicio Gastronómico: Mesa, Impoconsumo 8% & Propina Sugerida
                                 </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-bold">Mesa de Servicio</label>
+                                        <label className="text-[11px] text-gray-300 font-bold">Mesa de Servicio</label>
                                         <select
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-semibold outline-none focus:border-primary cursor-pointer"
+                                            className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white font-semibold outline-none focus:border-[#eab308] cursor-pointer"
                                             value={selectedTableId}
                                             onChange={(e) => setSelectedTableId(e.target.value)}
                                         >
@@ -1103,9 +1117,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     </div>
 
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-bold">Mesero Atribuidor</label>
+                                        <label className="text-[11px] text-gray-300 font-bold">Mesero Atribuidor</label>
                                         <select
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-semibold outline-none focus:border-primary cursor-pointer"
+                                            className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white font-semibold outline-none focus:border-[#eab308] cursor-pointer"
                                             value={selectedWaiterId}
                                             onChange={(e) => setSelectedWaiterId(e.target.value)}
                                         >
@@ -1119,9 +1133,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     </div>
 
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-bold">Impuesto Gastronómico (E.T. Colombia)</label>
+                                        <label className="text-[11px] text-gray-300 font-bold">Impuesto Gastronómico (E.T.)</label>
                                         <select
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none focus:border-primary cursor-pointer text-primary"
+                                            className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs font-bold outline-none focus:border-[#eab308] cursor-pointer text-amber-400"
                                             value={taxMode}
                                             onChange={(e) => setTaxMode(e.target.value as any)}
                                         >
@@ -1132,16 +1146,16 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     </div>
 
                                     <div className="flex flex-col gap-1.5 justify-center">
-                                        <label className="text-xs text-on-surface-variant font-bold">💵 Propina Sugerida (Ley 1935)</label>
+                                        <label className="text-[11px] text-gray-300 font-bold">💵 Propina Sugerida (Ley 1935)</label>
                                         <div className="flex items-center gap-2 pt-1">
                                             <input
                                                 type="checkbox"
                                                 id="includeTipCheck"
                                                 checked={includeTip}
                                                 onChange={(e) => setIncludeTip(e.target.checked)}
-                                                className="w-4 h-4 text-primary rounded cursor-pointer"
+                                                className="w-4 h-4 accent-[#eab308] rounded cursor-pointer"
                                             />
-                                            <label htmlFor="includeTipCheck" className="text-xs font-bold text-on-surface cursor-pointer flex items-center gap-1">
+                                            <label htmlFor="includeTipCheck" className="text-xs font-bold text-white cursor-pointer flex items-center gap-1">
                                                 <span>Incluir</span>
                                                 <input
                                                     type="number"
@@ -1149,7 +1163,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                     max="30"
                                                     value={tipPercentage}
                                                     onChange={(e) => setTipPercentage(parseFloat(e.target.value) || 0)}
-                                                    className="w-12 bg-surface border border-outline/20 rounded px-1 py-0.5 text-xs text-center font-bold text-primary outline-none"
+                                                    className="w-12 bg-[#141517] border border-[#2d3036] rounded px-1 py-0.5 text-xs text-center font-bold text-amber-400 outline-none"
                                                 />
                                                 <span>% Voluntario</span>
                                             </label>
@@ -1160,16 +1174,16 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                         )}
 
                         {/* Condiciones de Pago */}
-                        <div className="border border-outline/10 p-4 rounded-xl space-y-3 bg-surface-container/10">
-                            <h4 className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+                        <div className="bg-[#1c1e22] border border-[#2d3036] p-4 rounded-xl space-y-3">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[16px]">payments</span>
                                 Condiciones y Método de Pago
                             </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-xs text-on-surface-variant font-medium">Método de Pago *</label>
+                                    <label className="text-[11px] text-gray-300 font-medium">Método de Pago *</label>
                                     <select 
-                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" 
+                                        className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white font-bold outline-none" 
                                         value={paymentMethod} 
                                         onChange={(e) => setPaymentMethod(e.target.value as any)}
                                         required
@@ -1185,9 +1199,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                 {paymentMethod === 'transferencia' && (
                                     <>
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-xs text-on-surface-variant font-medium">Banco del Cliente (Origen)</label>
+                                            <label className="text-[11px] text-gray-300 font-medium">Banco del Cliente (Origen)</label>
                                             <select
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none"
                                                 value={transferBankSelect}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
@@ -1221,7 +1235,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             {transferBankSelect === 'otro' && (
                                                 <input 
                                                     type="text" 
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition mt-1"
+                                                    className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none mt-1"
                                                     placeholder="Escribe el nombre del banco..."
                                                     value={customTransferBank}
                                                     onChange={(e) => {
@@ -1232,10 +1246,10 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             )}
                                         </div>
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-xs text-on-surface-variant font-medium">Cuenta de Destino (Propia)</label>
+                                            <label className="text-[11px] text-gray-300 font-medium">Cuenta de Destino (Propia)</label>
                                             {bankAccounts.length > 0 ? (
                                                 <select 
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                    className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none"
                                                     value={transferDestinationAccount}
                                                     onChange={(e) => setTransferDestinationAccount(e.target.value)}
                                                 >
@@ -1249,7 +1263,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             ) : (
                                                 <input 
                                                     type="text" 
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                                    className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none"
                                                     placeholder="Ej: Ahorros Bancolombia #1234"
                                                     value={transferDestinationAccount}
                                                     onChange={(e) => setTransferDestinationAccount(e.target.value)}
@@ -1262,20 +1276,20 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                 {paymentMethod === 'credito' && (
                                     <>
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-xs text-on-surface-variant font-medium">Abono Inicial ($) *</label>
+                                            <label className="text-[11px] text-gray-300 font-medium">Abono Inicial ($) *</label>
                                             <input 
                                                 type="number" 
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" 
+                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none font-mono" 
                                                 value={abono} 
                                                 onChange={(e) => setAbono(e.target.value)}
                                                 required
                                             />
                                         </div>
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-xs text-on-surface-variant font-medium">Número de Cuotas *</label>
+                                            <label className="text-[11px] text-gray-300 font-medium">Número de Cuotas *</label>
                                             <input 
                                                 type="number" 
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" 
+                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none font-mono" 
                                                 value={installmentsCount} 
                                                 onChange={(e) => {
                                                      const val = e.target.value;
@@ -1290,9 +1304,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             />
                                         </div>
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-xs text-on-surface-variant font-medium">Frecuencia de Cobro *</label>
+                                            <label className="text-[11px] text-gray-300 font-medium">Frecuencia de Cobro *</label>
                                             <select 
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" 
+                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none" 
                                                 value={installmentFrequency} 
                                                 onChange={(e) => setInstallmentFrequency(e.target.value as any)}
                                                 required
@@ -1308,16 +1322,16 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                         </div>
 
                         {/* Logística de Despacho */}
-                        <div className="border border-outline/10 p-4 rounded-xl space-y-3 bg-surface-container/10">
-                            <h4 className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+                        <div className="bg-[#1c1e22] border border-[#2d3036] p-4 rounded-xl space-y-3">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[16px]">local_shipping</span>
                                 Despacho y Logística
                             </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-xs text-on-surface-variant font-medium">Modalidad de Entrega</label>
+                                    <label className="text-[11px] text-gray-300 font-medium">Modalidad de Entrega</label>
                                     <select 
-                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" 
+                                        className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none" 
                                         value={deliveryMethod} 
                                         onChange={(e) => setDeliveryMethod(e.target.value as any)}
                                     >
@@ -1329,19 +1343,19 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                 {deliveryMethod === 'domicilio' && (
                                     <>
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-xs text-on-surface-variant font-medium">Costo de Domicilio ($)</label>
+                                            <label className="text-[11px] text-gray-300 font-medium">Costo de Domicilio ($)</label>
                                             <input 
                                                 type="number" 
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" 
+                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none font-mono" 
                                                 value={deliveryFee} 
                                                 onChange={(e) => setDeliveryFee(e.target.value)}
                                             />
                                         </div>
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-xs text-on-surface-variant font-medium">Fecha Estimada de Entrega</label>
+                                            <label className="text-[11px] text-gray-300 font-medium">Fecha Estimada de Entrega</label>
                                             <input 
                                                 type="date" 
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" 
+                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none" 
                                                 value={deliveryDate} 
                                                 onChange={(e) => setDeliveryDate(e.target.value)}
                                             />
@@ -1352,9 +1366,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                 id="diffAddress"
                                                 checked={differentDeliveryAddress}
                                                 onChange={(e) => setDifferentDeliveryAddress(e.target.checked)}
-                                                className="w-4 h-4 cursor-pointer"
+                                                className="w-4 h-4 accent-[#eab308] cursor-pointer"
                                             />
-                                            <label htmlFor="diffAddress" className="text-xs text-on-surface font-medium cursor-pointer">
+                                            <label htmlFor="diffAddress" className="text-xs text-white font-medium cursor-pointer">
                                                 Dirección Alternativa
                                             </label>
                                         </div>
@@ -1364,11 +1378,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                             
                             {deliveryMethod === 'domicilio' && differentDeliveryAddress && (
                                 <div className="flex flex-col gap-1.5 pt-2">
-                                    <label className="text-xs text-on-surface-variant font-medium">Dirección de Entrega Alternativa</label>
+                                    <label className="text-[11px] text-gray-300 font-medium">Dirección de Entrega Alternativa</label>
                                     <input 
                                         type="text" 
                                         placeholder="Ej. Oficina de trabajo, dirección de familiar..."
-                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition" 
+                                        className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none" 
                                         value={altDeliveryAddress} 
                                         onChange={(e) => setAltDeliveryAddress(e.target.value)}
                                     />
@@ -1377,18 +1391,19 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                         </div>
 
                         {/* Items / Detalle */}
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h4 className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Detalle de la Venta</h4>
-                            </div>
+                        <div className="bg-[#1c1e22] border border-[#2d3036] p-4 rounded-xl space-y-3">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
+                                Detalle de la Venta e Inventario
+                            </h4>
 
                             {/* Barcode Fast Scanner */}
-                            <div className="bg-surface-container/30 border border-outline/10 p-4 rounded-xl flex flex-col md:flex-row items-center gap-3 justify-between">
-                                <div className="flex items-center gap-2 text-primary">
-                                    <span className="material-symbols-outlined text-[18px]">barcode_scanner</span>
+                            <div className="bg-[#141517] border border-[#2d3036] p-3 rounded-lg flex flex-col md:flex-row items-center gap-3 justify-between">
+                                <div className="flex items-center gap-2 text-amber-400">
+                                    <span className="material-symbols-outlined text-[20px]">barcode_scanner</span>
                                     <div className="text-left">
-                                        <p className="text-xs font-semibold text-on-surface">Lector de Códigos de Barras</p>
-                                        <p className="text-[10px] text-on-surface-variant">Dispara tu lector para cargar productos físicos de stock al instante</p>
+                                        <p className="text-xs font-bold text-white">Lector de Códigos de Barras SKU</p>
+                                        <p className="text-[10px] text-gray-400">Dispara tu lector para cargar productos físicos de stock al instante</p>
                                     </div>
                                 </div>
                                 <input 
@@ -1397,28 +1412,19 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     value={barcodeScanInput}
                                     onChange={(e) => setBarcodeScanInput(e.target.value)}
                                     onKeyDown={handleBarcodeScan}
-                                    className="bg-surface-container border border-outline/20 rounded-lg py-1.5 px-3 text-xs text-on-surface focus:border-primary outline-none w-full md:w-64 font-mono uppercase"
+                                    className="bg-[#1c1e22] border border-[#2d3036] rounded-lg py-1.5 px-3 text-xs text-white focus:border-[#eab308] outline-none w-full md:w-64 font-mono uppercase"
                                 />
                             </div>
 
                             {selectedItems.map((item, index) => {
                                 return (
-                                    <div key={index} className="bg-surface-container/40 p-4 rounded-xl border border-outline/10 space-y-3">
-                                        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_2.2fr_0.7fr_1.2fr_0.7fr_44px] gap-3 items-end">
+                                    <div key={index} className="bg-[#141517] p-3 rounded-xl border border-[#2d3036] space-y-3">
+                                        <div className="grid grid-cols-1 md:grid-cols-[3.4fr_0.7fr_1.2fr_0.7fr_44px] gap-2 items-end">
                                             
-                                            <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-bold">Categoría</label>
-                                                <div className="bg-surface-container border border-outline/20 rounded-lg px-2 py-2 text-xs text-on-surface/80 h-10 flex items-center truncate">
-                                                    {item.categoryId
-                                                        ? categories.find(cat => cat.id === item.categoryId)?.name || 'Categoría interna'
-                                                        : 'Automática'}
-                                                </div>
-                                            </div>
-
                                             <div className="flex flex-col gap-1 relative">
-                                                <label className="text-[10px] text-on-surface-variant font-bold">Buscar Artículo del Inventario</label>
+                                                <label className="text-[10px] text-gray-400 font-bold">Buscar Artículo del Inventario</label>
                                                 <div className="relative">
-                                                    <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-[14px] pointer-events-none">search</span>
+                                                    <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[14px] pointer-events-none">search</span>
                                                     <input
                                                         type="text"
                                                         placeholder={products.length === 0 ? 'Sin productos en inventario...' : `Buscar entre ${products.length} producto(s)...`}
@@ -1427,8 +1433,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                         onBlur={() => setTimeout(() => {
                                                             if (!item.productId) handleItemChange(index, 'productSearch', '');
                                                         }, 200)}
-                                                        className={`bg-surface-container border rounded-lg pl-7 pr-3 py-2 text-xs focus:border-primary text-on-surface outline-none h-10 w-full transition ${
-                                                            item.productId ? 'border-primary/60 bg-primary/5 font-semibold' : 'border-outline/20'
+                                                        className={`bg-[#1c1e22] border rounded-lg pl-8 pr-3 py-2 text-xs focus:border-[#eab308] text-white outline-none h-10 w-full transition ${
+                                                            item.productId ? 'border-[#eab308]/60 bg-[#eab308]/10 font-bold' : 'border-[#2d3036]'
                                                         }`}
                                                         autoComplete="off"
                                                     />
@@ -1436,7 +1442,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                         <button
                                                             type="button"
                                                             onClick={() => { handleItemChange(index, 'productId', ''); handleItemChange(index, 'productSearch', ''); }}
-                                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-red-400 transition cursor-pointer border-0 bg-transparent p-0"
+                                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-400 transition cursor-pointer border-0 bg-transparent p-0"
                                                             title="Limpiar selección"
                                                         >
                                                             <span className="material-symbols-outlined text-[14px]">close</span>
@@ -1451,9 +1457,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                         (p.sku && p.sku.toLowerCase().includes(query))
                                                     ).slice(0, 8);
                                                     return (
-                                                        <div className="absolute left-0 right-0 top-full mt-1 bg-surface-container border border-outline/30 rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto">
+                                                        <div className="absolute left-0 right-0 top-full mt-1 bg-[#1c1e22] border border-[#2d3036] rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto">
                                                             {suggestions.length === 0 ? (
-                                                                <div className="p-3 text-xs text-on-surface-variant italic text-center">No se encontraron productos con ese nombre o SKU.</div>
+                                                                <div className="p-3 text-xs text-gray-400 italic text-center">No se encontraron productos con ese nombre o SKU.</div>
                                                             ) : (
                                                                 suggestions.map(p => (
                                                                     <button
@@ -1475,13 +1481,13 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                                 return copy;
                                                                             });
                                                                         }}
-                                                                        className="w-full text-left px-3 py-2 hover:bg-primary/10 flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent border-b border-outline/5 last:border-0"
+                                                                        className="w-full text-left px-3 py-2 hover:bg-[#eab308]/15 flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent border-b border-[#2d3036]/40 last:border-0"
                                                                     >
                                                                         <div>
-                                                                            <p className="text-xs font-semibold text-on-surface">{p.name}</p>
-                                                                            <p className="text-[10px] text-on-surface-variant">{p.sku ? `SKU: ${p.sku} • ` : ''}Stock: {p.stock}</p>
+                                                                            <p className="text-xs font-semibold text-white">{p.name}</p>
+                                                                            <p className="text-[10px] text-gray-400">{p.sku ? `SKU: ${p.sku} • ` : ''}Stock: {p.stock}</p>
                                                                         </div>
-                                                                        <span className="text-xs font-bold text-primary font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
+                                                                        <span className="text-xs font-bold text-amber-400 font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
                                                                     </button>
                                                                 ))
                                                             )}
@@ -1491,15 +1497,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             </div>
 
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-bold text-center">Cant.</label>
-                                                <input type="number" min={1} className="bg-surface-container text-center border border-outline/20 rounded-lg p-2 text-xs focus:border-primary text-on-surface outline-none w-full h-10" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required />
+                                                <label className="text-[10px] text-gray-400 font-bold text-center">Cant.</label>
+                                                <input type="number" min={1} className="bg-[#1c1e22] text-center border border-[#2d3036] rounded-lg p-2 text-xs focus:border-[#eab308] text-white outline-none w-full h-10 font-mono font-bold" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required />
                                             </div>
                                             
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-bold">Precio Unit.</label>
+                                                <label className="text-[10px] text-gray-400 font-bold">Precio Unit.</label>
                                                 <input 
                                                     type="number" 
-                                                    className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs focus:border-primary text-on-surface outline-none w-full h-10 font-mono font-bold" 
+                                                    className="bg-[#1c1e22] border border-[#2d3036] rounded-lg p-2 text-xs focus:border-[#eab308] text-white outline-none w-full h-10 font-mono font-bold" 
                                                     value={item.price} 
                                                     onChange={(e) => handleItemChange(index, 'price', e.target.value)} 
                                                     readOnly={item.productType === 'inventory' && !item.productId}
@@ -1508,15 +1514,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             </div>
                                             
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-bold text-center">% Desc.</label>
-                                                <input type="number" min={0} max={100} className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs focus:border-primary text-on-surface outline-none w-full h-10 text-center" value={item.discountPercentage} onChange={(e) => handleItemChange(index, 'discountPercentage', e.target.value)} />
+                                                <label className="text-[10px] text-gray-400 font-bold text-center">% Desc.</label>
+                                                <input type="number" min={0} max={100} className="bg-[#1c1e22] border border-[#2d3036] rounded-lg p-2 text-xs focus:border-[#eab308] text-white outline-none w-full h-10 text-center font-mono" value={item.discountPercentage} onChange={(e) => handleItemChange(index, 'discountPercentage', e.target.value)} />
                                             </div>
 
                                             <div className="flex justify-center items-end pb-0.5">
                                                 <button 
                                                     type="button" 
                                                     onClick={() => handleRemoveItem(index)} 
-                                                    className="w-8 h-8 p-0 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-md cursor-pointer border-0 flex items-center justify-center transition-all duration-200 hover:scale-[1.02]"
+                                                    className="w-8 h-8 p-0 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg cursor-pointer border-0 flex items-center justify-center transition-all duration-200"
                                                 >
                                                     <span className="material-symbols-outlined text-[16px] leading-none">close</span>
                                                 </button>
@@ -1525,29 +1531,37 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     </div>
                                 );
                             })}
+
+                            <div className="pt-1">
+                                <button
+                                    type="button"
+                                    onClick={handleAddItem}
+                                    className="bg-[#141517] border border-[#2d3036] hover:bg-[#222528] text-amber-400 text-xs font-bold py-2 px-4 rounded-lg flex items-center gap-1.5 cursor-pointer transition-all duration-200"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                                    + AGREGAR OTRO PRODUCTO / LÍNEA
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Total y Botones */}
-                        <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-t border-outline/10 pt-4">
+                        {/* Resumen Total y Botones */}
+                        <div className="bg-[#1c1e22] p-4 rounded-xl border border-[#2d3036] flex flex-col md:flex-row justify-between items-center gap-4 shadow-lg">
                             <div className="text-left">
-                                <p className="text-xs text-on-surface-variant">Subtotal Factura: {formatPrice(totalAmount)}</p>
-                                <p className="text-xs text-on-surface-variant mt-0.5">
-                                    Domicilio: {deliveryMethod === 'domicilio' ? formatPrice(parseFloat(deliveryFee) || 0) : '$0'}
+                                <p className="text-xs text-gray-400">Subtotal Factura: <span className="font-mono">{formatPrice(totalAmount)}</span></p>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    Domicilio: <span className="font-mono">{deliveryMethod === 'domicilio' ? formatPrice(parseFloat(deliveryFee) || 0) : '$0'}</span>
                                 </p>
-                                <p className="text-xl font-bold text-[#00ff88]">
-                                    Total: {formatPrice(totalAmount + (deliveryMethod === 'domicilio' ? parseFloat(deliveryFee) || 0 : 0))}
+                                <p className="text-2xl font-extrabold text-emerald-400 font-mono mt-1">
+                                    TOTAL: {formatPrice(totalAmount + (deliveryMethod === 'domicilio' ? parseFloat(deliveryFee) || 0 : 0))}
                                 </p>
                             </div>
                             <div className="flex items-center gap-3">
-                                <button type="button" onClick={handleAddItem} className="bg-surface-container border border-outline/20 hover:bg-surface-container-high text-[10px] font-semibold py-1.5 px-3 rounded-lg flex items-center gap-1 cursor-pointer text-on-surface transition-all duration-200">
-                                    <span className="material-symbols-outlined text-[12px]">add</span>
-                                    Agregar Producto
-                                </button>
-                                <button type="button" onClick={resetForm} className="bg-surface-container border border-outline/20 hover:bg-surface-container-high text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer text-on-surface">
+                                <button type="button" onClick={resetForm} className="px-4 py-2 bg-transparent hover:bg-[#222528] text-gray-300 text-xs font-bold rounded-lg border border-[#2d3036] cursor-pointer">
                                     Cancelar
                                 </button>
-                                <button type="submit" className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer">
-                                    Emitir Factura
+                                <button type="submit" className="px-5 py-2.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-xs rounded-lg transition-all border-0 cursor-pointer shadow-md flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[18px]">send</span>
+                                    EMITIR FACTURA DE VENTA 🧾
                                 </button>
                             </div>
                         </div>

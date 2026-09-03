@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 
 interface SaaSErpAccountingProps {
@@ -402,51 +403,57 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
         </>
       )}
 
-      {/* Modal Registrar Gasto Fijo */}
-      {isExpenseModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-surface-container-highest border border-outline/30 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-3">
-              <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[18px]">domain</span>
+      {/* Modal Registrar Gasto Fijo Operativo (Teleportado a document.body) */}
+      {isExpenseModalOpen && createPortal(
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[99999]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#141517] border border-[#2a2c32] rounded-2xl p-6 max-w-md w-full space-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.9)] relative z-[100000]" onClick={(e) => e.stopPropagation()}>
+            
+            {/* Header del Modal */}
+            <div className="flex justify-between items-center border-b border-[#222428] pb-3">
+              <h4 className="font-extrabold text-sm text-[#eab308] flex items-center gap-2" style={{ color: '#eab308' }}>
+                <span className="material-symbols-outlined text-[20px] text-[#eab308]">domain</span>
                 Registrar Gasto Fijo Operativo
               </h4>
-              <button onClick={() => setIsExpenseModalOpen(false)} className="text-on-surface-variant hover:text-on-surface cursor-pointer bg-transparent border-0">
-                <span className="material-symbols-outlined text-[18px]">close</span>
+              <button 
+                type="button"
+                onClick={() => setIsExpenseModalOpen(false)} 
+                className="text-gray-400 hover:text-white cursor-pointer bg-transparent border-0 flex items-center justify-center p-1 rounded-lg hover:bg-white/5 transition"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
 
-            <form onSubmit={handleAddFixedExpense} className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold uppercase text-on-surface-variant">Concepto del Gasto</label>
+            <form onSubmit={handleAddFixedExpense} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Concepto del Gasto *</label>
                 <input
                   type="text"
                   required
                   placeholder="Ej. Arriendo de Local, Luz/Agua, Internet"
                   value={expenseConcept}
                   onChange={(e) => setExpenseConcept(e.target.value)}
-                  className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                  className="w-full bg-[#0a0b0c] border border-[#26282d] rounded-xl p-3 text-xs text-white placeholder-gray-600 outline-none focus:border-[#eab308] transition"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold uppercase text-on-surface-variant">Categoría</label>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Categoría</label>
                   <select
                     value={expenseCategory}
                     onChange={(e) => setExpenseCategory(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                    className="w-full bg-[#0a0b0c] border border-[#26282d] rounded-xl p-3 text-xs text-white outline-none cursor-pointer focus:border-[#eab308] transition"
                   >
-                    <option value="operativo">Arriendo / Local</option>
-                    <option value="servicios">Servicios Públicos</option>
-                    <option value="tecnologia">Internet / Software</option>
-                    <option value="mantenimiento">Mantenimiento</option>
-                    <option value="otros">Otros Gastos Fijos</option>
+                    <option value="operativo" className="bg-[#141517] text-white">Arriendo / Local</option>
+                    <option value="servicios" className="bg-[#141517] text-white">Servicios Públicos</option>
+                    <option value="tecnologia" className="bg-[#141517] text-white">Internet / Software</option>
+                    <option value="mantenimiento" className="bg-[#141517] text-white">Mantenimiento</option>
+                    <option value="otros" className="bg-[#141517] text-white">Otros Gastos Fijos</option>
                   </select>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold uppercase text-on-surface-variant">Monto Mensual ($ COP)</label>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Monto Mensual ($ COP) *</label>
                   <input
                     type="number"
                     required
@@ -454,40 +461,45 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
                     placeholder="2000000"
                     value={expenseAmount}
                     onChange={(e) => setExpenseAmount(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface font-mono outline-none"
+                    className="w-full bg-[#0a0b0c] border border-[#26282d] rounded-xl p-3 text-xs text-amber-400 font-mono font-bold outline-none focus:border-[#eab308] transition"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold uppercase text-on-surface-variant">Notas Adicionales</label>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Notas Adicionales</label>
                 <textarea
                   placeholder="Detalles del contrato de arriendo o vencimiento de pago"
                   value={expenseNotes}
                   onChange={(e) => setExpenseNotes(e.target.value)}
-                  className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none resize-none h-16"
+                  className="w-full bg-[#0a0b0c] border border-[#26282d] rounded-xl p-3 text-xs text-white placeholder-gray-600 outline-none resize-none h-20 focus:border-[#eab308] transition"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-outline/10">
+              <div className="flex justify-end gap-3 pt-3 border-t border-[#222428]">
                 <button
                   type="button"
                   onClick={() => setIsExpenseModalOpen(false)}
-                  className="px-4 py-2 border border-outline/20 text-on-surface font-bold text-xs rounded-xl cursor-pointer hover:bg-surface-container-high"
+                  className="px-4 py-2.5 border border-[#26282d] text-gray-300 hover:text-white font-bold text-xs rounded-xl cursor-pointer hover:bg-white/5 transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingExpense}
-                  className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl cursor-pointer shadow hover:opacity-90"
+                  className="px-5 py-2.5 bg-[#eab308] hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl cursor-pointer shadow-lg transition flex items-center gap-1.5 border-0"
                 >
-                  {savingExpense ? 'Guardando...' : 'Guardar Gasto Fijo'}
+                  {savingExpense ? (
+                    <><span className="material-symbols-outlined text-[16px] animate-spin">sync</span> Guardando...</>
+                  ) : (
+                    <><span className="material-symbols-outlined text-[16px]">save</span> Guardar Gasto Fijo</>
+                  )}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

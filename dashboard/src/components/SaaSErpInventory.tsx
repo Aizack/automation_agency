@@ -221,6 +221,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const clientId = (rawClientId && rawClientId !== 'undefined' && rawClientId !== 'admin')
         ? rawClientId
         : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
+    const sessionRole = localStorage.getItem('session_role');
+    const empRole = localStorage.getItem('emp_role') || localStorage.getItem('employee_role');
+    const isAdmin = sessionRole === 'admin' || sessionRole === 'superadmin' || sessionRole === 'client' || (!sessionRole && !empRole);
+
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [addProductStep, setAddProductStep] = useState<'closed' | 'open'>('closed');
@@ -1248,15 +1252,32 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     {(!hasVariants && productType === 'product') && (
                                         <>
                                             <div className="flex flex-col gap-1.5">
-                                                <label className="text-xs text-on-surface-variant font-medium">Stock Actual *</label>
+                                                <label className="text-xs text-on-surface-variant font-medium flex items-center justify-between">
+                                                    <span>Stock Actual *</span>
+                                                    {!isAdmin && editingProduct !== null && (
+                                                        <span className="text-[10px] text-[#eab308] font-bold flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[13px]">lock</span>
+                                                            Solo lectura (Solo Admin edita stock existente)
+                                                        </span>
+                                                    )}
+                                                </label>
                                                 <input 
                                                     type="number"
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono font-bold"
+                                                    disabled={!isAdmin && editingProduct !== null}
+                                                    className={`bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono font-bold ${
+                                                        !isAdmin && editingProduct !== null ? 'opacity-60 cursor-not-allowed bg-surface-container-highest/40' : ''
+                                                    }`}
                                                     value={stock}
                                                     onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
                                                     placeholder="Ej: 10"
                                                     required
                                                 />
+                                                {!isAdmin && editingProduct !== null && (
+                                                    <p className="text-[11px] text-amber-400/90 bg-amber-500/10 border border-amber-500/20 p-2 rounded-xl flex items-center gap-1.5 mt-0.5">
+                                                        <span className="material-symbols-outlined text-[15px]">info</span>
+                                                        Para agregar unidades a este producto existente, usa el botón <strong>"Reabastecer (+)"</strong> en el catálogo.
+                                                    </p>
+                                                )}
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-xs text-on-surface-variant font-medium">Stock Mínimo Alerta *</label>
@@ -1658,13 +1679,16 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                             <input
                                                                 type="number"
                                                                 placeholder="Stock *"
+                                                                disabled={!isAdmin && editingProduct !== null}
                                                                 value={v.stock}
                                                                 onChange={(e) => {
                                                                     const updated = [...variantList];
                                                                     updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
                                                                     setVariantList(updated);
                                                                 }}
-                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                                className={`w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center font-bold ${
+                                                                    !isAdmin && editingProduct !== null ? 'opacity-60 cursor-not-allowed bg-surface-container-highest/40' : ''
+                                                                }`}
                                                             />
                                                         </div>
 

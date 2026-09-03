@@ -11,6 +11,7 @@ interface Employee {
     department_id: string | null;
     department_name: string | null;
     pin: string;
+    allowed_modules?: string[] | any;
     is_active: boolean;
     created_at: string;
     hire_date?: string | null;
@@ -49,6 +50,227 @@ interface SaaSErpEmployeesProps {
 }
 
 
+
+const CustomDatePicker: React.FC<{
+    value: string;
+    onChange: (dateStr: string) => void;
+    label?: string;
+}> = ({ value, onChange, label }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'calendar' | 'monthYear'>('calendar');
+
+    const parsedDate = value ? new Date(value + 'T00:00:00') : new Date();
+    const [currentMonth, setCurrentMonth] = useState(isNaN(parsedDate.getTime()) ? new Date().getMonth() : parsedDate.getMonth());
+    const [currentYear, setCurrentYear] = useState(isNaN(parsedDate.getTime()) ? new Date().getFullYear() : parsedDate.getFullYear());
+
+    const monthNames = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
+    const shortMonthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sept', 'Oct', 'Nov', 'Dic'];
+    const years = Array.from({ length: 70 }, (_, i) => 1970 + i);
+
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
+
+    const handleSelectDay = (day: number) => {
+        const mm = String(currentMonth + 1).padStart(2, '0');
+        const dd = String(day).padStart(2, '0');
+        onChange(`${currentYear}-${mm}-${dd}`);
+        setIsOpen(false);
+        setViewMode('calendar');
+    };
+
+    const formatDisplay = () => {
+        if (!value) return 'DD/MM/AAAA';
+        const parts = value.split('-');
+        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        return value;
+    };
+
+    return (
+        <div className="relative w-full">
+            {label && <label className="text-[10px] text-on-surface-variant font-medium block mb-1">{label}</label>}
+            <div 
+                onClick={() => setIsOpen(!isOpen)}
+                className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface flex items-center justify-between cursor-pointer hover:border-primary/50 transition shadow-sm"
+            >
+                <span className={value ? 'text-on-surface font-mono font-bold' : 'text-on-surface-variant/60'}>
+                    {formatDisplay()}
+                </span>
+                <span className="material-symbols-outlined text-[18px] text-primary">calendar_today</span>
+            </div>
+
+            {isOpen && (
+                <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+                    <div className="absolute left-0 mt-1.5 z-50 bg-[#1e2024] border border-[#33373e] rounded-2xl shadow-2xl p-4 w-72 text-on-surface text-xs select-none">
+                        {viewMode === 'calendar' ? (
+                            <div>
+                                <div className="flex items-center justify-between mb-3 border-b border-[#2d3138] pb-2">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => {
+                                            if (currentMonth === 0) {
+                                                setCurrentMonth(11);
+                                                setCurrentYear(y => y - 1);
+                                            } else {
+                                                setCurrentMonth(m => m - 1);
+                                            }
+                                        }}
+                                        className="p-1 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white cursor-pointer transition"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">chevron_left</span>
+                                    </button>
+
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setViewMode('monthYear')}
+                                        className="px-3 py-1 bg-[#282b30] hover:bg-[#32363d] text-white font-bold rounded-lg border border-[#3a3f47] cursor-pointer transition flex items-center gap-1 text-xs"
+                                    >
+                                        <span>{monthNames[currentMonth]} de {currentYear}</span>
+                                        <span className="material-symbols-outlined text-xs">expand_more</span>
+                                    </button>
+
+                                    <button 
+                                        type="button" 
+                                        onClick={() => {
+                                            if (currentMonth === 11) {
+                                                setCurrentMonth(0);
+                                                setCurrentYear(y => y + 1);
+                                            } else {
+                                                setCurrentMonth(m => m + 1);
+                                            }
+                                        }}
+                                        className="p-1 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white cursor-pointer transition"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">chevron_right</span>
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-7 text-center font-bold text-[10px] text-gray-400 mb-1">
+                                    <span className="text-red-400">dom</span>
+                                    <span>lun</span>
+                                    <span>mar</span>
+                                    <span>mié</span>
+                                    <span>jue</span>
+                                    <span>vie</span>
+                                    <span>sáb</span>
+                                </div>
+
+                                <div className="grid grid-cols-7 gap-1 text-center font-mono text-xs">
+                                    {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                                        <div key={`empty-${i}`} className="p-1" />
+                                    ))}
+                                    {Array.from({ length: daysInMonth }).map((_, i) => {
+                                        const day = i + 1;
+                                        const mm = String(currentMonth + 1).padStart(2, '0');
+                                        const dd = String(day).padStart(2, '0');
+                                        const formattedDay = `${currentYear}-${mm}-${dd}`;
+                                        const isSelected = value === formattedDay;
+                                        const today = new Date();
+                                        const isToday = today.getDate() === day && today.getMonth() === currentMonth && today.getFullYear() === currentYear;
+
+                                        return (
+                                            <button
+                                                key={`day-${day}`}
+                                                type="button"
+                                                onClick={() => handleSelectDay(day)}
+                                                className={`p-1.5 rounded-lg text-xs font-bold cursor-pointer transition ${
+                                                    isSelected ? 'bg-primary text-white font-black shadow-md' :
+                                                    isToday ? 'border border-primary text-primary' : 'hover:bg-white/10 text-gray-200'
+                                                }`}
+                                            >
+                                                {day}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="flex justify-between items-center mt-3 pt-2 border-t border-[#2d3138] text-[11px]">
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            onChange('');
+                                            setIsOpen(false);
+                                        }}
+                                        className="px-2.5 py-1 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-md font-bold transition cursor-pointer"
+                                    >
+                                        Limpiar
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            setCurrentMonth(today.getMonth());
+                                            setCurrentYear(today.getFullYear());
+                                            handleSelectDay(today.getDate());
+                                        }}
+                                        className="px-3 py-1 bg-primary/20 text-primary hover:bg-primary/30 rounded-md font-bold transition cursor-pointer"
+                                    >
+                                        Hoy
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                <div className="text-center font-extrabold text-xs border-b border-[#2d3138] pb-2 text-primary uppercase">
+                                    Seleccionar Mes y Año
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="max-h-48 overflow-y-auto pr-1 space-y-1 custom-scrollbar">
+                                        <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 sticky top-0 bg-[#1e2024] py-0.5">Mes</p>
+                                        {shortMonthNames.map((mName, idx) => (
+                                            <button
+                                                key={mName}
+                                                type="button"
+                                                onClick={() => setCurrentMonth(idx)}
+                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                                                    currentMonth === idx ? 'bg-primary text-white font-black' : 'hover:bg-white/10 text-gray-300'
+                                                }`}
+                                            >
+                                                {mName}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="max-h-48 overflow-y-auto pr-1 space-y-1 custom-scrollbar">
+                                        <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 sticky top-0 bg-[#1e2024] py-0.5">Año</p>
+                                        {years.map(yr => (
+                                            <button
+                                                key={yr}
+                                                type="button"
+                                                onClick={() => setCurrentYear(yr)}
+                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold font-mono transition cursor-pointer ${
+                                                    currentYear === yr ? 'bg-primary text-white font-black' : 'hover:bg-white/10 text-gray-300'
+                                                }`}
+                                            >
+                                                {yr}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="pt-2 border-t border-[#2d3138] flex justify-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode('calendar')}
+                                        className="w-full py-2 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-1.5 uppercase"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">check_circle</span>
+                                        Seleccionar
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
 
 const MODULES = [
     { key: 'inventory', label: '📦 Inventario' },
@@ -150,8 +372,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     const [contrTransportAllowance, setContrTransportAllowance] = useState('');
     const [contrPaymentType, setContrPaymentType] = useState<'fixed' | 'hourly'>('fixed');
     const [contrPayPeriod, setContrPayPeriod] = useState<'quincenal' | 'mensual'>('mensual');
-    const [contrCutoffDays, setContrCutoffDays] = useState('');
-    const [contrPayDays, setContrPayDays] = useState('');
+    const [contrCutoff1, setContrCutoff1] = useState('15');
+    const [contrCutoff2, setContrCutoff2] = useState('30');
+    const [contrPay1, setContrPay1] = useState('15');
+    const [contrPay2, setContrPay2] = useState('30');
     const [contrVacations, setContrVacations] = useState('');
     const [contrEmpStatus, setContrEmpStatus] = useState<'linked' | 'unlinked'>('linked');
     const [contrContractType, setContrContractType] = useState<string>('indefinido');
@@ -180,7 +404,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     const [newTaskDueDate, setNewTaskDueDate] = useState('');
     const [newTaskDueTime, setNewTaskDueTime] = useState('');
     const [newTaskCreator, setNewTaskCreator] = useState('');
-    const [detailTab, setDetailTab] = useState<'info' | 'shifts' | 'tasks' | 'contrato' | 'permisos' | 'deliveries'>('info');
+    const [detailTab, setDetailTab] = useState<'info' | 'shifts' | 'tasks' | 'contrato' | 'permisos'>('info');
 
     // Payroll states
     const [isPayrollOpen, setIsPayrollOpen] = useState(false);
@@ -400,15 +624,15 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                     phone: selectedEmpDetail.phone,
                     role: selectedEmpDetail.role,
                     department_id: selectedEmpDetail.department_id,
-                    pin: selectedEmpDetail.pin,
+                    pin: '',
                     is_active: contrActStatus === 'active',
                     hire_date: contrHireDate || null,
                     basic_salary: contrBasicSalary ? parseFloat(contrBasicSalary) : 0,
                     transport_allowance: contrTransportAllowance ? parseFloat(contrTransportAllowance) : 0,
                     payment_type: contrPaymentType,
                     pay_period: contrPayPeriod,
-                    cutoff_days: contrCutoffDays || null,
-                    pay_days: contrPayDays || null,
+                    cutoff_days: contrPayPeriod === 'mensual' ? (contrCutoff1 || '30') : `${contrCutoff1 || '15'},${contrCutoff2 || '30'}`,
+                    pay_days: contrPayPeriod === 'mensual' ? (contrPay1 || '30') : `${contrPay1 || '15'},${contrPay2 || '30'}`,
                     vacation_days_accumulated: contrVacations ? parseFloat(contrVacations) : 0,
                     hourly_rate: contrBasicSalary ? (parseFloat(contrBasicSalary) / 240) : 0,
                     employment_status: contrEmpStatus,
@@ -718,6 +942,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             return;
         }
 
+        if (!selectedEmp && (!empPin || empPin.trim().length < 4)) {
+            setErrorMsg('Debes asignar un PIN numérico de 4 a 6 dígitos para el nuevo colaborador.');
+            return;
+        }
+
         try {
             setActionLoading(true);
             setErrorMsg('');
@@ -741,9 +970,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                     phone: empPhone,
                     role: normalizedRole,
                     department_id: empDeptId || null,
-                    pin: empPin,
+                    pin: empPin ? empPin.trim() : '',
                     employee_code: finalEmployeeCode,
                     professional_license: empProfLicense || null,
+                    allowed_modules: employeeAccessPermissions,
                     is_active: true
                 })
             });
@@ -778,6 +1008,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         }
     };
 
+    const DEFAULT_MODULE_KEYS = ['inventory', 'billing', 'cartera', 'crm', 'appointments', 'formulas', 'lab', 'domicilios', 'employees', 'campaigns', 'marketing'];
+
     const openCreateEmpModal = () => {
         setSelectedEmp(null);
         setEmpName('');
@@ -787,6 +1019,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         setEmpDeptId('');
         setEmpPin('');
         setEmpCode(generateEmployeeCode());
+        setEmployeeAccessPermissions(DEFAULT_MODULE_KEYS);
         setErrorMsg('');
         setIsEmpOpen(true);
     };
@@ -798,8 +1031,21 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         setEmpPhone(emp.phone);
         setEmpRole(emp.role);
         setEmpDeptId(emp.department_id || '');
-        setEmpPin(emp.pin);
+        setEmpPin('');
         setEmpCode((emp as any).employee_code || generateEmployeeCode());
+        
+        let loadedModules = DEFAULT_MODULE_KEYS;
+        if (emp.allowed_modules) {
+            if (Array.isArray(emp.allowed_modules)) {
+                loadedModules = emp.allowed_modules.length > 0 ? emp.allowed_modules : DEFAULT_MODULE_KEYS;
+            } else if (typeof emp.allowed_modules === 'string') {
+                try {
+                    const parsed = JSON.parse(emp.allowed_modules);
+                    if (Array.isArray(parsed) && parsed.length > 0) loadedModules = parsed;
+                } catch (e) {}
+            }
+        }
+        setEmployeeAccessPermissions(loadedModules);
         setErrorMsg('');
         setIsEmpOpen(true);
     };
@@ -876,52 +1122,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         }
     };
 
-    const [empDeliveries, setEmpDeliveries] = useState<any[]>([]);
-    const [loadingEmpDeliveries, setLoadingEmpDeliveries] = useState(false);
-
-    const loadEmpDeliveries = async (empId: string) => {
-        try {
-            setLoadingEmpDeliveries(true);
-            const res = await fetch(`/api/clients/${clientId}/employees/${empId}/deliveries`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const json = await res.json();
-            if (json.success) {
-                setEmpDeliveries(json.deliveries || []);
-            }
-        } catch (err) {
-            console.error("Error cargando entregas:", err);
-        } finally {
-            setLoadingEmpDeliveries(false);
-        }
-    };
-
-    const handleSeedDeliveriesTest = async () => {
-        try {
-            const res = await fetch(`/api/clients/${clientId}/deliveries/seed-test`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const json = await res.json();
-            if (json.success) {
-                alert('🎉 ¡6 Facturas de Domicilio de prueba creadas con éxito para Speedie Gonzalez y ordenadas por cercanía!');
-                if (selectedEmpDetail) {
-                    loadEmpDeliveries(selectedEmpDetail.id);
-                }
-                fetchData();
-            } else {
-                alert(`Error: ${json.error}`);
-            }
-        } catch (err) {
-            alert('Error generando entregas de prueba.');
-        }
-    };
-
     const handleOpenDetail = (emp: Employee) => {
         setSelectedEmpDetail(emp);
         loadShifts(emp.id);
         loadTasks(emp.id);
-        loadEmpDeliveries(emp.id);
         setNewTaskTitle('');
         setNewTaskDesc('');
         setNewTaskDueDate('');
@@ -935,8 +1139,15 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         setContrTransportAllowance(rawAllowance === '0' ? '' : rawAllowance);
         setContrPaymentType(emp.payment_type || 'fixed');
         setContrPayPeriod(emp.pay_period || 'mensual');
-        setContrCutoffDays(emp.cutoff_days || '15,30');
-        setContrPayDays(emp.pay_days || '15,30');
+
+        const rawCutoff = emp.cutoff_days || `${(emp as any).cutoff_day_1 || 15},${(emp as any).cutoff_day_2 || 30}`;
+        const rawPay = emp.pay_days || `${(emp as any).pay_day_1 || 15},${(emp as any).pay_day_2 || 30}`;
+        const cutoffs = rawCutoff.split(',');
+        const pays = rawPay.split(',');
+        setContrCutoff1(cutoffs[0] || '15');
+        setContrCutoff2(cutoffs[1] || '30');
+        setContrPay1(pays[0] || '15');
+        setContrPay2(pays[1] || '30');
         setContrVacations(emp.vacation_days_accumulated?.toString() || '0');
         setContrEmpStatus(emp.employment_status || 'linked');
         setContrContractType((emp as any).contract_type || 'indefinido');
@@ -2396,15 +2607,18 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">PIN de Seguridad (6 dígitos)</label>
+                                    <label className="block text-xs font-bold text-on-surface-variant flex items-center justify-between">
+                                        <span>PIN de Seguridad (6 dígitos)</span>
+                                        {selectedEmp && <span className="text-[10px] text-amber-500 font-normal">(Opcional)</span>}
+                                    </label>
                                     <input 
                                         type="password"
                                         maxLength={6}
-                                        required
+                                        required={!selectedEmp}
                                         value={empPin}
                                         onChange={(e) => setEmpPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                         className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono tracking-widest text-center text-lg"
-                                        placeholder="Ej: 123456"
+                                        placeholder={selectedEmp ? "•••••• (Sin cambios)" : "Ej: 123456"}
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -2705,13 +2919,6 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                             </button>
                             <button 
                                 type="button"
-                                onClick={() => setDetailTab('deliveries')}
-                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'deliveries' ? 'bg-emerald-600 text-white font-bold' : 'text-emerald-400/80 hover:text-emerald-400'}`}
-                            >
-                                🚚 Mis Entregas ({empDeliveries.length})
-                            </button>
-                            <button 
-                                type="button"
                                 onClick={() => setDetailTab('contrato')}
                                 className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'contrato' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
                             >
@@ -2980,155 +3187,17 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 </div>
                             )}
 
-                            {detailTab === 'deliveries' && (
-                                <div className="space-y-4 text-xs text-left">
-                                    <div className="flex justify-between items-center bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
-                                        <div>
-                                            <h4 className="font-bold text-sm text-emerald-400 flex items-center gap-1.5">
-                                                <span className="material-symbols-outlined text-[18px]">local_shipping</span>
-                                                Mis Entregas del Día (Ruta de Domicilios por Cercanía)
-                                            </h4>
-                                            <p className="text-[11px] text-on-surface-variant mt-0.5">
-                                                Ruta asignada organizada automáticamente por proximidad y valores a cobrar.
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={handleSeedDeliveriesTest}
-                                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-md"
-                                        >
-                                            <span className="material-symbols-outlined text-[16px]">science</span>
-                                            Generar 6 Entregas de Prueba
-                                        </button>
-                                    </div>
-
-                                    {loadingEmpDeliveries ? (
-                                        <p className="text-xs text-on-surface-variant italic py-6 text-center animate-pulse">Cargando ruta de domicilios para hoy...</p>
-                                    ) : empDeliveries.length === 0 ? (
-                                        <div className="text-center py-8 bg-surface-container/20 border border-outline/10 rounded-2xl space-y-3">
-                                            <span className="material-symbols-outlined text-4xl text-on-surface-variant opacity-50">local_shipping</span>
-                                            <p className="text-xs text-on-surface-variant font-medium">No se registran entregas asignadas para hoy.</p>
-                                            <button
-                                                type="button"
-                                                onClick={handleSeedDeliveriesTest}
-                                                className="bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer"
-                                            >
-                                                🧪 Generar 6 Entregas de Prueba para Speedie
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
-                                            {empDeliveries.map((del: any, idx: number) => (
-                                                <div key={del.invoice_id} className="bg-surface-container/40 border border-outline/15 p-4 rounded-2xl space-y-3 hover:border-emerald-500/30 transition">
-                                                    <div className="flex justify-between items-start">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="bg-emerald-500/20 text-emerald-400 font-bold text-[10px] px-2.5 py-1 rounded-lg border border-emerald-500/30 font-mono">
-                                                                Parada #{del.route_order || idx + 1} (Cercanía)
-                                                            </span>
-                                                            <span className="font-bold text-on-surface text-sm">Factura #{del.invoice_number}</span>
-                                                        </div>
-                                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                                                            del.delivery_status === 'delivered' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                                                            del.delivery_status === 'in_transit' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                                                            'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                                        }`}>
-                                                            {del.delivery_status === 'delivered' ? '✅ Entregado' : del.delivery_status === 'in_transit' ? '🚀 En Camino' : '⏳ Pendiente'}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                                                        <div className="space-y-0.5">
-                                                            <span className="text-on-surface-variant block font-medium">Cliente / Recibe:</span>
-                                                            <strong className="text-on-surface font-semibold">{del.customer_name}</strong>
-                                                            <p className="text-on-surface-variant font-mono text-[11px]">📞 +{del.customer_phone}</p>
-                                                        </div>
-
-                                                        <div className="space-y-0.5">
-                                                            <span className="text-on-surface-variant block font-medium">Dirección de Entrega:</span>
-                                                            <strong className="text-emerald-400 font-medium">{del.delivery_address}</strong>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-outline/10 text-xs">
-                                                        <div>
-                                                            <span className="text-on-surface-variant text-[11px]">Estado de Pago: </span>
-                                                            <strong className={`font-bold font-mono text-sm ${del.payment_status === 'paid' ? 'text-green-400' : 'text-amber-400'}`}>
-                                                                ${del.total_amount.toLocaleString('es-CO')} COP
-                                                            </strong>
-                                                            <span className="text-[10px] text-on-surface-variant ml-1 font-mono uppercase block">
-                                                                {del.payment_status === 'paid'
-                                                                    ? '✅ Pagado Previamente (Banco/Tienda)'
-                                                                    : `⚠️ Pendiente de Cobro (${del.payment_method === 'efectivo' ? '💵 Efectivo Contra-Entrega' : '🏦 Nequi/Transferencia'})`}
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="flex gap-1.5">
-                                                            <a
-                                                                href={`https://maps.google.com/?q=${encodeURIComponent(del.delivery_address)}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="bg-surface-container-high hover:bg-surface-container text-on-surface font-semibold text-[10px] px-2.5 py-1.5 rounded-lg border border-outline/20 transition flex items-center gap-1"
-                                                            >
-                                                                <span className="material-symbols-outlined text-[14px]">map</span>
-                                                                Abrir Mapa
-                                                            </a>
-                                                            <a
-                                                                href={`https://wa.me/${del.customer_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola ${del.customer_name}, soy Speedie Gonzalez tu domiciliario. Estoy en camino a la dirección ${del.delivery_address} con tu pedido de la Factura #${del.invoice_number}.`)}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="bg-green-600 hover:bg-green-500 text-white font-semibold text-[10px] px-2.5 py-1.5 rounded-lg transition flex items-center gap-1"
-                                                            >
-                                                                <span className="material-symbols-outlined text-[14px]">chat</span>
-                                                                WhatsApp
-                                                            </a>
-                                                        </div>
-                                                    </div>
-
-                                                    {del.notes && (
-                                                        <p className="text-[10px] text-on-surface-variant/80 bg-surface-container-high/40 p-2 rounded-lg italic">
-                                                            💡 Nota del Despacho: {del.notes}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
                             {detailTab === 'contrato' && (
                                 <form onSubmit={handleSaveContractInfo} className="space-y-4 text-xs text-left">
                                     <div className="bg-white/5 p-4 rounded-xl border border-outline/5 space-y-4">
                                         <h4 className="font-bold text-xs text-primary uppercase tracking-wider">Condiciones Contractuales</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Fecha de Contratación</label>
-                                                <div className="flex gap-1.5 items-center">
-                                                    <input 
-                                                        type="date" 
-                                                        id="hire-date-input"
-                                                        value={contrHireDate} 
-                                                        onChange={(e) => setContrHireDate(e.target.value)}
-                                                        onClick={(e) => {
-                                                            try {
-                                                                (e.target as any).showPicker();
-                                                            } catch (err) {}
-                                                        }}
-                                                        className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none flex-grow cursor-pointer"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            try {
-                                                                const el = document.getElementById('hire-date-input');
-                                                                if (el) (el as any).showPicker();
-                                                            } catch (err) {}
-                                                        }}
-                                                        className="px-2 py-2 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl text-[10px] font-bold cursor-pointer transition whitespace-nowrap"
-                                                    >
-                                                        Seleccionar
-                                                    </button>
-                                                </div>
+                                                <CustomDatePicker 
+                                                    label="Fecha de Contratación"
+                                                    value={contrHireDate}
+                                                    onChange={(d) => setContrHireDate(d)}
+                                                />
                                             </div>
                                             <div className="flex flex-col gap-1">
                                                 <label className="text-[10px] text-on-surface-variant font-medium">Días Vacaciones Acumulados (Ley Colombiana)</label>
@@ -3137,7 +3206,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                     readOnly
                                                     disabled
                                                     value={contrVacations} 
-                                                    className="bg-surface-container/50 border border-outline/20 rounded-xl p-2 text-xs text-on-surface-variant/80 outline-none cursor-not-allowed font-medium"
+                                                    className="bg-surface-container/50 border border-outline/20 rounded-xl p-2 text-xs text-on-surface-variant/80 outline-none cursor-not-allowed font-medium mt-0.5"
                                                     title="Cálculo automático: (Días laborados * 15) / 360 - Días de vacaciones ya tomados y aprobados"
                                                 />
                                             </div>
@@ -3265,28 +3334,85 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Fechas de Corte (ej: 15,30)</label>
-                                                <input 
-                                                    type="text" 
-                                                    value={contrCutoffDays} 
-                                                    onChange={(e) => setContrCutoffDays(e.target.value)}
-                                                    placeholder="Ej: 15,30"
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none"
-                                                />
+                                        {contrPayPeriod === 'mensual' ? (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-[10px] text-on-surface-variant font-medium">Día de Corte Mensual (ej: 30)</label>
+                                                    <input 
+                                                        type="number"
+                                                        min={1}
+                                                        max={31} 
+                                                        value={contrCutoff1} 
+                                                        onChange={(e) => setContrCutoff1(e.target.value)}
+                                                        placeholder="Ej: 30"
+                                                        className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono font-bold"
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-[10px] text-on-surface-variant font-medium">Día de Pago Mensual (ej: 30)</label>
+                                                    <input 
+                                                        type="number"
+                                                        min={1}
+                                                        max={31} 
+                                                        value={contrPay1} 
+                                                        onChange={(e) => setContrPay1(e.target.value)}
+                                                        placeholder="Ej: 30"
+                                                        className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono font-bold"
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Fechas de Pago (ej: 15,30)</label>
-                                                <input 
-                                                    type="text" 
-                                                    value={contrPayDays} 
-                                                    onChange={(e) => setContrPayDays(e.target.value)}
-                                                    placeholder="Ej: 15,30"
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none"
-                                                />
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-[10px] text-on-surface-variant font-medium">Fechas de Corte Quincenales</label>
+                                                    <div className="grid grid-cols-2 gap-1.5">
+                                                        <input 
+                                                            type="number"
+                                                            min={1}
+                                                            max={31}
+                                                            value={contrCutoff1} 
+                                                            onChange={(e) => setContrCutoff1(e.target.value)}
+                                                            placeholder="1ª Quinc (15)"
+                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                        />
+                                                        <input 
+                                                            type="number"
+                                                            min={1}
+                                                            max={31}
+                                                            value={contrCutoff2} 
+                                                            onChange={(e) => setContrCutoff2(e.target.value)}
+                                                            placeholder="2ª Quinc (30)"
+                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                        />
+                                                    </div>
+                                                    <span className="text-[9px] text-on-surface-variant/70 italic">1ª Quincena | 2ª Quincena</span>
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-[10px] text-on-surface-variant font-medium">Fechas de Pago Quincenales</label>
+                                                    <div className="grid grid-cols-2 gap-1.5">
+                                                        <input 
+                                                            type="number"
+                                                            min={1}
+                                                            max={31}
+                                                            value={contrPay1} 
+                                                            onChange={(e) => setContrPay1(e.target.value)}
+                                                            placeholder="1ª Quinc (15)"
+                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                        />
+                                                        <input 
+                                                            type="number"
+                                                            min={1}
+                                                            max={31}
+                                                            value={contrPay2} 
+                                                            onChange={(e) => setContrPay2(e.target.value)}
+                                                            placeholder="2ª Quinc (30)"
+                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                        />
+                                                    </div>
+                                                    <span className="text-[9px] text-on-surface-variant/70 italic">1ª Quincena | 2ª Quincena</span>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
 
                                     <div className="bg-white/5 p-4 rounded-xl border border-outline/5 space-y-4">

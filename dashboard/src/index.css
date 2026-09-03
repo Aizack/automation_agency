@@ -466,6 +466,10 @@ html[data-theme='light'],
 /* ==========================================================================
    GLOBAL BASE STYLES & TRANSITIONS
    ========================================================================== */
+html {
+  font-size: 115%; /* Aumento global del 15% en el tamaño de fuente para legibilidad en portátiles */
+}
+
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
@@ -473,7 +477,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-family: var(--font-sans);
-  font-weight: 300;
+  font-weight: 400;
+  line-height: 1.5;
   transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
               color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

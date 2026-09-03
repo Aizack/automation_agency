@@ -1,16 +1,16 @@
 # Graph Report - Bot multi-tenant  (2026-09-02)
 
 ## Corpus Check
-- 162 files · ~300,156 words
+- 162 files · ~301,201 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1235 nodes · 1626 edges · 112 communities (95 shown, 17 thin omitted)
+- 1236 nodes · 1628 edges · 114 communities (97 shown, 17 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 7 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8dc1234b`
+- Built from commit: `f0fa5e48`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -43,9 +43,9 @@
 - 🧪 GUÍA DE TESTING: Sistema de Gestión de Errores y Logging
 - Plan de Implementación: Módulo Contable, Métodos de Pago y Rotación de Inventario
 - shutdownManager.ts
-- pdfGeneratorService.ts
-- 🚨 Error 502 Bad Gateway - Diagnosis & Solutions
 - scheduler.ts
+- 🚨 Error 502 Bad Gateway - Diagnosis & Solutions
+- server
 - SaaSErpMarketing.tsx
 - SaaSErpSuppliers.tsx
 - logger.ts
@@ -119,6 +119,8 @@
 - rules/graphify.md
 - workflows/graphify.md
 - optometry_rules.md
+- localKnowledge.ts
+- envValidator.ts
 - QUICK_START.md
 
 ## God Nodes (most connected - your core abstractions)
@@ -142,21 +144,21 @@
   dashboard/src/components/AdminDashboard.tsx → dashboard/src/utils/api.ts
 - `BankAccountsManager()` --calls--> `authFetch()`  [EXTRACTED]
   dashboard/src/components/SaaSErpStoreSettings.tsx → dashboard/src/utils/api.ts
-- `server` --calls--> `initDatabase()`  [EXTRACTED]
-  src/server.ts → src/database/initDb.ts
+- `initializeWhatsAppClient()` --calls--> `routeIncomingMessage()`  [EXTRACTED]
+  src/services/whatsapp.ts → src/core/router.ts
 
 ## Import Cycles
 - 2-file cycle: `src/server.ts -> src/services/shutdownManager.ts -> src/server.ts`
 
-## Communities (112 total, 17 thin omitted)
+## Communities (114 total, 17 thin omitted)
 
 ### Community 0 - "postgres.ts"
-Cohesion: 0.06
-Nodes (46): runValidation(), AIAgent, genAI, ClientConfig, getClientConfigById(), getClientConfigByPhone(), pendingAgentConfirmations, pendingCustomerConfirmations (+38 more)
+Cohesion: 0.07
+Nodes (44): runValidation(), AIAgent, genAI, ClientConfig, getClientConfigById(), getClientConfigByPhone(), pendingAgentConfirmations, pendingCustomerConfirmations (+36 more)
 
 ### Community 1 - "whatsapp.ts"
-Cohesion: 0.15
-Nodes (15): KNOWLEDGE_BASE_DIR, listLocalFiles(), saveLocalFile(), autoRestoreSavedWhatsAppSessions(), client, connectWhatsApp(), getWhatsAppState(), logoutWhatsApp() (+7 more)
+Cohesion: 0.19
+Nodes (16): updateClient(), main(), getS3Client(), isR2Configured(), uploadTenantFile(), autoRestoreSavedWhatsAppSessions(), connectWhatsApp(), getWhatsAppState() (+8 more)
 
 ### Community 2 - "dependencies"
 Cohesion: 0.08
@@ -164,7 +166,7 @@ Nodes (25): @aws-sdk/client-s3, bcrypt, dotenv, express, @google/generative-ai, 
 
 ### Community 3 - "SaaSErpInventory.tsx"
 Cohesion: 0.09
-Nodes (28): ColorOption, colorOptions, getColorPreview(), InventoryRotationView(), Product, ProductVariant, PromoDiscountRow(), RotationProduct (+20 more)
+Nodes (29): ColorOption, colorOptions, getColorHex(), getColorPreview(), InventoryRotationView(), Product, ProductVariant, PromoDiscountRow() (+21 more)
 
 ### Community 4 - "react"
 Cohesion: 0.11
@@ -262,17 +264,17 @@ Nodes (23): 1.1 Cambio de nomenclatura en la UI y BD, 1.2 Campos adicionales par
 Cohesion: 0.29
 Nodes (9): runTest(), STATE_FILE_PATH, stopEscalationService(), captureSystemState(), gracefulShutdown(), registerShutdownHandlers(), restoreSystemState(), STATE_FILE_PATH (+1 more)
 
-### Community 28 - "pdfGeneratorService.ts"
-Cohesion: 0.36
-Nodes (7): main(), generatePOSThermalTicketHTML(), getInvoicePrintData(), InvoicePrintData, getS3Client(), isR2Configured(), uploadTenantFile()
+### Community 28 - "scheduler.ts"
+Cohesion: 0.33
+Nodes (6): checkAndSendReminders(), delay(), formatCurrency(), startScheduler(), client, whatsappState
 
 ### Community 29 - "🚨 Error 502 Bad Gateway - Diagnosis & Solutions"
 Cohesion: 0.10
 Nodes (20): **1. Nginx Proxy NO está corriendo**, **2. Configuración de Nginx incorrecta**, **3. Firewall bloqueando puerto 3000**, **4. DNS/Hosts file mal configurado**, 🔧 Configuración Nginx de Referencia, 📊 Diagrama del Flujo, 🚨 Error 502 Bad Gateway - Diagnosis & Solutions, **PASO 1: Confirmar que localhost funciona** (+12 more)
 
-### Community 30 - "scheduler.ts"
-Cohesion: 0.24
-Nodes (9): runAutoFixAgent(), TicketFixResult, resolveProductClientId(), server, startEscalationService(), checkAndSendReminders(), delay(), formatCurrency() (+1 more)
+### Community 30 - "server"
+Cohesion: 0.33
+Nodes (5): runAutoFixAgent(), TicketFixResult, resolveProductClientId(), server, startEscalationService()
 
 ### Community 31 - "SaaSErpMarketing.tsx"
 Cohesion: 0.40
@@ -502,6 +504,14 @@ Nodes (4): 3.1. Usuario global vs negocio, 3.2. Empleado vs usuario, 3.3. Client
 Cohesion: 0.67
 Nodes (3): 7. Optimización de ruta, Cuándo sí usar Google Maps, Método recomendado
 
+### Community 107 - "localKnowledge.ts"
+Cohesion: 0.50
+Nodes (3): KNOWLEDGE_BASE_DIR, listLocalFiles(), saveLocalFile()
+
+### Community 108 - "envValidator.ts"
+Cohesion: 0.50
+Nodes (3): REQUIRED_VARS, validateEnv(), WARN_VARS
+
 ## Knowledge Gaps
 - **701 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+696 more)
   These have ≤1 connection - possible missing edges or undocumented components.
@@ -519,8 +529,8 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
   _701 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `postgres.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.06347340581839553 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0654320987654321 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.08 - nodes in this community are weakly interconnected._
 - **Should `SaaSErpInventory.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08907563025210084 - nodes in this community are weakly interconnected._

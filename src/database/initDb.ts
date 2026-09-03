@@ -141,13 +141,15 @@ export const initDatabase = async () => {
             );
         `);
         // Ejecutar alter table por si la columna department no existe
-        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS department VARCHAR(30) DEFAULT 'recepcion';`);
+        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS department VARCHAR(100) DEFAULT 'recepcion';`);
         await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;`);
-        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'agent';`);
-        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS pin VARCHAR(20) DEFAULT '1234';`);
-        await pool.query(`ALTER TABLE agent_contacts ALTER COLUMN pin TYPE VARCHAR(20);`);
+        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS role VARCHAR(100) DEFAULT 'agent';`);
+        await pool.query(`ALTER TABLE agent_contacts ADD COLUMN IF NOT EXISTS pin VARCHAR(255) DEFAULT '1234';`);
+        await pool.query(`ALTER TABLE agent_contacts ALTER COLUMN pin TYPE VARCHAR(255);`);
+        await pool.query(`ALTER TABLE agent_contacts ALTER COLUMN role TYPE VARCHAR(100);`);
+        await pool.query(`ALTER TABLE agent_contacts ALTER COLUMN department TYPE VARCHAR(100);`);
         await pool.query(`ALTER TABLE takeover_sessions ADD COLUMN IF NOT EXISTS department VARCHAR(50) DEFAULT 'recepcion';`);
-        console.log("[DB Init] ✅ Tabla 'agent_contacts' creada o ya existente, alterada con columnas department, is_verified, role y pin. Tabla 'takeover_sessions' alterada con department.");
+        console.log("[DB Init] ✅ Tabla 'agent_contacts' creada o ya existente, alterada con columnas department, is_verified, role y pin ampliadas. Tabla 'takeover_sessions' alterada con department.");
 
         // 4.2 Crear tabla products (Inventario)
         await pool.query(`
@@ -201,6 +203,33 @@ export const initDatabase = async () => {
             );
         `);
         console.log("[DB Init] ✅ Tabla 'invoice_items' creada o ya existente.");
+
+        // 4.5 Tabla de Cotizaciones Comerciales
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS quotes (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                quote_number VARCHAR(50) NOT NULL,
+                customer_name VARCHAR(150) NOT NULL,
+                customer_phone VARCHAR(50),
+                customer_email VARCHAR(150),
+                customer_document VARCHAR(50),
+                items JSONB NOT NULL DEFAULT '[]'::jsonb,
+                subtotal NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+                discount_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+                tax_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+                total_amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+                status VARCHAR(30) NOT NULL DEFAULT 'pending',
+                valid_until DATE,
+                notes TEXT,
+                seller_name VARCHAR(100),
+                converted_invoice_id UUID,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(client_id, quote_number)
+            );
+            CREATE INDEX IF NOT EXISTS idx_quotes_client_status ON quotes(client_id, status);
+        `);
+        console.log("[DB Init] ✅ Tabla 'quotes' (Cotizaciones Comerciales) creada.");
 
         // 5. Crear tabla appointments (Agenda de citas interna)
         await pool.query(`
@@ -350,7 +379,8 @@ export const initDatabase = async () => {
                 phone VARCHAR(20) NOT NULL,
                 role VARCHAR(100) DEFAULT 'agent', -- 'admin', 'agent'
                 department_id UUID REFERENCES business_departments(id) ON DELETE SET NULL,
-                pin VARCHAR(4) DEFAULT '1234',
+                pin VARCHAR(255) DEFAULT '1234',
+                allowed_modules JSONB DEFAULT '[]'::jsonb,
                 is_active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );

@@ -28,6 +28,7 @@ import { SaaSErpSupportDocuments } from './SaaSErpSupportDocuments';
 import { SaaSErpCashShifts } from './SaaSErpCashShifts';
 import { SaaSErpSupportTickets } from './SaaSErpSupportTickets';
 import { SaaSErpSalesTargets } from './SaaSErpSalesTargets';
+import { SaaSErpQuotes } from './SaaSErpQuotes';
 
 interface Client {
   id: string;
@@ -115,7 +116,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     return 'cartera';
   };
 
-  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(getDefaultTab());
+  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'cotizaciones' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(getDefaultTab());
   const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1039,6 +1040,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                       </span>
                     </button>
                   )}
+
+                  <button 
+                    onClick={() => setActiveTab('cotizaciones')}
+                    className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                      activeTab === 'cotizaciones' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">request_quote</span>
+                    <span className="font-bold text-xs">Cotizaciones</span>
+                  </button>
 
                   <button 
                     onClick={() => setActiveTab('documentos_soporte')}
@@ -2379,6 +2390,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         {activeTab === 'facturacion2' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
             <SaaSErpInvoices2 clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'cotizaciones' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpQuotes clientId={clientId} />
           </div>
         )}
 

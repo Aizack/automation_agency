@@ -103,12 +103,17 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
 
     // Evento: Generación del código QR único para esta tienda
     newClient.on('qr', (qr) => {
-        console.log(`\n[WhatsApp Multi-Tenant] 📱 CÓDIGO QR GENERADO PARA TIENDA: ${key}`);
-        qrcode.generate(qr, { small: true });
-        
+        const isFirstQR = state.status !== 'QR';
         state.status = 'QR';
         state.qr = qr;
         state.phone = '';
+
+        if (isFirstQR) {
+            console.log(`\n[WhatsApp Multi-Tenant] 📱 CÓDIGO QR GENERADO PARA TIENDA: ${key} (Escaneable en Dashboard o consola)`);
+            qrcode.generate(qr, { small: true });
+        } else {
+            console.log(`[WhatsApp Multi-Tenant] 🔄 Código QR actualizado para tienda: ${key} (esperando escaneo...)`);
+        }
     });
 
     // Evento: Autenticación exitosa
@@ -382,29 +387,42 @@ export const logoutWhatsApp = async (clientId?: string) => {
     }
 };
 
+let autoRestoreExecuted = false;
+
 // Autorestaurar sesiones de WhatsApp previamente vinculadas y guardadas en disco (Sin pedir QR nuevo)
 export const autoRestoreSavedWhatsAppSessions = async () => {
+    if (autoRestoreExecuted) return;
+    autoRestoreExecuted = true;
+
     const authDir = path.join(process.cwd(), '.wwebjs_auth');
     console.log(`[WhatsApp Multi-Tenant] 🔍 Verificando sesiones guardadas en disco en: ${authDir}`);
     if (!fs.existsSync(authDir)) return;
 
     try {
         const entries = fs.readdirSync(authDir);
+        const restoredTenants = new Set<string>();
+
+        // 1. Restaurar primero las sesiones nombradas por tenant (session-<tenantId>)
         for (const entry of entries) {
             if (entry.startsWith('session-')) {
                 const tenantId = entry.replace('session-', '');
-                if (tenantId) {
+                if (tenantId && !restoredTenants.has(tenantId)) {
+                    restoredTenants.add(tenantId);
                     console.log(`[WhatsApp Multi-Tenant] 🔄 Restaurando sesión guardada para tienda: ${tenantId}...`);
                     await connectWhatsApp(tenantId).catch(err => {
                         console.warn(`[WhatsApp Multi-Tenant] Error al restaurar sesión de ${tenantId}:`, err.message);
                     });
                 }
-            } else if (entry === 'session') {
-                console.log(`[WhatsApp Multi-Tenant] 🔄 Restaurando sesión guardada legacy para tienda: admin...`);
-                await connectWhatsApp('admin').catch(err => {
-                    console.warn(`[WhatsApp Multi-Tenant] Error al restaurar sesión legacy admin:`, err.message);
-                });
             }
+        }
+
+        // 2. Si existe carpeta legacy 'session' y 'admin' no ha sido procesado aún
+        if (entries.includes('session') && !restoredTenants.has('admin')) {
+            restoredTenants.add('admin');
+            console.log(`[WhatsApp Multi-Tenant] 🔄 Restaurando sesión guardada legacy para tienda: admin...`);
+            await connectWhatsApp('admin').catch(err => {
+                console.warn(`[WhatsApp Multi-Tenant] Error al restaurar sesión legacy admin:`, err.message);
+            });
         }
     } catch (err) {
         console.error("[WhatsApp Multi-Tenant] Error escaneando sesiones guardadas:", err);

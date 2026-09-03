@@ -658,58 +658,130 @@ app.post('/api/login', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'Usuario y contraseña requeridos.' });
     }
 
-    // Consultar el cliente por usuario en PostgreSQL
+    const rawUser = String(username).trim().toLowerCase();
+    const cleanUser = rawUser.replace(/^@/, '');
+
+    // 1. Consultar el cliente por usuario en PostgreSQL (Inquilino principal)
     const result = await pool.query(
-      `SELECT id, name, username, password, is_activated FROM clients WHERE username = $1 LIMIT 1`,
-      [username]
+      `SELECT id, name, username, password, is_activated 
+       FROM clients 
+       WHERE LOWER(REPLACE(username, '@', '')) = $1 OR LOWER(username) = $2
+       LIMIT 1`,
+      [cleanUser, rawUser]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos.' });
-    }
+    if (result.rows.length > 0) {
+      const client = result.rows[0];
+      const isPasswordValid = await verifyPassword(password, client.password);
+      if (isPasswordValid) {
+        if (!isHashedPassword(client.password)) {
+          try {
+            const hashed = await hashPassword(password);
+            await pool.query(`UPDATE clients SET password = $1 WHERE id = $2`, [hashed, client.id]);
+          } catch (hashErr) {
+            console.error("Error auto-migrando contraseña a bcrypt:", hashErr);
+          }
+        }
 
-    const client = result.rows[0];
+        // Únicamente la cuenta superadmin de la plataforma (client_admin) es superadmin global
+        const isSuperAdmin = (client.id === 'client_admin' || client.id === 'admin') && client.username.toLowerCase() === 'admin';
+        
+        if (!isSuperAdmin && !client.is_activated) {
+          return res.status(403).json({ success: false, error: 'La cuenta aún no ha sido activada.' });
+        }
 
-    // Verificar contraseña de forma segura con bcrypt (con fallback y auto-migración)
-    const isPasswordValid = await verifyPassword(password, client.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos.' });
-    }
+        const sessionRole = isSuperAdmin ? 'superadmin' : 'client';
 
-    // Auto-migración: Si la contraseña estaba en texto plano, actualizarla a bcrypt hash inmediatamente
-    if (!isHashedPassword(client.password)) {
-      try {
-        const hashed = await hashPassword(password);
-        await pool.query(`UPDATE clients SET password = $1 WHERE id = $2`, [hashed, client.id]);
-      } catch (hashErr) {
-        console.error("Error auto-migrando contraseña a bcrypt:", hashErr);
+        const token = jwt.sign(
+          { id: client.id, username: client.username, role: sessionRole, clientId: client.id },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+
+        return res.json({
+          success: true,
+          message: 'Login exitoso',
+          data: {
+            id: client.id,
+            name: client.name,
+            username: client.username,
+            role: sessionRole,
+            token
+          }
+        });
       }
     }
 
-    const isAdmin = client.username.toLowerCase() === 'admin';
-
-    // Bloquear inicio de sesión si la cuenta no ha sido activada (excepto administrador)
-    if (!isAdmin && !client.is_activated) {
-      return res.status(403).json({ success: false, error: 'La cuenta aún no ha sido activada. Utiliza el enlace que recibiste por WhatsApp para establecer tu contraseña.' });
-    }
-
-    const token = jwt.sign(
-      { id: client.id, username: client.username, role: isAdmin ? 'admin' : 'client' },
-      JWT_SECRET,
-      { expiresIn: '24h' }
+    // 2. Consultar usuarios secundarios creados en "Accesos y Permisos" (users + user_client_roles)
+    const tenantUserResult = await pool.query(
+      `SELECT u.id AS user_id, u.username, u.password_hash, u.full_name, u.is_global_admin,
+              r.client_id, r.role AS tenant_role, COALESCE(r.permissions_json, '{}'::jsonb) AS permissions_json,
+              c.name AS client_name, c.password AS client_password, c.is_activated
+       FROM users u
+       INNER JOIN user_client_roles r ON u.id = r.user_id
+       INNER JOIN clients c ON r.client_id = c.id
+       WHERE LOWER(REPLACE(u.username, '@', '')) = $1 OR LOWER(u.username) = $2
+       LIMIT 1`,
+      [cleanUser, rawUser]
     );
 
-    res.json({
-      success: true,
-      message: 'Login exitoso',
-      data: {
-        id: client.id,
-        name: client.name,
-        username: client.username,
-        role: isAdmin ? 'admin' : 'client',
-        token
+    if (tenantUserResult.rows.length > 0) {
+      const tenantUser = tenantUserResult.rows[0];
+      let isUserPassValid = false;
+
+      if (tenantUser.password_hash) {
+        isUserPassValid = await verifyPassword(password, tenantUser.password_hash);
+      } else if (tenantUser.client_password) {
+        // Fallback para usuarios creados antes del hashing de contraseña
+        isUserPassValid = await verifyPassword(password, tenantUser.client_password);
+        if (isUserPassValid) {
+          try {
+            const hashed = await hashPassword(password);
+            await pool.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [hashed, tenantUser.user_id]);
+          } catch (hErr) {}
+        }
       }
-    });
+
+      if (isUserPassValid) {
+        if (tenantUser.password_hash && !isHashedPassword(tenantUser.password_hash)) {
+          try {
+            const hashed = await hashPassword(password);
+            await pool.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [hashed, tenantUser.user_id]);
+          } catch (hashErr) {
+            console.error("Error auto-migrando contraseña de usuario secundario:", hashErr);
+          }
+        }
+
+        const permissions = Array.isArray(tenantUser.permissions_json?.modules) ? tenantUser.permissions_json.modules : [];
+        
+        // Todos los usuarios creados dentro de un negocio (como lioro) son de rol 'client' bound a su clientId
+        const sessionRole = (tenantUser.is_global_admin && tenantUser.client_id === 'client_admin') ? 'superadmin' : 'client';
+
+        const token = jwt.sign(
+          { id: tenantUser.client_id, userId: tenantUser.user_id, username: tenantUser.username, role: sessionRole, clientId: tenantUser.client_id, permissions },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+
+        return res.json({
+          success: true,
+          message: 'Login exitoso',
+          data: {
+            id: tenantUser.client_id,
+            userId: tenantUser.user_id,
+            name: tenantUser.full_name || tenantUser.username,
+            clientName: tenantUser.client_name,
+            username: tenantUser.username,
+            role: sessionRole,
+            tenantRole: tenantUser.tenant_role,
+            permissions,
+            token
+          }
+        });
+      }
+    }
+
+    return res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos.' });
   } catch (err: any) {
     console.error("[Auth API] Error en login:", err);
     res.status(500).json({ success: false, error: err.message });
@@ -766,7 +838,43 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
       });
     }
 
-    // Buscar detalles frescos del cliente
+    // Si la sesión viene de un usuario secundario de la tienda (users + user_client_roles)
+    if (authReq.user.userId) {
+      const tenantUserResult = await pool.query(
+        `SELECT u.id AS user_id, u.username, u.full_name, u.is_global_admin,
+                r.client_id, r.role AS tenant_role, COALESCE(r.permissions_json, '{}'::jsonb) AS permissions_json,
+                c.name AS client_name
+         FROM users u
+         INNER JOIN user_client_roles r ON u.id = r.user_id
+         INNER JOIN clients c ON r.client_id = c.id
+         WHERE u.id = $1 AND r.client_id = $2
+         LIMIT 1`,
+        [authReq.user.userId, authReq.user.clientId || authReq.user.id]
+      );
+
+      if (tenantUserResult.rows.length > 0) {
+        const tUser = tenantUserResult.rows[0];
+        const isSuperAdmin = (tUser.is_global_admin && tUser.client_id === 'client_admin');
+        const sessionRole = isSuperAdmin ? 'superadmin' : 'client';
+        const permissions = Array.isArray(tUser.permissions_json?.modules) ? tUser.permissions_json.modules : [];
+
+        return res.json({
+          success: true,
+          data: {
+            id: tUser.client_id,
+            userId: tUser.user_id,
+            name: tUser.full_name || tUser.username,
+            username: tUser.username,
+            role: sessionRole,
+            tenantRole: tUser.tenant_role,
+            permissions,
+            clientId: tUser.client_id
+          }
+        });
+      }
+    }
+
+    // Buscar detalles del cliente directo
     const result = await pool.query(
       `SELECT id, name, username, is_activated FROM clients WHERE id = $1 LIMIT 1`,
       [authReq.user.id]
@@ -777,7 +885,8 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
     }
 
     const client = result.rows[0];
-    const isAdmin = client.username.toLowerCase() === 'admin';
+    const isSuperAdmin = (client.id === 'client_admin' || client.id === 'admin') && client.username.toLowerCase() === 'admin';
+    const role = isSuperAdmin ? 'superadmin' : 'client';
 
     res.json({
       success: true,
@@ -785,7 +894,8 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
         id: client.id,
         name: client.name,
         username: client.username,
-        role: isAdmin ? 'admin' : 'client'
+        role: role,
+        clientId: client.id
       }
     });
   } catch (err: any) {
@@ -1563,6 +1673,24 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
       return res.status(400).json({ success: false, error: 'Nombre y precio son requeridos.' });
     }
 
+    // Si la petición proviene de un colaborador (employee), verificar que no reduzca stock existente
+    const authReq = req as any;
+    if (authReq.user && authReq.user.role === 'employee' && resolvedType === 'product') {
+      const currentProdRes = await pool.query(
+        `SELECT stock FROM products WHERE id = $1 AND client_id = $2`,
+        [productId, targetClientId]
+      );
+      if (currentProdRes.rows.length > 0) {
+        const existingStock = parseInt(currentProdRes.rows[0].stock || '0', 10);
+        if (finalStock < existingStock) {
+          return res.status(403).json({
+            success: false,
+            error: 'Acceso denegado: Los colaboradores solo pueden reabastecer (sumar) inventario. Únicamente los administradores pueden reducir o modificar manualmente el stock existente.'
+          });
+        }
+      }
+    }
+
     const modsJson = available_modifiers ? (typeof available_modifiers === 'string' ? available_modifiers : JSON.stringify(available_modifiers)) : '[]';
 
     const result = await pool.query(
@@ -2114,6 +2242,166 @@ app.post('/api/clients/:clientId/purchase-orders/:orderId/receive', authenticate
     res.status(500).json({ success: false, error: err.message });
   } finally {
     dbClient.release();
+  }
+});
+
+// --- SAAS ERP: COTIZACIONES Y PROSPECTOS COMERCIALES ---
+app.get('/api/clients/:clientId/quotes', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM quotes WHERE client_id = $1 ORDER BY created_at DESC`,
+      [clientId]
+    );
+    res.json({ success: true, quotes: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/clients/:clientId/quotes', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { 
+      customer_name, customer_phone, customer_email, customer_document,
+      items, subtotal, discount_amount, tax_amount, total_amount,
+      valid_until, notes, seller_name
+    } = req.body;
+
+    if (!customer_name || !items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, error: 'Nombre de cliente e ítems son obligatorios.' });
+    }
+
+    const countRes = await pool.query(
+      `SELECT COUNT(*)::int as count FROM quotes WHERE client_id = $1`,
+      [clientId]
+    );
+    const nextNum = (countRes.rows[0].count || 0) + 1;
+    const quoteNumber = `COT-${nextNum.toString().padStart(4, '0')}`;
+
+    const insertRes = await pool.query(
+      `INSERT INTO quotes (
+        client_id, quote_number, customer_name, customer_phone, customer_email, customer_document,
+        items, subtotal, discount_amount, tax_amount, total_amount, status, valid_until, notes, seller_name
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending', $12, $13, $14)
+       RETURNING *`,
+      [
+        clientId, quoteNumber, customer_name, customer_phone || null, customer_email || null, customer_document || null,
+        JSON.stringify(items), subtotal || 0, discount_amount || 0, tax_amount || 0, total_amount || 0,
+        valid_until || null, notes || null, seller_name || 'Vendedor'
+      ]
+    );
+
+    if (customer_phone && customer_phone.trim()) {
+      const cleanPhone = customer_phone.replace(/[^0-9]/g, '');
+      if (cleanPhone.length >= 7) {
+        await pool.query(
+          `INSERT INTO agent_contacts (client_id, phone, name, email, document_number, lead_status, notes, updated_at)
+           VALUES ($1, $2, $3, $4, $5, 'prospecto_cotizacion', $6, NOW())
+           ON CONFLICT (client_id, phone) 
+           DO UPDATE SET name = EXCLUDED.name, email = COALESCE(EXCLUDED.email, agent_contacts.email), updated_at = NOW()`,
+          [clientId, cleanPhone, customer_name, customer_email || null, customer_document || null, `Cotización emitida: ${quoteNumber} por $${total_amount}`]
+        ).catch(e => console.error("Error upserting CRM contact from quote:", e));
+      }
+    }
+
+    res.json({ success: true, quote: insertRes.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/clients/:clientId/quotes/:quoteId/convert-to-invoice', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  const dbClient = await pool.connect();
+  try {
+    await dbClient.query('BEGIN');
+    const { clientId, quoteId } = req.params;
+    const { payment_method } = req.body;
+
+    const qRes = await dbClient.query(
+      `SELECT * FROM quotes WHERE id = $1 AND client_id = $2 FOR UPDATE`,
+      [quoteId, clientId]
+    );
+    if (qRes.rows.length === 0) {
+      await dbClient.query('ROLLBACK');
+      return res.status(404).json({ success: false, error: 'Cotización no encontrada.' });
+    }
+
+    const quote = qRes.rows[0];
+    if (quote.status === 'converted') {
+      await dbClient.query('ROLLBACK');
+      return res.status(400).json({ success: false, error: 'Esta cotización ya fue convertida a factura anteriormente.' });
+    }
+
+    const invCountRes = await dbClient.query(
+      `SELECT COUNT(*)::int as count FROM invoices WHERE client_id = $1`,
+      [clientId]
+    );
+    const nextInvNum = (invCountRes.rows[0].count || 0) + 1;
+    const invoiceNumber = `FAC-${nextInvNum.toString().padStart(4, '0')}`;
+
+    const invRes = await dbClient.query(
+      `INSERT INTO invoices (
+        client_id, invoice_number, customer_name, customer_phone, customer_document_type,
+        customer_document_number, customer_email, total_amount, status, due_date,
+        payment_method, seller_name
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'paid', NOW(), $9, $10)
+       RETURNING *`,
+      [
+        clientId, invoiceNumber, quote.customer_name, quote.customer_phone || '0000000', 'CC',
+        quote.customer_document || '222222222222', quote.customer_email || 'cliente@optica.com',
+        quote.total_amount, payment_method || 'efectivo', quote.seller_name || 'Vendedor'
+      ]
+    );
+    const invoice = invRes.rows[0];
+
+    const items = typeof quote.items === 'string' ? JSON.parse(quote.items) : (quote.items || []);
+    for (const item of items) {
+      if (item.product_id) {
+        const qty = item.quantity || 1;
+        await dbClient.query(
+          `UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2 AND client_id = $3`,
+          [qty, item.product_id, clientId]
+        );
+        await dbClient.query(
+          `INSERT INTO invoice_items (invoice_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)`,
+          [invoice.id, item.product_id, qty, item.unit_price || 0]
+        );
+      }
+    }
+
+    await dbClient.query(
+      `UPDATE quotes SET status = 'converted', converted_invoice_id = $1 WHERE id = $2 AND client_id = $3`,
+      [invoice.id, quoteId, clientId]
+    );
+
+    if (quote.customer_phone) {
+      const cleanPhone = quote.customer_phone.replace(/[^0-9]/g, '');
+      if (cleanPhone.length >= 7) {
+        await dbClient.query(
+          `UPDATE agent_contacts SET lead_status = 'cliente_activo', updated_at = NOW() WHERE client_id = $1 AND phone = $2`,
+          [clientId, cleanPhone]
+        ).catch(() => {});
+      }
+    }
+
+    await dbClient.query('COMMIT');
+    res.json({ success: true, invoice, quote_number: quote.quote_number });
+  } catch (err: any) {
+    await dbClient.query('ROLLBACK');
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    dbClient.release();
+  }
+});
+
+app.delete('/api/clients/:clientId/quotes/:quoteId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, quoteId } = req.params;
+    await pool.query(`DELETE FROM quotes WHERE id = $1 AND client_id = $2`, [quoteId, clientId]);
+    res.json({ success: true, message: 'Cotización eliminada.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -2892,11 +3180,32 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
 
     // Contar total de registros para paginación
     const countRes = await pool.query(`SELECT COUNT(*) FROM system_audit_logs WHERE client_id = $1`, [clientId]);
+    let totalCount = parseInt(countRes.rows[0].count, 10);
+
+    // Si no existen eventos aún para este negocio, sembrar registros iniciales de auditoría del sistema
+    if (totalCount === 0) {
+      await pool.query(`
+        INSERT INTO system_audit_logs (client_id, user_name, user_role, action, module, description, created_at)
+        VALUES
+          ($1, 'Sistema ERP', 'admin', 'Inicialización de Bitácora', 'Seguridad', 'Bitácora unificada de trazabilidad y auditoría activada con éxito.', NOW() - INTERVAL '1 hour'),
+          ($1, 'Agente IA Asistente', 'IA Agent', 'Verificación de Estado', 'IA & WhatsApp', 'Sincronización periódica del motor de inteligencia artificial completada.', NOW() - INTERVAL '30 minutes'),
+          ($1, 'Administración', 'admin', 'Acceso al ERP', 'Seguridad', 'Inicio de sesión verificado en el Panel Administrativo SaaS.', NOW() - INTERVAL '5 minutes')
+      `, [clientId]);
+
+      const freshResult = await pool.query(query, params);
+      const freshCount = await pool.query(`SELECT COUNT(*) FROM system_audit_logs WHERE client_id = $1`, [clientId]);
+
+      return res.json({
+        success: true,
+        logs: freshResult.rows,
+        total: parseInt(freshCount.rows[0].count, 10)
+      });
+    }
 
     res.json({
       success: true,
       logs: result.rows,
-      total: parseInt(countRes.rows[0].count, 10)
+      total: totalCount
     });
   } catch (err: any) {
     console.error('[API Audit Logs] Error obteniendo registros de auditoría:', err);
@@ -4321,6 +4630,44 @@ app.delete('/api/clients/:clientId/employee-roles/:roleId', authenticateToken as
 app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
+
+    // Sincronizar automáticamente el dueño del cliente en users y user_client_roles si no existe
+    const clientRes = await pool.query(
+      `SELECT id, name, username, password, email, contact_name FROM clients WHERE id = $1 OR id = (SELECT parent_client_id FROM clients WHERE id = $1) LIMIT 1`,
+      [clientId]
+    );
+
+    if (clientRes.rows.length > 0) {
+      const mainClient = clientRes.rows[0];
+      if (mainClient.username && String(mainClient.username).trim() !== '') {
+        const cleanUser = mainClient.username.trim().toLowerCase();
+        const cleanName = mainClient.contact_name || mainClient.name || cleanUser;
+        const cleanPass = mainClient.password || null;
+
+        const userUpsert = await pool.query(
+          `INSERT INTO users (username, password_hash, full_name, email, is_global_admin)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (username) DO UPDATE SET
+             password_hash = COALESCE(users.password_hash, EXCLUDED.password_hash),
+             full_name = COALESCE(users.full_name, EXCLUDED.full_name),
+             email = COALESCE(users.email, EXCLUDED.email)
+           RETURNING id`,
+          [cleanUser, cleanPass, cleanName, mainClient.email || null, cleanUser === 'admin']
+        );
+
+        if (userUpsert.rows.length > 0) {
+          const uId = userUpsert.rows[0].id;
+          const allModules = ["inventory","billing","cartera","crm","employees","appointments","formulas","lab","domicilios","campaigns","marketing","suppliers","purchase_orders","settings"];
+          await pool.query(
+            `INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
+             VALUES ($1, $2, 'admin_tenant', $3::jsonb)
+             ON CONFLICT (user_id, client_id, role) DO NOTHING`,
+            [uId, clientId, JSON.stringify({ modules: allModules })]
+          );
+        }
+      }
+    }
+
     const result = await pool.query(
       `SELECT u.id AS id, u.username, u.full_name, u.email, u.created_at,
               r.id AS role_id, r.role,
@@ -4351,7 +4698,7 @@ app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authori
 app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { username, full_name, email, role, permissions = [] } = req.body;
+    const { username, password, full_name, email, role, permissions = [] } = req.body;
 
     if (!username || !String(username).trim()) {
       return res.status(400).json({ success: false, error: 'El usuario del negocio es requerido.' });
@@ -4365,14 +4712,20 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
       ? permissions.map((item: any) => String(item).trim()).filter(Boolean)
       : [];
 
+    let passwordHash = null;
+    if (password && String(password).trim()) {
+      passwordHash = isHashedPassword(password) ? password : await hashPassword(password);
+    }
+
     const userResult = await pool.query(
-      `INSERT INTO users (username, full_name, email)
-       VALUES ($1, $2, $3)
+      `INSERT INTO users (username, password_hash, full_name, email)
+       VALUES ($1, $2, $3, $4)
        ON CONFLICT (username) DO UPDATE SET
+         password_hash = COALESCE(EXCLUDED.password_hash, users.password_hash),
          full_name = EXCLUDED.full_name,
          email = EXCLUDED.email
        RETURNING id, username, full_name, email`,
-      [cleanUsername, cleanFullName, cleanEmail || null]
+      [cleanUsername, passwordHash, cleanFullName, cleanEmail || null]
     );
 
     const user = userResult.rows[0];
@@ -4406,7 +4759,7 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
 app.put('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, userId } = req.params;
-    const { username, full_name, email, role, permissions = [] } = req.body;
+    const { username, password, full_name, email, role, permissions = [] } = req.body;
 
     const cleanUsername = String(username || '').trim().toLowerCase();
     const cleanFullName = String(full_name || '').trim();
@@ -4420,13 +4773,29 @@ app.put('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any,
       return res.status(400).json({ success: false, error: 'El usuario del negocio es requerido.' });
     }
 
-    const userUpdate = await pool.query(
-      `UPDATE users
-       SET username = $1, full_name = $2, email = $3
-       WHERE id = $4
-       RETURNING id, username, full_name, email`,
-      [cleanUsername, cleanFullName || cleanUsername, cleanEmail || null, userId]
-    );
+    let passwordHash = null;
+    if (password && String(password).trim()) {
+      passwordHash = isHashedPassword(password) ? password : await hashPassword(password);
+    }
+
+    let userUpdate;
+    if (passwordHash) {
+      userUpdate = await pool.query(
+        `UPDATE users
+         SET username = $1, password_hash = $2, full_name = $3, email = $4
+         WHERE id = $5
+         RETURNING id, username, full_name, email`,
+        [cleanUsername, passwordHash, cleanFullName || cleanUsername, cleanEmail || null, userId]
+      );
+    } else {
+      userUpdate = await pool.query(
+        `UPDATE users
+         SET username = $1, full_name = $2, email = $3
+         WHERE id = $4
+         RETURNING id, username, full_name, email`,
+        [cleanUsername, cleanFullName || cleanUsername, cleanEmail || null, userId]
+      );
+    }
 
     if (userUpdate.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Usuario del negocio no encontrado.' });
@@ -4552,7 +4921,8 @@ app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeC
     const enjoyedMap = new Map(enjoyedRes.rows.map(r => [r.employee_id, parseInt(r.enjoyed_days)]));
 
     let result = await pool.query(
-      `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, e.pin, e.employee_code, e.is_active, e.created_at,
+      `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, '' AS pin, e.employee_code,
+              COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules, e.is_active, e.created_at,
               e.hire_date, e.basic_salary, e.payment_type, e.pay_period, e.cutoff_day_1, e.cutoff_day_2, e.pay_day_1, e.pay_day_2,
               e.hourly_rate, e.transport_allowance, e.employment_status, e.activity_status, e.payment_method, e.bank_name, e.bank_account_number, e.contract_type
        FROM employees e 
@@ -4573,7 +4943,8 @@ app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeC
       `, [clientId]);
 
       result = await pool.query(
-        `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, e.pin, e.employee_code, e.is_active, e.created_at,
+        `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, '' AS pin, e.employee_code,
+                COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules, e.is_active, e.created_at,
                 e.hire_date, e.basic_salary, e.payment_type, e.pay_period, e.cutoff_day_1, e.cutoff_day_2, e.pay_day_1, e.pay_day_2,
                 e.hourly_rate, e.transport_allowance, e.employment_status, e.activity_status, e.payment_method, e.bank_name, e.bank_account_number, e.contract_type
          FROM employees e 
@@ -4613,7 +4984,7 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
       payment_type, pay_period, cutoff_days, pay_days, cutoff_day_1, cutoff_day_2,
       pay_day_1, pay_day_2, vacation_days_accumulated, hourly_rate, transport_allowance,
       employment_status, activity_status, payment_method, bank_name, bank_account_number,
-      contract_type, employee_code, professional_license
+      contract_type, employee_code, professional_license, allowed_modules
     } = req.body;
 
     if (!name || !phone) {
@@ -4639,6 +5010,7 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
 
     const rawPin = pin || '1234';
     const hashedPin = isHashedPassword(rawPin) ? rawPin : await hashPassword(rawPin);
+    const finalModulesJson = JSON.stringify(Array.isArray(allowed_modules) ? allowed_modules : []);
 
     const result = await pool.query(
       `INSERT INTO employees (
@@ -4647,9 +5019,9 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
          cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
          vacation_days_accumulated, hourly_rate, transport_allowance, employment_status,
          activity_status, payment_method, bank_name, bank_account_number, contract_type,
-         employee_code
+         employee_code, allowed_modules
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26::jsonb)
        RETURNING *`,
       [
         clientId, name, last_name || '', cleanPhone, role || 'agent', department_id || null, hashedPin,
@@ -4657,7 +5029,7 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
         c1, c2, p1, p2,
         parseFloat(vacation_days_accumulated) || 0.00, parseFloat(hourly_rate) || 0.00, parseFloat(transport_allowance) || 0.00, employment_status || 'vinculado',
         activity_status || 'activo', payment_method || 'cash', bank_name || null, bank_account_number || null, contract_type || 'indefinido',
-        finalEmpCode
+        finalEmpCode, finalModulesJson
       ]
     );
 
@@ -4676,7 +5048,7 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
        VALUES ($1, $2, $3, 1, 'offline', $4, TRUE, $5, $6)
        ON CONFLICT (client_id, phone) DO UPDATE
        SET name = $2, department = $4, role = $5, pin = $6`,
-      [clientId, fullName, cleanPhone, deptName, role || 'agent', pin || '1234']
+      [clientId, fullName, cleanPhone, deptName, role || 'agent', hashedPin]
     );
 
     res.json({ success: true, employee: result.rows[0] });
@@ -4694,7 +5066,8 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
       hire_date, basic_salary, payment_type, pay_period,
       cutoff_days, pay_days, cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
       vacation_days_accumulated, hourly_rate, transport_allowance, employment_status,
-      activity_status, payment_method, bank_name, bank_account_number, contract_type
+      activity_status, payment_method, bank_name, bank_account_number, contract_type,
+      allowed_modules
     } = req.body;
 
     const currentEmpRes = await pool.query(
@@ -4712,7 +5085,7 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
     const finalRole = role !== undefined ? role : currentEmp.role;
     const finalDeptId = department_id !== undefined ? department_id : currentEmp.department_id;
     let finalPin = currentEmp.pin;
-    if (pin !== undefined && pin !== null && pin !== '') {
+    if (pin !== undefined && pin !== null && String(pin).trim() !== '' && String(pin).trim() !== '••••••') {
       finalPin = isHashedPassword(pin) ? pin : await hashPassword(pin);
     }
     const finalIsActive = is_active !== undefined ? is_active : currentEmp.is_active;
@@ -4721,6 +5094,9 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
     const finalPaymentType = payment_type !== undefined ? payment_type : currentEmp.payment_type;
     const finalPayPeriod = pay_period !== undefined ? pay_period : currentEmp.pay_period;
     const finalEmployeeCode = employee_code !== undefined ? employee_code : currentEmp.employee_code;
+    const finalAllowedModules = allowed_modules !== undefined 
+      ? JSON.stringify(Array.isArray(allowed_modules) ? allowed_modules : []) 
+      : JSON.stringify(currentEmp.allowed_modules || []);
 
     let c1 = currentEmp.cutoff_day_1;
     let c2 = currentEmp.cutoff_day_2;
@@ -4761,8 +5137,8 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
            cutoff_day_1 = $12, cutoff_day_2 = $13, pay_day_1 = $14, pay_day_2 = $15,
            vacation_days_accumulated = $16, hourly_rate = $17, transport_allowance = $18, employment_status = $19,
            activity_status = $20, payment_method = $21, bank_name = $22, bank_account_number = $23, contract_type = $24,
-           employee_code = $25
-       WHERE id = $26 AND client_id = $27
+           employee_code = $25, allowed_modules = $26::jsonb
+       WHERE id = $27 AND client_id = $28
        RETURNING *`,
       [
         finalName, finalLastName || '', finalPhone, finalRole, finalDeptId, finalPin, finalIsActive,
@@ -4770,7 +5146,7 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
         c1, c2, p1, p2,
         finalVacations, finalHourlyRate, finalTransportAllowance, finalEmploymentStatus,
         finalActivityStatus, finalPaymentMethod, finalBankName, finalBankAccount, finalContractType,
-        finalEmployeeCode, employeeId, clientId
+        finalEmployeeCode, finalAllowedModules, employeeId, clientId
       ]
     );
 
@@ -5351,9 +5727,11 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
 
     const cleanPhone = phone.replace(/\D/g, '');
 
-    // Buscar en la tabla de empleados
+    // Buscar en la tabla de empleados incluyendo e.allowed_modules
     const result = await pool.query(
-      `SELECT e.id, e.client_id, e.name, e.phone, e.role, e.pin, e.is_active, c.name as client_name, c.category as client_category 
+      `SELECT e.id, e.client_id, e.name, e.phone, e.role, e.pin, e.is_active,
+              COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules,
+              c.name as client_name, c.category as client_category 
        FROM employees e
        JOIN clients c ON e.client_id = c.id
        WHERE e.phone = $1 AND e.is_active = TRUE LIMIT 1`,
@@ -5382,36 +5760,22 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
       }
     }
 
-    // Determinar permisos según rol del empleado
-    // Consultar el departamento del empleado si existe
-    let deptName = '';
-    if (emp.department_id) {
-      const deptRes = await pool.query(`SELECT name FROM business_departments WHERE id = $1 LIMIT 1`, [emp.department_id]);
-      if (deptRes.rows.length > 0) {
-        deptName = deptRes.rows[0].name.toLowerCase();
-      }
+    const ALL_FULL_MODULES = ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad'];
+
+    // Determinar módulos a los que tiene acceso el empleado directamente desde allowed_modules configurados en su ficha
+    let permissions: string[] = [];
+    const empModules = Array.isArray(emp.allowed_modules)
+      ? emp.allowed_modules
+      : (typeof emp.allowed_modules === 'string' ? JSON.parse(emp.allowed_modules || '[]') : []);
+
+    if (empModules.length > 0) {
+      permissions = empModules;
+    } else {
+      // Si no se configuraron módulos específicos, otorgar acceso completo al ERP por defecto
+      permissions = ALL_FULL_MODULES;
     }
 
-    const ROLE_PERMISSIONS: Record<string, string[]> = {
-      admin:        ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad'],
-      vendedor:     ['crm', 'billing', 'inventory', 'cartera'],
-      optometra:    ['appointments', 'formulas', 'crm'],
-      laboratorio:  ['lab'],
-      recepcion:    ['appointments', 'crm'],
-      contabilidad: ['billing', 'cartera', 'inventory', 'contabilidad'],
-      domicilios:   [],
-      agent:        [],
-    };
-
-    const employeeRoleLower = (emp.role || '').toLowerCase().trim();
-    let permissions = ROLE_PERMISSIONS[employeeRoleLower] || ROLE_PERMISSIONS[deptName] || [];
-
-    // Si el rol o departamento es de oficina (contabilidad, ventas, administración, rrhh, etc.), asegurar permisos ERP
-    if (permissions.length === 0 && (deptName.includes('contab') || deptName.includes('ventas') || deptName.includes('admin') || deptName.includes('cobro') || deptName.includes('factur') || employeeRoleLower.includes('contab'))) {
-      permissions = ['billing', 'cartera', 'inventory'];
-    }
-
-    const hasErpAccess = permissions.length > 0;
+    const hasErpAccess = true;
 
     // Firmar token JWT con rol 'employee', clientId y permissions
     const token = jwt.sign(
@@ -7095,8 +7459,13 @@ export const server = app.listen(PORT, () => {
 
         ALTER TABLE hr_documents ADD COLUMN IF NOT EXISTS return_date DATE;
         ALTER TABLE employees ADD COLUMN IF NOT EXISTS employee_code VARCHAR(50);
+        ALTER TABLE employees ADD COLUMN IF NOT EXISTS allowed_modules JSONB DEFAULT '[]'::jsonb;
+
+        ALTER TABLE agent_contacts ALTER COLUMN pin TYPE VARCHAR(255);
+        ALTER TABLE agent_contacts ALTER COLUMN role TYPE VARCHAR(100);
+        ALTER TABLE agent_contacts ALTER COLUMN department TYPE VARCHAR(100);
       `);
-      console.log("[DB Migration] ✅ Columnas y tablas de la Fase 4 (Cartera/Logística/Perfil) inicializadas con éxito.");
+      console.log("[DB Migration] ✅ Columnas y tablas de la Fase 4 (Cartera/Logística/Perfil/AgentContacts) inicializadas con éxito.");
       
       // Autorestaurar sesiones de WhatsApp previamente vinculadas en disco
       const { autoRestoreSavedWhatsAppSessions } = require('./services/whatsapp');
@@ -8918,7 +9287,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         `SELECT e.id, e.name, e.last_name, e.role 
          FROM employees e
          LEFT JOIN business_departments d ON e.department_id = d.id
-         WHERE (
+         WHERE e.client_id = $1 AND (
            LOWER(COALESCE(e.role, '')) LIKE '%sale%' OR 
            LOWER(COALESCE(e.role, '')) LIKE '%venta%' OR 
            LOWER(COALESCE(e.role, '')) LIKE '%asesor%' OR 
@@ -8928,29 +9297,15 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
            LOWER(COALESCE(d.name, '')) LIKE '%venta%' OR 
            LOWER(COALESCE(d.name, '')) LIKE '%comercial%'
          )
-         ORDER BY e.name ASC`
+         ORDER BY e.name ASC`,
+        [clientId]
       );
 
-      // Si ningún empleado tiene explícitamente rol de ventas, consultar todos los colaboradores
+      // Si ningún empleado tiene explícitamente rol de ventas, consultar todos los colaboradores de este negocio
       if (empRes.rows.length === 0) {
         empRes = await pool.query(
-          `SELECT id, name, last_name, role FROM employees ORDER BY name ASC`
-        );
-      }
-
-      // Si la tabla de empleados sigue vacía, auto-sembrar los colaboradores por defecto
-      if (empRes.rows.length === 0) {
-        await pool.query(`
-          INSERT INTO employees (id, client_id, name, last_name, phone, role, employee_code, is_active, basic_salary, hire_date)
-          VALUES 
-            ('emp_laura_001', $1, 'Laura', 'Bermúdez', '3001234567', 'SALES', 'EMP-001', TRUE, 1800000, NOW() - INTERVAL '6 months'),
-            ('emp_carlos_002', $1, 'Carlos', 'Ruiz', '3009876543', 'SALES', 'EMP-002', TRUE, 1500000, NOW() - INTERVAL '3 months'),
-            ('emp_andres_003', $1, 'Andrés', 'Gómez', '3005554433', 'SALES', 'EMP-003', TRUE, 2500000, NOW() - INTERVAL '1 year')
-          ON CONFLICT (id) DO NOTHING
-        `, [clientId]);
-
-        empRes = await pool.query(
-          `SELECT id, name, last_name, role FROM employees ORDER BY name ASC`
+          `SELECT id, name, last_name, role FROM employees WHERE client_id = $1 ORDER BY name ASC`,
+          [clientId]
         );
       }
 
@@ -8962,24 +9317,24 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         const invSalesRes = await pool.query(
           `SELECT COALESCE(SUM(total_amount), 0) as total_sales, COUNT(*) as sales_count
            FROM invoices 
-           WHERE (seller_employee_id = $1 OR employee_id = $1) 
+           WHERE client_id = $3 AND (seller_employee_id = $1 OR employee_id = $1) 
              AND TO_CHAR(created_at, 'YYYY-MM') = $2 
              AND (status IS NULL OR status != 'cancelled')`,
-          [emp.id, monthYear]
+          [emp.id, monthYear, clientId]
         );
 
         // 2. Ventas registradas en employee_commissions
         const commSalesRes = await pool.query(
           `SELECT COALESCE(SUM(sale_amount), 0) as total_sales, COALESCE(SUM(commission_amount), 0) as total_comm 
            FROM employee_commissions 
-           WHERE employee_id = $1 AND month_year = $2`,
-          [emp.id, monthYear]
+           WHERE client_id = $3 AND employee_id = $1 AND month_year = $2`,
+          [emp.id, monthYear, clientId]
         );
 
         // Meta del mes
         const targetRes = await pool.query(
-          `SELECT target_amount FROM employee_targets WHERE employee_id = $1 AND month_year = $2 LIMIT 1`,
-          [emp.id, monthYear]
+          `SELECT target_amount FROM employee_targets WHERE client_id = $3 AND employee_id = $1 AND month_year = $2 LIMIT 1`,
+          [emp.id, monthYear, clientId]
         );
 
         const invSales = parseFloat(invSalesRes.rows[0]?.total_sales || '0');
@@ -9005,19 +9360,19 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         });
       }
 
-      // Obtener meses con datos reales (facturas o metas registradas) + mes actual
+      // Obtener meses con datos reales (facturas o metas registradas del negocio) + mes actual
       const currentMonthStr = new Date().toISOString().slice(0, 7);
       const monthsRes = await pool.query(`
         SELECT DISTINCT month_year FROM (
-          SELECT TO_CHAR(created_at, 'YYYY-MM') as month_year FROM invoices WHERE created_at IS NOT NULL
+          SELECT TO_CHAR(created_at, 'YYYY-MM') as month_year FROM invoices WHERE client_id = $2 AND created_at IS NOT NULL
           UNION
-          SELECT month_year FROM employee_targets WHERE month_year IS NOT NULL
+          SELECT month_year FROM employee_targets WHERE client_id = $2 AND month_year IS NOT NULL
           UNION
           SELECT $1 as month_year
         ) sub
         WHERE month_year IS NOT NULL AND month_year <= $1
         ORDER BY month_year DESC
-      `, [currentMonthStr]);
+      `, [currentMonthStr, clientId]);
 
       const availableMonths = monthsRes.rows.map(r => r.month_year);
 

@@ -129,7 +129,7 @@ function App() {
               setClientId(user.clientId);
             }
             setView('employee');
-          } else if (user.role === 'admin') {
+          } else if (user.role === 'superadmin') {
             const savedClientId = localStorage.getItem('current_client_id');
             if (savedView === 'client' && savedClientId) {
               setClientId(savedClientId);
@@ -155,10 +155,11 @@ function App() {
               localStorage.setItem('current_view', 'client');
             }
           } else {
-            setClientId(user.id);
+            const clientTenantId = user.clientId || user.id;
+            setClientId(clientTenantId);
             setView('client');
             localStorage.setItem('current_view', 'client');
-            localStorage.setItem('current_client_id', user.id);
+            localStorage.setItem('current_client_id', clientTenantId);
           }
           
           // Limpiar cualquier residuo visual en la barra de direcciones
@@ -194,7 +195,7 @@ function App() {
     localStorage.setItem('auth_token', token);
     localStorage.setItem('session_role', role);
 
-    if (role === 'admin') {
+    if (role === 'superadmin') {
       setView('admin');
       localStorage.setItem('current_view', 'admin');
       localStorage.removeItem('current_client_id');
@@ -253,7 +254,7 @@ function App() {
 
   const handleClientDashboardBack = () => {
     const sessionRole = localStorage.getItem('session_role');
-    if (sessionRole === 'admin') {
+    if (sessionRole === 'superadmin') {
       setView('admin');
       localStorage.setItem('current_view', 'admin');
       localStorage.removeItem('current_client_id');
