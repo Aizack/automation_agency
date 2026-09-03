@@ -16,6 +16,7 @@ def run_ssh():
     client.connect(VPS_IP, username=VPS_USER, password=VPS_PASS, timeout=15)
 
     commands = [
+        "cd /app/agency-bot && git pull",
         "cd /app/agency-bot/dashboard && npm run build",
         "pm2 restart all || pm2 restart agency-bot",
         "systemctl reload nginx 2>/dev/null || true",

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { RestaurantWaiterPortal } from './RestaurantWaiterPortal';
+import { clearAllSessionData } from '../utils/api';
 
 interface Task {
     id: string;
@@ -621,19 +622,7 @@ export const EmployeePortal: React.FC = () => {
 
     // LOGOUT ACTION
     const handleLogout = () => {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('session_role');
-        localStorage.removeItem('session_name');
-        localStorage.removeItem('current_view');
-        localStorage.removeItem('current_client_id');
-        localStorage.removeItem('employee_role');
-        localStorage.removeItem('employee_permissions');
-        localStorage.removeItem('emp_token');
-        localStorage.removeItem('emp_id');
-        localStorage.removeItem('emp_name');
-        localStorage.removeItem('emp_role');
-        localStorage.removeItem('emp_client_id');
-        localStorage.removeItem('shift_start_ts');
+        clearAllSessionData();
         setIsAuthenticated(false);
         setTimerActive(false);
         setShiftStartTimestamp(null);

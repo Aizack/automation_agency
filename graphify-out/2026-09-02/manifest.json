@@ -12,9 +12,9 @@
     "semantic_hash": "0649eb6aa485ca40777181f08fec66a9"
   },
   "dashboard/src/App.tsx": {
-    "mtime": 1788400293.4284904,
-    "seen": 1788403710.1663446,
-    "ast_hash": "19cc8dc9b0fd32be1d13e2e9941f95b7",
+    "mtime": 1788406202.2016032,
+    "seen": 1788406279.8953137,
+    "ast_hash": "6d03734b81c7760e09fd8fd8a4b43a51",
     "semantic_hash": ""
   },
   "dashboard/src/components/ActivateAccount.tsx": {
@@ -66,10 +66,10 @@
     "semantic_hash": "e12b350e0b66b3fa037cf2b1d1531066"
   },
   "dashboard/src/components/Login.tsx": {
-    "mtime": 1787895365.3778036,
-    "seen": 1788044146.8913028,
-    "ast_hash": "628dcff7017805634e01e18ac8ddf999",
-    "semantic_hash": "628dcff7017805634e01e18ac8ddf999"
+    "mtime": 1788406168.316374,
+    "seen": 1788406279.8953354,
+    "ast_hash": "ca17f03e35dd5565aeed19cea5a69d66",
+    "semantic_hash": ""
   },
   "dashboard/src/components/PublicRestaurantMenu.tsx": {
     "mtime": 1787936940.9332604,
@@ -474,9 +474,9 @@
     "semantic_hash": "b3024c4e4260cc821458cbe2a3a5d9e1"
   },
   "src/server.ts": {
-    "mtime": 1788405436.753512,
-    "seen": 1788405521.7422214,
-    "ast_hash": "a7bcbdb91edb6d6dd49c04a73e6acf4f",
+    "mtime": 1788406157.2141778,
+    "seen": 1788406279.8954926,
+    "ast_hash": "4c95296117d87925efb28497a446e9fc",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {

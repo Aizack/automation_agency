@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { authFetch as fetch } from '../utils/api';
+import { authFetch as fetch, clearAllSessionData } from '../utils/api';
 import { SaaSErpInventory } from './SaaSErpInventory';
 import { SaaSErpInvoices } from './SaaSErpInvoices';
 import { SaaSErpInvoices2 } from './SaaSErpInvoices2';
@@ -1426,10 +1426,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     )}
                     <button
                       onClick={() => {
-                        localStorage.removeItem('auth_token');
-                        localStorage.removeItem('session_role');
-                        localStorage.removeItem('current_client_id');
-                        window.location.reload();
+                        clearAllSessionData();
+                        onBack();
                       }}
                       className="w-full text-left p-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-red-400 hover:bg-red-500/10 transition cursor-pointer border-0"
                     >

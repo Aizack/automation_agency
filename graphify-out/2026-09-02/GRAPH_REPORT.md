@@ -1,7 +1,7 @@
 # Graph Report - Bot multi-tenant  (2026-09-02)
 
 ## Corpus Check
-- 166 files · ~309,000 words
+- 166 files · ~309,018 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `30f4042c`
+- Built from commit: `7bb475c5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
