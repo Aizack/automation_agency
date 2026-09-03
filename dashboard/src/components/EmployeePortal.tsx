@@ -456,17 +456,17 @@ export const EmployeePortal: React.FC = () => {
             return res;
         };
 
-        const storedToken = localStorage.getItem('emp_token');
-        const storedEmpId = localStorage.getItem('emp_id');
-        const storedName = localStorage.getItem('emp_name');
-        const storedRole = localStorage.getItem('emp_role');
-        const storedCategory = localStorage.getItem('emp_client_category');
-        const storedClientId = localStorage.getItem('emp_client_id');
+        const storedToken = localStorage.getItem('emp_token') || localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+        const storedEmpId = localStorage.getItem('emp_id') || localStorage.getItem('user_id');
+        const storedName = localStorage.getItem('emp_name') || localStorage.getItem('session_name');
+        const storedRole = localStorage.getItem('emp_role') || localStorage.getItem('employee_role');
+        const storedCategory = localStorage.getItem('emp_client_category') || '';
+        const storedClientId = localStorage.getItem('emp_client_id') || localStorage.getItem('current_client_id');
         const storedShiftStart = localStorage.getItem('shift_start_ts');
 
-        if (storedToken && storedEmpId && storedClientId) {
+        if (storedToken && storedClientId) {
             setEmployeeToken(storedToken);
-            setEmployeeId(storedEmpId);
+            setEmployeeId(storedEmpId || 'emp_session');
             setEmployeeName(storedName || 'Empleado');
             setEmployeeRole(storedRole || 'employee');
             setClientCategory(storedCategory || '');

@@ -91,13 +91,6 @@ function App() {
         return;
       }
 
-      // 0.1 Caso de portal de empleado o chat corporativo standalone
-      if (path === '/empleados' || path === '/employee' || path === '/chat') {
-        setView('employee');
-        setLoading(false);
-        return;
-      }
-
       // 1. Caso de activación de cuenta (enlace público de WhatsApp)
       if (urlView === 'activate-account' && urlClientId && urlToken) {
         setView('activate');

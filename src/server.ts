@@ -957,8 +957,8 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
         laboratorio:  ['lab'],
         recepcion:    ['appointments', 'crm'],
         contabilidad: ['billing', 'cartera', 'inventory', 'contabilidad'],
-        domicilios:   [],
-        agent:        [],
+        domicilios:   ['domicilios', 'cartera', 'billing'],
+        agent:        ['crm', 'billing'],
       };
 
       const employeeRoleLower = (emp.role || '').toLowerCase().trim();
