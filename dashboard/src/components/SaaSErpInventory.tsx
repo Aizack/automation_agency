@@ -125,9 +125,18 @@ const colorOptions: ColorOption[] = [
     { name: 'Rojo', value: 'Rojo', preview: '#ff0000' }
 ];
 
-const getColorPreview = (name: string): string => {
-    const opt = colorOptions.find(o => o.value.toLowerCase() === (name || '').toLowerCase() || o.name.toLowerCase() === (name || '').toLowerCase());
-    return opt ? opt.preview : '#808080';
+const getColorPreview = (name: string, colorHex?: string): string => {
+    if (colorHex && colorHex.startsWith('#')) return colorHex;
+    if (!name) return '#808080';
+    const clean = name.trim().toLowerCase();
+    const opt = colorOptions.find(o => 
+        o.value.toLowerCase() === clean || 
+        o.name.toLowerCase() === clean || 
+        clean.includes(o.value.toLowerCase()) || 
+        o.value.toLowerCase().includes(clean)
+    );
+    if (opt) return opt.preview;
+    return getColorHex(name, colorHex);
 };
 
 // Sub-componente para edición inline de promociones
@@ -2654,7 +2663,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 <div className="flex items-center gap-2.5">
                                                     <span 
                                                         className="w-5 h-5 rounded-full border border-white/30 inline-block shadow-sm"
-                                                        style={{ backgroundColor: v.color_hex || getColorHex(v.variant_name || v.color) }}
+                                                        style={{ background: getColorPreview(v.color || v.variant_name, v.color_hex) }}
                                                     />
                                                     <div>
                                                         <p className="text-xs font-bold text-on-surface">{v.variant_name || v.color}</p>
@@ -2932,7 +2941,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         <div className="flex items-center gap-3">
                                             <div
                                                 className="w-5 h-5 rounded-full border border-white/20 shrink-0 shadow-sm"
-                                                style={{ background: getColorHex(v.color || v.variant_name, v.color_hex) }}
+                                                style={{ background: getColorPreview(v.color || v.variant_name, v.color_hex) }}
                                             />
                                             <div>
                                                 <p className="font-bold text-xs text-on-surface">{v.variant_name || v.color}</p>
