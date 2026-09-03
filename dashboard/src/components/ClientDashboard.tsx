@@ -565,7 +565,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         }
 
         // 2. Obtener estado en tiempo real de WhatsApp
-        const waRes = await fetch('/api/whatsapp/status');
+        const waRes = await fetch(`/api/whatsapp/status?clientId=${clientId}`);
         const waJson = await waRes.json();
         if (waJson.success) {
           setWhatsappStatus(waJson.data);
