@@ -1229,7 +1229,7 @@ export const EmployeePortal: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#0d0d0d] text-on-surface font-sans flex flex-col md:flex-row">
             {/* Sidebar Navigation (Visible on Desktop) */}
-            <aside className="hidden md:flex md:flex-col md:w-64 bg-[#0d0d0d] border-r border-outline/10 p-6 flex-shrink-0 justify-between">
+            <aside className="hidden md:flex md:flex-col md:w-64 bg-[#0d0d0d] border-r border-outline/10 p-6 flex-shrink-0 justify-between md:sticky md:top-0 md:h-screen md:overflow-y-auto custom-scrollbar">
                 <div className="space-y-8">
                     {/* User profile card */}
                     <div className="flex items-center gap-3 border-b border-outline/10 pb-6">

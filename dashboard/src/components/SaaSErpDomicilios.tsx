@@ -46,6 +46,8 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
   const [batchPage, setBatchPage] = useState<number>(1);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [batchTargetGuyId, setBatchTargetGuyId] = useState<string>('');
+  const [batchUpdating, setBatchUpdating] = useState<boolean>(false);
 
   // Modal Reagendar
   const [reagendaInvoice, setReagendaInvoice] = useState<Invoice | null>(null);
@@ -202,6 +204,38 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
     }
   };
 
+  const handleBatchAssignDeliveryGuy = async () => {
+    if (!batchTargetGuyId) {
+      alert('Por favor selecciona un repartidor para asignar al lote completo.');
+      return;
+    }
+
+    if (currentBatchDeliveries.length === 0) return;
+
+    const guyObj = employees.find(e => e.id === batchTargetGuyId);
+    const guyName = guyObj ? `${guyObj.name} ${guyObj.last_name || ''}`.trim() : 'el repartidor seleccionado';
+
+    if (!window.confirm(`¿Deseas asignar los ${currentBatchDeliveries.length} envíos del Lote #${currentBatchPage} a ${guyName}?`)) {
+      return;
+    }
+
+    setBatchUpdating(true);
+    try {
+      await Promise.all(currentBatchDeliveries.map(dev => 
+        fetch(`/api/clients/${clientId}/invoices/${dev.id}/delivery`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deliveryGuyId: batchTargetGuyId })
+        })
+      ));
+      fetchDeliveries();
+    } catch (err) {
+      alert('Error al asignar envíos en lote.');
+    } finally {
+      setBatchUpdating(false);
+    }
+  };
+
   const handleCopyAddress = async (address: string, invoiceId: string) => {
     try {
       await navigator.clipboard.writeText(address);
@@ -323,6 +357,51 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
                 </button>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Barra de Asignación Masiva por Lote */}
+      {currentBatchDeliveries.length > 0 && (
+        <div className="bg-[#141517] border border-[#eab308]/30 p-3.5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-2.5">
+            <span className="material-symbols-outlined text-[22px]" style={{ color: '#eab308' }}>two_wheeler</span>
+            <div>
+              <p className="text-xs font-extrabold text-white flex items-center gap-2">
+                ASIGNACIÓN MASIVA DEL LOTE #{currentBatchPage}
+                <span className="bg-[#eab308]/20 text-[#eab308] text-[10px] px-2 py-0.5 rounded-full border border-[#eab308]/30 font-mono">
+                  {currentBatchDeliveries.length} pedidos
+                </span>
+              </p>
+              <p className="text-[11px] text-gray-400">
+                Asigna los {currentBatchDeliveries.length} domicilios de este lote a un mismo repartidor con 1 solo clic.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <select
+              value={batchTargetGuyId}
+              onChange={(e) => setBatchTargetGuyId(e.target.value)}
+              className="bg-[#181a1c] border border-[#2d3036] rounded-lg p-2 text-xs font-bold text-white outline-none cursor-pointer flex-grow md:flex-grow-0"
+            >
+              <option value="">-- Seleccionar Repartidor para el Lote --</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  🛵 {emp.name} {emp.last_name || ''}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              disabled={batchUpdating || !batchTargetGuyId}
+              onClick={handleBatchAssignDeliveryGuy}
+              className="px-4 py-2 bg-[#eab308] hover:bg-amber-300 disabled:opacity-50 text-black font-extrabold text-xs rounded-lg cursor-pointer shadow flex items-center gap-1.5 transition whitespace-nowrap border-0"
+            >
+              <span className="material-symbols-outlined text-[16px]">assignment_turned_in</span>
+              {batchUpdating ? 'Asignando Lote...' : `Asignar Lote #${currentBatchPage} (${currentBatchDeliveries.length})`}
+            </button>
           </div>
         </div>
       )}
