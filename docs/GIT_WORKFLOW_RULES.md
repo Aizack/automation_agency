@@ -23,6 +23,10 @@ Este documento define la normativa estricta para la gestión del repositorio Git
      - `npx tsc --noEmit` (Sin errores de TypeScript)
      - `npm run build:frontend` (Compilación limpia de Vite)
 
+4. **REGLA ESTRICTA DE APROBACIÓN EN LOCAL ANTES DE VPS**:
+   - **NUNCA ejecutar despliegue ni actualización al VPS** sin que el cambio haya sido probado primero en el entorno **LOCAL**, y el usuario haya confirmado y aprobado explícitamente que en local funciona al 100%.
+   - El flujo obligatorio es: `Desarrollo Local` ➔ `Build Local` ➔ `Prueba del Usuario en Local` ➔ `Confirmación del Usuario` ➔ `Despliegue a VPS`.
+
 ---
 
 ## 🌿 2. ESTRATEGIA Y GESTIÓN DE RAMAS
