@@ -1011,66 +1011,70 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           )}
 
-          {(hasPermission('billing') || hasPermission('contabilidad') || hasPermission('cartera')) && (
+          {(hasPermission('billing') || hasPermission('contabilidad') || hasPermission('cartera') || hasPermission('cotizaciones') || hasPermission('documentos_soporte') || hasPermission('arqueo_caja')) && (
             <div className="space-y-1 pt-1">
               <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Facturación y Contabilidad</div>
               {hasPermission('billing') && clientData?.enabledModules?.billing !== false && (
-                <>
-                  <button 
-                    onClick={() => setActiveTab('facturacion')}
-                    className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                      activeTab === 'facturacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-                    <span className="font-bold text-xs">Facturación</span>
-                  </button>
+                <button 
+                  onClick={() => setActiveTab('facturacion')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'facturacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+                  <span className="font-bold text-xs">Facturación</span>
+                </button>
+              )}
 
-                  {rawRole === 'admin' && (
-                    <button 
-                      onClick={() => setActiveTab('facturacion2')}
-                      className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                        activeTab === 'facturacion2' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-[18px]">receipt</span>
-                      <span className="font-bold text-xs flex items-center justify-between w-full">
-                        <span>Facturación v2</span>
-                        <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-mono uppercase">Admin Respaldo</span>
-                      </span>
-                    </button>
-                  )}
+              {rawRole === 'admin' && (
+                <button 
+                  onClick={() => setActiveTab('facturacion2')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'facturacion2' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">receipt</span>
+                  <span className="font-bold text-xs flex items-center justify-between w-full">
+                    <span>Facturación v2</span>
+                    <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-mono uppercase">Admin Respaldo</span>
+                  </span>
+                </button>
+              )}
 
-                  <button 
-                    onClick={() => setActiveTab('cotizaciones')}
-                    className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                      activeTab === 'cotizaciones' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">request_quote</span>
-                    <span className="font-bold text-xs">Cotizaciones</span>
-                  </button>
+              {hasPermission('cotizaciones') && (
+                <button 
+                  onClick={() => setActiveTab('cotizaciones')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'cotizaciones' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">request_quote</span>
+                  <span className="font-bold text-xs">Cotizaciones</span>
+                </button>
+              )}
 
-                  <button 
-                    onClick={() => setActiveTab('documentos_soporte')}
-                    className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                      activeTab === 'documentos_soporte' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">description</span>
-                    <span className="font-bold text-xs">Documentos Soporte</span>
-                  </button>
+              {hasPermission('documentos_soporte') && (
+                <button 
+                  onClick={() => setActiveTab('documentos_soporte')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'documentos_soporte' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">description</span>
+                  <span className="font-bold text-xs">Documentos Soporte</span>
+                </button>
+              )}
 
-                  <button 
-                    onClick={() => setActiveTab('arqueo_caja')}
-                    className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                      activeTab === 'arqueo_caja' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">point_of_sale</span>
-                    <span className="font-bold text-xs">Arqueo de Caja</span>
-                  </button>
-                </>
+              {hasPermission('arqueo_caja') && (
+                <button 
+                  onClick={() => setActiveTab('arqueo_caja')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'arqueo_caja' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">point_of_sale</span>
+                  <span className="font-bold text-xs">Arqueo de Caja</span>
+                </button>
               )}
 
               {hasPermission('contabilidad') && (
@@ -1099,7 +1103,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           )}
 
-          {(hasPermission('crm') || hasPermission('campaigns') || hasPermission('marketing')) && (
+          {(hasPermission('crm') || hasPermission('campaigns') || hasPermission('marketing') || hasPermission('metas_ventas')) && (
             <div className="space-y-1 pt-1">
               <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Marketing y Ventas</div>
               {hasPermission('crm') && clientData?.enabledModules?.crm !== false && (
@@ -1138,15 +1142,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 </button>
               )}
 
-              <button 
-                onClick={() => setActiveTab('metas_ventas')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'metas_ventas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">groups</span>
-                <span className="font-bold text-xs">Metas & Ventas Personal</span>
-              </button>
+              {hasPermission('metas_ventas') && (
+                <button 
+                  onClick={() => setActiveTab('metas_ventas')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'metas_ventas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">groups</span>
+                  <span className="font-bold text-xs">Metas & Ventas Personal</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -1182,10 +1188,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           )}
 
-          {hasPermission('employees') && (
+          {(hasPermission('employees') || hasPermission('trazabilidad')) && (
             <div className="space-y-1 pt-1">
               <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Administración de Personal</div>
-              {clientData?.enabledModules?.employees !== false && (
+              {hasPermission('employees') && clientData?.enabledModules?.employees !== false && (
                 <button 
                   onClick={() => setActiveTab('empleados')}
                   className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
@@ -1196,38 +1202,44 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                   <span className="font-bold text-xs">Administración de Personal</span>
                 </button>
               )}
-              <button 
-                onClick={() => setActiveTab('usuarios')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'usuarios' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
-                <span className="font-bold text-xs">Accesos y Permisos</span>
-              </button>
-              <button 
-                onClick={() => setActiveTab('trazabilidad')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'trazabilidad' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">shield</span>
-                <span className="font-bold text-xs">Trazabilidad & Auditoría</span>
-              </button>
+              {hasPermission('employees') && (
+                <button 
+                  onClick={() => setActiveTab('usuarios')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'usuarios' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
+                  <span className="font-bold text-xs">Accesos y Permisos</span>
+                </button>
+              )}
+              {hasPermission('trazabilidad') && (
+                <button 
+                  onClick={() => setActiveTab('trazabilidad')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'trazabilidad' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">shield</span>
+                  <span className="font-bold text-xs">Trazabilidad & Auditoría</span>
+                </button>
+              )}
             </div>
           )}
 
-          <div className="space-y-1 pt-1">
-            <button 
-              onClick={() => setActiveTab('logs')}
-              className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                activeTab === 'logs' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]">build</span>
-              <span className="font-bold text-xs">Estado del Sistema</span>
-            </button>
-          </div>
+          {hasPermission('system_status') && (
+            <div className="space-y-1 pt-1">
+              <button 
+                onClick={() => setActiveTab('logs')}
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                  activeTab === 'logs' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">build</span>
+                <span className="font-bold text-xs">Estado del Sistema</span>
+              </button>
+            </div>
+          )}
         </nav>
 
         {/* User Session Info & Back / Logout footer */}

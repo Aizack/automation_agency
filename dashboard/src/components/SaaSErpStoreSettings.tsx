@@ -315,6 +315,27 @@ const ThemeSelectorManager: React.FC = () => {
   );
 };
 
+const COLOMBIAN_BANKS = [
+  'Bancolombia',
+  'Nequi',
+  'Daviplata',
+  'Davivienda',
+  'Banco de Bogotá',
+  'BBVA Colombia',
+  'Banco de Occidente',
+  'Banco Popular',
+  'Banco AV Villas',
+  'Lulo Bank',
+  'Nu Colombia (Nubank)',
+  'RappiPay',
+  'Scotiabank Colpatria',
+  'Banco Falabella',
+  'Banco Agrario',
+  'Bold',
+  'Mercado Pago',
+  'Otro Banco / Entidad'
+];
+
 interface BankAccount {
   id: string;
   bank_name: string;
@@ -326,7 +347,8 @@ interface BankAccount {
 
 const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
-  const [bankName, setBankName] = useState('');
+  const [selectedBankSelect, setSelectedBankSelect] = useState('Bancolombia');
+  const [customBankName, setCustomBankName] = useState('');
   const [accountType, setAccountType] = useState('ahorros');
   const [accountNumber, setAccountNumber] = useState('');
   const [accountHolder, setAccountHolder] = useState('');
@@ -347,9 +369,20 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
     fetchBankAccounts();
   }, [clientId]);
 
+  const getEffectiveBankName = () => {
+    if (selectedBankSelect === 'Otro Banco / Entidad') {
+      return customBankName.trim();
+    }
+    return selectedBankSelect;
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bankName.trim() || !accountNumber.trim()) return;
+    const effectiveBankName = getEffectiveBankName();
+    if (!effectiveBankName || !accountNumber.trim()) {
+      alert('Por favor selecciona un banco válido e ingresa el número de cuenta.');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -362,7 +395,7 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          bank_name: bankName.trim(),
+          bank_name: effectiveBankName,
           account_type: accountType,
           account_number: accountNumber.trim(),
           account_holder: accountHolder.trim()
@@ -371,7 +404,8 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
 
       const json = await res.json();
       if (json.success) {
-        setBankName('');
+        setSelectedBankSelect('Bancolombia');
+        setCustomBankName('');
         setAccountNumber('');
         setAccountHolder('');
         setEditingId(null);
@@ -388,20 +422,32 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
 
   const handleEdit = (acc: BankAccount) => {
     setEditingId(acc.id);
-    setBankName(acc.bank_name);
+    if (COLOMBIAN_BANKS.includes(acc.bank_name)) {
+      setSelectedBankSelect(acc.bank_name);
+      setCustomBankName('');
+    } else {
+      setSelectedBankSelect('Otro Banco / Entidad');
+      setCustomBankName(acc.bank_name);
+    }
     setAccountType(acc.account_type);
     setAccountNumber(acc.account_number);
     setAccountHolder(acc.account_holder || '');
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!confirm('¿Seguro que deseas eliminar esta cuenta bancaria?')) return;
     try {
       const res = await fetch(`/api/clients/${clientId}/bank-accounts/${id}`, { method: 'DELETE' });
       const json = await res.json();
-      if (json.success) fetchBankAccounts();
+      if (json.success) {
+        fetchBankAccounts();
+      } else {
+        alert(json.error || 'No se pudo eliminar la cuenta bancaria.');
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Error eliminando cuenta bancaria:', err);
     }
   };
 
@@ -421,15 +467,31 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
         <form onSubmit={handleSave} className="lg:col-span-5 bg-surface-container/20 border border-outline/10 p-4 rounded-xl space-y-3">
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-on-surface-variant uppercase">Banco / Entidad *</label>
-            <input
-              type="text"
+            <select
               required
-              value={bankName}
-              onChange={(e) => setBankName(e.target.value)}
-              placeholder="Ej: Bancolombia, Nequi, Davivienda"
-              className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none"
-            />
+              value={selectedBankSelect}
+              onChange={(e) => setSelectedBankSelect(e.target.value)}
+              className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none cursor-pointer"
+            >
+              {COLOMBIAN_BANKS.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
           </div>
+
+          {selectedBankSelect === 'Otro Banco / Entidad' && (
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-on-surface-variant uppercase">Nombre de Entidad Bancaria *</label>
+              <input
+                type="text"
+                required
+                value={customBankName}
+                onChange={(e) => setCustomBankName(e.target.value)}
+                placeholder="Escribe el nombre de la entidad..."
+                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none"
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
@@ -472,7 +534,7 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
             {editingId && (
               <button
                 type="button"
-                onClick={() => { setEditingId(null); setBankName(''); setAccountNumber(''); setAccountHolder(''); }}
+                onClick={() => { setEditingId(null); setSelectedBankSelect('Bancolombia'); setCustomBankName(''); setAccountNumber(''); setAccountHolder(''); }}
                 className="px-3 py-1.5 border border-outline/20 text-xs font-bold rounded-lg cursor-pointer"
               >
                 Cancelar
@@ -511,8 +573,9 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(acc.id)}
-                      className="p-1 text-red-500 hover:bg-red-500/10 rounded cursor-pointer"
+                      onClick={(e) => handleDelete(e, acc.id)}
+                      className="p-1 text-red-500 hover:bg-red-500/10 rounded cursor-pointer border-0 bg-transparent"
+                      title="Eliminar cuenta bancaria"
                     >
                       <span className="material-symbols-outlined text-[16px]">delete</span>
                     </button>

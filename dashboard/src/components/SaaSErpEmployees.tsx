@@ -275,15 +275,22 @@ const CustomDatePicker: React.FC<{
 const MODULES = [
     { key: 'inventory', label: '📦 Inventario' },
     { key: 'billing', label: '💵 Facturación' },
+    { key: 'cotizaciones', label: '📄 Cotizaciones' },
+    { key: 'documentos_soporte', label: '📑 Documentos Soporte' },
+    { key: 'arqueo_caja', label: '📟 Arqueo de Caja' },
+    { key: 'contabilidad', label: '📈 Contabilidad' },
     { key: 'cartera', label: '📊 Cartera y Cobros' },
     { key: 'crm', label: '👤 CRM / Clientes' },
+    { key: 'metas_ventas', label: '👥 Metas & Ventas Personal' },
     { key: 'appointments', label: '📅 Agenda de Citas' },
     { key: 'formulas', label: '👁 Optometría / Fórmulas' },
     { key: 'lab', label: '🔬 Laboratorio' },
     { key: 'domicilios', label: '🚴 Despachos y Domicilios' },
     { key: 'employees', label: '👥 Administración Personal' },
+    { key: 'trazabilidad', label: '🛡️ Trazabilidad & Bitácora' },
     { key: 'campaigns', label: '🗺️ Campañas' },
     { key: 'marketing', label: '📢 Difusión Promocional' },
+    { key: 'system_status', label: '🔧 Estado del Sistema' },
 ] as const;
 
 export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: rawClientId, viewMode }) => {

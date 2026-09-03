@@ -1053,6 +1053,18 @@ export const initDatabase = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             CREATE INDEX IF NOT EXISTS idx_subscription_plans_client ON subscription_plans(client_id);
+
+            CREATE TABLE IF NOT EXISTS business_bank_accounts (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                bank_name VARCHAR(100) NOT NULL,
+                account_type VARCHAR(50) NOT NULL DEFAULT 'ahorros',
+                account_number VARCHAR(100) NOT NULL,
+                account_holder VARCHAR(150),
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_business_bank_accounts_client ON business_bank_accounts(client_id);
         `);
 
         // Reparación e inicialización secuencial automática de Códigos de Empleados (EMP-001, EMP-002, etc.)

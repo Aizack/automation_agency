@@ -104,7 +104,8 @@ export const authorizeClientAccess = (
     return res.status(401).json({ success: false, error: 'No autorizado. Sesión no iniciada.' });
   }
 
-  const targetClientId = req.params.id || req.params.clientId;
+  // Priorizar clientId de la ruta (evitando que req.params.id tome el ID del recurso individual)
+  const targetClientId = req.params.clientId || req.params.id;
 
   // Si es SuperAdministrador Global de la plataforma, tiene acceso completo
   if (req.user.role === 'superadmin') {

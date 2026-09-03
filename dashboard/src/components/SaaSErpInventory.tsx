@@ -308,6 +308,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [style, setStyle] = useState('');
     const [color, setColor] = useState('');
 
+    const [filterBrand, setFilterBrand] = useState<string>('all');
+    const [filterStock, setFilterStock] = useState<string>('all');
+    const [filterMinPrice, setFilterMinPrice] = useState<string>('');
+    const [filterMaxPrice, setFilterMaxPrice] = useState<string>('');
+
     // Silence unused warnings for compatibility
     if (false as boolean) { console.log(minStock, color); }
     const [promoDiscount, setPromoDiscount] = useState<number | ''>('');
@@ -962,10 +967,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         }).format(parseFloat(val));
     };
 
+    const uniqueBrands = Array.from(
+        new Set(products.map(p => p.brand).filter((b): b is string => Boolean(b && b.trim())))
+    ).sort();
+
     const filteredProducts = products.filter(prod => {
         const match = searchTerm.trim().toLowerCase();
-        if (!match) return true;
-        return (
+        
+        const matchesSearch = !match || (
             prod.name.toLowerCase().includes(match) ||
             (prod.sku && prod.sku.toLowerCase().includes(match)) ||
             (prod.brand && prod.brand.toLowerCase().includes(match)) ||
@@ -973,6 +982,25 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             (prod.style && prod.style.toLowerCase().includes(match)) ||
             (prod.color && prod.color.toLowerCase().includes(match))
         );
+
+        const matchesBrand = filterBrand === 'all' || (prod.brand && prod.brand.toLowerCase() === filterBrand.toLowerCase());
+
+        const itemStock = prod.stock || 0;
+        const itemMinStock = prod.min_stock || 2;
+        let matchesStock = true;
+        if (filterStock === 'in_stock') matchesStock = itemStock > 0;
+        else if (filterStock === 'low_stock') matchesStock = itemStock > 0 && itemStock <= itemMinStock;
+        else if (filterStock === 'out_of_stock') matchesStock = itemStock === 0;
+
+        const itemPrice = parseFloat(prod.price || '0');
+        const minP = filterMinPrice !== '' ? parseFloat(filterMinPrice) : null;
+        const maxP = filterMaxPrice !== '' ? parseFloat(filterMaxPrice) : null;
+
+        let matchesPrice = true;
+        if (minP !== null && !isNaN(minP)) matchesPrice = matchesPrice && itemPrice >= minP;
+        if (maxP !== null && !isNaN(maxP)) matchesPrice = matchesPrice && itemPrice <= maxP;
+
+        return matchesSearch && matchesBrand && matchesStock && matchesPrice;
     });
 
     return (
@@ -1127,15 +1155,91 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         : "Buscador por código de barras, nombre o descripción..."}
                     className="w-full bg-surface-container border border-outline/20 rounded-xl py-3 pl-10 pr-4 text-sm text-on-surface focus:border-primary outline-none transition"
                 />
-                {searchTerm && (
-                    <button 
-                        onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 border-0 bg-transparent text-on-surface-variant cursor-pointer hover:text-on-surface"
-                    >
-                        <span className="material-symbols-outlined text-[16px]">close</span>
-                    </button>
-                )}
             </div>
+
+            {/* Barra de Filtros Avanzados (Marcas, Stock, Rango de Precios) */}
+            {activeTab === 'catalog' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-[#141517] border border-[#222428] p-3.5 rounded-xl">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                            <span className="material-symbols-outlined text-xs text-[#eab308]">branding_watermark</span>
+                            Marca / Fabricante
+                        </label>
+                        <select
+                            value={filterBrand}
+                            onChange={(e) => setFilterBrand(e.target.value)}
+                            className="bg-[#1a1c20] border border-outline/20 rounded-lg p-2 text-xs text-white outline-none cursor-pointer"
+                        >
+                            <option value="all">Todas las Marcas ({uniqueBrands.length})</option>
+                            {uniqueBrands.map(b => (
+                                <option key={b} value={b}>{b}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                            <span className="material-symbols-outlined text-xs text-[#eab308]">inventory_2</span>
+                            Nivel de Stock
+                        </label>
+                        <select
+                            value={filterStock}
+                            onChange={(e) => setFilterStock(e.target.value)}
+                            className="bg-[#1a1c20] border border-outline/20 rounded-lg p-2 text-xs text-white outline-none cursor-pointer"
+                        >
+                            <option value="all">Todo el Inventario</option>
+                            <option value="in_stock">🟢 Con Stock Disponible (&gt; 0)</option>
+                            <option value="low_stock">⚠️ Stock Bajo / Alerta Mínima</option>
+                            <option value="out_of_stock">🔴 Sin Stock / Agotado (0)</option>
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                            <span className="material-symbols-outlined text-xs text-[#eab308]">attach_money</span>
+                            Precio Mínimo (COP)
+                        </label>
+                        <input
+                            type="number"
+                            value={filterMinPrice}
+                            onChange={(e) => setFilterMinPrice(e.target.value)}
+                            placeholder="Ej: 50000"
+                            className="bg-[#1a1c20] border border-outline/20 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                            <span className="material-symbols-outlined text-xs text-[#eab308]">payments</span>
+                            Precio Máximo (COP)
+                        </label>
+                        <div className="flex items-center gap-1">
+                            <input
+                                type="number"
+                                value={filterMaxPrice}
+                                onChange={(e) => setFilterMaxPrice(e.target.value)}
+                                placeholder="Ej: 500000"
+                                className="w-full bg-[#1a1c20] border border-outline/20 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                            />
+                            {(filterBrand !== 'all' || filterStock !== 'all' || filterMinPrice !== '' || filterMaxPrice !== '') && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setFilterBrand('all');
+                                        setFilterStock('all');
+                                        setFilterMinPrice('');
+                                        setFilterMaxPrice('');
+                                    }}
+                                    className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 text-xs shrink-0 cursor-pointer"
+                                    title="Limpiar filtros"
+                                >
+                                    <span className="material-symbols-outlined text-[15px]">filter_alt_off</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Render Tab Contents */}
             {activeTab === 'catalog' ? (
@@ -1280,22 +1384,45 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs text-on-surface-variant font-medium">Nombre del Producto *</label>
+                                    {/* 1. MARCA / FABRICANTE (PRIMERO) */}
+                                    {productType === 'product' && (
+                                        <div className="col-span-1 md:col-span-2">
+                                            <FieldWrapper 
+                                                fieldId="brand" 
+                                                label="Marca / Fabricante *"
+                                                hidden={hiddenFields.has('brand')}
+                                                onToggleHidden={toggleFieldHidden}
+                                            >
+                                                <input 
+                                                    type="text"
+                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-amber-400 text-on-surface outline-none transition"
+                                                    value={brand}
+                                                    onChange={(e) => setBrand(e.target.value)}
+                                                    placeholder="Ej: Ray-Ban, Gucci, Oakley, Bausch + Lomb"
+                                                />
+                                            </FieldWrapper>
+                                        </div>
+                                    )}
+
+                                    {/* 2. REFERENCIA / MODELO (SEGUNDO) */}
+                                    <div className="flex flex-col gap-1.5 col-span-1 md:col-span-2">
+                                        <label className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Referencia / Modelo *</label>
                                         <input 
                                             type="text"
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
+                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-amber-400 text-on-surface outline-none transition"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            placeholder="Ej: Gafa rosada"
+                                            placeholder="Ej: 16-140, RB3025, GG00610"
                                             required
                                         />
                                     </div>
+
+                                    {/* 3. SKU / CÓDIGO DE BARRAS (TERCERO) */}
                                     {(!hasVariants || productType === 'service') ? (
-                                        <div className="flex flex-col gap-1.5">
+                                        <div className="flex flex-col gap-1.5 col-span-1 md:col-span-2">
                                             <label className="text-xs text-on-surface-variant font-medium flex items-center justify-between">
-                                                <span>SKU / Código de Barras (Producto Simple)</span>
-                                                <span className="text-[10px] text-primary font-semibold flex items-center gap-0.5">
+                                                <span className="font-bold uppercase tracking-wider text-xs">SKU / Código de Barras (Producto Simple)</span>
+                                                <span className="text-[10px] text-amber-400 font-semibold flex items-center gap-0.5">
                                                     <span className="material-symbols-outlined text-[13px]">barcode_scanner</span>
                                                     Listo para Pistola Lectora
                                                 </span>
@@ -1303,7 +1430,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             <div className="relative">
                                                 <input 
                                                     type="text"
-                                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 pr-10 text-sm focus:border-primary text-on-surface outline-none transition font-mono uppercase"
+                                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 pr-10 text-sm focus:border-amber-400 text-on-surface outline-none transition font-mono uppercase"
                                                     value={sku}
                                                     onChange={(e) => setSku(e.target.value)}
                                                     onKeyDown={(e) => {
@@ -1320,7 +1447,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             <p className="text-[10px] text-on-surface-variant">Si lo dejas en blanco, el sistema autogenerará un código único.</p>
                                         </div>
                                     ) : (
-                                        <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center justify-between">
+                                        <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center justify-between col-span-1 md:col-span-2">
                                             <div className="flex items-center gap-2">
                                                 <span className="material-symbols-outlined text-primary text-[20px]">palette</span>
                                                 <div>
@@ -2039,8 +2166,19 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 onClick={() => openEdit(prod)}
                                             >
                                                 <div className="flex flex-col">
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="font-semibold text-on-surface text-sm">{prod.name}</p>
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <h4 className="font-bold text-sm text-on-surface flex items-center gap-1.5 flex-wrap">
+                                                            {prod.brand ? (
+                                                                <>
+                                                                    <span className="text-[#eab308] font-extrabold uppercase text-xs tracking-wider">Marca:</span>
+                                                                    <span className="text-white font-bold text-sm">{prod.brand}</span>
+                                                                    <span className="text-gray-500 font-normal mx-0.5">•</span>
+                                                                </>
+                                                            ) : null}
+                                                            <span className="text-primary font-extrabold uppercase text-xs tracking-wider">Referencia:</span>
+                                                            <span className="text-slate-100 font-bold text-sm">{prod.name}</span>
+                                                        </h4>
+
                                                         {parseFloat(prod.promo_discount || '0') > 0 && (
                                                             <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
                                                                 -{parseFloat(prod.promo_discount)}% Promoción
@@ -2050,7 +2188,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     {prod.description && <p className="text-xs text-on-surface-variant mt-0.5">{prod.description}</p>}
                                                     {category === 'optica' && (
                                                         <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[10px] text-on-surface-variant">
-                                                            {prod.brand && <span className="bg-surface-container border border-outline/10 px-1.5 py-0.5 rounded">Marca: {prod.brand}</span>}
                                                             {prod.material && <span className="bg-surface-container border border-outline/10 px-1.5 py-0.5 rounded">Material: {prod.material}</span>}
                                                             {prod.style && <span className="bg-surface-container border border-outline/10 px-1.5 py-0.5 rounded">Estilo: {prod.style}</span>}
                                                             {prod.color && (

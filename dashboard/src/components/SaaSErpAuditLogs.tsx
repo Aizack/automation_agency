@@ -219,14 +219,21 @@ ${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details)}` : ''}`;
           </div>
         ) : (
           <div className="w-full overflow-x-auto">
-            <table className="w-full text-left border-collapse table-fixed min-w-[700px]">
+            <table className="w-full text-left border-collapse table-fixed">
+              <colgroup>
+                <col className="w-[190px]" />
+                <col className="w-[150px]" />
+                <col className="w-[140px]" />
+                <col className="w-[150px]" />
+                <col className="w-[280px]" />
+              </colgroup>
               <thead>
                 <tr className="bg-slate-800/60 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="py-3.5 px-4 w-[160px]">Fecha / Hora</th>
-                  <th className="py-3.5 px-4 w-[170px]">Usuario / Rol</th>
-                  <th className="py-3.5 px-4 w-[130px]">Módulo</th>
-                  <th className="py-3.5 px-4 w-[140px]">Acción</th>
-                  <th className="py-3.5 px-4">Descripción de Evento</th>
+                  <th className="py-3.5 px-4">FECHA / HORA</th>
+                  <th className="py-3.5 px-4">USUARIO / ROL</th>
+                  <th className="py-3.5 px-4">MÓDULO</th>
+                  <th className="py-3.5 px-4">ACCIÓN</th>
+                  <th className="py-3.5 px-4">DESCRIPCIÓN DE EVENTO</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-xs">
@@ -239,20 +246,15 @@ ${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details)}` : ''}`;
                   return (
                     <tr key={log.id} className="hover:bg-slate-800/40 transition-colors items-center">
                       <td className="py-3.5 px-4 text-slate-400 whitespace-nowrap text-xs font-mono">
-                        <div className="flex items-center gap-1.5">
-                          <span className="material-symbols-outlined text-xs text-slate-500">schedule</span>
-                          {dateStr}
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className="material-symbols-outlined text-xs text-slate-500 shrink-0">schedule</span>
+                          <span className="truncate">{dateStr}</span>
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <div className="w-7 h-7 shrink-0 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-indigo-400">
-                            {log.user_name ? log.user_name.charAt(0).toUpperCase() : 'U'}
-                          </div>
-                          <div className="truncate">
-                            <p className="text-slate-200 font-medium text-xs truncate">{log.user_name}</p>
-                            <span className="text-[9px] text-slate-500 uppercase font-semibold block truncate">{log.user_role}</span>
-                          </div>
+                        <div className="truncate">
+                          <p className="text-slate-200 font-medium text-xs truncate">{log.user_name}</p>
+                          <span className="text-[9px] text-slate-500 uppercase font-semibold block truncate">{log.user_role}</span>
                         </div>
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap">
@@ -262,8 +264,8 @@ ${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details)}` : ''}`;
                         {log.action}
                       </td>
                       <td className="py-3.5 px-4 text-slate-300 text-xs">
-                        <div className="flex items-center justify-between gap-2 bg-slate-950/40 p-1.5 px-2.5 rounded-xl border border-slate-800/50">
-                          <span className="truncate text-slate-300 flex-1" title={log.description}>
+                        <div className="flex items-center justify-between gap-2 bg-slate-950/40 p-1.5 px-2.5 rounded-xl border border-slate-800/50 w-full max-w-[260px] overflow-hidden">
+                          <span className="truncate text-slate-300 font-sans text-xs min-w-0 block flex-1" title={log.description}>
                             {log.description}
                           </span>
                           <button
