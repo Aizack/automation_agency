@@ -1345,6 +1345,17 @@ export const initDatabase = async () => {
             );
         `);
 
+        // Sincronización de contact_name a full_name en users para corregir nombres de tienda en accesos
+        await pool.query(`
+            UPDATE users u
+            SET full_name = c.contact_name
+            FROM clients c
+            WHERE LOWER(u.username) = LOWER(c.username)
+              AND c.contact_name IS NOT NULL
+              AND c.contact_name != ''
+              AND (u.full_name IS NULL OR u.full_name != c.contact_name);
+        `);
+
         console.log("[DB Init] ✅ Tablas de Finanzas, Inversión, Préstamos, Tickets, Variantes y Comisiones inicializadas.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 

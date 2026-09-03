@@ -133,7 +133,7 @@ app.post('/api/whatsapp/logout', authenticateToken as any, async (req: Request, 
 // --- ENDPOINTS DE CLIENTES (CRUD) ---
 
 // 1. Listar todos los clientes
-app.get('/api/clients', authenticateToken as any, requireRole(['admin']) as any, async (req: Request, res: Response) => {
+app.get('/api/clients', authenticateToken as any, requireRole(['superadmin', 'admin']) as any, async (req: Request, res: Response) => {
   try {
     const clients = (await listClients()).filter(c => c.id !== 'admin');
     res.json({ success: true, count: clients.length, data: clients });
@@ -171,7 +171,7 @@ app.get('/api/clients/:id/logs', authenticateToken as any, authorizeClientAccess
 });
 
 // 3. Crear un cliente (ID automático, carpeta de Google Drive autogenerada y credenciales de acceso)
-app.post('/api/clients', authenticateToken as any, requireRole(['admin']) as any, async (req: Request, res: Response) => {
+app.post('/api/clients', authenticateToken as any, requireRole(['superadmin', 'admin']) as any, async (req: Request, res: Response) => {
   try {
     const { 
       id, 
@@ -225,6 +225,40 @@ app.post('/api/clients', authenticateToken as any, requireRole(['admin']) as any
       category: category || 'optica'
     });
 
+    // Sincronizar automáticamente el usuario administrador en `users` y `user_client_roles`
+    if (username && String(username).trim() !== '') {
+      try {
+        const cleanUser = username.trim().toLowerCase();
+        const cleanName = contact_name || name || cleanUser;
+        const hashedPass = password ? (isHashedPassword(password) ? password : await hashPassword(password)) : null;
+
+        const userUpsert = await pool.query(
+          `INSERT INTO users (username, password_hash, full_name, email, is_global_admin)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (username) DO UPDATE SET
+             password_hash = COALESCE(EXCLUDED.password_hash, users.password_hash),
+             full_name = EXCLUDED.full_name,
+             email = COALESCE(EXCLUDED.email, users.email)
+           RETURNING id`,
+          [cleanUser, hashedPass, cleanName, email || null, cleanUser === 'admin']
+        );
+
+        if (userUpsert.rows.length > 0) {
+          const uId = userUpsert.rows[0].id;
+          const allModules = ["inventory","billing","cartera","crm","employees","appointments","formulas","lab","domicilios","campaigns","marketing","suppliers","purchase_orders","settings"];
+          await pool.query(
+            `INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
+             VALUES ($1, $2, 'admin_tenant', $3::jsonb)
+             ON CONFLICT (user_id, client_id, role) DO UPDATE SET
+               permissions_json = $3::jsonb`,
+            [uId, clientId, JSON.stringify({ modules: allModules })]
+          );
+        }
+      } catch (userSyncErr) {
+        console.error("[API] Error creando usuario de cliente en users:", userSyncErr);
+      }
+    }
+
     res.status(201).json({ 
       success: true, 
       message: `Cliente '${name}' creado exitosamente`,
@@ -257,7 +291,7 @@ app.put('/api/clients/:id', authenticateToken as any, authorizeClientAccess as a
 });
 
 // 5. Eliminar un cliente
-app.delete('/api/clients/:id', authenticateToken as any, requireRole(['admin']) as any, async (req: Request, res: Response) => {
+app.delete('/api/clients/:id', authenticateToken as any, requireRole(['superadmin', 'admin']) as any, async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
     
@@ -278,7 +312,7 @@ app.delete('/api/clients/:id', authenticateToken as any, requireRole(['admin']) 
 });
 
 // 6. Suspender la cuenta de un cliente
-app.post('/api/clients/:id/suspend', authenticateToken as any, requireRole(['admin']) as any, async (req: Request, res: Response) => {
+app.post('/api/clients/:id/suspend', authenticateToken as any, requireRole(['superadmin', 'admin']) as any, async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
     const existing = await getClientById(id);
@@ -294,7 +328,7 @@ app.post('/api/clients/:id/suspend', authenticateToken as any, requireRole(['adm
 });
 
 // 7. Activar la cuenta de un cliente
-app.post('/api/clients/:id/activate', authenticateToken as any, requireRole(['admin']) as any, async (req: Request, res: Response) => {
+app.post('/api/clients/:id/activate', authenticateToken as any, requireRole(['superadmin', 'admin']) as any, async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
     const existing = await getClientById(id);
@@ -1160,7 +1194,7 @@ app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
 // --- ENDPOINTS DE MÉTRICAS (MÓDULO ADMIN/DASHBOARD) ---
 
 // 8. Obtener métricas globales e individuales de consumo
-app.get('/api/metrics', authenticateToken as any, requireRole(['admin']) as any, async (req: Request, res: Response) => {
+app.get('/api/metrics', authenticateToken as any, requireRole(['superadmin', 'admin']) as any, async (req: Request, res: Response) => {
   try {
     // A. Métricas globales de uso de la plataforma
     const globalStats = await pool.query(`
