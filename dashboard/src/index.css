@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+/* Prevenir que traductores automáticos de navegador traduzcan la fuente de iconos Material Symbols */
+.material-symbols-outlined,
+.material-icons,
+[class*="material-symbols"] {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  translate: no !important;
+}
+
 /* ==========================================================================
    OPEN-DESIGN TOKENS - NEXT GEN DYNAMIC THEME SYSTEM (W3C Standard)
    ERP SaaS Theme Configuration (5 Themes)
