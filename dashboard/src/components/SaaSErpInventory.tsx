@@ -34,6 +34,7 @@ interface Product {
     promo_discount: string;
     category_id?: string | null;
     product_type?: 'product' | 'service';
+    has_variants?: boolean;
     variants?: ProductVariant[];
     created_at: string;
 }
@@ -458,6 +459,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [categoryId, setCategoryId] = useState('');
     const [refillProduct, setRefillProduct] = useState<Product | null>(null);
     const [refillQuantity, setRefillQuantity] = useState<number | ''>('');
+    const [refillVariantQuantities, setRefillVariantQuantities] = useState<Record<string, number | ''>>({});
     const [isRefillModalOpen, setIsRefillModalOpen] = useState(false);
     const [printAfterRefill, setPrintAfterRefill] = useState(true);
 
@@ -778,6 +780,36 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         setCustomAttrs((prod as any).attributes || {});
         setAddProductStep('open');
         setHiddenFields(new Set());
+
+        // Cargar las variantes por color registradas
+        if (prod.variants && prod.variants.length > 0) {
+            setHasVariants(true);
+            setVariantList(prod.variants.map((v: any) => ({
+                id: v.id,
+                color: v.variant_name || v.color || 'Negro',
+                sku: v.sku || '',
+                stock: v.stock !== undefined ? v.stock : 0,
+                min_stock: v.min_stock !== undefined ? v.min_stock : 2,
+                image_url: v.image_url || ''
+            })));
+        } else if (prod.has_variants && prod.color && prod.color.includes(',')) {
+            setHasVariants(true);
+            const colorNames = prod.color.split(',').map((c: string) => c.trim()).filter(Boolean);
+            setVariantList(colorNames.map((c: string) => ({
+                color: c,
+                sku: '',
+                stock: Math.floor((prod.stock || 0) / colorNames.length) || 0,
+                min_stock: prod.min_stock || 2,
+                image_url: ''
+            })));
+        } else {
+            setHasVariants(Boolean(prod.has_variants));
+            if (prod.has_variants) {
+                setVariantList([{ color: prod.color || 'Negro', sku: prod.sku || '', stock: prod.stock || 0, min_stock: prod.min_stock || 2, image_url: '' }]);
+            } else {
+                setVariantList([{ color: 'Negro', sku: '', stock: prod.stock || 0, min_stock: prod.min_stock || 2, image_url: '' }]);
+            }
+        }
     };
 
     const resetForm = () => {
@@ -798,6 +830,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         setProductType('product');
         setCustomAttrs({});
         setHiddenFields(new Set());
+        setHasVariants(true);
+        setVariantList([{ color: 'Negro', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
         setAddProductStep('closed');
     };
 
@@ -805,16 +839,74 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         setRefillProduct(prod);
         setRefillQuantity('');
         setPrintAfterRefill(true);
+
+        if (prod.variants && prod.variants.length > 0) {
+            const initialMap: Record<string, number | ''> = {};
+            prod.variants.forEach((v: any, idx: number) => {
+                const key = v.id || v.sku || v.variant_name || v.color || `var_${idx}`;
+                initialMap[key] = '';
+            });
+            setRefillVariantQuantities(initialMap);
+        } else {
+            setRefillVariantQuantities({});
+        }
+
         setIsRefillModalOpen(true);
     };
 
     const handleSaveRefill = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!refillProduct || !refillQuantity || refillQuantity <= 0) return;
+        if (!refillProduct) return;
 
-        const addedQty = parseInt(refillQuantity.toString());
-        const currentStock = refillProduct.stock || 0;
-        const newStock = currentStock + addedQty;
+        const hasVars = Boolean(refillProduct.variants && refillProduct.variants.length > 0);
+        let updatedVariants: any[] = [];
+        let addedTotalStock = 0;
+        const labelsToPrint: any[] = [];
+
+        if (hasVars) {
+            updatedVariants = refillProduct.variants!.map((v: any, idx: number) => {
+                const key = v.id || v.sku || v.variant_name || v.color || `var_${idx}`;
+                const addedForThisVar = parseInt(refillVariantQuantities[key]?.toString() || '0', 10) || 0;
+                if (addedForThisVar > 0) {
+                    addedTotalStock += addedForThisVar;
+                    labelsToPrint.push({
+                        name: `${refillProduct.name} (${v.variant_name || v.color})`,
+                        sku: v.sku || refillProduct.sku || '',
+                        price: refillProduct.price,
+                        quantity: addedForThisVar
+                    });
+                }
+                return {
+                    id: v.id,
+                    variant_name: v.variant_name || v.color,
+                    color_hex: v.color_hex || null,
+                    sku: v.sku,
+                    stock: (parseInt(v.stock?.toString() || '0') || 0) + addedForThisVar,
+                    min_stock: v.min_stock || 2,
+                    image_url: v.image_url || null
+                };
+            });
+
+            if (addedTotalStock <= 0) {
+                alert('Por favor ingresa la cantidad a rellenar (mayor a 0) en al menos una variante de color.');
+                return;
+            }
+        } else {
+            const addedQty = parseInt(refillQuantity.toString() || '0', 10) || 0;
+            if (addedQty <= 0) {
+                alert('Ingresa una cantidad válida mayor a 0.');
+                return;
+            }
+            addedTotalStock = addedQty;
+            labelsToPrint.push({
+                name: refillProduct.name,
+                sku: refillProduct.sku || '',
+                price: refillProduct.price,
+                quantity: addedQty
+            });
+        }
+
+        const newStock = (refillProduct.stock || 0) + addedTotalStock;
 
         const body = {
             name: refillProduct.name,
@@ -831,7 +923,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             style: refillProduct.style || null,
             color: refillProduct.color || null,
             promo_discount: refillProduct.promo_discount || 0,
-            category_id: refillProduct.category_id || null
+            category_id: refillProduct.category_id || null,
+            has_variants: hasVars,
+            variants: hasVars ? updatedVariants : undefined
         };
 
         try {
@@ -847,14 +941,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                 setIsRefillModalOpen(false);
                 fetchProducts();
                 
-                if (printAfterRefill) {
+                if (printAfterRefill && labelsToPrint.length > 0) {
                     setTimeout(() => {
-                        printBarcodes([{
-                            name: refillProduct.name,
-                            sku: refillProduct.sku || '',
-                            price: refillProduct.price,
-                            quantity: addedQty
-                        }]);
+                        for (const item of labelsToPrint) {
+                            printBarcodes([item]);
+                        }
                     }, 300);
                 }
             } else {
@@ -2398,18 +2489,63 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             <p className="text-on-surface-variant opacity-75">Stock Actual: <strong className="text-on-surface">{refillProduct.stock} uds</strong> (Mínimo: {refillProduct.min_stock !== undefined ? refillProduct.min_stock : 5} uds)</p>
                         </div>
 
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-bold text-on-surface-variant uppercase ml-1">Cantidad a ingresar *</label>
-                            <input 
-                                type="number" 
-                                required
-                                min="1"
-                                placeholder="Ej: 50"
-                                value={refillQuantity}
-                                onChange={(e) => setRefillQuantity(e.target.value === '' ? '' : parseInt(e.target.value))}
-                                className="bg-surface-container border border-outline/20 p-3 rounded-md text-sm font-semibold text-on-surface outline-none w-full font-mono"
-                            />
-                        </div>
+                        {refillProduct.variants && refillProduct.variants.length > 0 ? (
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold text-on-surface-variant uppercase ml-1 block">
+                                    Rellenar Stock por Color / Variante *
+                                </label>
+                                <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
+                                    {refillProduct.variants.map((v: any, idx: number) => {
+                                        const key = v.id || v.sku || v.variant_name || v.color || `var_${idx}`;
+                                        return (
+                                            <div key={idx} className="bg-surface-container p-3 rounded-xl border border-outline/10 flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-2.5">
+                                                    <span 
+                                                        className="w-5 h-5 rounded-full border border-white/30 inline-block shadow-sm"
+                                                        style={{ backgroundColor: v.color_hex || getColorHex(v.variant_name || v.color) }}
+                                                    />
+                                                    <div>
+                                                        <p className="text-xs font-bold text-on-surface">{v.variant_name || v.color}</p>
+                                                        <p className="text-[10px] text-on-surface-variant font-mono">Stock actual: {v.stock} uds</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-xs font-bold text-green-400">+</span>
+                                                    <input 
+                                                        type="number" 
+                                                        min="0"
+                                                        placeholder="0"
+                                                        value={refillVariantQuantities[key] ?? ''}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value) || 0);
+                                                            setRefillVariantQuantities(prev => ({
+                                                                ...prev,
+                                                                [key]: val
+                                                            }));
+                                                        }}
+                                                        className="bg-[#181a1c] border border-outline/20 p-2 rounded-lg text-xs font-mono font-bold text-on-surface outline-none w-20 text-center focus:border-primary"
+                                                    />
+                                                    <span className="text-[10px] text-on-surface-variant">uds</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-bold text-on-surface-variant uppercase ml-1">Cantidad a ingresar *</label>
+                                <input 
+                                    type="number" 
+                                    required
+                                    min="1"
+                                    placeholder="Ej: 50"
+                                    value={refillQuantity}
+                                    onChange={(e) => setRefillQuantity(e.target.value === '' ? '' : parseInt(e.target.value))}
+                                    className="bg-surface-container border border-outline/20 p-3 rounded-md text-sm font-semibold text-on-surface outline-none w-full font-mono"
+                                />
+                            </div>
+                        )}
 
                         <label className="flex items-center gap-2 cursor-pointer select-none py-1 ml-1 text-xs text-on-surface-variant">
                             <input 
