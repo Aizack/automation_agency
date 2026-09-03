@@ -84,11 +84,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
   const [clientData, setClientData] = useState<Client | null>(null);
 
-  useEffect(() => {
-    localStorage.setItem('current_view', 'client');
-    sessionStorage.setItem('current_view', 'client');
-  }, []);
-
   // Permisos de sesión de empleado
   const sessionRole = localStorage.getItem('session_role');
   const isEmployeeSession = sessionRole === 'employee';

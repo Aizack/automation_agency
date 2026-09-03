@@ -148,16 +148,15 @@ function App() {
           sessionStorage.setItem('session_name', user.name || '');
           localStorage.setItem('session_name', user.name || '');
 
-          const savedView = localStorage.getItem('current_view') || sessionStorage.getItem('current_view');
+          const currentPath = window.location.pathname.toLowerCase();
 
           if (user.role === 'superadmin') {
             const savedClientId = localStorage.getItem('current_client_id');
-            if (savedView === 'client' && savedClientId) {
+            if ((currentPath === '/client' || currentPath === '/') && savedClientId && localStorage.getItem('view_as_client') === 'true') {
               setClientId(savedClientId);
               setView('client');
             } else {
               setView('admin');
-              localStorage.setItem('current_view', 'admin');
             }
           } else if (user.role === 'employee') {
             localStorage.setItem('employee_role', user.employeeRole || '');
@@ -167,42 +166,44 @@ function App() {
               setClientId(user.clientId);
             }
 
-            if (savedView === 'client' && user.hasErpAccess) {
-              setView('client');
-              localStorage.setItem('current_view', 'client');
-            } else if (savedView === 'employee') {
+            // Si navegó explícitamente a /empleados o /employee -> Portal Personal de Trabajo
+            if (currentPath.startsWith('/empleado') || currentPath.startsWith('/employee') || currentPath.startsWith('/chat')) {
               setView('employee');
-              localStorage.setItem('current_view', 'employee');
             } else if (!user.hasErpAccess) {
+              // Si el colaborador NO tiene permisos de ERP (ej. solo turno/reloj) -> Forzar Portal de Empleado
               setView('employee');
-              localStorage.setItem('current_view', 'employee');
+              if (window.location.pathname !== '/empleados') {
+                window.history.replaceState({}, '', '/empleados');
+              }
             } else {
+              // Si el colaborador TIENE permisos de ERP y está en el root / -> Mantener en ERP (ClientDashboard)
               setView('client');
-              localStorage.setItem('current_view', 'client');
+              if (window.location.pathname !== '/') {
+                window.history.replaceState({}, '', '/');
+              }
             }
           } else {
             const clientTenantId = user.clientId || user.id;
             setClientId(clientTenantId);
             setView('client');
-            localStorage.setItem('current_view', 'client');
             localStorage.setItem('current_client_id', clientTenantId);
           }
           
-          // Limpiar cualquier residuo visual en la barra de direcciones
+          // Limpiar cualquier residuo visual de query params si se requiere
           if (window.location.search !== '') {
-            window.history.pushState({}, '', '/');
+            window.history.pushState({}, '', window.location.pathname);
           }
         } else {
           // Token inválido/expirado
           clearAllSessionData();
           setView('login');
-          window.history.pushState({}, '', '/');
+          window.history.pushState({}, '', '/login');
         }
       } catch (err) {
         console.error("[Auth App] Error validando sesión:", err);
         clearAllSessionData();
         setView('login');
-        window.history.pushState({}, '', '/');
+        window.history.pushState({}, '', '/login');
       } finally {
         setLoading(false);
       }
@@ -229,10 +230,10 @@ function App() {
 
     if (role === 'superadmin') {
       setView('admin');
-      localStorage.setItem('current_view', 'admin');
       localStorage.removeItem('current_client_id');
+      localStorage.removeItem('view_as_client');
+      window.history.pushState({}, '', '/admin');
     } else if (role === 'employee') {
-      // Guardar sesión principal y sesión nativa de EmployeePortal
       localStorage.setItem('employee_role', extra?.employeeRole || '');
       localStorage.setItem('employee_permissions', JSON.stringify(extra?.permissions || []));
       localStorage.setItem('current_client_id', id);
@@ -246,21 +247,19 @@ function App() {
 
       setClientId(id);
 
-      if (extra?.hasErpAccess) {
+      if (extra?.hasErpAccess && extra?.targetPortal !== 'employee_portal') {
         setView('client');
-        localStorage.setItem('current_view', 'client');
+        window.history.pushState({}, '', '/');
       } else {
         setView('employee');
-        localStorage.setItem('current_view', 'employee');
+        window.history.pushState({}, '', '/empleados');
       }
     } else {
       setClientId(id);
       setView('client');
-      localStorage.setItem('current_view', 'client');
       localStorage.setItem('current_client_id', id);
+      window.history.pushState({}, '', '/');
     }
-
-    window.history.pushState({}, '', '/');
   };
 
   const handleLogout = () => {
