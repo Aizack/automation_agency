@@ -927,19 +927,6 @@
       "source_location": "L96"
     },
     {
-      "id": "src_agents_autofixagent_ticketfixresult",
-      "label": "TicketFixResult",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "server",
-      "file_type": "code",
-      "norm_label": "ticketfixresult",
-      "source_file": "src/agents/autoFixAgent.ts",
-      "source_location": "L3"
-    },
-    {
       "id": "dashboard_src_components_saaserpcrm_customer",
       "label": "Customer",
       "_callable": true,
@@ -1720,6 +1707,19 @@
       "source_location": "L73"
     },
     {
+      "id": "src_agents_autofixagent_ticketfixresult",
+      "label": "TicketFixResult",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "ticketfixresult",
+      "source_file": "src/agents/autoFixAgent.ts",
+      "source_location": "L3"
+    },
+    {
       "id": "src_middlewares_authmiddleware_authenticatedrequest",
       "label": "AuthenticatedRequest",
       "_callable": true,
@@ -1809,18 +1809,6 @@
       "norm_label": "tenantuser",
       "source_file": "dashboard/src/components/SaaSErpUsers.tsx",
       "source_location": "L4"
-    },
-    {
-      "id": "scratch_test_restaurant_validation_runvalidation",
-      "label": "runValidation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "runvalidation()",
-      "source_file": "scratch/test_restaurant_validation.ts",
-      "source_location": "L5"
     },
     {
       "id": "src_agents_base_aiagent_constructor",
@@ -1917,30 +1905,6 @@
       "norm_label": "listclients()",
       "source_file": "src/database/clientsCrud.ts",
       "source_location": "L171"
-    },
-    {
-      "id": "src_database_clientscrud_updateclient",
-      "label": "updateClient()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "updateclient()",
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L99"
-    },
-    {
-      "id": "src_database_initdb_initdatabase",
-      "label": "initDatabase()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
-      "file_type": "code",
-      "norm_label": "initdatabase()",
-      "source_file": "src/database/initDb.ts",
-      "source_location": "L5"
     },
     {
       "id": "src_database_vectordb_vectordatabase_getembedding",
@@ -2183,16 +2147,16 @@
       "source_location": "L58"
     },
     {
-      "id": "src_services_whatsapp_initializewhatsappclient",
-      "label": "initializeWhatsAppClient()",
+      "id": "src_database_clientscrud_updateclient",
+      "label": "updateClient()",
       "_callable": true,
       "_origin": "ast",
-      "community": 0,
-      "community_name": "postgres.ts",
+      "community": 1,
+      "community_name": "whatsapp.ts",
       "file_type": "code",
-      "norm_label": "initializewhatsappclient()",
-      "source_file": "src/services/whatsapp.ts",
-      "source_location": "L60"
+      "norm_label": "updateclient()",
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L99"
     },
     {
       "id": "src_scratch_check_wa_state_check",
@@ -2231,18 +2195,6 @@
       "source_location": "L14"
     },
     {
-      "id": "src_services_whatsapp_autorestoresavedwhatsappsessions",
-      "label": "autoRestoreSavedWhatsAppSessions()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "whatsapp.ts",
-      "file_type": "code",
-      "norm_label": "autorestoresavedwhatsappsessions()",
-      "source_file": "src/services/whatsapp.ts",
-      "source_location": "L393"
-    },
-    {
       "id": "src_services_whatsapp_connectwhatsapp",
       "label": "connectWhatsApp()",
       "_callable": true,
@@ -2265,6 +2217,18 @@
       "norm_label": "getwhatsappstate()",
       "source_file": "src/services/whatsapp.ts",
       "source_location": "L35"
+    },
+    {
+      "id": "src_services_whatsapp_initializewhatsappclient",
+      "label": "initializeWhatsAppClient()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "initializewhatsappclient()",
+      "source_file": "src/services/whatsapp.ts",
+      "source_location": "L60"
     },
     {
       "id": "src_services_whatsapp_logoutwhatsapp",
@@ -2687,6 +2651,30 @@
       "source_location": "L68"
     },
     {
+      "id": "scratch_test_restaurant_validation_runvalidation",
+      "label": "runValidation()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "runvalidation()",
+      "source_file": "scratch/test_restaurant_validation.ts",
+      "source_location": "L5"
+    },
+    {
+      "id": "src_database_initdb_initdatabase",
+      "label": "initDatabase()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "initdatabase()",
+      "source_file": "src/database/initDb.ts",
+      "source_location": "L5"
+    },
+    {
       "id": "src_scratch_test_graceful_shutdown_runtest",
       "label": "runTest()",
       "_callable": true,
@@ -2697,6 +2685,18 @@
       "norm_label": "runtest()",
       "source_file": "src/scratch/test-graceful-shutdown.ts",
       "source_location": "L8"
+    },
+    {
+      "id": "src_services_escalation_startescalationservice",
+      "label": "startEscalationService()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "startescalationservice()",
+      "source_file": "src/services/escalation.ts",
+      "source_location": "L5"
     },
     {
       "id": "src_services_escalation_stopescalationservice",
@@ -2757,6 +2757,18 @@
       "norm_label": "restoresystemstate()",
       "source_file": "src/services/shutdownManager.ts",
       "source_location": "L110"
+    },
+    {
+      "id": "src_services_whatsapp_autorestoresavedwhatsappsessions",
+      "label": "autoRestoreSavedWhatsAppSessions()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "autorestoresavedwhatsappsessions()",
+      "source_file": "src/services/whatsapp.ts",
+      "source_location": "L393"
     },
     {
       "id": "src_scratch_testr2_main",
@@ -3023,40 +3035,16 @@
       "source_location": "L3"
     },
     {
-      "id": "src_agents_autofixagent_runautofixagent",
-      "label": "runAutoFixAgent()",
+      "id": "scratch_execute_vps_update_run_ssh",
+      "label": "run_ssh()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "server",
+      "community_name": "execute_vps_update.py",
       "file_type": "code",
-      "norm_label": "runautofixagent()",
-      "source_file": "src/agents/autoFixAgent.ts",
-      "source_location": "L19"
-    },
-    {
-      "id": "src_server_resolveproductclientid",
-      "label": "resolveProductClientId()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "server",
-      "file_type": "code",
-      "norm_label": "resolveproductclientid()",
-      "source_file": "src/server.ts",
-      "source_location": "L1481"
-    },
-    {
-      "id": "src_services_escalation_startescalationservice",
-      "label": "startEscalationService()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "server",
-      "file_type": "code",
-      "norm_label": "startescalationservice()",
-      "source_file": "src/services/escalation.ts",
-      "source_location": "L5"
+      "norm_label": "run_ssh()",
+      "source_file": "scratch/execute_vps_update.py",
+      "source_location": "L12"
     },
     {
       "id": "dashboard_src_components_saaserpcrm_saaserpcrm",
@@ -3551,6 +3539,18 @@
       "source_location": "L77"
     },
     {
+      "id": "src_agents_autofixagent_runautofixagent",
+      "label": "runAutoFixAgent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "runautofixagent()",
+      "source_file": "src/agents/autoFixAgent.ts",
+      "source_location": "L19"
+    },
+    {
       "id": "src_database_clientscrud_deleteclient",
       "label": "deleteClient()",
       "_callable": true,
@@ -3632,7 +3632,19 @@
       "file_type": "code",
       "norm_label": "minutestotime()",
       "source_file": "src/server.ts",
-      "source_location": "L4067"
+      "source_location": "L4174"
+    },
+    {
+      "id": "src_server_resolveproductclientid",
+      "label": "resolveProductClientId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "resolveproductclientid()",
+      "source_file": "src/server.ts",
+      "source_location": "L1588"
     },
     {
       "id": "src_server_startmarketingcampaignworker",
@@ -3644,7 +3656,7 @@
       "file_type": "code",
       "norm_label": "startmarketingcampaignworker()",
       "source_file": "src/server.ts",
-      "source_location": "L6211"
+      "source_location": "L6318"
     },
     {
       "id": "src_server_timetominutes",
@@ -3656,7 +3668,7 @@
       "file_type": "code",
       "norm_label": "timetominutes()",
       "source_file": "src/server.ts",
-      "source_location": "L4061"
+      "source_location": "L4168"
     },
     {
       "id": "src_utils_envvalidator_validateenv",
@@ -8060,6 +8072,17 @@
       "source_location": "L6"
     },
     {
+      "id": "src_server_server",
+      "label": "server",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "shutdownManager.ts",
+      "file_type": "code",
+      "norm_label": "server",
+      "source_file": "src/server.ts",
+      "source_location": "L7470"
+    },
+    {
       "id": "src_services_escalation",
       "label": "escalation.ts",
       "_origin": "ast",
@@ -8455,26 +8478,15 @@
       "source_location": "L45"
     },
     {
-      "id": "src_agents_autofixagent",
-      "label": "autoFixAgent.ts",
+      "id": "scratch_execute_vps_update",
+      "label": "execute_vps_update.py",
       "_origin": "ast",
       "community": 30,
-      "community_name": "server",
+      "community_name": "execute_vps_update.py",
       "file_type": "code",
-      "norm_label": "autofixagent.ts",
-      "source_file": "src/agents/autoFixAgent.ts",
+      "norm_label": "execute_vps_update.py",
+      "source_file": "scratch/execute_vps_update.py",
       "source_location": "L1"
-    },
-    {
-      "id": "src_server_server",
-      "label": "server",
-      "_origin": "ast",
-      "community": 30,
-      "community_name": "server",
-      "file_type": "code",
-      "norm_label": "server",
-      "source_file": "src/server.ts",
-      "source_location": "L7363"
     },
     {
       "id": "docs_sistema_reparaciones_seguridad_y_cotizaciones_2026",
@@ -13599,6 +13611,17 @@
       "source_location": "L1"
     },
     {
+      "id": "src_agents_autofixagent",
+      "label": "autoFixAgent.ts",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "autofixagent.ts",
+      "source_file": "src/agents/autoFixAgent.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "src_middlewares_authmiddleware",
       "label": "authMiddleware.ts",
       "_origin": "ast",
@@ -13684,7 +13707,7 @@
       "file_type": "code",
       "norm_label": "diskupload",
       "source_file": "src/server.ts",
-      "source_location": "L1766"
+      "source_location": "L1873"
     },
     {
       "id": "src_server_mediadir",
@@ -15661,7 +15684,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L7371",
+      "source_location": "L7478",
       "weight": 1.0
     },
     {
@@ -15673,7 +15696,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9065",
+      "source_location": "L9172",
       "weight": 1.0
     },
     {
@@ -15685,7 +15708,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9111",
+      "source_location": "L9218",
       "weight": 1.0
     },
     {
@@ -15697,7 +15720,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9587",
+      "source_location": "L9694",
       "weight": 1.0
     },
     {
@@ -15709,7 +15732,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9590",
+      "source_location": "L9697",
       "weight": 1.0
     },
     {
@@ -19021,7 +19044,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/server.ts",
-      "source_location": "L7471",
+      "source_location": "L7578",
       "weight": 1.0
     },
     {
@@ -21817,7 +21840,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/server.ts",
-      "source_location": "L7471",
+      "source_location": "L7578",
       "weight": 1.0
     },
     {
@@ -31392,6 +31415,17 @@
       "weight": 1.0
     },
     {
+      "source": "scratch_execute_vps_update",
+      "target": "scratch_execute_vps_update_run_ssh",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "scratch/execute_vps_update.py",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
       "source": "scratch_seed_10_sales",
       "target": "scratch_seed_10_sales_pool",
       "relation": "contains",
@@ -32191,7 +32225,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L1481",
+      "source_location": "L1588",
       "weight": 1.0
     },
     {
@@ -32202,7 +32236,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L1766",
+      "source_location": "L1873",
       "weight": 1.0
     },
     {
@@ -32213,7 +32247,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L4061",
+      "source_location": "L4168",
       "weight": 1.0
     },
     {
@@ -32224,7 +32258,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L4067",
+      "source_location": "L4174",
       "weight": 1.0
     },
     {
@@ -32257,7 +32291,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L6211",
+      "source_location": "L6318",
       "weight": 1.0
     },
     {
@@ -32268,7 +32302,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L7363",
+      "source_location": "L7470",
       "weight": 1.0
     },
     {
@@ -33936,10 +33970,10 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "src/server.ts",
-      "source_location": "L7360",
+      "source_location": "L7467",
       "weight": 1.0
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "adcaf2d8448521eaa55c407c82e78d6b3bc7be6b"
+  "built_at_commit": "30f4042ca565099c3b268f20f15618024f0acb89"
 }

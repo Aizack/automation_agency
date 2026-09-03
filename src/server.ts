@@ -2,9 +2,34 @@ import express, { Request, Response, NextFunction } from 'express';
 import 'dotenv/config';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import multer from 'multer';
 import { google } from 'googleapis';
 import jwt from 'jsonwebtoken';
+
+/**
+ * Registra o actualiza la sesión activa única en la base de datos PostgreSQL.
+ * Cualquier sesión previa activa en otro dispositivo para este usuario quedará desautorizada.
+ */
+const registerActiveSession = async (userType: 'client' | 'user' | 'employee', userId: string, clientId: string, sessionId: string, req: Request) => {
+  try {
+    const rawIp = (req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || '').split(',')[0].trim();
+    const userAgent = req.headers['user-agent'] || '';
+    await pool.query(
+      `INSERT INTO active_user_sessions (user_type, user_id, client_id, session_id, ip_address, user_agent, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
+       ON CONFLICT (user_type, user_id) DO UPDATE SET
+         client_id = EXCLUDED.client_id,
+         session_id = EXCLUDED.session_id,
+         ip_address = EXCLUDED.ip_address,
+         user_agent = EXCLUDED.user_agent,
+         updated_at = CURRENT_TIMESTAMP`,
+      [userType, userId, clientId, sessionId, rawIp, userAgent]
+    );
+  } catch (err) {
+    console.error("[Session Security] Error registrando sesión activa:", err);
+  }
+};
 import { 
   createClient, 
   getClientById, 
@@ -725,11 +750,14 @@ app.post('/api/login', async (req: Request, res: Response) => {
         }
 
         const sessionRole = isSuperAdmin ? 'superadmin' : 'client';
+        const sessionId = crypto.randomUUID();
+
+        await registerActiveSession('client', client.id, client.id, sessionId, req);
 
         const token = jwt.sign(
-          { id: client.id, username: client.username, role: sessionRole, clientId: client.id },
+          { id: client.id, username: client.username, role: sessionRole, clientId: client.id, sessionId },
           JWT_SECRET,
-          { expiresIn: '24h' }
+          { expiresIn: '4h' }
         );
 
         return res.json({
@@ -737,7 +765,8 @@ app.post('/api/login', async (req: Request, res: Response) => {
           message: 'Login exitoso',
           data: {
             id: client.id,
-            name: client.name,
+            name: client.contact_name || client.name,
+            clientName: client.name,
             username: client.username,
             role: sessionRole,
             token
@@ -787,14 +816,15 @@ app.post('/api/login', async (req: Request, res: Response) => {
         }
 
         const permissions = Array.isArray(tenantUser.permissions_json?.modules) ? tenantUser.permissions_json.modules : [];
-        
-        // Todos los usuarios creados dentro de un negocio (como lioro) son de rol 'client' bound a su clientId
         const sessionRole = (tenantUser.is_global_admin && tenantUser.client_id === 'client_admin') ? 'superadmin' : 'client';
+        const sessionId = crypto.randomUUID();
+
+        await registerActiveSession('user', tenantUser.user_id, tenantUser.client_id, sessionId, req);
 
         const token = jwt.sign(
-          { id: tenantUser.client_id, userId: tenantUser.user_id, username: tenantUser.username, role: sessionRole, clientId: tenantUser.client_id, permissions },
+          { id: tenantUser.client_id, userId: tenantUser.user_id, username: tenantUser.username, role: sessionRole, clientId: tenantUser.client_id, permissions, sessionId },
           JWT_SECRET,
-          { expiresIn: '24h' }
+          { expiresIn: '4h' }
         );
 
         return res.json({
@@ -854,6 +884,9 @@ app.post('/api/login', async (req: Request, res: Response) => {
         const permissions = Array.isArray(empUser.allowed_modules) ? empUser.allowed_modules : [];
         const isEmpAdmin = (empUser.employee_role === 'admin' || empUser.employee_role === 'superadmin' || empUser.employee_role === 'dueño');
         const sessionRole = isEmpAdmin ? 'client' : 'employee';
+        const sessionId = crypto.randomUUID();
+
+        await registerActiveSession('employee', empUser.employee_id, empUser.client_id, sessionId, req);
 
         const token = jwt.sign(
           {
@@ -863,10 +896,11 @@ app.post('/api/login', async (req: Request, res: Response) => {
             username: empUser.name,
             role: sessionRole,
             clientId: empUser.client_id,
-            permissions
+            permissions,
+            sessionId
           },
           JWT_SECRET,
-          { expiresIn: '24h' }
+          { expiresIn: '4h' }
         );
 
         return res.json({

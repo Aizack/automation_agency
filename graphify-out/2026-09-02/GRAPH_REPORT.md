@@ -1,16 +1,16 @@
 # Graph Report - Bot multi-tenant  (2026-09-02)
 
 ## Corpus Check
-- 165 files · ~308,430 words
+- 166 files · ~309,000 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1267 nodes · 1661 edges · 122 communities (102 shown, 20 thin omitted)
+- 1269 nodes · 1662 edges · 122 communities (102 shown, 20 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 7 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `adcaf2d8`
+- Built from commit: `30f4042c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -45,7 +45,6 @@
 - shutdownManager.ts
 - pdfGeneratorService.ts
 - 🚨 Error 502 Bad Gateway - Diagnosis & Solutions
-- server
 - Documentación Permanente de Cambios, Seguridad y Módulo de Cotizaciones (2026)
 - SaaSErpCRM.tsx
 - logger.ts
@@ -152,8 +151,8 @@
   dashboard/src/components/AdminDashboard.tsx → dashboard/src/utils/api.ts
 - `BankAccountsManager()` --calls--> `authFetch()`  [EXTRACTED]
   dashboard/src/components/SaaSErpStoreSettings.tsx → dashboard/src/utils/api.ts
-- `server` --calls--> `initDatabase()`  [EXTRACTED]
-  src/server.ts → src/database/initDb.ts
+- `server` --calls--> `runAutoFixAgent()`  [EXTRACTED]
+  src/server.ts → src/agents/autoFixAgent.ts
 
 ## Import Cycles
 - 2-file cycle: `src/server.ts -> src/services/shutdownManager.ts -> src/server.ts`
@@ -161,12 +160,12 @@
 ## Communities (122 total, 20 thin omitted)
 
 ### Community 0 - "postgres.ts"
-Cohesion: 0.06
-Nodes (46): runValidation(), AIAgent, genAI, ClientConfig, getClientConfigById(), getClientConfigByPhone(), pendingAgentConfirmations, pendingCustomerConfirmations (+38 more)
+Cohesion: 0.07
+Nodes (42): AIAgent, genAI, ClientConfig, getClientConfigById(), getClientConfigByPhone(), pendingAgentConfirmations, pendingCustomerConfirmations, routeIncomingMessage() (+34 more)
 
 ### Community 1 - "whatsapp.ts"
 Cohesion: 0.15
-Nodes (15): KNOWLEDGE_BASE_DIR, listLocalFiles(), saveLocalFile(), autoRestoreSavedWhatsAppSessions(), client, connectWhatsApp(), getWhatsAppState(), logoutWhatsApp() (+7 more)
+Nodes (16): updateClient(), KNOWLEDGE_BASE_DIR, listLocalFiles(), saveLocalFile(), client, connectWhatsApp(), getWhatsAppState(), initializeWhatsAppClient() (+8 more)
 
 ### Community 2 - "dependencies"
 Cohesion: 0.11
@@ -193,8 +192,8 @@ Cohesion: 0.08
 Nodes (23): compilerOptions, allowArbitraryExtensions, allowImportingTsExtensions, erasableSyntaxOnly, jsx, lib, module, moduleDetection (+15 more)
 
 ### Community 8 - "server.ts"
-Cohesion: 0.09
-Nodes (21): deleteClient(), updateClientStatus(), AuthenticatedRequest, authenticateToken(), authorizeClientAccess(), requireRole(), authRateLimiter, generalApiLimiter (+13 more)
+Cohesion: 0.08
+Nodes (24): runAutoFixAgent(), TicketFixResult, deleteClient(), updateClientStatus(), AuthenticatedRequest, authenticateToken(), authorizeClientAccess(), requireRole() (+16 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.10
@@ -269,8 +268,8 @@ Cohesion: 0.08
 Nodes (23): 1.1 Cambio de nomenclatura en la UI y BD, 1.2 Campos adicionales para Transferencia Bancaria, 1.3 Actualizar formulario de factura, 2.1 Backend — Endpoints necesarios, 2.2 Frontend — `SaaSErpAccounting.tsx`, 2.3 Integrar en `ClientDashboard.tsx`, 3.1 Migración de BD, 3.2 Endpoints CRUD (+15 more)
 
 ### Community 27 - "shutdownManager.ts"
-Cohesion: 0.29
-Nodes (9): runTest(), STATE_FILE_PATH, stopEscalationService(), captureSystemState(), gracefulShutdown(), registerShutdownHandlers(), restoreSystemState(), STATE_FILE_PATH (+1 more)
+Cohesion: 0.20
+Nodes (14): runValidation(), initDatabase(), runTest(), STATE_FILE_PATH, server, startEscalationService(), stopEscalationService(), captureSystemState() (+6 more)
 
 ### Community 28 - "pdfGeneratorService.ts"
 Cohesion: 0.36
@@ -279,10 +278,6 @@ Nodes (7): main(), generatePOSThermalTicketHTML(), getInvoicePrintData(), Invoic
 ### Community 29 - "🚨 Error 502 Bad Gateway - Diagnosis & Solutions"
 Cohesion: 0.10
 Nodes (20): **1. Nginx Proxy NO está corriendo**, **2. Configuración de Nginx incorrecta**, **3. Firewall bloqueando puerto 3000**, **4. DNS/Hosts file mal configurado**, 🔧 Configuración Nginx de Referencia, 📊 Diagrama del Flujo, 🚨 Error 502 Bad Gateway - Diagnosis & Solutions, **PASO 1: Confirmar que localhost funciona** (+12 more)
-
-### Community 30 - "server"
-Cohesion: 0.33
-Nodes (5): runAutoFixAgent(), TicketFixResult, resolveProductClientId(), server, startEscalationService()
 
 ### Community 31 - "Documentación Permanente de Cambios, Seguridad y Módulo de Cotizaciones (2026)"
 Cohesion: 0.11
@@ -550,14 +545,14 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `SaaSErpInventory.tsx`, `ClientDashboard.tsx`, `authFetch`, `RestaurantWaiterPortal.tsx`, `SaaSErpEmployees.tsx`, `plugins`, `EnterprisePlanningModule.tsx`, `SaaSErpAccounting.tsx`, `SaaSErpAppointments.tsx`, `SaaSErpInvoices.tsx`, `SaaSErpCRM.tsx`, `AdminDashboard.tsx`, `SaaSErpFormulas.tsx`, `SaaSErpInvoices2.tsx`, `SaaSErpCampaigns.tsx`, `SaaSErpUsers.tsx`, `SaaSErpQuotes.tsx`, `SaaSErpAuditLogs.tsx`, `RestaurantKdsDisplay.tsx`, `RestaurantMenuBuilder.tsx`, `SaaSErpCartera.tsx`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **Why does `pool` connect `postgres.ts` to `logger.ts`, `whatsapp.ts`, `server.ts`, `electronicInvoiceService.ts`, `scheduler.ts`, `shutdownManager.ts`, `pdfGeneratorService.ts`, `server`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
-- **Why does `Modelo multi-tenant: usuarios, roles, negocio y CRM` connect `Modelo multi-tenant: usuarios, roles, negocio y CRM` to `INFORME_ANALISIS_FASES.md`, `4. Modelo de base de datos recomendado`, `3. Relación entre conceptos`, `2. Capas del sistema`?**
+- **Why does `pool` connect `postgres.ts` to `logger.ts`, `whatsapp.ts`, `server.ts`, `electronicInvoiceService.ts`, `shutdownManager.ts`, `pdfGeneratorService.ts`, `scheduler.ts`?**
+  _High betweenness centrality (0.004) - this node is a cross-community bridge._
+- **Why does `Implementación técnica del flujo de laboratorio y domicilios óptica` connect `Implementación técnica del flujo de laboratorio y domicilios óptica` to `INFORME_ANALISIS_FASES.md`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
 - **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
   _719 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `postgres.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.06347340581839553 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06751054852320675 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
 - **Should `SaaSErpInventory.tsx` be split into smaller, more focused modules?**

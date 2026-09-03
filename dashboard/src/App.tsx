@@ -7,6 +7,7 @@ import { EmployeePortal } from './components/EmployeePortal';
 import { ActivateAccount } from './components/ActivateAccount';
 import { LandingPage } from './components/LandingPage';
 import { PublicRestaurantMenu } from './components/PublicRestaurantMenu';
+import { clearAllSessionData, getStoredToken } from './utils/api';
 
 function App() {
   const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing' | 'menu'>(() => {
@@ -35,6 +36,30 @@ function App() {
   });
   const [clientId, setClientId] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Escuchadores de eventos de seguridad (desconexión remota, 401/403 o cierre de sesión en otra pestaña)
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      clearAllSessionData();
+      setClientId('');
+      setView('login');
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_token' || e.key === 'emp_token') {
+        if (!e.newValue) {
+          handleUnauthorized();
+        }
+      }
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   // Sincronizar estado y verificar sesión activa
   useEffect(() => {
@@ -87,8 +112,8 @@ function App() {
         return;
       }
 
-      // 2. Verificar si existe token en localStorage
-      const token = localStorage.getItem('auth_token');
+      // 2. Verificar si existe token en almacenamiento
+      const token = getStoredToken();
       if (!token) {
         // Si el usuario navegó a /landpage explícitamente o está en diazlab.online
         if (path === '/landpage' || path === '/landing' || ((host === 'diazlab.online' || host === 'www.diazlab.online') && path === '/')) {
@@ -118,10 +143,12 @@ function App() {
 
         if (json.success) {
           const user = json.data;
+          sessionStorage.setItem('session_role', user.role);
           localStorage.setItem('session_role', user.role);
+          sessionStorage.setItem('session_name', user.name || '');
           localStorage.setItem('session_name', user.name || '');
 
-          const savedView = localStorage.getItem('current_view');
+          const savedView = localStorage.getItem('current_view') || sessionStorage.getItem('current_view');
 
           if (savedView === 'employee') {
             if (user.clientId) {
@@ -139,7 +166,6 @@ function App() {
               localStorage.setItem('current_view', 'admin');
             }
           } else if (user.role === 'employee') {
-            localStorage.setItem('session_name', user.name || '');
             localStorage.setItem('employee_role', user.employeeRole || '');
             localStorage.setItem('employee_permissions', JSON.stringify(user.permissions || []));
             if (user.clientId) {
@@ -168,19 +194,13 @@ function App() {
           }
         } else {
           // Token inválido/expirado
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('session_role');
-          localStorage.removeItem('current_view');
-          localStorage.removeItem('current_client_id');
+          clearAllSessionData();
           setView('login');
           window.history.pushState({}, '', '/');
         }
       } catch (err) {
         console.error("[Auth App] Error validando sesión:", err);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('session_role');
-        localStorage.removeItem('current_view');
-        localStorage.removeItem('current_client_id');
+        clearAllSessionData();
         setView('login');
         window.history.pushState({}, '', '/');
       } finally {
@@ -192,13 +212,19 @@ function App() {
   }, []);
 
   const handleLoginSuccess = (id: string, role: string, token: string, extra?: Record<string, any>) => {
+    // 1. Limpieza total de cualquier sesión o usuario previo en memoria
+    clearAllSessionData();
+
+    // 2. Establecer credenciales de la nueva sesión
+    sessionStorage.setItem('auth_token', token);
     localStorage.setItem('auth_token', token);
+    sessionStorage.setItem('session_role', role);
     localStorage.setItem('session_role', role);
+
     const resolvedName = extra?.name || extra?.username || '';
     if (resolvedName) {
+      sessionStorage.setItem('session_name', resolvedName);
       localStorage.setItem('session_name', resolvedName);
-    } else {
-      localStorage.removeItem('session_name');
     }
 
     if (role === 'superadmin') {
@@ -211,6 +237,7 @@ function App() {
       localStorage.setItem('employee_permissions', JSON.stringify(extra?.permissions || []));
       localStorage.setItem('current_client_id', id);
 
+      sessionStorage.setItem('emp_token', token);
       localStorage.setItem('emp_token', token);
       localStorage.setItem('emp_id', extra?.employeeId || id);
       localStorage.setItem('emp_name', resolvedName);
@@ -237,21 +264,7 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('session_role');
-    localStorage.removeItem('session_name');
-    localStorage.removeItem('current_view');
-    localStorage.removeItem('current_client_id');
-    localStorage.removeItem('client_active_tab');
-    localStorage.removeItem('admin_active_tab');
-    localStorage.removeItem('employee_role');
-    localStorage.removeItem('employee_permissions');
-    localStorage.removeItem('emp_token');
-    localStorage.removeItem('emp_id');
-    localStorage.removeItem('emp_name');
-    localStorage.removeItem('emp_role');
-    localStorage.removeItem('emp_client_id');
-    localStorage.removeItem('shift_start_ts');
+    clearAllSessionData();
     setClientId('');
     setView('login');
     window.history.pushState({}, '', '/');

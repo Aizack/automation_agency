@@ -1343,6 +1343,19 @@ export const initDatabase = async () => {
                 status VARCHAR(20) DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            -- Tabla de Sesiones Activas por Usuario (Sesión Única por Dispositivo)
+            CREATE TABLE IF NOT EXISTS active_user_sessions (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_type VARCHAR(20) NOT NULL, -- 'client', 'user', 'employee'
+                user_id VARCHAR(100) NOT NULL,
+                client_id VARCHAR(50) NOT NULL,
+                session_id UUID NOT NULL,
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT unique_user_active_session UNIQUE (user_type, user_id)
+            );
         `);
 
         // Sincronización de contact_name a full_name en users para corregir nombres de tienda en accesos
