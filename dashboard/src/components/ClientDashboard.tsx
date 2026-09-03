@@ -509,7 +509,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     }
 
     try {
-      await fetch('/api/whatsapp/logout', { method: 'POST' });
+      await fetch(`/api/whatsapp/logout?clientId=${clientId}`, { method: 'POST' });
     } catch (error) {
       console.error("[ClientDashboard] Error solicitando desvinculación:", error);
     }
@@ -1392,6 +1392,20 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               <span className="hidden md:inline">Soporte & AutoFix</span>
             </button>
 
+            {/* Botón Volver al Panel Admin / SuperAdmin (si aplica) */}
+            {(rawRole === 'admin' || rawRole === 'superadmin' || localStorage.getItem('session_role') === 'superadmin') && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="flex items-center gap-1.5 p-1.5 px-3 rounded-md bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 transition cursor-pointer text-xs font-extrabold shadow-sm"
+                style={{ color: '#eab308' }}
+                title="Regresar a la Consola General de Administrador"
+              >
+                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                <span className="hidden md:inline">Volver a Consola Admin</span>
+              </button>
+            )}
+
             {/* User Profile Badge & Dropdown Menu */}
             <div className="relative">
               <button 
@@ -1424,16 +1438,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                   </div>
 
                   <div className="py-1 space-y-1">
-                    {rawRole === 'admin' && (
+                    {(rawRole === 'admin' || rawRole === 'superadmin' || localStorage.getItem('session_role') === 'superadmin') && (
                       <button
                         onClick={() => {
                           setIsUserMenuOpen(false);
                           onBack();
                         }}
-                        className="w-full text-left p-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-primary hover:bg-primary/10 transition cursor-pointer border-0"
+                        className="w-full text-left p-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-amber-400 hover:bg-amber-500/10 transition cursor-pointer border-0"
                       >
                         <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                        Volver al Panel Admin
+                        Volver al Panel General Admin
                       </button>
                     )}
                     <button
@@ -2105,7 +2119,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                         onClick={async () => {
                           if (confirm("¿Deseas cancelar la conexión actual y generar un nuevo código QR?")) {
                             try {
-                              await fetch('/api/whatsapp/logout', { method: 'POST' });
+                              await fetch(`/api/whatsapp/logout?clientId=${clientId}`, { method: 'POST' });
                               await new Promise(resolve => setTimeout(resolve, 1500));
                               await fetch(`/api/whatsapp/connect?clientId=${clientId}`, { method: 'POST' });
                             } catch (err) {

@@ -131,7 +131,7 @@ app.get('/api/whatsapp/status', authenticateToken as any, (req: Request, res: Re
 app.post('/api/whatsapp/connect', authenticateToken as any, (req: Request, res: Response, next: NextFunction) => {
   const authReq = req as AuthenticatedRequest;
   const clientId = (req.query.clientId as string) || 'admin';
-  if (authReq.user?.role === 'admin' || authReq.user?.id === clientId) {
+  if (authReq.user?.role === 'admin' || authReq.user?.role === 'superadmin' || authReq.user?.id === clientId || (authReq.user as any)?.clientId === clientId) {
     return next();
   }
   return res.status(403).json({ success: false, error: 'Acceso denegado. No tienes permisos para conectar esta cuenta.' });
