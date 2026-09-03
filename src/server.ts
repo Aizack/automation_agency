@@ -781,6 +781,79 @@ app.post('/api/login', async (req: Request, res: Response) => {
       }
     }
 
+    // 3. Consultar colaboradores/empleados creados en el Módulo de Empleados (employees)
+    const employeeUserResult = await pool.query(
+      `SELECT e.id AS employee_id, e.name, e.last_name, e.phone, e.pin, e.role AS employee_role, e.client_id, e.is_active,
+              COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules,
+              c.name AS client_name, c.is_activated
+       FROM employees e
+       INNER JOIN clients c ON e.client_id = c.id
+       WHERE (LOWER(REPLACE(e.phone, '+', '')) = $1 
+          OR LOWER(e.phone) = $2 
+          OR LOWER(REPLACE(e.name, ' ', '')) = $1 
+          OR LOWER(e.name) = $2 
+          OR LOWER(CONCAT(e.name, ' ', e.last_name)) = $1
+          OR LOWER(REPLACE(CONCAT(e.name, e.last_name), ' ', '')) = $1)
+         AND e.is_active = TRUE
+       LIMIT 1`,
+      [cleanUser, rawUser]
+    );
+
+    if (employeeUserResult.rows.length > 0) {
+      const empUser = employeeUserResult.rows[0];
+      const isPinValid = await verifyPassword(password, empUser.pin);
+
+      if (isPinValid) {
+        if (!isHashedPassword(empUser.pin)) {
+          try {
+            const hashed = await hashPassword(password);
+            await pool.query(`UPDATE employees SET pin = $1 WHERE id = $2`, [hashed, empUser.employee_id]);
+          } catch (pinHashErr) {
+            console.error("Error auto-migrando PIN de empleado a bcrypt:", pinHashErr);
+          }
+        }
+
+        if (!empUser.is_activated) {
+          return res.status(403).json({ success: false, error: 'La tienda vinculada no está activa.' });
+        }
+
+        const permissions = Array.isArray(empUser.allowed_modules) ? empUser.allowed_modules : [];
+        const isEmpAdmin = (empUser.employee_role === 'admin' || empUser.employee_role === 'superadmin' || empUser.employee_role === 'dueño');
+        const sessionRole = isEmpAdmin ? 'client' : 'employee';
+
+        const token = jwt.sign(
+          {
+            id: empUser.client_id,
+            employeeId: empUser.employee_id,
+            userId: empUser.employee_id,
+            username: empUser.name,
+            role: sessionRole,
+            clientId: empUser.client_id,
+            permissions
+          },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+
+        return res.json({
+          success: true,
+          message: 'Login exitoso',
+          data: {
+            id: empUser.client_id,
+            employeeId: empUser.employee_id,
+            name: `${empUser.name} ${empUser.last_name || ''}`.trim(),
+            clientName: empUser.client_name,
+            username: empUser.name,
+            role: sessionRole,
+            employeeRole: empUser.employee_role,
+            permissions,
+            hasErpAccess: true,
+            token
+          }
+        });
+      }
+    }
+
     return res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos.' });
   } catch (err: any) {
     console.error("[Auth API] Error en login:", err);
