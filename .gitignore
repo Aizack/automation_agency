@@ -11,3 +11,4 @@ dist_deploy/
 dashboard/dist/
 dashboard/dist_output/
 dashboard/dist_deploy/
+external/

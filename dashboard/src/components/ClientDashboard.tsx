@@ -29,6 +29,7 @@ import { SaaSErpCashShifts } from './SaaSErpCashShifts';
 import { SaaSErpSupportTickets } from './SaaSErpSupportTickets';
 import { SaaSErpSalesTargets } from './SaaSErpSalesTargets';
 import { SaaSErpQuotes } from './SaaSErpQuotes';
+import { SaaSErpHabilitacionDian } from './SaaSErpHabilitacionDian';
 
 interface Client {
   id: string;
@@ -116,7 +117,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     return 'cartera';
   };
 
-  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'cotizaciones' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(getDefaultTab());
+  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'dian_habilitacion' | 'cotizaciones' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(getDefaultTab());
   const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1023,6 +1024,21 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 >
                   <span className="material-symbols-outlined text-[18px]">receipt_long</span>
                   <span className="font-bold text-xs">Facturación</span>
+                </button>
+              )}
+
+              {hasPermission('billing') && (
+                <button 
+                  onClick={() => setActiveTab('dian_habilitacion')}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
+                    activeTab === 'dian_habilitacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px] text-emerald-400">verified</span>
+                  <span className="font-bold text-xs flex items-center justify-between w-full">
+                    <span>Habilitación DIAN</span>
+                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono uppercase font-bold">⚡ Factus</span>
+                  </span>
                 </button>
               )}
 
@@ -2408,6 +2424,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         {activeTab === 'facturacion' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
             <SaaSErpInvoices clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === 'dian_habilitacion' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+            <SaaSErpHabilitacionDian clientId={clientId} />
           </div>
         )}
 

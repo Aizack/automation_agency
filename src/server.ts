@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import 'dotenv/config';
+import { runFactusDianTestSet, emitFactusInvoice } from './services/factusService';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -676,6 +677,47 @@ app.put('/api/clients/:clientId/profile-settings', authenticateToken as any, aut
     `, [name || null, nit || null, address || null, phone_number || null, email || null, invoice_footer || null, clientId]);
 
     res.json({ success: true, message: 'Configuración comercial de la tienda guardada con éxito.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Consultar estado de Habilitación DIAN del cliente
+app.get('/api/clients/:clientId/dian-status', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const clientRes = await pool.query('SELECT dian_status, dian_test_set_id, dian_updated_at, nit, name, email, address FROM clients WHERE id = $1', [clientId]);
+    const client = clientRes.rows[0];
+
+    res.json({
+      success: true,
+      data: {
+        status: client?.dian_status || 'pendiente',
+        testSetId: client?.dian_test_set_id || null,
+        updatedAt: client?.dian_updated_at || null,
+        nit: client?.nit || '',
+        name: client?.name || '',
+        email: client?.email || '',
+        address: client?.address || '',
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Ejecutar Set de Pruebas DIAN (Factus API)
+app.post('/api/clients/:clientId/dian/test-set', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { testSetId } = req.body;
+
+    if (!testSetId || !testSetId.trim()) {
+      return res.status(400).json({ success: false, message: 'El código TestSetID es requerido.' });
+    }
+
+    const result = await runFactusDianTestSet(clientId, testSetId.trim());
+    res.json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
