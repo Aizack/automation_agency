@@ -1018,12 +1018,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     });
 
     return (
-        <div className="space-y-6 text-white">
+        <div className="space-y-6 text-[#161616]">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E2DFD7] pb-4">
                 <div>
-                    <h2 className="text-xl font-extrabold text-[#eab308]" style={{ color: '#eab308' }}>INVENTARIO Y PROMOCIONES</h2>
-                    <p className="text-xs text-gray-400 font-medium font-sans">Administra los productos, precios de costo, venta y descuentos.</p>
+                    <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans">LOGÍSTICA & STOCK</span>
+                    <h2 className="font-serif text-3xl font-bold text-[#161616] tracking-tight mt-0.5">Inventario de Productos</h2>
                 </div>
                 {activeTab === 'catalog' && (
                     <div className="flex items-center gap-2">
@@ -1037,26 +1037,26 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={importing}
-                            className="bg-[#181a1c] hover:bg-[#222528] text-white border border-[#2d3036] text-[11px] font-bold py-1.5 px-3 rounded-md flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                            className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[11px] font-bold py-2 px-3.5 rounded-md flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-sm uppercase tracking-wider"
                         >
-                            <span className="material-symbols-outlined text-[15px]">publish</span>
+                            <span className="material-symbols-outlined text-[16px] text-[#D9381E]">publish</span>
                             {importing ? 'Importando...' : 'Importar CSV'}
                         </button>
                         <button
                             type="button"
                             onClick={fetchProducts}
-                            className="h-8 px-3 bg-[#181a1c] hover:bg-[#222528] text-white rounded-md flex items-center justify-center border border-[#2d3036] cursor-pointer transition text-xs font-semibold shrink-0"
+                            className="h-9 px-3.5 bg-white hover:bg-[#FAF8F5] text-[#161616] rounded-md flex items-center justify-center border border-[#E2DFD7] cursor-pointer transition text-xs font-bold shrink-0 shadow-sm uppercase tracking-wider"
                             title="Refrescar catálogo"
                         >
-                            <span className="material-symbols-outlined text-[16px] mr-1">refresh</span>
+                            <span className="material-symbols-outlined text-[16px] mr-1 text-[#D9381E]">refresh</span>
                             Refrescar
                         </button>
                         <button
                             onClick={() => { resetForm(); setAddProductStep('open'); }}
-                            className="bg-[#eab308] hover:bg-amber-300 text-black text-[11px] font-extrabold py-1.5 px-3 rounded-md flex items-center gap-1 transition-colors cursor-pointer shadow border-0"
+                            className="bg-[#161616] hover:bg-[#333333] text-white text-xs font-bold py-2 px-4 rounded-md flex items-center gap-1.5 transition-all cursor-pointer shadow-sm border-0 uppercase tracking-wider"
                         >
-                            <span className="material-symbols-outlined text-[15px]">add</span>
-                            AGREGAR PRODUCTO
+                            <span className="material-symbols-outlined text-[16px] text-[#D9381E]">add</span>
+                            + NUEVO PRODUCTO / ÍTEM
                         </button>
                     </div>
                 )}
@@ -1064,12 +1064,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
             {/* Banners feedback */}
             {importSuccessMsg && (
-                <div className="bg-primary/10 border border-primary/20 text-primary text-xs p-3 rounded-xl font-medium">
+                <div className="bg-[#E6F4EA] border border-[#A8DADC] text-[#1E4620] text-xs p-3 rounded-md font-semibold flex items-center gap-2 shadow-sm">
                     ✓ {importSuccessMsg}
                 </div>
             )}
             {importErrorMsg && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl font-medium">
+                <div className="bg-[#FCE8E6] border border-[#F5C6CB] text-[#C5221F] text-xs p-3 rounded-md font-semibold flex items-center gap-2 shadow-sm">
                     ⚠️ {importErrorMsg}
                 </div>
             )}
@@ -1077,32 +1077,32 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             {/* METRICAS Y RESUMEN DE INVENTARIO */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Productos en Catálogo */}
-                <div className="bg-[#141517] border border-[#222428] p-5 rounded-lg flex flex-col justify-between shadow-md">
+                <div className="bg-white border border-[#E2DFD7] p-5 rounded-lg flex flex-col justify-between shadow-sm">
                     <div className="flex items-center justify-between">
-                        <p className="font-bold text-xs uppercase tracking-wider flex items-center gap-2" style={{ color: '#eab308' }}>
-                            <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+                        <p className="font-bold text-[11px] uppercase tracking-wider flex items-center gap-2 text-[#666666]">
+                            <span className="material-symbols-outlined text-[18px] text-[#D9381E]">inventory_2</span>
                             PRODUCTOS EN CATÁLOGO
                         </p>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#1a170a] border border-amber-500/40 font-mono font-bold" style={{ color: '#eab308' }}>Existencias activas</span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#E2DFD7] font-mono font-bold text-[#161616]">Existencias activas</span>
                     </div>
                     <div className="mt-3">
-                        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-mono">
-                            {products.length} Ítems
+                        <h2 className="text-3xl font-serif font-bold tracking-tight text-[#161616]">
+                            {products.length} <span className="text-sm font-sans font-normal text-[#666666]">Ítems</span>
                         </h2>
-                        <p className="text-gray-400 text-xs mt-1">
+                        <p className="text-[#666666] text-xs mt-1">
                             {products.reduce((acc, p) => acc + (p.stock || 0), 0)} unidades físicas registradas en stock
                         </p>
                     </div>
                 </div>
 
                 {/* Valor Total del Inventario & ROI */}
-                <div className="bg-[#141517] border border-[#222428] p-5 rounded-lg flex flex-col justify-between shadow-md">
+                <div className="bg-white border border-[#E2DFD7] p-5 rounded-lg flex flex-col justify-between shadow-sm">
                     <div className="flex items-center justify-between">
-                        <p className="font-bold text-xs uppercase tracking-wider flex items-center gap-2" style={{ color: '#eab308' }}>
-                            <span className="material-symbols-outlined text-[18px]">trending_up</span>
+                        <p className="font-bold text-[11px] uppercase tracking-wider flex items-center gap-2 text-[#666666]">
+                            <span className="material-symbols-outlined text-[18px] text-[#D9381E]">trending_up</span>
                             VALOR DEL INVENTARIO & ROI
                         </p>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#1a170a] border border-amber-500/40 font-mono font-bold" style={{ color: '#eab308' }}>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#E2DFD7] font-mono font-bold text-[#D9381E]">
                             +{(
                                 products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.cost_price || '0') || 0)), 0) > 0
                                 ? (((products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.price || '0') || 0)), 0) - products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.cost_price || '0') || 0)), 0)) / products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.cost_price || '0') || 0)), 0)) * 100).toFixed(1)
@@ -1356,21 +1356,21 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     )}
 
                     {isFormOpen && (
-                        <div className="glass-card p-6 space-y-4">
-                            <div className="flex items-center justify-between border-b border-outline/10 pb-3">
-                                <h3 className="text-sm font-bold tracking-tight text-on-surface flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary text-[20px]">
-                                        {editingProduct ? 'edit' : 'add_box'}
-                                    </span>
-                                    {editingProduct ? 'Editar Producto / Servicio' : 'Nuevo Producto / Servicio'}
-                                </h3>
+                        <div className="bg-white border border-[#E2DFD7] p-6 rounded-lg shadow-sm space-y-6 text-[#161616]">
+                            <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-4">
+                                <div>
+                                    <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans">FORMULARIO DE INVENTARIO ERP</span>
+                                    <h3 className="font-serif text-2xl font-bold text-[#161616] tracking-tight mt-0.5">
+                                        {editingProduct ? 'Editar Producto o Servicio de Venta' : 'Crear / Editar Producto o Servicio de Venta'}
+                                    </h3>
+                                </div>
                                 <button
                                     type="button"
                                     onClick={resetForm}
-                                    className="p-1.5 hover:bg-surface-container-highest rounded-lg text-on-surface-variant hover:text-white transition cursor-pointer border-0 bg-transparent flex items-center gap-1 text-xs font-bold"
+                                    className="p-1 text-[#666666] hover:text-[#161616] hover:bg-[#FAF8F5] rounded transition cursor-pointer border-0 bg-transparent text-xl font-bold"
                                     title="Cerrar formulario"
                                 >
-                                    <span className="material-symbols-outlined text-[20px]">close</span>
+                                    &times;
                                 </button>
                             </div>
                             <form onSubmit={handleSubmit} className="space-y-4">
