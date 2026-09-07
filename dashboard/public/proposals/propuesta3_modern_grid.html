@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Propuesta 3: KOI Modern Grid (Magazine & Bloques de Acento)</title>
+  <!-- Google Fonts: Syne + DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-white: #FAFAFA;
+      --bg-accent-yellow: #FFD100;
+      --bg-accent-red: #DC2626;
+      --text-black: #050505;
+      --text-muted: #555555;
+      --border-black: #050505;
+      --font-magazine: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-white);
+      color: var(--text-black);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header {
+      border-bottom: 2px solid var(--border-black);
+      padding: 2rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .editorial-logo {
+      font-family: var(--font-magazine);
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+    }
+
+    .nav-grid {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-grid a {
+      text-decoration: none;
+      color: var(--text-black);
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-grid a.active {
+      background-color: var(--bg-accent-yellow);
+      padding: 0.4rem 0.8rem;
+    }
+
+    .main-grid {
+      padding: 4rem;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 4rem;
+    }
+
+    .hero-editorial {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .section-number {
+      font-family: var(--font-magazine);
+      font-size: 5rem;
+      line-height: 1;
+      color: var(--border-black);
+    }
+
+    .headline-huge {
+      font-family: var(--font-magazine);
+      font-size: 3.5rem;
+      line-height: 1;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .yellow-block {
+      background-color: var(--bg-accent-yellow);
+      padding: 2rem;
+      border: 2px solid var(--border-black);
+    }
+
+    .yellow-block h3 {
+      font-family: var(--font-magazine);
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .table-magazine {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+    }
+
+    .table-magazine th {
+      border-bottom: 2px solid var(--border-black);
+      text-align: left;
+      padding: 1rem 0;
+      font-family: var(--font-magazine);
+      text-transform: uppercase;
+    }
+
+    .table-magazine td {
+      border-bottom: 1px solid #E5E5E5;
+      padding: 1.2rem 0;
+      font-weight: 500;
+    }
+
+    .sidebar-editorial {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .red-banner {
+      background-color: var(--bg-accent-red);
+      color: #FFFFFF;
+      padding: 2rem;
+      border: 2px solid var(--border-black);
+    }
+
+    .red-banner h4 {
+      font-family: var(--font-magazine);
+      font-size: 2rem;
+      line-height: 1;
+      margin-bottom: 1rem;
+    }
+
+    .btn-magazine {
+      background-color: var(--text-black);
+      color: #FFFFFF;
+      border: 2px solid var(--text-black);
+      padding: 1.2rem;
+      font-family: var(--font-magazine);
+      font-size: 1rem;
+      text-transform: uppercase;
+      width: 100%;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn-magazine:hover {
+      background-color: var(--bg-accent-yellow);
+      color: var(--text-black);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <div style="font-size: 0.8rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.5rem;">REVISTA ERP & FACTURACIÓN</div>
+      <h1 class="editorial-logo">KOI.MAG</h1>
+    </div>
+
+    <ul class="nav-grid">
+      <li><a href="#" class="active">01 RESUMEN</a></li>
+      <li><a href="#">02 INVENTARIO</a></li>
+      <li><a href="#">03 DIAN FACTUS</a></li>
+      <li><a href="#">04 POS CAJA</a></li>
+    </ul>
+  </header>
+
+  <main class="main-grid">
+    <section class="hero-editorial">
+      <div style="display: flex; align-items: baseline; gap: 2rem;">
+        <span class="section-number">01</span>
+        <div>
+          <h2 class="headline-huge">Móvil & Global</h2>
+          <p style="font-size: 1.1rem; color: var(--text-muted);">Estética inspirada en diagramación de revistas tipográficas con bloques de acento de alto impacto.</p>
+        </div>
+      </div>
+
+      <div class="yellow-block">
+        <h3>RESUMEN DE OPERACIONES DIAN</h3>
+        <p style="font-size: 1rem; font-weight: 500;">99.8% de comprobantes autorizados sin errores en transmisión.</p>
+      </div>
+
+      <table class="table-magazine">
+        <thead>
+          <tr>
+            <th>Comprobante</th>
+            <th>Monto Total</th>
+            <th>Tributo</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>FACTURA ELECTRÓNICA #901</td>
+            <td>$ 1,200,000</td>
+            <td>19% IVA</td>
+            <td><strong>AUTORIZADO</strong></td>
+          </tr>
+          <tr>
+            <td>VENTA MOSTRADOR POS #441</td>
+            <td>$ 350,000</td>
+            <td>0% EXENTO</td>
+            <td><strong>PAGADO</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <aside class="sidebar-editorial">
+      <div class="red-banner">
+        <h4>DIAN HABILITACIÓN</h4>
+        <p style="font-size: 0.95rem; line-height: 1.5;">Pruebas completadas en ambiente Sandbox de Factus API.</p>
+      </div>
+
+      <div>
+        <button class="btn-magazine">+ Emitir Comprobante</button>
+      </div>
+
+      <div style="border: 2px solid var(--border-black); padding: 1.5rem; background: #FFF;">
+        <strong>Propuesta 3 — Modern Magazine:</strong>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+          Grilla tipográfica de revista contemporánea, encabezados gigantes en negrita y bloques de contraste amarillo/rojo.
+        </p>
+      </div>
+    </aside>
+  </main>
+
+</body>
+</html>

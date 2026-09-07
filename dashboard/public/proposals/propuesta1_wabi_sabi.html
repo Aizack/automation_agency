@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Propuesta 1: KOI Wabi-Sabi Paper (Calma Editorial)</title>
+  <!-- Google Fonts: Instrument Serif + Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-paper: #F6F4EE;
+      --bg-card: #FFFFFF;
+      --text-main: #161616;
+      --text-muted: #6B6862;
+      --border-thin: #E2DFD7;
+      --koi-vermilion: #D9381E;
+      --koi-gold: #D4A359;
+      --font-serif: 'Instrument Serif', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-paper);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Layout Widescreen Editorial */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem 4rem;
+      border-bottom: 1px solid var(--border-thin);
+    }
+
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand-mark h1 {
+      font-family: var(--font-serif);
+      font-size: 2.2rem;
+      font-weight: 400;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .koi-dot {
+      width: 10px;
+      height: 10px;
+      background-color: var(--koi-vermilion);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .nav-editorial {
+      display: flex;
+      gap: 3rem;
+      list-style: none;
+    }
+
+    .nav-editorial a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .nav-editorial a.active, .nav-editorial a:hover {
+      color: var(--text-main);
+      border-bottom: 1px solid var(--koi-vermilion);
+      padding-bottom: 4px;
+    }
+
+    .main-container {
+      flex: 1;
+      padding: 3rem 4rem;
+      display: grid;
+      grid-template-columns: 280px 1fr 340px;
+      gap: 3rem;
+    }
+
+    /* Panel Izquierdo: Indice Editorial */
+    .editorial-index {
+      border-right: 1px solid var(--border-thin);
+      padding-right: 2rem;
+    }
+
+    .index-tag {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--koi-vermilion);
+      margin-bottom: 1.5rem;
+      display: block;
+    }
+
+    .editorial-title {
+      font-family: var(--font-serif);
+      font-size: 3rem;
+      line-height: 1.1;
+      font-weight: 400;
+      margin-bottom: 2rem;
+    }
+
+    .stat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+
+    .stat-item .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .stat-item .value {
+      font-family: var(--font-serif);
+      font-size: 2.2rem;
+      color: var(--text-main);
+    }
+
+    /* Centro: Tabla & Acciones Principales */
+    .content-center {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--border-thin);
+      padding-bottom: 1rem;
+    }
+
+    .section-header h2 {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      font-weight: 400;
+    }
+
+    .editorial-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .editorial-table th {
+      text-align: left;
+      padding: 1rem 0;
+      color: var(--text-muted);
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.75rem;
+      border-bottom: 1px solid var(--border-thin);
+    }
+
+    .editorial-table td {
+      padding: 1.2rem 0;
+      border-bottom: 1px solid var(--border-thin);
+      color: var(--text-main);
+    }
+
+    .badge-status {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-radius: 2px;
+      background-color: rgba(217, 56, 30, 0.08);
+      color: var(--koi-vermilion);
+    }
+
+    /* Derecha: Resumen de Caja & Acciones Rápidas */
+    .panel-right {
+      background-color: var(--bg-card);
+      padding: 2rem;
+      border: 1px solid var(--border-thin);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .panel-right h3 {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      font-weight: 400;
+      margin-bottom: 1rem;
+    }
+
+    .btn-koi {
+      background-color: var(--text-main);
+      color: #FFFFFF;
+      border: none;
+      padding: 1rem 1.5rem;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      width: 100%;
+    }
+
+    .btn-koi:hover {
+      background-color: var(--koi-vermilion);
+    }
+
+    .footer-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar Editorial -->
+  <header class="header-bar">
+    <div class="brand-mark">
+      <span class="koi-dot"></span>
+      <h1>KOI ERP <span style="font-size: 1rem; color: var(--text-muted); font-family: var(--font-sans);">/ Wabi-Sabi Paper</span></h1>
+    </div>
+    <ul class="nav-editorial">
+      <li><a href="#" class="active">01 Resumen</a></li>
+      <li><a href="#">02 Ventas POS</a></li>
+      <li><a href="#">03 Inventario</a></li>
+      <li><a href="#">04 Facturación DIAN</a></li>
+      <li><a href="#">05 Ajustes</a></li>
+    </ul>
+  </header>
+
+  <!-- Grilla Principal Asimétrica -->
+  <main class="main-container">
+    
+    <!-- Columna 1: Índice Editorial -->
+    <aside class="editorial-index">
+      <span class="index-tag">Vol. 2026 — Edición 01</span>
+      <h2 class="editorial-title">Estética en movimiento.</h2>
+      
+      <div class="stat-list">
+        <div class="stat-item">
+          <div class="label">Ventas del Día</div>
+          <div class="value">$ 4,850,000</div>
+        </div>
+        <div class="stat-item">
+          <div class="label">Órdenes Activas</div>
+          <div class="value">24 Pedidos</div>
+        </div>
+        <div class="stat-item">
+          <div class="label">Habilitación DIAN</div>
+          <div class="value" style="color: var(--koi-vermilion);">Habilitado ✔</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Columna 2: Tabla de Movimientos Principales -->
+    <section class="content-center">
+      <div class="section-header">
+        <h2>Registro de Operaciones Recientes</h2>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Actualizado en tiempo real</span>
+      </div>
+
+      <table class="editorial-table">
+        <thead>
+          <tr>
+            <th>Código / Ref</th>
+            <th>Cliente / Tienda</th>
+            <th>Monto Total</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>INV-2026-089</strong></td>
+            <td>Óptica Visión Clara</td>
+            <td>$ 680,000 COP</td>
+            <td><span class="badge-status">Emitida DIAN</span></td>
+          </tr>
+          <tr>
+            <td><strong>INV-2026-088</strong></td>
+            <td>Distribuidora Andes</td>
+            <td>$ 1,420,000 COP</td>
+            <td><span class="badge-status">Emitida DIAN</span></td>
+          </tr>
+          <tr>
+            <td><strong>POS-00421</strong></td>
+            <td>Cliente Mostrador</td>
+            <td>$ 150,000 COP</td>
+            <td><span class="badge-status" style="background: rgba(0,0,0,0.05); color: var(--text-main);">Cobrado POS</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Columna 3: Tarjeta de Acciones Rápidas -->
+    <aside class="panel-right">
+      <div>
+        <h3>Caja POS & Emisión rápida</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem;">Acceso directo al registro de ventas sin salir del flujo de trabajo.</p>
+        <button class="btn-koi">+ Nueva Venta POS</button>
+      </div>
+
+      <div class="footer-note">
+        <strong>Propuesta 1 — Estética KOI Paper:</strong> Fondo tono beige tenue, contraste descansado para la vista y grilla basada en revistas tipográficas.
+      </div>
+    </aside>
+
+  </main>
+
+</body>
+</html>

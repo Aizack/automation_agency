@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KOI ERP — Wabi-Sabi Paper (Diseño Editorial Multi-Tenant)</title>
+  <!-- Google Fonts: Instrument Serif + Plus Jakarta Sans + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-paper: #F6F4EE;
+      --bg-card: #FFFFFF;
+      --text-main: #161616;
+      --text-muted: #6B6862;
+      --border-thin: #E2DFD7;
+      --border-strong: #161616;
+      --koi-vermilion: #D9381E;
+      --koi-vermilion-light: rgba(217, 56, 30, 0.08);
+      --font-serif: 'Instrument Serif', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-paper);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: row;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* -------------------------------------------------------------
+       BARRA LATERAL EXPANDIBLE EN HOVER (CERO SCROLLBAR CERRADA)
+    ------------------------------------------------------------- */
+    .sidebar-expandable {
+      width: 64px;
+      height: 100vh;
+      background-color: var(--bg-paper);
+      border-right: 1px solid var(--border-thin);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      padding: 1.2rem 0;
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+      overflow: hidden !important; /* CERO SCROLLBAR EN ESTADO CERRADO */
+      white-space: nowrap;
+    }
+
+    .sidebar-expandable:hover {
+      width: 290px;
+      box-shadow: 10px 0 30px rgba(0,0,0,0.06);
+      border-right: 1px solid var(--border-strong);
+      overflow-y: auto !important;
+    }
+
+    .sidebar-brand {
+      padding: 0 0.8rem 1.2rem 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border-thin);
+      margin-bottom: 1rem;
+    }
+
+    .brand-avatar {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      background-color: var(--border-strong);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .brand-info {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .sidebar-expandable:hover .brand-info {
+      opacity: 1;
+    }
+
+    .brand-name {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+
+    .brand-sub {
+      font-size: 0.65rem;
+      color: var(--koi-vermilion);
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .nav-menu-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      padding: 0 0.4rem;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-item-btn {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 0.8rem;
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      border-radius: 4px;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .nav-item-btn:hover, .nav-item-btn.active {
+      background-color: var(--koi-vermilion-light);
+      color: var(--koi-vermilion);
+    }
+
+    .nav-icon {
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      fill: none;
+      stroke: var(--text-main);
+      stroke-width: 1.8;
+      transition: stroke 0.2s;
+    }
+
+    .nav-item-btn:hover .nav-icon, .nav-item-btn.active .nav-icon {
+      stroke: var(--koi-vermilion);
+    }
+
+    .nav-text {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .sidebar-expandable:hover .nav-text {
+      opacity: 1;
+    }
+
+    .sidebar-expandable:not(:hover) .sub-menu {
+      display: none !important;
+    }
+
+    .sub-menu {
+      list-style: none;
+      padding-left: 3.2rem;
+      display: none;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-top: 0.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .sidebar-expandable:hover .sub-menu.open {
+      display: flex;
+    }
+
+    .sub-menu a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      transition: color 0.2s;
+      display: block;
+      padding: 0.2rem 0;
+    }
+
+    .sub-menu a:hover, .sub-menu a.active-link {
+      color: var(--koi-vermilion);
+      font-weight: 600;
+    }
+
+    .caret-arrow {
+      font-size: 0.7rem;
+      transition: transform 0.2s;
+    }
+
+    .nav-item-btn.active .caret-arrow {
+      transform: rotate(180deg);
+    }
+
+    /* -------------------------------------------------------------
+       ÁREA PRINCIPAL DE CONTENIDO & HEADER EDITORIAL ELEGANTE
+    ------------------------------------------------------------- */
+    .content-area {
+      margin-left: 64px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: margin-left 0.3s ease;
+    }
+
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 3.5rem;
+      border-bottom: 1px solid var(--border-thin);
+      background-color: var(--bg-paper);
+    }
+
+    .top-header-left {
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+    }
+
+    .top-header-brand {
+      font-family: var(--font-serif);
+      font-size: 2.2rem;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      color: var(--text-main);
+    }
+
+    .search-bar-zen {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      border-bottom: 1px solid var(--border-strong);
+      padding: 0.4rem 0.2rem;
+      width: 340px;
+    }
+
+    .search-bar-zen svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: var(--text-main);
+      stroke-width: 1.8;
+    }
+
+    .search-bar-zen input {
+      border: none;
+      background: transparent;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      color: var(--text-main);
+      outline: none;
+      width: 100%;
+    }
+
+    .top-header-right {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .tenant-indicator {
+      display: flex;
+      flex-direction: column;
+      text-align: right;
+    }
+
+    .tenant-label {
+      font-size: 0.65rem;
+      color: var(--koi-vermilion);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .tenant-name {
+      font-family: var(--font-serif);
+      font-size: 1.3rem;
+      color: var(--text-main);
+      line-height: 1.1;
+    }
+
+    .header-divider {
+      width: 1px;
+      height: 28px;
+      background-color: var(--border-thin);
+    }
+
+    .user-profile-zen {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .user-profile-zen:hover {
+      background-color: rgba(0,0,0,0.03);
+    }
+
+    .user-avatar-zen {
+      width: 34px;
+      height: 34px;
+      background-color: var(--text-main);
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .user-info-zen {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .user-name-zen {
+      font-size: 0.85rem;
+      font-weight: 600;
+      line-height: 1.1;
+      color: var(--text-main);
+    }
+
+    .user-role-zen {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* TARJETAS RESUMEN KPI (TOTAL PRODUCTOS, DINERO INVENTARIO, ALERTAS) */
+    .kpi-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.8rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .kpi-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-thin);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .kpi-card:hover {
+      border-color: var(--border-strong);
+    }
+
+    .kpi-card.warning {
+      border-left: 3px solid var(--koi-vermilion);
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-family: var(--font-serif);
+      font-size: 2.4rem;
+      font-weight: 400;
+      line-height: 1.1;
+      color: var(--text-main);
+    }
+
+    .kpi-value.warning-text {
+      color: var(--koi-vermilion);
+    }
+
+    .kpi-unit {
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .kpi-subtext {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* CUERPO DE PÁGINA */
+    .main-body {
+      padding: 3rem 3.5rem;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 3.5rem;
+    }
+
+    .section-title-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-thin);
+      padding-bottom: 1.2rem;
+    }
+
+    .section-title-wrapper h2 {
+      font-family: var(--font-serif);
+      font-size: 3rem;
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    .btn-primary-action {
+      background-color: var(--text-main);
+      color: #FFFFFF;
+      border: 1px solid var(--text-main);
+      padding: 0.9rem 1.8rem;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary-action:hover {
+      background-color: var(--koi-vermilion);
+      border-color: var(--koi-vermilion);
+    }
+
+    .inventory-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .inventory-table th {
+      text-align: left;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    .inventory-table td {
+      padding: 1.2rem 0;
+      border-bottom: 1px solid var(--border-thin);
+      font-size: 0.9rem;
+    }
+
+    .badge-code {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      background: rgba(0,0,0,0.04);
+      padding: 0.2rem 0.5rem;
+      border-radius: 2px;
+    }
+
+    /* -------------------------------------------------------------
+       MODAL WIDESCREEN EDITORIAL WABI-SABI (CUA DROS DE COLOR & GALERÍA)
+    ------------------------------------------------------------- */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(22, 22, 22, 0.5);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: 2rem;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-widescreen {
+      width: 100%;
+      max-width: 1360px;
+      height: 88vh;
+      background-color: var(--bg-paper);
+      border: 1px solid var(--border-strong);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    .modal-top {
+      padding: 1.3rem 2.8rem;
+      border-bottom: 1px solid var(--border-thin);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--bg-paper);
+    }
+
+    .modal-top h3 {
+      font-family: var(--font-serif);
+      font-size: 2.1rem;
+      font-weight: 400;
+    }
+
+    .modal-content-grid {
+      flex: 1;
+      padding: 2.2rem 2.8rem;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2.8rem;
+    }
+
+    .modal-form-scrollable {
+      overflow-y: auto;
+      padding-right: 1.5rem;
+      max-height: 100%;
+    }
+
+    .form-section-title {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      border-bottom: 1px solid var(--border-thin);
+      padding-bottom: 0.4rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .field-group label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .field-group input, .field-group select, .field-group textarea {
+      padding: 0.75rem 0.9rem;
+      border: 1px solid var(--border-thin);
+      background-color: var(--bg-card);
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+      border-color: var(--border-strong);
+    }
+
+    .help-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    /* VARIANTES DE COLOR ZEN CON CUADRITO DE COLOR */
+    .variants-section-zen {
+      margin-bottom: 1.8rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border-thin);
+    }
+
+    .variants-table-zen {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.8rem;
+    }
+
+    .variants-table-zen th {
+      text-align: left;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    .variants-table-zen td {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border-thin);
+      vertical-align: middle;
+    }
+
+    /* Cuadrito Muestra de Color en la Tabla */
+    .color-swatch-box {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.18);
+      display: inline-block;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .color-select-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 95%;
+    }
+
+    .variants-table-zen input, .variants-table-zen select {
+      padding: 0.55rem 0.7rem;
+      border: 1px solid var(--border-thin);
+      background-color: var(--bg-card);
+      font-size: 0.85rem;
+      width: 100%;
+    }
+
+    .btn-add-variant-zen {
+      background: transparent;
+      border: 1px solid var(--border-thin);
+      padding: 0.4rem 0.9rem;
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-add-variant-zen:hover {
+      border-color: var(--border-strong);
+      background-color: var(--bg-card);
+    }
+
+    /* COLUMNA DERECHA CON SELECTOR DE FOTO POR COLOR (CUADRITOS A LA IZQUIERDA DE LA FOTO) */
+    .modal-sidebar-fixed {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      height: 100%;
+      justify-content: flex-start;
+    }
+
+    .photo-area-with-swatches {
+      display: flex;
+      gap: 0.8rem;
+      align-items: flex-start;
+    }
+
+    /* Selector Vertical de Cuadritos de Color para Fotos */
+    .photo-color-swatches-column {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding-top: 0.2rem;
+    }
+
+    .photo-swatch-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 3px;
+      border: 2px solid var(--border-thin);
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .photo-swatch-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .photo-swatch-btn.active {
+      border-color: var(--koi-vermilion);
+      transform: scale(1.15);
+      box-shadow: 0 0 0 2px var(--bg-paper), 0 0 0 4px var(--koi-vermilion);
+    }
+
+    .photo-dropzone-compact {
+      flex: 1;
+      border: 2px dashed var(--border-thin);
+      background-color: var(--bg-card);
+      height: 135px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .photo-dropzone-compact:hover {
+      border-color: var(--koi-vermilion);
+      color: var(--koi-vermilion);
+    }
+
+    .summary-card-compact {
+      background: var(--bg-card);
+      border: 1px solid var(--border-thin);
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-card-title {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.2rem;
+    }
+
+    .summary-card-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .summary-card-price {
+      font-family: var(--font-mono);
+      font-size: 1.35rem;
+      color: var(--koi-vermilion);
+      margin-top: 0.4rem;
+      font-weight: 600;
+    }
+
+    .modal-bottom {
+      padding: 0.75rem 2.8rem;
+      border-top: 1px solid var(--border-thin);
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      background-color: var(--bg-paper);
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--border-thin);
+      padding: 0.55rem 1.4rem;
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+
+    .btn-save {
+      background-color: var(--koi-vermilion);
+      color: #FFFFFF;
+      border: none;
+      padding: 0.55rem 1.8rem;
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-weight: 700;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- -------------------------------------------------------------
+       BARRA LATERAL EXPANDIBLE EN HOVER
+  ------------------------------------------------------------- -->
+  <aside class="sidebar-expandable" id="sidebarExpandable">
+    
+    <div class="sidebar-brand">
+      <div class="brand-avatar">KOI</div>
+      <div class="brand-info">
+        <div class="brand-name">KOI ERP</div>
+        <div class="brand-sub">SaaS Multi-Tenant</div>
+      </div>
+    </div>
+
+    <div class="nav-menu-list">
+      
+      <!-- 0. Agente IA WhatsApp -->
+      <div class="nav-item">
+        <a href="#" class="nav-item-btn">
+          <svg class="nav-icon" viewBox="0 0 24 24">
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+            <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+            <path d="M9 15h6"/>
+          </svg>
+          <span class="nav-text"><span>Configuración Agente IA</span></span>
+        </a>
+      </div>
+
+      <!-- 1. Información Empresa -->
+      <div class="nav-item">
+        <button class="nav-item-btn" onclick="toggleSubMenu('sub-empresa', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12,2 19,7 19,17 12,22 5,17 5,7"/></svg>
+          <span class="nav-text"><span>Información Empresa</span> <span class="caret-arrow">▾</span></span>
+        </button>
+        <ul class="sub-menu" id="sub-empresa">
+          <li><a href="#">Perfil Comercial</a></li>
+          <li><a href="#">Sucursales & Sedes</a></li>
+          <li><a href="#">Planeación Empresarial</a></li>
+        </ul>
+      </div>
+
+      <!-- 2. Logística & Stock -->
+      <div class="nav-item">
+        <button class="nav-item-btn active" onclick="toggleSubMenu('sub-logistica', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <span class="nav-text"><span>Logística & Stock</span> <span class="caret-arrow">▾</span></span>
+        </button>
+        <ul class="sub-menu open" id="sub-logistica">
+          <li><a href="#" class="active-link">Inventario de Productos</a></li>
+          <li><a href="#">Trabajos de Laboratorio</a></li>
+          <li><a href="#">Despachos y Domicilios</a></li>
+        </ul>
+      </div>
+
+      <!-- 3. Facturación & Finanzas -->
+      <div class="nav-item">
+        <button class="nav-item-btn" onclick="toggleSubMenu('sub-facturacion', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+          <span class="nav-text"><span>Facturación & Finanzas</span> <span class="caret-arrow">▾</span></span>
+        </button>
+        <ul class="sub-menu" id="sub-facturacion">
+          <li><a href="#">Facturación POS & DIAN</a></li>
+          <li><a href="#">Cotizaciones</a></li>
+          <li><a href="#">Documentos Soporte</a></li>
+          <li><a href="#">Arqueo de Caja</a></li>
+          <li><a href="#">Contabilidad General</a></li>
+          <li><a href="#">Cartera & Cobros</a></li>
+        </ul>
+      </div>
+
+      <!-- 4. Clientes & Difusión -->
+      <div class="nav-item">
+        <button class="nav-item-btn" onclick="toggleSubMenu('sub-marketing', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+          <span class="nav-text"><span>Clientes & Difusión</span> <span class="caret-arrow">▾</span></span>
+        </button>
+        <ul class="sub-menu" id="sub-marketing">
+          <li><a href="#">CRM Clientes</a></li>
+          <li><a href="#">Campañas de Campo</a></li>
+          <li><a href="#">Difusión Promocional</a></li>
+          <li><a href="#">Metas & Ventas Personal</a></li>
+        </ul>
+      </div>
+
+      <!-- 5. Citas & Salud Visual -->
+      <div class="nav-item">
+        <button class="nav-item-btn" onclick="toggleSubMenu('sub-citas', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 4a8 8 0 100 16 8 8 0 000-16zM12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+          <span class="nav-text"><span>Citas & Salud Visual</span> <span class="caret-arrow">▾</span></span>
+        </button>
+        <ul class="sub-menu" id="sub-citas">
+          <li><a href="#">Programación de Citas</a></li>
+          <li><a href="#">Optometría (Fórmulas)</a></li>
+        </ul>
+      </div>
+
+      <!-- 6. Personal & Seguridad -->
+      <div class="nav-item">
+        <button class="nav-item-btn" onclick="toggleSubMenu('sub-personal', this)">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg>
+          <span class="nav-text"><span>Personal & Seguridad</span> <span class="caret-arrow">▾</span></span>
+        </button>
+        <ul class="sub-menu" id="sub-personal">
+          <li><a href="#">Administración de Personal</a></li>
+          <li><a href="#">Accesos y Permisos</a></li>
+          <li><a href="#" style="color: var(--koi-vermilion); font-weight: 600;">Soporte & AutoFix</a></li>
+          <li><a href="#">Trazabilidad & Auditoría</a></li>
+          <li><a href="#">Estado del Sistema</a></li>
+        </ul>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- -------------------------------------------------------------
+       ÁREA PRINCIPAL DE CONTENIDO
+  ------------------------------------------------------------- -->
+  <div class="content-area">
+    
+    <header class="top-header">
+      <div class="top-header-left">
+        <div class="top-header-brand">
+          KOI ERP
+        </div>
+        
+        <div class="search-bar-zen">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+          </svg>
+          <input type="text" placeholder="Buscar en inventario, facturas, citas...">
+        </div>
+      </div>
+
+      <div class="top-header-right">
+        <div class="tenant-indicator">
+          <span class="tenant-label">Negocio Activo</span>
+          <span class="tenant-name">Óptica Nuevo Horizonte</span>
+        </div>
+
+        <div class="header-divider"></div>
+
+        <div class="user-profile-zen">
+          <div class="user-avatar-zen">L</div>
+          <div class="user-info-zen">
+            <span class="user-name-zen">Lindy Orozco</span>
+            <span class="user-role-zen">ADMINISTRADOR DE TIENDA ▾</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-body">
+      <section>
+        <div class="section-title-wrapper">
+          <div>
+            <span style="font-size: 0.75rem; color: var(--koi-vermilion); letter-spacing: 0.2em; text-transform: uppercase;">Logística & Stock</span>
+            <h2>Inventario de Productos</h2>
+          </div>
+
+          <button class="btn-primary-action" id="openModalBtn">+ Nuevo Producto / Ítem</button>
+        </div>
+
+        <!-- Tarjetas KPI de Resumen de Inventario -->
+        <div class="kpi-metrics-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Total de Ítems en Stock</span>
+            <div class="kpi-value">128 <span class="kpi-unit">Ítems</span></div>
+            <span class="kpi-subtext">Catalogados en sistema ERP</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Valor en Inventario</span>
+            <div class="kpi-value">$ 14.8M <span class="kpi-unit">COP</span></div>
+            <span class="kpi-subtext">Costo total de stock en bodega</span>
+          </div>
+          <div class="kpi-card warning">
+            <span class="kpi-label">Alertas de Stock Bajo</span>
+            <div class="kpi-value warning-text">3 <span class="kpi-unit">Alertas</span></div>
+            <span class="kpi-subtext">Ítems por debajo del stock mínimo</span>
+          </div>
+        </div>
+
+        <table class="inventory-table">
+          <thead>
+            <tr>
+              <th>SKU / Ref</th>
+              <th>Código DIAN / EAN</th>
+              <th>Nombre del Producto</th>
+              <th>Precio Base</th>
+              <th>Impuesto</th>
+              <th>Stock Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge-code">OPT-AR-001</span></td>
+              <td><span class="badge-code">770123456789</span></td>
+              <td><strong>Lente Antireflejo High Index 1.67 BlueCut</strong></td>
+              <td style="font-family: var(--font-mono); font-weight: 600;">$ 120,000 COP</td>
+              <td>19% IVA</td>
+              <td><span style="font-weight: 700; color: var(--koi-vermilion);">45 Unidades</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge-code">OPT-MON-042</span></td>
+              <td><span class="badge-code">770987654321</span></td>
+              <td><strong>Montura Acetato KOI Titanium Black (3 Variantes)</strong></td>
+              <td style="font-family: var(--font-mono); font-weight: 600;">$ 350,000 COP</td>
+              <td>19% IVA</td>
+              <td><span style="font-weight: 700; color: var(--koi-vermilion);">10 Unidades</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <aside>
+        <div style="background-color: var(--bg-card); border: 1px solid var(--border-thin); padding: 2rem;">
+          <h4 style="font-family: var(--font-serif); font-size: 1.8rem; margin-bottom: 1rem;">Diseño KOI ERP</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            Cuadritos de muestra de color visuales en la tabla e indicadores a la izquierda del recuadro de foto para gestión independiente por color.
+          </p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- -------------------------------------------------------------
+       MODAL WIDESCREEN EDITORIAL WABI-SABI (CUA DROS DE COLOR & FOTO POR VARIANTE)
+  ------------------------------------------------------------- -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-widescreen">
+      <div class="modal-top">
+        <div>
+          <span style="font-size: 0.72rem; color: var(--koi-vermilion); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700;">Formulario de Inventario ERP</span>
+          <h3>Crear / Editar Producto o Servicio de Venta</h3>
+        </div>
+        <button style="background:none; border:none; font-size:1.8rem; cursor:pointer;" id="closeModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-content-grid">
+        
+        <!-- Columna Izquierda: Formulario Técnico -->
+        <div class="modal-form-scrollable">
+          <h4 class="form-section-title">1. Información General del Ítem</h4>
+          
+          <div class="form-row-2">
+            <div class="field-group">
+              <label>Tipo de Ítem *</label>
+              <select id="itemTypeSelect" onchange="toggleVariantSection()">
+                <option value="product">Producto Inventariable (Físico)</option>
+                <option value="service">Servicio / Honorario Médico (Sin Stock)</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Categoría del Producto *</label>
+              <select>
+                <option>Monturas y Lentes</option>
+                <option>Lentes de Contacto</option>
+                <option>Accesorios y Soluciones</option>
+                <option>Servicios Optométricos</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="field-group">
+              <label>Nombre del Producto / Servicio *</label>
+              <input type="text" placeholder="Ej. Montura Acetato KOI Titanium Black" value="Montura Acetato KOI Titanium Black">
+            </div>
+            <div class="field-group">
+              <label>Referencia Interna / SKU *</label>
+              <input type="text" placeholder="Ej. OPT-MON-042" value="OPT-MON-042">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="field-group">
+              <label>Código de Barras / EAN</label>
+              <input type="text" placeholder="Ej. 770987654321">
+            </div>
+            <div class="field-group">
+              <label>Código Estándar DIAN (UNSPSC / EAN) ✨</label>
+              <input type="text" placeholder="Ej. 42142902 (Lentes Oftálmicos)" value="42142902">
+              <span class="help-hint">Recomendado para Facturación Electrónica DIAN.</span>
+            </div>
+          </div>
+
+          <!-- 2. Variantes de Color con Cuadrito Muestra de Color Integrado -->
+          <h4 class="form-section-title" style="margin-top: 1.8rem;">2. Variantes de Color & Control de Stock</h4>
+          
+          <div class="variants-section-zen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <div>
+                <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-main);">Producto con Variantes de Color</span>
+                <p style="font-size: 0.78rem; color: var(--text-muted);">Define los códigos de barra y stock por cada color.</p>
+              </div>
+              <button class="btn-add-variant-zen" onclick="addVariantRow()">+ Agregar Color</button>
+            </div>
+
+            <table class="variants-table-zen">
+              <thead>
+                <tr>
+                  <th style="width: 32%;">Color / Variante</th>
+                  <th style="width: 18%;">Stock Actual</th>
+                  <th style="width: 18%;">Stock Mínimo</th>
+                  <th style="width: 26%;">EAN / Barras</th>
+                  <th style="width: 6%;"></th>
+                </tr>
+              </thead>
+              <tbody id="variantTableBody">
+                <tr>
+                  <td>
+                    <div class="color-select-wrapper">
+                      <span class="color-swatch-box" style="background-color: #161616;"></span>
+                      <select onchange="updateSwatchColor(this)">
+                        <option value="#161616" selected>Negro / Black</option>
+                        <option value="#D4AF37">Dorado / Gold</option>
+                        <option value="#795548">Carey / Tortoise</option>
+                        <option value="#C0C0C0">Plata / Silver</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td><input type="number" value="10" class="stock-input" onchange="calculateTotalStock()"></td>
+                  <td><input type="number" value="2"></td>
+                  <td><input type="text" placeholder="Escanear / Vacío"></td>
+                  <td style="text-align: center;"><button style="background:none; border:none; color:var(--koi-vermilion); cursor:pointer; font-size:1.1rem;" onclick="removeVariantRow(this)">&times;</button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="color-select-wrapper">
+                      <span class="color-swatch-box" style="background-color: #D4AF37;"></span>
+                      <select onchange="updateSwatchColor(this)">
+                        <option value="#161616">Negro / Black</option>
+                        <option value="#D4AF37" selected>Dorado / Gold</option>
+                        <option value="#795548">Carey / Tortoise</option>
+                        <option value="#C0C0C0">Plata / Silver</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td><input type="number" value="5" class="stock-input" onchange="calculateTotalStock()"></td>
+                  <td><input type="number" value="2"></td>
+                  <td><input type="text" placeholder="Escanear / Vacío"></td>
+                  <td style="text-align: center;"><button style="background:none; border:none; color:var(--koi-vermilion); cursor:pointer; font-size:1.1rem;" onclick="removeVariantRow(this)">&times;</button></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--border-thin); display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted);">Stock Total Calculado:</span>
+              <span style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--koi-vermilion);" id="totalStockDisplay">15 Unidades</span>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="field-group">
+              <label>Unidad de Medida DIAN *</label>
+              <select>
+                <option>70 — Unidad / Pieza</option>
+                <option>94 — Unidad Comercial</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>Alerta de Stock Mínimo Global</label>
+              <input type="number" value="5">
+            </div>
+          </div>
+
+          <h4 class="form-section-title" style="margin-top: 1.8rem;">3. Precios e Impuestos (DIAN)</h4>
+
+          <div class="form-row-3">
+            <div class="field-group">
+              <label>Precio Costo ($)</label>
+              <input type="text" placeholder="$ 180,000">
+            </div>
+            <div class="field-group">
+              <label>Precio Venta Base ($) *</label>
+              <input type="text" placeholder="$ 350,000" value="350000">
+            </div>
+            <div class="field-group">
+              <label>Tarifa de Impuesto (IVA) *</label>
+              <select>
+                <option>19.00% — IVA General</option>
+                <option>5.00% — IVA Reducido</option>
+                <option>0.00% — Exento / Excluido</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-group" style="margin-top: 1.2rem;">
+            <label>Descripción Comercial para Cotización y Factura</label>
+            <textarea rows="3" placeholder="Detalles de garantía, ficha técnica, indicaciones..."></textarea>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Cuadritos Muestra de Color a la Izquierda del Cuadro de Foto -->
+        <div class="modal-sidebar-fixed">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem;">
+              <h4 class="form-section-title" style="font-size: 1.1rem; margin-bottom: 0; border: none; padding: 0;">Fotografía del Ítem</h4>
+              <span style="font-size: 0.65rem; color: var(--koi-vermilion); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;" id="activeColorNameLabel">Color: Negro</span>
+            </div>
+
+            <!-- Área de Foto con Selector de Cuadritos de Color a la Izquierda -->
+            <div class="photo-area-with-swatches">
+              <!-- Cuadritos de Selección de Foto por Color (Generados Dinámicamente) -->
+              <div class="photo-color-swatches-column" id="photoColorSwatchesColumn">
+                <!-- Se llena con JS -->
+              </div>
+
+              <!-- Dropzone Compacta de Fotografía -->
+              <div class="photo-dropzone-compact">
+                <svg viewBox="0 0 24 24" style="width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 1.5;">
+                  <rect x="3" y="6" width="18" height="14" rx="2"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span style="font-size: 0.78rem; font-weight: 500; text-align: center; padding: 0 0.5rem;" id="dropzoneText">Subir foto para variante seleccionada</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-card-compact">
+            <div class="summary-card-title">Resumen de Registro</div>
+            <div class="summary-card-name">Montura Acetato KOI Titanium Black</div>
+            <div class="summary-card-price">$ 416,500 COP <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-sans); font-weight: normal;">(IVA Incluido)</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-bottom">
+        <button class="btn-cancel" id="cancelBtn">Cancelar</button>
+        <button class="btn-save">Guardar Producto en ERP</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleSubMenu(menuId, btnElement) {
+      const menu = document.getElementById(menuId);
+      if (menu) {
+        menu.classList.toggle('open');
+        btnElement.classList.toggle('active');
+      }
+    }
+
+    const openModalBtn = document.getElementById('openModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const modalOverlay = document.getElementById('modalOverlay');
+
+    openModalBtn.addEventListener('click', () => {
+      modalOverlay.classList.add('active');
+      syncPhotoColorSwatches();
+    });
+    closeModalBtn.addEventListener('click', () => modalOverlay.classList.remove('active'));
+    cancelBtn.addEventListener('click', () => modalOverlay.classList.remove('active'));
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) modalOverlay.classList.remove('active');
+    });
+
+    // Actualizar Cuadrito de Muestra de Color en la Fila
+    function updateSwatchColor(selectElem) {
+      const swatch = selectElem.previousElementSibling;
+      if (swatch) {
+        swatch.style.backgroundColor = selectElem.value;
+      }
+      syncPhotoColorSwatches();
+    }
+
+    // Agregar Fila de Variante
+    function addVariantRow() {
+      const tbody = document.getElementById('variantTableBody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <div class="color-select-wrapper">
+            <span class="color-swatch-box" style="background-color: #795548;"></span>
+            <select onchange="updateSwatchColor(this)">
+              <option value="#161616">Negro / Black</option>
+              <option value="#D4AF37">Dorado / Gold</option>
+              <option value="#795548" selected>Carey / Tortoise</option>
+              <option value="#C0C0C0">Plata / Silver</option>
+              <option value="#1E3A8A">Azul / Blue</option>
+            </select>
+          </div>
+        </td>
+        <td><input type="number" value="5" class="stock-input" onchange="calculateTotalStock()"></td>
+        <td><input type="number" value="2"></td>
+        <td><input type="text" placeholder="Escanear / Vacío"></td>
+        <td style="text-align: center;"><button style="background:none; border:none; color:var(--koi-vermilion); cursor:pointer; font-size:1.1rem;" onclick="removeVariantRow(this)">&times;</button></td>
+      `;
+      tbody.appendChild(tr);
+      calculateTotalStock();
+      syncPhotoColorSwatches();
+    }
+
+    function removeVariantRow(btn) {
+      const row = btn.closest('tr');
+      row.remove();
+      calculateTotalStock();
+      syncPhotoColorSwatches();
+    }
+
+    function calculateTotalStock() {
+      const inputs = document.querySelectorAll('.stock-input');
+      let total = 0;
+      inputs.forEach(input => {
+        total += parseInt(input.value) || 0;
+      });
+      document.getElementById('totalStockDisplay').innerText = `${total} Unidades`;
+    }
+
+    // Sincronizar Cuadritos de Muestra a la Izquierda de la Foto
+    let activeColorIndex = 0;
+    function syncPhotoColorSwatches() {
+      const container = document.getElementById('photoColorSwatchesColumn');
+      const selects = document.querySelectorAll('.variants-table-zen select');
+      container.innerHTML = '';
+
+      selects.forEach((select, index) => {
+        const colorHex = select.value;
+        const colorText = select.options[select.selectedIndex].text.split('/')[0].trim();
+
+        const btn = document.createElement('div');
+        btn.className = `photo-swatch-btn ${index === activeColorIndex ? 'active' : ''}`;
+        btn.style.backgroundColor = colorHex;
+        btn.title = `Ver foto para ${colorText}`;
+        btn.onclick = () => {
+          activeColorIndex = index;
+          syncPhotoColorSwatches();
+          document.getElementById('activeColorNameLabel').innerText = `Color: ${colorText}`;
+          document.getElementById('dropzoneText').innerText = `Subir foto para variante ${colorText}`;
+        };
+        container.appendChild(btn);
+      });
+
+      if (selects.length > 0 && selects[activeColorIndex]) {
+        const activeText = selects[activeColorIndex].options[selects[activeColorIndex].selectedIndex].text.split('/')[0].trim();
+        document.getElementById('activeColorNameLabel').innerText = `Color: ${activeText}`;
+      }
+    }
+
+    // Inicializar al cargar
+    syncPhotoColorSwatches();
+  </script>
+</body>
+</html>

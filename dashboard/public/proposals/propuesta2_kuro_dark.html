@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Propuesta 2: KOI Kuro (Sumi Ink Dark Editorial)</title>
+  <!-- Google Fonts: Outfit + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0D0F12;
+      --bg-card: rgba(255, 255, 255, 0.03);
+      --text-main: #E8E6E1;
+      --text-muted: #8A8F99;
+      --border-dark: rgba(255, 255, 255, 0.08);
+      --koi-vermilion: #E63946;
+      --koi-orange: #F4A261;
+      --font-display: 'Outfit', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-display);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 3rem;
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    .brand-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .koi-badge {
+      font-size: 0.65rem;
+      background: var(--koi-vermilion);
+      color: #fff;
+      padding: 0.2rem 0.5rem;
+      border-radius: 2px;
+      letter-spacing: 0.1em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .nav-links a.active, .nav-links a:hover {
+      color: #FFFFFF;
+    }
+
+    .container-wide {
+      padding: 2.5rem 3rem;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2.5rem;
+    }
+
+    /* Grid de Estadísticas */
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .card-dark {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      padding: 1.8rem;
+      border-radius: 4px;
+      backdrop-filter: blur(10px);
+    }
+
+    .card-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.8rem;
+    }
+
+    .card-value {
+      font-family: var(--font-mono);
+      font-size: 2.2rem;
+      font-weight: 500;
+      color: #FFFFFF;
+    }
+
+    /* Tabla de Datos */
+    .table-container {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 4px;
+      padding: 1.8rem;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .table-header h2 {
+      font-size: 1.2rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    td {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border-dark);
+      font-family: var(--font-display);
+    }
+
+    .td-mono {
+      font-family: var(--font-mono);
+    }
+
+    .status-tag {
+      color: var(--koi-orange);
+      border: 1px solid var(--koi-orange);
+      padding: 0.15rem 0.5rem;
+      font-size: 0.7rem;
+      border-radius: 2px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Sidebar Derecha */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .action-card {
+      background: linear-gradient(135deg, rgba(230, 57, 70, 0.1) 0%, rgba(13, 15, 18, 0.5) 100%);
+      border: 1px solid rgba(230, 57, 70, 0.3);
+      padding: 2rem;
+      border-radius: 4px;
+    }
+
+    .btn-dark {
+      background: #FFFFFF;
+      color: #000000;
+      border: none;
+      width: 100%;
+      padding: 1rem;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      transition: opacity 0.2s;
+    }
+
+    .btn-dark:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="top-nav">
+    <div class="brand-title">
+      <span>KOI KURO</span>
+      <span class="koi-badge">DARK EDITORIAL</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#" class="active">Dashboard</a></li>
+      <li><a href="#">POS Ventas</a></li>
+      <li><a href="#">Inventario</a></li>
+      <li><a href="#">DIAN Factus</a></li>
+    </ul>
+  </header>
+
+  <main class="container-wide">
+    <section>
+      <!-- Cards de Métricas -->
+      <div class="grid-stats">
+        <div class="card-dark">
+          <div class="card-label">Ingresos Totales</div>
+          <div class="card-value">$ 12,450.00</div>
+        </div>
+        <div class="card-dark">
+          <div class="card-label">Ventas POS Hoy</div>
+          <div class="card-value">188</div>
+        </div>
+        <div class="card-dark">
+          <div class="card-label">Estado del Servidor</div>
+          <div class="card-value" style="color: #4EBE96; font-size: 1.8rem;">99.99% ONLINE</div>
+        </div>
+      </div>
+
+      <!-- Tabla Estilizada -->
+      <div class="table-container">
+        <div class="table-header">
+          <h2>Transacciones de Ventas</h2>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Filtrado por Tienda Principal</span>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ID Factura</th>
+              <th>Cliente</th>
+              <th>Monto</th>
+              <th>Estado DIAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-mono">#FAC-8890</td>
+              <td>Óptica Visión Central</td>
+              <td class="td-mono">$ 890.00 COP</td>
+              <td><span class="status-tag">Habilitado</span></td>
+            </tr>
+            <tr>
+              <td class="td-mono">#FAC-8889</td>
+              <td>Laboratorio Óptico S.A.S</td>
+              <td class="td-mono">$ 2,450.00 COP</td>
+              <td><span class="status-tag">Habilitado</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Sidebar de Control -->
+    <aside class="side-panel">
+      <div class="action-card">
+        <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem;">Caja POS Rápida</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Realiza cobros en caja de manera instantánea y sin fricción.</p>
+        <button class="btn-dark">Iniciar Venta</button>
+      </div>
+
+      <div class="card-dark">
+        <div class="card-label">Propuesta 2 — Dark Editorial</div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-top: 0.5rem;">
+          Fondo carbón mate profundo, tipografía de alta visibilidad para trabajo nocturno y contraste equilibrado.
+        </p>
+      </div>
+    </aside>
+  </main>
+
+</body>
+</html>
