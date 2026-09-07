@@ -26,12 +26,15 @@
    ========================================================================== */
 
 :root,
-html[data-theme='wabi-sabi-koi'],
+html,
 [data-theme='wabi-sabi-koi'] {
-  /* --- 0. WABI-SABI PAPER (KOI ERP Principal Light Mode) --- */
+  /* --- WABI-SABI PAPER (KOI ERP Exclusivo Sistema de Diseño) --- */
   --bg-color: #F6F4EE;
+  --bg-paper: #F6F4EE;
+  --bg-card: #FFFFFF;
   --bg-secondary: #FAF8F3;
   --text-color: #161616;
+  --text-main: #161616;
   --text-muted: #6B6862;
   
   --primary-color: #D9381E;

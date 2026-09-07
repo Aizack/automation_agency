@@ -122,36 +122,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Temas Dinámicos Open-Design (W3C Tokens) - Wabi-Sabi Paper (Oficial Principal)
-  const [theme, setTheme] = useState<string>(() => {
-    return localStorage.getItem('app_theme') || localStorage.getItem('theme') || 'wabi-sabi-koi';
-  });
-  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  // Sistema de Diseño Wabi-Sabi Paper (Exclusivo KOI ERP)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  const openDesignThemes = [
-    { id: 'wabi-sabi-koi', name: 'Wabi-Sabi Paper (KOI ERP)', icon: 'style', color: '#D9381E', desc: 'Papel Marfil Natural & Rojo Bermellón (Oficial Principal)' },
-    { id: 'obsidian-gold', name: 'Obsidian Gold', icon: 'brightness_7', color: '#edc23e', desc: 'Oscuro Lujo & Oro Industrial' },
-    { id: 'emerald-lux', name: 'Emerald Lux', icon: 'eco', color: '#10b981', desc: 'Esmeralda & Menta' },
-    { id: 'cyberpunk-neon', name: 'Cyberpunk Neon', icon: 'bolt', color: '#a855f7', desc: 'Neón Morado & Cian' },
-    { id: 'royal-light', name: 'Royal Light', icon: 'light_mode', color: '#2563eb', desc: 'Modo Claro Pulcro' },
-    { id: 'sunset-violet', name: 'Sunset Violet', icon: 'auto_awesome', color: '#ec4899', desc: 'Violeta & Rosa Neón' },
-    { id: 'monolith-noir', name: 'Midnight Obsidian', icon: 'dark_mode', color: '#c8c6c5', desc: 'Minimalismo Industrial ERP' },
-  ];
-
   useEffect(() => {
-    const saved = localStorage.getItem('app_theme') || localStorage.getItem('theme') || 'wabi-sabi-koi';
-    setTheme(saved);
-    document.documentElement.setAttribute('data-theme', saved);
+    localStorage.setItem('app_theme', 'wabi-sabi-koi');
+    localStorage.setItem('theme', 'wabi-sabi-koi');
+    document.documentElement.setAttribute('data-theme', 'wabi-sabi-koi');
   }, []);
-
-  const changeOpenDesignTheme = (themeId: string) => {
-    setTheme(themeId);
-    localStorage.setItem('app_theme', themeId);
-    localStorage.setItem('theme', themeId);
-    document.documentElement.setAttribute('data-theme', themeId);
-    setIsThemeDropdownOpen(false);
-  };
 
   // Estado de WhatsApp en tiempo real
   const [whatsappStatus, setWhatsappStatus] = useState<WhatsappStatus>({
@@ -1302,66 +1280,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </h2>
 
           <div className="flex items-center gap-4">
-            {/* Quick Open-Design Theme Switcher Popover */}
-            <div className="relative">
-              <button 
-                type="button"
-                onClick={() => {
-                  setIsThemeDropdownOpen(!isThemeDropdownOpen);
-                  setIsUserMenuOpen(false);
-                }}
-                className="px-3 py-1.5 rounded-md bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] flex items-center gap-2 cursor-pointer transition text-white text-xs font-semibold shadow-sm"
-                title="Cambiar Paleta de Tema (Open-Design Tokens)"
-              >
-                <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>palette</span>
-                <span className="hidden md:inline font-mono text-[11px]">
-                  {openDesignThemes.find(t => t.id === theme)?.name || 'Temas'}
-                </span>
-                <span className="material-symbols-outlined text-[14px] text-gray-400">arrow_drop_down</span>
-              </button>
-
-              {/* Menú Desplegable de 5 Temas Open-Design */}
-              {isThemeDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-surface-container-highest border border-outline/20 rounded-2xl shadow-2xl p-2 z-50 divide-y divide-outline/5 backdrop-blur-xl animate-fade-in">
-                  <div className="p-2 border-b border-outline/10">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px] text-primary">auto_awesome</span>
-                      Paletas Open-Design Tokens
-                    </p>
-                  </div>
-                  <div className="py-1 space-y-1">
-                    {openDesignThemes.map((t) => {
-                      const isSelected = theme === t.id;
-                      return (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => changeOpenDesignTheme(t.id)}
-                          className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs transition cursor-pointer border-0 ${
-                            isSelected 
-                              ? 'bg-primary/15 text-primary font-bold border-l-2 border-primary' 
-                              : 'text-on-surface hover:bg-surface-container-high/60 font-normal'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <span 
-                              className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0 shadow-sm" 
-                              style={{ backgroundColor: t.color }} 
-                            />
-                            <div>
-                              <p className="font-semibold leading-tight">{t.name}</p>
-                              <p className="text-[9.5px] text-on-surface-variant opacity-80">{t.desc}</p>
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <span className="material-symbols-outlined text-primary text-[16px]">check</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+            {/* Badge Wabi-Sabi Paper (Sistema Único de Diseño) */}
+            <div className="px-3 py-1 rounded-full bg-[#D9381E]/10 border border-[#D9381E]/30 flex items-center gap-1.5 text-[#D9381E] text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-[#D9381E]"></span>
+              <span className="font-serif text-[11px] tracking-wider uppercase font-bold">Wabi-Sabi Paper</span>
             </div>
 
             {/* Store Switcher Dropdown (Módulo Multi-Sede) */}
@@ -1405,21 +1327,19 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               className="flex items-center gap-1.5 p-1.5 px-3 rounded-md bg-[#181a1c] hover:bg-[#222528] text-white border border-[#2d3036] hover:border-amber-400/50 transition cursor-pointer text-xs font-bold shadow-sm"
               title="Reportar Problema / Tickets AutoFix IA"
             >
-              <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>support_agent</span>
+                  <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>support_agent</span>
               <span className="hidden md:inline">Soporte & AutoFix</span>
             </button>
 
             {/* Botón Volver al Panel Admin / SuperAdmin (si aplica) */}
-            {(rawRole === 'admin' || rawRole === 'superadmin' || localStorage.getItem('session_role') === 'superadmin') && (
-              <button
-                type="button"
+            {rawRole === 'admin' && (
+              <button 
                 onClick={onBack}
-                className="flex items-center gap-1.5 p-1.5 px-3 rounded-md bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/40 transition cursor-pointer text-xs font-extrabold shadow-sm"
-                style={{ color: '#eab308' }}
+                className="flex items-center gap-1.5 p-1.5 px-3 rounded-xl bg-white hover:bg-[#FAF8F3] text-[#161616] border border-[#E2DFD7] transition cursor-pointer text-xs font-bold shadow-sm"
                 title="Regresar a la Consola General de Administrador"
               >
                 <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-                <span className="hidden md:inline">Volver a Consola Admin</span>
+                <span className="hidden md:inline">Volver a Admin</span>
               </button>
             )}
 
@@ -1429,20 +1349,19 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 type="button"
                 onClick={() => {
                   setIsUserMenuOpen(!isUserMenuOpen);
-                  setIsThemeDropdownOpen(false);
                 }}
-                className="flex items-center gap-2 p-1 px-2.5 rounded-md bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] transition cursor-pointer text-left shadow-sm"
+                className="flex items-center gap-2 p-1 px-2.5 rounded-xl bg-white hover:bg-[#FAF8F3] border border-[#E2DFD7] transition cursor-pointer text-left shadow-sm"
               >
-                <div className="w-7 h-7 rounded-md bg-[#1a170a] text-amber-400 font-extrabold text-xs flex items-center justify-center border border-amber-500/40 shrink-0" style={{ color: '#eab308' }}>
+                <div className="w-7 h-7 rounded-lg bg-[#161616] text-white font-bold text-xs flex items-center justify-center shrink-0">
                   {activeUserName.substring(0, 1).toUpperCase()}
                 </div>
                 <div className="hidden sm:flex flex-col min-w-0">
-                  <span className="text-xs font-bold text-white truncate leading-tight">{activeUserName}</span>
-                  <span className="text-[9px] text-amber-400 font-mono font-medium truncate uppercase tracking-wider" style={{ color: '#eab308' }}>
+                  <span className="text-xs font-bold text-[#161616] truncate leading-tight">{activeUserName}</span>
+                  <span className="text-[9px] text-[#D9381E] font-mono font-bold truncate uppercase tracking-wider">
                     {activeUserRole}
                   </span>
                 </div>
-                <span className="material-symbols-outlined text-[16px] text-gray-400">arrow_drop_down</span>
+                <span className="material-symbols-outlined text-[14px] text-[#6B6862]">arrow_drop_down</span>
               </button>
 
               {/* Menú Desplegable de Usuario */}
