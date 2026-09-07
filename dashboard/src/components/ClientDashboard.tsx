@@ -589,7 +589,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     fetchDashboardMetrics();
   }, [clientId]);
 
-  // Polling dinámico optimizado para Estado de Vinculación QR
+  // Carga inicial y suscripción a eventos en tiempo real (SSE) para WhatsApp, Logs y Métricas
   useEffect(() => {
     const fetchWaStatus = async () => {
       try {
@@ -603,15 +603,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
       }
     };
 
-    fetchWaStatus(); // Carga inicial
-    // Rápido (3s) únicamente si se está procesando o mostrando un QR; moderado (20s) de lo contrario
-    const isConnecting = whatsappStatus.status === 'INITIALIZING' || whatsappStatus.status === 'QR';
-    const statusInterval = setInterval(fetchWaStatus, isConnecting ? 3000 : 20000);
-    return () => clearInterval(statusInterval);
-  }, [clientId, whatsappStatus.status]);
-
-  // Polling secundario (cada 30 segundos) para Logs de Chat y Métricas del Dashboard
-  useEffect(() => {
     const fetchLogsAndMetrics = async () => {
       try {
         const logsRes = await fetch(`/api/clients/${clientId}/logs`);
@@ -625,9 +616,31 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
       }
     };
 
+    // Carga inicial estática al montar
+    fetchWaStatus();
     fetchLogsAndMetrics();
-    const interval = setInterval(fetchLogsAndMetrics, 30000); // 30 segundos
-    return () => clearInterval(interval);
+
+    // Escucha de eventos push en tiempo real (EventSource SSE)
+    const es = new EventSource(`/api/events/stream?clientId=${clientId}`);
+
+    // Disparador de estado de WhatsApp en tiempo real
+    es.addEventListener('whatsapp_status', (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data);
+        setWhatsappStatus(data);
+      } catch {
+        fetchWaStatus();
+      }
+    });
+
+    // Disparador de logs e interacciones
+    es.addEventListener('logs_update', () => {
+      fetchLogsAndMetrics();
+    });
+
+    return () => {
+      es.close();
+    };
   }, [clientId]);
 
   // Guardar configuración del Bot

@@ -50,6 +50,7 @@ import {
 import { saveLocalFile, listLocalFiles } from './services/localKnowledge';
 import { activeWaSessions } from './services/whatsapp';
 import { logger } from './services/logger';
+import { registerSseClient } from './services/sse';
 import { startEscalationService } from './services/escalation';
 import { authenticateToken, requireRole, authorizeClientAccess, AuthenticatedRequest } from './middlewares/authMiddleware';
 import { registerShutdownHandlers, restoreSystemState } from './services/shutdownManager';
@@ -121,6 +122,21 @@ app.use(express.static(path.join(process.cwd(), 'dashboard/dist')));
 
 // Puerto de ejecución del servidor (default: 3000)
 const PORT = process.env.PORT || 3000;
+
+// --- CANAL DE EVENTOS EN TIEMPO REAL (SSE - Server-Sent Events) ---
+app.get('/api/events/stream', (req: Request, res: Response) => {
+  const clientId = (req.query.clientId as string) || 'admin';
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // Para evitar buffering en Nginx
+
+  res.flushHeaders();
+  res.write(`event: connected\ndata: ${JSON.stringify({ clientId, timestamp: new Date().toISOString() })}\n\n`);
+
+  registerSseClient(clientId, res);
+});
 
 // --- ENDPOINT DE VINCULACIÓN WHATSAPP ---
 app.get('/api/whatsapp/status', authenticateToken as any, (req: Request, res: Response) => {

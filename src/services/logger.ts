@@ -177,6 +177,14 @@ export const logger = {
                 [alertKey, severity, message, clientId || null, severity === 'red' ? 1 : severity === 'orange' ? 2 : 3]
             );
 
+            // Notificar por SSE en tiempo real a los clientes conectados
+            try {
+                const { broadcastSseEvent } = await import('./sse');
+                broadcastSseEvent(clientId || 'admin', 'alert_update', { action: 'raised', alertKey, severity, message });
+            } catch (sseErr) {
+                // Ignorado
+            }
+
             // Enviar alerta a Discord
             await sendDiscordAlert(alertKey, severity, `${message}${clientId ? ` (Negocio: ${clientId})` : ''}`, detail);
 
@@ -234,6 +242,14 @@ export const logger = {
             }
 
             logger.info(`[ALERT RESOLVED] Key: ${alertKey} | ${resolutionMessage}${clientId ? ` | Tenant: ${clientId}` : ''}`);
+
+            // Notificar por SSE en tiempo real a los clientes conectados
+            try {
+                const { broadcastSseEvent } = await import('./sse');
+                broadcastSseEvent(clientId || 'admin', 'alert_update', { action: 'resolved', alertKey });
+            } catch (sseErr) {
+                // Ignorado
+            }
 
             // Enviar mensaje de recuperación a Discord
             await sendDiscordRecovery(alertKey, `${resolutionMessage}${clientId ? ` (Negocio: ${clientId})` : ''}`);

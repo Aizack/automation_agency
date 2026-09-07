@@ -48,9 +48,18 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   };
 
   useEffect(() => {
-    fetchAlerts();
-    const interval = setInterval(fetchAlerts, 20000); // Polling moderado cada 20 segundos
-    return () => clearInterval(interval);
+    fetchAlerts(); // Carga inicial estática
+
+    // Escuchar eventos SSE en tiempo real sin polling
+    const es = new EventSource(`/api/events/stream?clientId=${clientId}`);
+
+    es.addEventListener('alert_update', () => {
+      fetchAlerts();
+    });
+
+    return () => {
+      es.close();
+    };
   }, [clientId]);
 
   // Manejar clic fuera del cuadro flotante para cerrarlo

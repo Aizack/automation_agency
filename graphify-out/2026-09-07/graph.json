@@ -2308,7 +2308,7 @@
       "file_type": "code",
       "norm_label": "autorestoresavedwhatsappsessions()",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L487"
+      "source_location": "L495"
     },
     {
       "id": "src_services_whatsapp_clearqrtimeout",
@@ -2332,7 +2332,7 @@
       "file_type": "code",
       "norm_label": "connectwhatsapp()",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L415"
+      "source_location": "L418"
     },
     {
       "id": "src_services_whatsapp_getwhatsappstate",
@@ -2368,7 +2368,7 @@
       "file_type": "code",
       "norm_label": "logoutwhatsapp()",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L459"
+      "source_location": "L467"
     },
     {
       "id": "src_services_whatsapp_sendwhatsapptextmessage",
@@ -2380,7 +2380,7 @@
       "file_type": "code",
       "norm_label": "sendwhatsapptextmessage()",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L527"
+      "source_location": "L535"
     },
     {
       "id": "dashboard_src_components_saaserpquotes_saaserpquotes",
@@ -17606,7 +17606,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L506",
+      "source_location": "L514",
       "weight": 1.0
     },
     {
@@ -17618,7 +17618,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L417",
+      "source_location": "L420",
       "weight": 1.0
     },
     {
@@ -17630,7 +17630,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L427",
+      "source_location": "L430",
       "weight": 1.0
     },
     {
@@ -17642,7 +17642,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L445",
+      "source_location": "L448",
       "weight": 1.0
     },
     {
@@ -17654,7 +17654,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L132",
+      "source_location": "L133",
       "weight": 1.0
     },
     {
@@ -17666,7 +17666,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L218",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -17678,7 +17678,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L220",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -17690,7 +17690,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L305",
+      "source_location": "L308",
       "weight": 1.0
     },
     {
@@ -17702,7 +17702,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L335",
+      "source_location": "L338",
       "weight": 1.0
     },
     {
@@ -17726,7 +17726,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L462",
+      "source_location": "L470",
       "weight": 1.0
     },
     {
@@ -17738,7 +17738,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L464",
+      "source_location": "L472",
       "weight": 1.0
     },
     {
@@ -17750,7 +17750,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L530",
+      "source_location": "L538",
       "weight": 1.0
     },
     {
@@ -36086,7 +36086,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L415",
+      "source_location": "L418",
       "weight": 1.0
     },
     {
@@ -36108,7 +36108,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L459",
+      "source_location": "L467",
       "weight": 1.0
     },
     {
@@ -36119,7 +36119,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L487",
+      "source_location": "L495",
       "weight": 1.0
     },
     {
@@ -36130,7 +36130,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L527",
+      "source_location": "L535",
       "weight": 1.0
     },
     {

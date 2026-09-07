@@ -1,7 +1,7 @@
 # Graph Report - Bot multi-tenant-exp  (2026-09-07)
 
 ## Corpus Check
-- 180 files · ~386,848 words
+- 180 files · ~387,257 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary

@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1788800291.8463898,
-    "seen": 1788800339.5444987,
-    "ast_hash": "27bc88c89730572f6bffe84ac45e7f61",
+    "mtime": 1788802794.3652346,
+    "seen": 1788802836.5027816,
+    "ast_hash": "f6eb85a921a651a7b6357f7260578379",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1788799764.0801606,
-    "seen": 1788799870.8418694,
-    "ast_hash": "4a578a9adcc14643393f5818cc37ada7",
+    "mtime": 1788802765.469575,
+    "seen": 1788802836.502991,
+    "ast_hash": "8ca69e9da0de88045f9f4cc056957082",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -510,9 +510,9 @@
     "semantic_hash": ""
   },
   "src/services/logger.ts": {
-    "mtime": 1788494605.8434942,
-    "seen": 1788747134.5371387,
-    "ast_hash": "d83bbfaa3004015283a565cb895a15ce",
+    "mtime": 1788802696.0773983,
+    "seen": 1788802836.5030084,
+    "ast_hash": "e01a4f9f49474a67494a089268502b55",
     "semantic_hash": ""
   },
   "src/services/pdfGeneratorService.ts": {
@@ -540,9 +540,9 @@
     "semantic_hash": ""
   },
   "src/services/whatsapp.ts": {
-    "mtime": 1788801288.376157,
-    "seen": 1788801327.6897495,
-    "ast_hash": "d07098e9e7a7b03d0674d8ddc2c423a0",
+    "mtime": 1788802726.236257,
+    "seen": 1788802836.5030253,
+    "ast_hash": "1b6c10ae7d248c2232fe2ff8b961ab95",
     "semantic_hash": ""
   },
   "src/tools/agendarCita.ts": {
@@ -1260,9 +1260,15 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/NotificationBell.tsx": {
-    "mtime": 1788801246.7032766,
-    "seen": 1788801327.6895916,
-    "ast_hash": "5a9d7564e63fa04c92897bf4948a9205",
+    "mtime": 1788802785.4535232,
+    "seen": 1788802836.5027957,
+    "ast_hash": "4df27e52b4f7d7828d935c1de6bef493",
+    "semantic_hash": ""
+  },
+  "src/services/sse.ts": {
+    "mtime": 1788802690.0140476,
+    "seen": 1788802836.5030203,
+    "ast_hash": "05ff0dc9958f87d3edb0de9e0e714d1d",
     "semantic_hash": ""
   }
 }

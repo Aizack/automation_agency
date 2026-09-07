@@ -9,6 +9,19 @@ import { fetchDocumentsFromDrive, uploadFileToFolder } from './drive';
 import { pool } from '../database/postgres';
 import { logger } from './logger';
 import { uploadTenantFile } from './storageService';
+import { broadcastSseEvent } from './sse';
+
+// Helper para emitir cambios de estado por SSE en tiempo real
+export const notifyStatusChange = (key: string) => {
+    const state = getWhatsAppState(key);
+    try {
+        broadcastSseEvent(key, 'whatsapp_status', {
+            status: state.status,
+            qr: state.qr,
+            phone: state.phone
+        });
+    } catch {}
+};
 
 // Estructura de estado de WhatsApp por Tienda / Tenant
 export interface TenantWhatsAppState {
@@ -121,6 +134,7 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin', options: { 
             state.status = 'DISCONNECTED';
             state.qr = '';
             state.phone = '';
+            notifyStatusChange(key);
 
             logger.raiseAlert(
                 'whatsapp_session_expired',
@@ -148,6 +162,7 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin', options: { 
         state.status = 'QR';
         state.qr = qr;
         state.phone = '';
+        notifyStatusChange(key);
 
         if (isFirstQR) {
             console.log(`\n[WhatsApp Multi-Tenant] 📱 CÓDIGO QR GENERADO PARA TIENDA: ${key} (Escaneable en Dashboard o consola)`);
@@ -160,6 +175,7 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin', options: { 
                 state.status = 'DISCONNECTED';
                 state.qr = '';
                 state.phone = '';
+                notifyStatusChange(key);
 
                 logger.raiseAlert(
                     'whatsapp_session_expired',
@@ -194,6 +210,7 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin', options: { 
         state.status = 'DISCONNECTED';
         state.qr = '';
         state.phone = '';
+        notifyStatusChange(key);
         clearQRTimeout(key);
         logger.raiseAlert('whatsapp_session_expired', 'red', `Fallo de autenticación en WhatsApp para ${key}.`, msg, key);
         try {
@@ -213,6 +230,7 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin', options: { 
         state.qr = '';
         state.phone = connectedPhone;
         state.clientId = key;
+        notifyStatusChange(key);
 
         logger.resolveAlert('whatsapp_disconnected', `El bot de WhatsApp (${key}) se vinculó correctamente al +${connectedPhone}.`, key);
         logger.resolveAlert('whatsapp_session_expired', `El bot de WhatsApp (${key}) se vinculó correctamente al +${connectedPhone}.`, key);
@@ -386,6 +404,7 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin', options: { 
         state.status = 'DISCONNECTED';
         state.qr = '';
         state.phone = '';
+        notifyStatusChange(key);
         clearQRTimeout(key);
 
         logger.raiseAlert('whatsapp_disconnected', 'red', `El bot de WhatsApp de ${key} se ha desconectado.`, `Razón: ${reason}`, key);
@@ -427,6 +446,7 @@ export const connectWhatsApp = async (clientId?: string, options: { isAutoRestor
     state.status = 'INITIALIZING';
     state.qr = '';
     state.phone = '';
+    notifyStatusChange(key);
     clearQRTimeout(key);
     if (options.isAutoRestore) {
         console.log(`[WhatsApp Multi-Tenant] 🔄 Intentando restauración en segundo plano de sesión guardada para tienda: ${key}...`);
@@ -457,6 +477,7 @@ export const connectWhatsApp = async (clientId?: string, options: { isAutoRestor
 
         console.error(`[WhatsApp Multi-Tenant] ❌ Error al inicializar Puppeteer para ${key}:`, err?.message || err);
         state.status = 'DISCONNECTED';
+        notifyStatusChange(key);
         clearQRTimeout(key);
         whatsappClientsMap.delete(key);
         logger.raiseAlert('whatsapp_initialization_error', 'red', `Fallo al arrancar cliente Puppeteer para ${key}.`, err?.message || String(err), key);
@@ -473,6 +494,7 @@ export const logoutWhatsApp = async (clientId?: string) => {
     state.status = 'DISCONNECTED';
     state.qr = '';
     state.phone = '';
+    notifyStatusChange(key);
 
     const targetClient = whatsappClientsMap.get(key);
     if (targetClient) {
