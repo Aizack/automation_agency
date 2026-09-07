@@ -74,106 +74,104 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   };
 
   return (
-    <div className="space-y-6 text-white">
-      <div className="flex justify-between items-center border-b border-[#222428] pb-4">
-        <div>
-          <h3 className="font-extrabold text-xl text-[#eab308]" style={{ color: '#eab308' }}>CONFIGURACIÓN DE PERFIL COMERCIAL</h3>
-          <p className="text-xs text-gray-400">
-            Define la información tributaria y de contacto que aparecerá en tus facturas impresas.
-          </p>
-        </div>
+    <div className="space-y-8 text-[#161616]">
+      <div className="border-b border-[#E2DFD7] pb-4">
+        <h3 className="font-serif font-bold text-2xl text-[#161616] tracking-tight">CONFIGURACIÓN DE PERFIL COMERCIAL</h3>
+        <p className="text-xs text-[#666666] mt-1">
+          Define la información tributaria y de contacto que aparecerá en tus facturas impresas.
+        </p>
       </div>
 
       {success && (
-        <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-xs font-semibold flex items-center gap-2">
-          <span className="material-symbols-outlined text-[16px]">check_circle</span>
+        <div className="p-4 bg-[#E6F4EA] border border-[#A8DADC] text-[#1E4620] rounded-md text-xs font-semibold flex items-center gap-2 shadow-sm">
+          <span className="material-symbols-outlined text-[18px] text-[#2E7D32]">check_circle</span>
           ¡Configuración guardada exitosamente!
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-xs font-semibold flex items-center gap-2">
-          <span className="material-symbols-outlined text-[16px]">error</span>
+        <div className="p-4 bg-[#FCE8E6] border border-[#F5C6CB] text-[#C5221F] rounded-md text-xs font-semibold flex items-center gap-2 shadow-sm">
+          <span className="material-symbols-outlined text-[18px] text-[#C5221F]">error</span>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl bg-[#141517] border border-[#222428] p-6 rounded-lg">
+      <form onSubmit={handleSubmit} className="space-y-5 max-w-3xl bg-white border border-[#E2DFD7] p-6 rounded-lg shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-1 md:col-span-2">
-            <label className="font-label-md text-on-surface-variant ml-1">Nombre / Razón Social Legal del Negocio *</label>
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Nombre / Razón Social Legal del Negocio *</label>
             <input
               type="text"
               required
               value={storeName}
               onChange={(e) => setStoreName(e.target.value)}
-              placeholder="ej. 1 Óptica Nuevo Horizonte"
-              className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all font-bold"
+              placeholder="ej. Óptica Nuevo Horizonte"
+              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all font-bold"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="font-label-md text-on-surface-variant ml-1">NIT / RUT del Negocio</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">NIT / RUT del Negocio</label>
             <input
               type="text"
               value={nit}
               onChange={(e) => setNit(e.target.value)}
               placeholder="ej. 900.123.456-7"
-              className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all"
+              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all font-mono"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="font-label-md text-on-surface-variant ml-1">Dirección Comercial</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Dirección Comercial</label>
             <input
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="ej. Calle 45 # 12-34 Local 101"
-              className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all"
+              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="font-label-md text-on-surface-variant ml-1">Teléfono de Atención</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Teléfono de Atención</label>
             <input
               type="text"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="ej. 573104567890"
-              className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all"
+              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="font-label-md text-on-surface-variant ml-1">Email Comercial</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Email Comercial</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="ej. contacto@minegocio.com"
-              className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all"
+              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all"
             />
           </div>
         </div>
 
-        <div className="space-y-1">
-          <label className="font-label-md text-on-surface-variant ml-1">Términos de Garantía y Pie de Factura</label>
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Términos de Garantía y Pie de Factura</label>
           <textarea
             value={invoiceFooter}
             onChange={(e) => setInvoiceFooter(e.target.value)}
             rows={4}
             placeholder="ej. Garantía de 1 año en monturas por defectos de fabricación. No se aceptan devoluciones de lentes formulados personalizados una vez cortados."
-            className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2.5 text-on-surface focus:border-primary outline-none transition-all font-sans text-sm resize-none"
+            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all font-sans resize-none"
           />
-          <p className="text-[10px] text-on-surface-variant opacity-60 ml-1">Este texto aparecerá en la parte inferior del recibo térmico de 80mm.</p>
+          <p className="text-[11px] text-[#777777]">Este texto aparecerá en la parte inferior del recibo térmico de 80mm.</p>
         </div>
 
         <div className="pt-2 flex justify-end">
           <button
             type="submit"
             disabled={loading}
-            className="bg-primary-container text-on-primary-container font-label-md px-6 py-2.5 rounded-xl flex items-center gap-2 primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+            className="bg-[#D9381E] hover:bg-[#b82e18] text-white font-bold text-xs px-6 py-2.5 rounded-md flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
           >
             {loading ? (
               <>
@@ -192,140 +190,6 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
 
       {/* Sección Cuentas Bancarias del Negocio */}
       <BankAccountsManager clientId={clientId} />
-
-      {/* Sección Selector de Temas Dinámicos Open-Design (5 Paletas Visuales) */}
-      <ThemeSelectorManager />
-    </div>
-  );
-};
-
-// Componente Selector de Temas Dinámicos Open-Design
-const ThemeSelectorManager: React.FC = () => {
-  const [currentTheme, setCurrentTheme] = useState<string>(() => {
-    return localStorage.getItem('app_theme') || 'obsidian-gold';
-  });
-
-  const themes = [
-    {
-      id: 'obsidian-gold',
-      name: 'Obsidian Gold',
-      subtitle: 'Obsidiana Sóbria & Oro Industrial ERP (Predeterminado)',
-      bg: '#121414',
-      primary: '#edc23e',
-      border: 'rgba(237, 194, 62, 0.4)',
-      tag: 'Lujo / Industrial'
-    },
-    {
-      id: 'emerald-lux',
-      name: 'Emerald Lux',
-      subtitle: 'Verde Esmeralda & Menta',
-      bg: '#061a14',
-      primary: '#10b981',
-      border: 'rgba(52, 211, 153, 0.4)',
-      tag: 'Eco / Salud'
-    },
-    {
-      id: 'cyberpunk-neon',
-      name: 'Cyberpunk Neon',
-      subtitle: 'Neón Morado & Cian Futurista',
-      bg: '#090514',
-      primary: '#a855f7',
-      border: 'rgba(168, 85, 247, 0.4)',
-      tag: 'Tech / Neón'
-    },
-    {
-      id: 'royal-light',
-      name: 'Royal Light',
-      subtitle: 'Modo Claro Pulcro & Azul Rey',
-      bg: '#f8fafc',
-      primary: '#2563eb',
-      border: 'rgba(37, 99, 235, 0.4)',
-      tag: 'Corporativo'
-    },
-    {
-      id: 'sunset-violet',
-      name: 'Sunset Violet',
-      subtitle: 'Violeta Profundo & Rosa Neón',
-      bg: '#120b1c',
-      primary: '#ec4899',
-      border: 'rgba(236, 72, 153, 0.4)',
-      tag: 'Boutique / Moda'
-    },
-    {
-      id: 'monolith-noir',
-      name: 'Midnight Obsidian',
-      subtitle: 'Minimalismo Sóbrio & Oro Industrial ERP',
-      bg: '#121414',
-      primary: '#c8c6c5',
-      border: '#8e9192',
-      tag: 'Pro ERP / Sóbrio'
-    }
-  ];
-
-  const applyTheme = (themeId: string) => {
-    setCurrentTheme(themeId);
-    document.documentElement.setAttribute('data-theme', themeId);
-    localStorage.setItem('app_theme', themeId);
-  };
-
-  useEffect(() => {
-    const saved = localStorage.getItem('app_theme') || 'obsidian-gold';
-    document.documentElement.setAttribute('data-theme', saved);
-  }, []);
-
-  return (
-    <div className="space-y-4 pt-6 border-t border-outline/10">
-      <div>
-        <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-[18px]">palette</span>
-          Personalización Visual & Paleta de Temas (Open-Design Tokens)
-        </h4>
-        <p className="text-xs text-on-surface-variant opacity-75">
-          Selecciona el estilo visual que mejor combine con la identidad corporativa de tu marca. El cambio se aplica instantáneamente.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {themes.map((theme) => {
-          const isSelected = currentTheme === theme.id;
-          return (
-            <div
-              key={theme.id}
-              onClick={() => applyTheme(theme.id)}
-              className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 relative overflow-hidden flex flex-col justify-between ${
-                isSelected
-                  ? 'border-2 ring-2 ring-primary/40 shadow-xl scale-[1.02]'
-                  : 'border-outline/15 hover:border-outline/40 opacity-85 hover:opacity-100'
-              }`}
-              style={{
-                backgroundColor: theme.bg,
-                borderColor: isSelected ? theme.primary : undefined
-              }}
-            >
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-white/10 text-white/80" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
-                    {theme.tag}
-                  </span>
-                  <h5 className="font-bold text-sm text-white mt-1.5">{theme.name}</h5>
-                  <p className="text-[11px] text-white/70">{theme.subtitle}</p>
-                </div>
-                {isSelected && (
-                  <span className="material-symbols-outlined text-emerald-400 text-xl">check_circle</span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                <div className="w-5 h-5 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: theme.primary }} />
-                <div className="w-5 h-5 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: theme.bg }} />
-                <span className="text-[10px] text-white/60 font-mono ml-auto">
-                  {isSelected ? '✓ Activo' : 'Haz clic para aplicar'}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 };
@@ -467,26 +331,26 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
   };
 
   return (
-    <div className="space-y-4 pt-6 border-t border-outline/10">
+    <div className="space-y-5 pt-6 border-t border-[#E2DFD7]">
       <div>
-        <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-[18px]">account_balance</span>
+        <h4 className="font-serif font-bold text-xl text-[#161616] flex items-center gap-2">
+          <span className="material-symbols-outlined text-[#D9381E] text-[20px]">account_balance</span>
           Cuentas Bancarias del Negocio (para recibir transferencias)
         </h4>
-        <p className="text-xs text-on-surface-variant opacity-75">
+        <p className="text-xs text-[#666666] mt-0.5">
           Registra las cuentas bancarias de la empresa para que aparezcan disponibles al facturar con transferencia.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <form onSubmit={handleSave} className="lg:col-span-5 bg-surface-container/20 border border-outline/10 p-4 rounded-xl space-y-3">
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Banco / Entidad *</label>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <form onSubmit={handleSave} className="lg:col-span-5 bg-white border border-[#E2DFD7] p-5 rounded-lg shadow-sm space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Banco / Entidad *</label>
             <select
               required
               value={selectedBankSelect}
               onChange={(e) => setSelectedBankSelect(e.target.value)}
-              className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none cursor-pointer"
+              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md p-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] outline-none cursor-pointer"
             >
               {COLOMBIAN_BANKS.map((b) => (
                 <option key={b} value={b}>{b}</option>
@@ -495,62 +359,62 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
           </div>
 
           {selectedBankSelect === 'Otro Banco / Entidad' && (
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-on-surface-variant uppercase">Nombre de Entidad Bancaria *</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Nombre de Entidad Bancaria *</label>
               <input
                 type="text"
                 required
                 value={customBankName}
                 onChange={(e) => setCustomBankName(e.target.value)}
                 placeholder="Escribe el nombre de la entidad..."
-                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none"
+                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md p-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] outline-none"
               />
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-on-surface-variant uppercase">Tipo de Cuenta</label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Tipo de Cuenta</label>
               <select
                 value={accountType}
                 onChange={(e) => setAccountType(e.target.value)}
-                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none cursor-pointer"
+                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md p-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] outline-none cursor-pointer"
               >
                 <option value="ahorros">Ahorros</option>
                 <option value="corriente">Corriente</option>
                 <option value="nequi">Nequi / Daviplata</option>
               </select>
             </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-on-surface-variant uppercase">Número *</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Número *</label>
               <input
                 type="text"
                 required
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value)}
                 placeholder="123456789"
-                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono"
+                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md p-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] outline-none font-mono"
               />
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-on-surface-variant uppercase">Titular / NIT</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Titular / NIT</label>
             <input
               type="text"
               value={accountHolder}
               onChange={(e) => setAccountHolder(e.target.value)}
               placeholder="Nombre de la empresa o NIT"
-              className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none"
+              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md p-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] outline-none"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-1">
+          <div className="flex justify-end gap-2 pt-2">
             {editingId && (
               <button
                 type="button"
                 onClick={() => { setEditingId(null); setSelectedBankSelect('Bancolombia'); setCustomBankName(''); setAccountNumber(''); setAccountHolder(''); }}
-                className="px-3 py-1.5 border border-outline/20 text-xs font-bold rounded-lg cursor-pointer"
+                className="px-4 py-2 border border-[#E2DFD7] text-xs font-bold text-[#555] hover:bg-[#FAF8F5] rounded-md cursor-pointer transition-all"
               >
                 Cancelar
               </button>
@@ -558,38 +422,38 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-1.5 bg-primary text-white text-xs font-bold rounded-lg cursor-pointer border-0 shadow"
+              className="px-5 py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold rounded-md cursor-pointer shadow-sm transition-all border-0"
             >
               {editingId ? 'Actualizar Cuenta' : 'Agregar Cuenta'}
             </button>
           </div>
         </form>
 
-        <div className="lg:col-span-7 bg-surface-container/20 border border-outline/10 p-4 rounded-xl space-y-2">
-          <h5 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Cuentas Registradas</h5>
+        <div className="lg:col-span-7 bg-white border border-[#E2DFD7] p-5 rounded-lg shadow-sm space-y-3">
+          <h5 className="text-xs font-bold uppercase tracking-wider text-[#555]">Cuentas Registradas</h5>
           {accounts.length === 0 ? (
-            <p className="text-xs text-on-surface-variant opacity-60 py-6 text-center italic">No hay cuentas bancarias registradas.</p>
+            <p className="text-xs text-[#777777] py-8 text-center italic">No hay cuentas bancarias registradas.</p>
           ) : (
-            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
               {accounts.map(acc => (
-                <div key={acc.id} className="flex justify-between items-center p-3 bg-surface-container/50 border border-outline/10 rounded-lg">
+                <div key={acc.id} className="flex justify-between items-center p-3.5 bg-[#FAF8F5] border border-[#E2DFD7] rounded-md hover:border-[#D9381E]/40 transition-all">
                   <div>
-                    <p className="font-bold text-xs text-on-surface">{acc.bank_name} ({acc.account_type.toUpperCase()})</p>
-                    <p className="text-[11px] text-primary font-mono font-bold">#{acc.account_number}</p>
-                    {acc.account_holder && <p className="text-[10px] text-on-surface-variant opacity-75">{acc.account_holder}</p>}
+                    <p className="font-bold text-xs text-[#161616]">{acc.bank_name} ({acc.account_type.toUpperCase()})</p>
+                    <p className="text-xs text-[#D9381E] font-mono font-bold mt-0.5">#{acc.account_number}</p>
+                    {acc.account_holder && <p className="text-[11px] text-[#666666]">{acc.account_holder}</p>}
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => handleEdit(acc)}
-                      className="p-1 text-on-surface hover:bg-surface-variant/40 rounded cursor-pointer"
+                      className="p-1.5 text-[#555] hover:text-[#161616] hover:bg-white border border-transparent hover:border-[#E2DFD7] rounded cursor-pointer transition-all"
                     >
                       <span className="material-symbols-outlined text-[16px]">edit</span>
                     </button>
                     <button
                       type="button"
                       onClick={(e) => handleDelete(e, acc.id)}
-                      className="p-1 text-red-500 hover:bg-red-500/10 rounded cursor-pointer border-0 bg-transparent"
+                      className="p-1.5 text-[#C5221F] hover:bg-[#FCE8E6] rounded cursor-pointer border-0 bg-transparent transition-all"
                       title="Eliminar cuenta bancaria"
                     >
                       <span className="material-symbols-outlined text-[16px]">delete</span>
