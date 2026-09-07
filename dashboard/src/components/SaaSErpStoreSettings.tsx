@@ -76,102 +76,102 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   return (
     <div className="space-y-8 text-[#161616]">
       <div className="border-b border-[#E2DFD7] pb-4">
-        <h3 className="font-serif font-bold text-2xl text-[#161616] tracking-tight">CONFIGURACIÓN DE PERFIL COMERCIAL</h3>
-        <p className="text-xs text-[#666666] mt-1">
+        <h3 className="font-serif font-bold text-3xl text-[#161616] tracking-tight">CONFIGURACIÓN DE PERFIL COMERCIAL</h3>
+        <p className="text-xs text-[#6B6862] mt-1">
           Define la información tributaria y de contacto que aparecerá en tus facturas impresas.
         </p>
       </div>
 
       {success && (
-        <div className="p-4 bg-[#E6F4EA] border border-[#A8DADC] text-[#1E4620] rounded-md text-xs font-semibold flex items-center gap-2 shadow-sm">
+        <div className="p-4 bg-[#E6F4EA] border border-[#A8DADC] text-[#1E4620] rounded-none text-xs font-semibold flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px] text-[#2E7D32]">check_circle</span>
           ¡Configuración guardada exitosamente!
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-[#FCE8E6] border border-[#F5C6CB] text-[#C5221F] rounded-md text-xs font-semibold flex items-center gap-2 shadow-sm">
+        <div className="p-4 bg-[#FCE8E6] border border-[#F5C6CB] text-[#C5221F] rounded-none text-xs font-semibold flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px] text-[#C5221F]">error</span>
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5 max-w-3xl bg-white border border-[#E2DFD7] p-6 rounded-lg shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl bg-white border border-[#E2DFD7] p-8 rounded-none">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1.5 md:col-span-2">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Nombre / Razón Social Legal del Negocio *</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Nombre / Razón Social Legal del Negocio *</label>
             <input
               type="text"
               required
               value={storeName}
               onChange={(e) => setStoreName(e.target.value)}
               placeholder="ej. Óptica Nuevo Horizonte"
-              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all font-bold"
+              className="w-full bg-white border border-[#E2DFD7] rounded-none px-3.5 py-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none transition-colors font-bold"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">NIT / RUT del Negocio</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">NIT / RUT del Negocio</label>
             <input
               type="text"
               value={nit}
               onChange={(e) => setNit(e.target.value)}
               placeholder="ej. 900.123.456-7"
-              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all font-mono"
+              className="w-full bg-white border border-[#E2DFD7] rounded-none px-3.5 py-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none transition-colors font-mono"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Dirección Comercial</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Dirección Comercial</label>
             <input
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="ej. Calle 45 # 12-34 Local 101"
-              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all"
+              className="w-full bg-white border border-[#E2DFD7] rounded-none px-3.5 py-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none transition-colors"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Teléfono de Atención</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Teléfono de Atención</label>
             <input
               type="text"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="ej. 573104567890"
-              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all"
+              className="w-full bg-white border border-[#E2DFD7] rounded-none px-3.5 py-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none transition-colors"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Email Comercial</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Email Comercial</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="ej. contacto@minegocio.com"
-              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all"
+              className="w-full bg-white border border-[#E2DFD7] rounded-none px-3.5 py-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none transition-colors"
             />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Términos de Garantía y Pie de Factura</label>
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Términos de Garantía y Pie de Factura</label>
           <textarea
             value={invoiceFooter}
             onChange={(e) => setInvoiceFooter(e.target.value)}
             rows={4}
             placeholder="ej. Garantía de 1 año en monturas por defectos de fabricación. No se aceptan devoluciones de lentes formulados personalizados una vez cortados."
-            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md px-3.5 py-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] focus:ring-1 focus:ring-[#D9381E] outline-none transition-all font-sans resize-none"
+            className="w-full bg-white border border-[#E2DFD7] rounded-none px-3.5 py-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none transition-colors font-sans resize-none"
           />
-          <p className="text-[11px] text-[#777777]">Este texto aparecerá en la parte inferior del recibo térmico de 80mm.</p>
+          <p className="text-[11px] text-[#6B6862] mt-1">Este texto aparecerá en la parte inferior del recibo térmico de 80mm.</p>
         </div>
 
         <div className="pt-2 flex justify-end">
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#D9381E] hover:bg-[#b82e18] text-white font-bold text-xs px-6 py-2.5 rounded-md flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            className="bg-[#D9381E] hover:bg-[#b82e18] text-white font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-none flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 border-0"
           >
             {loading ? (
               <>
@@ -331,26 +331,26 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
   };
 
   return (
-    <div className="space-y-5 pt-6 border-t border-[#E2DFD7]">
+    <div className="space-y-6 pt-8 border-t border-[#E2DFD7]">
       <div>
-        <h4 className="font-serif font-bold text-xl text-[#161616] flex items-center gap-2">
+        <h4 className="font-serif font-bold text-2xl text-[#161616] flex items-center gap-2">
           <span className="material-symbols-outlined text-[#D9381E] text-[20px]">account_balance</span>
           Cuentas Bancarias del Negocio (para recibir transferencias)
         </h4>
-        <p className="text-xs text-[#666666] mt-0.5">
+        <p className="text-xs text-[#6B6862] mt-1">
           Registra las cuentas bancarias de la empresa para que aparezcan disponibles al facturar con transferencia.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <form onSubmit={handleSave} className="lg:col-span-5 bg-white border border-[#E2DFD7] p-5 rounded-lg shadow-sm space-y-4">
+        <form onSubmit={handleSave} className="lg:col-span-5 bg-white border border-[#E2DFD7] p-6 rounded-none space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Banco / Entidad *</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Banco / Entidad *</label>
             <select
               required
               value={selectedBankSelect}
               onChange={(e) => setSelectedBankSelect(e.target.value)}
-              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md p-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] outline-none cursor-pointer"
+              className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none cursor-pointer"
             >
               {COLOMBIAN_BANKS.map((b) => (
                 <option key={b} value={b}>{b}</option>
@@ -360,25 +360,25 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
 
           {selectedBankSelect === 'Otro Banco / Entidad' && (
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Nombre de Entidad Bancaria *</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Nombre de Entidad Bancaria *</label>
               <input
                 type="text"
                 required
                 value={customBankName}
                 onChange={(e) => setCustomBankName(e.target.value)}
                 placeholder="Escribe el nombre de la entidad..."
-                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md p-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] outline-none"
+                className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none"
               />
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Tipo de Cuenta</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Tipo de Cuenta</label>
               <select
                 value={accountType}
                 onChange={(e) => setAccountType(e.target.value)}
-                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md p-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] outline-none cursor-pointer"
+                className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none cursor-pointer"
               >
                 <option value="ahorros">Ahorros</option>
                 <option value="corriente">Corriente</option>
@@ -386,26 +386,26 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Número *</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Número *</label>
               <input
                 type="text"
                 required
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value)}
                 placeholder="123456789"
-                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md p-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] outline-none font-mono"
+                className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#555]">Titular / NIT</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Titular / NIT</label>
             <input
               type="text"
               value={accountHolder}
               onChange={(e) => setAccountHolder(e.target.value)}
               placeholder="Nombre de la empresa o NIT"
-              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-md p-2.5 text-xs text-[#161616] focus:bg-white focus:border-[#D9381E] outline-none"
+              className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none"
             />
           </div>
 
@@ -414,7 +414,7 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
               <button
                 type="button"
                 onClick={() => { setEditingId(null); setSelectedBankSelect('Bancolombia'); setCustomBankName(''); setAccountNumber(''); setAccountHolder(''); }}
-                className="px-4 py-2 border border-[#E2DFD7] text-xs font-bold text-[#555] hover:bg-[#FAF8F5] rounded-md cursor-pointer transition-all"
+                className="px-4 py-2 border border-[#E2DFD7] text-xs font-bold text-[#6B6862] hover:bg-[#FAF8F5] rounded-none cursor-pointer transition-all uppercase tracking-wider"
               >
                 Cancelar
               </button>
@@ -422,38 +422,38 @@ const BankAccountsManager: React.FC<{ clientId: string }> = ({ clientId }) => {
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold rounded-md cursor-pointer shadow-sm transition-all border-0"
+              className="px-5 py-2.5 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer transition-all border-0"
             >
               {editingId ? 'Actualizar Cuenta' : 'Agregar Cuenta'}
             </button>
           </div>
         </form>
 
-        <div className="lg:col-span-7 bg-white border border-[#E2DFD7] p-5 rounded-lg shadow-sm space-y-3">
-          <h5 className="text-xs font-bold uppercase tracking-wider text-[#555]">Cuentas Registradas</h5>
+        <div className="lg:col-span-7 bg-white border border-[#E2DFD7] p-6 rounded-none space-y-4">
+          <h5 className="text-xs font-bold uppercase tracking-wider text-[#6B6862]">Cuentas Registradas</h5>
           {accounts.length === 0 ? (
-            <p className="text-xs text-[#777777] py-8 text-center italic">No hay cuentas bancarias registradas.</p>
+            <p className="text-xs text-[#6B6862] py-8 text-center italic">No hay cuentas bancarias registradas.</p>
           ) : (
-            <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
               {accounts.map(acc => (
-                <div key={acc.id} className="flex justify-between items-center p-3.5 bg-[#FAF8F5] border border-[#E2DFD7] rounded-md hover:border-[#D9381E]/40 transition-all">
+                <div key={acc.id} className="flex justify-between items-center p-3.5 bg-white border border-[#E2DFD7] rounded-none hover:border-[#161616] transition-all">
                   <div>
                     <p className="font-bold text-xs text-[#161616]">{acc.bank_name} ({acc.account_type.toUpperCase()})</p>
                     <p className="text-xs text-[#D9381E] font-mono font-bold mt-0.5">#{acc.account_number}</p>
-                    {acc.account_holder && <p className="text-[11px] text-[#666666]">{acc.account_holder}</p>}
+                    {acc.account_holder && <p className="text-[11px] text-[#6B6862]">{acc.account_holder}</p>}
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => handleEdit(acc)}
-                      className="p-1.5 text-[#555] hover:text-[#161616] hover:bg-white border border-transparent hover:border-[#E2DFD7] rounded cursor-pointer transition-all"
+                      className="p-1.5 text-[#555] hover:text-[#161616] border border-transparent hover:border-[#E2DFD7] rounded-none cursor-pointer transition-all"
                     >
                       <span className="material-symbols-outlined text-[16px]">edit</span>
                     </button>
                     <button
                       type="button"
                       onClick={(e) => handleDelete(e, acc.id)}
-                      className="p-1.5 text-[#C5221F] hover:bg-[#FCE8E6] rounded cursor-pointer border-0 bg-transparent transition-all"
+                      className="p-1.5 text-[#C5221F] hover:bg-[#FCE8E6] rounded-none cursor-pointer border-0 bg-transparent transition-all"
                       title="Eliminar cuenta bancaria"
                     >
                       <span className="material-symbols-outlined text-[16px]">delete</span>

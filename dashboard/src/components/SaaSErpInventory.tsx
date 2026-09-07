@@ -1356,37 +1356,37 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     )}
 
                     {isFormOpen && (
-                        <div className="bg-white border border-[#E2DFD7] p-6 rounded-lg shadow-sm space-y-6 text-[#161616]">
+                        <div className="bg-white border border-[#E2DFD7] p-8 rounded-none shadow-sm space-y-6 text-[#161616]">
                             <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-4">
                                 <div>
                                     <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans">FORMULARIO DE INVENTARIO ERP</span>
-                                    <h3 className="font-serif text-2xl font-bold text-[#161616] tracking-tight mt-0.5">
+                                    <h3 className="font-serif text-3xl font-bold text-[#161616] tracking-tight mt-0.5">
                                         {editingProduct ? 'Editar Producto o Servicio de Venta' : 'Crear / Editar Producto o Servicio de Venta'}
                                     </h3>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={resetForm}
-                                    className="p-1 text-[#666666] hover:text-[#161616] hover:bg-[#FAF8F5] rounded transition cursor-pointer border-0 bg-transparent text-xl font-bold"
+                                    className="p-1 text-[#666666] hover:text-[#161616] rounded-none transition cursor-pointer border-0 bg-transparent text-2xl font-bold"
                                     title="Cerrar formulario"
                                 >
                                     &times;
                                 </button>
                             </div>
-                            <form onSubmit={handleSubmit} className="space-y-4">
+                            <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Tipo de Ítem *</label>
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Tipo de Ítem *</label>
+                                    <div className="grid grid-cols-2 gap-3">
                                         <button
                                             type="button"
                                             onClick={() => {
                                                 setProductType('product');
                                                 if (stock === 999999) setStock('');
                                             }}
-                                            className={`py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition ${
+                                            className={`py-2.5 rounded-none border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-colors ${
                                                 productType === 'product'
-                                                    ? 'bg-primary border-primary text-on-primary shadow-md'
-                                                    : 'bg-surface-container border-outline/20 text-on-surface-variant hover:border-primary/50'
+                                                    ? 'bg-[#161616] border-[#161616] text-white shadow-sm'
+                                                    : 'bg-white border-[#E2DFD7] text-[#6B6862] hover:border-[#161616]'
                                             }`}
                                         >
                                             <span className="material-symbols-outlined text-[18px]">inventory_2</span>
@@ -1398,10 +1398,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 setProductType('service');
                                                 setStock(999999);
                                             }}
-                                            className={`py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition ${
+                                            className={`py-2.5 rounded-none border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-colors ${
                                                 productType === 'service'
-                                                    ? 'bg-primary border-primary text-on-primary shadow-md'
-                                                    : 'bg-surface-container border-outline/20 text-on-surface-variant hover:border-primary/50'
+                                                    ? 'bg-[#161616] border-[#161616] text-white shadow-sm'
+                                                    : 'bg-white border-[#E2DFD7] text-[#6B6862] hover:border-[#161616]'
                                             }`}
                                         >
                                             <span className="material-symbols-outlined text-[18px]">medical_services</span>
