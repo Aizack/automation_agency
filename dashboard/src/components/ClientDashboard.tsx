@@ -104,7 +104,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
   // Calcular la pestaña por defecto si es colaborador
   const getDefaultTab = () => {
-    if (!isEmployeeSession) return 'resumen';
+    if (!isEmployeeSession) return 'configuracion';
+    if (employeePermissions.includes('settings')) return 'configuracion';
     if (employeePermissions.includes('billing')) return 'facturacion';
     if (employeePermissions.includes('contabilidad')) return 'contabilidad';
     if (employeePermissions.includes('cartera')) return 'cartera';
@@ -115,7 +116,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     if (employeePermissions.includes('lab')) return 'lab_jobs';
     if (employeePermissions.includes('domicilios')) return 'domicilios';
     if (employeePermissions.includes('employees')) return 'empleados';
-    return 'cartera';
+    return 'configuracion';
   };
 
   const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'dian_habilitacion' | 'cotizaciones' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(() => {
@@ -126,9 +127,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
   // Submenús desplegables del menú lateral Wabi-Sabi
   const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({
-    empresa: false,
-    logistica: true,
+    empresa: true,
+    agente_ia: false,
     facturacion: false,
+    finanzas: false,
+    logistica: false,
     marketing: false,
     citas: false,
     personal: false,
@@ -143,12 +146,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   };
 
   useEffect(() => {
-    if (['configuracion', 'planeacion_empresarial'].includes(activeTab)) {
+    if (['configuracion', 'dian_habilitacion'].includes(activeTab)) {
       setOpenSubMenus(prev => ({ ...prev, empresa: true }));
+    } else if (activeTab === 'resumen') {
+      setOpenSubMenus(prev => ({ ...prev, agente_ia: true }));
+    } else if (['facturacion', 'facturacion2', 'cotizaciones', 'documentos_soporte', 'arqueo_caja', 'cartera'].includes(activeTab)) {
+      setOpenSubMenus(prev => ({ ...prev, facturacion: true }));
+    } else if (['contabilidad', 'planeacion_empresarial'].includes(activeTab)) {
+      setOpenSubMenus(prev => ({ ...prev, finanzas: true }));
     } else if (['inventario', 'lab_jobs', 'domicilios'].includes(activeTab)) {
       setOpenSubMenus(prev => ({ ...prev, logistica: true }));
-    } else if (['facturacion', 'dian_habilitacion', 'facturacion2', 'cotizaciones', 'documentos_soporte', 'arqueo_caja', 'contabilidad', 'cartera'].includes(activeTab)) {
-      setOpenSubMenus(prev => ({ ...prev, facturacion: true }));
     } else if (['clientes', 'campanias', 'marketing', 'metas_ventas'].includes(activeTab)) {
       setOpenSubMenus(prev => ({ ...prev, marketing: true }));
     } else if (['agenda', 'formulas'].includes(activeTab)) {
@@ -907,37 +914,19 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           </div>
         </div>
 
-        {/* Navigation Menu List (Acordeón Wabi-Sabi exacto propuesta_principal_wabi_sabi_koi.html) */}
+        {/* Navigation Menu List (Orden del Sistema ERP Wabi-Sabi) */}
         <div className="nav-menu-list flex-grow overflow-y-auto custom-scrollbar">
           
-          {/* 0. Agente IA WhatsApp */}
+          {/* 1. Datos de la Empresa (Pantalla Principal) */}
           {hasPermission('settings') && (
             <div className="nav-item">
               <button 
-                onClick={() => setActiveTab('resumen')}
-                className={`nav-item-btn ${activeTab === 'resumen' ? 'active' : ''}`}
-              >
-                <svg className="nav-icon" viewBox="0 0 24 24">
-                  <rect x="4" y="4" width="16" height="16" rx="2"/>
-                  <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
-                  <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
-                  <path d="M9 15h6"/>
-                </svg>
-                <span className="nav-text"><span>Configuración Agente IA</span></span>
-              </button>
-            </div>
-          )}
-
-          {/* 1. Información Empresa */}
-          {hasPermission('settings') && (
-            <div className="nav-item">
-              <button 
-                className={`nav-item-btn ${['configuracion', 'planeacion_empresarial'].includes(activeTab) ? 'active' : ''}`} 
+                className={`nav-item-btn ${['configuracion', 'dian_habilitacion'].includes(activeTab) ? 'active' : ''}`} 
                 onClick={() => toggleSubMenu('empresa')}
               >
                 <svg className="nav-icon" viewBox="0 0 24 24"><polygon points="12,2 19,7 19,17 12,22 5,17 5,7"/></svg>
                 <span className="nav-text">
-                  <span>Información Empresa</span> 
+                  <span>Datos de la Empresa</span> 
                   <span className={`caret-arrow ${openSubMenus.empresa ? 'open' : ''}`}>▾</span>
                 </span>
               </button>
@@ -947,78 +936,198 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     onClick={() => setActiveTab('configuracion')} 
                     className={activeTab === 'configuracion' ? 'active-link' : ''}
                   >
-                    Perfil Comercial & Sede
+                    Datos de la Empresa
                   </button>
                 </li>
+                {hasPermission('billing') && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('dian_habilitacion')} 
+                      className={activeTab === 'dian_habilitacion' ? 'active-link' : ''}
+                    >
+                      Habilitación DIAN <span className="text-[9px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-1 py-0.5 rounded font-mono font-bold ml-1">DIAN ⚡</span>
+                    </button>
+                  </li>
+                )}
                 <li>
                   <button 
-                    onClick={() => setActiveTab('planeacion_empresarial')} 
-                    className={activeTab === 'planeacion_empresarial' ? 'active-link' : ''}
+                    onClick={() => setIsAddBranchModalOpen(true)} 
+                    className="text-[#D9381E] font-bold"
                   >
-                    Planeación Empresarial
+                    + Nueva Sede
                   </button>
                 </li>
               </ul>
             </div>
           )}
 
-          {/* Gastronomía & Mesas (si es categoría restaurante) */}
-          {clientData?.category === 'restaurante' && (
+          {/* 2. Configuración Agente IA */}
+          {hasPermission('settings') && (
             <div className="nav-item">
               <button 
-                className={`nav-item-btn ${['restaurante_menu', 'inventario_insumos', 'restaurante_mesas', 'restaurante_kds'].includes(activeTab) ? 'active' : ''}`} 
-                onClick={() => toggleSubMenu('gastronomia')}
+                className={`nav-item-btn ${activeTab === 'resumen' ? 'active' : ''}`}
+                onClick={() => toggleSubMenu('agente_ia')}
               >
                 <svg className="nav-icon" viewBox="0 0 24 24">
-                  <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-                  <line x1="6" y1="1" x2="6" y2="4"></line>
-                  <line x1="10" y1="1" x2="10" y2="4"></line>
-                  <line x1="14" y1="1" x2="14" y2="4"></line>
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+                  <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+                  <path d="M9 15h6"/>
                 </svg>
                 <span className="nav-text">
-                  <span>Gastronomía & Mesas</span> 
-                  <span className={`caret-arrow ${openSubMenus.gastronomia ? 'open' : ''}`}>▾</span>
+                  <span>Configuración Agente IA</span>
+                  <span className={`caret-arrow ${openSubMenus.agente_ia ? 'open' : ''}`}>▾</span>
                 </span>
               </button>
-              <ul className={`sub-menu ${openSubMenus.gastronomia ? 'open' : ''}`}>
+              <ul className={`sub-menu ${openSubMenus.agente_ia ? 'open' : ''}`}>
                 <li>
                   <button 
-                    onClick={() => setActiveTab('restaurante_menu')} 
-                    className={activeTab === 'restaurante_menu' ? 'active-link' : ''}
+                    onClick={() => setActiveTab('resumen')} 
+                    className={activeTab === 'resumen' ? 'active-link' : ''}
                   >
-                    Crear Menú & Recetario
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('inventario_insumos')} 
-                    className={activeTab === 'inventario_insumos' ? 'active-link' : ''}
-                  >
-                    Inventario de Insumos
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('restaurante_mesas')} 
-                    className={activeTab === 'restaurante_mesas' ? 'active-link' : ''}
-                  >
-                    Comandero & Mesas
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('restaurante_kds')} 
-                    className={activeTab === 'restaurante_kds' ? 'active-link' : ''}
-                  >
-                    Pantalla KDS (Cocina/Barra)
+                    Configuración Agente IA
                   </button>
                 </li>
               </ul>
             </div>
           )}
 
-          {/* 2. Logística & Stock */}
+          {/* 3. Facturación (Separado) */}
+          {(hasPermission('billing') || hasPermission('cartera') || hasPermission('cotizaciones') || hasPermission('documentos_soporte') || hasPermission('arqueo_caja')) && (
+            <div className="nav-item">
+              <button 
+                className={`nav-item-btn ${['facturacion', 'facturacion2', 'cotizaciones', 'documentos_soporte', 'arqueo_caja', 'cartera'].includes(activeTab) ? 'active' : ''}`} 
+                onClick={() => toggleSubMenu('facturacion')}
+              >
+                <svg className="nav-icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+                <span className="nav-text">
+                  <span>Facturación</span> 
+                  <span className={`caret-arrow ${openSubMenus.facturacion ? 'open' : ''}`}>▾</span>
+                </span>
+              </button>
+              <ul className={`sub-menu ${openSubMenus.facturacion ? 'open' : ''}`}>
+                {hasPermission('billing') && clientData?.enabledModules?.billing !== false && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('facturacion')} 
+                      className={activeTab === 'facturacion' ? 'active-link' : ''}
+                    >
+                      Facturación POS & DIAN
+                    </button>
+                  </li>
+                )}
+                {rawRole === 'admin' && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('facturacion2')} 
+                      className={activeTab === 'facturacion2' ? 'active-link' : ''}
+                    >
+                      Facturación v2 (Admin)
+                    </button>
+                  </li>
+                )}
+                {hasPermission('cotizaciones') && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('cotizaciones')} 
+                      className={activeTab === 'cotizaciones' ? 'active-link' : ''}
+                    >
+                      Cotizaciones
+                    </button>
+                  </li>
+                )}
+                {hasPermission('documentos_soporte') && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('documentos_soporte')} 
+                      className={activeTab === 'documentos_soporte' ? 'active-link' : ''}
+                    >
+                      Documentos Soporte
+                    </button>
+                  </li>
+                )}
+                {hasPermission('arqueo_caja') && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('arqueo_caja')} 
+                      className={activeTab === 'arqueo_caja' ? 'active-link' : ''}
+                    >
+                      Arqueo de Caja
+                    </button>
+                  </li>
+                )}
+                {hasPermission('cartera') && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('cartera')} 
+                      className={activeTab === 'cartera' ? 'active-link' : ''}
+                    >
+                      Cartera de Cobros
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* 4. Finanzas (Separado) */}
+          {(hasPermission('contabilidad') || hasPermission('settings')) && (
+            <div className="nav-item">
+              <button 
+                className={`nav-item-btn ${['contabilidad', 'planeacion_empresarial'].includes(activeTab) ? 'active' : ''}`} 
+                onClick={() => toggleSubMenu('finanzas')}
+              >
+                <svg className="nav-icon" viewBox="0 0 24 24">
+                  <line x1="12" y1="20" x2="12" y2="10"/>
+                  <line x1="18" y1="20" x2="18" y2="4"/>
+                  <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                <span className="nav-text">
+                  <span>Finanzas</span> 
+                  <span className={`caret-arrow ${openSubMenus.finanzas ? 'open' : ''}`}>▾</span>
+                </span>
+              </button>
+              <ul className={`sub-menu ${openSubMenus.finanzas ? 'open' : ''}`}>
+                {hasPermission('contabilidad') && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('contabilidad')} 
+                      className={activeTab === 'contabilidad' ? 'active-link' : ''}
+                    >
+                      Contabilidad
+                    </button>
+                  </li>
+                )}
+                <li>
+                  <button className="opacity-70 cursor-not-allowed">
+                    Nómina Electrónica <span className="text-[#D9381E] font-bold">⚡</span>
+                  </button>
+                </li>
+                <li>
+                  <button className="opacity-70 cursor-not-allowed">
+                    Exógena & Form 350
+                  </button>
+                </li>
+                <li>
+                  <button className="opacity-70 cursor-not-allowed">
+                    Conciliación Bancaria
+                  </button>
+                </li>
+                {hasPermission('settings') && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('planeacion_empresarial')} 
+                      className={activeTab === 'planeacion_empresarial' ? 'active-link' : ''}
+                    >
+                      Planeación Empresarial
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* 5. Logística & Stock */}
           {(hasPermission('inventory') || hasPermission('lab') || hasPermission('domicilios')) && (
             <div className="nav-item">
               <button 
@@ -1066,105 +1175,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           )}
 
-          {/* 3. Facturación & Finanzas */}
-          {(hasPermission('billing') || hasPermission('contabilidad') || hasPermission('cartera') || hasPermission('cotizaciones') || hasPermission('documentos_soporte') || hasPermission('arqueo_caja')) && (
-            <div className="nav-item">
-              <button 
-                className={`nav-item-btn ${['facturacion', 'dian_habilitacion', 'facturacion2', 'cotizaciones', 'documentos_soporte', 'arqueo_caja', 'contabilidad', 'cartera'].includes(activeTab) ? 'active' : ''}`} 
-                onClick={() => toggleSubMenu('facturacion')}
-              >
-                <svg className="nav-icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
-                <span className="nav-text">
-                  <span>Facturación & Finanzas</span> 
-                  <span className={`caret-arrow ${openSubMenus.facturacion ? 'open' : ''}`}>▾</span>
-                </span>
-              </button>
-              <ul className={`sub-menu ${openSubMenus.facturacion ? 'open' : ''}`}>
-                {hasPermission('billing') && clientData?.enabledModules?.billing !== false && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('facturacion')} 
-                      className={activeTab === 'facturacion' ? 'active-link' : ''}
-                    >
-                      Facturación POS & DIAN
-                    </button>
-                  </li>
-                )}
-                {hasPermission('billing') && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('dian_habilitacion')} 
-                      className={activeTab === 'dian_habilitacion' ? 'active-link' : ''}
-                    >
-                      Habilitación DIAN ⚡ Factus
-                    </button>
-                  </li>
-                )}
-                {rawRole === 'admin' && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('facturacion2')} 
-                      className={activeTab === 'facturacion2' ? 'active-link' : ''}
-                    >
-                      Facturación v2 (Admin)
-                    </button>
-                  </li>
-                )}
-                {hasPermission('cotizaciones') && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('cotizaciones')} 
-                      className={activeTab === 'cotizaciones' ? 'active-link' : ''}
-                    >
-                      Cotizaciones
-                    </button>
-                  </li>
-                )}
-                {hasPermission('documentos_soporte') && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('documentos_soporte')} 
-                      className={activeTab === 'documentos_soporte' ? 'active-link' : ''}
-                    >
-                      Documentos Soporte
-                    </button>
-                  </li>
-                )}
-                {hasPermission('arqueo_caja') && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('arqueo_caja')} 
-                      className={activeTab === 'arqueo_caja' ? 'active-link' : ''}
-                    >
-                      Arqueo de Caja
-                    </button>
-                  </li>
-                )}
-                {hasPermission('contabilidad') && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('contabilidad')} 
-                      className={activeTab === 'contabilidad' ? 'active-link' : ''}
-                    >
-                      Contabilidad General
-                    </button>
-                  </li>
-                )}
-                {hasPermission('cartera') && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('cartera')} 
-                      className={activeTab === 'cartera' ? 'active-link' : ''}
-                    >
-                      Cartera & Cobros
-                    </button>
-                  </li>
-                )}
-              </ul>
-            </div>
-          )}
-
-          {/* 4. Clientes & Difusión */}
+          {/* 6. Clientes & Difusión */}
           {(hasPermission('crm') || hasPermission('campaigns') || hasPermission('marketing') || hasPermission('metas_ventas')) && (
             <div className="nav-item">
               <button 
@@ -1222,7 +1233,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           )}
 
-          {/* 5. Citas & Salud Visual */}
+          {/* 7. Citas & Salud Visual */}
           {(hasPermission('appointments') || hasPermission('formulas')) && (
             <div className="nav-item">
               <button 
@@ -1264,7 +1275,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           )}
 
-          {/* 6. Personal & Seguridad */}
+          {/* 8. Personal & Seguridad */}
           {(hasPermission('employees') || hasPermission('trazabilidad') || hasPermission('system_status')) && (
             <div className="nav-item">
               <button 
@@ -1318,6 +1329,62 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     </button>
                   </li>
                 )}
+              </ul>
+            </div>
+          )}
+
+          {/* Gastronomía & Mesas (si es categoría restaurante) */}
+          {clientData?.category === 'restaurante' && (
+            <div className="nav-item">
+              <button 
+                className={`nav-item-btn ${['restaurante_menu', 'inventario_insumos', 'restaurante_mesas', 'restaurante_kds'].includes(activeTab) ? 'active' : ''}`} 
+                onClick={() => toggleSubMenu('gastronomia')}
+              >
+                <svg className="nav-icon" viewBox="0 0 24 24">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                  <line x1="6" y1="1" x2="6" y2="4"></line>
+                  <line x1="10" y1="1" x2="10" y2="4"></line>
+                  <line x1="14" y1="1" x2="14" y2="4"></line>
+                </svg>
+                <span className="nav-text">
+                  <span>Gastronomía & Mesas</span> 
+                  <span className={`caret-arrow ${openSubMenus.gastronomia ? 'open' : ''}`}>▾</span>
+                </span>
+              </button>
+              <ul className={`sub-menu ${openSubMenus.gastronomia ? 'open' : ''}`}>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('restaurante_menu')} 
+                    className={activeTab === 'restaurante_menu' ? 'active-link' : ''}
+                  >
+                    Crear Menú & Recetario
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('inventario_insumos')} 
+                    className={activeTab === 'inventario_insumos' ? 'active-link' : ''}
+                  >
+                    Inventario de Insumos
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('restaurante_mesas')} 
+                    className={activeTab === 'restaurante_mesas' ? 'active-link' : ''}
+                  >
+                    Comandero & Mesas
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('restaurante_kds')} 
+                    className={activeTab === 'restaurante_kds' ? 'active-link' : ''}
+                  >
+                    Pantalla KDS (Cocina/Barra)
+                  </button>
+                </li>
               </ul>
             </div>
           )}
