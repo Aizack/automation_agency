@@ -873,152 +873,128 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         {/* Navigation Menu List */}
         <div className="nav-menu-list flex-grow overflow-y-auto custom-scrollbar">
           {hasPermission('settings') && (
-            <div className="space-y-1">
+            <div className="nav-item">
               <button 
                 onClick={() => setActiveTab('resumen')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'resumen' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
+                className={`nav-item-btn ${activeTab === 'resumen' ? 'active' : ''}`}
               >
-                <span className="material-symbols-outlined text-[18px]">smart_toy</span>
-                <span className="font-bold text-xs">Configuración Agente IA</span>
+                <span className="material-symbols-outlined nav-icon-material">smart_toy</span>
+                <span className="nav-text"><span>Configuración Agente IA</span></span>
               </button>
             </div>
           )}
 
           {hasPermission('settings') && (
-            <div className="space-y-1 pt-1">
-              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Información Empresa</div>
+            <div className="nav-item">
+              <div className="nav-section-title">Información Empresa</div>
               <button 
                 onClick={() => setActiveTab('configuracion')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'configuracion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
+                className={`nav-item-btn ${activeTab === 'configuracion' ? 'active' : ''}`}
               >
-                <span className="material-symbols-outlined text-[18px]">settings</span>
-                <span className="font-bold text-xs">Información Empresa</span>
+                <span className="material-symbols-outlined nav-icon-material">settings</span>
+                <span className="nav-text"><span>Perfil & Sede</span></span>
               </button>
               <button 
                 onClick={() => setActiveTab('planeacion_empresarial')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'planeacion_empresarial' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
+                className={`nav-item-btn ${activeTab === 'planeacion_empresarial' ? 'active' : ''}`}
               >
-                <span className="material-symbols-outlined text-[18px]">query_stats</span>
-                <span className="font-bold text-xs">Planeación Empresarial</span>
+                <span className="material-symbols-outlined nav-icon-material">query_stats</span>
+                <span className="nav-text"><span>Planeación Empresarial</span></span>
               </button>
             </div>
           )}
 
           {clientData?.category === 'restaurante' && (
-            <div className="space-y-1 pt-1">
-              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Gastronomía & Mesas</div>
+            <div className="nav-item">
+              <div className="nav-section-title">Gastronomía & Mesas</div>
               <button 
                 onClick={() => setActiveTab('restaurante_menu')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'restaurante_menu' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
+                className={`nav-item-btn ${activeTab === 'restaurante_menu' ? 'active' : ''}`}
               >
-                <span className="material-symbols-outlined text-[18px]">menu_book</span>
-                <span className="font-bold text-xs">Crear Menú & Recetario</span>
+                <span className="material-symbols-outlined nav-icon-material">menu_book</span>
+                <span className="nav-text"><span>Crear Menú & Recetario</span></span>
               </button>
               <button 
                 onClick={() => setActiveTab('inventario_insumos')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'inventario_insumos' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
+                className={`nav-item-btn ${activeTab === 'inventario_insumos' ? 'active' : ''}`}
               >
-                <span className="material-symbols-outlined text-[18px]">inventory</span>
-                <span className="font-bold text-xs">Inventario de Insumos</span>
+                <span className="material-symbols-outlined nav-icon-material">inventory</span>
+                <span className="nav-text"><span>Inventario de Insumos</span></span>
               </button>
               <button 
                 onClick={() => setActiveTab('restaurante_mesas')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'restaurante_mesas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
+                className={`nav-item-btn ${activeTab === 'restaurante_mesas' ? 'active' : ''}`}
               >
-                <span className="material-symbols-outlined text-[18px]">table_restaurant</span>
-                <span className="font-bold text-xs">Comandero & Mesas</span>
+                <span className="material-symbols-outlined nav-icon-material">table_restaurant</span>
+                <span className="nav-text"><span>Comandero & Mesas</span></span>
               </button>
               <button 
                 onClick={() => setActiveTab('restaurante_kds')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'restaurante_kds' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
+                className={`nav-item-btn ${activeTab === 'restaurante_kds' ? 'active' : ''}`}
               >
-                <span className="material-symbols-outlined text-[18px]">soup_kitchen</span>
-                <span className="font-bold text-xs">Pantalla KDS (Cocina/Barra)</span>
+                <span className="material-symbols-outlined nav-icon-material">soup_kitchen</span>
+                <span className="nav-text"><span>Pantalla KDS</span></span>
               </button>
             </div>
           )}
 
           {(hasPermission('inventory') || hasPermission('lab') || hasPermission('domicilios')) && (
-            <div className="space-y-1 pt-1">
-              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Logística</div>
+            <div className="nav-item">
+              <div className="nav-section-title">Logística & Stock</div>
               {hasPermission('inventory') && clientData?.enabledModules?.inventory !== false && clientData?.category !== 'restaurante' && (
                 <button 
                   onClick={() => setActiveTab('inventario')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'inventario' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'inventario' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-                  <span className="font-bold text-xs">Inventario</span>
+                  <span className="material-symbols-outlined nav-icon-material">inventory_2</span>
+                  <span className="nav-text"><span>Inventario de Productos</span></span>
                 </button>
               )}
 
               {hasPermission('lab') && clientData?.category === 'optica' && (
                 <button 
                   onClick={() => setActiveTab('lab_jobs')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'lab_jobs' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'lab_jobs' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">precision_manufacturing</span>
-                  <span className="font-bold text-xs">Trabajos de laboratorio</span>
+                  <span className="material-symbols-outlined nav-icon-material">precision_manufacturing</span>
+                  <span className="nav-text"><span>Trabajos de Laboratorio</span></span>
                 </button>
               )}
 
               {hasPermission('domicilios') && clientData?.enabledModules?.billing !== false && (
                 <button 
                   onClick={() => setActiveTab('domicilios')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'domicilios' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'domicilios' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">local_shipping</span>
-                  <span className="font-bold text-xs">Despachos y Domicilios</span>
+                  <span className="material-symbols-outlined nav-icon-material">local_shipping</span>
+                  <span className="nav-text"><span>Despachos y Domicilios</span></span>
                 </button>
               )}
             </div>
           )}
 
           {(hasPermission('billing') || hasPermission('contabilidad') || hasPermission('cartera') || hasPermission('cotizaciones') || hasPermission('documentos_soporte') || hasPermission('arqueo_caja')) && (
-            <div className="space-y-1 pt-1">
-              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Facturación y Contabilidad</div>
+            <div className="nav-item">
+              <div className="nav-section-title">Facturación & Finanzas</div>
               {hasPermission('billing') && clientData?.enabledModules?.billing !== false && (
                 <button 
                   onClick={() => setActiveTab('facturacion')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'facturacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'facturacion' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-                  <span className="font-bold text-xs">Facturación</span>
+                  <span className="material-symbols-outlined nav-icon-material">receipt_long</span>
+                  <span className="nav-text"><span>Facturación POS & DIAN</span></span>
                 </button>
               )}
 
               {hasPermission('billing') && (
                 <button 
                   onClick={() => setActiveTab('dian_habilitacion')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'dian_habilitacion' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'dian_habilitacion' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px] text-emerald-400">verified</span>
-                  <span className="font-bold text-xs flex items-center justify-between w-full">
+                  <span className="material-symbols-outlined nav-icon-material text-emerald-600 dark:text-emerald-400">verified</span>
+                  <span className="nav-text">
                     <span>Habilitación DIAN</span>
-                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono uppercase font-bold">⚡ Factus</span>
+                    <span className="text-[9px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded font-mono uppercase font-bold">⚡ Factus</span>
                   </span>
                 </button>
               )}
@@ -1026,14 +1002,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {rawRole === 'admin' && (
                 <button 
                   onClick={() => setActiveTab('facturacion2')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'facturacion2' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'facturacion2' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">receipt</span>
-                  <span className="font-bold text-xs flex items-center justify-between w-full">
+                  <span className="material-symbols-outlined nav-icon-material">receipt</span>
+                  <span className="nav-text">
                     <span>Facturación v2</span>
-                    <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-mono uppercase">Admin Respaldo</span>
+                    <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-mono uppercase">Admin</span>
                   </span>
                 </button>
               )}
@@ -1041,132 +1015,117 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('cotizaciones') && (
                 <button 
                   onClick={() => setActiveTab('cotizaciones')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'cotizaciones' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'cotizaciones' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">request_quote</span>
-                  <span className="font-bold text-xs">Cotizaciones</span>
+                  <span className="material-symbols-outlined nav-icon-material">request_quote</span>
+                  <span className="nav-text"><span>Cotizaciones</span></span>
                 </button>
               )}
 
               {hasPermission('documentos_soporte') && (
                 <button 
                   onClick={() => setActiveTab('documentos_soporte')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'documentos_soporte' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'documentos_soporte' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">description</span>
-                  <span className="font-bold text-xs">Documentos Soporte</span>
+                  <span className="material-symbols-outlined nav-icon-material">description</span>
+                  <span className="nav-text"><span>Documentos Soporte</span></span>
                 </button>
               )}
 
               {hasPermission('arqueo_caja') && (
                 <button 
                   onClick={() => setActiveTab('arqueo_caja')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'arqueo_caja' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'arqueo_caja' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">point_of_sale</span>
-                  <span className="font-bold text-xs">Arqueo de Caja</span>
+                  <span className="material-symbols-outlined nav-icon-material">point_of_sale</span>
+                  <span className="nav-text"><span>Arqueo de Caja</span></span>
                 </button>
               )}
 
               {hasPermission('contabilidad') && (
                 <button 
                   onClick={() => setActiveTab('contabilidad')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'contabilidad' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'contabilidad' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">bar_chart</span>
-                  <span className="font-bold text-xs">Contabilidad</span>
+                  <span className="material-symbols-outlined nav-icon-material">bar_chart</span>
+                  <span className="nav-text"><span>Contabilidad General</span></span>
                 </button>
               )}
 
               {hasPermission('cartera') && (
                 <button 
                   onClick={() => setActiveTab('cartera')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'cartera' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'cartera' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">payments</span>
-                  <span className="font-bold text-xs">Cartera</span>
+                  <span className="material-symbols-outlined nav-icon-material">payments</span>
+                  <span className="nav-text"><span>Cartera & Cobros</span></span>
                 </button>
               )}
             </div>
           )}
 
           {(hasPermission('crm') || hasPermission('campaigns') || hasPermission('marketing') || hasPermission('metas_ventas')) && (
-            <div className="space-y-1 pt-1">
-              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Marketing y Ventas</div>
+            <div className="nav-item">
+              <div className="nav-section-title">Clientes & Difusión</div>
               {hasPermission('crm') && clientData?.enabledModules?.crm !== false && (
                 <button 
                   onClick={() => setActiveTab('clientes')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'clientes' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'clientes' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">contacts</span>
-                  <span className="font-bold text-xs">Clientes</span>
+                  <span className="material-symbols-outlined nav-icon-material">contacts</span>
+                  <span className="nav-text"><span>CRM Clientes</span></span>
                 </button>
               )}
 
               {hasPermission('campaigns') && clientData?.enabledModules?.field_visits !== false && clientData?.category === 'optica' && (
                 <button 
                   onClick={() => setActiveTab('campanias')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'campanias' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'campanias' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">explore</span>
-                  <span className="font-bold text-xs">Campañas de Campo</span>
+                  <span className="material-symbols-outlined nav-icon-material">explore</span>
+                  <span className="nav-text"><span>Campañas de Campo</span></span>
                 </button>
               )}
 
               {hasPermission('marketing') && clientData?.enabledModules?.marketing !== false && (
                 <button 
                   onClick={() => setActiveTab('marketing')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'marketing' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'marketing' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">campaign</span>
-                  <span className="font-bold text-xs">Difusión Promocional</span>
+                  <span className="material-symbols-outlined nav-icon-material">campaign</span>
+                  <span className="nav-text"><span>Difusión Promocional</span></span>
                 </button>
               )}
 
               {hasPermission('metas_ventas') && (
                 <button 
                   onClick={() => setActiveTab('metas_ventas')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'metas_ventas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'metas_ventas' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">groups</span>
-                  <span className="font-bold text-xs">Metas & Ventas Personal</span>
+                  <span className="material-symbols-outlined nav-icon-material">groups</span>
+                  <span className="nav-text"><span>Metas & Ventas Personal</span></span>
                 </button>
               )}
             </div>
           )}
 
           {(hasPermission('appointments') || hasPermission('formulas')) && (
-            <div className="space-y-1 pt-1">
-              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Citas y Exámenes</div>
+            <div className="nav-item">
+              <div className="nav-section-title">
+                {clientData?.category === 'restaurante' ? 'Reservas' :
+                 clientData?.category === 'optica' ? 'Citas & Salud Visual' : 'Agenda'}
+              </div>
               {hasPermission('appointments') && clientData?.enabledModules?.appointments !== false && (
                 <button 
                   onClick={() => setActiveTab('agenda')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'agenda' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'agenda' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                  <span className="font-bold text-xs">
-                    {clientData?.category === 'restaurante' ? 'Reservas de Mesa' :
-                     clientData?.category === 'optica' ? 'Programación Citas' : 'Agenda Citas'}
+                  <span className="material-symbols-outlined nav-icon-material">calendar_month</span>
+                  <span className="nav-text">
+                    <span>
+                      {clientData?.category === 'restaurante' ? 'Reservas de Mesa' :
+                       clientData?.category === 'optica' ? 'Programación de Citas' : 'Agenda Citas'}
+                    </span>
                   </span>
                 </button>
               )}
@@ -1174,73 +1133,63 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               {hasPermission('formulas') && clientData?.category === 'optica' && (
                 <button 
                   onClick={() => setActiveTab('formulas')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'formulas' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'formulas' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">visibility</span>
-                  <span className="font-bold text-xs">Optometría</span>
+                  <span className="material-symbols-outlined nav-icon-material">visibility</span>
+                  <span className="nav-text"><span>Optometría (Fórmulas)</span></span>
                 </button>
               )}
             </div>
           )}
 
           {(hasPermission('employees') || hasPermission('trazabilidad')) && (
-            <div className="space-y-1 pt-1">
-              <div className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-on-surface-variant/70">Administración de Personal</div>
+            <div className="nav-item">
+              <div className="nav-section-title">Personal & Seguridad</div>
               {hasPermission('employees') && clientData?.enabledModules?.employees !== false && (
                 <button 
                   onClick={() => setActiveTab('empleados')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'empleados' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'empleados' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">groups</span>
-                  <span className="font-bold text-xs">Administración de Personal</span>
+                  <span className="material-symbols-outlined nav-icon-material">groups</span>
+                  <span className="nav-text"><span>Administración Personal</span></span>
                 </button>
               )}
               {hasPermission('employees') && (
                 <button 
                   onClick={() => setActiveTab('usuarios')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'usuarios' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'usuarios' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
-                  <span className="font-bold text-xs">Accesos y Permisos</span>
+                  <span className="material-symbols-outlined nav-icon-material">manage_accounts</span>
+                  <span className="nav-text"><span>Accesos y Permisos</span></span>
                 </button>
               )}
               {hasPermission('trazabilidad') && (
                 <button 
                   onClick={() => setActiveTab('trazabilidad')}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                    activeTab === 'trazabilidad' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                  }`}
+                  className={`nav-item-btn ${activeTab === 'trazabilidad' ? 'active' : ''}`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">shield</span>
-                  <span className="font-bold text-xs">Trazabilidad & Auditoría</span>
+                  <span className="material-symbols-outlined nav-icon-material">shield</span>
+                  <span className="nav-text"><span>Trazabilidad & Auditoría</span></span>
                 </button>
               )}
             </div>
           )}
 
           {hasPermission('system_status') && (
-            <div className="space-y-1 pt-1">
+            <div className="nav-item">
               <button 
                 onClick={() => setActiveTab('logs')}
-                className={`w-full text-left flex items-center gap-3 p-3 rounded-md border-0 cursor-pointer font-sans transition-all duration-200 ${
-                  activeTab === 'logs' ? 'bg-primary/10 text-primary sidebar-item-active' : 'text-on-surface-variant hover:bg-surface-variant/40 bg-transparent'
-                }`}
+                className={`nav-item-btn ${activeTab === 'logs' ? 'active' : ''}`}
               >
-                <span className="material-symbols-outlined text-[18px]">build</span>
-                <span className="font-bold text-xs">Estado del Sistema</span>
+                <span className="material-symbols-outlined nav-icon-material">build</span>
+                <span className="nav-text"><span>Estado del Sistema</span></span>
               </button>
             </div>
           )}
         </div>
         
         {/* User Session Info & Back / Logout footer */}
-        <div className="border-t border-[#E2DFD7] p-3 mt-auto flex items-center justify-between text-xs text-[#6B6862]">
+        <div className="sidebar-footer">
           <span className="text-[10px] font-mono opacity-50">KOI ERP v1.0</span>
           {rawRole === 'admin' && (
             <button 
@@ -1249,7 +1198,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               title="Volver a la consola admin"
             >
               <span className="material-symbols-outlined text-[12px]">arrow_back</span>
-              Admin
+              <span>Admin</span>
             </button>
           )}
         </div>
