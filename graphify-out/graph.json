@@ -1561,7 +1561,7 @@
       "file_type": "code",
       "norm_label": "bankaccount",
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L354"
+      "source_location": "L218"
     },
     {
       "id": "dashboard_src_components_saaserpstoresettings_storesettingsprops",
@@ -1973,6 +1973,54 @@
       "source_location": "L3"
     },
     {
+      "id": "src_scratch_test_graceful_shutdown_runtest",
+      "label": "runTest()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "runtest()",
+      "source_file": "src/scratch/test-graceful-shutdown.ts",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_server_resolveproductclientid",
+      "label": "resolveProductClientId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "resolveproductclientid()",
+      "source_file": "src/server.ts",
+      "source_location": "L1669"
+    },
+    {
+      "id": "src_services_escalation_startescalationservice",
+      "label": "startEscalationService()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "startescalationservice()",
+      "source_file": "src/services/escalation.ts",
+      "source_location": "L5"
+    },
+    {
+      "id": "src_services_escalation_stopescalationservice",
+      "label": "stopEscalationService()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "stopescalationservice()",
+      "source_file": "src/services/escalation.ts",
+      "source_location": "L113"
+    },
+    {
       "id": "src_services_scheduler_checkandsendreminders",
       "label": "checkAndSendReminders()",
       "_callable": true,
@@ -2019,6 +2067,54 @@
       "norm_label": "startscheduler()",
       "source_file": "src/services/scheduler.ts",
       "source_location": "L152"
+    },
+    {
+      "id": "src_services_shutdownmanager_capturesystemstate",
+      "label": "captureSystemState()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "capturesystemstate()",
+      "source_file": "src/services/shutdownManager.ts",
+      "source_location": "L12"
+    },
+    {
+      "id": "src_services_shutdownmanager_gracefulshutdown",
+      "label": "gracefulShutdown()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "gracefulshutdown()",
+      "source_file": "src/services/shutdownManager.ts",
+      "source_location": "L53"
+    },
+    {
+      "id": "src_services_shutdownmanager_registershutdownhandlers",
+      "label": "registerShutdownHandlers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "registershutdownhandlers()",
+      "source_file": "src/services/shutdownManager.ts",
+      "source_location": "L143"
+    },
+    {
+      "id": "src_services_shutdownmanager_restoresystemstate",
+      "label": "restoreSystemState()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "restoresystemstate()",
+      "source_file": "src/services/shutdownManager.ts",
+      "source_location": "L110"
     },
     {
       "id": "src_services_whatsapp_autorestoresavedwhatsappsessions",
@@ -2427,78 +2523,6 @@
       "norm_label": "saaserpmarketing()",
       "source_file": "dashboard/src/components/SaaSErpMarketing.tsx",
       "source_location": "L30"
-    },
-    {
-      "id": "src_scratch_test_graceful_shutdown_runtest",
-      "label": "runTest()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "runtest()",
-      "source_file": "src/scratch/test-graceful-shutdown.ts",
-      "source_location": "L8"
-    },
-    {
-      "id": "src_services_escalation_stopescalationservice",
-      "label": "stopEscalationService()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "stopescalationservice()",
-      "source_file": "src/services/escalation.ts",
-      "source_location": "L113"
-    },
-    {
-      "id": "src_services_shutdownmanager_capturesystemstate",
-      "label": "captureSystemState()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "capturesystemstate()",
-      "source_file": "src/services/shutdownManager.ts",
-      "source_location": "L12"
-    },
-    {
-      "id": "src_services_shutdownmanager_gracefulshutdown",
-      "label": "gracefulShutdown()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "gracefulshutdown()",
-      "source_file": "src/services/shutdownManager.ts",
-      "source_location": "L53"
-    },
-    {
-      "id": "src_services_shutdownmanager_registershutdownhandlers",
-      "label": "registerShutdownHandlers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "registershutdownhandlers()",
-      "source_file": "src/services/shutdownManager.ts",
-      "source_location": "L143"
-    },
-    {
-      "id": "src_services_shutdownmanager_restoresystemstate",
-      "label": "restoreSystemState()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "restoresystemstate()",
-      "source_file": "src/services/shutdownManager.ts",
-      "source_location": "L110"
     },
     {
       "id": "dashboard_src_components_saaserpsalestargets_saaserpsalestargets",
@@ -3278,7 +3302,7 @@
       "file_type": "code",
       "norm_label": "bankaccountsmanager()",
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L363"
+      "source_location": "L227"
     },
     {
       "id": "dashboard_src_components_saaserpstoresettings_saaserpstoresettings",
@@ -3291,18 +3315,6 @@
       "norm_label": "saaserpstoresettings()",
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
       "source_location": "L9"
-    },
-    {
-      "id": "dashboard_src_components_saaserpstoresettings_themeselectormanager",
-      "label": "ThemeSelectorManager()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 59,
-      "community_name": "authFetch",
-      "file_type": "code",
-      "norm_label": "themeselectormanager()",
-      "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L203"
     },
     {
       "id": "dashboard_src_components_systemalertspanel_systemalertspanel",
@@ -3446,7 +3458,7 @@
       "file_type": "code",
       "norm_label": "minutestotime()",
       "source_file": "src/server.ts",
-      "source_location": "L4254"
+      "source_location": "L4255"
     },
     {
       "id": "src_server_registeractivesession",
@@ -3461,18 +3473,6 @@
       "source_location": "L15"
     },
     {
-      "id": "src_server_resolveproductclientid",
-      "label": "resolveProductClientId()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "resolveproductclientid()",
-      "source_file": "src/server.ts",
-      "source_location": "L1668"
-    },
-    {
       "id": "src_server_startmarketingcampaignworker",
       "label": "startMarketingCampaignWorker()",
       "_callable": true,
@@ -3482,7 +3482,7 @@
       "file_type": "code",
       "norm_label": "startmarketingcampaignworker()",
       "source_file": "src/server.ts",
-      "source_location": "L6398"
+      "source_location": "L6399"
     },
     {
       "id": "src_server_timetominutes",
@@ -3494,19 +3494,7 @@
       "file_type": "code",
       "norm_label": "timetominutes()",
       "source_file": "src/server.ts",
-      "source_location": "L4248"
-    },
-    {
-      "id": "src_services_escalation_startescalationservice",
-      "label": "startEscalationService()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "startescalationservice()",
-      "source_file": "src/services/escalation.ts",
-      "source_location": "L5"
+      "source_location": "L4249"
     },
     {
       "id": "src_services_factusservice_emitfactusinvoice",
@@ -3543,6 +3531,30 @@
       "norm_label": "runfactusdiantestset()",
       "source_file": "src/services/factusService.ts",
       "source_location": "L53"
+    },
+    {
+      "id": "src_services_localknowledge_listlocalfiles",
+      "label": "listLocalFiles()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "listlocalfiles()",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L28"
+    },
+    {
+      "id": "src_services_localknowledge_savelocalfile",
+      "label": "saveLocalFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "savelocalfile()",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L14"
     },
     {
       "id": "src_services_pdfgeneratorservice_generateposthermaltickethtml",
@@ -3941,30 +3953,6 @@
       "source_location": "L58"
     },
     {
-      "id": "src_services_localknowledge_listlocalfiles",
-      "label": "listLocalFiles()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "listlocalfiles()",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L28"
-    },
-    {
-      "id": "src_services_localknowledge_savelocalfile",
-      "label": "saveLocalFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "savelocalfile()",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L14"
-    },
-    {
       "id": "scratch_test_restaurant_validation",
       "label": "test_restaurant_validation.ts",
       "_origin": "ast",
@@ -4273,6 +4261,17 @@
       "source_location": "L8"
     },
     {
+      "id": "src_index",
+      "label": "index.ts",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "index.ts",
+      "source_file": "src/index.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "src_scratch_check_wa_state",
       "label": "check-wa-state.ts",
       "_origin": "ast",
@@ -4281,6 +4280,50 @@
       "file_type": "code",
       "norm_label": "check-wa-state.ts",
       "source_file": "src/scratch/check-wa-state.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_scratch_test_graceful_shutdown",
+      "label": "test-graceful-shutdown.ts",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "test-graceful-shutdown.ts",
+      "source_file": "src/scratch/test-graceful-shutdown.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_scratch_test_graceful_shutdown_state_file_path",
+      "label": "STATE_FILE_PATH",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "state_file_path",
+      "source_file": "src/scratch/test-graceful-shutdown.ts",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_server_server",
+      "label": "server",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "server",
+      "source_file": "src/server.ts",
+      "source_location": "L7551"
+    },
+    {
+      "id": "src_services_escalation",
+      "label": "escalation.ts",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "escalation.ts",
+      "source_file": "src/services/escalation.ts",
       "source_location": "L1"
     },
     {
@@ -4295,6 +4338,28 @@
       "source_location": "L1"
     },
     {
+      "id": "src_services_shutdownmanager",
+      "label": "shutdownManager.ts",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "shutdownmanager.ts",
+      "source_file": "src/services/shutdownManager.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_services_shutdownmanager_state_file_path",
+      "label": "STATE_FILE_PATH",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "state_file_path",
+      "source_file": "src/services/shutdownManager.ts",
+      "source_location": "L7"
+    },
+    {
       "id": "src_services_whatsapp",
       "label": "whatsapp.ts",
       "_origin": "ast",
@@ -4304,6 +4369,17 @@
       "norm_label": "whatsapp.ts",
       "source_file": "src/services/whatsapp.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "src_services_whatsapp_activewasessions",
+      "label": "activeWaSessions",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "whatsapp.ts",
+      "file_type": "code",
+      "norm_label": "activewasessions",
+      "source_file": "src/services/whatsapp.ts",
+      "source_location": "L31"
     },
     {
       "id": "src_services_whatsapp_client",
@@ -7140,83 +7216,6 @@
       "norm_label": "saaserpmarketing.tsx",
       "source_file": "dashboard/src/components/SaaSErpMarketing.tsx",
       "source_location": "L1"
-    },
-    {
-      "id": "src_index",
-      "label": "index.ts",
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "index.ts",
-      "source_file": "src/index.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_scratch_test_graceful_shutdown",
-      "label": "test-graceful-shutdown.ts",
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "test-graceful-shutdown.ts",
-      "source_file": "src/scratch/test-graceful-shutdown.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_scratch_test_graceful_shutdown_state_file_path",
-      "label": "STATE_FILE_PATH",
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "state_file_path",
-      "source_file": "src/scratch/test-graceful-shutdown.ts",
-      "source_location": "L6"
-    },
-    {
-      "id": "src_services_escalation",
-      "label": "escalation.ts",
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "escalation.ts",
-      "source_file": "src/services/escalation.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_shutdownmanager",
-      "label": "shutdownManager.ts",
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "shutdownmanager.ts",
-      "source_file": "src/services/shutdownManager.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_shutdownmanager_state_file_path",
-      "label": "STATE_FILE_PATH",
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "state_file_path",
-      "source_file": "src/services/shutdownManager.ts",
-      "source_location": "L7"
-    },
-    {
-      "id": "src_services_whatsapp_activewasessions",
-      "label": "activeWaSessions",
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "shutdownManager.ts",
-      "file_type": "code",
-      "norm_label": "activewasessions",
-      "source_file": "src/services/whatsapp.ts",
-      "source_location": "L31"
     },
     {
       "id": "dashboard_src_components_saaserpsalestargets",
@@ -12687,7 +12686,7 @@
       "file_type": "code",
       "norm_label": "colombian_banks",
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L333"
+      "source_location": "L197"
     },
     {
       "id": "dashboard_src_components_systemalertspanel",
@@ -15032,7 +15031,7 @@
       "file_type": "code",
       "norm_label": "diskupload",
       "source_file": "src/server.ts",
-      "source_location": "L1953"
+      "source_location": "L1954"
     },
     {
       "id": "src_server_mediadir",
@@ -15044,17 +15043,6 @@
       "norm_label": "mediadir",
       "source_file": "src/server.ts",
       "source_location": "L106"
-    },
-    {
-      "id": "src_server_server",
-      "label": "server",
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "server.ts",
-      "file_type": "code",
-      "norm_label": "server",
-      "source_file": "src/server.ts",
-      "source_location": "L7550"
     },
     {
       "id": "src_server_upload",
@@ -15088,6 +15076,28 @@
       "norm_label": "factusservice.ts",
       "source_file": "src/services/factusService.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "src_services_localknowledge",
+      "label": "localKnowledge.ts",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "localknowledge.ts",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_services_localknowledge_knowledge_base_dir",
+      "label": "KNOWLEDGE_BASE_DIR",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "server.ts",
+      "file_type": "code",
+      "norm_label": "knowledge_base_dir",
+      "source_file": "src/services/localKnowledge.ts",
+      "source_location": "L4"
     },
     {
       "id": "src_services_pdfgeneratorservice",
@@ -16274,28 +16284,6 @@
       "source_location": "L8"
     },
     {
-      "id": "src_services_localknowledge",
-      "label": "localKnowledge.ts",
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "localknowledge.ts",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_localknowledge_knowledge_base_dir",
-      "label": "KNOWLEDGE_BASE_DIR",
-      "_origin": "ast",
-      "community": 94,
-      "community_name": "drive.ts",
-      "file_type": "code",
-      "norm_label": "knowledge_base_dir",
-      "source_file": "src/services/localKnowledge.ts",
-      "source_location": "L4"
-    },
-    {
       "id": "dashboard_readme",
       "label": "README.md",
       "_origin": "ast",
@@ -16766,7 +16754,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L375",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -17234,7 +17222,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L7558",
+      "source_location": "L7559",
       "weight": 1.0
     },
     {
@@ -17246,7 +17234,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9255",
+      "source_location": "L9256",
       "weight": 1.0
     },
     {
@@ -17258,7 +17246,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9301",
+      "source_location": "L9302",
       "weight": 1.0
     },
     {
@@ -17270,7 +17258,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9777",
+      "source_location": "L9778",
       "weight": 1.0
     },
     {
@@ -17282,7 +17270,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9780",
+      "source_location": "L9781",
       "weight": 1.0
     },
     {
@@ -20738,7 +20726,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/server.ts",
-      "source_location": "L7658",
+      "source_location": "L7659",
       "weight": 1.0
     },
     {
@@ -20810,6 +20798,18 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/services/escalation.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_services_factusservice",
+      "target": "src_database_postgres_pool",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/services/factusService.ts",
       "source_location": "L1",
       "weight": 1.0
     },
@@ -23642,7 +23642,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/server.ts",
-      "source_location": "L7658",
+      "source_location": "L7659",
       "weight": 1.0
     },
     {
@@ -23714,6 +23714,18 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/services/escalation.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_services_factusservice",
+      "target": "src_database_postgres",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/services/factusService.ts",
       "source_location": "L1",
       "weight": 1.0
     },
@@ -26937,24 +26949,13 @@
     },
     {
       "source": "dashboard_src_components_saaserpstoresettings",
-      "target": "dashboard_src_components_saaserpstoresettings_themeselectormanager",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L203",
-      "weight": 1.0
-    },
-    {
-      "source": "dashboard_src_components_saaserpstoresettings",
       "target": "dashboard_src_components_saaserpstoresettings_colombian_banks",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L333",
+      "source_location": "L197",
       "weight": 1.0
     },
     {
@@ -26965,7 +26966,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L354",
+      "source_location": "L218",
       "weight": 1.0
     },
     {
@@ -26976,7 +26977,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L363",
+      "source_location": "L227",
       "weight": 1.0
     },
     {
@@ -35237,7 +35238,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L1668",
+      "source_location": "L1669",
       "weight": 1.0
     },
     {
@@ -35248,7 +35249,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L1953",
+      "source_location": "L1954",
       "weight": 1.0
     },
     {
@@ -35259,7 +35260,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L4248",
+      "source_location": "L4249",
       "weight": 1.0
     },
     {
@@ -35270,7 +35271,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L4254",
+      "source_location": "L4255",
       "weight": 1.0
     },
     {
@@ -35281,7 +35282,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L6398",
+      "source_location": "L6399",
       "weight": 1.0
     },
     {
@@ -35292,7 +35293,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L7550",
+      "source_location": "L7551",
       "weight": 1.0
     },
     {
@@ -36981,7 +36982,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "src/server.ts",
-      "source_location": "L7547",
+      "source_location": "L7548",
       "weight": 1.0
     },
     {
@@ -36998,5 +36999,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "6066de8d39b16608978944fca02fdf31ee261f9f"
+  "built_at_commit": "028f11edbf9124d2036f5a2b4b1bbeaacc8b945c"
 }

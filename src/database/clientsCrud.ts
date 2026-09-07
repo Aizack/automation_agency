@@ -73,6 +73,7 @@ export const getClientById = async (id: string): Promise<ClientConfig | null> =>
         first_message_notified AS "firstMessageNotified",
         is_activated AS "isActivated",
         category,
+        person_type AS "personType",
         enabled_modules AS "enabledModules",
         logo_url,
         nit,

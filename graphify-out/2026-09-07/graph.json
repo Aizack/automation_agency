@@ -16622,7 +16622,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L1445",
+      "source_location": "L1512",
       "weight": 1.0
     },
     {
@@ -36998,5 +36998,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1bb94999e01327079facfc585cfb096f216393c6"
+  "built_at_commit": "6066de8d39b16608978944fca02fdf31ee261f9f"
 }

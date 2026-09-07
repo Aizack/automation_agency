@@ -49,7 +49,8 @@ export const initDatabase = async () => {
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_message_notified BOOLEAN DEFAULT FALSE;`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_activated BOOLEAN DEFAULT FALSE;`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'optica';`);
-        console.log("[DB Init] ✅ Tabla 'clients' creada y alterada con columnas de Login, agent_phone, drive_folder_id, owner_phone, first_message_notified, is_activated y category.");
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS person_type VARCHAR(30) DEFAULT 'persona_juridica';`);
+        console.log("[DB Init] ✅ Tabla 'clients' creada y alterada con columnas de Login, agent_phone, drive_folder_id, owner_phone, first_message_notified, is_activated, category y person_type.");
 
         // 2.1 Crear tabla users (usuarios de plataforma) y user_client_roles (acceso multi-tenant)
         await pool.query(`

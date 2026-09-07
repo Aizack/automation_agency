@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
-    "mtime": 1788744942.4046743,
-    "seen": 1788747134.536916,
-    "ast_hash": "1cb0419d84c7221b052c42366aa2d6dc",
+    "mtime": 1788761971.9760416,
+    "seen": 1788762024.9259055,
+    "ast_hash": "a8df5242b644d1d3dd0283d74e8e6ad9",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpStoreSettings.tsx": {
-    "mtime": 1788744942.4046743,
-    "seen": 1788747134.536942,
-    "ast_hash": "98908b96df76b31486ce7f45d35f5974",
+    "mtime": 1788761959.1333666,
+    "seen": 1788762024.9259207,
+    "ast_hash": "9e4175d85dd9a696121830817f3d634f",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSuppliers.tsx": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1788744942.421702,
-    "seen": 1788747134.5371203,
-    "ast_hash": "8b3b3201d1c8e33342893df81946a215",
+    "mtime": 1788759776.8810172,
+    "seen": 1788760235.7898583,
+    "ast_hash": "6ff70e07fbd6b6a46cc5f0b7f1416dd8",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -834,9 +834,9 @@
     "semantic_hash": ""
   },
   "dashboard/index.html": {
-    "mtime": 1788494605.6046913,
-    "seen": 1788747134.5372686,
-    "ast_hash": "188721c37d9daed7ecd2923cb131b140",
+    "mtime": 1788760843.5350006,
+    "seen": 1788760958.8730676,
+    "ast_hash": "7304ad9b9c099ea6571e88185bc45e04",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -1158,9 +1158,9 @@
     "semantic_hash": ""
   },
   "src/services/factusService.ts": {
-    "mtime": 1788744942.4242115,
-    "seen": 1788747134.5371332,
-    "ast_hash": "6d3de589de5393fd50a4dd605ef88b69",
+    "mtime": 1788759857.1381352,
+    "seen": 1788760235.789866,
+    "ast_hash": "b0856a5960b2281ccc71e143cd39471d",
     "semantic_hash": ""
   },
   "REDISENO_WABI_SABI_GUIA.md": {

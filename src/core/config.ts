@@ -17,6 +17,7 @@ export interface ClientConfig {
   firstMessageNotified?: boolean;
   isActivated?: boolean;
   category?: string;
+  personType?: string;
   enabledModules?: any;
   logo_url?: string;
   nit?: string;
@@ -44,6 +45,7 @@ export const getClientConfigByPhone = async (phone: string): Promise<ClientConfi
         first_message_notified AS "firstMessageNotified",
         is_activated AS "isActivated",
         category,
+        person_type AS "personType",
         enabled_modules AS "enabledModules",
         logo_url,
         nit,
@@ -84,6 +86,7 @@ export const getClientConfigById = async (id: string): Promise<ClientConfig | nu
         first_message_notified AS "firstMessageNotified",
         is_activated AS "isActivated",
         category,
+        person_type AS "personType",
         enabled_modules AS "enabledModules",
         logo_url,
         nit,

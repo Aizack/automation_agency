@@ -668,13 +668,30 @@ app.post('/api/clients/:clientId/register-business', authenticateToken as any, a
 app.put('/api/clients/:clientId/profile-settings', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { name, nit, address, phone_number, email, invoice_footer } = req.body;
+    const { name, nit, address, phone_number, email, invoice_footer, category, person_type } = req.body;
 
     await pool.query(`
       UPDATE clients 
-      SET name = COALESCE($1, name), nit = $2, address = $3, phone_number = $4, email = $5, invoice_footer = $6
-      WHERE id = $7
-    `, [name || null, nit || null, address || null, phone_number || null, email || null, invoice_footer || null, clientId]);
+      SET name = COALESCE($1, name), 
+          nit = $2, 
+          address = $3, 
+          phone_number = $4, 
+          email = $5, 
+          invoice_footer = $6,
+          category = COALESCE($7, category),
+          person_type = COALESCE($8, person_type)
+      WHERE id = $9
+    `, [
+      name || null, 
+      nit || null, 
+      address || null, 
+      phone_number || null, 
+      email || null, 
+      invoice_footer || null, 
+      category || null, 
+      person_type || null, 
+      clientId
+    ]);
 
     res.json({ success: true, message: 'Configuración comercial de la tienda guardada con éxito.' });
   } catch (err: any) {

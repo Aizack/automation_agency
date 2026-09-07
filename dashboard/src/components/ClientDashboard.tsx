@@ -945,7 +945,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                       onClick={() => setActiveTab('dian_habilitacion')} 
                       className={activeTab === 'dian_habilitacion' ? 'active-link' : ''}
                     >
-                      Habilitación DIAN <span className="text-[9px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-1 py-0.5 rounded font-mono font-bold ml-1">DIAN ⚡</span>
+                      Habilitación DIAN
                     </button>
                   </li>
                 )}
@@ -1780,7 +1780,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         )}
 
         {activeTab === 'configuracion' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpStoreSettings clientId={clientId} onProfileUpdated={() => {
               // Recargar datos
               fetch(`/api/clients/${clientId}`)
