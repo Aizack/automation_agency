@@ -1,16 +1,16 @@
 # Graph Report - Bot multi-tenant-exp  (2026-09-06)
 
 ## Corpus Check
-- 178 files · ~379,586 words
+- 178 files · ~387,078 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1390 nodes · 1799 edges · 138 communities (117 shown, 21 thin omitted)
+- 1390 nodes · 1795 edges · 137 communities (116 shown, 21 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 7 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8b24c343`
+- Built from commit: `8ba06159`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -42,11 +42,11 @@
 - SaaSErpInvoices.tsx
 - 🧪 GUÍA DE TESTING: Sistema de Gestión de Errores y Logging
 - Plan de Implementación: Módulo Contable, Métodos de Pago y Rotación de Inventario
-- api.ts
+- 📄 ANÁLISIS, DISEÑO ARQUITECTÓNICO Y PLAN OFICIAL: MÓDULO DE CONTABILIDAD Y NÓMINA ELECTRÓNICA UNIFICADA
 - uploadTenantFile
 - 🚨 Error 502 Bad Gateway - Diagnosis & Solutions
 - Documentación Permanente de Cambios, Seguridad y Módulo de Cotizaciones (2026)
-- 📄 ANÁLISIS, DISEÑO ARQUITECTÓNICO Y PLAN OFICIAL: MÓDULO DE CONTABILIDAD Y NÓMINA ELECTRÓNICA UNIFICADA
+- api.ts
 - 2. 🔒 Protección de Memoria en el Navegador (`sessionStorage` + Limpieza Atómica)
 - Plan de Mejoras Arquitectónicas
 - dashboard/tsconfig.json
@@ -118,37 +118,36 @@
 - rules/graphify.md
 - workflows/graphify.md
 - optometry_rules.md
-- SaaSErpQuotes.tsx
 - Detalle de cada Paso del Wizard:
+- SaaSErpAuditLogs.tsx
 - QUICK_START.md
 - 🛡️ Reglas de Seguridad de Git y Estrategia de Ramas
-- 🏢 Documentación Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotación Dinámica de Personal (2026)
+- PublicRestaurantMenu.tsx
 - RestaurantMenuBuilder.tsx
-- SaaSErpCartera.tsx
-- 📜 Guía y Hoja de Ruta: Rediseño Wabi-Sabi Paper (KOI ERP)
+- 🏢 Documentación Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotación Dinámica de Personal (2026)
+- SaaSErpSuppliers.tsx
 - package.json
 - dotenv
 - qrcode-terminal
 - @types/bcrypt
+- SaaSErpSupportDocuments.tsx
+- 📜 Guía y Hoja de Ruta: Rediseño Wabi-Sabi Paper (KOI ERP)
 - 📋 2. PLAN DE IMPLEMENTACIÓN TÉCNICA
-- SaaSErpSupportTickets.tsx
+- SaaSErpCRM.tsx
 - 📋 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)
 - 2. Principios de Diseño para Alta Disponibilidad
 - 3. Catálogo de Propuestas de Maquetación (HTML Mockups)
-- PublicRestaurantMenu.tsx
+- SaaSErpAiAgentModule.tsx
 - RestaurantKdsDisplay.tsx
 - SaaSErpDomicilios.tsx
+- SaaSErpMarketing.tsx
+- scheduler.ts
 - SaaSErpSalesTargets.tsx
 - test-pre-recorded-voice.ts
-- SaaSErpAiAgentModule.tsx
-- SaaSErpCRM.tsx
-- SaaSErpMarketing.tsx
-- SaaSErpSuppliers.tsx
-- scheduler.ts
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 43 edges
-2. `pool` - 35 edges
+2. `pool` - 34 edges
 3. `authFetch()` - 28 edges
 4. `compilerOptions` - 18 edges
 5. `compilerOptions` - 15 edges
@@ -173,7 +172,7 @@
 ## Import Cycles
 - 2-file cycle: `src/server.ts -> src/services/shutdownManager.ts -> src/server.ts`
 
-## Communities (138 total, 21 thin omitted)
+## Communities (137 total, 21 thin omitted)
 
 ### Community 0 - "postgres.ts"
 Cohesion: 0.11
@@ -196,8 +195,8 @@ Cohesion: 0.17
 Nodes (11): AuthFast(), AuthFastProps, LandingPage(), LandingPageProps, LegalDocsModal(), LegalDocsModalProps, Login(), LoginProps (+3 more)
 
 ### Community 5 - "ClientDashboard.tsx"
-Cohesion: 0.08
-Nodes (23): AgentContact, AudioContact, Client, ClientDashboardProps, Interaction, WhatsappStatus, RawMaterial, RawMaterialsInventory() (+15 more)
+Cohesion: 0.07
+Nodes (25): AgentContact, AudioContact, Client, ClientDashboardProps, Interaction, WhatsappStatus, RawMaterial, RawMaterialsInventory() (+17 more)
 
 ### Community 6 - "SaaSErpCashShifts.tsx"
 Cohesion: 0.40
@@ -283,9 +282,9 @@ Nodes (24): 1. Backend - Confirmar Endpoints, 2. Frontend - Panel de Alertas, 3.
 Cohesion: 0.08
 Nodes (23): 1.1 Cambio de nomenclatura en la UI y BD, 1.2 Campos adicionales para Transferencia Bancaria, 1.3 Actualizar formulario de factura, 2.1 Backend — Endpoints necesarios, 2.2 Frontend — `SaaSErpAccounting.tsx`, 2.3 Integrar en `ClientDashboard.tsx`, 3.1 Migración de BD, 3.2 Endpoints CRUD (+15 more)
 
-### Community 27 - "api.ts"
-Cohesion: 0.26
-Nodes (9): App(), ActivateAccount(), ActivateAccountProps, ClientDashboard(), DocRequest, EmployeePortal(), Task, clearAllSessionData() (+1 more)
+### Community 27 - "📄 ANÁLISIS, DISEÑO ARQUITECTÓNICO Y PLAN OFICIAL: MÓDULO DE CONTABILIDAD Y NÓMINA ELECTRÓNICA UNIFICADA"
+Cohesion: 0.13
+Nodes (14): 1. 🔍 DIAGNÓSTICO DEL MÓDULO ACTUAL ("ADMINISTRACIÓN DE PERSONAL"), 2. 🧱 ARQUITECTURA Y FUNCIONES DEL MÓDULO DE CONTABILIDAD, 3. 🧾 NÓMINA ELECTRÓNICA: ¿DÓNDE DEBE ESTAR Y CÓMO DEBE FUNCIONAR?, 4. 🛠️ MEJORAS ESPECÍFICAS A IMPLEMENTAR, 5. 🎯 CONCLUSIÓN Y PRÓXIMOS PASOS, A. En el Módulo de Administración de Personal:, 📄 ANÁLISIS, DISEÑO ARQUITECTÓNICO Y PLAN OFICIAL: MÓDULO DE CONTABILIDAD Y NÓMINA ELECTRÓNICA UNIFICADA, B. En el Módulo de Contabilidad: (+6 more)
 
 ### Community 28 - "uploadTenantFile"
 Cohesion: 0.73
@@ -299,9 +298,9 @@ Nodes (20): **1. Nginx Proxy NO está corriendo**, **2. Configuración de Nginx 
 Cohesion: 0.11
 Nodes (17): 1. 🛡️ Seguridad y Aislamiento Multi-Tenant, 2. 🔐 Reglas de Permisos de Empleados en Inventario, 3. 📋 Módulo de Cotizaciones y Prospectos Comerciales (CRM), 4. 🎨 Sistema de Diseño Obsidian Gold & Escalado Tipográfico, 5. ⚙️ Reglas Git y Despliegue Automático en VPS, Componentes y Esquema de Base de Datos, Despliegue Continuo (CI/CD), Documentación Permanente de Cambios, Seguridad y Módulo de Cotizaciones (2026) (+9 more)
 
-### Community 32 - "📄 ANÁLISIS, DISEÑO ARQUITECTÓNICO Y PLAN OFICIAL: MÓDULO DE CONTABILIDAD Y NÓMINA ELECTRÓNICA UNIFICADA"
-Cohesion: 0.13
-Nodes (14): 1. 🔍 DIAGNÓSTICO DEL MÓDULO ACTUAL ("ADMINISTRACIÓN DE PERSONAL"), 2. 🧱 ARQUITECTURA Y FUNCIONES DEL MÓDULO DE CONTABILIDAD, 3. 🧾 NÓMINA ELECTRÓNICA: ¿DÓNDE DEBE ESTAR Y CÓMO DEBE FUNCIONAR?, 4. 🛠️ MEJORAS ESPECÍFICAS A IMPLEMENTAR, 5. 🎯 CONCLUSIÓN Y PRÓXIMOS PASOS, A. En el Módulo de Administración de Personal:, 📄 ANÁLISIS, DISEÑO ARQUITECTÓNICO Y PLAN OFICIAL: MÓDULO DE CONTABILIDAD Y NÓMINA ELECTRÓNICA UNIFICADA, B. En el Módulo de Contabilidad: (+6 more)
+### Community 32 - "api.ts"
+Cohesion: 0.26
+Nodes (9): App(), ActivateAccount(), ActivateAccountProps, ClientDashboard(), DocRequest, EmployeePortal(), Task, clearAllSessionData() (+1 more)
 
 ### Community 33 - "2. 🔒 Protección de Memoria en el Navegador (`sessionStorage` + Limpieza Atómica)"
 Cohesion: 0.20
@@ -352,8 +351,8 @@ Cohesion: 0.15
 Nodes (12): 📌 1. Visión General y Objetivos, 🗄️ 2. Diseño de Base de Datos y Esquemas SQL, 🔍 3. Consulta de Stock Inter-Sedes & Reserva Exprés, 🖼️ 4. Fotografía Opcional de Producto, 5.1. Creación de Nueva Sede (`SaaSErpStoreSettings.tsx`), 5.2. Selector de Sede ("Store Switcher") en `ClientDashboard.tsx`, 5.3. Reubicación / Traslado de Empleados (`SaaSErpEmployees.tsx`), 🖥️ 5. Componentes Frontend & Flujo de Usuario (+4 more)
 
 ### Community 59 - "authFetch"
-Cohesion: 0.14
-Nodes (13): AdminDashboard(), AdminDashboardProps, Client, Metrics, BankAccount, BankAccountsManager(), COLOMBIAN_BANKS, SaaSErpStoreSettings() (+5 more)
+Cohesion: 0.10
+Nodes (17): AdminDashboard(), AdminDashboardProps, Client, Metrics, CarteraProps, Installment, Invoice, SaaSErpCartera() (+9 more)
 
 ### Community 60 - "🎯 Plan Estratégico: Monetización, Seguridad Zero-Trust y Sistema de Temas Visuales"
 Cohesion: 0.17
@@ -523,93 +522,89 @@ Nodes (4): 3.1. Usuario global vs negocio, 3.2. Empleado vs usuario, 3.3. Client
 Cohesion: 0.67
 Nodes (3): 7. Optimización de ruta, Cuándo sí usar Google Maps, Método recomendado
 
-### Community 107 - "SaaSErpQuotes.tsx"
-Cohesion: 0.33
-Nodes (5): Product, Quote, QuoteItem, SaaSErpQuotes(), SaaSErpQuotesProps
-
-### Community 108 - "Detalle de cada Paso del Wizard:"
+### Community 107 - "Detalle de cada Paso del Wizard:"
 Cohesion: 0.13
 Nodes (14): 1. 🔍 DIAGNÓSTICO Y DECISIÓN DE PROVEEDOR TECNOLÓGICO, 2. 🎨 ARQUITECTURA DE EXPERIENCIA DE USUARIO (WIZARD ESTILO ALEGRA), 3. 🛠️ COMPONENTES A IMPLEMENTAR EN EL CÓDIGO, 4. 🎯 CONCLUSIÓN, A. Backend (`src/services/factusService.ts` & `src/server.ts`):, B. Frontend (`dashboard/src/components/SaaSErpHabilitacionDian.tsx`):, Detalle de cada Paso del Wizard:, 📄 DOCUMENTO OFICIAL DE ARQUITECTURA Y UX: INTEGRACIÓN FACTUS API Y WIZARD DE HABILITACIÓN DIAN (ESTILO ALEGRA) (+6 more)
+
+### Community 108 - "SaaSErpAuditLogs.tsx"
+Cohesion: 0.50
+Nodes (3): AuditLog, SaaSErpAuditLogs(), SaaSErpAuditLogsProps
 
 ### Community 114 - "🛡️ Reglas de Seguridad de Git y Estrategia de Ramas"
 Cohesion: 0.33
 Nodes (5): ⚠️ 1. REGLAS INVIOLABLES DE SEGURIDAD (ANTI-PÉRDIDA DE CÓDIGO), 🌿 2. ESTRATEGIA Y GESTIÓN DE RAMAS, 📋 3. PASO A PASO PARA TRABAJAR UNA NUEVA TAREA, 🛡️ Reglas de Seguridad de Git y Estrategia de Ramas, Roles de las Ramas:
 
-### Community 115 - "🏢 Documentación Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotación Dinámica de Personal (2026)"
-Cohesion: 0.13
-Nodes (14): 🎯 1. OBJETIVOS DEL PROYECTO, 2.1. Modelo de Datos y Esquemas SQL (`src/database/initDb.ts`), 2.2. Frontend - UI / UX, 2.3. Lógica de Negocio y Backend (`src/server.ts`), 📋 2. PLAN DE IMPLEMENTACIÓN TÉCNICA, 🧪 3. PLAN DE VERIFICACIÓN Y PRUEBAS, 📌 4. WALKTHROUGH & RESUMEN DE CAMBIOS EJECUTADOS, A. Facturación y Ventas (POS) (+6 more)
+### Community 115 - "PublicRestaurantMenu.tsx"
+Cohesion: 0.29
+Nodes (6): CartItem, MenuItem, Modifier, PublicRestaurantMenu(), PublicRestaurantMenuProps, RestaurantInfo
 
 ### Community 116 - "RestaurantMenuBuilder.tsx"
 Cohesion: 0.40
 Nodes (4): Product, RecipeItem, RestaurantMenuBuilder(), RestaurantMenuBuilderProps
 
-### Community 117 - "SaaSErpCartera.tsx"
-Cohesion: 0.40
-Nodes (4): CarteraProps, Installment, Invoice, SaaSErpCartera()
+### Community 117 - "🏢 Documentación Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotación Dinámica de Personal (2026)"
+Cohesion: 0.13
+Nodes (14): 🎯 1. OBJETIVOS DEL PROYECTO, 2.1. Modelo de Datos y Esquemas SQL (`src/database/initDb.ts`), 2.2. Frontend - UI / UX, 2.3. Lógica de Negocio y Backend (`src/server.ts`), 📋 2. PLAN DE IMPLEMENTACIÓN TÉCNICA, 🧪 3. PLAN DE VERIFICACIÓN Y PRUEBAS, 📌 4. WALKTHROUGH & RESUMEN DE CAMBIOS EJECUTADOS, A. Facturación y Ventas (POS) (+6 more)
 
-### Community 118 - "📜 Guía y Hoja de Ruta: Rediseño Wabi-Sabi Paper (KOI ERP)"
-Cohesion: 0.18
-Nodes (10): 1. Menú Lateral Desplegable (`.sidebar-expandable`):, 🎨 1. Sistema de Diseño (Wabi-Sabi Paper), 📐 2. Arquitectura de Layout y Navegación, 2. Barra Superior (`.top-header`):, 🗂️ 3. Estructura Reorganizada del Menú del ERP, 🛠️ 4. Correcciones Técnicas Importantes Realizadas, 🚀 5. Instrucciones para Continuar en un Nuevo Chat, 📜 Guía y Hoja de Ruta: Rediseño Wabi-Sabi Paper (KOI ERP) (+2 more)
+### Community 118 - "SaaSErpSuppliers.tsx"
+Cohesion: 0.40
+Nodes (4): Category, SaaSErpSuppliers(), Supplier, SuppliersProps
 
 ### Community 119 - "package.json"
 Cohesion: 0.40
 Nodes (4): description, main, name, version
 
-### Community 123 - "📋 2. PLAN DE IMPLEMENTACIÓN TÉCNICA"
+### Community 123 - "SaaSErpSupportDocuments.tsx"
+Cohesion: 0.50
+Nodes (3): SaaSErpSupportDocuments(), SaaSErpSupportDocumentsProps, SupportDocument
+
+### Community 124 - "📜 Guía y Hoja de Ruta: Rediseño Wabi-Sabi Paper (KOI ERP)"
+Cohesion: 0.18
+Nodes (10): 1. Menú Lateral Desplegable (`.sidebar-expandable`):, 🎨 1. Sistema de Diseño (Wabi-Sabi Paper), 📐 2. Arquitectura de Layout y Navegación, 2. Barra Superior (`.top-header`):, 🗂️ 3. Estructura Reorganizada del Menú del ERP, 🛠️ 4. Correcciones Técnicas Importantes Realizadas, 🚀 5. Instrucciones para Continuar en un Nuevo Chat, 📜 Guía y Hoja de Ruta: Rediseño Wabi-Sabi Paper (KOI ERP) (+2 more)
+
+### Community 125 - "📋 2. PLAN DE IMPLEMENTACIÓN TÉCNICA"
 Cohesion: 0.20
 Nodes (9): 🎯 1. OBJETIVO DEL PROYECTO, 2.1. Configuración Dinámica de Impuestos por Negocio y Producto, 2.2. Protección de Precios de Costo en Inventario (`SaaSErpInventory.tsx`), 2.3. Filtro por Tipo de Comprobante DIAN (`SaaSErpInvoices.tsx`), 2.4. Módulo de Contabilidad Fiscal & P&L Adaptativo (`SaaSErpAccounting.tsx`), 📋 2. PLAN DE IMPLEMENTACIÓN TÉCNICA, 🧪 3. VERIFICACIÓN Y PRUEBAS AUTOMATIZADAS, 📌 4. WALKTHROUGH & RESUMEN DE CAMBIOS EJECUTADOS (+1 more)
 
-### Community 124 - "SaaSErpSupportTickets.tsx"
-Cohesion: 0.50
-Nodes (3): SaaSErpSupportTickets(), SaaSErpSupportTicketsProps, SupportTicket
-
-### Community 125 - "📋 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)"
-Cohesion: 0.20
-Nodes (9): 📌 1. Alcance de la Migración, 🗺️ 2. Mapeo Oficial de Módulos & Pestañas (`ClientDashboard.tsx`), 📋 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`), A. Campos del Formulario de Producto / Servicio:, B. Matriz de Variantes por Color (Con Cuadrito Muestra 18px):, C. Fototeca por Variante (Panel Derecho Fijo):, D. Modales & Funciones Secundarias Preservadas:, 🏮 Documento Oficial de Migración de Diseño Wabi-Sabi Paper (+1 more)
-
-### Community 126 - "2. Principios de Diseño para Alta Disponibilidad"
-Cohesion: 0.22
-Nodes (8): 1. Visión General y Diagnóstico de Fallas, 2. Principios de Diseño para Alta Disponibilidad, 3. Plan de Implementación por Fases, A. Recorridos Críticos vs. Degradación Controlada (Controlled Degradation), Arquitectura Oficial de Resiliencia, Degradación Controlada e Idempotencia, B. Colas Durables e Idempotencia (Durable Event Queues & Idempotency), C. Descarte de Carga Selectivo (Load Shedding), El Peligro de las Fallas en Cascada (Cascade Failures)
-
-### Community 127 - "3. Catálogo de Propuestas de Maquetación (HTML Mockups)"
-Cohesion: 0.25
-Nodes (7): 1. Referencias Visuales Inspiracionales, 2. Pilares de Diseño Exigidos, 3. Catálogo de Propuestas de Maquetación (HTML Mockups), Concepto y Propuestas de Diseño GUI: Minimalismo Japonés KOI & Estética Editorial ERP, 🟢 Propuesta 1: **KOI Wabi-Sabi Paper (Calma Editorial)**, 🌑 Propuesta 2: **KOI Kuro (Sumi Ink Dark Editorial)**, 🟡 Propuesta 3: **KOI Modern Grid (Magazine & Bloques de Acento)**
-
-### Community 128 - "PublicRestaurantMenu.tsx"
-Cohesion: 0.29
-Nodes (6): CartItem, MenuItem, Modifier, PublicRestaurantMenu(), PublicRestaurantMenuProps, RestaurantInfo
-
-### Community 129 - "RestaurantKdsDisplay.tsx"
-Cohesion: 0.40
-Nodes (4): KdsItem, KdsOrder, RestaurantKdsDisplay(), RestaurantKdsDisplayProps
-
-### Community 130 - "SaaSErpDomicilios.tsx"
-Cohesion: 0.40
-Nodes (4): DomiciliosProps, Employee, Invoice, SaaSErpDomicilios()
-
-### Community 131 - "SaaSErpSalesTargets.tsx"
-Cohesion: 0.50
-Nodes (3): EmployeeSalesTarget, SaaSErpSalesTargets(), SaaSErpSalesTargetsProps
-
-### Community 133 - "SaaSErpAiAgentModule.tsx"
-Cohesion: 0.29
-Nodes (6): AgentContact, AudioContact, Interaction, SaaSErpAiAgentModule(), SaaSErpAiAgentModuleProps, WhatsappStatus
-
-### Community 134 - "SaaSErpCRM.tsx"
+### Community 126 - "SaaSErpCRM.tsx"
 Cohesion: 0.40
 Nodes (4): Customer, Invoice, SaaSErpCRM(), SaaSErpCRMProps
 
-### Community 135 - "SaaSErpMarketing.tsx"
+### Community 127 - "📋 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)"
+Cohesion: 0.20
+Nodes (9): 📌 1. Alcance de la Migración, 🗺️ 2. Mapeo Oficial de Módulos & Pestañas (`ClientDashboard.tsx`), 📋 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`), A. Campos del Formulario de Producto / Servicio:, B. Matriz de Variantes por Color (Con Cuadrito Muestra 18px):, C. Fototeca por Variante (Panel Derecho Fijo):, D. Modales & Funciones Secundarias Preservadas:, 🏮 Documento Oficial de Migración de Diseño Wabi-Sabi Paper (+1 more)
+
+### Community 128 - "2. Principios de Diseño para Alta Disponibilidad"
+Cohesion: 0.22
+Nodes (8): 1. Visión General y Diagnóstico de Fallas, 2. Principios de Diseño para Alta Disponibilidad, 3. Plan de Implementación por Fases, A. Recorridos Críticos vs. Degradación Controlada (Controlled Degradation), Arquitectura Oficial de Resiliencia, Degradación Controlada e Idempotencia, B. Colas Durables e Idempotencia (Durable Event Queues & Idempotency), C. Descarte de Carga Selectivo (Load Shedding), El Peligro de las Fallas en Cascada (Cascade Failures)
+
+### Community 129 - "3. Catálogo de Propuestas de Maquetación (HTML Mockups)"
+Cohesion: 0.25
+Nodes (7): 1. Referencias Visuales Inspiracionales, 2. Pilares de Diseño Exigidos, 3. Catálogo de Propuestas de Maquetación (HTML Mockups), Concepto y Propuestas de Diseño GUI: Minimalismo Japonés KOI & Estética Editorial ERP, 🟢 Propuesta 1: **KOI Wabi-Sabi Paper (Calma Editorial)**, 🌑 Propuesta 2: **KOI Kuro (Sumi Ink Dark Editorial)**, 🟡 Propuesta 3: **KOI Modern Grid (Magazine & Bloques de Acento)**
+
+### Community 130 - "SaaSErpAiAgentModule.tsx"
+Cohesion: 0.29
+Nodes (5): AgentContact, AudioContact, Interaction, SaaSErpAiAgentModuleProps, WhatsappStatus
+
+### Community 131 - "RestaurantKdsDisplay.tsx"
+Cohesion: 0.40
+Nodes (4): KdsItem, KdsOrder, RestaurantKdsDisplay(), RestaurantKdsDisplayProps
+
+### Community 132 - "SaaSErpDomicilios.tsx"
+Cohesion: 0.40
+Nodes (4): DomiciliosProps, Employee, Invoice, SaaSErpDomicilios()
+
+### Community 133 - "SaaSErpMarketing.tsx"
 Cohesion: 0.40
 Nodes (4): Campaign, CampaignLog, SaaSErpMarketing(), SaaSErpMarketingProps
 
-### Community 136 - "SaaSErpSuppliers.tsx"
-Cohesion: 0.40
-Nodes (4): Category, SaaSErpSuppliers(), Supplier, SuppliersProps
-
-### Community 137 - "scheduler.ts"
+### Community 134 - "scheduler.ts"
 Cohesion: 0.70
 Nodes (4): checkAndSendReminders(), delay(), formatCurrency(), startScheduler()
+
+### Community 135 - "SaaSErpSalesTargets.tsx"
+Cohesion: 0.50
+Nodes (3): EmployeeSalesTarget, SaaSErpSalesTargets(), SaaSErpSalesTargetsProps
 
 ## Knowledge Gaps
 - **791 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+786 more)
@@ -619,8 +614,8 @@ Nodes (4): checkAndSendReminders(), delay(), formatCurrency(), startScheduler()
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `PublicRestaurantMenu.tsx`, `RestaurantKdsDisplay.tsx`, `SaaSErpDomicilios.tsx`, `SaaSErpInventory.tsx`, `SaaSErpSalesTargets.tsx`, `ClientDashboard.tsx`, `SaaSErpAiAgentModule.tsx`, `SaaSErpCashShifts.tsx`, `SaaSErpCRM.tsx`, `SaaSErpMarketing.tsx`, `SaaSErpSuppliers.tsx`, `RestaurantWaiterPortal.tsx`, `SaaSErpEmployees.tsx`, `plugins`, `EnterprisePlanningModule.tsx`, `SaaSErpAccounting.tsx`, `SaaSErpAppointments.tsx`, `SaaSErpInvoices.tsx`, `api.ts`, `authFetch`, `SaaSErpFormulas.tsx`, `SaaSErpInvoices2.tsx`, `SaaSErpUsers.tsx`, `SaaSErpQuotes.tsx`, `RestaurantMenuBuilder.tsx`, `SaaSErpCartera.tsx`, `SaaSErpSupportTickets.tsx`?**
-  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+- **Why does `react` connect `react` to `SaaSErpAiAgentModule.tsx`, `RestaurantKdsDisplay.tsx`, `SaaSErpDomicilios.tsx`, `ClientDashboard.tsx`, `SaaSErpCashShifts.tsx`, `SaaSErpInventory.tsx`, `SaaSErpMarketing.tsx`, `SaaSErpSalesTargets.tsx`, `RestaurantWaiterPortal.tsx`, `SaaSErpEmployees.tsx`, `plugins`, `EnterprisePlanningModule.tsx`, `SaaSErpAccounting.tsx`, `SaaSErpAppointments.tsx`, `SaaSErpInvoices.tsx`, `api.ts`, `authFetch`, `SaaSErpFormulas.tsx`, `SaaSErpInvoices2.tsx`, `SaaSErpUsers.tsx`, `SaaSErpAuditLogs.tsx`, `PublicRestaurantMenu.tsx`, `RestaurantMenuBuilder.tsx`, `SaaSErpSuppliers.tsx`, `SaaSErpSupportDocuments.tsx`, `SaaSErpCRM.tsx`?**
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **Why does `Informe de análisis técnico por fases` connect `Informe de análisis técnico por fases` to `INFORME_ANALISIS_FASES.md`, `12. Recomendación de optimización por prioridad`, `10. Fase 8: WhatsApp, IA y automatización`, `11. Fase 9: Frontend, navegación y experiencia de usuario`, `3. Fase 1: Infraestructura base y arranque del sistema`, `4. Fase 2: Multi-tenancy, usuarios, roles y permisos`, `5. Fase 3: CRM, clientes y relación con facturación`, `6. Fase 4: Facturación, cartera y pagos`, `7. Fase 5: Inventario, proveedores y compras`, `8. Fase 6: Laboratorio y domicilios`, `9. Fase 7: Empleados, departments, roles y RRHH`?**
   _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **Why does `StructuredLogger` connect `logger.ts` to `server.ts`?**

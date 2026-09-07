@@ -37,6 +37,10 @@ html,
   --text-main: #161616;
   --text-muted: #6B6862;
   
+  --koi-vermilion: #D9381E;
+  --koi-vermilion-hover: #b82b14;
+  --koi-vermilion-light: rgba(217, 56, 30, 0.08);
+
   --primary-color: #D9381E;
   --primary-hover: #b82b14;
   --on-primary: #FFFFFF;
@@ -61,6 +65,11 @@ html,
   --on-surface-variant-val: #6B6862;
   --outline-color: #E2DFD7;
   --outline-variant-color: #161616;
+
+  --border-thin: #E2DFD7;
+  --border-strong: #161616;
+
+  --font-serif: "Instrument Serif", Georgia, serif;
 
   --card-bg: #FFFFFF;
   --card-border: #E2DFD7;
@@ -906,6 +915,13 @@ label,
 /* ==========================================================================
    WABI-SABI PAPER SYSTEM (PROPUESTA PRINCIPAL KOI ERP)
    ========================================================================== */
+/* Restablecimiento Estricto de Tarjetas Cuadradas Wabi-Sabi Paper (Sin Bordes Ovalados) */
+[data-theme='wabi-sabi-koi'] .rounded-3xl,
+[data-theme='wabi-sabi-koi'] .rounded-2xl,
+[data-theme='wabi-sabi-koi'] .rounded-xl {
+  border-radius: 4px !important;
+}
+
 .sidebar-expandable {
   width: 64px;
   height: 100vh;

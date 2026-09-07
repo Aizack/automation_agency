@@ -158,32 +158,32 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
   ];
 
   return (
-    <div className="space-y-8 text-[#1C1B1A] font-sans max-w-[1400px] mx-auto pb-12">
-      <div className="bg-white border border-[#E2DFD7] rounded-3xl p-6 sm:p-8 shadow-sm">
+    <div className="space-y-8 text-[#161616] font-sans max-w-[1400px] mx-auto pb-12">
+      <div className="bg-white border border-[#E2DFD7] rounded-[4px] p-6 sm:p-8 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[#E2DFD7]/60">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#C84B31]/10 text-[#C84B31] border border-[#C84B31]/20">
+              <span className="px-2.5 py-0.5 rounded-[4px] text-[10px] font-bold uppercase tracking-wider bg-[#D9381E]/10 text-[#D9381E] border border-[#D9381E]/20">
                 Agente IA Frant
               </span>
-              <span className="text-xs text-[#6E6B65] font-mono">• {clientData?.name}</span>
+              <span className="text-xs text-[#6B6862] font-mono">• {clientData?.name}</span>
             </div>
-            <h2 className="text-3xl font-display font-normal text-[#1C1B1A] mt-1 flex items-center gap-3">
+            <h2 className="text-3xl font-serif font-normal text-[#161616] mt-1 flex items-center gap-3">
               Módulo de Inteligencia Artificial
             </h2>
-            <p className="text-xs text-[#6E6B65] mt-1 max-w-2xl">
+            <p className="text-xs text-[#6B6862] mt-1 max-w-2xl">
               Gestiona el comportamiento del bot en el panel de configuración o consulta el historial de conversaciones y métricas de rendimiento en tiempo real.
             </p>
           </div>
 
-          <div className="flex gap-2 p-1.5 bg-[#FAF8F3] rounded-2xl border border-[#E2DFD7] shrink-0 self-start md:self-auto">
+          <div className="flex gap-2 p-1.5 bg-[#FAF8F3] rounded-[4px] border border-[#E2DFD7] shrink-0 self-start md:self-auto">
             <button
               type="button"
               onClick={() => setMainView('resultados')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              className={`px-5 py-2.5 rounded-[4px] text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 mainView === 'resultados' 
-                  ? 'bg-[#C84B31] text-white shadow-sm' 
-                  : 'text-[#6E6B65] hover:text-[#1C1B1A]'
+                  ? 'bg-[#D9381E] text-white shadow-sm' 
+                  : 'text-[#6B6862] hover:text-[#161616]'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">query_stats</span>
@@ -193,10 +193,10 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
             <button
               type="button"
               onClick={() => setMainView('configuracion')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              className={`px-5 py-2.5 rounded-[4px] text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                 mainView === 'configuracion' 
-                  ? 'bg-[#C84B31] text-white shadow-sm' 
-                  : 'text-[#6E6B65] hover:text-[#1C1B1A]'
+                  ? 'bg-[#D9381E] text-white shadow-sm' 
+                  : 'text-[#6B6862] hover:text-[#161616]'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">settings</span>
@@ -209,45 +209,45 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
       {mainView === 'resultados' && (
         <div className="space-y-8 animate-fade-in">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="bg-white border border-[#E2DFD7] p-6 rounded-3xl shadow-sm relative overflow-hidden">
-              <span className="text-[10px] font-bold text-[#6E6B65] uppercase tracking-wider block font-mono">
+            <div className="bg-white border border-[#E2DFD7] p-6 rounded-[4px] shadow-sm relative overflow-hidden">
+              <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider block font-mono">
                 ROI DE AUTOMATIZACIÓN
               </span>
-              <div className="text-3xl font-display text-[#C84B31] mt-2 font-normal">
+              <div className="text-3xl font-serif text-[#D9381E] mt-2 font-normal">
                 +{metrics.roi > 0 ? metrics.roi.toFixed(1) : '250.0'}%
               </div>
-              <span className="text-[11px] text-[#6E6B65] mt-1 block">Eficiencia estimada del negocio</span>
+              <span className="text-[11px] text-[#6B6862] mt-1 block">Eficiencia estimada del negocio</span>
             </div>
 
-            <div className="bg-white border border-[#E2DFD7] p-6 rounded-3xl shadow-sm relative overflow-hidden">
-              <span className="text-[10px] font-bold text-[#6E6B65] uppercase tracking-wider block font-mono">
+            <div className="bg-white border border-[#E2DFD7] p-6 rounded-[4px] shadow-sm relative overflow-hidden">
+              <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider block font-mono">
                 CHATS ATENDIDOS
               </span>
-              <div className="text-3xl font-display text-[#1C1B1A] mt-2 font-normal">
+              <div className="text-3xl font-serif text-[#161616] mt-2 font-normal">
                 {metrics.totalChats}
               </div>
-              <span className="text-[11px] text-[#6E6B65] mt-1 block">
+              <span className="text-[11px] text-[#6B6862] mt-1 block">
                 Costo acumulado: ${metrics.totalCost.toFixed(4)} USD
               </span>
             </div>
 
-            <div className="bg-white border border-[#E2DFD7] p-6 rounded-3xl shadow-sm relative overflow-hidden">
-              <span className="text-[10px] font-bold text-[#6E6B65] uppercase tracking-wider block font-mono">
+            <div className="bg-white border border-[#E2DFD7] p-6 rounded-[4px] shadow-sm relative overflow-hidden">
+              <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider block font-mono">
                 TIEMPO AHORRADO
               </span>
-              <div className="text-3xl font-display text-[#1C1B1A] mt-2 font-normal">
-                {metrics.hoursSaved.toFixed(1)} <span className="text-sm text-[#6E6B65] font-sans">Horas</span>
+              <div className="text-3xl font-serif text-[#161616] mt-2 font-normal">
+                {metrics.hoursSaved.toFixed(1)} <span className="text-sm text-[#6B6862] font-sans">Horas</span>
               </div>
-              <span className="text-[11px] text-[#6E6B65] mt-1 block">Trabajo humano delegado al Bot</span>
+              <span className="text-[11px] text-[#6B6862] mt-1 block">Trabajo humano delegado al Bot</span>
             </div>
 
-            <div className="bg-white border border-[#E2DFD7] p-6 rounded-3xl shadow-sm relative overflow-hidden">
-              <span className="text-[10px] font-bold text-[#6E6B65] uppercase tracking-wider block font-mono">
+            <div className="bg-white border border-[#E2DFD7] p-6 rounded-[4px] shadow-sm relative overflow-hidden">
+              <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider block font-mono">
                 CANAL WHATSAPP
               </span>
               <div className="text-xl font-bold mt-2 flex items-center gap-2">
                 <span className={`w-3 h-3 rounded-full ${isWaConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-                <span className={isWaConnected ? 'text-emerald-700' : 'text-amber-700'}>
+                <span className={isWaConnected ? 'text-emerald-700 font-mono font-bold uppercase' : 'text-amber-700 font-mono font-bold uppercase'}>
                   {isWaConnected ? 'CONECTADO' : 'PENDIENTE'}
                 </span>
               </div>

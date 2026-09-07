@@ -145,7 +145,8 @@ function App() {
 
           if (user.role === 'superadmin') {
             const savedClientId = localStorage.getItem('current_client_id');
-            if ((currentPath === '/client' || currentPath === '/') && savedClientId && localStorage.getItem('view_as_client') === 'true') {
+            const viewAsClient = localStorage.getItem('view_as_client');
+            if (savedClientId && viewAsClient === 'true') {
               setClientId(savedClientId);
               setView('client');
             } else {
@@ -267,6 +268,7 @@ function App() {
     if (sessionRole === 'superadmin') {
       setView('admin');
       localStorage.setItem('current_view', 'admin');
+      localStorage.removeItem('view_as_client');
       localStorage.removeItem('current_client_id');
       localStorage.removeItem('client_active_tab');
     } else {
@@ -276,10 +278,10 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#070b13] text-white flex flex-col items-center justify-center font-sans">
+      <div className="min-h-screen bg-[#F6F4EE] text-[#161616] flex flex-col items-center justify-center font-sans">
         <div className="flex flex-col items-center space-y-4">
-          <div className="w-12 h-12 border-4 border-[#0a5cff] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm text-gray-400 font-bold uppercase tracking-wider animate-pulse">Verificando sesión segura...</p>
+          <div className="w-10 h-10 border-3 border-[#D9381E] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs text-[#6B6862] font-bold uppercase tracking-wider animate-pulse font-mono">Verificando sesión segura...</p>
         </div>
       </div>
     );

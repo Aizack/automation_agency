@@ -95,56 +95,95 @@
       "source_location": "L26"
     },
     {
-      "id": "dashboard_src_components_saaserpquotes_product",
-      "label": "Product",
+      "id": "dashboard_src_components_saaserpauditlogs_auditlog",
+      "label": "AuditLog",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 107,
-      "community_name": "SaaSErpQuotes.tsx",
+      "community": 108,
+      "community_name": "SaaSErpAuditLogs.tsx",
       "file_type": "code",
-      "norm_label": "product",
-      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
-      "source_location": "L36"
-    },
-    {
-      "id": "dashboard_src_components_saaserpquotes_quote",
-      "label": "Quote",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 107,
-      "community_name": "SaaSErpQuotes.tsx",
-      "file_type": "code",
-      "norm_label": "quote",
-      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
-      "source_location": "L15"
-    },
-    {
-      "id": "dashboard_src_components_saaserpquotes_quoteitem",
-      "label": "QuoteItem",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 107,
-      "community_name": "SaaSErpQuotes.tsx",
-      "file_type": "code",
-      "norm_label": "quoteitem",
-      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
+      "norm_label": "auditlog",
+      "source_file": "dashboard/src/components/SaaSErpAuditLogs.tsx",
       "source_location": "L5"
     },
     {
-      "id": "dashboard_src_components_saaserpquotes_saaserpquotesprops",
-      "label": "SaaSErpQuotesProps",
+      "id": "dashboard_src_components_saaserpauditlogs_saaserpauditlogsprops",
+      "label": "SaaSErpAuditLogsProps",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 107,
-      "community_name": "SaaSErpQuotes.tsx",
+      "community": 108,
+      "community_name": "SaaSErpAuditLogs.tsx",
       "file_type": "code",
-      "norm_label": "saaserpquotesprops",
-      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
-      "source_location": "L45"
+      "norm_label": "saaserpauditlogsprops",
+      "source_file": "dashboard/src/components/SaaSErpAuditLogs.tsx",
+      "source_location": "L21"
+    },
+    {
+      "id": "dashboard_src_components_publicrestaurantmenu_cartitem",
+      "label": "CartItem",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "PublicRestaurantMenu.tsx",
+      "file_type": "code",
+      "norm_label": "cartitem",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L18"
+    },
+    {
+      "id": "dashboard_src_components_publicrestaurantmenu_menuitem",
+      "label": "MenuItem",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "PublicRestaurantMenu.tsx",
+      "file_type": "code",
+      "norm_label": "menuitem",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "dashboard_src_components_publicrestaurantmenu_modifier",
+      "label": "Modifier",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "PublicRestaurantMenu.tsx",
+      "file_type": "code",
+      "norm_label": "modifier",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L3"
+    },
+    {
+      "id": "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenuprops",
+      "label": "PublicRestaurantMenuProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "PublicRestaurantMenu.tsx",
+      "file_type": "code",
+      "norm_label": "publicrestaurantmenuprops",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L37"
+    },
+    {
+      "id": "dashboard_src_components_publicrestaurantmenu_restaurantinfo",
+      "label": "RestaurantInfo",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "PublicRestaurantMenu.tsx",
+      "file_type": "code",
+      "norm_label": "restaurantinfo",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L28"
     },
     {
       "id": "dashboard_src_components_restaurantmenubuilder_product",
@@ -186,173 +225,108 @@
       "source_location": "L25"
     },
     {
-      "id": "dashboard_src_components_saaserpcartera_carteraprops",
-      "label": "CarteraProps",
+      "id": "dashboard_src_components_saaserpsuppliers_category",
+      "label": "Category",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 117,
-      "community_name": "SaaSErpCartera.tsx",
+      "community": 118,
+      "community_name": "SaaSErpSuppliers.tsx",
       "file_type": "code",
-      "norm_label": "carteraprops",
-      "source_file": "dashboard/src/components/SaaSErpCartera.tsx",
+      "norm_label": "category",
+      "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
       "source_location": "L5"
     },
     {
-      "id": "dashboard_src_components_saaserpcartera_installment",
-      "label": "Installment",
+      "id": "dashboard_src_components_saaserpsuppliers_supplier",
+      "label": "Supplier",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 117,
-      "community_name": "SaaSErpCartera.tsx",
+      "community": 118,
+      "community_name": "SaaSErpSuppliers.tsx",
       "file_type": "code",
-      "norm_label": "installment",
-      "source_file": "dashboard/src/components/SaaSErpCartera.tsx",
+      "norm_label": "supplier",
+      "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "dashboard_src_components_saaserpsuppliers_suppliersprops",
+      "label": "SuppliersProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 118,
+      "community_name": "SaaSErpSuppliers.tsx",
+      "file_type": "code",
+      "norm_label": "suppliersprops",
+      "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
       "source_location": "L23"
     },
     {
-      "id": "dashboard_src_components_saaserpcartera_invoice",
+      "id": "dashboard_src_components_saaserpsupportdocuments_saaserpsupportdocumentsprops",
+      "label": "SaaSErpSupportDocumentsProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "SaaSErpSupportDocuments.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpsupportdocumentsprops",
+      "source_file": "dashboard/src/components/SaaSErpSupportDocuments.tsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "dashboard_src_components_saaserpsupportdocuments_supportdocument",
+      "label": "SupportDocument",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "SaaSErpSupportDocuments.tsx",
+      "file_type": "code",
+      "norm_label": "supportdocument",
+      "source_file": "dashboard/src/components/SaaSErpSupportDocuments.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcrm_customer",
+      "label": "Customer",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 126,
+      "community_name": "SaaSErpCRM.tsx",
+      "file_type": "code",
+      "norm_label": "customer",
+      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcrm_invoice",
       "label": "Invoice",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 117,
-      "community_name": "SaaSErpCartera.tsx",
+      "community": 126,
+      "community_name": "SaaSErpCRM.tsx",
       "file_type": "code",
       "norm_label": "invoice",
-      "source_file": "dashboard/src/components/SaaSErpCartera.tsx",
-      "source_location": "L9"
+      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
+      "source_location": "L19"
     },
     {
-      "id": "dashboard_src_components_saaserpsupporttickets_saaserpsupportticketsprops",
-      "label": "SaaSErpSupportTicketsProps",
+      "id": "dashboard_src_components_saaserpcrm_saaserpcrmprops",
+      "label": "SaaSErpCRMProps",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 124,
-      "community_name": "SaaSErpSupportTickets.tsx",
+      "community": 126,
+      "community_name": "SaaSErpCRM.tsx",
       "file_type": "code",
-      "norm_label": "saaserpsupportticketsprops",
-      "source_file": "dashboard/src/components/SaaSErpSupportTickets.tsx",
-      "source_location": "L18"
-    },
-    {
-      "id": "dashboard_src_components_saaserpsupporttickets_supportticket",
-      "label": "SupportTicket",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 124,
-      "community_name": "SaaSErpSupportTickets.tsx",
-      "file_type": "code",
-      "norm_label": "supportticket",
-      "source_file": "dashboard/src/components/SaaSErpSupportTickets.tsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "dashboard_src_components_publicrestaurantmenu_cartitem",
-      "label": "CartItem",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 128,
-      "community_name": "PublicRestaurantMenu.tsx",
-      "file_type": "code",
-      "norm_label": "cartitem",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L18"
-    },
-    {
-      "id": "dashboard_src_components_publicrestaurantmenu_menuitem",
-      "label": "MenuItem",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 128,
-      "community_name": "PublicRestaurantMenu.tsx",
-      "file_type": "code",
-      "norm_label": "menuitem",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "dashboard_src_components_publicrestaurantmenu_modifier",
-      "label": "Modifier",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 128,
-      "community_name": "PublicRestaurantMenu.tsx",
-      "file_type": "code",
-      "norm_label": "modifier",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L3"
-    },
-    {
-      "id": "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenuprops",
-      "label": "PublicRestaurantMenuProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 128,
-      "community_name": "PublicRestaurantMenu.tsx",
-      "file_type": "code",
-      "norm_label": "publicrestaurantmenuprops",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L37"
-    },
-    {
-      "id": "dashboard_src_components_publicrestaurantmenu_restaurantinfo",
-      "label": "RestaurantInfo",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 128,
-      "community_name": "PublicRestaurantMenu.tsx",
-      "file_type": "code",
-      "norm_label": "restaurantinfo",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "norm_label": "saaserpcrmprops",
+      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
       "source_location": "L28"
-    },
-    {
-      "id": "dashboard_src_components_restaurantkdsdisplay_kdsitem",
-      "label": "KdsItem",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "RestaurantKdsDisplay.tsx",
-      "file_type": "code",
-      "norm_label": "kdsitem",
-      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
-      "source_location": "L3"
-    },
-    {
-      "id": "dashboard_src_components_restaurantkdsdisplay_kdsorder",
-      "label": "KdsOrder",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "RestaurantKdsDisplay.tsx",
-      "file_type": "code",
-      "norm_label": "kdsorder",
-      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
-      "source_location": "L11"
-    },
-    {
-      "id": "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplayprops",
-      "label": "RestaurantKdsDisplayProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "RestaurantKdsDisplay.tsx",
-      "file_type": "code",
-      "norm_label": "restaurantkdsdisplayprops",
-      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
-      "source_location": "L27"
     },
     {
       "id": "src_middlewares_correlationidmiddleware_request",
@@ -407,77 +381,12 @@
       "source_location": "L7"
     },
     {
-      "id": "dashboard_src_components_saaserpdomicilios_domiciliosprops",
-      "label": "DomiciliosProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "SaaSErpDomicilios.tsx",
-      "file_type": "code",
-      "norm_label": "domiciliosprops",
-      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "dashboard_src_components_saaserpdomicilios_employee",
-      "label": "Employee",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "SaaSErpDomicilios.tsx",
-      "file_type": "code",
-      "norm_label": "employee",
-      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
-      "source_location": "L25"
-    },
-    {
-      "id": "dashboard_src_components_saaserpdomicilios_invoice",
-      "label": "Invoice",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "SaaSErpDomicilios.tsx",
-      "file_type": "code",
-      "norm_label": "invoice",
-      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "dashboard_src_components_saaserpsalestargets_employeesalestarget",
-      "label": "EmployeeSalesTarget",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 131,
-      "community_name": "SaaSErpSalesTargets.tsx",
-      "file_type": "code",
-      "norm_label": "employeesalestarget",
-      "source_file": "dashboard/src/components/SaaSErpSalesTargets.tsx",
-      "source_location": "L5"
-    },
-    {
-      "id": "dashboard_src_components_saaserpsalestargets_saaserpsalestargetsprops",
-      "label": "SaaSErpSalesTargetsProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 131,
-      "community_name": "SaaSErpSalesTargets.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpsalestargetsprops",
-      "source_file": "dashboard/src/components/SaaSErpSalesTargets.tsx",
-      "source_location": "L17"
-    },
-    {
       "id": "dashboard_src_components_saaserpaiagentmodule_agentcontact",
       "label": "AgentContact",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 133,
+      "community": 130,
       "community_name": "SaaSErpAiAgentModule.tsx",
       "file_type": "code",
       "norm_label": "agentcontact",
@@ -490,7 +399,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 133,
+      "community": 130,
       "community_name": "SaaSErpAiAgentModule.tsx",
       "file_type": "code",
       "norm_label": "audiocontact",
@@ -503,7 +412,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 133,
+      "community": 130,
       "community_name": "SaaSErpAiAgentModule.tsx",
       "file_type": "code",
       "norm_label": "interaction",
@@ -516,7 +425,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 133,
+      "community": 130,
       "community_name": "SaaSErpAiAgentModule.tsx",
       "file_type": "code",
       "norm_label": "saaserpaiagentmoduleprops",
@@ -529,7 +438,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 133,
+      "community": 130,
       "community_name": "SaaSErpAiAgentModule.tsx",
       "file_type": "code",
       "norm_label": "whatsappstatus",
@@ -537,43 +446,82 @@
       "source_location": "L26"
     },
     {
-      "id": "dashboard_src_components_saaserpcrm_customer",
-      "label": "Customer",
+      "id": "dashboard_src_components_restaurantkdsdisplay_kdsitem",
+      "label": "KdsItem",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 134,
-      "community_name": "SaaSErpCRM.tsx",
+      "community": 131,
+      "community_name": "RestaurantKdsDisplay.tsx",
       "file_type": "code",
-      "norm_label": "customer",
-      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
+      "norm_label": "kdsitem",
+      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
+      "source_location": "L3"
+    },
+    {
+      "id": "dashboard_src_components_restaurantkdsdisplay_kdsorder",
+      "label": "KdsOrder",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 131,
+      "community_name": "RestaurantKdsDisplay.tsx",
+      "file_type": "code",
+      "norm_label": "kdsorder",
+      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
+      "source_location": "L11"
+    },
+    {
+      "id": "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplayprops",
+      "label": "RestaurantKdsDisplayProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 131,
+      "community_name": "RestaurantKdsDisplay.tsx",
+      "file_type": "code",
+      "norm_label": "restaurantkdsdisplayprops",
+      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
+      "source_location": "L27"
+    },
+    {
+      "id": "dashboard_src_components_saaserpdomicilios_domiciliosprops",
+      "label": "DomiciliosProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "SaaSErpDomicilios.tsx",
+      "file_type": "code",
+      "norm_label": "domiciliosprops",
+      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
       "source_location": "L4"
     },
     {
-      "id": "dashboard_src_components_saaserpcrm_invoice",
+      "id": "dashboard_src_components_saaserpdomicilios_employee",
+      "label": "Employee",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "SaaSErpDomicilios.tsx",
+      "file_type": "code",
+      "norm_label": "employee",
+      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
+      "source_location": "L25"
+    },
+    {
+      "id": "dashboard_src_components_saaserpdomicilios_invoice",
       "label": "Invoice",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 134,
-      "community_name": "SaaSErpCRM.tsx",
+      "community": 132,
+      "community_name": "SaaSErpDomicilios.tsx",
       "file_type": "code",
       "norm_label": "invoice",
-      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
-      "source_location": "L19"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcrm_saaserpcrmprops",
-      "label": "SaaSErpCRMProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "SaaSErpCRM.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpcrmprops",
-      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
-      "source_location": "L28"
+      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
+      "source_location": "L8"
     },
     {
       "id": "dashboard_src_components_saaserpmarketing_campaign",
@@ -581,7 +529,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 135,
+      "community": 133,
       "community_name": "SaaSErpMarketing.tsx",
       "file_type": "code",
       "norm_label": "campaign",
@@ -594,7 +542,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 135,
+      "community": 133,
       "community_name": "SaaSErpMarketing.tsx",
       "file_type": "code",
       "norm_label": "campaignlog",
@@ -607,7 +555,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 135,
+      "community": 133,
       "community_name": "SaaSErpMarketing.tsx",
       "file_type": "code",
       "norm_label": "saaserpmarketingprops",
@@ -615,43 +563,30 @@
       "source_location": "L26"
     },
     {
-      "id": "dashboard_src_components_saaserpsuppliers_category",
-      "label": "Category",
+      "id": "dashboard_src_components_saaserpsalestargets_employeesalestarget",
+      "label": "EmployeeSalesTarget",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 136,
-      "community_name": "SaaSErpSuppliers.tsx",
+      "community": 135,
+      "community_name": "SaaSErpSalesTargets.tsx",
       "file_type": "code",
-      "norm_label": "category",
-      "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
+      "norm_label": "employeesalestarget",
+      "source_file": "dashboard/src/components/SaaSErpSalesTargets.tsx",
       "source_location": "L5"
     },
     {
-      "id": "dashboard_src_components_saaserpsuppliers_supplier",
-      "label": "Supplier",
+      "id": "dashboard_src_components_saaserpsalestargets_saaserpsalestargetsprops",
+      "label": "SaaSErpSalesTargetsProps",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 136,
-      "community_name": "SaaSErpSuppliers.tsx",
+      "community": 135,
+      "community_name": "SaaSErpSalesTargets.tsx",
       "file_type": "code",
-      "norm_label": "supplier",
-      "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
-      "source_location": "L11"
-    },
-    {
-      "id": "dashboard_src_components_saaserpsuppliers_suppliersprops",
-      "label": "SuppliersProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 136,
-      "community_name": "SaaSErpSuppliers.tsx",
-      "file_type": "code",
-      "norm_label": "suppliersprops",
-      "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
-      "source_location": "L23"
+      "norm_label": "saaserpsalestargetsprops",
+      "source_file": "dashboard/src/components/SaaSErpSalesTargets.tsx",
+      "source_location": "L17"
     },
     {
       "id": "dashboard_src_components_restaurantwaiterportal_employee",
@@ -1005,45 +940,6 @@
       "source_location": "L64"
     },
     {
-      "id": "dashboard_src_components_activateaccount_activateaccountprops",
-      "label": "ActivateAccountProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "activateaccountprops",
-      "source_file": "dashboard/src/components/ActivateAccount.tsx",
-      "source_location": "L3"
-    },
-    {
-      "id": "dashboard_src_components_employeeportal_docrequest",
-      "label": "DocRequest",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "docrequest",
-      "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L18"
-    },
-    {
-      "id": "dashboard_src_components_employeeportal_task",
-      "label": "Task",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "task",
-      "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L6"
-    },
-    {
       "id": "dashboard_src_components_saaserpinventory_coloroption",
       "label": "ColorOption",
       "_callable": true,
@@ -1093,7 +989,7 @@
       "file_type": "code",
       "norm_label": "rotationproduct",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2973"
+      "source_location": "L2984"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_saaserpinventoryprops",
@@ -1213,6 +1109,45 @@
       "source_location": "L96"
     },
     {
+      "id": "dashboard_src_components_activateaccount_activateaccountprops",
+      "label": "ActivateAccountProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "activateaccountprops",
+      "source_file": "dashboard/src/components/ActivateAccount.tsx",
+      "source_location": "L3"
+    },
+    {
+      "id": "dashboard_src_components_employeeportal_docrequest",
+      "label": "DocRequest",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "docrequest",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
+      "source_location": "L18"
+    },
+    {
+      "id": "dashboard_src_components_employeeportal_task",
+      "label": "Task",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "task",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
+      "source_location": "L6"
+    },
+    {
       "id": "dashboard_src_components_authfast_authfastprops",
       "label": "AuthFastProps",
       "_callable": true,
@@ -1301,7 +1236,7 @@
       "file_type": "code",
       "norm_label": "agentcontact",
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L63"
+      "source_location": "L62"
     },
     {
       "id": "dashboard_src_components_clientdashboard_audiocontact",
@@ -1314,7 +1249,7 @@
       "file_type": "code",
       "norm_label": "audiocontact",
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L71"
+      "source_location": "L70"
     },
     {
       "id": "dashboard_src_components_clientdashboard_client",
@@ -1327,7 +1262,7 @@
       "file_type": "code",
       "norm_label": "client",
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L35"
+      "source_location": "L34"
     },
     {
       "id": "dashboard_src_components_clientdashboard_clientdashboardprops",
@@ -1340,7 +1275,7 @@
       "file_type": "code",
       "norm_label": "clientdashboardprops",
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L78"
+      "source_location": "L77"
     },
     {
       "id": "dashboard_src_components_clientdashboard_interaction",
@@ -1353,7 +1288,7 @@
       "file_type": "code",
       "norm_label": "interaction",
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L49"
+      "source_location": "L48"
     },
     {
       "id": "dashboard_src_components_clientdashboard_whatsappstatus",
@@ -1366,7 +1301,7 @@
       "file_type": "code",
       "norm_label": "whatsappstatus",
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L57"
+      "source_location": "L56"
     },
     {
       "id": "dashboard_src_components_rawmaterialsinventory_rawmaterial",
@@ -1393,32 +1328,6 @@
       "norm_label": "rawmaterialsinventoryprops",
       "source_file": "dashboard/src/components/RawMaterialsInventory.tsx",
       "source_location": "L19"
-    },
-    {
-      "id": "dashboard_src_components_saaserpauditlogs_auditlog",
-      "label": "AuditLog",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "auditlog",
-      "source_file": "dashboard/src/components/SaaSErpAuditLogs.tsx",
-      "source_location": "L5"
-    },
-    {
-      "id": "dashboard_src_components_saaserpauditlogs_saaserpauditlogsprops",
-      "label": "SaaSErpAuditLogsProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpauditlogsprops",
-      "source_file": "dashboard/src/components/SaaSErpAuditLogs.tsx",
-      "source_location": "L21"
     },
     {
       "id": "dashboard_src_components_saaserpcampaigns_employee",
@@ -1486,30 +1395,82 @@
       "source_location": "L5"
     },
     {
-      "id": "dashboard_src_components_saaserpsupportdocuments_saaserpsupportdocumentsprops",
-      "label": "SaaSErpSupportDocumentsProps",
+      "id": "dashboard_src_components_saaserpquotes_product",
+      "label": "Product",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 5,
       "community_name": "ClientDashboard.tsx",
       "file_type": "code",
-      "norm_label": "saaserpsupportdocumentsprops",
-      "source_file": "dashboard/src/components/SaaSErpSupportDocuments.tsx",
-      "source_location": "L4"
+      "norm_label": "product",
+      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
+      "source_location": "L36"
     },
     {
-      "id": "dashboard_src_components_saaserpsupportdocuments_supportdocument",
-      "label": "SupportDocument",
+      "id": "dashboard_src_components_saaserpquotes_quote",
+      "label": "Quote",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 5,
       "community_name": "ClientDashboard.tsx",
       "file_type": "code",
-      "norm_label": "supportdocument",
-      "source_file": "dashboard/src/components/SaaSErpSupportDocuments.tsx",
-      "source_location": "L8"
+      "norm_label": "quote",
+      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
+      "source_location": "L15"
+    },
+    {
+      "id": "dashboard_src_components_saaserpquotes_quoteitem",
+      "label": "QuoteItem",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "ClientDashboard.tsx",
+      "file_type": "code",
+      "norm_label": "quoteitem",
+      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
+      "source_location": "L5"
+    },
+    {
+      "id": "dashboard_src_components_saaserpquotes_saaserpquotesprops",
+      "label": "SaaSErpQuotesProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "ClientDashboard.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpquotesprops",
+      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
+      "source_location": "L45"
+    },
+    {
+      "id": "dashboard_src_components_saaserpsupporttickets_saaserpsupportticketsprops",
+      "label": "SaaSErpSupportTicketsProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "ClientDashboard.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpsupportticketsprops",
+      "source_file": "dashboard/src/components/SaaSErpSupportTickets.tsx",
+      "source_location": "L18"
+    },
+    {
+      "id": "dashboard_src_components_saaserpsupporttickets_supportticket",
+      "label": "SupportTicket",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "ClientDashboard.tsx",
+      "file_type": "code",
+      "norm_label": "supportticket",
+      "source_file": "dashboard/src/components/SaaSErpSupportTickets.tsx",
+      "source_location": "L4"
     },
     {
       "id": "dashboard_src_components_admindashboard_admindashboardprops",
@@ -1551,6 +1512,45 @@
       "source_location": "L16"
     },
     {
+      "id": "dashboard_src_components_saaserpcartera_carteraprops",
+      "label": "CarteraProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "authFetch",
+      "file_type": "code",
+      "norm_label": "carteraprops",
+      "source_file": "dashboard/src/components/SaaSErpCartera.tsx",
+      "source_location": "L5"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcartera_installment",
+      "label": "Installment",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "authFetch",
+      "file_type": "code",
+      "norm_label": "installment",
+      "source_file": "dashboard/src/components/SaaSErpCartera.tsx",
+      "source_location": "L23"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcartera_invoice",
+      "label": "Invoice",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "authFetch",
+      "file_type": "code",
+      "norm_label": "invoice",
+      "source_file": "dashboard/src/components/SaaSErpCartera.tsx",
+      "source_location": "L9"
+    },
+    {
       "id": "dashboard_src_components_saaserpstoresettings_bankaccount",
       "label": "BankAccount",
       "_callable": true,
@@ -1561,7 +1561,7 @@
       "file_type": "code",
       "norm_label": "bankaccount",
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L417"
+      "source_location": "L354"
     },
     {
       "id": "dashboard_src_components_saaserpstoresettings_storesettingsprops",
@@ -1958,7 +1958,7 @@
       "file_type": "code",
       "norm_label": "updateclient()",
       "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L102"
+      "source_location": "L99"
     },
     {
       "id": "src_scratch_check_wa_state_check",
@@ -1994,7 +1994,7 @@
       "file_type": "code",
       "norm_label": "resolveproductclientid()",
       "source_file": "src/server.ts",
-      "source_location": "L1679"
+      "source_location": "L1668"
     },
     {
       "id": "src_services_escalation_startescalationservice",
@@ -2078,7 +2078,7 @@
       "file_type": "code",
       "norm_label": "autorestoresavedwhatsappsessions()",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L392"
+      "source_location": "L393"
     },
     {
       "id": "src_services_whatsapp_connectwhatsapp",
@@ -2090,7 +2090,7 @@
       "file_type": "code",
       "norm_label": "connectwhatsapp()",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L327"
+      "source_location": "L328"
     },
     {
       "id": "src_services_whatsapp_getwhatsappstate",
@@ -2126,7 +2126,7 @@
       "file_type": "code",
       "norm_label": "logoutwhatsapp()",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L365"
+      "source_location": "L366"
     },
     {
       "id": "src_services_whatsapp_sendwhatsapptextmessage",
@@ -2138,19 +2138,19 @@
       "file_type": "code",
       "norm_label": "sendwhatsapptextmessage()",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L432"
+      "source_location": "L433"
     },
     {
-      "id": "dashboard_src_components_saaserpquotes_saaserpquotes",
-      "label": "SaaSErpQuotes()",
+      "id": "dashboard_src_components_saaserpauditlogs_saaserpauditlogs",
+      "label": "SaaSErpAuditLogs()",
       "_callable": true,
       "_origin": "ast",
-      "community": 107,
-      "community_name": "SaaSErpQuotes.tsx",
+      "community": 108,
+      "community_name": "SaaSErpAuditLogs.tsx",
       "file_type": "code",
-      "norm_label": "saaserpquotes()",
-      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
-      "source_location": "L49"
+      "norm_label": "saaserpauditlogs()",
+      "source_file": "dashboard/src/components/SaaSErpAuditLogs.tsx",
+      "source_location": "L25"
     },
     {
       "id": "scratch_do_vps_update_run_cmd",
@@ -2189,6 +2189,18 @@
       "source_location": "L12"
     },
     {
+      "id": "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenu",
+      "label": "PublicRestaurantMenu()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "PublicRestaurantMenu.tsx",
+      "file_type": "code",
+      "norm_label": "publicrestaurantmenu()",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
+      "source_location": "L41"
+    },
+    {
       "id": "dashboard_src_components_restaurantmenubuilder_restaurantmenubuilder",
       "label": "RestaurantMenuBuilder()",
       "_callable": true,
@@ -2201,52 +2213,40 @@
       "source_location": "L29"
     },
     {
-      "id": "dashboard_src_components_saaserpcartera_saaserpcartera",
-      "label": "SaaSErpCartera()",
+      "id": "dashboard_src_components_saaserpsuppliers_saaserpsuppliers",
+      "label": "SaaSErpSuppliers()",
       "_callable": true,
       "_origin": "ast",
-      "community": 117,
-      "community_name": "SaaSErpCartera.tsx",
+      "community": 118,
+      "community_name": "SaaSErpSuppliers.tsx",
       "file_type": "code",
-      "norm_label": "saaserpcartera()",
-      "source_file": "dashboard/src/components/SaaSErpCartera.tsx",
+      "norm_label": "saaserpsuppliers()",
+      "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
+      "source_location": "L27"
+    },
+    {
+      "id": "dashboard_src_components_saaserpsupportdocuments_saaserpsupportdocuments",
+      "label": "SaaSErpSupportDocuments()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "SaaSErpSupportDocuments.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpsupportdocuments()",
+      "source_file": "dashboard/src/components/SaaSErpSupportDocuments.tsx",
+      "source_location": "L25"
+    },
+    {
+      "id": "dashboard_src_components_saaserpcrm_saaserpcrm",
+      "label": "SaaSErpCRM()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 126,
+      "community_name": "SaaSErpCRM.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpcrm()",
+      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
       "source_location": "L33"
-    },
-    {
-      "id": "dashboard_src_components_saaserpsupporttickets_saaserpsupporttickets",
-      "label": "SaaSErpSupportTickets()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 124,
-      "community_name": "SaaSErpSupportTickets.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpsupporttickets()",
-      "source_file": "dashboard/src/components/SaaSErpSupportTickets.tsx",
-      "source_location": "L23"
-    },
-    {
-      "id": "dashboard_src_components_publicrestaurantmenu_publicrestaurantmenu",
-      "label": "PublicRestaurantMenu()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 128,
-      "community_name": "PublicRestaurantMenu.tsx",
-      "file_type": "code",
-      "norm_label": "publicrestaurantmenu()",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L41"
-    },
-    {
-      "id": "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplay",
-      "label": "RestaurantKdsDisplay()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "RestaurantKdsDisplay.tsx",
-      "file_type": "code",
-      "norm_label": "restaurantkdsdisplay()",
-      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
-      "source_location": "L31"
     },
     {
       "id": "src_middlewares_correlationidmiddleware_correlationidmiddleware",
@@ -2429,47 +2429,11 @@
       "source_location": "L24"
     },
     {
-      "id": "dashboard_src_components_saaserpdomicilios_saaserpdomicilios",
-      "label": "SaaSErpDomicilios()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 130,
-      "community_name": "SaaSErpDomicilios.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpdomicilios()",
-      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
-      "source_location": "L36"
-    },
-    {
-      "id": "dashboard_src_components_saaserpsalestargets_saaserpsalestargets",
-      "label": "SaaSErpSalesTargets()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 131,
-      "community_name": "SaaSErpSalesTargets.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpsalestargets()",
-      "source_file": "dashboard/src/components/SaaSErpSalesTargets.tsx",
-      "source_location": "L21"
-    },
-    {
-      "id": "src_scratch_test_pre_recorded_voice_run",
-      "label": "run()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 132,
-      "community_name": "test-pre-recorded-voice.ts",
-      "file_type": "code",
-      "norm_label": "run()",
-      "source_file": "src/scratch/test-pre-recorded-voice.ts",
-      "source_location": "L5"
-    },
-    {
       "id": "dashboard_src_components_saaserpaiagentmodule_saaserpaiagentmodule",
       "label": "SaaSErpAiAgentModule()",
       "_callable": true,
       "_origin": "ast",
-      "community": 133,
+      "community": 130,
       "community_name": "SaaSErpAiAgentModule.tsx",
       "file_type": "code",
       "norm_label": "saaserpaiagentmodule()",
@@ -2477,23 +2441,35 @@
       "source_location": "L92"
     },
     {
-      "id": "dashboard_src_components_saaserpcrm_saaserpcrm",
-      "label": "SaaSErpCRM()",
+      "id": "dashboard_src_components_restaurantkdsdisplay_restaurantkdsdisplay",
+      "label": "RestaurantKdsDisplay()",
       "_callable": true,
       "_origin": "ast",
-      "community": 134,
-      "community_name": "SaaSErpCRM.tsx",
+      "community": 131,
+      "community_name": "RestaurantKdsDisplay.tsx",
       "file_type": "code",
-      "norm_label": "saaserpcrm()",
-      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
-      "source_location": "L33"
+      "norm_label": "restaurantkdsdisplay()",
+      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
+      "source_location": "L31"
+    },
+    {
+      "id": "dashboard_src_components_saaserpdomicilios_saaserpdomicilios",
+      "label": "SaaSErpDomicilios()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 132,
+      "community_name": "SaaSErpDomicilios.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpdomicilios()",
+      "source_file": "dashboard/src/components/SaaSErpDomicilios.tsx",
+      "source_location": "L36"
     },
     {
       "id": "dashboard_src_components_saaserpmarketing_saaserpmarketing",
       "label": "SaaSErpMarketing()",
       "_callable": true,
       "_origin": "ast",
-      "community": 135,
+      "community": 133,
       "community_name": "SaaSErpMarketing.tsx",
       "file_type": "code",
       "norm_label": "saaserpmarketing()",
@@ -2501,23 +2477,11 @@
       "source_location": "L30"
     },
     {
-      "id": "dashboard_src_components_saaserpsuppliers_saaserpsuppliers",
-      "label": "SaaSErpSuppliers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 136,
-      "community_name": "SaaSErpSuppliers.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpsuppliers()",
-      "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
-      "source_location": "L27"
-    },
-    {
       "id": "src_services_scheduler_checkandsendreminders",
       "label": "checkAndSendReminders()",
       "_callable": true,
       "_origin": "ast",
-      "community": 137,
+      "community": 134,
       "community_name": "scheduler.ts",
       "file_type": "code",
       "norm_label": "checkandsendreminders()",
@@ -2529,7 +2493,7 @@
       "label": "delay()",
       "_callable": true,
       "_origin": "ast",
-      "community": 137,
+      "community": 134,
       "community_name": "scheduler.ts",
       "file_type": "code",
       "norm_label": "delay()",
@@ -2541,7 +2505,7 @@
       "label": "formatCurrency()",
       "_callable": true,
       "_origin": "ast",
-      "community": 137,
+      "community": 134,
       "community_name": "scheduler.ts",
       "file_type": "code",
       "norm_label": "formatcurrency()",
@@ -2553,12 +2517,36 @@
       "label": "startScheduler()",
       "_callable": true,
       "_origin": "ast",
-      "community": 137,
+      "community": 134,
       "community_name": "scheduler.ts",
       "file_type": "code",
       "norm_label": "startscheduler()",
       "source_file": "src/services/scheduler.ts",
       "source_location": "L152"
+    },
+    {
+      "id": "dashboard_src_components_saaserpsalestargets_saaserpsalestargets",
+      "label": "SaaSErpSalesTargets()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 135,
+      "community_name": "SaaSErpSalesTargets.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpsalestargets()",
+      "source_file": "dashboard/src/components/SaaSErpSalesTargets.tsx",
+      "source_location": "L21"
+    },
+    {
+      "id": "src_scratch_test_pre_recorded_voice_run",
+      "label": "run()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 136,
+      "community_name": "test-pre-recorded-voice.ts",
+      "file_type": "code",
+      "norm_label": "run()",
+      "source_file": "src/scratch/test-pre-recorded-voice.ts",
+      "source_location": "L5"
     },
     {
       "id": "dashboard_src_components_restaurantwaiterportal_restaurantwaiterportal",
@@ -2741,78 +2729,6 @@
       "source_location": "L68"
     },
     {
-      "id": "dashboard_src_app_app",
-      "label": "App()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "app()",
-      "source_file": "dashboard/src/App.tsx",
-      "source_location": "L12"
-    },
-    {
-      "id": "dashboard_src_components_activateaccount_activateaccount",
-      "label": "ActivateAccount()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "activateaccount()",
-      "source_file": "dashboard/src/components/ActivateAccount.tsx",
-      "source_location": "L9"
-    },
-    {
-      "id": "dashboard_src_components_clientdashboard_clientdashboard",
-      "label": "ClientDashboard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "clientdashboard()",
-      "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L83"
-    },
-    {
-      "id": "dashboard_src_components_employeeportal_employeeportal",
-      "label": "EmployeePortal()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "employeeportal()",
-      "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L30"
-    },
-    {
-      "id": "dashboard_src_utils_api_clearallsessiondata",
-      "label": "clearAllSessionData()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "clearallsessiondata()",
-      "source_file": "dashboard/src/utils/api.ts",
-      "source_location": "L13"
-    },
-    {
-      "id": "dashboard_src_utils_api_getstoredtoken",
-      "label": "getStoredToken()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "getstoredtoken()",
-      "source_file": "dashboard/src/utils/api.ts",
-      "source_location": "L5"
-    },
-    {
       "id": "src_scratch_testr2_main",
       "label": "main()",
       "_callable": true,
@@ -2918,7 +2834,7 @@
       "file_type": "code",
       "norm_label": "inventoryrotationview()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2984"
+      "source_location": "L2995"
     },
     {
       "id": "dashboard_src_components_saaserpinventory_promodiscountrow",
@@ -2954,7 +2870,7 @@
       "file_type": "code",
       "norm_label": "visualcolordropdown()",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L3110"
+      "source_location": "L3121"
     },
     {
       "id": "dashboard_src_components_saaserppurchaseorders_saaserppurchaseorders",
@@ -3063,6 +2979,78 @@
       "norm_label": "run_ssh()",
       "source_file": "scratch/execute_vps_update.py",
       "source_location": "L12"
+    },
+    {
+      "id": "dashboard_src_app_app",
+      "label": "App()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "app()",
+      "source_file": "dashboard/src/App.tsx",
+      "source_location": "L12"
+    },
+    {
+      "id": "dashboard_src_components_activateaccount_activateaccount",
+      "label": "ActivateAccount()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "activateaccount()",
+      "source_file": "dashboard/src/components/ActivateAccount.tsx",
+      "source_location": "L9"
+    },
+    {
+      "id": "dashboard_src_components_clientdashboard_clientdashboard",
+      "label": "ClientDashboard()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "clientdashboard()",
+      "source_file": "dashboard/src/components/ClientDashboard.tsx",
+      "source_location": "L82"
+    },
+    {
+      "id": "dashboard_src_components_employeeportal_employeeportal",
+      "label": "EmployeePortal()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "employeeportal()",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
+      "source_location": "L30"
+    },
+    {
+      "id": "dashboard_src_utils_api_clearallsessiondata",
+      "label": "clearAllSessionData()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "clearallsessiondata()",
+      "source_file": "dashboard/src/utils/api.ts",
+      "source_location": "L13"
+    },
+    {
+      "id": "dashboard_src_utils_api_getstoredtoken",
+      "label": "getStoredToken()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "getstoredtoken()",
+      "source_file": "dashboard/src/utils/api.ts",
+      "source_location": "L5"
     },
     {
       "id": "scratch_seed_10_sales_seed10sales",
@@ -3221,18 +3209,6 @@
       "source_location": "L23"
     },
     {
-      "id": "dashboard_src_components_saaserpauditlogs_saaserpauditlogs",
-      "label": "SaaSErpAuditLogs()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpauditlogs()",
-      "source_file": "dashboard/src/components/SaaSErpAuditLogs.tsx",
-      "source_location": "L25"
-    },
-    {
       "id": "dashboard_src_components_saaserpcampaigns_saaserpcampaigns",
       "label": "SaaSErpCampaigns()",
       "_callable": true,
@@ -3269,16 +3245,28 @@
       "source_location": "L9"
     },
     {
-      "id": "dashboard_src_components_saaserpsupportdocuments_saaserpsupportdocuments",
-      "label": "SaaSErpSupportDocuments()",
+      "id": "dashboard_src_components_saaserpquotes_saaserpquotes",
+      "label": "SaaSErpQuotes()",
       "_callable": true,
       "_origin": "ast",
       "community": 5,
       "community_name": "ClientDashboard.tsx",
       "file_type": "code",
-      "norm_label": "saaserpsupportdocuments()",
-      "source_file": "dashboard/src/components/SaaSErpSupportDocuments.tsx",
-      "source_location": "L25"
+      "norm_label": "saaserpquotes()",
+      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
+      "source_location": "L49"
+    },
+    {
+      "id": "dashboard_src_components_saaserpsupporttickets_saaserpsupporttickets",
+      "label": "SaaSErpSupportTickets()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "ClientDashboard.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpsupporttickets()",
+      "source_file": "dashboard/src/components/SaaSErpSupportTickets.tsx",
+      "source_location": "L23"
     },
     {
       "id": "dashboard_src_components_admindashboard_admindashboard",
@@ -3293,6 +3281,18 @@
       "source_location": "L28"
     },
     {
+      "id": "dashboard_src_components_saaserpcartera_saaserpcartera",
+      "label": "SaaSErpCartera()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "authFetch",
+      "file_type": "code",
+      "norm_label": "saaserpcartera()",
+      "source_file": "dashboard/src/components/SaaSErpCartera.tsx",
+      "source_location": "L33"
+    },
+    {
       "id": "dashboard_src_components_saaserpstoresettings_bankaccountsmanager",
       "label": "BankAccountsManager()",
       "_callable": true,
@@ -3302,7 +3302,7 @@
       "file_type": "code",
       "norm_label": "bankaccountsmanager()",
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L426"
+      "source_location": "L363"
     },
     {
       "id": "dashboard_src_components_saaserpstoresettings_saaserpstoresettings",
@@ -3326,7 +3326,7 @@
       "file_type": "code",
       "norm_label": "themeselectormanager()",
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L267"
+      "source_location": "L203"
     },
     {
       "id": "dashboard_src_components_systemalertspanel_systemalertspanel",
@@ -3434,7 +3434,7 @@
       "file_type": "code",
       "norm_label": "authorizeclientaccess()",
       "source_file": "src/middlewares/authMiddleware.ts",
-      "source_location": "L99"
+      "source_location": "L98"
     },
     {
       "id": "src_middlewares_authmiddleware_requirerole",
@@ -3446,7 +3446,7 @@
       "file_type": "code",
       "norm_label": "requirerole()",
       "source_file": "src/middlewares/authMiddleware.ts",
-      "source_location": "L81"
+      "source_location": "L80"
     },
     {
       "id": "src_middlewares_ratelimiter_createratelimiter",
@@ -3470,7 +3470,7 @@
       "file_type": "code",
       "norm_label": "minutestotime()",
       "source_file": "src/server.ts",
-      "source_location": "L4265"
+      "source_location": "L4254"
     },
     {
       "id": "src_server_registeractivesession",
@@ -3494,7 +3494,7 @@
       "file_type": "code",
       "norm_label": "startmarketingcampaignworker()",
       "source_file": "src/server.ts",
-      "source_location": "L6409"
+      "source_location": "L6398"
     },
     {
       "id": "src_server_timetominutes",
@@ -3506,7 +3506,7 @@
       "file_type": "code",
       "norm_label": "timetominutes()",
       "source_file": "src/server.ts",
-      "source_location": "L4259"
+      "source_location": "L4248"
     },
     {
       "id": "src_services_factusservice_emitfactusinvoice",
@@ -3686,7 +3686,7 @@
       "file_type": "code",
       "norm_label": "deleteclient()",
       "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L161"
+      "source_location": "L158"
     },
     {
       "id": "src_database_clientscrud_getclientbyid",
@@ -3710,7 +3710,7 @@
       "file_type": "code",
       "norm_label": "listclients()",
       "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L174"
+      "source_location": "L171"
     },
     {
       "id": "src_database_clientscrud_updateclientstatus",
@@ -3722,7 +3722,7 @@
       "file_type": "code",
       "norm_label": "updateclientstatus()",
       "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L148"
+      "source_location": "L145"
     },
     {
       "id": "src_scratch_test_db_test",
@@ -4325,7 +4325,7 @@
       "file_type": "code",
       "norm_label": "server",
       "source_file": "src/server.ts",
-      "source_location": "L7561"
+      "source_location": "L7550"
     },
     {
       "id": "src_services_escalation",
@@ -5126,21 +5126,10 @@
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_saaserpquotes",
-      "label": "SaaSErpQuotes.tsx",
-      "_origin": "ast",
-      "community": 107,
-      "community_name": "SaaSErpQuotes.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpquotes.tsx",
-      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian",
       "label": "PLAN_FACTURACION_ELECTRONICA_FACTUS_Y_WIZARD_HABILITACION_DIAN.md",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "page",
@@ -5152,7 +5141,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_1_diagn\u00f3stico_y_decisi\u00f3n_de_proveedor_tecnol\u00f3gico",
       "label": "1. \ud83d\udd0d DIAGN\u00d3STICO Y DECISI\u00d3N DE PROVEEDOR TECNOL\u00d3GICO",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5164,7 +5153,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_2_arquitectura_de_experiencia_de_usuario_wizard_estilo_alegra",
       "label": "2. \ud83c\udfa8 ARQUITECTURA DE EXPERIENCIA DE USUARIO (WIZARD ESTILO ALEGRA)",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5176,7 +5165,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_3_componentes_a_implementar_en_el_c\u00f3digo",
       "label": "3. \ud83d\udee0\ufe0f COMPONENTES A IMPLEMENTAR EN EL C\u00d3DIGO",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5188,7 +5177,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_4_conclusi\u00f3n",
       "label": "4. \ud83c\udfaf CONCLUSI\u00d3N",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5200,7 +5189,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_a_backend_src_services_factusservice_ts_src_server_ts",
       "label": "A. Backend (`src/services/factusService.ts` & `src/server.ts`):",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5212,7 +5201,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_b_frontend_dashboard_src_components_saaserphabilitaciondian_tsx",
       "label": "B. Frontend (`dashboard/src/components/SaaSErpHabilitacionDian.tsx`):",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5224,7 +5213,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_detalle_de_cada_paso_del_wizard",
       "label": "Detalle de cada Paso del Wizard:",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5236,7 +5225,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_documento_oficial_de_arquitectura_y_ux_integraci\u00f3n_factus_api_y_wizard_de_habilitaci\u00f3n_dian_estilo_alegra",
       "label": "\ud83d\udcc4 DOCUMENTO OFICIAL DE ARQUITECTURA Y UX: INTEGRACI\u00d3N FACTUS API Y WIZARD DE HABILITACI\u00d3N DIAN (ESTILO ALEGRA)",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5248,7 +5237,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_paso_1_datos_de_tu_empresa",
       "label": "\ud83d\udccc PASO 1: Datos de tu Empresa",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5260,7 +5249,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_paso_2_gu\u00eda_de_registro_en_la_dian",
       "label": "\ud83d\udccc PASO 2: Gu\u00eda de Registro en la DIAN",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5272,7 +5261,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_paso_3_modos_de_operaci\u00f3n_seleccionar_factus",
       "label": "\ud83d\udccc PASO 3: Modos de Operaci\u00f3n (Seleccionar Factus)",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5284,7 +5273,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_paso_4_env\u00edo_del_set_de_pruebas_testsetid",
       "label": "\ud83d\udccc PASO 4: Env\u00edo del Set de Pruebas (`TestSetID`)",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5296,7 +5285,7 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_paso_5_numeraciones_y_prefijos",
       "label": "\ud83d\udccc PASO 5: Numeraciones y Prefijos",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
@@ -5308,13 +5297,24 @@
       "id": "docs_plan_facturacion_electronica_factus_y_wizard_habilitacion_dian_por_qu\u00e9_elegimos_factus_api_sobre_otros_integradores",
       "label": "Por qu\u00e9 elegimos **Factus API** sobre otros integradores:",
       "_origin": "ast",
-      "community": 108,
+      "community": 107,
       "community_name": "Detalle de cada Paso del Wizard:",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "por que elegimos **factus api** sobre otros integradores:",
       "source_file": "docs/PLAN_FACTURACION_ELECTRONICA_FACTUS_Y_WIZARD_HABILITACION_DIAN.md",
       "source_location": "L13"
+    },
+    {
+      "id": "dashboard_src_components_saaserpauditlogs",
+      "label": "SaaSErpAuditLogs.tsx",
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "SaaSErpAuditLogs.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpauditlogs.tsx",
+      "source_file": "dashboard/src/components/SaaSErpAuditLogs.tsx",
+      "source_location": "L1"
     },
     {
       "id": "quick_start",
@@ -5913,183 +5913,14 @@
       "source_location": "L46"
     },
     {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal",
-      "label": "PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "id": "dashboard_src_components_publicrestaurantmenu",
+      "label": "PublicRestaurantMenu.tsx",
       "_origin": "ast",
       "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "plan_oficial_sedes_nit_independiente_y_rotacion_personal.md",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_1_objetivos_del_proyecto",
-      "label": "\ud83c\udfaf 1. OBJETIVOS DEL PROYECTO",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\ud83c\udfaf 1. objetivos del proyecto",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L7"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_2_1_modelo_de_datos_y_esquemas_sql_src_database_initdb_ts",
-      "label": "2.1. Modelo de Datos y Esquemas SQL (`src/database/initDb.ts`)",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "2.1. modelo de datos y esquemas sql (`src/database/initdb.ts`)",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L22"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_2_2_frontend_ui_ux",
-      "label": "2.2. Frontend - UI / UX",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "2.2. frontend - ui / ux",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L49"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_2_3_l\u00f3gica_de_negocio_y_backend_src_server_ts",
-      "label": "2.3. L\u00f3gica de Negocio y Backend (`src/server.ts`)",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "2.3. logica de negocio y backend (`src/server.ts`)",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L69"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_2_plan_de_implementaci\u00f3n_t\u00e9cnica",
-      "label": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\ud83d\udccb 2. plan de implementacion tecnica",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L20"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_3_plan_de_verificaci\u00f3n_y_pruebas",
-      "label": "\ud83e\uddea 3. PLAN DE VERIFICACI\u00d3N Y PRUEBAS",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\ud83e\uddea 3. plan de verificacion y pruebas",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L88"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_4_walkthrough_resumen_de_cambios_ejecutados",
-      "label": "\ud83d\udccc 4. WALKTHROUGH & RESUMEN DE CAMBIOS EJECUTADOS",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\ud83d\udccc 4. walkthrough & resumen de cambios ejecutados",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L101"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_a_facturaci\u00f3n_y_ventas_pos",
-      "label": "A. Facturaci\u00f3n y Ventas (POS)",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "a. facturacion y ventas (pos)",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L71"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_a_modal_agregar_editar_sede_saaserpstoresettings_tsx",
-      "label": "A. Modal \"Agregar / Editar Sede\" (`SaaSErpStoreSettings.tsx`)",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "a. modal \"agregar / editar sede\" (`saaserpstoresettings.tsx`)",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L51"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_b_selector_de_sede_activa_store_switcher_clientdashboard_tsx",
-      "label": "B. Selector de Sede Activa (\"Store Switcher\") (`ClientDashboard.tsx`)",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "b. selector de sede activa (\"store switcher\") (`clientdashboard.tsx`)",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L58"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_b_turnos_arqueos_de_caja_y_ventas_por_empleado_cash_shifts",
-      "label": "B. Turnos, Arqueos de Caja y Ventas por Empleado (`cash_shifts`)",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "b. turnos, arqueos de caja y ventas por empleado (`cash_shifts`)",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L77"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_c_asignaci\u00f3n_de_sedes_a_empleados_saaserpemployees_tsx",
-      "label": "C. Asignaci\u00f3n de Sedes a Empleados (`SaaSErpEmployees.tsx`)",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "c. asignacion de sedes a empleados (`saaserpemployees.tsx`)",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L64"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_c_reportes_y_contabilidad",
-      "label": "C. Reportes y Contabilidad",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "c. reportes y contabilidad",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
-      "source_location": "L81"
-    },
-    {
-      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_documentaci\u00f3n_oficial_arquitectura_multi_sede_con_nit_independiente_y_rotaci\u00f3n_din\u00e1mica_de_personal_2026",
-      "label": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\ud83c\udfe2 documentacion oficial: arquitectura multi-sede con nit independiente y rotacion dinamica de personal (2026)",
-      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "community_name": "PublicRestaurantMenu.tsx",
+      "file_type": "code",
+      "norm_label": "publicrestaurantmenu.tsx",
+      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
       "source_location": "L1"
     },
     {
@@ -6104,147 +5935,195 @@
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_saaserpcartera",
-      "label": "SaaSErpCartera.tsx",
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal",
+      "label": "PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
       "_origin": "ast",
       "community": 117,
-      "community_name": "SaaSErpCartera.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpcartera.tsx",
-      "source_file": "dashboard/src/components/SaaSErpCartera.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "rediseno_wabi_sabi_guia",
-      "label": "REDISENO_WABI_SABI_GUIA.md",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
       "file_type": "document",
       "node_kind": "page",
-      "norm_label": "rediseno_wabi_sabi_guia.md",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "norm_label": "plan_oficial_sedes_nit_independiente_y_rotacion_personal.md",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
       "source_location": "L1"
     },
     {
-      "id": "rediseno_wabi_sabi_guia_1_men\u00fa_lateral_desplegable_sidebar_expandable",
-      "label": "1. Men\u00fa Lateral Desplegable (`.sidebar-expandable`):",
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_1_objetivos_del_proyecto",
+      "label": "\ud83c\udfaf 1. OBJETIVOS DEL PROYECTO",
       "_origin": "ast",
-      "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "1. menu lateral desplegable (`.sidebar-expandable`):",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
-      "source_location": "L27"
-    },
-    {
-      "id": "rediseno_wabi_sabi_guia_1_sistema_de_dise\u00f1o_wabi_sabi_paper",
-      "label": "\ud83c\udfa8 1. Sistema de Dise\u00f1o (Wabi-Sabi Paper)",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\ud83c\udfa8 1. sistema de diseno (wabi-sabi paper)",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "norm_label": "\ud83c\udfaf 1. objetivos del proyecto",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
       "source_location": "L7"
     },
     {
-      "id": "rediseno_wabi_sabi_guia_2_arquitectura_de_layout_y_navegaci\u00f3n",
-      "label": "\ud83d\udcd0 2. Arquitectura de Layout y Navegaci\u00f3n",
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_2_1_modelo_de_datos_y_esquemas_sql_src_database_initdb_ts",
+      "label": "2.1. Modelo de Datos y Esquemas SQL (`src/database/initDb.ts`)",
       "_origin": "ast",
-      "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "\ud83d\udcd0 2. arquitectura de layout y navegacion",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
-      "source_location": "L25"
+      "norm_label": "2.1. modelo de datos y esquemas sql (`src/database/initdb.ts`)",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L22"
     },
     {
-      "id": "rediseno_wabi_sabi_guia_2_barra_superior_top_header",
-      "label": "2. Barra Superior (`.top-header`):",
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_2_2_frontend_ui_ux",
+      "label": "2.2. Frontend - UI / UX",
       "_origin": "ast",
-      "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "2. barra superior (`.top-header`):",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
-      "source_location": "L32"
+      "norm_label": "2.2. frontend - ui / ux",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L49"
     },
     {
-      "id": "rediseno_wabi_sabi_guia_3_estructura_reorganizada_del_men\u00fa_del_erp",
-      "label": "\ud83d\uddc2\ufe0f 3. Estructura Reorganizada del Men\u00fa del ERP",
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_2_3_l\u00f3gica_de_negocio_y_backend_src_server_ts",
+      "label": "2.3. L\u00f3gica de Negocio y Backend (`src/server.ts`)",
       "_origin": "ast",
-      "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "\ud83d\uddc2\ufe0f 3. estructura reorganizada del menu del erp",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
-      "source_location": "L39"
+      "norm_label": "2.3. logica de negocio y backend (`src/server.ts`)",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L69"
     },
     {
-      "id": "rediseno_wabi_sabi_guia_4_correcciones_t\u00e9cnicas_importantes_realizadas",
-      "label": "\ud83d\udee0\ufe0f 4. Correcciones T\u00e9cnicas Importantes Realizadas",
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_2_plan_de_implementaci\u00f3n_t\u00e9cnica",
+      "label": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "_origin": "ast",
-      "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "\ud83d\udee0\ufe0f 4. correcciones tecnicas importantes realizadas",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
-      "source_location": "L85"
+      "norm_label": "\ud83d\udccb 2. plan de implementacion tecnica",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L20"
     },
     {
-      "id": "rediseno_wabi_sabi_guia_5_instrucciones_para_continuar_en_un_nuevo_chat",
-      "label": "\ud83d\ude80 5. Instrucciones para Continuar en un Nuevo Chat",
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_3_plan_de_verificaci\u00f3n_y_pruebas",
+      "label": "\ud83e\uddea 3. PLAN DE VERIFICACI\u00d3N Y PRUEBAS",
       "_origin": "ast",
-      "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "\ud83d\ude80 5. instrucciones para continuar en un nuevo chat",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
-      "source_location": "L103"
+      "norm_label": "\ud83e\uddea 3. plan de verificacion y pruebas",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L88"
     },
     {
-      "id": "rediseno_wabi_sabi_guia_gu\u00eda_y_hoja_de_ruta_redise\u00f1o_wabi_sabi_paper_koi_erp",
-      "label": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_4_walkthrough_resumen_de_cambios_ejecutados",
+      "label": "\ud83d\udccc 4. WALKTHROUGH & RESUMEN DE CAMBIOS EJECUTADOS",
       "_origin": "ast",
-      "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "\ud83d\udcdc guia y hoja de ruta: rediseno wabi-sabi paper (koi erp)",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "norm_label": "\ud83d\udccc 4. walkthrough & resumen de cambios ejecutados",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L101"
+    },
+    {
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_a_facturaci\u00f3n_y_ventas_pos",
+      "label": "A. Facturaci\u00f3n y Ventas (POS)",
+      "_origin": "ast",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "a. facturacion y ventas (pos)",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L71"
+    },
+    {
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_a_modal_agregar_editar_sede_saaserpstoresettings_tsx",
+      "label": "A. Modal \"Agregar / Editar Sede\" (`SaaSErpStoreSettings.tsx`)",
+      "_origin": "ast",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "a. modal \"agregar / editar sede\" (`saaserpstoresettings.tsx`)",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L51"
+    },
+    {
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_b_selector_de_sede_activa_store_switcher_clientdashboard_tsx",
+      "label": "B. Selector de Sede Activa (\"Store Switcher\") (`ClientDashboard.tsx`)",
+      "_origin": "ast",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "b. selector de sede activa (\"store switcher\") (`clientdashboard.tsx`)",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L58"
+    },
+    {
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_b_turnos_arqueos_de_caja_y_ventas_por_empleado_cash_shifts",
+      "label": "B. Turnos, Arqueos de Caja y Ventas por Empleado (`cash_shifts`)",
+      "_origin": "ast",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "b. turnos, arqueos de caja y ventas por empleado (`cash_shifts`)",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L77"
+    },
+    {
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_c_asignaci\u00f3n_de_sedes_a_empleados_saaserpemployees_tsx",
+      "label": "C. Asignaci\u00f3n de Sedes a Empleados (`SaaSErpEmployees.tsx`)",
+      "_origin": "ast",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "c. asignacion de sedes a empleados (`saaserpemployees.tsx`)",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L64"
+    },
+    {
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_c_reportes_y_contabilidad",
+      "label": "C. Reportes y Contabilidad",
+      "_origin": "ast",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "c. reportes y contabilidad",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
+      "source_location": "L81"
+    },
+    {
+      "id": "docs_plan_oficial_sedes_nit_independiente_y_rotacion_personal_documentaci\u00f3n_oficial_arquitectura_multi_sede_con_nit_independiente_y_rotaci\u00f3n_din\u00e1mica_de_personal_2026",
+      "label": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
+      "_origin": "ast",
+      "community": 117,
+      "community_name": "\ud83c\udfe2 Documentaci\u00f3n Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotaci\u00f3n Din\u00e1mica de Personal (2026)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83c\udfe2 documentacion oficial: arquitectura multi-sede con nit independiente y rotacion dinamica de personal (2026)",
+      "source_file": "docs/PLAN_OFICIAL_SEDES_NIT_INDEPENDIENTE_Y_ROTACION_PERSONAL.md",
       "source_location": "L1"
     },
     {
-      "id": "rediseno_wabi_sabi_guia_paleta_crom\u00e1tica",
-      "label": "\ud83c\udfa8 Paleta Crom\u00e1tica:",
+      "id": "dashboard_src_components_saaserpsuppliers",
+      "label": "SaaSErpSuppliers.tsx",
       "_origin": "ast",
       "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\ud83c\udfa8 paleta cromatica:",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
-      "source_location": "L9"
-    },
-    {
-      "id": "rediseno_wabi_sabi_guia_tipograf\u00eda_y_estilo_editorial",
-      "label": "\ud83d\udd8b\ufe0f Tipograf\u00eda y Estilo Editorial:",
-      "_origin": "ast",
-      "community": 118,
-      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\ud83d\udd8b\ufe0f tipografia y estilo editorial:",
-      "source_file": "REDISENO_WABI_SABI_GUIA.md",
-      "source_location": "L18"
+      "community_name": "SaaSErpSuppliers.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpsuppliers.tsx",
+      "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
+      "source_location": "L1"
     },
     {
       "id": "package",
@@ -6599,10 +6478,153 @@
       "source_location": "L18"
     },
     {
+      "id": "dashboard_src_components_saaserpsupportdocuments",
+      "label": "SaaSErpSupportDocuments.tsx",
+      "_origin": "ast",
+      "community": 123,
+      "community_name": "SaaSErpSupportDocuments.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpsupportdocuments.tsx",
+      "source_file": "dashboard/src/components/SaaSErpSupportDocuments.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia",
+      "label": "REDISENO_WABI_SABI_GUIA.md",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "rediseno_wabi_sabi_guia.md",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia_1_men\u00fa_lateral_desplegable_sidebar_expandable",
+      "label": "1. Men\u00fa Lateral Desplegable (`.sidebar-expandable`):",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "1. menu lateral desplegable (`.sidebar-expandable`):",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L27"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia_1_sistema_de_dise\u00f1o_wabi_sabi_paper",
+      "label": "\ud83c\udfa8 1. Sistema de Dise\u00f1o (Wabi-Sabi Paper)",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83c\udfa8 1. sistema de diseno (wabi-sabi paper)",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L7"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia_2_arquitectura_de_layout_y_navegaci\u00f3n",
+      "label": "\ud83d\udcd0 2. Arquitectura de Layout y Navegaci\u00f3n",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83d\udcd0 2. arquitectura de layout y navegacion",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L25"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia_2_barra_superior_top_header",
+      "label": "2. Barra Superior (`.top-header`):",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "2. barra superior (`.top-header`):",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L32"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia_3_estructura_reorganizada_del_men\u00fa_del_erp",
+      "label": "\ud83d\uddc2\ufe0f 3. Estructura Reorganizada del Men\u00fa del ERP",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83d\uddc2\ufe0f 3. estructura reorganizada del menu del erp",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L39"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia_4_correcciones_t\u00e9cnicas_importantes_realizadas",
+      "label": "\ud83d\udee0\ufe0f 4. Correcciones T\u00e9cnicas Importantes Realizadas",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83d\udee0\ufe0f 4. correcciones tecnicas importantes realizadas",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L85"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia_5_instrucciones_para_continuar_en_un_nuevo_chat",
+      "label": "\ud83d\ude80 5. Instrucciones para Continuar en un Nuevo Chat",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83d\ude80 5. instrucciones para continuar en un nuevo chat",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L103"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia_gu\u00eda_y_hoja_de_ruta_redise\u00f1o_wabi_sabi_paper_koi_erp",
+      "label": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83d\udcdc guia y hoja de ruta: rediseno wabi-sabi paper (koi erp)",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia_paleta_crom\u00e1tica",
+      "label": "\ud83c\udfa8 Paleta Crom\u00e1tica:",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83c\udfa8 paleta cromatica:",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L9"
+    },
+    {
+      "id": "rediseno_wabi_sabi_guia_tipograf\u00eda_y_estilo_editorial",
+      "label": "\ud83d\udd8b\ufe0f Tipograf\u00eda y Estilo Editorial:",
+      "_origin": "ast",
+      "community": 124,
+      "community_name": "\ud83d\udcdc Gu\u00eda y Hoja de Ruta: Redise\u00f1o Wabi-Sabi Paper (KOI ERP)",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83d\udd8b\ufe0f tipografia y estilo editorial:",
+      "source_file": "REDISENO_WABI_SABI_GUIA.md",
+      "source_location": "L18"
+    },
+    {
       "id": "docs_plan_oficial_inventario_costos_filtro_dian_y_contabilidad",
       "label": "PLAN_OFICIAL_INVENTARIO_COSTOS_FILTRO_DIAN_Y_CONTABILIDAD.md",
       "_origin": "ast",
-      "community": 123,
+      "community": 125,
       "community_name": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "file_type": "document",
       "node_kind": "page",
@@ -6614,7 +6636,7 @@
       "id": "docs_plan_oficial_inventario_costos_filtro_dian_y_contabilidad_1_objetivo_del_proyecto",
       "label": "\ud83c\udfaf 1. OBJETIVO DEL PROYECTO",
       "_origin": "ast",
-      "community": 123,
+      "community": 125,
       "community_name": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "file_type": "document",
       "node_kind": "heading",
@@ -6626,7 +6648,7 @@
       "id": "docs_plan_oficial_inventario_costos_filtro_dian_y_contabilidad_2_1_configuraci\u00f3n_din\u00e1mica_de_impuestos_por_negocio_y_producto",
       "label": "2.1. Configuraci\u00f3n Din\u00e1mica de Impuestos por Negocio y Producto",
       "_origin": "ast",
-      "community": 123,
+      "community": 125,
       "community_name": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "file_type": "document",
       "node_kind": "heading",
@@ -6638,7 +6660,7 @@
       "id": "docs_plan_oficial_inventario_costos_filtro_dian_y_contabilidad_2_2_protecci\u00f3n_de_precios_de_costo_en_inventario_saaserpinventory_tsx",
       "label": "2.2. Protecci\u00f3n de Precios de Costo en Inventario (`SaaSErpInventory.tsx`)",
       "_origin": "ast",
-      "community": 123,
+      "community": 125,
       "community_name": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "file_type": "document",
       "node_kind": "heading",
@@ -6650,7 +6672,7 @@
       "id": "docs_plan_oficial_inventario_costos_filtro_dian_y_contabilidad_2_3_filtro_por_tipo_de_comprobante_dian_saaserpinvoices_tsx",
       "label": "2.3. Filtro por Tipo de Comprobante DIAN (`SaaSErpInvoices.tsx`)",
       "_origin": "ast",
-      "community": 123,
+      "community": 125,
       "community_name": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "file_type": "document",
       "node_kind": "heading",
@@ -6662,7 +6684,7 @@
       "id": "docs_plan_oficial_inventario_costos_filtro_dian_y_contabilidad_2_4_m\u00f3dulo_de_contabilidad_fiscal_p_l_adaptativo_saaserpaccounting_tsx",
       "label": "2.4. M\u00f3dulo de Contabilidad Fiscal & P&L Adaptativo (`SaaSErpAccounting.tsx`)",
       "_origin": "ast",
-      "community": 123,
+      "community": 125,
       "community_name": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "file_type": "document",
       "node_kind": "heading",
@@ -6674,7 +6696,7 @@
       "id": "docs_plan_oficial_inventario_costos_filtro_dian_y_contabilidad_2_plan_de_implementaci\u00f3n_t\u00e9cnica",
       "label": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "_origin": "ast",
-      "community": 123,
+      "community": 125,
       "community_name": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "file_type": "document",
       "node_kind": "heading",
@@ -6686,7 +6708,7 @@
       "id": "docs_plan_oficial_inventario_costos_filtro_dian_y_contabilidad_3_verificaci\u00f3n_y_pruebas_automatizadas",
       "label": "\ud83e\uddea 3. VERIFICACI\u00d3N Y PRUEBAS AUTOMATIZADAS",
       "_origin": "ast",
-      "community": 123,
+      "community": 125,
       "community_name": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "file_type": "document",
       "node_kind": "heading",
@@ -6698,7 +6720,7 @@
       "id": "docs_plan_oficial_inventario_costos_filtro_dian_y_contabilidad_4_walkthrough_resumen_de_cambios_ejecutados",
       "label": "\ud83d\udccc 4. WALKTHROUGH & RESUMEN DE CAMBIOS EJECUTADOS",
       "_origin": "ast",
-      "community": 123,
+      "community": 125,
       "community_name": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "file_type": "document",
       "node_kind": "heading",
@@ -6710,7 +6732,7 @@
       "id": "docs_plan_oficial_inventario_costos_filtro_dian_y_contabilidad_documentaci\u00f3n_oficial_ocultamiento_de_costos_filtro_dian_y_contabilidad_fiscal_din\u00e1mica_2026",
       "label": "\ud83d\udcc4 Documentaci\u00f3n Oficial: Ocultamiento de Costos, Filtro DIAN y Contabilidad Fiscal Din\u00e1mica (2026)",
       "_origin": "ast",
-      "community": 123,
+      "community": 125,
       "community_name": "\ud83d\udccb 2. PLAN DE IMPLEMENTACI\u00d3N T\u00c9CNICA",
       "file_type": "document",
       "node_kind": "heading",
@@ -6719,21 +6741,21 @@
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_saaserpsupporttickets",
-      "label": "SaaSErpSupportTickets.tsx",
+      "id": "dashboard_src_components_saaserpcrm",
+      "label": "SaaSErpCRM.tsx",
       "_origin": "ast",
-      "community": 124,
-      "community_name": "SaaSErpSupportTickets.tsx",
+      "community": 126,
+      "community_name": "SaaSErpCRM.tsx",
       "file_type": "code",
-      "norm_label": "saaserpsupporttickets.tsx",
-      "source_file": "dashboard/src/components/SaaSErpSupportTickets.tsx",
+      "norm_label": "saaserpcrm.tsx",
+      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
       "source_location": "L1"
     },
     {
       "id": "docs_plan_oficial_migracion_diseno_wabi_sabi_koi_erp",
       "label": "PLAN_OFICIAL_MIGRACION_DISENO_WABI_SABI_KOI_ERP.md",
       "_origin": "ast",
-      "community": 125,
+      "community": 127,
       "community_name": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "file_type": "document",
       "node_kind": "page",
@@ -6745,7 +6767,7 @@
       "id": "docs_plan_oficial_migracion_diseno_wabi_sabi_koi_erp_1_alcance_de_la_migraci\u00f3n",
       "label": "\ud83d\udccc 1. Alcance de la Migraci\u00f3n",
       "_origin": "ast",
-      "community": 125,
+      "community": 127,
       "community_name": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6757,7 +6779,7 @@
       "id": "docs_plan_oficial_migracion_diseno_wabi_sabi_koi_erp_2_mapeo_oficial_de_m\u00f3dulos_pesta\u00f1as_clientdashboard_tsx",
       "label": "\ud83d\uddfa\ufe0f 2. Mapeo Oficial de M\u00f3dulos & Pesta\u00f1as (`ClientDashboard.tsx`)",
       "_origin": "ast",
-      "community": 125,
+      "community": 127,
       "community_name": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6769,7 +6791,7 @@
       "id": "docs_plan_oficial_migracion_diseno_wabi_sabi_koi_erp_3_mapeo_oficial_de_campos_de_inventario_saaserpinventory_tsx",
       "label": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "_origin": "ast",
-      "community": 125,
+      "community": 127,
       "community_name": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6781,7 +6803,7 @@
       "id": "docs_plan_oficial_migracion_diseno_wabi_sabi_koi_erp_a_campos_del_formulario_de_producto_servicio",
       "label": "A. Campos del Formulario de Producto / Servicio:",
       "_origin": "ast",
-      "community": 125,
+      "community": 127,
       "community_name": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6793,7 +6815,7 @@
       "id": "docs_plan_oficial_migracion_diseno_wabi_sabi_koi_erp_b_matriz_de_variantes_por_color_con_cuadrito_muestra_18px",
       "label": "B. Matriz de Variantes por Color (Con Cuadrito Muestra 18px):",
       "_origin": "ast",
-      "community": 125,
+      "community": 127,
       "community_name": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6805,7 +6827,7 @@
       "id": "docs_plan_oficial_migracion_diseno_wabi_sabi_koi_erp_c_fototeca_por_variante_panel_derecho_fijo",
       "label": "C. Fototeca por Variante (Panel Derecho Fijo):",
       "_origin": "ast",
-      "community": 125,
+      "community": 127,
       "community_name": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6817,7 +6839,7 @@
       "id": "docs_plan_oficial_migracion_diseno_wabi_sabi_koi_erp_d_modales_funciones_secundarias_preservadas",
       "label": "D. Modales & Funciones Secundarias Preservadas:",
       "_origin": "ast",
-      "community": 125,
+      "community": 127,
       "community_name": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6829,7 +6851,7 @@
       "id": "docs_plan_oficial_migracion_diseno_wabi_sabi_koi_erp_documento_oficial_de_migraci\u00f3n_de_dise\u00f1o_wabi_sabi_paper",
       "label": "\ud83c\udfee Documento Oficial de Migraci\u00f3n de Dise\u00f1o Wabi-Sabi Paper",
       "_origin": "ast",
-      "community": 125,
+      "community": 127,
       "community_name": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6841,7 +6863,7 @@
       "id": "docs_plan_oficial_migracion_diseno_wabi_sabi_koi_erp_koi_erp_sistema_saas_multi_tenant_entorno_experimental_bot_multi_tenant_exp",
       "label": "KOI ERP \u2014 Sistema SaaS Multi-Tenant (Entorno Experimental `Bot multi-tenant-exp`)",
       "_origin": "ast",
-      "community": 125,
+      "community": 127,
       "community_name": "\ud83d\udccb 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6853,7 +6875,7 @@
       "id": "docs_arquitectura_resiliencia_y_degradacion_controlada",
       "label": "ARQUITECTURA_RESILIENCIA_Y_DEGRADACION_CONTROLADA.md",
       "_origin": "ast",
-      "community": 126,
+      "community": 128,
       "community_name": "2. Principios de Dise\u00f1o para Alta Disponibilidad",
       "file_type": "document",
       "node_kind": "page",
@@ -6865,7 +6887,7 @@
       "id": "docs_arquitectura_resiliencia_y_degradacion_controlada_1_visi\u00f3n_general_y_diagn\u00f3stico_de_fallas",
       "label": "1. Visi\u00f3n General y Diagn\u00f3stico de Fallas",
       "_origin": "ast",
-      "community": 126,
+      "community": 128,
       "community_name": "2. Principios de Dise\u00f1o para Alta Disponibilidad",
       "file_type": "document",
       "node_kind": "heading",
@@ -6877,7 +6899,7 @@
       "id": "docs_arquitectura_resiliencia_y_degradacion_controlada_2_principios_de_dise\u00f1o_para_alta_disponibilidad",
       "label": "2. Principios de Dise\u00f1o para Alta Disponibilidad",
       "_origin": "ast",
-      "community": 126,
+      "community": 128,
       "community_name": "2. Principios de Dise\u00f1o para Alta Disponibilidad",
       "file_type": "document",
       "node_kind": "heading",
@@ -6889,7 +6911,7 @@
       "id": "docs_arquitectura_resiliencia_y_degradacion_controlada_3_plan_de_implementaci\u00f3n_por_fases",
       "label": "3. Plan de Implementaci\u00f3n por Fases",
       "_origin": "ast",
-      "community": 126,
+      "community": 128,
       "community_name": "2. Principios de Dise\u00f1o para Alta Disponibilidad",
       "file_type": "document",
       "node_kind": "heading",
@@ -6901,7 +6923,7 @@
       "id": "docs_arquitectura_resiliencia_y_degradacion_controlada_a_recorridos_cr\u00edticos_vs_degradaci\u00f3n_controlada_controlled_degradation",
       "label": "A. Recorridos Cr\u00edticos vs. Degradaci\u00f3n Controlada (Controlled Degradation)",
       "_origin": "ast",
-      "community": 126,
+      "community": 128,
       "community_name": "2. Principios de Dise\u00f1o para Alta Disponibilidad",
       "file_type": "document",
       "node_kind": "heading",
@@ -6913,7 +6935,7 @@
       "id": "docs_arquitectura_resiliencia_y_degradacion_controlada_arquitectura_oficial_de_resiliencia_degradaci\u00f3n_controlada_e_idempotencia",
       "label": "Arquitectura Oficial de Resiliencia, Degradaci\u00f3n Controlada e Idempotencia",
       "_origin": "ast",
-      "community": 126,
+      "community": 128,
       "community_name": "2. Principios de Dise\u00f1o para Alta Disponibilidad",
       "file_type": "document",
       "node_kind": "heading",
@@ -6925,7 +6947,7 @@
       "id": "docs_arquitectura_resiliencia_y_degradacion_controlada_b_colas_durables_e_idempotencia_durable_event_queues_idempotency",
       "label": "B. Colas Durables e Idempotencia (Durable Event Queues & Idempotency)",
       "_origin": "ast",
-      "community": 126,
+      "community": 128,
       "community_name": "2. Principios de Dise\u00f1o para Alta Disponibilidad",
       "file_type": "document",
       "node_kind": "heading",
@@ -6937,7 +6959,7 @@
       "id": "docs_arquitectura_resiliencia_y_degradacion_controlada_c_descarte_de_carga_selectivo_load_shedding",
       "label": "C. Descarte de Carga Selectivo (Load Shedding)",
       "_origin": "ast",
-      "community": 126,
+      "community": 128,
       "community_name": "2. Principios de Dise\u00f1o para Alta Disponibilidad",
       "file_type": "document",
       "node_kind": "heading",
@@ -6949,7 +6971,7 @@
       "id": "docs_arquitectura_resiliencia_y_degradacion_controlada_el_peligro_de_las_fallas_en_cascada_cascade_failures",
       "label": "El Peligro de las Fallas en Cascada (Cascade Failures)",
       "_origin": "ast",
-      "community": 126,
+      "community": 128,
       "community_name": "2. Principios de Dise\u00f1o para Alta Disponibilidad",
       "file_type": "document",
       "node_kind": "heading",
@@ -6961,7 +6983,7 @@
       "id": "docs_propuestas_diseno_gui_editorial_koi",
       "label": "PROPUESTAS_DISENO_GUI_EDITORIAL_KOI.md",
       "_origin": "ast",
-      "community": 127,
+      "community": 129,
       "community_name": "3. Cat\u00e1logo de Propuestas de Maquetaci\u00f3n (HTML Mockups)",
       "file_type": "document",
       "node_kind": "page",
@@ -6973,7 +6995,7 @@
       "id": "docs_propuestas_diseno_gui_editorial_koi_1_referencias_visuales_inspiracionales",
       "label": "1. Referencias Visuales Inspiracionales",
       "_origin": "ast",
-      "community": 127,
+      "community": 129,
       "community_name": "3. Cat\u00e1logo de Propuestas de Maquetaci\u00f3n (HTML Mockups)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6985,7 +7007,7 @@
       "id": "docs_propuestas_diseno_gui_editorial_koi_2_pilares_de_dise\u00f1o_exigidos",
       "label": "2. Pilares de Dise\u00f1o Exigidos",
       "_origin": "ast",
-      "community": 127,
+      "community": 129,
       "community_name": "3. Cat\u00e1logo de Propuestas de Maquetaci\u00f3n (HTML Mockups)",
       "file_type": "document",
       "node_kind": "heading",
@@ -6997,7 +7019,7 @@
       "id": "docs_propuestas_diseno_gui_editorial_koi_3_cat\u00e1logo_de_propuestas_de_maquetaci\u00f3n_html_mockups",
       "label": "3. Cat\u00e1logo de Propuestas de Maquetaci\u00f3n (HTML Mockups)",
       "_origin": "ast",
-      "community": 127,
+      "community": 129,
       "community_name": "3. Cat\u00e1logo de Propuestas de Maquetaci\u00f3n (HTML Mockups)",
       "file_type": "document",
       "node_kind": "heading",
@@ -7009,7 +7031,7 @@
       "id": "docs_propuestas_diseno_gui_editorial_koi_concepto_y_propuestas_de_dise\u00f1o_gui_minimalismo_japon\u00e9s_koi_est\u00e9tica_editorial_erp",
       "label": "Concepto y Propuestas de Dise\u00f1o GUI: Minimalismo Japon\u00e9s KOI & Est\u00e9tica Editorial ERP",
       "_origin": "ast",
-      "community": 127,
+      "community": 129,
       "community_name": "3. Cat\u00e1logo de Propuestas de Maquetaci\u00f3n (HTML Mockups)",
       "file_type": "document",
       "node_kind": "heading",
@@ -7021,7 +7043,7 @@
       "id": "docs_propuestas_diseno_gui_editorial_koi_propuesta_1_koi_wabi_sabi_paper_calma_editorial",
       "label": "\ud83d\udfe2 Propuesta 1: **KOI Wabi-Sabi Paper (Calma Editorial)**",
       "_origin": "ast",
-      "community": 127,
+      "community": 129,
       "community_name": "3. Cat\u00e1logo de Propuestas de Maquetaci\u00f3n (HTML Mockups)",
       "file_type": "document",
       "node_kind": "heading",
@@ -7033,7 +7055,7 @@
       "id": "docs_propuestas_diseno_gui_editorial_koi_propuesta_2_koi_kuro_sumi_ink_dark_editorial",
       "label": "\ud83c\udf11 Propuesta 2: **KOI Kuro (Sumi Ink Dark Editorial)**",
       "_origin": "ast",
-      "community": 127,
+      "community": 129,
       "community_name": "3. Cat\u00e1logo de Propuestas de Maquetaci\u00f3n (HTML Mockups)",
       "file_type": "document",
       "node_kind": "heading",
@@ -7045,35 +7067,13 @@
       "id": "docs_propuestas_diseno_gui_editorial_koi_propuesta_3_koi_modern_grid_magazine_bloques_de_acento",
       "label": "\ud83d\udfe1 Propuesta 3: **KOI Modern Grid (Magazine & Bloques de Acento)**",
       "_origin": "ast",
-      "community": 127,
+      "community": 129,
       "community_name": "3. Cat\u00e1logo de Propuestas de Maquetaci\u00f3n (HTML Mockups)",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\ud83d\udfe1 propuesta 3: **koi modern grid (magazine & bloques de acento)**",
       "source_file": "docs/PROPUESTAS_DISENO_GUI_EDITORIAL_KOI.md",
       "source_location": "L52"
-    },
-    {
-      "id": "dashboard_src_components_publicrestaurantmenu",
-      "label": "PublicRestaurantMenu.tsx",
-      "_origin": "ast",
-      "community": 128,
-      "community_name": "PublicRestaurantMenu.tsx",
-      "file_type": "code",
-      "norm_label": "publicrestaurantmenu.tsx",
-      "source_file": "dashboard/src/components/PublicRestaurantMenu.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "dashboard_src_components_restaurantkdsdisplay",
-      "label": "RestaurantKdsDisplay.tsx",
-      "_origin": "ast",
-      "community": 129,
-      "community_name": "RestaurantKdsDisplay.tsx",
-      "file_type": "code",
-      "norm_label": "restaurantkdsdisplay.tsx",
-      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
-      "source_location": "L1"
     },
     {
       "id": "src_middlewares_correlationidmiddleware",
@@ -7175,10 +7175,32 @@
       "source_location": "L1"
     },
     {
+      "id": "dashboard_src_components_saaserpaiagentmodule",
+      "label": "SaaSErpAiAgentModule.tsx",
+      "_origin": "ast",
+      "community": 130,
+      "community_name": "SaaSErpAiAgentModule.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpaiagentmodule.tsx",
+      "source_file": "dashboard/src/components/SaaSErpAiAgentModule.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "dashboard_src_components_restaurantkdsdisplay",
+      "label": "RestaurantKdsDisplay.tsx",
+      "_origin": "ast",
+      "community": 131,
+      "community_name": "RestaurantKdsDisplay.tsx",
+      "file_type": "code",
+      "norm_label": "restaurantkdsdisplay.tsx",
+      "source_file": "dashboard/src/components/RestaurantKdsDisplay.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "dashboard_src_components_saaserpdomicilios",
       "label": "SaaSErpDomicilios.tsx",
       "_origin": "ast",
-      "community": 130,
+      "community": 132,
       "community_name": "SaaSErpDomicilios.tsx",
       "file_type": "code",
       "norm_label": "saaserpdomicilios.tsx",
@@ -7186,10 +7208,32 @@
       "source_location": "L1"
     },
     {
+      "id": "dashboard_src_components_saaserpmarketing",
+      "label": "SaaSErpMarketing.tsx",
+      "_origin": "ast",
+      "community": 133,
+      "community_name": "SaaSErpMarketing.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpmarketing.tsx",
+      "source_file": "dashboard/src/components/SaaSErpMarketing.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_services_scheduler",
+      "label": "scheduler.ts",
+      "_origin": "ast",
+      "community": 134,
+      "community_name": "scheduler.ts",
+      "file_type": "code",
+      "norm_label": "scheduler.ts",
+      "source_file": "src/services/scheduler.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "dashboard_src_components_saaserpsalestargets",
       "label": "SaaSErpSalesTargets.tsx",
       "_origin": "ast",
-      "community": 131,
+      "community": 135,
       "community_name": "SaaSErpSalesTargets.tsx",
       "file_type": "code",
       "norm_label": "saaserpsalestargets.tsx",
@@ -7200,7 +7244,7 @@
       "id": "src_scratch_test_pre_recorded_voice",
       "label": "test-pre-recorded-voice.ts",
       "_origin": "ast",
-      "community": 132,
+      "community": 136,
       "community_name": "test-pre-recorded-voice.ts",
       "file_type": "code",
       "norm_label": "test-pre-recorded-voice.ts",
@@ -7211,7 +7255,7 @@
       "id": "src_tools_enviaraudio",
       "label": "enviarAudio.ts",
       "_origin": "ast",
-      "community": 132,
+      "community": 136,
       "community_name": "test-pre-recorded-voice.ts",
       "file_type": "code",
       "norm_label": "enviaraudio.ts",
@@ -7222,67 +7266,12 @@
       "id": "src_tools_enviaraudio_enviaraudiotool",
       "label": "enviarAudioTool",
       "_origin": "ast",
-      "community": 132,
+      "community": 136,
       "community_name": "test-pre-recorded-voice.ts",
       "file_type": "code",
       "norm_label": "enviaraudiotool",
       "source_file": "src/tools/enviarAudio.ts",
       "source_location": "L4"
-    },
-    {
-      "id": "dashboard_src_components_saaserpaiagentmodule",
-      "label": "SaaSErpAiAgentModule.tsx",
-      "_origin": "ast",
-      "community": 133,
-      "community_name": "SaaSErpAiAgentModule.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpaiagentmodule.tsx",
-      "source_file": "dashboard/src/components/SaaSErpAiAgentModule.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "dashboard_src_components_saaserpcrm",
-      "label": "SaaSErpCRM.tsx",
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "SaaSErpCRM.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpcrm.tsx",
-      "source_file": "dashboard/src/components/SaaSErpCRM.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "dashboard_src_components_saaserpmarketing",
-      "label": "SaaSErpMarketing.tsx",
-      "_origin": "ast",
-      "community": 135,
-      "community_name": "SaaSErpMarketing.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpmarketing.tsx",
-      "source_file": "dashboard/src/components/SaaSErpMarketing.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "dashboard_src_components_saaserpsuppliers",
-      "label": "SaaSErpSuppliers.tsx",
-      "_origin": "ast",
-      "community": 136,
-      "community_name": "SaaSErpSuppliers.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpsuppliers.tsx",
-      "source_file": "dashboard/src/components/SaaSErpSuppliers.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_services_scheduler",
-      "label": "scheduler.ts",
-      "_origin": "ast",
-      "community": 137,
-      "community_name": "scheduler.ts",
-      "file_type": "code",
-      "norm_label": "scheduler.ts",
-      "source_file": "src/services/scheduler.ts",
-      "source_location": "L1"
     },
     {
       "id": "docs_implementacion_laboratorio_domicilios_technical_10_c\u00f3mo_se_usa_el_gps",
@@ -9215,59 +9204,184 @@
       "source_location": "L259"
     },
     {
-      "id": "dashboard_src_app",
-      "label": "App.tsx",
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica",
+      "label": "ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
       "_origin": "ast",
       "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "app.tsx",
-      "source_file": "dashboard/src/App.tsx",
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "analisis_y_diseno_oficial_contabilidad_y_nomina_electronica.md",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_activateaccount",
-      "label": "ActivateAccount.tsx",
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_1_diagn\u00f3stico_del_m\u00f3dulo_actual_administraci\u00f3n_de_personal",
+      "label": "1. \ud83d\udd0d DIAGN\u00d3STICO DEL M\u00d3DULO ACTUAL (\"ADMINISTRACI\u00d3N DE PERSONAL\")",
       "_origin": "ast",
       "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "activateaccount.tsx",
-      "source_file": "dashboard/src/components/ActivateAccount.tsx",
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "1. \ud83d\udd0d diagnostico del modulo actual (\"administracion de personal\")",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L10"
+    },
+    {
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_2_arquitectura_y_funciones_del_m\u00f3dulo_de_contabilidad",
+      "label": "2. \ud83e\uddf1 ARQUITECTURA Y FUNCIONES DEL M\u00d3DULO DE CONTABILIDAD",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "2. \ud83e\uddf1 arquitectura y funciones del modulo de contabilidad",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L27"
+    },
+    {
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_3_n\u00f3mina_electr\u00f3nica_d\u00f3nde_debe_estar_y_c\u00f3mo_debe_funcionar",
+      "label": "3. \ud83e\uddfe N\u00d3MINA ELECTR\u00d3NICA: \u00bfD\u00d3NDE DEBE ESTAR Y C\u00d3MO DEBE FUNCIONAR?",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3. \ud83e\uddfe nomina electronica: \u00bfdonde debe estar y como debe funcionar?",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L63"
+    },
+    {
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_4_mejoras_espec\u00edficas_a_implementar",
+      "label": "4. \ud83d\udee0\ufe0f MEJORAS ESPEC\u00cdFICAS A IMPLEMENTAR",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "4. \ud83d\udee0\ufe0f mejoras especificas a implementar",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L97"
+    },
+    {
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_5_conclusi\u00f3n_y_pr\u00f3ximos_pasos",
+      "label": "5. \ud83c\udfaf CONCLUSI\u00d3N Y PR\u00d3XIMOS PASOS",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5. \ud83c\udfaf conclusion y proximos pasos",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L120"
+    },
+    {
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_a_en_el_m\u00f3dulo_de_administraci\u00f3n_de_personal",
+      "label": "A. En el M\u00f3dulo de Administraci\u00f3n de Personal:",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "a. en el modulo de administracion de personal:",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L99"
+    },
+    {
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_an\u00e1lisis_dise\u00f1o_arquitect\u00f3nico_y_plan_oficial_m\u00f3dulo_de_contabilidad_y_n\u00f3mina_electr\u00f3nica_unificada",
+      "label": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83d\udcc4 analisis, diseno arquitectonico y plan oficial: modulo de contabilidad y nomina electronica unificada",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_employeeportal",
-      "label": "EmployeePortal.tsx",
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_b_en_el_m\u00f3dulo_de_contabilidad",
+      "label": "B. En el M\u00f3dulo de Contabilidad:",
       "_origin": "ast",
       "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "employeeportal.tsx",
-      "source_file": "dashboard/src/components/EmployeePortal.tsx",
-      "source_location": "L1"
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "b. en el modulo de contabilidad:",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L108"
     },
     {
-      "id": "dashboard_src_main",
-      "label": "main.tsx",
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_el_error_de_los_erps_tradicionales_lo_que_odia_el_usuario",
+      "label": "\ud83d\udeab El error de los ERPs tradicionales (Lo que odia el usuario):",
       "_origin": "ast",
       "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "main.tsx",
-      "source_file": "dashboard/src/main.tsx",
-      "source_location": "L1"
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\ud83d\udeab el error de los erps tradicionales (lo que odia el usuario):",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L68"
     },
     {
-      "id": "dashboard_src_utils_api",
-      "label": "api.ts",
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_funciones_principales",
+      "label": "Funciones Principales:",
       "_origin": "ast",
       "community": 27,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "api.ts",
-      "source_file": "dashboard/src/utils/api.ts",
-      "source_location": "L1"
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "funciones principales:",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L46"
+    },
+    {
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_la_gran_pregunta_de_ux_en_personal_o_en_contabilidad",
+      "label": "\u2753 La Gran Pregunta de UX: \u00bfEn Personal o en Contabilidad?",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u2753 la gran pregunta de ux: \u00bfen personal o en contabilidad?",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L65"
+    },
+    {
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_la_soluci\u00f3n_unificada_smart_flow_ux",
+      "label": "\u2728 La Soluci\u00f3n Unificada (Smart-Flow UX):",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u2728 la solucion unificada (smart-flow ux):",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L75"
+    },
+    {
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_lo_que_falta_por_mejorar_en_personal",
+      "label": "\u26a0\ufe0f Lo que falta por mejorar en Personal:",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u26a0\ufe0f lo que falta por mejorar en personal:",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L21"
+    },
+    {
+      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_lo_que_ya_est\u00e1_implementado",
+      "label": "\u2705 Lo que YA est\u00e1 implementado:",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u2705 lo que ya esta implementado:",
+      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "source_location": "L14"
     },
     {
       "id": "src_scratch_testr2",
@@ -9837,184 +9951,59 @@
       "source_location": "L26"
     },
     {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica",
-      "label": "ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "id": "dashboard_src_app",
+      "label": "App.tsx",
       "_origin": "ast",
       "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "analisis_y_diseno_oficial_contabilidad_y_nomina_electronica.md",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "app.tsx",
+      "source_file": "dashboard/src/App.tsx",
       "source_location": "L1"
     },
     {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_1_diagn\u00f3stico_del_m\u00f3dulo_actual_administraci\u00f3n_de_personal",
-      "label": "1. \ud83d\udd0d DIAGN\u00d3STICO DEL M\u00d3DULO ACTUAL (\"ADMINISTRACI\u00d3N DE PERSONAL\")",
+      "id": "dashboard_src_components_activateaccount",
+      "label": "ActivateAccount.tsx",
       "_origin": "ast",
       "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "1. \ud83d\udd0d diagnostico del modulo actual (\"administracion de personal\")",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L10"
-    },
-    {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_2_arquitectura_y_funciones_del_m\u00f3dulo_de_contabilidad",
-      "label": "2. \ud83e\uddf1 ARQUITECTURA Y FUNCIONES DEL M\u00d3DULO DE CONTABILIDAD",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "2. \ud83e\uddf1 arquitectura y funciones del modulo de contabilidad",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L27"
-    },
-    {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_3_n\u00f3mina_electr\u00f3nica_d\u00f3nde_debe_estar_y_c\u00f3mo_debe_funcionar",
-      "label": "3. \ud83e\uddfe N\u00d3MINA ELECTR\u00d3NICA: \u00bfD\u00d3NDE DEBE ESTAR Y C\u00d3MO DEBE FUNCIONAR?",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3. \ud83e\uddfe nomina electronica: \u00bfdonde debe estar y como debe funcionar?",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L63"
-    },
-    {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_4_mejoras_espec\u00edficas_a_implementar",
-      "label": "4. \ud83d\udee0\ufe0f MEJORAS ESPEC\u00cdFICAS A IMPLEMENTAR",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "4. \ud83d\udee0\ufe0f mejoras especificas a implementar",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L97"
-    },
-    {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_5_conclusi\u00f3n_y_pr\u00f3ximos_pasos",
-      "label": "5. \ud83c\udfaf CONCLUSI\u00d3N Y PR\u00d3XIMOS PASOS",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "5. \ud83c\udfaf conclusion y proximos pasos",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L120"
-    },
-    {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_a_en_el_m\u00f3dulo_de_administraci\u00f3n_de_personal",
-      "label": "A. En el M\u00f3dulo de Administraci\u00f3n de Personal:",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "a. en el modulo de administracion de personal:",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L99"
-    },
-    {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_an\u00e1lisis_dise\u00f1o_arquitect\u00f3nico_y_plan_oficial_m\u00f3dulo_de_contabilidad_y_n\u00f3mina_electr\u00f3nica_unificada",
-      "label": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\ud83d\udcc4 analisis, diseno arquitectonico y plan oficial: modulo de contabilidad y nomina electronica unificada",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "activateaccount.tsx",
+      "source_file": "dashboard/src/components/ActivateAccount.tsx",
       "source_location": "L1"
     },
     {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_b_en_el_m\u00f3dulo_de_contabilidad",
-      "label": "B. En el M\u00f3dulo de Contabilidad:",
+      "id": "dashboard_src_components_employeeportal",
+      "label": "EmployeePortal.tsx",
       "_origin": "ast",
       "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "b. en el modulo de contabilidad:",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L108"
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "employeeportal.tsx",
+      "source_file": "dashboard/src/components/EmployeePortal.tsx",
+      "source_location": "L1"
     },
     {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_el_error_de_los_erps_tradicionales_lo_que_odia_el_usuario",
-      "label": "\ud83d\udeab El error de los ERPs tradicionales (Lo que odia el usuario):",
+      "id": "dashboard_src_main",
+      "label": "main.tsx",
       "_origin": "ast",
       "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\ud83d\udeab el error de los erps tradicionales (lo que odia el usuario):",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L68"
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "main.tsx",
+      "source_file": "dashboard/src/main.tsx",
+      "source_location": "L1"
     },
     {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_funciones_principales",
-      "label": "Funciones Principales:",
+      "id": "dashboard_src_utils_api",
+      "label": "api.ts",
       "_origin": "ast",
       "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "funciones principales:",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L46"
-    },
-    {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_la_gran_pregunta_de_ux_en_personal_o_en_contabilidad",
-      "label": "\u2753 La Gran Pregunta de UX: \u00bfEn Personal o en Contabilidad?",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u2753 la gran pregunta de ux: \u00bfen personal o en contabilidad?",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L65"
-    },
-    {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_la_soluci\u00f3n_unificada_smart_flow_ux",
-      "label": "\u2728 La Soluci\u00f3n Unificada (Smart-Flow UX):",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u2728 la solucion unificada (smart-flow ux):",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L75"
-    },
-    {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_lo_que_falta_por_mejorar_en_personal",
-      "label": "\u26a0\ufe0f Lo que falta por mejorar en Personal:",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u26a0\ufe0f lo que falta por mejorar en personal:",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L21"
-    },
-    {
-      "id": "docs_analisis_y_diseno_oficial_contabilidad_y_nomina_electronica_lo_que_ya_est\u00e1_implementado",
-      "label": "\u2705 Lo que YA est\u00e1 implementado:",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "\ud83d\udcc4 AN\u00c1LISIS, DISE\u00d1O ARQUITECT\u00d3NICO Y PLAN OFICIAL: M\u00d3DULO DE CONTABILIDAD Y N\u00d3MINA ELECTR\u00d3NICA UNIFICADA",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u2705 lo que ya esta implementado:",
-      "source_file": "docs/ANALISIS_Y_DISENO_OFICIAL_CONTABILIDAD_Y_NOMINA_ELECTRONICA.md",
-      "source_location": "L14"
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "api.ts",
+      "source_file": "dashboard/src/utils/api.ts",
+      "source_location": "L1"
     },
     {
       "id": "docs_seguridad_sesion_unica_y_proteccion_memoria",
@@ -11011,17 +11000,6 @@
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_saaserpauditlogs",
-      "label": "SaaSErpAuditLogs.tsx",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "ClientDashboard.tsx",
-      "file_type": "code",
-      "norm_label": "saaserpauditlogs.tsx",
-      "source_file": "dashboard/src/components/SaaSErpAuditLogs.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "dashboard_src_components_saaserpcampaigns",
       "label": "SaaSErpCampaigns.tsx",
       "_origin": "ast",
@@ -11055,14 +11033,25 @@
       "source_location": "L1"
     },
     {
-      "id": "dashboard_src_components_saaserpsupportdocuments",
-      "label": "SaaSErpSupportDocuments.tsx",
+      "id": "dashboard_src_components_saaserpquotes",
+      "label": "SaaSErpQuotes.tsx",
       "_origin": "ast",
       "community": 5,
       "community_name": "ClientDashboard.tsx",
       "file_type": "code",
-      "norm_label": "saaserpsupportdocuments.tsx",
-      "source_file": "dashboard/src/components/SaaSErpSupportDocuments.tsx",
+      "norm_label": "saaserpquotes.tsx",
+      "source_file": "dashboard/src/components/SaaSErpQuotes.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "dashboard_src_components_saaserpsupporttickets",
+      "label": "SaaSErpSupportTickets.tsx",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "ClientDashboard.tsx",
+      "file_type": "code",
+      "norm_label": "saaserpsupporttickets.tsx",
+      "source_file": "dashboard/src/components/SaaSErpSupportTickets.tsx",
       "source_location": "L1"
     },
     {
@@ -12643,6 +12632,17 @@
       "source_location": "L1"
     },
     {
+      "id": "dashboard_src_components_saaserpcartera",
+      "label": "SaaSErpCartera.tsx",
+      "_origin": "ast",
+      "community": 59,
+      "community_name": "authFetch",
+      "file_type": "code",
+      "norm_label": "saaserpcartera.tsx",
+      "source_file": "dashboard/src/components/SaaSErpCartera.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "dashboard_src_components_saaserpstoresettings",
       "label": "SaaSErpStoreSettings.tsx",
       "_origin": "ast",
@@ -12662,7 +12662,7 @@
       "file_type": "code",
       "norm_label": "colombian_banks",
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L396"
+      "source_location": "L333"
     },
     {
       "id": "dashboard_src_components_systemalertspanel",
@@ -15007,7 +15007,7 @@
       "file_type": "code",
       "norm_label": "diskupload",
       "source_file": "src/server.ts",
-      "source_location": "L1964"
+      "source_location": "L1953"
     },
     {
       "id": "src_server_mediadir",
@@ -16586,7 +16586,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L1095",
+      "source_location": "L1381",
       "weight": 1.0
     },
     {
@@ -16646,7 +16646,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2993",
+      "source_location": "L3004",
       "weight": 1.0
     },
     {
@@ -16670,7 +16670,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2211",
+      "source_location": "L2222",
       "weight": 1.0
     },
     {
@@ -16682,7 +16682,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2248",
+      "source_location": "L2259",
       "weight": 1.0
     },
     {
@@ -16730,7 +16730,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L438",
+      "source_location": "L375",
       "weight": 1.0
     },
     {
@@ -17198,7 +17198,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L7569",
+      "source_location": "L7558",
       "weight": 1.0
     },
     {
@@ -17210,7 +17210,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9266",
+      "source_location": "L9255",
       "weight": 1.0
     },
     {
@@ -17222,7 +17222,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9312",
+      "source_location": "L9301",
       "weight": 1.0
     },
     {
@@ -17234,7 +17234,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9788",
+      "source_location": "L9777",
       "weight": 1.0
     },
     {
@@ -17246,7 +17246,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L9791",
+      "source_location": "L9780",
       "weight": 1.0
     },
     {
@@ -17354,7 +17354,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/electronicInvoiceService.ts",
-      "source_location": "L200",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -17366,7 +17366,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/electronicInvoiceService.ts",
-      "source_location": "L212",
+      "source_location": "L211",
       "weight": 1.0
     },
     {
@@ -17378,7 +17378,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/electronicInvoiceService.ts",
-      "source_location": "L239",
+      "source_location": "L238",
       "weight": 1.0
     },
     {
@@ -17510,7 +17510,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L411",
+      "source_location": "L412",
       "weight": 1.0
     },
     {
@@ -17522,7 +17522,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L329",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -17534,7 +17534,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L352",
+      "source_location": "L353",
       "weight": 1.0
     },
     {
@@ -17546,7 +17546,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L131",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -17558,7 +17558,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L133",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -17570,7 +17570,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L218",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
@@ -17582,7 +17582,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L248",
+      "source_location": "L249",
       "weight": 1.0
     },
     {
@@ -17606,7 +17606,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L369",
+      "source_location": "L370",
       "weight": 1.0
     },
     {
@@ -17618,7 +17618,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L435",
+      "source_location": "L436",
       "weight": 1.0
     },
     {
@@ -18483,18 +18483,6 @@
       "context": "import",
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
       "source_location": "L32",
-      "weight": 1.0
-    },
-    {
-      "source": "dashboard_src_components_clientdashboard",
-      "target": "dashboard_src_components_saaserpaiagentmodule_saaserpaiagentmodule",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -20702,7 +20690,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/server.ts",
-      "source_location": "L7669",
+      "source_location": "L7658",
       "weight": 1.0
     },
     {
@@ -20774,18 +20762,6 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/services/escalation.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "src_services_factusservice",
-      "target": "src_database_postgres_pool",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "src/services/factusService.ts",
       "source_location": "L1",
       "weight": 1.0
     },
@@ -21687,18 +21663,6 @@
       "context": "import",
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
       "source_location": "L32",
-      "weight": 1.0
-    },
-    {
-      "source": "dashboard_src_components_clientdashboard",
-      "target": "dashboard_src_components_saaserpaiagentmodule",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -23618,7 +23582,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/server.ts",
-      "source_location": "L7669",
+      "source_location": "L7658",
       "weight": 1.0
     },
     {
@@ -23690,18 +23654,6 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/services/escalation.ts",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "src_services_factusservice",
-      "target": "src_database_postgres",
-      "relation": "imports_from",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "src/services/factusService.ts",
       "source_location": "L1",
       "weight": 1.0
     },
@@ -25292,7 +25244,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L35",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -25303,7 +25255,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L49",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -25314,7 +25266,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L57",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -25325,7 +25277,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L63",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -25336,7 +25288,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L71",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -25347,7 +25299,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L78",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -25358,7 +25310,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/ClientDashboard.tsx",
-      "source_location": "L83",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -26469,7 +26421,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2973",
+      "source_location": "L2984",
       "weight": 1.0
     },
     {
@@ -26480,7 +26432,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L2984",
+      "source_location": "L2995",
       "weight": 1.0
     },
     {
@@ -26491,7 +26443,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInventory.tsx",
-      "source_location": "L3110",
+      "source_location": "L3121",
       "weight": 1.0
     },
     {
@@ -26909,7 +26861,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L267",
+      "source_location": "L203",
       "weight": 1.0
     },
     {
@@ -26920,7 +26872,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L396",
+      "source_location": "L333",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_saaserpstoresettings",
+      "target": "dashboard_src_components_saaserpstoresettings_bankaccount",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
+      "source_location": "L354",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_saaserpstoresettings",
+      "target": "dashboard_src_components_saaserpstoresettings_bankaccountsmanager",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
+      "source_location": "L363",
       "weight": 1.0
     },
     {
@@ -26932,28 +26906,6 @@
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
       "source_location": "L4",
-      "weight": 1.0
-    },
-    {
-      "source": "dashboard_src_components_saaserpstoresettings",
-      "target": "dashboard_src_components_saaserpstoresettings_bankaccount",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L417",
-      "weight": 1.0
-    },
-    {
-      "source": "dashboard_src_components_saaserpstoresettings",
-      "target": "dashboard_src_components_saaserpstoresettings_bankaccountsmanager",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "dashboard/src/components/SaaSErpStoreSettings.tsx",
-      "source_location": "L426",
       "weight": 1.0
     },
     {
@@ -34559,24 +34511,13 @@
     },
     {
       "source": "src_database_clientscrud",
-      "target": "src_database_clientscrud_updateclient",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L102",
-      "weight": 1.0
-    },
-    {
-      "source": "src_database_clientscrud",
       "target": "src_database_clientscrud_updateclientstatus",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L148",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -34587,7 +34528,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L161",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -34598,7 +34539,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/database/clientsCrud.ts",
-      "source_location": "L174",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -34621,6 +34562,17 @@
       "confidence_score": 1.0,
       "source_file": "src/database/clientsCrud.ts",
       "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "src_database_clientscrud",
+      "target": "src_database_clientscrud_updateclient",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/database/clientsCrud.ts",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -34686,7 +34638,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/middlewares/authMiddleware.ts",
-      "source_location": "L81",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -34708,7 +34660,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/middlewares/authMiddleware.ts",
-      "source_location": "L99",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -35203,7 +35155,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L1679",
+      "source_location": "L1668",
       "weight": 1.0
     },
     {
@@ -35214,7 +35166,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L1964",
+      "source_location": "L1953",
       "weight": 1.0
     },
     {
@@ -35225,7 +35177,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L4259",
+      "source_location": "L4248",
       "weight": 1.0
     },
     {
@@ -35236,7 +35188,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L4265",
+      "source_location": "L4254",
       "weight": 1.0
     },
     {
@@ -35247,7 +35199,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L6409",
+      "source_location": "L6398",
       "weight": 1.0
     },
     {
@@ -35258,7 +35210,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L7561",
+      "source_location": "L7550",
       "weight": 1.0
     },
     {
@@ -35852,7 +35804,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L327",
+      "source_location": "L328",
       "weight": 1.0
     },
     {
@@ -35874,7 +35826,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L365",
+      "source_location": "L366",
       "weight": 1.0
     },
     {
@@ -35885,7 +35837,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L392",
+      "source_location": "L393",
       "weight": 1.0
     },
     {
@@ -35896,7 +35848,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/services/whatsapp.ts",
-      "source_location": "L432",
+      "source_location": "L433",
       "weight": 1.0
     },
     {
@@ -36947,7 +36899,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "src/server.ts",
-      "source_location": "L7558",
+      "source_location": "L7547",
       "weight": 1.0
     },
     {
@@ -36964,5 +36916,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8b24c34309b949272ed442087a11dbc53ac13df4"
+  "built_at_commit": "8ba0615952e73efb6a4223312f500183850acdfa"
 }

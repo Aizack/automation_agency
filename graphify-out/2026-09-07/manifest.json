@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1788754370.075903,
-    "seen": 1788754446.411434,
-    "ast_hash": "4faf6b0415f512e60b1a9fcbe82b3a88",
+    "mtime": 1788756771.4660797,
+    "seen": 1788756802.4670177,
+    "ast_hash": "155a14ea7c7521fa420858d212fbfd7c",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
