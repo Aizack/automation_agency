@@ -903,3 +903,278 @@ label,
   background: var(--surface-container-high-val);
 }
 
+/* ==========================================================================
+   WABI-SABI PAPER SYSTEM (PROPUESTA PRINCIPAL KOI ERP)
+   ========================================================================== */
+.sidebar-expandable {
+  width: 64px;
+  height: 100vh;
+  background-color: var(--bg-paper);
+  border-right: 1px solid var(--border-thin);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  padding: 1.2rem 0;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  overflow: hidden !important;
+  white-space: nowrap;
+}
+
+.sidebar-expandable:hover {
+  width: 290px;
+  box-shadow: 10px 0 30px rgba(0,0,0,0.06);
+  border-right: 1px solid var(--border-strong);
+  overflow-y: auto !important;
+}
+
+.sidebar-brand {
+  padding: 0 0.8rem 1.2rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-thin);
+  margin-bottom: 1rem;
+}
+
+.brand-avatar {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  background-color: var(--border-strong);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.brand-info {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-expandable:hover .brand-info {
+  opacity: 1;
+}
+
+.brand-name {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--text-main);
+}
+
+.brand-sub {
+  font-size: 0.65rem;
+  color: var(--koi-vermilion);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.nav-menu-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0 0.4rem;
+}
+
+.nav-item-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0.8rem;
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-item-btn:hover, .nav-item-btn.active {
+  background-color: var(--koi-vermilion-light);
+  color: var(--koi-vermilion);
+}
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  fill: none;
+  stroke: var(--text-main);
+  stroke-width: 1.8;
+  transition: stroke 0.2s;
+}
+
+.nav-item-btn:hover .nav-icon, .nav-item-btn.active .nav-icon {
+  stroke: var(--koi-vermilion);
+}
+
+.nav-text {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.sidebar-expandable:hover .nav-text {
+  opacity: 1;
+}
+
+.sidebar-expandable:not(:hover) .sub-menu {
+  display: none !important;
+}
+
+.sub-menu {
+  list-style: none;
+  padding-left: 3.2rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-expandable:hover .sub-menu.open {
+  display: flex;
+}
+
+.sub-menu button, .sub-menu a {
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  transition: color 0.2s;
+  display: block;
+  padding: 0.2rem 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sub-menu button:hover, .sub-menu button.active-link, .sub-menu a:hover, .sub-menu a.active-link {
+  color: var(--koi-vermilion);
+  font-weight: 600;
+}
+
+.top-header-zen {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 3.5rem;
+  border-bottom: 1px solid var(--border-thin);
+  background-color: var(--bg-paper);
+}
+
+.top-header-left-zen {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+.top-header-brand-zen {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--text-main);
+}
+
+.search-bar-zen {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  border-bottom: 1px solid var(--border-strong);
+  padding: 0.4rem 0.2rem;
+  width: 340px;
+}
+
+.search-bar-zen input {
+  border: none;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-main);
+  outline: none;
+  width: 100%;
+}
+
+.top-header-right-zen {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.tenant-indicator-zen {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+
+.tenant-label-zen {
+  font-size: 0.65rem;
+  color: var(--koi-vermilion);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.tenant-name-zen {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.user-profile-zen {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.user-profile-zen:hover {
+  background-color: rgba(0,0,0,0.03);
+}
+
+.user-avatar-zen {
+  width: 34px;
+  height: 34px;
+  background-color: var(--text-main);
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.badge-code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  background: rgba(0,0,0,0.04);
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+}
+
+

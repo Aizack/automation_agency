@@ -831,10 +831,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   const activeUserRole = rawRole === 'admin' ? 'Super Admin' : rawRole === 'employee' ? (localStorage.getItem('employee_role') || 'Colaborador') : 'Administrador de Tienda';
 
   return (
-    <div className="flex min-h-screen bg-[#F6F4EE] text-[#161616] transition-colors duration-200 font-sans">
-      <aside className="h-screen w-64 fixed left-0 top-0 bg-[#FAF8F3] border-r border-[#E2DFD7] flex flex-col py-6 px-6 z-[100]">
-        {/* Header/Logo Empresa */}
-        <div className="flex flex-col items-center mb-6 text-center">
+    <div className="flex min-h-screen bg-[#F6F4EE] text-[#161616] font-sans">
+      {/* Sidebar Expandable Wabi-Sabi (64px cerrado -> 290px hover) */}
+      <aside className="sidebar-expandable" id="sidebarExpandable">
+        <div className="sidebar-brand cursor-pointer" onClick={triggerSidebarLogoUpload} title="Haz clic para cambiar el logotipo">
           <input 
             type="file" 
             accept="image/*" 
@@ -842,34 +842,25 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             className="hidden" 
             id="sidebar-logo-upload-input" 
           />
-          <div 
-            onClick={triggerSidebarLogoUpload}
-            className="group relative cursor-pointer flex justify-center items-center w-24 h-24 mb-3"
-            title="Haz clic para cambiar el logotipo"
-          >
-            {clientData?.logo_url ? (
-              <img 
-                src={`${clientData.logo_url}?t=${logoBuster}`} 
-                alt="Logo" 
-                className="w-24 h-24 rounded-2xl object-contain bg-white/5 border border-outline/10 p-1 group-hover:border-primary/50 group-hover:scale-105 transition-all duration-200" 
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-3xl group-hover:bg-primary/30 transition-all duration-200">
-                {clientData?.name.substring(0, 2).toUpperCase()}
-              </div>
-            )}
-            <div className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-              <span className="material-symbols-outlined text-white text-xl">photo_camera</span>
+          {clientData?.logo_url ? (
+            <img 
+              src={`${clientData.logo_url}?t=${logoBuster}`} 
+              alt="Logo" 
+              className="w-[40px] h-[40px] min-w-[40px] rounded-md object-contain bg-white border border-[#E2DFD7] p-0.5" 
+            />
+          ) : (
+            <div className="brand-avatar">
+              {clientData?.name ? clientData.name.substring(0, 2).toUpperCase() : 'KOI'}
             </div>
-          </div>
-          <div className="w-full truncate px-2">
-            <h1 className="font-extrabold text-sm text-on-surface truncate leading-snug">{clientData?.name}</h1>
-            <p className="text-[9px] text-on-surface-variant font-mono uppercase tracking-widest mt-0.5">SaaS ERP</p>
+          )}
+          <div className="brand-info">
+            <div className="brand-name truncate max-w-[200px]">{clientData?.name || 'KOI ERP'}</div>
+            <div className="brand-sub">SaaS Multi-Tenant</div>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <nav className="flex-grow space-y-2.5 overflow-y-auto custom-scrollbar px-1.5 py-1">
+        {/* Navigation Menu List */}
+        <div className="nav-menu-list flex-grow overflow-y-auto custom-scrollbar">
           {hasPermission('settings') && (
             <div className="space-y-1">
               <button 
@@ -1235,15 +1226,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               </button>
             </div>
           )}
-        </nav>
-
+        </div>
+        
         {/* User Session Info & Back / Logout footer */}
-        <div className="border-t border-outline/10 pt-3 mt-auto flex items-center justify-between text-xs text-on-surface-variant">
-          <span className="text-[10px] font-mono opacity-50">Frant SaaS v1.0</span>
+        <div className="border-t border-[#E2DFD7] p-3 mt-auto flex items-center justify-between text-xs text-[#6B6862]">
+          <span className="text-[10px] font-mono opacity-50">KOI ERP v1.0</span>
           {rawRole === 'admin' && (
             <button 
               onClick={onBack}
-              className="text-[10px] text-primary hover:underline font-bold bg-transparent border-0 cursor-pointer flex items-center gap-1"
+              className="text-[10px] text-[#D9381E] hover:underline font-bold bg-transparent border-0 cursor-pointer flex items-center gap-1"
               title="Volver a la consola admin"
             >
               <span className="material-symbols-outlined text-[12px]">arrow_back</span>
@@ -1253,33 +1244,32 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-grow pl-64 min-h-screen flex flex-col bg-[#F6F4EE]">
-        {/* Header Bar Wabi-Sabi */}
-        <header className="h-16 border-b border-[#E2DFD7] flex items-center justify-between px-8 bg-[#FAF8F3] backdrop-blur sticky top-0 z-40">
-            <h2 className="font-display text-xl font-normal text-[#161616] flex items-center gap-2">
-              <span className="font-serif text-[#161616]">
-                {activeTab === 'inventario' ? 'Inventario' :
-                 activeTab === 'facturacion' ? 'Facturación' :
-                 activeTab === 'facturacion2' ? 'Facturación v2 (Módulo Paralelo)' :
-                 activeTab === 'contabilidad' ? 'Contabilidad y Análisis Financiero' :
-                 activeTab === 'cartera' ? 'Cartera' :
-                 activeTab === 'domicilios' ? 'Despachos y Domicilios' :
-                 activeTab === 'lab_jobs' ? 'Trabajos de laboratorio' :
-                 activeTab === 'formulas' ? 'Optometría' :
-                 activeTab === 'agenda' ? (
-                   clientData?.category === 'restaurante' ? 'Reservación de Mesas' :
-                   clientData?.category === 'optica' ? 'Programación de Citas' : 'Calendario de Citas'
-                 ) :
-                 activeTab === 'empleados' ? 'Administración de Personal' :
-                 activeTab === 'usuarios' ? 'Accesos y Permisos ERP' :
-                 activeTab === 'clientes' ? 'Clientes' :
-                 activeTab === 'configuracion' ? 'Información Empresa' :
-                 'Estado del Sistema'}
-              </span>
-            </h2>
+      {/* Main Content Area Wabi-Sabi (64px margin-left) */}
+      <div className="content-area ml-[64px] flex-1 flex flex-col min-h-screen bg-[#F6F4EE]">
+        {/* Top Header Zen (Propuesta Principal KOI ERP) */}
+        <header className="top-header-zen sticky top-0 z-40">
+          <div className="top-header-left-zen">
+            <div className="top-header-brand-zen font-serif text-2xl font-normal text-[#161616]">
+              KOI ERP
+            </div>
+            
+            <div className="search-bar-zen hidden md:flex">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-[#161616] stroke-[1.8]">
+                <circle cx="11" cy="11" r="7"/>
+                <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+              </svg>
+              <input type="text" placeholder="Buscar en inventario, facturas, citas..." />
+            </div>
+          </div>
 
-          <div className="flex items-center gap-4">
+          <div className="top-header-right-zen flex items-center gap-6">
+            <div className="tenant-indicator-zen text-right hidden sm:flex">
+              <span className="tenant-label-zen text-[10px] text-[#D9381E] font-bold uppercase tracking-widest">Negocio Activo</span>
+              <span className="tenant-name-zen font-serif text-lg text-[#161616]">{clientData?.name || 'Óptica Nuevo Horizonte'}</span>
+            </div>
+
+            <div className="h-7 w-[1px] bg-[#E2DFD7] hidden sm:block"></div>
+
             {/* Badge Wabi-Sabi Paper (Sistema Único de Diseño) */}
             <div className="px-3 py-1 rounded-full bg-[#D9381E]/10 border border-[#D9381E]/30 flex items-center gap-1.5 text-[#D9381E] text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-[#D9381E]"></span>
