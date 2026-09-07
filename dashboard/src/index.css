@@ -26,6 +26,76 @@
    ========================================================================== */
 
 :root,
+html[data-theme='wabi-sabi-koi'],
+[data-theme='wabi-sabi-koi'] {
+  /* --- 0. WABI-SABI PAPER (KOI ERP Principal Light Mode) --- */
+  --bg-color: #F6F4EE;
+  --bg-secondary: #FAF8F3;
+  --text-color: #161616;
+  --text-muted: #6B6862;
+  
+  --primary-color: #D9381E;
+  --primary-hover: #b82b14;
+  --on-primary: #FFFFFF;
+  --primary-container: rgba(217, 56, 30, 0.08);
+  --on-primary-container: #D9381E;
+
+  --secondary-color: #161616;
+  --secondary-hover: #333333;
+  --on-secondary: #FFFFFF;
+  --secondary-container: #FAF8F3;
+  --on-secondary-container: #161616;
+
+  --surface-val: #FFFFFF;
+  --surface-dim-val: #FAF8F3;
+  --surface-bright-val: #FFFFFF;
+  --surface-container-val: #FFFFFF;
+  --surface-container-low-val: #FAF8F3;
+  --surface-container-high-val: #F6F4EE;
+  --surface-container-highest-val: #E2DFD7;
+
+  --on-surface-val: #161616;
+  --on-surface-variant-val: #6B6862;
+  --outline-color: #E2DFD7;
+  --outline-variant-color: #161616;
+
+  --card-bg: #FFFFFF;
+  --card-border: #E2DFD7;
+  --card-glow: none;
+
+  --glass-bg: #FAF8F3;
+  --glass-border: #E2DFD7;
+  --glass-blur: 8px;
+  --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --shadow-accent: 0 4px 20px rgba(217, 56, 30, 0.15);
+  --shadow-ocre: 0 4px 18px rgba(217, 56, 30, 0.18);
+  --accent-glow: none;
+
+  --font-family-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Instrument Serif", Georgia, serif;
+  --font-family-label: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+}
+
 html[data-theme='obsidian-gold'],
 [data-theme='obsidian-gold'] {
   /* --- 1. OBSIDIAN-GOLD (Midnight Obsidian Base #121414 con Oro Industrial #edc23e) --- */

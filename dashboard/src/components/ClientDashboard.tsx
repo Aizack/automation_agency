@@ -122,14 +122,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Temas Dinámicos Open-Design (W3C Tokens)
+  // Temas Dinámicos Open-Design (W3C Tokens) - Wabi-Sabi Paper (Oficial Principal)
   const [theme, setTheme] = useState<string>(() => {
-    return localStorage.getItem('app_theme') || localStorage.getItem('theme') || 'obsidian-gold';
+    return localStorage.getItem('app_theme') || localStorage.getItem('theme') || 'wabi-sabi-koi';
   });
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const openDesignThemes = [
+    { id: 'wabi-sabi-koi', name: 'Wabi-Sabi Paper (KOI ERP)', icon: 'style', color: '#D9381E', desc: 'Papel Marfil Natural & Rojo Bermellón (Oficial Principal)' },
     { id: 'obsidian-gold', name: 'Obsidian Gold', icon: 'brightness_7', color: '#edc23e', desc: 'Oscuro Lujo & Oro Industrial' },
     { id: 'emerald-lux', name: 'Emerald Lux', icon: 'eco', color: '#10b981', desc: 'Esmeralda & Menta' },
     { id: 'cyberpunk-neon', name: 'Cyberpunk Neon', icon: 'bolt', color: '#a855f7', desc: 'Neón Morado & Cian' },
@@ -139,7 +140,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   ];
 
   useEffect(() => {
-    const saved = localStorage.getItem('app_theme') || localStorage.getItem('theme') || 'obsidian-gold';
+    const saved = localStorage.getItem('app_theme') || localStorage.getItem('theme') || 'wabi-sabi-koi';
     setTheme(saved);
     document.documentElement.setAttribute('data-theme', saved);
   }, []);
@@ -852,8 +853,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   const activeUserRole = rawRole === 'admin' ? 'Super Admin' : rawRole === 'employee' ? (localStorage.getItem('employee_role') || 'Colaborador') : 'Administrador de Tienda';
 
   return (
-    <div className="flex min-h-screen bg-[#0a0b0c] text-white transition-colors duration-200">
-      <aside className="h-screen w-64 fixed left-0 top-0 bg-[#070708] border-r border-[#1e2023] flex flex-col py-6 px-6 z-[100]">
+    <div className="flex min-h-screen bg-[#F6F4EE] text-[#161616] transition-colors duration-200 font-sans">
+      <aside className="h-screen w-64 fixed left-0 top-0 bg-[#FAF8F3] border-r border-[#E2DFD7] flex flex-col py-6 px-6 z-[100]">
         {/* Header/Logo Empresa */}
         <div className="flex flex-col items-center mb-6 text-center">
           <input 
@@ -1275,11 +1276,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-grow pl-64 min-h-screen flex flex-col bg-[#0a0b0c]">
-        {/* Header Bar */}
-        <header className="h-16 border-b border-[#1e2023] flex items-center justify-between px-8 bg-[#070708] backdrop-blur sticky top-0 z-40">
-            <h2 className="font-extrabold text-base sm:text-lg text-on-surface flex items-center gap-2">
-              <span className="font-sans" style={{ color: '#eab308' }}>
+      <div className="flex-grow pl-64 min-h-screen flex flex-col bg-[#F6F4EE]">
+        {/* Header Bar Wabi-Sabi */}
+        <header className="h-16 border-b border-[#E2DFD7] flex items-center justify-between px-8 bg-[#FAF8F3] backdrop-blur sticky top-0 z-40">
+            <h2 className="font-display text-xl font-normal text-[#161616] flex items-center gap-2">
+              <span className="font-serif text-[#161616]">
                 {activeTab === 'inventario' ? 'Inventario' :
                  activeTab === 'facturacion' ? 'Facturación' :
                  activeTab === 'facturacion2' ? 'Facturación v2 (Módulo Paralelo)' :
