@@ -101,24 +101,29 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
   ];
 
   return (
-    <div className="space-y-6 text-on-surface">
-      {/* Header Estilo Alegra */}
-      <div className="bg-surface-container/30 border border-outline/10 rounded-2xl p-6 shadow-sm">
+    <div className="space-y-6 text-[#161616] font-sans">
+      {/* Header Estilo Wabi-Sabi Zen */}
+      <div className="bg-white border border-[#E2DFD7] rounded-[4px] p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-black text-primary flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary text-[28px]">verified</span>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="badge-code bg-[#D9381E]/10 text-[#D9381E] border border-[#D9381E]/30 px-2 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wider">
+                ⚡ MÓDULO DIAN FACTUS
+              </span>
+            </div>
+            <h2 className="text-2xl font-serif text-[#161616] flex items-center gap-2" style={{ fontFamily: '"Instrument Serif", serif' }}>
+              <span className="material-symbols-outlined text-[#D9381E] text-[28px]">verified</span>
               Habilitación de Facturación Electrónica DIAN
             </h2>
-            <p className="text-xs text-on-surface-variant opacity-80 mt-1">
+            <p className="text-xs text-[#6B6862] mt-1">
               Sin costo de certificado digital. Habilita tu negocio en la DIAN en menos de 5 minutos mediante Factus API (Proveedor Tecnológico).
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
+            <span className={`px-3 py-1 rounded-[4px] text-xs font-mono font-bold flex items-center gap-1.5 ${
               dianStatus === 'habilitado' 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-300' 
+                : 'bg-amber-50 text-amber-800 border border-amber-300'
             }`}>
               <span className="w-2 h-2 rounded-full bg-current animate-pulse"></span>
               {dianStatus === 'habilitado' ? 'ESTADO: HABILITADO ANTE LA DIAN' : 'ESTADO: PENDIENTE DE HABILITACIÓN'}
@@ -126,10 +131,10 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
           </div>
         </div>
 
-        {/* Stepper Superior */}
-        <div className="w-full overflow-x-auto pb-2">
+        {/* Stepper Superior Wabi-Sabi */}
+        <div className="w-full overflow-x-auto pb-2 border-t border-[#E2DFD7] pt-4">
           <div className="flex items-center justify-between min-w-[650px] relative">
-            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-outline/10 -z-0"></div>
+            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[1px] bg-[#E2DFD7] -z-0"></div>
             {steps.map((step) => {
               const isCompleted = step.num < currentStep || dianStatus === 'habilitado';
               const isActive = step.num === currentStep && dianStatus !== 'habilitado';
@@ -138,14 +143,14 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
                 <div 
                   key={step.num} 
                   onClick={() => setCurrentStep(step.num)}
-                  className="flex flex-col items-center gap-1.5 cursor-pointer z-10 bg-surface-container-lowest px-2"
+                  className="flex flex-col items-center gap-1.5 cursor-pointer z-10 bg-white px-3"
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                  <div className={`w-8 h-8 rounded-[4px] flex items-center justify-center text-xs font-mono font-bold transition-all duration-200 border ${
                     isCompleted 
-                      ? 'bg-emerald-500 text-white shadow-md' 
+                      ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]' 
                       : isActive 
-                      ? 'bg-primary text-on-primary ring-4 ring-primary/20 scale-110 shadow-lg' 
-                      : 'bg-surface-variant text-on-surface-variant opacity-60'
+                      ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-sm' 
+                      : 'bg-[#F6F4EE] text-[#6B6862] border-[#E2DFD7]'
                   }`}>
                     {isCompleted ? (
                       <span className="material-symbols-outlined text-[16px]">check</span>
@@ -153,8 +158,8 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
                       step.num
                     )}
                   </div>
-                  <span className={`text-[11px] font-semibold tracking-tight ${
-                    isActive ? 'text-primary font-bold' : 'text-on-surface-variant opacity-75'
+                  <span className={`text-[11px] tracking-tight ${
+                    isActive ? 'text-[#161616] font-bold' : 'text-[#6B6862]'
                   }`}>
                     {step.label}
                   </span>
@@ -167,33 +172,33 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
 
       {/* Mensajes de Alerta */}
       {successMessage && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold flex items-center gap-2 animate-fade-in">
-          <span className="material-symbols-outlined text-[20px]">check_circle</span>
+        <div className="p-4 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-[4px] text-xs font-medium flex items-center gap-2 animate-fade-in">
+          <span className="material-symbols-outlined text-[20px] text-emerald-600">check_circle</span>
           {successMessage}
         </div>
       )}
 
       {errorMessage && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-xs font-bold flex items-center gap-2 animate-fade-in">
-          <span className="material-symbols-outlined text-[20px]">error</span>
+        <div className="p-4 bg-rose-50 border border-rose-300 text-rose-900 rounded-[4px] text-xs font-medium flex items-center gap-2 animate-fade-in">
+          <span className="material-symbols-outlined text-[20px] text-rose-600">error</span>
           {errorMessage}
         </div>
       )}
 
       {/* CONTENIDO DEL PASO 1: Datos de tu empresa */}
       {currentStep === 1 && (
-        <div className="bg-surface-container/30 border border-outline/10 rounded-2xl p-6 max-w-3xl space-y-6">
+        <div className="bg-white border border-[#E2DFD7] rounded-[4px] p-6 max-w-3xl space-y-6 shadow-sm">
           <div>
-            <h3 className="text-lg font-bold text-on-surface">Datos de la empresa</h3>
-            <p className="text-xs text-on-surface-variant">Completa los datos de tu negocio para iniciar el proceso en la DIAN.</p>
+            <h3 className="text-xl font-serif text-[#161616]" style={{ fontFamily: '"Instrument Serif", serif' }}>Datos de la empresa</h3>
+            <p className="text-xs text-[#6B6862]">Completa los datos de tu negocio para iniciar el proceso en la DIAN.</p>
           </div>
 
-          <div className="flex gap-4 p-1 bg-surface-container rounded-xl w-fit border border-outline/10">
+          <div className="flex gap-2 p-1 bg-[#F6F4EE] rounded-[4px] w-fit border border-[#E2DFD7]">
             <button
               type="button"
               onClick={() => setPersonType('natural')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                personType === 'natural' ? 'bg-primary text-white shadow' : 'text-on-surface-variant hover:text-on-surface'
+              className={`px-4 py-2 rounded-[4px] text-xs font-bold transition-all cursor-pointer border-0 ${
+                personType === 'natural' ? 'bg-[#161616] text-[#F6F4EE]' : 'text-[#6B6862] hover:text-[#161616] bg-transparent'
               }`}
             >
               Persona natural
@@ -201,8 +206,8 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
             <button
               type="button"
               onClick={() => setPersonType('juridica')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                personType === 'juridica' ? 'bg-primary text-white shadow' : 'text-on-surface-variant hover:text-on-surface'
+              className={`px-4 py-2 rounded-[4px] text-xs font-bold transition-all cursor-pointer border-0 ${
+                personType === 'juridica' ? 'bg-[#161616] text-[#F6F4EE]' : 'text-[#6B6862] hover:text-[#161616] bg-transparent'
               }`}
             >
               Persona jurídica
@@ -211,11 +216,11 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface-variant">Tipo de documento *</label>
+              <label className="text-xs font-bold text-[#6B6862]">Tipo de documento *</label>
               <select
                 value={idType}
                 onChange={(e) => setIdType(e.target.value)}
-                className="w-full bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface outline-none"
+                className="w-full bg-[#F6F4EE] border border-[#E2DFD7] rounded-[4px] px-3 py-2 text-xs text-[#161616] outline-none focus:border-[#161616]"
               >
                 <option value="NIT">NIT (Número de identificación tributaria)</option>
                 <option value="CC">Cédula de Ciudadanía</option>
@@ -223,18 +228,18 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface-variant">Número de identificación (sin DV) *</label>
+              <label className="text-xs font-bold text-[#6B6862]">Número de identificación (sin DV) *</label>
               <input
                 type="text"
                 value={idNumber}
                 onChange={(e) => setIdNumber(e.target.value)}
                 placeholder="ej. 1129520837"
-                className="w-full bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface outline-none font-mono"
+                className="w-full bg-[#F6F4EE] border border-[#E2DFD7] rounded-[4px] px-3 py-2 text-xs text-[#161616] outline-none font-mono focus:border-[#161616]"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface-variant">
+              <label className="text-xs font-bold text-[#6B6862]">
                 {personType === 'natural' ? 'Nombre *' : 'Razón Social *'}
               </label>
               <input
@@ -242,29 +247,29 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder={personType === 'natural' ? 'ej. ISAC DAVID' : 'ej. 1 ÓPTICA NUEVO HORIZONTE S.A.S.'}
-                className="w-full bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface outline-none font-bold"
+                className="w-full bg-[#F6F4EE] border border-[#E2DFD7] rounded-[4px] px-3 py-2 text-xs text-[#161616] outline-none font-bold focus:border-[#161616]"
               />
             </div>
 
             {personType === 'natural' && (
               <div className="space-y-1">
-                <label className="text-xs font-bold text-on-surface-variant">Apellidos *</label>
+                <label className="text-xs font-bold text-[#6B6862]">Apellidos *</label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="ej. DIAZ BARRIOS"
-                  className="w-full bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface outline-none font-bold"
+                  className="w-full bg-[#F6F4EE] border border-[#E2DFD7] rounded-[4px] px-3 py-2 text-xs text-[#161616] outline-none font-bold focus:border-[#161616]"
                 />
               </div>
             )}
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface-variant">Responsabilidad tributaria *</label>
+              <label className="text-xs font-bold text-[#6B6862]">Responsabilidad tributaria *</label>
               <select
                 value={taxResponsibility}
                 onChange={(e) => setTaxResponsibility(e.target.value)}
-                className="w-full bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface outline-none"
+                className="w-full bg-[#F6F4EE] border border-[#E2DFD7] rounded-[4px] px-3 py-2 text-xs text-[#161616] outline-none focus:border-[#161616]"
               >
                 <option value="No responsable de IVA">No responsable de IVA (Régimen Simplificado)</option>
                 <option value="Responsable de IVA">Responsable de IVA (Régimen Común)</option>
@@ -272,35 +277,35 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-on-surface-variant">Municipio / Departamento *</label>
+              <label className="text-xs font-bold text-[#6B6862]">Municipio / Departamento *</label>
               <input
                 type="text"
                 value={municipality}
                 onChange={(e) => setMunicipality(e.target.value)}
                 placeholder="ej. Barranquilla / Atlántico"
-                className="w-full bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface outline-none"
+                className="w-full bg-[#F6F4EE] border border-[#E2DFD7] rounded-[4px] px-3 py-2 text-xs text-[#161616] outline-none focus:border-[#161616]"
               />
             </div>
 
             <div className="space-y-1 md:col-span-2">
-              <label className="text-xs font-bold text-on-surface-variant">Dirección Comercial *</label>
+              <label className="text-xs font-bold text-[#6B6862]">Dirección Comercial *</label>
               <input
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="ej. Cra 16 sur No 46-64"
-                className="w-full bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface outline-none"
+                className="w-full bg-[#F6F4EE] border border-[#E2DFD7] rounded-[4px] px-3 py-2 text-xs text-[#161616] outline-none focus:border-[#161616]"
               />
             </div>
 
             <div className="space-y-1 md:col-span-2">
-              <label className="text-xs font-bold text-on-surface-variant">Correo electrónico para facturación *</label>
+              <label className="text-xs font-bold text-[#6B6862]">Correo electrónico para facturación *</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ej. contabilidadjdetodo@gmail.com"
-                className="w-full bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface outline-none"
+                className="w-full bg-[#F6F4EE] border border-[#E2DFD7] rounded-[4px] px-3 py-2 text-xs text-[#161616] outline-none focus:border-[#161616]"
               />
             </div>
           </div>
@@ -309,7 +314,7 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
-              className="px-6 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow transition cursor-pointer"
+              className="px-6 py-2.5 bg-[#161616] hover:bg-[#D9381E] text-[#F6F4EE] text-xs font-bold rounded-[4px] flex items-center gap-2 transition cursor-pointer border-0"
             >
               Continuar
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -320,17 +325,17 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
 
       {/* CONTENIDO DEL PASO 2: Habilitación DIAN Registro */}
       {currentStep === 2 && (
-        <div className="bg-surface-container/30 border border-outline/10 rounded-2xl p-6 max-w-3xl space-y-5">
+        <div className="bg-white border border-[#E2DFD7] rounded-[4px] p-6 max-w-3xl space-y-5 shadow-sm">
           <div>
-            <span className="px-2.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">Facturación Electrónica</span>
-            <h3 className="text-xl font-bold text-on-surface mt-1">Habilitación DIAN: Registro</h3>
-            <p className="text-xs text-on-surface-variant">Sigue los pasos de la guía para registrarte como facturador electrónico en la DIAN.</p>
+            <span className="badge-code bg-[#D9381E]/10 text-[#D9381E] border border-[#D9381E]/30 px-2.5 py-0.5 rounded-[4px] text-[10px] font-bold font-mono uppercase tracking-wider">Facturación Electrónica</span>
+            <h3 className="text-xl font-serif text-[#161616] mt-1" style={{ fontFamily: '"Instrument Serif", serif' }}>Habilitación DIAN: Registro</h3>
+            <p className="text-xs text-[#6B6862]">Sigue los pasos de la guía para registrarte como facturador electrónico en la DIAN.</p>
           </div>
 
-          <div className="bg-surface-container/50 border border-outline/10 p-5 rounded-xl space-y-4">
-            <ol className="space-y-3 text-xs text-on-surface list-decimal pl-4 font-medium">
+          <div className="bg-[#F6F4EE] border border-[#E2DFD7] p-5 rounded-[4px] space-y-4">
+            <ol className="space-y-3 text-xs text-[#161616] list-decimal pl-4 font-medium">
               <li>
-                Ingresa a la web de la DIAN por la opción <a href="https://catalogo-vpfe.dian.gov.co/User/Login" target="_blank" rel="noreferrer" className="text-primary font-bold underline">"Habilitación"</a>.
+                Ingresa a la web de la DIAN por la opción <a href="https://catalogo-vpfe.dian.gov.co/User/Login" target="_blank" rel="noreferrer" className="text-[#D9381E] font-bold underline">"Habilitación"</a>.
               </li>
               <li>
                 Elige tu tipo de usuario (Empresa o Persona Natural) y digita tu cédula/NIT.
@@ -351,14 +356,14 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
             <button
               type="button"
               onClick={() => setCurrentStep(1)}
-              className="px-4 py-2 border border-outline/20 text-on-surface text-xs font-bold rounded-xl cursor-pointer"
+              className="px-4 py-2 border border-[#E2DFD7] text-[#161616] text-xs font-bold rounded-[4px] cursor-pointer hover:bg-[#F6F4EE]"
             >
               Atrás
             </button>
             <button
               type="button"
               onClick={() => setCurrentStep(3)}
-              className="px-6 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow transition cursor-pointer"
+              className="px-6 py-2.5 bg-[#161616] hover:bg-[#D9381E] text-[#F6F4EE] text-xs font-bold rounded-[4px] flex items-center gap-2 transition cursor-pointer border-0"
             >
               Continuar
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -369,14 +374,14 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
 
       {/* CONTENIDO DEL PASO 3: Modos de Operación */}
       {currentStep === 3 && (
-        <div className="bg-surface-container/30 border border-outline/10 rounded-2xl p-6 max-w-3xl space-y-5">
+        <div className="bg-white border border-[#E2DFD7] rounded-[4px] p-6 max-w-3xl space-y-5 shadow-sm">
           <div>
-            <h3 className="text-xl font-bold text-on-surface">Habilitación DIAN: Modos de operación</h3>
-            <p className="text-xs text-on-surface-variant">Realiza los pasos de la guía y continúa con el proceso de habilitación.</p>
+            <h3 className="text-xl font-serif text-[#161616]" style={{ fontFamily: '"Instrument Serif", serif' }}>Habilitación DIAN: Modos de operación</h3>
+            <p className="text-xs text-[#6B6862]">Realiza los pasos de la guía y continúa con el proceso de habilitación.</p>
           </div>
 
-          <div className="bg-surface-container/50 border border-outline/10 p-5 rounded-xl space-y-3 text-xs text-on-surface">
-            <p className="font-bold text-primary">En el portal de la DIAN:</p>
+          <div className="bg-[#F6F4EE] border border-[#E2DFD7] p-5 rounded-[4px] space-y-3 text-xs text-[#161616]">
+            <p className="font-bold text-[#D9381E]">En el portal de la DIAN:</p>
             <ul className="space-y-2.5 list-disc pl-4">
               <li>Ubica la sección <strong>"Datos de empresa y software"</strong>.</li>
               <li>Como empresa proveedora elige: <strong>FACTUS S.A.S.</strong> (o <strong>LOPEZSOFT S.A.S.</strong>).</li>
@@ -390,14 +395,14 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
-              className="px-4 py-2 border border-outline/20 text-on-surface text-xs font-bold rounded-xl cursor-pointer"
+              className="px-4 py-2 border border-[#E2DFD7] text-[#161616] text-xs font-bold rounded-[4px] cursor-pointer hover:bg-[#F6F4EE]"
             >
               Atrás
             </button>
             <button
               type="button"
               onClick={() => setCurrentStep(4)}
-              className="px-6 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow transition cursor-pointer"
+              className="px-6 py-2.5 bg-[#161616] hover:bg-[#D9381E] text-[#F6F4EE] text-xs font-bold rounded-[4px] flex items-center gap-2 transition cursor-pointer border-0"
             >
               Ir a Set de Pruebas
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -408,15 +413,15 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
 
       {/* CONTENIDO DEL PASO 4: Envío del set de pruebas */}
       {currentStep === 4 && (
-        <div className="bg-surface-container/30 border border-outline/10 rounded-2xl p-6 max-w-3xl space-y-6">
+        <div className="bg-white border border-[#E2DFD7] rounded-[4px] p-6 max-w-3xl space-y-6 shadow-sm">
           <div>
-            <span className="px-2.5 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">Facturación electrónica</span>
-            <h3 className="text-2xl font-black text-on-surface mt-1">Envío del set de pruebas</h3>
-            <p className="text-xs text-on-surface-variant">Trae el código generado por la DIAN y activa el inicio de tus pruebas automatizadas.</p>
+            <span className="badge-code bg-[#D9381E]/10 text-[#D9381E] border border-[#D9381E]/30 px-2.5 py-0.5 rounded-[4px] text-[10px] font-bold font-mono uppercase tracking-wider">Facturación electrónica</span>
+            <h3 className="text-2xl font-serif text-[#161616] mt-1" style={{ fontFamily: '"Instrument Serif", serif' }}>Envío del set de pruebas</h3>
+            <p className="text-xs text-[#6B6862]">Trae el código generado por la DIAN y activa el inicio de tus pruebas automatizadas.</p>
           </div>
 
-          <div className="space-y-2 bg-surface-container/40 p-5 rounded-2xl border border-outline/10">
-            <label className="text-xs font-bold text-on-surface">Código TestsetId *</label>
+          <div className="space-y-2 bg-[#F6F4EE] p-5 rounded-[4px] border border-[#E2DFD7]">
+            <label className="text-xs font-bold text-[#161616]">Código TestsetId *</label>
             <div className="flex gap-3 flex-col sm:flex-row">
               <input
                 type="text"
@@ -424,13 +429,13 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
                 onChange={(e) => setTestSetId(e.target.value)}
                 placeholder="Agrega el código brindado por la DIAN (ej. 8a20f7b1-4c69...)"
                 disabled={isRunningTests}
-                className="flex-1 bg-surface-container border border-outline/20 rounded-xl px-4 py-3 text-xs text-on-surface outline-none font-mono focus:border-primary transition-all"
+                className="flex-1 bg-white border border-[#E2DFD7] rounded-[4px] px-4 py-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition-all"
               />
               <button
                 type="button"
                 onClick={handleStartTestSet}
                 disabled={isRunningTests || !testSetId.trim()}
-                className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 min-w-[150px]"
+                className="px-6 py-3 bg-[#161616] hover:bg-[#D9381E] text-[#F6F4EE] font-bold text-xs rounded-[4px] transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 min-w-[150px] border-0"
               >
                 {isRunningTests ? (
                   <>
@@ -446,13 +451,13 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
             {/* Barra de Progreso */}
             {isRunningTests && (
               <div className="space-y-1.5 pt-3">
-                <div className="flex justify-between text-[11px] font-bold text-primary">
+                <div className="flex justify-between text-[11px] font-mono font-bold text-[#D9381E]">
                   <span>Transmitiendo facturas de prueba a la DIAN via Factus...</span>
                   <span>{Math.round((testProgress / 20) * 100)}%</span>
                 </div>
-                <div className="w-full h-2 bg-surface-variant rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-[#E2DFD7] rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-emerald-400 transition-all duration-300 rounded-full"
+                    className="h-full bg-[#D9381E] transition-all duration-300 rounded-full"
                     style={{ width: `${(testProgress / 20) * 100}%` }}
                   ></div>
                 </div>
@@ -464,7 +469,7 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
             <button
               type="button"
               onClick={() => setCurrentStep(3)}
-              className="px-4 py-2 border border-outline/20 text-on-surface text-xs font-bold rounded-xl cursor-pointer"
+              className="px-4 py-2 border border-[#E2DFD7] text-[#161616] text-xs font-bold rounded-[4px] cursor-pointer hover:bg-[#F6F4EE]"
             >
               Atrás
             </button>
@@ -472,7 +477,7 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
               <button
                 type="button"
                 onClick={() => setCurrentStep(5)}
-                className="px-6 py-2.5 bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow cursor-pointer"
+                className="px-6 py-2.5 bg-[#161616] text-[#F6F4EE] hover:bg-[#D9381E] text-xs font-bold rounded-[4px] flex items-center gap-2 cursor-pointer border-0"
               >
                 Continuar a Numeraciones
                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -484,29 +489,29 @@ export const SaaSErpHabilitacionDian: React.FC<DianHabilitacionProps> = ({ clien
 
       {/* CONTENIDO DEL PASO 5: Numeraciones y Prefijos */}
       {currentStep === 5 && (
-        <div className="bg-surface-container/30 border border-outline/10 rounded-2xl p-6 max-w-3xl space-y-6">
-          <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400">
-            <span className="material-symbols-outlined text-[32px]">verified</span>
+        <div className="bg-white border border-[#E2DFD7] rounded-[4px] p-6 max-w-3xl space-y-6 shadow-sm">
+          <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-300 rounded-[4px] text-emerald-900">
+            <span className="material-symbols-outlined text-[32px] text-emerald-600">verified</span>
             <div>
-              <h4 className="font-extrabold text-sm">¡FELICITACIONES! TU NEGOCIO YA ESTÁ HABILITADO ANTE LA DIAN</h4>
+              <h4 className="font-serif font-bold text-base" style={{ fontFamily: '"Instrument Serif", serif' }}>¡FELICITACIONES! TU NEGOCIO YA ESTÁ HABILITADO ANTE LA DIAN</h4>
               <p className="text-xs opacity-90">Ya puedes emitir facturas electrónicas y documentos POS legalmente desde el Punto de Venta de tu ERP.</p>
             </div>
           </div>
 
-          <div className="bg-surface-container/40 p-5 rounded-2xl border border-outline/10 space-y-3">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-on-surface-variant">Resolución y Prefijo Asociado</h4>
+          <div className="bg-[#F6F4EE] p-5 rounded-[4px] border border-[#E2DFD7] space-y-3">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-[#6B6862]">Resolución y Prefijo Asociado</h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-              <div className="bg-surface-container p-3 rounded-xl border border-outline/10">
-                <span className="text-[10px] text-on-surface-variant">Prefijo POS</span>
-                <p className="font-bold font-mono text-primary">SETP</p>
+              <div className="bg-white p-3 rounded-[4px] border border-[#E2DFD7]">
+                <span className="text-[10px] text-[#6B6862]">Prefijo POS</span>
+                <p className="font-bold font-mono text-[#D9381E]">SETP</p>
               </div>
-              <div className="bg-surface-container p-3 rounded-xl border border-outline/10">
-                <span className="text-[10px] text-on-surface-variant">Rango Autorizado</span>
-                <p className="font-bold font-mono">1 a 500.000</p>
+              <div className="bg-white p-3 rounded-[4px] border border-[#E2DFD7]">
+                <span className="text-[10px] text-[#6B6862]">Rango Autorizado</span>
+                <p className="font-bold font-mono text-[#161616]">1 a 500.000</p>
               </div>
-              <div className="bg-surface-container p-3 rounded-xl border border-outline/10">
-                <span className="text-[10px] text-on-surface-variant">Proveedor</span>
-                <p className="font-bold text-emerald-400">Factus API (PT)</p>
+              <div className="bg-white p-3 rounded-[4px] border border-[#E2DFD7]">
+                <span className="text-[10px] text-[#6B6862]">Proveedor</span>
+                <p className="font-bold text-emerald-700 font-mono">Factus API (PT)</p>
               </div>
             </div>
           </div>
