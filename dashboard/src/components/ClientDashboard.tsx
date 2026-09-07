@@ -31,6 +31,7 @@ import { SaaSErpSalesTargets } from './SaaSErpSalesTargets';
 import { SaaSErpQuotes } from './SaaSErpQuotes';
 import { SaaSErpHabilitacionDian } from './SaaSErpHabilitacionDian';
 import { SaaSErpAiAgentModule } from './SaaSErpAiAgentModule';
+import { NotificationBell } from './NotificationBell';
 
 interface Client {
   id: string;
@@ -588,33 +589,44 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     fetchDashboardMetrics();
   }, [clientId]);
 
-  // Polling dinámico (Cada 3 segundos) para Logs y Estado de Vinculación QR
+  // Polling dinámico optimizado para Estado de Vinculación QR
   useEffect(() => {
-    const fetchLiveUpdates = async () => {
+    const fetchWaStatus = async () => {
       try {
-        // 1. Obtener logs reales de la base de datos
-        const logsRes = await fetch(`/api/clients/${clientId}/logs`);
-        const logsJson = await logsRes.json();
-        if (logsJson.success) {
-          setInteractions(logsJson.data);
-        }
-
-        // 2. Obtener estado en tiempo real de WhatsApp
         const waRes = await fetch(`/api/whatsapp/status?clientId=${clientId}`);
         const waJson = await waRes.json();
         if (waJson.success) {
           setWhatsappStatus(waJson.data);
         }
-
-        // 3. Obtener métricas
-        fetchDashboardMetrics();
       } catch (error) {
-        console.error("[ClientDashboard] Error en polling:", error);
+        console.error("[ClientDashboard] Error consultando estado WhatsApp:", error);
       }
     };
 
-    fetchLiveUpdates(); // Carga inicial
-    const interval = setInterval(fetchLiveUpdates, 3000); // Polling de 3 segundos
+    fetchWaStatus(); // Carga inicial
+    // Rápido (3s) únicamente si se está procesando o mostrando un QR; moderado (20s) de lo contrario
+    const isConnecting = whatsappStatus.status === 'INITIALIZING' || whatsappStatus.status === 'QR';
+    const statusInterval = setInterval(fetchWaStatus, isConnecting ? 3000 : 20000);
+    return () => clearInterval(statusInterval);
+  }, [clientId, whatsappStatus.status]);
+
+  // Polling secundario (cada 30 segundos) para Logs de Chat y Métricas del Dashboard
+  useEffect(() => {
+    const fetchLogsAndMetrics = async () => {
+      try {
+        const logsRes = await fetch(`/api/clients/${clientId}/logs`);
+        const logsJson = await logsRes.json();
+        if (logsJson.success) {
+          setInteractions(logsJson.data);
+        }
+        fetchDashboardMetrics();
+      } catch (error) {
+        console.error("[ClientDashboard] Error consultando logs y métricas:", error);
+      }
+    };
+
+    fetchLogsAndMetrics();
+    const interval = setInterval(fetchLogsAndMetrics, 30000); // 30 segundos
     return () => clearInterval(interval);
   }, [clientId]);
 
@@ -1425,11 +1437,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           </div>
 
-          <div className="top-header-right-zen flex items-center gap-6">
-            <div className="tenant-indicator-zen text-right hidden sm:flex flex-col">
-              <span className="tenant-label-zen text-[10px] text-[#D9381E] font-bold uppercase tracking-widest">Negocio Activo</span>
-              <span className="tenant-name-zen font-serif text-lg text-[#161616]" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>{clientData?.name || 'Óptica Nuevo Horizonte'}</span>
-            </div>
+          <div className="top-header-right-zen flex items-center gap-4">
+            {/* Campanita de Notificaciones del Sistema */}
+            <NotificationBell 
+              clientId={clientId} 
+              onConnectWhatsApp={handleConnectWhatsApp}
+              onNavigateTab={(tab) => setActiveTab(tab as any)}
+            />
 
             <div className="h-7 w-[1px] bg-[#E2DFD7] hidden sm:block"></div>
 

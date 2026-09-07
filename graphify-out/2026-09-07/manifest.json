@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1788758860.9205723,
-    "seen": 1788758886.253982,
-    "ast_hash": "7d308df0d287cb0534580f03c1fac759",
+    "mtime": 1788800291.8463898,
+    "seen": 1788800339.5444987,
+    "ast_hash": "27bc88c89730572f6bffe84ac45e7f61",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
-    "mtime": 1788744942.4046743,
-    "seen": 1788747134.536916,
-    "ast_hash": "1cb0419d84c7221b052c42366aa2d6dc",
+    "mtime": 1788761971.9760416,
+    "seen": 1788762024.9259055,
+    "ast_hash": "a8df5242b644d1d3dd0283d74e8e6ad9",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpStoreSettings.tsx": {
-    "mtime": 1788744942.4046743,
-    "seen": 1788747134.536942,
-    "ast_hash": "98908b96df76b31486ce7f45d35f5974",
+    "mtime": 1788763375.7522082,
+    "seen": 1788765046.2140706,
+    "ast_hash": "8596f211415b0d671b40a45e365c4073",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSuppliers.tsx": {
@@ -270,9 +270,9 @@
     "semantic_hash": ""
   },
   "src/core/config.ts": {
-    "mtime": 1788494605.8116057,
-    "seen": 1788747134.5370216,
-    "ast_hash": "7a69345293a421b93787c6db2eaf8535",
+    "mtime": 1788763103.7462246,
+    "seen": 1788765046.2141118,
+    "ast_hash": "dd0bfdc909570ff750b117a2396bc7eb",
     "semantic_hash": ""
   },
   "src/core/router.ts": {
@@ -282,15 +282,15 @@
     "semantic_hash": ""
   },
   "src/database/clientsCrud.ts": {
-    "mtime": 1788744942.4196954,
-    "seen": 1788747134.5370276,
-    "ast_hash": "7026d279d74ba3e45e9729cfdae76bd6",
+    "mtime": 1788763119.7738671,
+    "seen": 1788765046.2141147,
+    "ast_hash": "fb92f10a5150338efa6f9a7c8d305a8f",
     "semantic_hash": ""
   },
   "src/database/initDb.ts": {
-    "mtime": 1788744942.4196954,
-    "seen": 1788747134.5370302,
-    "ast_hash": "e4fd261cc053b2e5ba8de598c00bdc56",
+    "mtime": 1788763111.852245,
+    "seen": 1788765046.214116,
+    "ast_hash": "8583212e932f4c32e6bd122016669ef1",
     "semantic_hash": ""
   },
   "src/database/postgres.ts": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1788744942.421702,
-    "seen": 1788747134.5371203,
-    "ast_hash": "8b3b3201d1c8e33342893df81946a215",
+    "mtime": 1788799764.0801606,
+    "seen": 1788799870.8418694,
+    "ast_hash": "4a578a9adcc14643393f5818cc37ada7",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -540,9 +540,9 @@
     "semantic_hash": ""
   },
   "src/services/whatsapp.ts": {
-    "mtime": 1788744942.425212,
-    "seen": 1788747134.5371535,
-    "ast_hash": "4e612c02bca365bd888b4dc3a8238d51",
+    "mtime": 1788800279.496805,
+    "seen": 1788800339.5446682,
+    "ast_hash": "ba75a2cf1402398f9db9c52eaaabca93",
     "semantic_hash": ""
   },
   "src/tools/agendarCita.ts": {
@@ -834,9 +834,9 @@
     "semantic_hash": ""
   },
   "dashboard/index.html": {
-    "mtime": 1788494605.6046913,
-    "seen": 1788747134.5372686,
-    "ast_hash": "188721c37d9daed7ecd2923cb131b140",
+    "mtime": 1788760843.5350006,
+    "seen": 1788760958.8730676,
+    "ast_hash": "7304ad9b9c099ea6571e88185bc45e04",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -1146,21 +1146,21 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAiAgentModule.tsx": {
-    "mtime": 1788757468.8847334,
-    "seen": 1788757542.088861,
-    "ast_hash": "83786a21e22640c38d8176af58440d99",
+    "mtime": 1788800736.2283864,
+    "seen": 1788800795.265295,
+    "ast_hash": "0d85370ac732ffa8d6da1689a5cf1faf",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpHabilitacionDian.tsx": {
-    "mtime": 1788755670.2586613,
-    "seen": 1788755698.412299,
-    "ast_hash": "fa76dc1c116945fbef4f310f8c3d837a",
+    "mtime": 1788764811.3945653,
+    "seen": 1788765046.2140539,
+    "ast_hash": "76f5f8539c24ef48e4a9dd4ccb45ce48",
     "semantic_hash": ""
   },
   "src/services/factusService.ts": {
-    "mtime": 1788744942.4242115,
-    "seen": 1788747134.5371332,
-    "ast_hash": "6d3de589de5393fd50a4dd605ef88b69",
+    "mtime": 1788759857.1381352,
+    "seen": 1788760235.789866,
+    "ast_hash": "b0856a5960b2281ccc71e143cd39471d",
     "semantic_hash": ""
   },
   "REDISENO_WABI_SABI_GUIA.md": {
@@ -1257,6 +1257,12 @@
     "mtime": 1788758503.6295998,
     "seen": 1788758526.8293152,
     "ast_hash": "bf605a91bd00cd9b92d5860162fe3660",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/NotificationBell.tsx": {
+    "mtime": 1788799771.539378,
+    "seen": 1788799870.8417063,
+    "ast_hash": "aebb58f9aa81c3a7dd5d5a15588d15da",
     "semantic_hash": ""
   }
 }

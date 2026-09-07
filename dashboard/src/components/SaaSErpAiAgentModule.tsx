@@ -128,6 +128,11 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
     handleConnectWhatsApp,
     handleDisconnectWhatsApp,
     isWaConnected,
+    isEditingPhone,
+    setIsEditingPhone,
+    tempPhone,
+    setTempPhone,
+    handleSavePhoneNumber,
     interactions,
     metrics,
     saveSuccess,
@@ -842,27 +847,103 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
                     )}
                   </div>
 
-                  <div className="space-y-3 text-xs flex-1">
+                  <div className="space-y-3.5 text-xs flex-1">
                     <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-2">
                       <span className="text-[#6E6B65]">Estado del Canal:</span>
                       <span className={`font-bold font-mono ${isWaConnected ? 'text-[#15803d]' : 'text-[#C84B31]'}`}>
-                        {isWaConnected ? '● CONECTADO' : '○ PENDIENTE'}
+                        {isWaConnected ? '● CONECTADO' : whatsappStatus.status === 'QR' ? '○ ESPERANDO ESCANEO (QR)' : whatsappStatus.status === 'INITIALIZING' ? '⏳ INICIALIZANDO...' : '○ DESCONECTADO'}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
+
+                    {/* Edición directa del número de teléfono asignado */}
+                    <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-2">
                       <span className="text-[#6E6B65]">Línea Asignada:</span>
-                      <span className="font-bold font-mono text-[#1C1B1A]">+{clientData?.phoneNumber}</span>
+                      {!isEditingPhone ? (
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold font-mono text-[#1C1B1A]">
+                            {clientData?.phoneNumber ? `+${clientData.phoneNumber}` : 'Sin asignar'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTempPhone(clientData?.phoneNumber || '');
+                              setIsEditingPhone(true);
+                            }}
+                            className="px-2 py-0.5 text-[10px] font-bold text-[#C84B31] border border-[#C84B31]/30 hover:bg-[#C84B31] hover:text-white rounded transition cursor-pointer"
+                            title="Editar número de teléfono asignado a esta línea"
+                          >
+                            ✏️ Editar
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={tempPhone}
+                            onChange={(e) => setTempPhone(e.target.value)}
+                            placeholder="Ej. 573046247664"
+                            className="w-32 bg-white border border-[#E2DFD7] rounded px-2 py-1 text-xs font-mono text-[#1C1B1A] outline-none focus:border-[#C84B31]"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleSavePhoneNumber}
+                            className="px-2.5 py-1 bg-[#15803d] text-white text-[10px] font-bold rounded cursor-pointer hover:bg-[#116330] transition"
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingPhone(false)}
+                            className="px-2 py-1 bg-[#E2DFD7] text-[#1C1B1A] text-[10px] font-bold rounded cursor-pointer hover:bg-[#d5d2ca] transition"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      )}
                     </div>
 
-                    {isWaConnected && (
-                      <button
-                        type="button"
-                        onClick={handleDisconnectWhatsApp}
-                        className="w-full mt-2 py-2.5 border border-[#C84B31] text-[#C84B31] hover:bg-[#C84B31] hover:text-white rounded-xl text-xs font-bold transition cursor-pointer"
-                      >
-                        Desvincular WhatsApp
-                      </button>
-                    )}
+                    {/* Botones de acción de vinculación / desvinculación a voluntad */}
+                    <div className="pt-1 space-y-2">
+                      {isWaConnected ? (
+                        <button
+                          type="button"
+                          onClick={handleDisconnectWhatsApp}
+                          className="w-full py-2.5 border border-[#C84B31] text-[#C84B31] hover:bg-[#C84B31] hover:text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">link_off</span>
+                          <span>Desvincular WhatsApp</span>
+                        </button>
+                      ) : whatsappStatus.status === 'QR' || whatsappStatus.status === 'INITIALIZING' ? (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            type="button"
+                            onClick={handleConnectWhatsApp}
+                            className="flex-1 py-2 bg-[#C84B31] hover:bg-[#A83B25] text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">sync</span>
+                            <span>Generar Nuevo QR</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleDisconnectWhatsApp}
+                            className="py-2 px-3 border border-[#E2DFD7] hover:bg-[#E2DFD7] text-[#1C1B1A] rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
+                            title="Cancelar proceso de vinculación"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">cancel</span>
+                            <span>Cancelar</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleConnectWhatsApp}
+                          className="w-full py-2.5 bg-[#C84B31] hover:bg-[#A83B25] text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
+                          <span>Generar Código QR</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 

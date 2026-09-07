@@ -7456,13 +7456,34 @@ app.get('/api/admin/alerts/history', authenticateToken as any, requireRole(['adm
   res.json({ success: true, alerts: alerts.rows });
 }));
 
+// Alertas activas por cliente
+app.get('/api/clients/:clientId/alerts/active', authenticateToken as any, asyncHandler(async (req: Request, res: Response) => {
+  const { clientId } = req.params;
+  const authReq = req as AuthenticatedRequest;
+  
+  if (authReq.user?.role !== 'admin' && authReq.user?.role !== 'superadmin' && authReq.user?.id !== clientId && (authReq.user as any)?.clientId !== clientId) {
+    return res.status(403).json({ success: false, error: 'No autorizado' });
+  }
+
+  const alerts = await pool.query(
+    `SELECT * FROM system_alerts 
+     WHERE (client_id = $1 OR client_id = 'admin' OR client_id IS NULL)
+       AND status = 'active'
+       AND (snooze_until IS NULL OR snooze_until < NOW())
+     ORDER BY severity_level ASC, created_at DESC`,
+    [clientId]
+  );
+  
+  res.json({ success: true, alerts: alerts.rows });
+}));
+
 // Historial de alertas por cliente
 app.get('/api/clients/:clientId/alerts/history', authenticateToken as any, asyncHandler(async (req: Request, res: Response) => {
   const { clientId } = req.params;
   const authReq = req as AuthenticatedRequest;
   
   // Verificar permisos
-  if (authReq.user?.role !== 'admin' && authReq.user?.id !== clientId) {
+  if (authReq.user?.role !== 'admin' && authReq.user?.role !== 'superadmin' && authReq.user?.id !== clientId && (authReq.user as any)?.clientId !== clientId) {
     return res.status(403).json({ success: false, error: 'No autorizado' });
   }
 
@@ -7475,6 +7496,26 @@ app.get('/api/clients/:clientId/alerts/history', authenticateToken as any, async
   );
   
   res.json({ success: true, alerts: alerts.rows });
+}));
+
+// Resolver alerta de cliente
+app.post('/api/clients/:clientId/alerts/:alertId/resolve', authenticateToken as any, asyncHandler(async (req: Request, res: Response) => {
+  const { clientId, alertId } = req.params;
+  const authReq = req as AuthenticatedRequest;
+  
+  if (authReq.user?.role !== 'admin' && authReq.user?.role !== 'superadmin' && authReq.user?.id !== clientId && (authReq.user as any)?.clientId !== clientId) {
+    return res.status(403).json({ success: false, error: 'No autorizado' });
+  }
+
+  const result = await pool.query(
+    `UPDATE system_alerts 
+     SET status = 'resolved', resolved_at = NOW(), resolved_by = $1
+     WHERE id = $2 AND (client_id = $3 OR client_id IS NULL OR client_id = 'admin')
+     RETURNING *`,
+    [authReq.user?.username || clientId, alertId, clientId]
+  );
+
+  res.json({ success: true, message: 'Alerta resuelta con éxito', alert: result.rows[0] });
 }));
 
 // Resolver alerta manualmente

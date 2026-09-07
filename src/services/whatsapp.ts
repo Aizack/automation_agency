@@ -21,6 +21,14 @@ export interface TenantWhatsAppState {
 // Mapas en memoria Multi-Tenant (Aislamiento Total por tienda/clientId)
 export const whatsappClientsMap = new Map<string, Client>();
 export const whatsappStatesMap = new Map<string, TenantWhatsAppState>();
+export const qrTimeoutsMap = new Map<string, NodeJS.Timeout>();
+
+export const clearQRTimeout = (key: string) => {
+    if (qrTimeoutsMap.has(key)) {
+        clearTimeout(qrTimeoutsMap.get(key)!);
+        qrTimeoutsMap.delete(key);
+    }
+};
 
 // Estructura de sesión de carga de archivos temporal
 interface WhatsAppSession {
@@ -57,8 +65,9 @@ export const whatsappState = new Proxy({} as TenantWhatsAppState, {
 export let client: Client | null = null;
 
 // Inicializa una instancia limpia e aislada de Puppeteer/WhatsApp para una tienda específica
-export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => {
+export const initializeWhatsAppClient = (tenantId: string = 'admin', options: { isAutoRestore?: boolean } = {}): Client => {
     const key = tenantId || 'admin';
+    const isAutoRestore = options.isAutoRestore ?? false;
     
     // Si ya existe una instancia para esta tienda, la devolvemos
     let existingClient = whatsappClientsMap.get(key);
@@ -67,7 +76,7 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
         return existingClient;
     }
 
-    console.log(`[WhatsApp Multi-Tenant] 🚀 Instanciando cliente Puppeteer independiente para tienda: ${key}`);
+    console.log(`[WhatsApp Multi-Tenant] 🚀 Instanciando cliente Puppeteer independiente para tienda: ${key} (Auto-Restore: ${isAutoRestore})`);
     const state = getWhatsAppState(key);
 
     const newClient = new Client({
@@ -102,7 +111,39 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
     if (key === 'admin') client = newClient;
 
     // Evento: Generación del código QR único para esta tienda
-    newClient.on('qr', (qr) => {
+    newClient.on('qr', async (qr) => {
+        // Si estamos en proceso de auto-restauración al arrancar el servidor y solicita QR, 
+        // significa que la sesión guardada caducó o requiere re-escaneo.
+        // ABORTAMOS la auto-restauración inmediatamente para no dejar un bucle de QR sin usuario.
+        if (isAutoRestore) {
+            (newClient as any)._isAutoRestoreAborted = true;
+            console.warn(`[WhatsApp Multi-Tenant] ⚠️ La sesión restaurada para tienda '${key}' requiere un nuevo código QR. Abortando auto-restauración en segundo plano.`);
+            state.status = 'DISCONNECTED';
+            state.qr = '';
+            state.phone = '';
+
+            logger.raiseAlert(
+                'whatsapp_session_expired',
+                'red',
+                `La sesión de WhatsApp para ${key} ha expirado o se ha desconectado.`,
+                'Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.',
+                key
+            );
+
+            clearQRTimeout(key);
+            setTimeout(async () => {
+                try {
+                    await newClient.destroy();
+                } catch (dErr) {
+                    // Ignorar errores de destruccion de cliente abortado
+                } finally {
+                    whatsappClientsMap.delete(key);
+                    if (key === 'admin' || client === newClient) client = null;
+                }
+            }, 200);
+            return;
+        }
+
         const isFirstQR = state.status !== 'QR';
         state.status = 'QR';
         state.qr = qr;
@@ -111,14 +152,61 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
         if (isFirstQR) {
             console.log(`\n[WhatsApp Multi-Tenant] 📱 CÓDIGO QR GENERADO PARA TIENDA: ${key} (Escaneable en Dashboard o consola)`);
             qrcode.generate(qr, { small: true });
+
+            // Iniciar temporizador de 1 minuto (60.000 ms) para destruir Puppeteer si no es escaneado
+            clearQRTimeout(key);
+            const timer = setTimeout(async () => {
+                console.log(`\n[WhatsApp Multi-Tenant] ⏱️ Tiempo de espera del Código QR (1 minuto) agotado para tienda: ${key}. Destruyendo sesión Puppeteer...`);
+                state.status = 'DISCONNECTED';
+                state.qr = '';
+                state.phone = '';
+
+                logger.raiseAlert(
+                    'whatsapp_session_expired',
+                    'red',
+                    `El código QR de WhatsApp para ${key} expiró sin ser escaneado (1 min agotado).`,
+                    'Presiona "Generar QR" nuevamente para intentar otra vinculación.',
+                    key
+                );
+
+                const currentClient = whatsappClientsMap.get(key);
+                if (currentClient) {
+                    try {
+                        await currentClient.destroy();
+                    } catch (err) {
+                        console.warn(`[WhatsApp - ${key}] Warning destruyendo cliente por tiempo agotado de QR:`, err);
+                    } finally {
+                        whatsappClientsMap.delete(key);
+                        if (key === 'admin' || client === currentClient) client = null;
+                    }
+                }
+                clearQRTimeout(key);
+            }, 60000);
+            qrTimeoutsMap.set(key, timer);
         } else {
             console.log(`[WhatsApp Multi-Tenant] 🔄 Código QR actualizado para tienda: ${key} (esperando escaneo...)`);
         }
     });
 
+    // Evento: Fallo de autenticación
+    newClient.on('auth_failure', async (msg) => {
+        console.error(`[WhatsApp Multi-Tenant] ❌ Fallo de autenticación en sesión de ${key}:`, msg);
+        state.status = 'DISCONNECTED';
+        state.qr = '';
+        state.phone = '';
+        clearQRTimeout(key);
+        logger.raiseAlert('whatsapp_session_expired', 'red', `Fallo de autenticación en WhatsApp para ${key}.`, msg, key);
+        try {
+            await newClient.destroy();
+        } catch {}
+        whatsappClientsMap.delete(key);
+        if (key === 'admin' || client === newClient) client = null;
+    });
+
     // Evento: Autenticación exitosa
     newClient.on('ready', async () => {
         console.log(`[WhatsApp Multi-Tenant] ✅ Cliente ${key} conectado y listo.`);
+        clearQRTimeout(key);
         
         const connectedPhone = newClient.info?.wid?.user || '';
         state.status = 'CONNECTED';
@@ -127,6 +215,7 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
         state.clientId = key;
 
         logger.resolveAlert('whatsapp_disconnected', `El bot de WhatsApp (${key}) se vinculó correctamente al +${connectedPhone}.`, key);
+        logger.resolveAlert('whatsapp_session_expired', `El bot de WhatsApp (${key}) se vinculó correctamente al +${connectedPhone}.`, key);
 
         try {
             const clientData = await getClientById(key);
@@ -297,6 +386,7 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
         state.status = 'DISCONNECTED';
         state.qr = '';
         state.phone = '';
+        clearQRTimeout(key);
 
         logger.raiseAlert('whatsapp_disconnected', 'red', `El bot de WhatsApp de ${key} se ha desconectado.`, `Razón: ${reason}`, key);
 
@@ -324,8 +414,8 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin'): Client => 
     return newClient;
 };
 
-// Conectar WhatsApp BAJO DEMANDA para una tienda específica (Sin auto-boot al iniciar servidor)
-export const connectWhatsApp = async (clientId?: string) => {
+// Conectar WhatsApp (Bajo demanda o auto-restauración)
+export const connectWhatsApp = async (clientId?: string, options: { isAutoRestore?: boolean } = {}) => {
     const key = clientId || 'admin';
     const state = getWhatsAppState(key);
 
@@ -337,7 +427,12 @@ export const connectWhatsApp = async (clientId?: string) => {
     state.status = 'INITIALIZING';
     state.qr = '';
     state.phone = '';
-    console.log(`[WhatsApp Multi-Tenant] Inicializando conexión A PETICIÓN EXPLÍCITA del usuario para tienda: ${key}...`);
+    clearQRTimeout(key);
+    if (options.isAutoRestore) {
+        console.log(`[WhatsApp Multi-Tenant] 🔄 Intentando restauración en segundo plano de sesión guardada para tienda: ${key}...`);
+    } else {
+        console.log(`[WhatsApp Multi-Tenant] 🚀 Inicializando conexión A PETICIÓN EXPLÍCITA del usuario para tienda: ${key}...`);
+    }
 
     let existingClient = whatsappClientsMap.get(key);
     if (existingClient) {
@@ -350,15 +445,21 @@ export const connectWhatsApp = async (clientId?: string) => {
         whatsappClientsMap.delete(key);
     }
 
-    const activeClient = initializeWhatsAppClient(key);
+    const activeClient = initializeWhatsAppClient(key, { isAutoRestore: options.isAutoRestore });
 
     try {
         await activeClient.initialize();
     } catch (err: any) {
-        console.error(`[WhatsApp Multi-Tenant] ❌ Error al inicializar Puppeteer para ${key}:`, err);
+        if ((activeClient as any)._isAutoRestoreAborted) {
+            console.log(`[WhatsApp Multi-Tenant] Auto-restauración finalizada limpiamente para ${key} (sesión expirada).`);
+            return;
+        }
+
+        console.error(`[WhatsApp Multi-Tenant] ❌ Error al inicializar Puppeteer para ${key}:`, err?.message || err);
         state.status = 'DISCONNECTED';
+        clearQRTimeout(key);
         whatsappClientsMap.delete(key);
-        logger.raiseAlert('whatsapp_initialization_error', 'red', `Fallo al arrancar cliente Puppeteer para ${key}.`, err?.stack || String(err), key);
+        logger.raiseAlert('whatsapp_initialization_error', 'red', `Fallo al arrancar cliente Puppeteer para ${key}.`, err?.message || String(err), key);
     }
 };
 
@@ -366,6 +467,7 @@ export const connectWhatsApp = async (clientId?: string) => {
 export const logoutWhatsApp = async (clientId?: string) => {
     const key = clientId || 'admin';
     console.log(`[WhatsApp Multi-Tenant] Cerrando sesión a petición para tienda: ${key}...`);
+    clearQRTimeout(key);
     
     const state = getWhatsAppState(key);
     state.status = 'DISCONNECTED';
@@ -409,7 +511,7 @@ export const autoRestoreSavedWhatsAppSessions = async () => {
                 if (tenantId && !restoredTenants.has(tenantId)) {
                     restoredTenants.add(tenantId);
                     console.log(`[WhatsApp Multi-Tenant] 🔄 Restaurando sesión guardada para tienda: ${tenantId}...`);
-                    await connectWhatsApp(tenantId).catch(err => {
+                    await connectWhatsApp(tenantId, { isAutoRestore: true }).catch(err => {
                         console.warn(`[WhatsApp Multi-Tenant] Error al restaurar sesión de ${tenantId}:`, err.message);
                     });
                 }
@@ -420,7 +522,7 @@ export const autoRestoreSavedWhatsAppSessions = async () => {
         if (entries.includes('session') && !restoredTenants.has('admin')) {
             restoredTenants.add('admin');
             console.log(`[WhatsApp Multi-Tenant] 🔄 Restaurando sesión guardada legacy para tienda: admin...`);
-            await connectWhatsApp('admin').catch(err => {
+            await connectWhatsApp('admin', { isAutoRestore: true }).catch(err => {
                 console.warn(`[WhatsApp Multi-Tenant] Error al restaurar sesión legacy admin:`, err.message);
             });
         }
