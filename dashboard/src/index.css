@@ -1167,6 +1167,16 @@ label,
   font-weight: 600;
 }
 
+.caret-arrow {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+  margin-left: auto;
+}
+
+.caret-arrow.open {
+  transform: rotate(180deg);
+}
+
 .top-header-zen {
   display: flex;
   justify-content: space-between;
