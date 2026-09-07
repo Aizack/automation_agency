@@ -716,7 +716,8 @@ app.post('/api/clients/:clientId/dian/test-set', authenticateToken as any, autho
       return res.status(400).json({ success: false, message: 'El código TestSetID es requerido.' });
     }
 
-    const result = await runFactusDianTestSet(clientId, testSetId.trim());
+    const targetClientId = Array.isArray(clientId) ? clientId[0] : (clientId as string);
+    const result = await runFactusDianTestSet(targetClientId, testSetId.trim());
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });

@@ -1,4 +1,4 @@
-import pool from '../db/pool';
+import { pool } from '../database/postgres';
 
 const FACTUS_BASE_URL = process.env.FACTUS_API_URL || 'https://api-sandbox.factus.com.co';
 const FACTUS_CLIENT_ID = process.env.FACTUS_CLIENT_ID || 'sandbox_client_id';
@@ -36,7 +36,7 @@ export async function getFactusAccessToken(): Promise<string> {
       // Expiración por defecto en segundos (ej. 3600), guardamos con margen de 5 minutos
       const expiresInMs = (json.expires_in || 3600) * 1000 - 300000;
       tokenExpiresAt = now + expiresInMs;
-      return cachedAccessToken;
+      return json.access_token;
     }
 
     // Si estamos en entorno de desarrollo/sandbox simulado
