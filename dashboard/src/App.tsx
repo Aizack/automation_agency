@@ -146,9 +146,12 @@ function App() {
           if (user.role === 'superadmin') {
             const savedClientId = localStorage.getItem('current_client_id');
             const viewAsClient = localStorage.getItem('view_as_client');
-            if (savedClientId && viewAsClient === 'true') {
+            const currentView = localStorage.getItem('current_view');
+            if (savedClientId && (viewAsClient === 'true' || currentView === 'client')) {
               setClientId(savedClientId);
               setView('client');
+              localStorage.setItem('view_as_client', 'true');
+              localStorage.setItem('current_view', 'client');
             } else {
               setView('admin');
             }
@@ -327,6 +330,7 @@ function App() {
           setClientId(id);
           setView('client');
           localStorage.setItem('current_view', 'client');
+          localStorage.setItem('view_as_client', 'true');
           localStorage.setItem('current_client_id', id);
         }} 
       />

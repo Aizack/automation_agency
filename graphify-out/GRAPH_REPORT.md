@@ -1,16 +1,16 @@
 # Graph Report - Bot multi-tenant-exp  (2026-09-07)
 
 ## Corpus Check
-- 178 files · ~384,026 words
+- 179 files · ~384,146 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1390 nodes · 1797 edges · 138 communities (117 shown, 21 thin omitted)
+- 1393 nodes · 1799 edges · 139 communities (117 shown, 22 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 7 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `89e9b5d2`
+- Built from commit: `1bb94999`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -141,10 +141,11 @@
 - RestaurantKdsDisplay.tsx
 - SaaSErpDomicilios.tsx
 - SaaSErpMarketing.tsx
-- scheduler.ts
+- shutdownManager.ts
 - SaaSErpSalesTargets.tsx
 - test-pre-recorded-voice.ts
 - SaaSErpSupportTickets.tsx
+- Wabi-Sabi Paper Design System Rule
 
 ## God Nodes (most connected - your core abstractions)
 1. `react` - 43 edges
@@ -165,23 +166,23 @@
   dashboard/src/components/SaaSErpInventory.tsx → dashboard/src/utils/api.ts
 - `BankAccountsManager()` --calls--> `authFetch()`  [EXTRACTED]
   dashboard/src/components/SaaSErpStoreSettings.tsx → dashboard/src/utils/api.ts
-- `server` --calls--> `runAutoFixAgent()`  [EXTRACTED]
-  src/server.ts → src/agents/autoFixAgent.ts
 - `initializeWhatsAppClient()` --calls--> `routeIncomingMessage()`  [EXTRACTED]
   src/services/whatsapp.ts → src/core/router.ts
+- `testDriveWriter()` --calls--> `getClientById()`  [EXTRACTED]
+  src/scratch/test-drive-writer.ts → src/database/clientsCrud.ts
 
 ## Import Cycles
 - 2-file cycle: `src/server.ts -> src/services/shutdownManager.ts -> src/server.ts`
 
-## Communities (138 total, 21 thin omitted)
+## Communities (139 total, 22 thin omitted)
 
 ### Community 0 - "postgres.ts"
 Cohesion: 0.11
 Nodes (18): runValidation(), genAI, initDatabase(), pool, genAI, ExtendedRequest, agendarCitaTool, AsignarTareaArgs (+10 more)
 
 ### Community 1 - "whatsapp.ts"
-Cohesion: 0.12
-Nodes (26): updateClient(), runTest(), STATE_FILE_PATH, resolveProductClientId(), server, startEscalationService(), stopEscalationService(), captureSystemState() (+18 more)
+Cohesion: 0.16
+Nodes (18): updateClient(), checkAndSendReminders(), delay(), formatCurrency(), startScheduler(), autoRestoreSavedWhatsAppSessions(), client, connectWhatsApp() (+10 more)
 
 ### Community 2 - "dependencies"
 Cohesion: 0.11
@@ -209,7 +210,7 @@ Nodes (23): compilerOptions, allowArbitraryExtensions, allowImportingTsExtension
 
 ### Community 8 - "server.ts"
 Cohesion: 0.07
-Nodes (27): runAutoFixAgent(), TicketFixResult, AuthenticatedRequest, authenticateToken(), authorizeClientAccess(), requireRole(), authRateLimiter, generalApiLimiter (+19 more)
+Nodes (30): runAutoFixAgent(), TicketFixResult, AuthenticatedRequest, authenticateToken(), authorizeClientAccess(), requireRole(), authRateLimiter, generalApiLimiter (+22 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.10
@@ -599,9 +600,9 @@ Nodes (4): DomiciliosProps, Employee, Invoice, SaaSErpDomicilios()
 Cohesion: 0.40
 Nodes (4): Campaign, CampaignLog, SaaSErpMarketing(), SaaSErpMarketingProps
 
-### Community 134 - "scheduler.ts"
-Cohesion: 0.70
-Nodes (4): checkAndSendReminders(), delay(), formatCurrency(), startScheduler()
+### Community 134 - "shutdownManager.ts"
+Cohesion: 0.29
+Nodes (9): runTest(), STATE_FILE_PATH, stopEscalationService(), captureSystemState(), gracefulShutdown(), registerShutdownHandlers(), restoreSystemState(), STATE_FILE_PATH (+1 more)
 
 ### Community 135 - "SaaSErpSalesTargets.tsx"
 Cohesion: 0.50
@@ -612,24 +613,24 @@ Cohesion: 0.50
 Nodes (3): SaaSErpSupportTickets(), SaaSErpSupportTicketsProps, SupportTicket
 
 ## Knowledge Gaps
-- **791 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+786 more)
+- **792 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+787 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **22 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `SaaSErpAiAgentModule.tsx`, `RestaurantKdsDisplay.tsx`, `SaaSErpDomicilios.tsx`, `ClientDashboard.tsx`, `SaaSErpCashShifts.tsx`, `SaaSErpInventory.tsx`, `SaaSErpMarketing.tsx`, `SaaSErpSalesTargets.tsx`, `SaaSErpSupportTickets.tsx`, `RestaurantWaiterPortal.tsx`, `SaaSErpEmployees.tsx`, `plugins`, `EnterprisePlanningModule.tsx`, `SaaSErpAccounting.tsx`, `SaaSErpAppointments.tsx`, `SaaSErpInvoices.tsx`, `api.ts`, `authFetch`, `SaaSErpFormulas.tsx`, `SaaSErpInvoices2.tsx`, `SaaSErpUsers.tsx`, `SaaSErpQuotes.tsx`, `PublicRestaurantMenu.tsx`, `RestaurantMenuBuilder.tsx`, `SaaSErpSuppliers.tsx`, `SaaSErpCartera.tsx`, `SaaSErpCRM.tsx`?**
   _High betweenness centrality (0.014) - this node is a cross-community bridge._
-- **Why does `Informe de análisis técnico por fases` connect `Informe de análisis técnico por fases` to `INFORME_ANALISIS_FASES.md`, `12. Recomendación de optimización por prioridad`, `10. Fase 8: WhatsApp, IA y automatización`, `11. Fase 9: Frontend, navegación y experiencia de usuario`, `3. Fase 1: Infraestructura base y arranque del sistema`, `4. Fase 2: Multi-tenancy, usuarios, roles y permisos`, `5. Fase 3: CRM, clientes y relación con facturación`, `6. Fase 4: Facturación, cartera y pagos`, `7. Fase 5: Inventario, proveedores y compras`, `8. Fase 6: Laboratorio y domicilios`, `9. Fase 7: Empleados, departments, roles y RRHH`?**
-  _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **Why does `StructuredLogger` connect `logger.ts` to `server.ts`?**
   _High betweenness centrality (0.003) - this node is a cross-community bridge._
+- **Why does `pool` connect `postgres.ts` to `whatsapp.ts`, `shutdownManager.ts`, `server.ts`, `logger.ts`, `electronicInvoiceService.ts`, `clientsCrud.ts`, `drive.ts`?**
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
-  _791 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _792 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `postgres.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
-- **Should `whatsapp.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.11931818181818182 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
+- **Should `SaaSErpInventory.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.08907563025210084 - nodes in this community are weakly interconnected._

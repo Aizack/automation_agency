@@ -12,9 +12,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/App.tsx": {
-    "mtime": 1788757374.0677817,
-    "seen": 1788757542.0888298,
-    "ast_hash": "340970c4228c46cba890ecd17ad9576b",
+    "mtime": 1788758482.214473,
+    "seen": 1788758526.8290377,
+    "ast_hash": "25e497b1df6d67169c8309bc520ae649",
     "semantic_hash": ""
   },
   "dashboard/src/components/ActivateAccount.tsx": {
@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1788757379.776019,
-    "seen": 1788757542.0888395,
-    "ast_hash": "fef2e0b3a0a094131466c08ab1570e35",
+    "mtime": 1788758059.5532064,
+    "seen": 1788758085.321557,
+    "ast_hash": "a1dbd8466d8fd268870bca5a883d8ba5",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
@@ -1251,6 +1251,12 @@
     "mtime": 1788748873.975881,
     "seen": 1788749287.2581615,
     "ast_hash": "974a0c1285732c6123c00c6c8fc230bc",
+    "semantic_hash": ""
+  },
+  ".agents/rules/wabi_sabi_design_rule.md": {
+    "mtime": 1788758503.6295998,
+    "seen": 1788758526.8293152,
+    "ast_hash": "bf605a91bd00cd9b92d5860162fe3660",
     "semantic_hash": ""
   }
 }

@@ -12,9 +12,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/App.tsx": {
-    "mtime": 1788744942.3996692,
-    "seen": 1788747134.5368218,
-    "ast_hash": "a6908ef751b485e89758770004f2e9d2",
+    "mtime": 1788757374.0677817,
+    "seen": 1788757542.0888298,
+    "ast_hash": "340970c4228c46cba890ecd17ad9576b",
     "semantic_hash": ""
   },
   "dashboard/src/components/ActivateAccount.tsx": {
@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/AdminDashboard.tsx": {
-    "mtime": 1788747046.7304585,
-    "seen": 1788747134.5368297,
-    "ast_hash": "c1cf36304d6d13317f2629ee07ac9e6e",
+    "mtime": 1788757514.26204,
+    "seen": 1788757542.0888348,
+    "ast_hash": "a2d17c03ea8fea42140f45227497d5c8",
     "semantic_hash": ""
   },
   "dashboard/src/components/AuthFast.tsx": {
@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1788756771.4660797,
-    "seen": 1788756802.4670177,
-    "ast_hash": "155a14ea7c7521fa420858d212fbfd7c",
+    "mtime": 1788758059.5532064,
+    "seen": 1788758085.321557,
+    "ast_hash": "a1dbd8466d8fd268870bca5a883d8ba5",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
@@ -1146,9 +1146,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAiAgentModule.tsx": {
-    "mtime": 1788736831.3073578,
-    "seen": 1788747134.536877,
-    "ast_hash": "ba4ca626c2837513ea10edda4c51067f",
+    "mtime": 1788757468.8847334,
+    "seen": 1788757542.088861,
+    "ast_hash": "83786a21e22640c38d8176af58440d99",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpHabilitacionDian.tsx": {
