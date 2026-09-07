@@ -157,9 +157,9 @@ html[data-theme='obsidian-gold'],
   --shadow-ocre: 0 4px 20px rgba(237, 194, 62, 0.22);
   --accent-glow: 0 0 20px rgba(237, 194, 62, 0.35);
 
-  --font-family-sans: "Barlow Condensed", system-ui, -apple-system, sans-serif;
-  --font-family-display: "Barlow Condensed", system-ui, -apple-system, sans-serif;
-  --font-family-label: "Oswald", system-ui, -apple-system, sans-serif;
+  --font-family-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Instrument Serif", Georgia, serif;
+  --font-family-label: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 
   --radius-xs: 4px;
   --radius-sm: 6px;
@@ -432,9 +432,9 @@ html[data-theme='monolith-noir'],
   --shadow-ocre: none;
   --accent-glow: none;
 
-  --font-family-sans: "Barlow Condensed", system-ui, -apple-system, sans-serif;
-  --font-family-display: "Barlow Condensed", system-ui, -apple-system, sans-serif;
-  --font-family-label: "Oswald", system-ui, -apple-system, sans-serif;
+  --font-family-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Instrument Serif", Georgia, serif;
+  --font-family-label: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 
   --radius-xs: 2px;
   --radius-sm: 2px;
@@ -484,9 +484,9 @@ html[data-theme='dark'],
   --shadow-accent: 0 4px 25px rgba(237, 194, 62, 0.25);
   --shadow-ocre: 0 4px 20px rgba(237, 194, 62, 0.22);
   --accent-glow: 0 0 20px rgba(237, 194, 62, 0.35);
-  --font-family-sans: "Barlow Condensed", system-ui, -apple-system, sans-serif;
-  --font-family-display: "Barlow Condensed", system-ui, -apple-system, sans-serif;
-  --font-family-label: "Oswald", system-ui, -apple-system, sans-serif;
+  --font-family-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Instrument Serif", Georgia, serif;
+  --font-family-label: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 }
 
 html[data-theme='light'],
@@ -528,8 +528,9 @@ html[data-theme='light'],
   --shadow-accent: 0 4px 20px rgba(37, 99, 235, 0.15);
   --shadow-ocre: 0 4px 18px rgba(37, 99, 235, 0.18);
   --accent-glow: 0 0 18px rgba(37, 99, 235, 0.22);
-  --font-family-sans: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
-  --font-family-display: "Helvetica Neue", Helvetica, "Inter", system-ui, -apple-system, sans-serif;
+  --font-family-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-family-display: "Instrument Serif", Georgia, serif;
+  --font-family-label: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 }
 
 /* ==========================================================================
@@ -561,8 +562,10 @@ html[data-theme='light'],
   --color-background: var(--bg-color);
   --color-on-background: var(--on-surface-val);
   
-  --font-sans: var(--font-family-sans);
-  --font-display: var(--font-family-display);
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 /* ==========================================================================
