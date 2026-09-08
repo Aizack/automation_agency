@@ -590,9 +590,6 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, c
     const totalPersonsCount = customers.filter(c => !c.customer_type || c.customer_type === 'persona').length;
     const totalCompaniesCount = customers.filter(c => c.customer_type === 'empresa').length;
     const followUpCount = customers.filter(c => isNeedsFollowUp(c)).length;
-    const totalGlobalDebt = invoices
-        .filter(inv => inv.status !== 'paid')
-        .reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0);
 
     return (
         <div className="space-y-6 text-[#161616] font-sans antialiased">
@@ -662,13 +659,11 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, c
 
                 <div className="hidden md:flex items-center gap-4 text-xs font-mono text-[#76746E] pr-2">
                     <span>Retención (&gt;6m): <strong className="text-[#D9381E]">{followUpCount}</strong></span>
-                    <span>•</span>
-                    <span>Cartera Pendiente: <strong className="text-[#161616]">${totalGlobalDebt.toLocaleString('es-CO')}</strong></span>
                 </div>
             </div>
 
             {/* Quick Metrics Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
                     <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Total Directorio Activo</span>
                     <p className="text-2xl font-bold text-[#161616] font-mono mt-1">{customers.length} Registros</p>
@@ -682,14 +677,6 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, c
                     <p className="text-2xl font-bold text-[#D9381E] font-mono mt-1">{followUpCount} Pacientes</p>
                     <p className="text-[10px] text-[#76746E] font-mono mt-2 border-t border-[#E2DFD7] pt-1.5">
                         Sin control en más de 6 meses
-                    </p>
-                </div>
-
-                <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
-                    <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Total Cuentas por Cobrar</span>
-                    <p className="text-2xl font-bold text-[#C5221F] font-mono mt-1">${totalGlobalDebt.toLocaleString('es-CO')}</p>
-                    <p className="text-[10px] text-[#76746E] font-mono mt-2 border-t border-[#E2DFD7] pt-1.5">
-                        Facturas pendientes de cobro
                     </p>
                 </div>
             </div>
