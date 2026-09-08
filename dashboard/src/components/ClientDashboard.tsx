@@ -1992,7 +1992,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         )}
 
         {activeTab === 'contabilidad' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpAccounting clientId={clientId} />
           </div>
         )}
