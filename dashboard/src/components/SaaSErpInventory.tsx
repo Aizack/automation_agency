@@ -1288,11 +1288,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                     {/* MODAL POPUP WIDESCREEN EDITORIAL WABI-SABI PARA AGREGAR / EDITAR PRODUCTOS */}
                     {isFormOpen && createPortal(
-                        <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-                            <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] h-[93vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in">
+                        <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+                            <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] max-h-[calc(100vh-2.5rem)] h-full sm:h-[86vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in">
                                 
                                 {/* Header del Modal */}
-                                <div className="px-8 py-5 border-b border-[#E2DFD7] flex justify-between items-center bg-[#F6F4EE] shrink-0">
+                                <div className="px-6 sm:px-8 py-4 sm:py-5 border-b border-[#E2DFD7] flex justify-between items-center bg-[#F6F4EE] shrink-0">
                                     <div>
                                         <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans block">FORMULARIO DE INVENTARIO ERP</span>
                                         <h3 className="font-serif text-2xl sm:text-3xl font-normal text-[#161616] leading-tight">
@@ -1310,11 +1310,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                 </div>
 
                                 {/* Cuerpo Principal del Modal (2 Columnas: Izq Formulario Scrollable, Der Sidebar Fotos & Summary) */}
-                                <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
-                                    <div className="flex-1 p-6 sm:p-8 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+                                <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden min-h-0">
+                                    <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_310px] gap-6 sm:gap-8 min-h-0">
                                         
                                         {/* Columna Izquierda: Formulario Scrollable con amplio espacio para la barra de scroll */}
-                                        <div className="overflow-y-auto pr-8 sm:pr-10 space-y-6 max-h-full">
+                                        <div className="overflow-y-auto custom-scrollbar pr-4 sm:pr-8 space-y-6 max-h-full min-h-0 flex-1">
                                             
                                             {/* Sección 1: Información General */}
                                             <div>
@@ -1641,7 +1641,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         </div>
 
                                         {/* Columna Derecha (Fixed Modal Sidebar): Fotografía Cuadrada por Variante & Resumen de Registro */}
-                                        <div className="modal-sidebar-fixed flex flex-col gap-6 justify-between h-full">
+                                        <div className="modal-sidebar-fixed flex flex-col gap-4 justify-between h-full max-h-full overflow-y-auto custom-scrollbar pr-2 min-h-0 flex-1">
                                             <div>
                                                 <div className="flex justify-between items-baseline mb-3 border-b border-[#E2DFD7] pb-2">
                                                     <h4 className="font-serif text-lg text-[#161616] font-normal">Fotografía del Ítem</h4>
@@ -1653,7 +1653,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 {/* Área de Foto Cuadrada con Carousel Horizontal de Muestras Abajo */}
                                                 <div className="photo-area-with-swatches flex flex-col items-center gap-3 w-full">
                                                     {/* Square Photo Dropzone */}
-                                                    <label className="photo-dropzone-compact relative group cursor-pointer shrink-0">
+                                                    <label className="photo-dropzone-compact relative group cursor-pointer shrink-0 w-[145px] h-[145px] sm:w-[160px] sm:h-[160px]">
                                                         {variantList[activePhotoColorIdx]?.image_url ? (
                                                             <>
                                                                 <img 
@@ -1760,15 +1760,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             </div>
 
                                             {/* Live Resumen de Registro Card - Con espaciado suficiente y estética limpia */}
-                                            <div className="summary-card-compact bg-white border border-[#E2DFD7] p-5 shadow-sm mt-auto">
+                                            <div className="summary-card-compact bg-white border border-[#E2DFD7] p-4 shadow-sm mt-auto shrink-0">
                                                 <div className="summary-card-title text-[10px] font-bold uppercase tracking-widest text-[#6B6862] mb-1">
                                                     RESUMEN DE REGISTRO
                                                 </div>
-                                                <div className="summary-card-name text-sm font-bold text-[#161616]">
+                                                <div className="summary-card-name text-sm font-bold text-[#161616] truncate" title={name || 'Montura / Producto Ejemplo'}>
                                                     {name || 'Montura / Producto Ejemplo'}
                                                 </div>
-                                                {brand && <div className="text-xs text-[#6B6862] font-medium mt-0.5">Marca: {brand}</div>}
-                                                <div className="summary-card-price text-2xl font-mono font-bold text-[#D9381E] mt-3 flex items-baseline gap-1.5">
+                                                {brand && <div className="text-xs text-[#6B6862] font-medium mt-0.5 truncate">Marca: {brand}</div>}
+                                                <div className="summary-card-price text-xl font-mono font-bold text-[#D9381E] mt-2 flex items-baseline gap-1.5">
                                                     {price ? formatPrice(price.toString()) : '$ 0 COP'}
                                                     <span className="text-[10px] font-sans font-normal text-[#6B6862]">(IVA Incluido)</span>
                                                 </div>
