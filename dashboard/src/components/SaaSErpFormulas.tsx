@@ -76,10 +76,33 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
   const [clinMedAntecedents, setClinMedAntecedents] = useState('');
   const [clinOcuAntecedents, setClinOcuAntecedents] = useState('');
   const [clinFamAntecedents, setClinFamAntecedents] = useState('');
-  const [clinAvOd, setClinAvOd] = useState('20/20');
-  const [clinAvOi, setClinAvOi] = useState('20/20');
-  const [clinRefrOd, setClinRefrOd] = useState('');
-  const [clinRefrOi, setClinRefrOi] = useState('');
+
+  // Área 1: Exámenes Anteriores (Último examen previo)
+  const [prevExamDate, setPrevExamDate] = useState('Sin registro previo');
+  const [prevOdEsf, setPrevOdEsf] = useState('');
+  const [prevOdCil, setPrevOdCil] = useState('');
+  const [prevOdEje, setPrevOdEje] = useState('');
+  const [prevOdAdd, setPrevOdAdd] = useState('');
+  const [prevOdAv, setPrevOdAv] = useState('20/20');
+  const [prevOiEsf, setPrevOiEsf] = useState('');
+  const [prevOiCil, setPrevOiCil] = useState('');
+  const [prevOiEje, setPrevOiEje] = useState('');
+  const [prevOiAdd, setPrevOiAdd] = useState('');
+  const [prevOiAv, setPrevOiAv] = useState('20/20');
+
+  // Área 2: Exámenes Recientes (Consulta Actual)
+  const [recentOdEsf, setRecentOdEsf] = useState('');
+  const [recentOdCil, setRecentOdCil] = useState('');
+  const [recentOdEje, setRecentOdEje] = useState('');
+  const [recentOdAdd, setRecentOdAdd] = useState('');
+  const [recentOdAv, setRecentOdAv] = useState('20/20');
+  const [recentOiEsf, setRecentOiEsf] = useState('');
+  const [recentOiCil, setRecentOiCil] = useState('');
+  const [recentOiEje, setRecentOiEje] = useState('');
+  const [recentOiAdd, setRecentOiAdd] = useState('');
+  const [recentOiAv, setRecentOiAv] = useState('20/20');
+
+  // Pruebas Complementarias
   const [clinTonoOd, setClinTonoOd] = useState('14 mmHg');
   const [clinTonoOi, setClinTonoOi] = useState('14 mmHg');
   const [clinOphthalNotes, setClinOphthalNotes] = useState('');
@@ -113,7 +136,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
     };
   }, []);
   
-  // Ophthalmic inputs
+  // Ophthalmic inputs (Matriz de Prescripción)
   const [odSphere, setOdSphere] = useState('');
   const [odCylinder, setOdCylinder] = useState('');
   const [odAxis, setOdAxis] = useState('');
@@ -161,11 +184,18 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
     }
   };
 
-  const [businessInfo, setBusinessInfo] = useState({
+  const [businessInfo, setBusinessInfo] = useState<{
+    name: string;
+    nit: string;
+    address: string;
+    phone: string;
+    logo_url?: string | null;
+  }>({
     name: 'ÓPTICA Y CENTRO VISUAL',
     nit: 'NIT 900.123.456-7',
     address: 'Dirección Principal # 12 - 34',
-    phone: '+57 300 123 4567'
+    phone: '+57 300 123 4567',
+    logo_url: null
   });
 
   const fetchBusinessInfo = async () => {
@@ -174,12 +204,14 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const json = await res.json();
-      if (json.success && json.client) {
+      if (json.success && (json.data || json.client)) {
+        const c = json.data || json.client;
         setBusinessInfo({
-          name: json.client.company_name || json.client.name || 'ÓPTICA Y CENTRO VISUAL',
-          nit: json.client.nit || json.client.tax_id || 'NIT 900.123.456-7',
-          address: json.client.address || 'Dirección Principal',
-          phone: json.client.phone || '+57 300 123 4567'
+          name: c.company_name || c.name || 'ÓPTICA Y CENTRO VISUAL',
+          nit: c.nit || c.tax_id || (c.document_number ? `NIT ${c.document_number}` : 'NIT 900.123.456-7'),
+          address: c.address || 'Dirección Principal',
+          phone: c.phone || '+57 300 123 4567',
+          logo_url: c.logo_url || null
         });
       }
     } catch (err) {
@@ -191,7 +223,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
     const printWin = window.open('', '_blank', 'width=750,height=850');
     if (!printWin) return;
 
-    const custName = customerData ? `${customerData.name} ${customerData.last_name || ''}` : formulaData.customer_name || selectedCustomer?.name || 'Paciente';
+    const custName = customerData ? `${customerData.name} ${customerData.last_name || ''}`.trim() : formulaData.customer_name || selectedCustomer?.name || 'Paciente';
     const custDoc = customerData?.document_number || formulaData.customer_document_number || selectedCustomer?.document_number || 'N/A';
     const custPhone = customerData?.phone || formulaData.customer_phone || selectedCustomer?.phone || 'N/A';
     const dateStr = formulaData.created_at ? new Date(formulaData.created_at).toLocaleDateString('es-CO') : new Date().toLocaleDateString('es-CO');
@@ -219,21 +251,24 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
         <head>
           <title>Fórmula Óptica - ${custName}</title>
           <style>
-            body { font-family: 'Arial', sans-serif; padding: 25px; color: #111; font-size: 12px; line-height: 1.4; }
-            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-            .biz-name { font-size: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-            .biz-details { font-size: 11px; color: #444; margin-top: 3px; }
-            .title { font-size: 14px; font-weight: bold; text-align: center; margin-top: 10px; text-transform: uppercase; background: #f0f0f0; padding: 4px; border: 1px solid #ccc; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; margin-bottom: 10px; }
-            .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            .table th, .table td { border: 1px solid #333; padding: 6px; text-align: center; }
-            .table th { background: #e8e8e8; font-size: 11px; }
-            .footer { margin-top: 40px; text-align: center; border-top: 1px solid #ccc; padding-top: 15px; }
-            .signature { margin-top: 50px; display: inline-block; border-top: 1px solid #000; width: 220px; padding-top: 5px; font-weight: bold; }
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 25px; color: #161616; font-size: 12px; line-height: 1.4; }
+            .header { text-align: center; border-bottom: 2px solid #161616; padding-bottom: 12px; margin-bottom: 15px; }
+            .logo-container { text-align: center; margin-bottom: 8px; }
+            .logo-container img { max-height: 60px; max-width: 180px; object-fit: contain; }
+            .biz-name { font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #161616; }
+            .biz-details { font-size: 11px; color: #555; margin-top: 3px; font-family: monospace; }
+            .title { font-size: 13px; font-weight: bold; text-align: center; margin-top: 10px; text-transform: uppercase; background: #FAF8F5; padding: 6px; border: 1px solid #E2DFD7; font-family: monospace; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; margin-bottom: 10px; font-family: monospace; font-size: 11px; }
+            .table { width: 100%; border-collapse: collapse; margin-top: 10px; font-family: monospace; font-size: 11px; }
+            .table th, .table td { border: 1px solid #161616; padding: 6px; text-align: center; }
+            .table th { background: #FAF8F5; font-size: 10px; text-transform: uppercase; }
+            .footer { margin-top: 40px; text-align: center; }
+            .signature { margin-top: 40px; display: inline-block; border-top: 1px solid #161616; width: 220px; padding-top: 5px; font-weight: bold; font-family: monospace; }
           </style>
         </head>
         <body>
           <div class="header">
+            ${businessInfo.logo_url ? `<div class="logo-container"><img src="${businessInfo.logo_url}" alt="Logo" /></div>` : ''}
             <div class="biz-name">${businessInfo.name}</div>
             <div class="biz-details">${businessInfo.nit} | Dir: ${businessInfo.address} | Tel: ${businessInfo.phone}</div>
           </div>
@@ -281,12 +316,12 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
             </tbody>
           </table>
 
-          <div style="margin-top:12px; font-family:monospace; display:flex; justify-content:space-between; background:#f9f9f9; padding:8px; border:1px solid #ddd;">
+          <div style="margin-top:12px; font-family:monospace; display:flex; justify-content:space-between; background:#FAF8F5; padding:8px; border:1px solid #E2DFD7; font-size:11px;">
             <span><strong>DP (Distancia Pupilar):</strong> ${dp} mm</span>
             <span><strong>ALT (Altura de Montaje):</strong> ${alt} mm</span>
           </div>
 
-          <div style="margin-top:12px;">
+          <div style="margin-top:12px; font-family:monospace; font-size:11px;">
             <strong>Indicaciones & Observaciones:</strong> ${obs}
           </div>
 
@@ -536,6 +571,72 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
     }
   }, [formulasSubTab, clinicalSearch]);
 
+  const handleOpenNewClinicalRecordModal = (cust?: Customer | null) => {
+    const targetCust = cust || selectedCustomer;
+    setEditingClinicalRecordId(null);
+    setClinPatientName(targetCust ? `${targetCust.name} ${targetCust.last_name || ''}`.trim() : '');
+    setClinPatientDoc(targetCust?.document_number || '');
+    setClinPatientPhone(targetCust?.phone || '');
+    setClinReason('');
+    setClinMedAntecedents('');
+    setClinOcuAntecedents('');
+    setClinFamAntecedents('');
+
+    // Pre-poblar Examen Reciente con la fórmula que el doctor acaba de digitar
+    setRecentOdEsf(odSphere || '');
+    setRecentOdCil(odCylinder || '');
+    setRecentOdEje(odAxis || '');
+    setRecentOdAdd(odAddition || '');
+    setRecentOdAv(odAv || '20/20');
+
+    setRecentOiEsf(oiSphere || '');
+    setRecentOiCil(oiCylinder || '');
+    setRecentOiEje(oiAxis || '');
+    setRecentOiAdd(oiAddition || '');
+    setRecentOiAv(oiAv || '20/20');
+
+    // Cargar Examen Anterior desde el historial de fórmulas si existe
+    if (formulasHistory && formulasHistory.length > 0) {
+      const prev = formulasHistory[0];
+      setPrevExamDate(new Date(prev.created_at).toLocaleDateString('es-CO'));
+      setPrevOdEsf(prev.od_sphere || '---');
+      setPrevOdCil(prev.od_cylinder || '---');
+      setPrevOdEje(prev.od_axis ? `${prev.od_axis}°` : '---');
+      setPrevOdAdd(prev.od_addition || '---');
+      setPrevOdAv(prev.od_av || '20/20');
+
+      setPrevOiEsf(prev.oi_sphere || '---');
+      setPrevOiCil(prev.oi_cylinder || '---');
+      setPrevOiEje(prev.oi_axis ? `${prev.oi_axis}°` : '---');
+      setPrevOiAdd(prev.oi_addition || '---');
+      setPrevOiAv(prev.oi_av || '20/20');
+    } else {
+      setPrevExamDate('Sin antecedentes registrados');
+      setPrevOdEsf('---'); setPrevOdCil('---'); setPrevOdEje('---'); setPrevOdAdd('---'); setPrevOdAv('20/20');
+      setPrevOiEsf('---'); setPrevOiCil('---'); setPrevOiEje('---'); setPrevOiAdd('---'); setPrevOiAv('20/20');
+    }
+
+    setClinTonoOd('14 mmHg');
+    setClinTonoOi('14 mmHg');
+    setClinOphthalNotes('');
+    setClinDiagnosis('');
+    setClinTreatmentPlan('');
+    setClinOptometrist('Dr. Optómetra Especialista');
+
+    setDiseaseCheckboxes({
+      estrabismo: false,
+      carnosidad: false,
+      cataratas: false,
+      hipertension: false,
+      diabetes: false,
+      cirugia: false,
+      alergias: false,
+      familiares: false
+    });
+
+    setIsClinicalFormOpen(true);
+  };
+
   const handleCreateClinicalRecord = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clinPatientName) {
@@ -552,7 +653,15 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
       diseaseCheckboxes.cirugia && 'Cirugía Ocular',
     ].filter(Boolean).join(', ');
 
-    const finalMedAntecedents = [checkedDiseases, clinMedAntecedents, clinFamAntecedents ? `Fam: ${clinFamAntecedents}` : ''].filter(Boolean).join(' | ');
+    const finalMedAntecedents = [
+      prevExamDate !== 'Sin antecedentes registrados' ? `[Examen Previo (${prevExamDate}): OD ${prevOdEsf}/${prevOdCil}/${prevOdEje} | OI ${prevOiEsf}/${prevOiCil}/${prevOiEje}]` : null,
+      checkedDiseases,
+      clinMedAntecedents,
+      clinFamAntecedents ? `Familiares: ${clinFamAntecedents}` : null
+    ].filter(Boolean).join(' | ');
+
+    const refractionOdStr = `Esf: ${recentOdEsf || 'Plano'} | Cil: ${recentOdCil || '---'} | Eje: ${recentOdEje ? `${recentOdEje}°` : '---'} | Add: ${recentOdAdd || '---'}`;
+    const refractionOiStr = `Esf: ${recentOiEsf || 'Plano'} | Cil: ${recentOiCil || '---'} | Eje: ${recentOiEje ? `${recentOiEje}°` : '---'} | Add: ${recentOiAdd || '---'}`;
 
     try {
       setLoadingClinical(true);
@@ -575,10 +684,10 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
           consultationReason: clinReason,
           medicalAntecedents: finalMedAntecedents,
           ocularAntecedents: clinOcuAntecedents,
-          visualAcuityOd: clinAvOd,
-          visualAcuityOi: clinAvOi,
-          refractionOd: clinRefrOd,
-          refractionOi: clinRefrOi,
+          visualAcuityOd: recentOdAv,
+          visualAcuityOi: recentOiAv,
+          refractionOd: refractionOdStr,
+          refractionOi: refractionOiStr,
           tonometryOd: clinTonoOd,
           tonometryOi: clinTonoOi,
           ophthalmoscopyNotes: clinOphthalNotes,
@@ -593,17 +702,6 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
         alert("✅ Historia clínica guardada con éxito.");
         setIsClinicalFormOpen(false);
         setEditingClinicalRecordId(null);
-        setClinReason('');
-        setClinMedAntecedents('');
-        setClinOcuAntecedents('');
-        setClinFamAntecedents('');
-        setClinRefrOd('');
-        setClinRefrOi('');
-        setClinTonoOd('14 mmHg');
-        setClinTonoOi('14 mmHg');
-        setClinOphthalNotes('');
-        setClinDiagnosis('');
-        setClinTreatmentPlan('');
         fetchClinicalRecords();
       } else {
         alert(`Error: ${data.error}`);
@@ -640,24 +738,32 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
         <head>
           <title>Historia Clínica Optométrica - ${record.customer_name}</title>
           <style>
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 30px; color: #111; font-size: 13px; line-height: 1.5; }
-            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
-            .title { font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-            .section-title { font-size: 13px; font-weight: bold; background: #eee; padding: 6px 10px; border-left: 4px solid #333; margin-top: 15px; margin-bottom: 10px; text-transform: uppercase; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-            .field { margin-bottom: 8px; }
-            .label { font-weight: bold; color: #555; }
-            .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            .table th, .table td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-            .table th { background: #f5f5f5; }
-            .footer { margin-top: 50px; text-align: center; border-t: 1px solid #ccc; pt: 20px; }
-            .signature { margin-top: 60px; display: inline-block; border-top: 1px solid #000; width: 250px; padding-top: 5px; font-weight: bold; }
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 30px; color: #161616; font-size: 12px; line-height: 1.5; }
+            .header { text-align: center; border-bottom: 2px solid #161616; padding-bottom: 12px; margin-bottom: 15px; }
+            .logo-container { text-align: center; margin-bottom: 8px; }
+            .logo-container img { max-height: 60px; max-width: 180px; object-fit: contain; }
+            .biz-name { font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #161616; }
+            .biz-details { font-size: 11px; color: #555; margin-top: 3px; font-family: monospace; }
+            .title { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; background: #FAF8F5; padding: 6px; border: 1px solid #E2DFD7; margin-top: 10px; font-family: monospace; }
+            .date-subtitle { font-size: 11px; color: #666; margin-top: 4px; font-family: monospace; }
+            .section-title { font-size: 11px; font-weight: bold; background: #FAF8F5; padding: 5px 10px; border-left: 3px solid #161616; margin-top: 15px; margin-bottom: 8px; text-transform: uppercase; font-family: monospace; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-family: monospace; font-size: 11px; }
+            .field { margin-bottom: 6px; font-family: monospace; }
+            .label { font-weight: bold; color: #444; }
+            .table { width: 100%; border-collapse: collapse; margin-top: 8px; font-family: monospace; font-size: 11px; }
+            .table th, .table td { border: 1px solid #161616; padding: 6px; text-align: center; }
+            .table th { background: #FAF8F5; font-size: 10px; text-transform: uppercase; }
+            .footer { margin-top: 40px; text-align: center; }
+            .signature { margin-top: 40px; display: inline-block; border-top: 1px solid #161616; width: 250px; padding-top: 5px; font-weight: bold; font-family: monospace; }
           </style>
         </head>
         <body>
           <div class="header">
-            <div class="title">Historia Clínica Optométrica</div>
-            <div>Fecha de Examen: ${new Date(record.created_at).toLocaleDateString('es-CO')} ${new Date(record.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</div>
+            ${businessInfo.logo_url ? `<div class="logo-container"><img src="${businessInfo.logo_url}" alt="Logo" /></div>` : ''}
+            <div class="biz-name">${businessInfo.name}</div>
+            <div class="biz-details">${businessInfo.nit} | Dir: ${businessInfo.address} | Tel: ${businessInfo.phone}</div>
+            <div class="title">HISTORIA CLÍNICA OPTOMÉTRICA</div>
+            <div class="date-subtitle">Fecha de Examen: ${new Date(record.created_at).toLocaleDateString('es-CO')} ${new Date(record.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</div>
           </div>
 
           <div class="section-title">1. Datos del Paciente</div>
@@ -670,8 +776,8 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
 
           <div class="section-title">2. Anamnesis y Antecedentes</div>
           <div class="field"><span class="label">Motivo de Consulta:</span> ${record.consultation_reason || 'Control visual de rutina'}</div>
-          <div class="grid" style="margin-top:8px;">
-            <div class="field"><span class="label">Antecedentes Médicos:</span> ${record.medical_antecedents || 'Ninguno reportado'}</div>
+          <div class="grid" style="margin-top:6px;">
+            <div class="field"><span class="label">Antecedentes Médicos / RX Previa:</span> ${record.medical_antecedents || 'Ninguno reportado'}</div>
             <div class="field"><span class="label">Antecedentes Oculares:</span> ${record.ocular_antecedents || 'Ninguno reportado'}</div>
           </div>
 
@@ -702,14 +808,14 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
           </table>
 
           ${record.ophthalmoscopy_notes ? `
-            <div style="margin-top:10px;" class="field">
+            <div style="margin-top:8px;" class="field">
               <span class="label">Oftalmoscopía / Biomicroscopía:</span> ${record.ophthalmoscopy_notes}
             </div>
           ` : ''}
 
           <div class="section-title">4. Diagnóstico y Plan de Manejo</div>
           <div class="field"><span class="label">Diagnóstico Clínico:</span> ${record.diagnosis || 'Vicio de refracción general'}</div>
-          <div class="field" style="margin-top:8px;"><span class="label">Plan de Tratamiento / Conducta:</span> ${record.treatment_plan || 'Uso permanente de corrección óptica con filtro azul anti-reflejo.'}</div>
+          <div class="field" style="margin-top:6px;"><span class="label">Plan de Tratamiento / Conducta:</span> ${record.treatment_plan || 'Uso permanente de corrección óptica con filtro azul anti-reflejo.'}</div>
 
           <div class="footer">
             <div class="signature">
@@ -741,50 +847,6 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
     }
   };
 
-  const handleNewClinicalRecordForCustomer = (cust: Customer) => {
-    setEditingClinicalRecordId(null);
-    setClinPatientName(`${cust.name} ${cust.last_name || ''}`.trim());
-    setClinPatientDoc(cust.document_number || '');
-    setClinPatientPhone(cust.phone || '');
-
-    const hasCurrentFormula = odSphere || oiSphere;
-    if (hasCurrentFormula) {
-      const odStr = `Esf: ${odSphere || '---'} | Cil: ${odCylinder || '---'} | Eje: ${odAxis ? `${odAxis}°` : '---'} | Add: ${odAddition || '---'}`;
-      const oiStr = `Esf: ${oiSphere || '---'} | Cil: ${oiCylinder || '---'} | Eje: ${oiAxis ? `${oiAxis}°` : '---'} | Add: ${oiAddition || '---'}`;
-      setClinRefrOd(odStr);
-      setClinRefrOi(oiStr);
-      if (odAv) setClinAvOd(odAv);
-      if (oiAv) setClinAvOi(oiAv);
-    } else if (formulasHistory && formulasHistory.length > 0) {
-      const latestForm = formulasHistory[0];
-      const odStr = `Esf: ${latestForm.od_sphere || '---'} | Cil: ${latestForm.od_cylinder || '---'} | Eje: ${latestForm.od_axis ? `${latestForm.od_axis}°` : '---'} | Add: ${latestForm.od_addition || '---'}`;
-      const oiStr = `Esf: ${latestForm.oi_sphere || '---'} | Cil: ${latestForm.oi_cylinder || '---'} | Eje: ${latestForm.oi_axis ? `${latestForm.oi_axis}°` : '---'} | Add: ${latestForm.oi_addition || '---'}`;
-      setClinRefrOd(odStr);
-      setClinRefrOi(oiStr);
-      if (latestForm.od_av) setClinAvOd(latestForm.od_av);
-      if (latestForm.oi_av) setClinAvOi(latestForm.oi_av);
-    } else {
-      setClinRefrOd('');
-      setClinRefrOi('');
-      setClinAvOd('20/20');
-      setClinAvOi('20/20');
-    }
-
-    setDiseaseCheckboxes({
-      estrabismo: false,
-      carnosidad: false,
-      cataratas: false,
-      hipertension: false,
-      diabetes: false,
-      cirugia: false,
-      alergias: false,
-      familiares: false
-    });
-    setClinFamAntecedents('');
-
-    setIsClinicalFormOpen(true);
-  };
-
   return (
     <div className="space-y-6 text-[#161616] font-sans antialiased">
       {/* Header Principal Wabi-Sabi */}
@@ -803,42 +865,34 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
 
         <div className="flex flex-wrap items-center gap-2">
           {formulasSubTab === 'formulas' && selectedCustomer && (
-            <button
-              type="button"
-              onClick={() => handlePrintFormula({
-                od_sphere: odSphere, od_cylinder: odCylinder, od_axis: odAxis, od_addition: odAddition, od_prism: odPrism, od_av: odAv,
-                oi_sphere: oiSphere, oi_cylinder: oiCylinder, oi_axis: oiAxis, oi_addition: oiAddition, oi_prism: oiPrism, oi_av: oiAv,
-                dp_distance: dpDistance, height, notes
-              })}
-              className="px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider text-[#161616] bg-white border border-[#E2DFD7] hover:border-[#161616] transition cursor-pointer flex items-center gap-1.5 shadow-xs rounded-none"
-            >
-              <span className="material-symbols-outlined text-[16px]">print</span>
-              Imprimir Prescripción
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => handleOpenNewClinicalRecordModal(selectedCustomer)}
+                className="px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider text-[#161616] bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] transition cursor-pointer flex items-center gap-1.5 shadow-2xs rounded-none"
+              >
+                <span className="material-symbols-outlined text-[16px]">clinical_notes</span>
+                + Nueva Historia Clínica
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePrintFormula({
+                  od_sphere: odSphere, od_cylinder: odCylinder, od_axis: odAxis, od_addition: odAddition, od_prism: odPrism, od_av: odAv,
+                  oi_sphere: oiSphere, oi_cylinder: oiCylinder, oi_axis: oiAxis, oi_addition: oiAddition, oi_prism: oiPrism, oi_av: oiAv,
+                  dp_distance: dpDistance, height, notes
+                })}
+                className="px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider text-[#161616] bg-white border border-[#E2DFD7] hover:border-[#161616] transition cursor-pointer flex items-center gap-1.5 shadow-xs rounded-none"
+              >
+                <span className="material-symbols-outlined text-[16px]">print</span>
+                Imprimir Prescripción
+              </button>
+            </>
           )}
 
           {formulasSubTab === 'historia_clinica' && (
             <button
               type="button"
-              onClick={() => {
-                setEditingClinicalRecordId(null);
-                setClinPatientName('');
-                setClinPatientDoc('');
-                setClinPatientPhone('');
-                setClinReason('');
-                setClinMedAntecedents('');
-                setClinOcuAntecedents('');
-                setClinFamAntecedents('');
-                setClinRefrOd('');
-                setClinRefrOi('');
-                setClinTonoOd('14 mmHg');
-                setClinTonoOi('14 mmHg');
-                setClinOphthalNotes('');
-                setClinDiagnosis('');
-                setClinTreatmentPlan('');
-                setClinOptometrist('Dr. Optómetra Especialista');
-                setIsClinicalFormOpen(true);
-              }}
+              onClick={() => handleOpenNewClinicalRecordModal(null)}
               className="px-4 py-2 bg-[#161616] text-[#F6F4EE] hover:bg-[#2b2b2b] text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 shadow-xs rounded-none"
             >
               <span className="material-symbols-outlined text-[16px]">add</span>
@@ -909,7 +963,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   type="date"
                   value={agendaDate}
                   onChange={(e) => setAgendaDate(e.target.value)}
-                  className="bg-[#FAF8F5] border border-[#E2DFD7] px-2 py-1 text-xs font-mono text-[#161616] outline-none rounded-none cursor-pointer"
+                  className="bg-[#FAF8F5] border border-[#E2DFD7] px-2.5 py-1 text-xs font-mono text-[#161616] outline-none rounded-none cursor-pointer"
                 />
               </div>
               <span className="text-[11px] font-mono text-[#76746E]">
@@ -957,7 +1011,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     setShowSuggestions(true);
                   }}
                   onFocus={() => setShowSuggestions(true)}
-                  className="w-full bg-white border border-[#E2DFD7] pl-10 pr-4 py-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
+                  className="w-full bg-[#FAF8F5] border border-[#E2DFD7] pl-10 pr-4 py-2.5 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                   placeholder="Escribe nombre, número de cédula o teléfono del paciente..."
                 />
               </div>
@@ -1007,9 +1061,10 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleNewClinicalRecordForCustomer(selectedCustomer)}
-                    className="px-3 py-1.5 bg-[#161616] text-[#F6F4EE] hover:bg-[#2b2b2b] text-xs font-mono font-bold uppercase transition cursor-pointer shadow-2xs rounded-none"
+                    onClick={() => handleOpenNewClinicalRecordModal(selectedCustomer)}
+                    className="px-3 py-1.5 bg-[#161616] text-[#F6F4EE] hover:bg-[#2b2b2b] text-xs font-mono font-bold uppercase transition cursor-pointer shadow-2xs rounded-none flex items-center gap-1"
                   >
+                    <span className="material-symbols-outlined text-[14px]">clinical_notes</span>
                     + Nueva Historia
                   </button>
                 </div>
@@ -1019,16 +1074,28 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
 
           {/* Formulario de Prescripción Oftálmica Matriz OD / OI */}
           <form onSubmit={handleSaveFormula} className="bg-white border border-[#E2DFD7] p-6 shadow-xs rounded-none space-y-6">
-            <div className="border-b border-[#E2DFD7] pb-3 flex justify-between items-center">
+            <div className="border-b border-[#E2DFD7] pb-3 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
               <div>
                 <span className="text-[10px] font-bold text-[#D9381E] uppercase tracking-wider font-mono block">MATRIZ DE REFRACCIÓN</span>
                 <h3 className="font-serif text-xl font-normal text-[#161616]">Prescripción Óptica</h3>
               </div>
-              {saveSuccess && (
-                <span className="text-xs font-mono font-bold text-[#2E7D32] bg-[#E6F4EA] border border-[#CEEAD6] px-3 py-1">
-                  ✓ Fórmula Guardada Exitosamente
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {selectedCustomer && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenNewClinicalRecordModal(selectedCustomer)}
+                    className="px-3.5 py-1.5 bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-xs font-mono font-bold uppercase transition cursor-pointer flex items-center gap-1.5 shadow-2xs rounded-none"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">clinical_notes</span>
+                    Nueva Historia Médica
+                  </button>
+                )}
+                {saveSuccess && (
+                  <span className="text-xs font-mono font-bold text-[#2E7D32] bg-[#E6F4EA] border border-[#CEEAD6] px-3 py-1">
+                    ✓ Fórmula Guardada Exitosamente
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* TABLA MATRIZ OD / OI */}
@@ -1057,7 +1124,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="Ej: -1.50"
                         value={odSphere}
                         onChange={(e) => setOdSphere(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                     <td className="p-2">
@@ -1066,7 +1133,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="Ej: -0.75"
                         value={odCylinder}
                         onChange={(e) => setOdCylinder(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                     <td className="p-2">
@@ -1075,7 +1142,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="Ej: 90"
                         value={odAxis}
                         onChange={(e) => setOdAxis(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                     <td className="p-2">
@@ -1084,7 +1151,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="Ej: +1.75"
                         value={odAddition}
                         onChange={(e) => setOdAddition(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                     <td className="p-2">
@@ -1093,7 +1160,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="Ej: 1Δ Base Up"
                         value={odPrism}
                         onChange={(e) => setOdPrism(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                     <td className="p-2">
@@ -1102,7 +1169,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="20/20"
                         value={odAv}
                         onChange={(e) => setOdAv(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                   </tr>
@@ -1118,7 +1185,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="Ej: -1.25"
                         value={oiSphere}
                         onChange={(e) => setOiSphere(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                     <td className="p-2">
@@ -1127,7 +1194,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="Ej: -0.50"
                         value={oiCylinder}
                         onChange={(e) => setOiCylinder(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                     <td className="p-2">
@@ -1136,7 +1203,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="Ej: 85"
                         value={oiAxis}
                         onChange={(e) => setOiAxis(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                     <td className="p-2">
@@ -1145,7 +1212,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="Ej: +1.75"
                         value={oiAddition}
                         onChange={(e) => setOiAddition(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                     <td className="p-2">
@@ -1154,7 +1221,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="Ej: ---"
                         value={oiPrism}
                         onChange={(e) => setOiPrism(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                     <td className="p-2">
@@ -1163,7 +1230,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                         placeholder="20/20"
                         value={oiAv}
                         onChange={(e) => setOiAv(e.target.value)}
-                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] outline-none font-mono rounded-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                       />
                     </td>
                   </tr>
@@ -1182,7 +1249,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   placeholder="Ej: 62"
                   value={dpDistance}
                   onChange={(e) => setDpDistance(e.target.value)}
-                  className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
+                  className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                 />
               </div>
 
@@ -1195,7 +1262,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   placeholder="Ej: 18"
                   value={height}
                   onChange={(e) => setHeight(e.target.value)}
-                  className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
+                  className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                 />
               </div>
 
@@ -1208,12 +1275,23 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   placeholder="Ej: Antirreflejo Blue Protect, Policarbonato..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-sans rounded-none"
+                  className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-sans rounded-none transition-colors"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-[#E2DFD7]">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-[#E2DFD7]">
+              {selectedCustomer ? (
+                <button
+                  type="button"
+                  onClick={() => handleOpenNewClinicalRecordModal(selectedCustomer)}
+                  className="px-4 py-2 bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] text-[#161616] font-mono font-bold text-xs uppercase cursor-pointer transition flex items-center gap-1.5 shadow-2xs rounded-none"
+                >
+                  <span className="material-symbols-outlined text-[16px]">clinical_notes</span>
+                  Abrir Historia Clínica Completa
+                </button>
+              ) : <div></div>}
+
               <button
                 type="submit"
                 disabled={saving || !selectedCustomer}
@@ -1412,15 +1490,17 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
         <SaaSErpLabJobs clientId={clientId} />
       )}
 
-      {/* MODAL CREAR / EDITAR HISTORIA CLÍNICA WABI-SABI */}
+      {/* MODAL CREAR / EDITAR HISTORIA CLÍNICA WABI-SABI (CON ÁREA 1 Y ÁREA 2 COMPARATIVAS) */}
       {isClinicalFormOpen && createPortal(
         <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left">
-          <div className="bg-[#F6F4EE] border border-[#E2DFD7] max-w-2xl w-full rounded-none overflow-hidden p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#F6F4EE] border border-[#E2DFD7] max-w-4xl w-full rounded-none overflow-hidden p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
               <div>
-                <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">HISTORIA CLÍNICA OFTALMOLÓGICA</span>
-                <h3 className="font-serif text-xl font-normal text-[#161616]">
-                  {editingClinicalRecordId ? 'Editar Historia Clínica' : 'Ficha Médica de Consulta'}
+                <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">
+                  HISTORIA CLÍNICA OPTOMÉTRICA
+                </span>
+                <h3 className="font-serif text-2xl font-normal text-[#161616]">
+                  {editingClinicalRecordId ? 'Editar Historia Clínica' : 'Ficha Médica & Examen Comparativo'}
                 </h3>
               </div>
               <button 
@@ -1435,8 +1515,8 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
               </button>
             </div>
 
-            <form onSubmit={handleCreateClinicalRecord} className="space-y-4 text-xs font-sans">
-              {/* 1. Datos Básicos */}
+            <form onSubmit={handleCreateClinicalRecord} className="space-y-5 text-xs font-sans">
+              {/* 1. Datos Básicos del Paciente */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Nombre del Paciente *</label>
@@ -1445,7 +1525,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     required
                     value={clinPatientName}
                     onChange={(e) => setClinPatientName(e.target.value)}
-                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1454,7 +1534,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     type="text"
                     value={clinPatientDoc}
                     onChange={(e) => setClinPatientDoc(e.target.value)}
-                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1463,7 +1543,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     type="text"
                     value={clinPatientPhone}
                     onChange={(e) => setClinPatientPhone(e.target.value)}
-                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                   />
                 </div>
               </div>
@@ -1473,10 +1553,10 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Motivo de Consulta</label>
                 <input
                   type="text"
-                  placeholder="Ej: Visión borrosa de lejos, cansancio visual frente a pantallas..."
+                  placeholder="Ej: Visión borrosa lejana, cefalea frontal o control visual anual..."
                   value={clinReason}
                   onChange={(e) => setClinReason(e.target.value)}
-                  className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-sans rounded-none"
+                  className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-sans rounded-none transition-colors"
                 />
               </div>
 
@@ -1486,7 +1566,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[
                     { key: 'estrabismo', label: 'Estrabismo' },
-                    { key: 'carnosidad', label: 'Carnosidad' },
+                    { key: 'carnosidad', label: 'Carnosidad / Pterigión' },
                     { key: 'cataratas', label: 'Cataratas' },
                     { key: 'hipertension', label: 'Hipertensión' },
                     { key: 'diabetes', label: 'Diabetes' },
@@ -1506,42 +1586,149 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                   <input
                     type="text"
-                    placeholder="Otros antecedentes personales..."
+                    placeholder="Otros antecedentes personales o cirugías..."
                     value={clinMedAntecedents}
                     onChange={(e) => setClinMedAntecedents(e.target.value)}
-                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-sans rounded-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-sans rounded-none transition-colors"
                   />
                   <input
                     type="text"
-                    placeholder="Antecedentes familiares (glaucoma, diabetes...)..."
+                    placeholder="Antecedentes familiares (glaucoma, ceguera, diabetes...)..."
                     value={clinFamAntecedents}
                     onChange={(e) => setClinFamAntecedents(e.target.value)}
-                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-sans rounded-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-sans rounded-none transition-colors"
                   />
                 </div>
               </div>
 
-              {/* 4. Examen Clínico */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Refracción Prescrita OD</label>
-                  <input
-                    type="text"
-                    value={clinRefrOd}
-                    onChange={(e) => setClinRefrOd(e.target.value)}
-                    placeholder="Ej: Esf: -1.50 | Cil: -0.75 | Eje: 90°"
-                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
-                  />
+              {/* 4. DOS ÁREAS DE EXÁMENES COMPARATIVOS: ANTERIOR vs RECIENTE */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* ÁREA A: EXÁMENES ANTERIORES */}
+                <div className="bg-white border border-[#E2DFD7] p-3.5 space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2">
+                    <span className="text-[10px] font-bold text-[#76746E] uppercase tracking-wider font-mono">
+                      1. EXÁMENES ANTERIORES (PREVIO)
+                    </span>
+                    <span className="text-[10px] font-mono text-[#76746E] bg-[#FAF8F5] px-2 py-0.5 border border-[#E2DFD7]">
+                      {prevExamDate}
+                    </span>
+                  </div>
+
+                  {/* Tabla OD / OI Anterior */}
+                  <table className="w-full text-left font-mono text-[11px]">
+                    <thead>
+                      <tr className="text-[#76746E] text-[9px] uppercase border-b border-[#E2DFD7]">
+                        <th className="pb-1">Ojo</th>
+                        <th className="pb-1">Esf</th>
+                        <th className="pb-1">Cil</th>
+                        <th className="pb-1">Eje</th>
+                        <th className="pb-1">Add</th>
+                        <th className="pb-1">AV</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E2DFD7]">
+                      <tr>
+                        <td className="py-1.5 font-bold">OD</td>
+                        <td>
+                          <input type="text" value={prevOdEsf} onChange={(e) => setPrevOdEsf(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] outline-none" placeholder="---" />
+                        </td>
+                        <td>
+                          <input type="text" value={prevOdCil} onChange={(e) => setPrevOdCil(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] outline-none" placeholder="---" />
+                        </td>
+                        <td>
+                          <input type="text" value={prevOdEje} onChange={(e) => setPrevOdEje(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] outline-none" placeholder="---" />
+                        </td>
+                        <td>
+                          <input type="text" value={prevOdAdd} onChange={(e) => setPrevOdAdd(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] outline-none" placeholder="---" />
+                        </td>
+                        <td>
+                          <input type="text" value={prevOdAv} onChange={(e) => setPrevOdAv(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] outline-none" placeholder="20/20" />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-1.5 font-bold">OI</td>
+                        <td>
+                          <input type="text" value={prevOiEsf} onChange={(e) => setPrevOiEsf(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] outline-none" placeholder="---" />
+                        </td>
+                        <td>
+                          <input type="text" value={prevOiCil} onChange={(e) => setPrevOiCil(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] outline-none" placeholder="---" />
+                        </td>
+                        <td>
+                          <input type="text" value={prevOiEje} onChange={(e) => setPrevOiEje(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] outline-none" placeholder="---" />
+                        </td>
+                        <td>
+                          <input type="text" value={prevOiAdd} onChange={(e) => setPrevOiAdd(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] outline-none" placeholder="---" />
+                        </td>
+                        <td>
+                          <input type="text" value={prevOiAv} onChange={(e) => setPrevOiAv(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] outline-none" placeholder="20/20" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Refracción Prescrita OI</label>
-                  <input
-                    type="text"
-                    value={clinRefrOi}
-                    onChange={(e) => setClinRefrOi(e.target.value)}
-                    placeholder="Ej: Esf: -1.25 | Cil: -0.50 | Eje: 85°"
-                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
-                  />
+
+                {/* ÁREA B: EXÁMENES RECIENTES (ACTUAL) */}
+                <div className="bg-white border-2 border-[#161616] p-3.5 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2">
+                    <span className="text-[10px] font-bold text-[#D9381E] uppercase tracking-wider font-mono">
+                      2. EXÁMENES RECIENTES (CONSULTA ACTUAL) *
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-[#161616] bg-[#FAF8F5] px-2 py-0.5 border border-[#161616]">
+                      Hoy / Reciente
+                    </span>
+                  </div>
+
+                  {/* Tabla OD / OI Reciente */}
+                  <table className="w-full text-left font-mono text-[11px]">
+                    <thead>
+                      <tr className="text-[#161616] text-[9px] uppercase border-b border-[#E2DFD7]">
+                        <th className="pb-1">Ojo</th>
+                        <th className="pb-1">Esf</th>
+                        <th className="pb-1">Cil</th>
+                        <th className="pb-1">Eje</th>
+                        <th className="pb-1">Add</th>
+                        <th className="pb-1">AV</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E2DFD7]">
+                      <tr>
+                        <td className="py-1.5 font-bold text-[#161616]">OD</td>
+                        <td>
+                          <input type="text" value={recentOdEsf} onChange={(e) => setRecentOdEsf(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] focus:border-[#161616] focus:bg-white outline-none font-bold" placeholder="-1.50" />
+                        </td>
+                        <td>
+                          <input type="text" value={recentOdCil} onChange={(e) => setRecentOdCil(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] focus:border-[#161616] focus:bg-white outline-none" placeholder="-0.75" />
+                        </td>
+                        <td>
+                          <input type="text" value={recentOdEje} onChange={(e) => setRecentOdEje(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] focus:border-[#161616] focus:bg-white outline-none" placeholder="90" />
+                        </td>
+                        <td>
+                          <input type="text" value={recentOdAdd} onChange={(e) => setRecentOdAdd(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] focus:border-[#161616] focus:bg-white outline-none" placeholder="+1.75" />
+                        </td>
+                        <td>
+                          <input type="text" value={recentOdAv} onChange={(e) => setRecentOdAv(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] focus:border-[#161616] focus:bg-white outline-none font-bold" placeholder="20/20" />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-1.5 font-bold text-[#161616]">OI</td>
+                        <td>
+                          <input type="text" value={recentOiEsf} onChange={(e) => setRecentOiEsf(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] focus:border-[#161616] focus:bg-white outline-none font-bold" placeholder="-1.25" />
+                        </td>
+                        <td>
+                          <input type="text" value={recentOiCil} onChange={(e) => setRecentOiCil(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] focus:border-[#161616] focus:bg-white outline-none" placeholder="-0.50" />
+                        </td>
+                        <td>
+                          <input type="text" value={recentOiEje} onChange={(e) => setRecentOiEje(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] focus:border-[#161616] focus:bg-white outline-none" placeholder="85" />
+                        </td>
+                        <td>
+                          <input type="text" value={recentOiAdd} onChange={(e) => setRecentOiAdd(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] focus:border-[#161616] focus:bg-white outline-none" placeholder="+1.75" />
+                        </td>
+                        <td>
+                          <input type="text" value={recentOiAv} onChange={(e) => setRecentOiAv(e.target.value)} className="w-full bg-[#FAF8F5] p-1 text-[11px] font-mono border border-[#E2DFD7] focus:border-[#161616] focus:bg-white outline-none font-bold" placeholder="20/20" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
@@ -1553,7 +1740,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     type="text"
                     value={clinTonoOd}
                     onChange={(e) => setClinTonoOd(e.target.value)}
-                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1562,7 +1749,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     type="text"
                     value={clinTonoOi}
                     onChange={(e) => setClinTonoOi(e.target.value)}
-                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1571,7 +1758,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                     type="text"
                     value={clinOptometrist}
                     onChange={(e) => setClinOptometrist(e.target.value)}
-                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-sans rounded-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-sans rounded-none transition-colors"
                   />
                 </div>
               </div>
@@ -1580,10 +1767,10 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Oftalmoscopía / Fondo de Ojo</label>
                 <input
                   type="text"
-                  placeholder="Ej: Papila de bordes definidos, mácula y retina sin alteraciones aparentes..."
+                  placeholder="Ej: Medios transparentes, papila de bordes nítidos, mácula y vasos normoconfigurados..."
                   value={clinOphthalNotes}
                   onChange={(e) => setClinOphthalNotes(e.target.value)}
-                  className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-sans rounded-none"
+                  className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-sans rounded-none transition-colors"
                 />
               </div>
 
@@ -1593,20 +1780,20 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                   <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Diagnóstico Clínico</label>
                   <input
                     type="text"
-                    placeholder="Ej: Astigmatismo Miópico Compuesto"
+                    placeholder="Ej: H52.1 Miopía + H52.2 Astigmatismo Miopico"
                     value={clinDiagnosis}
                     onChange={(e) => setClinDiagnosis(e.target.value)}
-                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-sans rounded-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-sans rounded-none transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Plan de Manejo / Conducta</label>
                   <input
                     type="text"
-                    placeholder="Ej: Lentes progresivos con filtro UV400 y control en 1 año"
+                    placeholder="Ej: Prescripción óptica con lentes fotosensibles antirreflejo y control anual..."
                     value={clinTreatmentPlan}
                     onChange={(e) => setClinTreatmentPlan(e.target.value)}
-                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-sans rounded-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-sans rounded-none transition-colors"
                   />
                 </div>
               </div>
@@ -1625,7 +1812,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
                 <button
                   type="submit"
                   disabled={loadingClinical}
-                  className="px-4 py-2 bg-[#161616] hover:bg-[#2b2b2b] text-[#F6F4EE] font-mono font-bold uppercase text-xs cursor-pointer transition disabled:opacity-50 rounded-none shadow-xs"
+                  className="px-5 py-2 bg-[#161616] hover:bg-[#2b2b2b] text-[#F6F4EE] font-mono font-bold uppercase text-xs cursor-pointer transition disabled:opacity-50 rounded-none shadow-xs"
                 >
                   {loadingClinical ? 'Guardando...' : 'Guardar Historia'}
                 </button>
@@ -1654,24 +1841,24 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 bg-white p-3 border border-[#E2DFD7]">
+            <div className="grid grid-cols-2 gap-2 bg-[#FAF8F5] p-3 border border-[#E2DFD7]">
               <div><strong>Doc:</strong> {viewingClinicalRecord.customer_document || 'N/A'}</div>
               <div><strong>Tel:</strong> {viewingClinicalRecord.customer_phone || 'N/A'}</div>
               <div><strong>Fecha:</strong> {new Date(viewingClinicalRecord.created_at).toLocaleDateString('es-CO')}</div>
               <div><strong>Optómetra:</strong> {viewingClinicalRecord.optometrist_name || 'Especialista'}</div>
             </div>
 
-            <div className="bg-white p-3 border border-[#E2DFD7] space-y-1">
+            <div className="bg-[#FAF8F5] p-3 border border-[#E2DFD7] space-y-1">
               <strong className="text-[#D9381E] block uppercase text-[10px]">Motivo de Consulta</strong>
               <p>{viewingClinicalRecord.consultation_reason || 'Control visual de rutina'}</p>
             </div>
 
-            <div className="bg-white p-3 border border-[#E2DFD7] space-y-1">
+            <div className="bg-[#FAF8F5] p-3 border border-[#E2DFD7] space-y-1">
               <strong className="text-[#D9381E] block uppercase text-[10px]">Antecedentes</strong>
               <p>{viewingClinicalRecord.medical_antecedents || 'Ninguno reportado'}</p>
             </div>
 
-            <div className="bg-white p-3 border border-[#E2DFD7] space-y-2">
+            <div className="bg-[#FAF8F5] p-3 border border-[#E2DFD7] space-y-2">
               <strong className="text-[#D9381E] block uppercase text-[10px]">Examen Ocular</strong>
               <div className="grid grid-cols-2 gap-2">
                 <div><strong>OD:</strong> {viewingClinicalRecord.refraction_od || 'Plano'} (AV: {viewingClinicalRecord.visual_acuity_od || '20/20'})</div>
@@ -1681,7 +1868,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
               </div>
             </div>
 
-            <div className="bg-white p-3 border border-[#E2DFD7] space-y-1">
+            <div className="bg-[#FAF8F5] p-3 border border-[#E2DFD7] space-y-1">
               <strong className="text-[#D9381E] block uppercase text-[10px]">Diagnóstico & Conducta</strong>
               <p><strong>Diagnóstico:</strong> {viewingClinicalRecord.diagnosis || 'Refracción'}</p>
               <p><strong>Plan:</strong> {viewingClinicalRecord.treatment_plan || 'Control anual'}</p>
