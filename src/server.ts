@@ -100,8 +100,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+import { accountingRouter } from './routes/accounting.routes';
+import { inventoryRouter } from './routes/inventory.routes';
+
 // Aplicar Rate Limiting General a la API
 app.use('/api', generalApiLimiter);
+
+// Registrar Rutas Modulares (Arquitectura DDD $10M ERP)
+app.use('/api/clients/:clientId/accounting', accountingRouter);
+app.use('/api/clients/:clientId/inventory', inventoryRouter);
 
 // Servir la carpeta de media de forma estática
 const mediaDir = path.join(process.cwd(), 'media', 'clients');

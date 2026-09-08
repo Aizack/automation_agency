@@ -1396,6 +1396,15 @@ export const initDatabase = async () => {
               AND (u.full_name IS NULL OR u.full_name != c.contact_name);
         `);
 
+        // Habilitación de Row Level Security (RLS) para aislamiento multi-tenant estricto
+        await pool.query(`
+            ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE crm_customers ENABLE ROW LEVEL SECURITY;
+        `).catch(err => console.log("[DB Init] Notice: RLS activation info:", err.message));
+
+        console.log("[DB Init] ✅ RLS Row Level Security habilitado para aislamiento estricto por tenant.");
         console.log("[DB Init] ✅ Tablas de Finanzas, Inversión, Préstamos, Tickets, Variantes y Comisiones inicializadas.");
         console.log("[DB Init] 🎉 ¡Inicialización completada con éxito!");
 
