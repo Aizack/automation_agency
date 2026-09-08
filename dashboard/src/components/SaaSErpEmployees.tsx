@@ -92,24 +92,24 @@ const CustomDatePicker: React.FC<{
 
     return (
         <div className="relative w-full">
-            {label && <label className="text-[10px] text-on-surface-variant font-medium block mb-1">{label}</label>}
+            {label && <label className="text-[10px] text-[#76746E] font-medium block mb-1">{label}</label>}
             <div 
                 onClick={() => setIsOpen(!isOpen)}
-                className="bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface flex items-center justify-between cursor-pointer hover:border-primary/50 transition shadow-sm"
+                className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] flex items-center justify-between cursor-pointer hover:border-primary/50 transition shadow-sm"
             >
-                <span className={value ? 'text-on-surface font-mono font-bold' : 'text-on-surface-variant/60'}>
+                <span className={value ? 'text-[#161616] font-mono font-bold' : 'text-[#76746E]'}>
                     {formatDisplay()}
                 </span>
-                <span className="material-symbols-outlined text-[18px] text-primary">calendar_today</span>
+                <span className="material-symbols-outlined text-[18px] text-[#161616]">calendar_today</span>
             </div>
 
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                    <div className="absolute left-0 mt-1.5 z-50 bg-[#1e2024] border border-[#33373e] rounded-2xl shadow-2xl p-4 w-72 text-on-surface text-xs select-none">
+                    <div className="absolute left-0 mt-1.5 z-50 bg-[#F6F4EE] border border-[#E2DFD7] rounded-none shadow-2xl p-4 w-72 text-[#161616] text-xs select-none">
                         {viewMode === 'calendar' ? (
                             <div>
-                                <div className="flex items-center justify-between mb-3 border-b border-[#2d3138] pb-2">
+                                <div className="flex items-center justify-between mb-3 border-b border-[#E2DFD7] pb-2">
                                     <button 
                                         type="button" 
                                         onClick={() => {
@@ -120,7 +120,7 @@ const CustomDatePicker: React.FC<{
                                                 setCurrentMonth(m => m - 1);
                                             }
                                         }}
-                                        className="p-1 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white cursor-pointer transition"
+                                        className="p-1 hover:bg-white/10 rounded-none text-gray-400 hover:text-white cursor-pointer transition"
                                     >
                                         <span className="material-symbols-outlined text-sm">chevron_left</span>
                                     </button>
@@ -128,7 +128,7 @@ const CustomDatePicker: React.FC<{
                                     <button 
                                         type="button" 
                                         onClick={() => setViewMode('monthYear')}
-                                        className="px-3 py-1 bg-[#282b30] hover:bg-[#32363d] text-white font-bold rounded-lg border border-[#3a3f47] cursor-pointer transition flex items-center gap-1 text-xs"
+                                        className="px-3 py-1 bg-[#FAF8F5] hover:bg-white text-white font-bold rounded-none border border-[#E2DFD7] cursor-pointer transition flex items-center gap-1 text-xs"
                                     >
                                         <span>{monthNames[currentMonth]} de {currentYear}</span>
                                         <span className="material-symbols-outlined text-xs">expand_more</span>
@@ -144,7 +144,7 @@ const CustomDatePicker: React.FC<{
                                                 setCurrentMonth(m => m + 1);
                                             }
                                         }}
-                                        className="p-1 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white cursor-pointer transition"
+                                        className="p-1 hover:bg-white/10 rounded-none text-gray-400 hover:text-white cursor-pointer transition"
                                     >
                                         <span className="material-symbols-outlined text-sm">chevron_right</span>
                                     </button>
@@ -178,9 +178,9 @@ const CustomDatePicker: React.FC<{
                                                 key={`day-${day}`}
                                                 type="button"
                                                 onClick={() => handleSelectDay(day)}
-                                                className={`p-1.5 rounded-lg text-xs font-bold cursor-pointer transition ${
+                                                className={`p-1.5 rounded-none text-xs font-bold cursor-pointer transition ${
                                                     isSelected ? 'bg-primary text-white font-black shadow-md' :
-                                                    isToday ? 'border border-primary text-primary' : 'hover:bg-white/10 text-gray-200'
+                                                    isToday ? 'border border-primary text-[#161616]' : 'hover:bg-white/10 text-gray-200'
                                                 }`}
                                             >
                                                 {day}
@@ -189,14 +189,14 @@ const CustomDatePicker: React.FC<{
                                     })}
                                 </div>
 
-                                <div className="flex justify-between items-center mt-3 pt-2 border-t border-[#2d3138] text-[11px]">
+                                <div className="flex justify-between items-center mt-3 pt-2 border-t border-[#E2DFD7] text-[11px]">
                                     <button 
                                         type="button"
                                         onClick={() => {
                                             onChange('');
                                             setIsOpen(false);
                                         }}
-                                        className="px-2.5 py-1 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-md font-bold transition cursor-pointer"
+                                        className="px-2.5 py-1 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-none font-bold transition cursor-pointer"
                                     >
                                         Limpiar
                                     </button>
@@ -208,7 +208,7 @@ const CustomDatePicker: React.FC<{
                                             setCurrentYear(today.getFullYear());
                                             handleSelectDay(today.getDate());
                                         }}
-                                        className="px-3 py-1 bg-primary/20 text-primary hover:bg-primary/30 rounded-md font-bold transition cursor-pointer"
+                                        className="px-3 py-1 bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] hover:bg-primary/30 rounded-none font-bold transition cursor-pointer"
                                     >
                                         Hoy
                                     </button>
@@ -216,19 +216,19 @@ const CustomDatePicker: React.FC<{
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                <div className="text-center font-extrabold text-xs border-b border-[#2d3138] pb-2 text-primary uppercase">
+                                <div className="text-center font-extrabold text-xs border-b border-[#E2DFD7] pb-2 text-[#161616] uppercase">
                                     Seleccionar Mes y Año
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="max-h-48 overflow-y-auto pr-1 space-y-1 custom-scrollbar">
-                                        <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 sticky top-0 bg-[#1e2024] py-0.5">Mes</p>
+                                        <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 sticky top-0 bg-[#FAF8F5] py-0.5">Mes</p>
                                         {shortMonthNames.map((mName, idx) => (
                                             <button
                                                 key={mName}
                                                 type="button"
                                                 onClick={() => setCurrentMonth(idx)}
-                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                                                className={`w-full text-left px-2.5 py-1.5 rounded-none text-xs font-bold transition cursor-pointer ${
                                                     currentMonth === idx ? 'bg-primary text-white font-black' : 'hover:bg-white/10 text-gray-300'
                                                 }`}
                                             >
@@ -238,13 +238,13 @@ const CustomDatePicker: React.FC<{
                                     </div>
 
                                     <div className="max-h-48 overflow-y-auto pr-1 space-y-1 custom-scrollbar">
-                                        <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 sticky top-0 bg-[#1e2024] py-0.5">Año</p>
+                                        <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 sticky top-0 bg-[#FAF8F5] py-0.5">Año</p>
                                         {years.map(yr => (
                                             <button
                                                 key={yr}
                                                 type="button"
                                                 onClick={() => setCurrentYear(yr)}
-                                                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold font-mono transition cursor-pointer ${
+                                                className={`w-full text-left px-2.5 py-1.5 rounded-none text-xs font-bold font-mono transition cursor-pointer ${
                                                     currentYear === yr ? 'bg-primary text-white font-black' : 'hover:bg-white/10 text-gray-300'
                                                 }`}
                                             >
@@ -254,11 +254,11 @@ const CustomDatePicker: React.FC<{
                                     </div>
                                 </div>
 
-                                <div className="pt-2 border-t border-[#2d3138] flex justify-center">
+                                <div className="pt-2 border-t border-[#E2DFD7] flex justify-center">
                                     <button
                                         type="button"
                                         onClick={() => setViewMode('calendar')}
-                                        className="w-full py-2 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-1.5 uppercase"
+                                        className="w-full py-2 bg-primary hover:bg-primary/90 text-white font-bold text-xs rounded-none shadow-lg transition cursor-pointer flex items-center justify-center gap-1.5 uppercase"
                                     >
                                         <span className="material-symbols-outlined text-sm">check_circle</span>
                                         Seleccionar
@@ -1193,7 +1193,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         return (
             <div className="space-y-6">
                 {/* Header of Shifts View */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#141517] border border-[#222428] p-5 rounded-lg">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#141517] border border-[#222428] p-5 rounded-none">
                     <div>
                         <h3 className="font-extrabold text-lg flex items-center gap-2" style={{ color: '#eab308' }}>
                             <span className="material-symbols-outlined text-[#eab308]">work_history</span>
@@ -1204,7 +1204,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                     {viewMode !== 'turnos' && (
                         <button 
                             onClick={() => { setActiveView('list'); setSelectedEmpForShifts(null); }}
-                            className="px-3 py-1.5 bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white text-[11px] font-bold rounded-md flex items-center gap-1.5 cursor-pointer transition"
+                            className="px-3 py-1.5 bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white text-[11px] font-bold rounded-none flex items-center gap-1.5 cursor-pointer transition"
                         >
                             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
                             Volver a Lista
@@ -1239,21 +1239,21 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                     <div className="space-y-6">
                         {/* Summary indicators */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg flex justify-between items-center">
+                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-none flex justify-between items-center">
                                 <div>
                                     <p className="text-[10px] text-[#eab308] uppercase font-mono font-bold" style={{ color: '#eab308' }}>Fichajes de Hoy</p>
                                     <p className="text-xl font-black text-white mt-1">{todayShifts.length}</p>
                                 </div>
                                 <span className="material-symbols-outlined text-[#eab308] text-[28px]">badge</span>
                             </div>
-                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg flex justify-between items-center">
+                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-none flex justify-between items-center">
                                 <div>
                                     <p className="text-[10px] text-green-400 uppercase font-mono font-bold">En Turno Activo</p>
                                     <p className="text-xl font-black text-green-400 mt-1">{todayShifts.filter(s => !s.clock_out).length}</p>
                                 </div>
                                 <span className="material-symbols-outlined text-green-400 text-[28px]">play_circle</span>
                             </div>
-                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg flex justify-between items-center">
+                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-none flex justify-between items-center">
                                 <div>
                                     <p className="text-[10px] text-orange-400 uppercase font-mono font-bold">Retardos (Tarde)</p>
                                     <p className="text-xl font-black text-orange-400 mt-1">
@@ -1270,18 +1270,18 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                         </div>
 
                         {/* Today Shifts List */}
-                        <div className="bg-surface-container/30 border border-outline/10 rounded-2xl p-6 overflow-x-auto">
-                            <h4 className="font-bold text-sm text-on-surface mb-4">Ingresos y Salidas del Día</h4>
+                        <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none p-6 overflow-x-auto">
+                            <h4 className="font-bold text-sm text-[#161616] mb-4">Ingresos y Salidas del Día</h4>
                             {todayShiftsLoading ? (
                                 <div className="flex justify-center py-12">
-                                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-none animate-spin"></div>
                                 </div>
                             ) : todayShifts.length === 0 ? (
-                                <p className="text-xs text-on-surface-variant/60 py-6 text-center">Nadie ha fichado el día de hoy todavía.</p>
+                                <p className="text-xs text-[#76746E] py-6 text-center">Nadie ha fichado el día de hoy todavía.</p>
                             ) : (
                                 <table className="w-full text-left text-xs border-collapse">
                                     <thead>
-                                        <tr className="text-on-surface-variant/70 border-b border-outline/10 font-bold">
+                                        <tr className="text-[#76746E] border-b border-[#E2DFD7] font-bold">
                                             <th className="py-2.5 px-2">Empleado</th>
                                             <th className="py-2.5 px-2">Hora Entrada</th>
                                             <th className="py-2.5 px-2">Hora Salida</th>
@@ -1309,8 +1309,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                             }
 
                                             return (
-                                                <tr key={s.id} className="border-b border-outline/5 hover:bg-surface-variant/20 transition-all">
-                                                    <td className="py-3 px-2 font-bold text-on-surface">
+                                                <tr key={s.id} className="border-b border-[#E2DFD7] hover:bg-[#FAF8F5] transition-all">
+                                                    <td className="py-3 px-2 font-bold text-[#161616]">
                                                         {s.employee_name} {s.employee_last_name || ''}
                                                     </td>
                                                     <td className="py-3 px-2 font-mono">
@@ -1327,21 +1327,21 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                             )
                                                         )}
                                                     </td>
-                                                    <td className="py-3 px-2 text-on-surface-variant/80 font-mono">
+                                                    <td className="py-3 px-2 text-[#76746E] font-mono">
                                                         {lunchTimeStr === 'Almorzando' ? (
-                                                            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-pulse">Almorzando</span>
+                                                            <span className="px-1.5 py-0.5 rounded-none text-[9px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-pulse">Almorzando</span>
                                                         ) : (
                                                             lunchTimeStr
                                                         )}
                                                     </td>
                                                     <td className="py-3 px-2">
-                                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                                        <span className={`px-2 py-0.5 rounded-none text-[9px] font-bold ${
                                                             isLate ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'
                                                         }`}>
                                                             {isLate ? 'Tarde' : 'A Tiempo'}
                                                         </span>
                                                     </td>
-                                                    <td className="py-3 px-2 font-mono font-bold text-primary">
+                                                    <td className="py-3 px-2 font-mono font-bold text-[#161616]">
                                                         {Number(s.hours_worked || 0).toFixed(2)} hrs
                                                     </td>
                                                     <td className="py-3 px-2 text-right">
@@ -1350,7 +1350,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                                 const emp = employees.find(e => e.id === s.employee_id);
                                                                 if (emp) selectEmployeeForShifts(emp);
                                                             }}
-                                                            className="px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary border-0 rounded text-[10px] font-bold cursor-pointer transition"
+                                                            className="px-2 py-1 bg-[#FAF8F5] border border-[#E2DFD7] hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] border-0 rounded text-[10px] font-bold cursor-pointer transition"
                                                         >
                                                             Ver Historial
                                                         </button>
@@ -1369,16 +1369,16 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                 {shiftsTab === 'historial' && (
                     <div className="space-y-6">
                         {/* Employee Selector Dropdown */}
-                        <div className="bg-surface-container/40 border border-outline/10 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none/40 border border-[#E2DFD7] p-5 rounded-none flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Seleccionar Empleado</label>
+                                <label className="block text-xs font-bold text-[#76746E]">Seleccionar Empleado</label>
                                 <select 
                                     value={selectedEmpForShifts?.id || ''}
                                     onChange={(e) => {
                                         const emp = employees.find(x => x.id === e.target.value);
                                         if (emp) selectEmployeeForShifts(emp);
                                     }}
-                                    className="bg-surface border border-outline/20 p-2.5 rounded-xl text-xs text-on-surface outline-none focus:border-primary cursor-pointer w-full md:w-64"
+                                    className="bg-surface border border-[#E2DFD7] p-2.5 rounded-none text-xs text-[#161616] outline-none focus:border-primary cursor-pointer w-full md:w-64"
                                 >
                                     <option value="">-- Selecciona un Empleado --</option>
                                     {employees.map(e => (
@@ -1388,13 +1388,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                             </div>
 
                             {selectedEmpForShifts && (
-                                <div className="flex gap-4 items-center bg-surface-container/50 border border-outline/10 p-3 rounded-xl">
-                                    <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold text-sm font-display">
+                                <div className="flex gap-4 items-center bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-3 rounded-none">
+                                    <div className="w-8 h-8 rounded-none bg-primary/15 text-[#161616] flex items-center justify-center font-bold text-sm font-display">
                                         {selectedEmpForShifts.name[0]}
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-xs text-on-surface">{selectedEmpForShifts.name} {selectedEmpForShifts.last_name || ''}</h4>
-                                        <p className="text-[10px] text-on-surface-variant font-mono capitalize">{selectedEmpForShifts.role} | +{selectedEmpForShifts.phone}</p>
+                                        <h4 className="font-bold text-xs text-[#161616]">{selectedEmpForShifts.name} {selectedEmpForShifts.last_name || ''}</h4>
+                                        <p className="text-[10px] text-[#76746E] font-mono capitalize">{selectedEmpForShifts.role} | +{selectedEmpForShifts.phone}</p>
                                     </div>
                                 </div>
                             )}
@@ -1403,11 +1403,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                         {selectedEmpForShifts ? (
                             <div className="space-y-6">
                                 {/* Sub-tabs: Semana, Mes, Todos */}
-                                <div className="flex border-b border-outline/5 gap-4 text-xs font-bold">
+                                <div className="flex border-b border-[#E2DFD7] gap-4 text-xs font-bold">
                                     <button 
                                         onClick={() => setShiftsSubTab('semana')}
                                         className={`pb-2.5 cursor-pointer transition-all border-b-2 px-1 ${
-                                            shiftsSubTab === 'semana' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant/70 hover:text-on-surface'
+                                            shiftsSubTab === 'semana' ? 'border-primary text-[#161616]' : 'border-transparent text-[#76746E] hover:text-[#161616]'
                                         }`}
                                     >
                                         Semana Actual
@@ -1415,7 +1415,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                     <button 
                                         onClick={() => setShiftsSubTab('mes')}
                                         className={`pb-2.5 cursor-pointer transition-all border-b-2 px-1 ${
-                                            shiftsSubTab === 'mes' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant/70 hover:text-on-surface'
+                                            shiftsSubTab === 'mes' ? 'border-primary text-[#161616]' : 'border-transparent text-[#76746E] hover:text-[#161616]'
                                         }`}
                                     >
                                         Mes Actual
@@ -1423,7 +1423,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                     <button 
                                         onClick={() => setShiftsSubTab('todos')}
                                         className={`pb-2.5 cursor-pointer transition-all border-b-2 px-1 ${
-                                            shiftsSubTab === 'todos' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant/70 hover:text-on-surface'
+                                            shiftsSubTab === 'todos' ? 'border-primary text-[#161616]' : 'border-transparent text-[#76746E] hover:text-[#161616]'
                                         }`}
                                     >
                                         Todos los Meses
@@ -1434,15 +1434,15 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 {shiftsSubTab === 'semana' && (
                                     <div className="space-y-6">
                                         {/* Weekly Cards Grid (Reference Image 1) */}
-                                        <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-2xl">
-                                            <h4 className="font-bold text-xs text-on-surface mb-4">Grilla de Horas de la Semana</h4>
-                                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-outline/5 pb-4 mb-4">
+                                        <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] p-6 rounded-none">
+                                            <h4 className="font-bold text-xs text-[#161616] mb-4">Grilla de Horas de la Semana</h4>
+                                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-[#E2DFD7] pb-4 mb-4">
                                                 <div className="flex flex-wrap gap-2.5">
                                                     {getDatesOfCurrentWeek().map((date, idx) => {
                                                         const hours = getHoursForDate(date);
                                                         const weekdayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
                                                         
-                                                        let boxClass = 'bg-surface-container-high/40 text-on-surface-variant/50 border-outline/5';
+                                                        let boxClass = 'bg-[#FAF8F5] border border-[#E2DFD7] rounded-none text-[#76746E]/50 border-[#E2DFD7]';
                                                         if (hours > 0) {
                                                             boxClass = hours >= 8 
                                                                 ? 'bg-green-600 text-white font-bold border-green-700 shadow-sm' 
@@ -1451,27 +1451,27 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                                                         return (
                                                             <div key={idx} className="flex flex-col items-center gap-1">
-                                                                <span className="text-[10px] text-on-surface-variant/80 font-bold">{weekdayNames[date.getDay()]}</span>
-                                                                <div className={`w-16 h-12 rounded-xl flex items-center justify-center text-xs border transition ${boxClass}`}>
+                                                                <span className="text-[10px] text-[#76746E] font-bold">{weekdayNames[date.getDay()]}</span>
+                                                                <div className={`w-16 h-12 rounded-none flex items-center justify-center text-xs border transition ${boxClass}`}>
                                                                     {hours > 0 ? `${hours.toFixed(1)}h` : '--'}
                                                                 </div>
-                                                                <span className="text-[8px] text-on-surface-variant/50 font-mono">{date.getDate()}</span>
+                                                                <span className="text-[8px] text-[#76746E]/50 font-mono">{date.getDate()}</span>
                                                             </div>
                                                         );
                                                     })}
                                                 </div>
 
-                                                <div className="flex gap-6 items-center text-xs bg-surface-container/50 p-4 rounded-xl border border-outline/10">
+                                                <div className="flex gap-6 items-center text-xs bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-4 rounded-none border border-[#E2DFD7]">
                                                     <div>
-                                                        <p className="text-[9px] uppercase font-mono font-bold text-on-surface-variant">Registrado / Esperado</p>
-                                                        <p className="text-sm font-black text-on-surface mt-0.5">
+                                                        <p className="text-[9px] uppercase font-mono font-bold text-[#76746E]">Registrado / Esperado</p>
+                                                        <p className="text-sm font-black text-[#161616] mt-0.5">
                                                             {getDatesOfCurrentWeek().reduce((acc, curr) => acc + getHoursForDate(curr), 0).toFixed(1)}h / 40h
                                                         </p>
                                                     </div>
                                                     <div className="w-[1px] h-8 bg-outline/20" />
                                                     <div>
-                                                        <p className="text-[9px] uppercase font-mono font-bold text-on-surface-variant">Extras / Compensadas</p>
-                                                        <p className="text-sm font-black text-primary mt-0.5">
+                                                        <p className="text-[9px] uppercase font-mono font-bold text-[#76746E]">Extras / Compensadas</p>
+                                                        <p className="text-sm font-black text-[#161616] mt-0.5">
                                                             {(() => {
                                                                 const total = getDatesOfCurrentWeek().reduce((acc, curr) => acc + getHoursForDate(curr), 0);
                                                                 return total > 40 ? (total - 40).toFixed(1) : '0';
@@ -1486,22 +1486,22 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                                 {/* SUBTAB: MES ACTUAL */}
                                 {shiftsSubTab === 'mes' && (
-                                    <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-2xl">
-                                        <h4 className="font-bold text-xs text-on-surface mb-4">Fichajes del Mes Actual</h4>
+                                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] p-6 rounded-none">
+                                        <h4 className="font-bold text-xs text-[#161616] mb-4">Fichajes del Mes Actual</h4>
                                         {shiftsLoading ? (
                                             <div className="flex justify-center py-8">
-                                                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-none animate-spin"></div>
                                             </div>
                                         ) : empShifts.filter(s => {
                                             const clockIn = new Date(s.clock_in);
                                             const now = new Date();
                                             return clockIn.getMonth() === now.getMonth() && clockIn.getFullYear() === now.getFullYear();
                                         }).length === 0 ? (
-                                            <p className="text-xs text-on-surface-variant/60 py-6 text-center">No hay marcaciones este mes.</p>
+                                            <p className="text-xs text-[#76746E] py-6 text-center">No hay marcaciones este mes.</p>
                                         ) : (
                                             <table className="w-full text-left text-xs border-collapse">
                                                 <thead>
-                                                    <tr className="text-on-surface-variant/70 border-b border-outline/10 font-bold">
+                                                    <tr className="text-[#76746E] border-b border-[#E2DFD7] font-bold">
                                                         <th className="py-2.5 px-2">Fecha</th>
                                                         <th className="py-2.5 px-2">Hora Entrada</th>
                                                         <th className="py-2.5 px-2">Hora Salida</th>
@@ -1529,20 +1529,20 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                         const balanceStr = balance >= 0 ? `+${balance.toFixed(2)}` : `${balance.toFixed(2)}`;
 
                                                         return (
-                                                            <tr key={s.id} className="border-b border-outline/5 hover:bg-surface-variant/20 transition-all">
-                                                                <td className="py-3 px-2 font-bold text-on-surface">
+                                                            <tr key={s.id} className="border-b border-[#E2DFD7] hover:bg-[#FAF8F5] transition-all">
+                                                                <td className="py-3 px-2 font-bold text-[#161616]">
                                                                     {date.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })}
                                                                 </td>
                                                                 <td className="py-3 px-2 font-mono">
                                                                     {date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}
                                                                 </td>
-                                                                <td className="py-3 px-2 font-mono text-on-surface-variant">
+                                                                <td className="py-3 px-2 font-mono text-[#76746E]">
                                                                     {outDate ? outDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : <span className="text-green-500 font-bold">Activo</span>}
                                                                 </td>
-                                                                <td className="py-3 px-2 font-mono text-on-surface-variant">
+                                                                <td className="py-3 px-2 font-mono text-[#76746E]">
                                                                     {lunchMin > 0 ? `${lunchMin} mins` : '--'}
                                                                 </td>
-                                                                <td className="py-3 px-2 font-mono font-bold text-primary">
+                                                                <td className="py-3 px-2 font-mono font-bold text-[#161616]">
                                                                     {netHours.toFixed(2)} hrs
                                                                 </td>
                                                                 <td className={`py-3 px-2 font-mono text-right font-bold ${balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -1561,17 +1561,17 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 {shiftsSubTab === 'todos' && (
                                     <div className="space-y-6">
                                         {/* Months Select Grid */}
-                                        <div className="bg-surface-container/30 border border-outline/10 p-5 rounded-2xl">
-                                            <h4 className="font-bold text-xs text-on-surface mb-3">Filtrar por Mes</h4>
+                                        <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] p-5 rounded-none">
+                                            <h4 className="font-bold text-xs text-[#161616] mb-3">Filtrar por Mes</h4>
                                             <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
                                                 {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map((mName, mIdx) => (
                                                     <button 
                                                         key={mIdx}
                                                         onClick={() => setSelectedMonthFilter(selectedMonthFilter === mIdx ? null : mIdx)}
-                                                        className={`py-2 text-[10px] font-bold rounded-lg border transition cursor-pointer ${
+                                                        className={`py-2 text-[10px] font-bold rounded-none border transition cursor-pointer ${
                                                             selectedMonthFilter === mIdx 
                                                                 ? 'bg-primary border-primary text-white' 
-                                                                : 'bg-surface-container-high/40 border-outline/20 text-on-surface-variant hover:border-primary/50'
+                                                                : 'bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border-[#E2DFD7] text-[#76746E] hover:border-primary/50'
                                                         }`}
                                                     >
                                                         {mName.slice(0, 3)}
@@ -1581,26 +1581,26 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                         </div>
 
                                         {/* Historical List */}
-                                        <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-2xl">
-                                            <h4 className="font-bold text-xs text-on-surface mb-4">
+                                        <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] p-6 rounded-none">
+                                            <h4 className="font-bold text-xs text-[#161616] mb-4">
                                                 {selectedMonthFilter !== null 
                                                     ? `Marcaciones de ${['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][selectedMonthFilter]}` 
                                                     : 'Todos los Fichajes'}
                                             </h4>
                                             {shiftsLoading ? (
                                                 <div className="flex justify-center py-8">
-                                                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-none animate-spin"></div>
                                                 </div>
                                             ) : empShifts.filter(s => {
                                                 if (selectedMonthFilter === null) return true;
                                                 const clockIn = new Date(s.clock_in);
                                                 return clockIn.getMonth() === selectedMonthFilter;
                                             }).length === 0 ? (
-                                                <p className="text-xs text-on-surface-variant/60 py-6 text-center">No hay marcaciones para este período.</p>
+                                                <p className="text-xs text-[#76746E] py-6 text-center">No hay marcaciones para este período.</p>
                                             ) : (
                                                 <table className="w-full text-left text-xs border-collapse">
                                                     <thead>
-                                                        <tr className="text-on-surface-variant/70 border-b border-outline/10 font-bold">
+                                                        <tr className="text-[#76746E] border-b border-[#E2DFD7] font-bold">
                                                             <th className="py-2.5 px-2">Fecha</th>
                                                             <th className="py-2.5 px-2">Hora Entrada</th>
                                                             <th className="py-2.5 px-2">Hora Salida</th>
@@ -1621,20 +1621,20 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                                 lunchMin = Math.floor((new Date(s.lunch_end).getTime() - new Date(s.lunch_start).getTime()) / 60000);
                                                             }
                                                             return (
-                                                                <tr key={s.id} className="border-b border-outline/5 hover:bg-surface-variant/20 transition-all">
-                                                                    <td className="py-3 px-2 font-bold text-on-surface">
+                                                                <tr key={s.id} className="border-b border-[#E2DFD7] hover:bg-[#FAF8F5] transition-all">
+                                                                    <td className="py-3 px-2 font-bold text-[#161616]">
                                                                         {date.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                                                                     </td>
                                                                     <td className="py-3 px-2 font-mono">
                                                                         {date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })}
                                                                     </td>
-                                                                    <td className="py-3 px-2 font-mono text-on-surface-variant">
+                                                                    <td className="py-3 px-2 font-mono text-[#76746E]">
                                                                         {outDate ? outDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : <span className="text-green-500 font-bold">Activo</span>}
                                                                     </td>
-                                                                    <td className="py-3 px-2 font-mono text-on-surface-variant">
+                                                                    <td className="py-3 px-2 font-mono text-[#76746E]">
                                                                         {lunchMin > 0 ? `${lunchMin} min` : '--'}
                                                                     </td>
-                                                                    <td className="py-3 px-2 font-mono font-bold text-primary text-right">
+                                                                    <td className="py-3 px-2 font-mono font-bold text-[#161616] text-right">
                                                                         {Number(s.hours_worked || 0).toFixed(2)} hrs
                                                                     </td>
                                                                 </tr>
@@ -1648,7 +1648,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 )}
                             </div>
                         ) : (
-                            <p className="text-xs text-on-surface-variant/60 py-12 text-center bg-surface-container/10 rounded-2xl border border-dashed border-outline/20">
+                            <p className="text-xs text-[#76746E] py-12 text-center bg-[#FAF8F5] border border-[#E2DFD7] rounded-none/10 rounded-none border border-dashed border-[#E2DFD7]">
                                 Selecciona un empleado de la lista para ver su historial detallado de fichajes semanales y mensuales.
                             </p>
                         )}
@@ -1661,23 +1661,23 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     const renderAdvancesPanel = () => {
         return (
             <div className="space-y-6 text-left">
-                <div className="bg-surface-container/30 border border-outline/10 rounded-2xl p-6">
-                    <h3 className="font-bold text-sm text-on-surface mb-4">Gestión de Anticipos y Adelantos de Nómina</h3>
+                <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none p-6">
+                    <h3 className="font-bold text-sm text-[#161616] mb-4">Gestión de Anticipos y Adelantos de Nómina</h3>
                     {loadingAdvances ? (
-                        <div className="text-center py-12 text-xs text-on-surface-variant animate-pulse">Cargando anticipos...</div>
+                        <div className="text-center py-12 text-xs text-[#76746E] animate-pulse">Cargando anticipos...</div>
                     ) : allAdvances.length === 0 ? (
-                        <div className="text-center py-12 text-xs text-on-surface-variant italic">No hay solicitudes de anticipo registradas.</div>
+                        <div className="text-center py-12 text-xs text-[#76746E] italic">No hay solicitudes de anticipo registradas.</div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                             {allAdvances.map(adv => (
-                                <div key={adv.id} className="glass-card p-4 rounded-xl border border-outline/5 space-y-3 text-xs flex flex-col justify-between">
+                                <div key={adv.id} className="bg-white border border-[#E2DFD7] shadow-xs rounded-none p-4 rounded-none border border-[#E2DFD7] space-y-3 text-xs flex flex-col justify-between">
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <h4 className="font-bold text-on-surface text-sm">{adv.employee_name} {adv.employee_last_name || ''}</h4>
-                                                <p className="text-[10px] text-on-surface-variant font-mono capitalize">{adv.employee_role}</p>
+                                                <h4 className="font-bold text-[#161616] text-sm">{adv.employee_name} {adv.employee_last_name || ''}</h4>
+                                                <p className="text-[10px] text-[#76746E] font-mono capitalize">{adv.employee_role}</p>
                                             </div>
-                                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider ${
+                                            <span className={`px-2 py-0.5 rounded-none text-[8px] font-bold uppercase tracking-wider ${
                                                 adv.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
                                                 adv.status === 'in_process' ? 'bg-blue-500/10 text-blue-500' :
                                                 adv.status === 'delivered' ? 'bg-green-500/10 text-green-500' :
@@ -1689,28 +1689,28 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                             </span>
                                         </div>
 
-                                        <div className="p-3 bg-surface-container/20 border border-outline/5 rounded-lg space-y-1">
-                                            <div className="flex justify-between font-mono font-bold text-on-surface">
+                                        <div className="p-3 bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none space-y-1">
+                                            <div className="flex justify-between font-mono font-bold text-[#161616]">
                                                 <span>Monto:</span>
                                                 <span>${Number(adv.amount).toLocaleString('es-CO')}</span>
                                             </div>
-                                            <p className="text-[10px] text-on-surface-variant">Requerido: {new Date(adv.requested_date).toLocaleDateString('es-CO')}</p>
+                                            <p className="text-[10px] text-[#76746E]">Requerido: {new Date(adv.requested_date).toLocaleDateString('es-CO')}</p>
                                             {adv.notes && (
-                                                <p className="text-[10px] text-on-surface-variant italic">"{adv.notes}"</p>
+                                                <p className="text-[10px] text-[#76746E] italic">"{adv.notes}"</p>
                                             )}
                                         </div>
 
                                         {adv.admin_notes && (
-                                            <div className="text-[10px] text-on-surface-variant bg-blue-500/5 p-2 rounded border border-blue-500/10">
+                                            <div className="text-[10px] text-[#76746E] bg-blue-500/5 p-2 rounded border border-blue-500/10">
                                                 <strong>Mensaje Admin:</strong> "{adv.admin_notes}"
                                             </div>
                                         )}
 
                                         {adv.status === 'delivered' && (
-                                            <div className="text-[10px] text-on-surface-variant font-mono space-y-0.5 pt-1.5 border-t border-outline/5">
+                                            <div className="text-[10px] text-[#76746E] font-mono space-y-0.5 pt-1.5 border-t border-[#E2DFD7]">
                                                 <p>Método: <span className="capitalize">{adv.payment_method === 'cash' ? 'Efectivo' : `Transferencia (${adv.bank_name || 'N/A'})`}</span></p>
                                                 {adv.delivered_at && <p>Fecha Entrega: {new Date(adv.delivered_at).toLocaleDateString('es-CO')}</p>}
-                                                <div className="pt-2 border-t border-outline/5 flex justify-between text-[9px]">
+                                                <div className="pt-2 border-t border-[#E2DFD7] flex justify-between text-[9px]">
                                                     <span>Recibo Admin: {adv.confirmed_by_admin ? '✅ Firmado' : '❌ Pendiente'}</span>
                                                     <span>Recibo Empleado: {adv.confirmed_by_employee ? '✅ Firmado' : '❌ Pendiente'}</span>
                                                 </div>
@@ -1719,7 +1719,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                     </div>
 
                                     {/* Action buttons */}
-                                    <div className="pt-2 border-t border-outline/5 flex flex-wrap gap-2">
+                                    <div className="pt-2 border-t border-[#E2DFD7] flex flex-wrap gap-2">
                                         {adv.status === 'pending' && (
                                             <>
                                                 <button 
@@ -1728,7 +1728,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                         setAdvActionType('approve');
                                                         setAdminNotes('');
                                                     }}
-                                                    className="flex-1 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 font-bold rounded-lg border-0 transition cursor-pointer text-[10px]"
+                                                    className="flex-1 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 font-bold rounded-none border-0 transition cursor-pointer text-[10px]"
                                                 >
                                                     Aprobar (En Proceso)
                                                 </button>
@@ -1738,7 +1738,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                         setAdvActionType('reject');
                                                         setAdminNotes('');
                                                     }}
-                                                    className="py-1.5 px-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold rounded-lg border-0 transition cursor-pointer text-[10px]"
+                                                    className="py-1.5 px-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold rounded-none border-0 transition cursor-pointer text-[10px]"
                                                 >
                                                     Rechazar
                                                 </button>
@@ -1754,7 +1754,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                     setDeliveryMethod('cash');
                                                     setDeliveryBank('');
                                                 }}
-                                                className="w-full py-1.5 bg-green-500 text-white font-bold rounded-lg border-0 transition cursor-pointer text-[10px] uppercase tracking-wider hover:opacity-90"
+                                                className="w-full py-1.5 bg-green-500 text-white font-bold rounded-none border-0 transition cursor-pointer text-[10px] uppercase tracking-wider hover:opacity-90"
                                             >
                                                 Registrar Entrega / Desembolso
                                             </button>
@@ -1769,13 +1769,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                 {/* Modal de Procesamiento de Anticipo */}
                 {processingAdv && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <form onSubmit={handleProcessAdvance} className="bg-surface border border-outline/10 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
-                            <h3 className="font-bold text-sm text-on-surface">
+                        <form onSubmit={handleProcessAdvance} className="bg-surface border border-[#E2DFD7] p-6 rounded-none w-full max-w-md shadow-2xl space-y-4">
+                            <h3 className="font-bold text-sm text-[#161616]">
                                 {advActionType === 'approve' && 'Aprobar Anticipo'}
                                 {advActionType === 'reject' && 'Rechazar Anticipo'}
                                 {advActionType === 'deliver' && 'Registrar Desembolso de Anticipo'}
                             </h3>
-                            <p className="text-xs text-on-surface-variant">
+                            <p className="text-xs text-[#76746E]">
                                 Colaborador: <strong>{processingAdv.employee_name} {processingAdv.employee_last_name}</strong> | Monto: <strong>${Number(processingAdv.amount).toLocaleString('es-CO')}</strong>
                             </p>
 
@@ -1783,11 +1783,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 {advActionType === 'deliver' && (
                                     <>
                                         <div className="flex flex-col gap-1">
-                                            <label className="text-xs text-on-surface-variant font-medium">Método de Desembolso *</label>
+                                            <label className="text-xs text-[#76746E] font-medium">Método de Desembolso *</label>
                                             <select 
                                                 value={deliveryMethod}
                                                 onChange={(e: any) => setDeliveryMethod(e.target.value)}
-                                                className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none cursor-pointer"
+                                                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none cursor-pointer"
                                             >
                                                 <option value="cash">Efectivo</option>
                                                 <option value="transfer">Transferencia Bancaria / App</option>
@@ -1796,14 +1796,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                                         {deliveryMethod === 'transfer' && (
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-xs text-on-surface-variant font-medium">Banco / Canal (Nequi, Daviplata, Bancolombia, etc) *</label>
+                                                <label className="text-xs text-[#76746E] font-medium">Banco / Canal (Nequi, Daviplata, Bancolombia, etc) *</label>
                                                 <input 
                                                     type="text"
                                                     required
                                                     value={deliveryBank}
                                                     onChange={(e) => setDeliveryBank(e.target.value)}
                                                     placeholder="Ej: Nequi"
-                                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none"
                                                 />
                                             </div>
                                         )}
@@ -1811,7 +1811,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 )}
 
                                 <div className="flex flex-col gap-1">
-                                    <label className="text-xs text-on-surface-variant font-medium">
+                                    <label className="text-xs text-[#76746E] font-medium">
                                         {advActionType === 'approve' && 'Mensaje para el trabajador (ej: "puedes retirar en la tarde")'}
                                         {advActionType === 'reject' && 'Motivo del Rechazo'}
                                         {advActionType === 'deliver' && 'Notas de la transacción'}
@@ -1820,7 +1820,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                         value={adminNotes}
                                         onChange={(e) => setAdminNotes(e.target.value)}
                                         placeholder="Escribe comentarios..."
-                                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface outline-none h-20 resize-none w-full"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none h-20 resize-none w-full"
                                     />
                                 </div>
                             </div>
@@ -1829,13 +1829,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 <button 
                                     type="button"
                                     onClick={() => setProcessingAdv(null)}
-                                    className="px-4 py-2 border border-outline/20 text-on-surface rounded-xl hover:bg-surface-container text-xs cursor-pointer bg-transparent"
+                                    className="px-4 py-2 border border-[#E2DFD7] text-[#161616] rounded-none hover:bg-[#FAF8F5] border border-[#E2DFD7] rounded-none text-xs cursor-pointer bg-transparent"
                                 >
                                     Cancelar
                                 </button>
                                 <button 
                                     type="submit"
-                                    className="px-5 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold cursor-pointer border-0 hover:opacity-90 transition shadow"
+                                    className="px-5 py-2 bg-primary text-on-primary rounded-none text-xs font-bold cursor-pointer border-0 hover:opacity-90 transition shadow"
                                 >
                                     Confirmar Acción
                                 </button>
@@ -1869,114 +1869,118 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     });
 
     return (
-        <div className="space-y-6 text-on-surface">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-6 text-[#161616]">
+            {/* Header Wabi-Sabi */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-4">
                 <div>
-                    <h2 className="text-xl font-bold text-on-surface">
-                        {viewMode === 'turnos' ? 'Control de Asistencia y Turnos' : 'Gestión de Personal y Nómina'}
+                    <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">
+                        GESTIÓN HUMANA & NÓMINA
+                    </span>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#161616] tracking-tight">
+                        {viewMode === 'turnos' ? 'Control de Asistencia y Turnos' : 'Gestión de Personal & Nómina'}
                     </h2>
-                    <p className="text-xs text-on-surface-variant">
+                    <p className="text-xs text-[#76746E] font-sans mt-0.5">
                         {viewMode === 'turnos' 
-                            ? 'Monitorea en tiempo real los registros de entrada, almuerzos, salidas y puntualidad.' 
-                            : 'Registra departamentos, crea asesores de atención y liquida nóminas LatAm.'}
+                            ? 'Monitoreo en tiempo real de registros de entrada, almuerzos, salidas y puntualidad.' 
+                            : 'Registro de colaboradores, departamentos, liquidación de nóminas LatAm y control de asistencias.'}
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     {viewMode !== 'turnos' && (
                         <>
                             <button 
                                 onClick={() => { setErrorMsg(''); setDeptName(''); setIsDeptOpen(true); }}
-                                className="px-4 py-2 border border-outline/20 hover:bg-surface-variant/20 text-on-surface text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition"
+                                className="px-3.5 py-2 border border-[#E2DFD7] bg-white hover:bg-[#FAF8F5] text-[#161616] text-xs font-mono font-bold rounded-none flex items-center gap-1.5 cursor-pointer transition"
                             >
                                 <span className="material-symbols-outlined text-[16px]">domain</span>
                                 Departamentos
                             </button>
                             <button 
                                 onClick={() => { setErrorMsg(''); setRoleName(''); setIsRoleOpen(true); }}
-                                className="px-4 py-2 border border-outline/20 hover:bg-surface-variant/20 text-on-surface text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer transition"
+                                className="px-3.5 py-2 border border-[#E2DFD7] bg-white hover:bg-[#FAF8F5] text-[#161616] text-xs font-mono font-bold rounded-none flex items-center gap-1.5 cursor-pointer transition"
                             >
                                 <span className="material-symbols-outlined text-[16px]">badge</span>
                                 Roles
                             </button>
                             <button 
                                 onClick={() => { fetchData(); fetchHrDocs(); fetchTodayShifts(); }}
-                                className="w-9 h-9 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-xl flex items-center justify-center border border-outline/10 cursor-pointer transition shadow"
+                                className="p-2 border border-[#E2DFD7] bg-white hover:bg-[#FAF8F5] text-[#161616] rounded-none flex items-center justify-center cursor-pointer transition"
                                 title="Refrescar Empleados"
                             >
-                                <span className="material-symbols-outlined text-[18px]">refresh</span>
+                                <span className="material-symbols-outlined text-[16px]">refresh</span>
                             </button>
                             <button 
                                 onClick={openCreateEmpModal}
-                                className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition"
+                                className="px-4 py-2 bg-[#161616] hover:bg-[#D9381E] border border-[#161616] hover:border-[#D9381E] text-[#F6F4EE] text-xs font-mono font-bold uppercase tracking-wider rounded-none flex items-center gap-1.5 cursor-pointer transition"
                             >
                                 <span className="material-symbols-outlined text-[16px]">person_add</span>
-                                Nuevo Empleado
+                                + Nuevo Empleado
                             </button>
                         </>
                     )}
                 </div>
             </div>
 
-            <div className="flex border-b border-outline/10 gap-6 mb-4">
-                        <button
-                            onClick={() => setActiveView('list')}
-                            className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
-                                activeView === 'list' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
-                            }`}
-                        >
-                            Colaboradores & Nómina
-                            {activeView === 'list' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
-                            )}
-                        </button>
-                        <button
-                            onClick={() => {
-                                setActiveView('shifts');
-                                setSelectedEmpForShifts(null);
-                            }}
-                            className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
-                                activeView === 'shifts' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
-                            }`}
-                        >
-                            Monitoreo de Turnos
-                            {activeView === 'shifts' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
-                            )}
-                        </button>
-                        <button
-                            onClick={() => {
-                                setActiveView('advances');
-                                fetchAllAdvances();
-                            }}
-                            className={`pb-3 font-bold text-xs uppercase tracking-wider transition relative cursor-pointer border-0 bg-transparent ${
-                                activeView === 'advances' ? 'text-primary font-bold' : 'text-on-surface-variant/60 hover:text-on-surface'
-                            }`}
-                        >
-                            Solicitudes de Anticipos
-                            {activeView === 'advances' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
-                            )}
-                        </button>
-                    </div>
+            {/* Sub-Navegación / Barra Zen de Pestañas */}
+            <div className="bg-white border border-[#E2DFD7] p-1.5 flex flex-wrap items-center gap-1 sm:gap-2 shadow-xs mb-4">
+                <button
+                    onClick={() => setActiveView('list')}
+                    className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border ${
+                        activeView === 'list'
+                            ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                            : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
+                    }`}
+                >
+                    <span className="material-symbols-outlined text-[16px]">badge</span>
+                    Colaboradores & Nómina
+                </button>
+                <button
+                    onClick={() => {
+                        setActiveView('shifts');
+                        setSelectedEmpForShifts(null);
+                    }}
+                    className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border ${
+                        activeView === 'shifts'
+                            ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                            : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
+                    }`}
+                >
+                    <span className="material-symbols-outlined text-[16px]">schedule</span>
+                    Monitoreo de Turnos
+                </button>
+                <button
+                    onClick={() => {
+                        setActiveView('advances');
+                        fetchAllAdvances();
+                    }}
+                    className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border ${
+                        activeView === 'advances'
+                            ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                            : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
+                    }`}
+                >
+                    <span className="material-symbols-outlined text-[16px]">payments</span>
+                    Solicitudes de Anticipos
+                </button>
+            </div>
 
             {loading ? (
                 <div className="flex justify-center py-20">
-                    <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-none animate-spin"></div>
                 </div>
             ) : activeView === 'advances' ? (
                 renderAdvancesPanel()
             ) : activeView === 'list' ? (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Employees list table */}
-                    <div className="lg:col-span-8 bg-surface-container/30 border border-outline/10 rounded-2xl p-6 overflow-x-auto">
-                        <h3 className="font-bold text-sm text-on-surface mb-4">Listado de Personal</h3>
+                    <div className="lg:col-span-8 bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none p-6 overflow-x-auto">
+                        <h3 className="font-bold text-sm text-[#161616] mb-4">Listado de Personal</h3>
                         {employees.length === 0 ? (
-                            <p className="text-sm text-on-surface-variant text-center py-6">No hay empleados registrados en el sistema.</p>
+                            <p className="text-sm text-[#76746E] text-center py-6">No hay empleados registrados en el sistema.</p>
                         ) : (
                             <table className="w-full text-left text-xs border-collapse">
                                 <thead>
-                                    <tr className="border-b border-outline/10 text-on-surface-variant uppercase font-bold tracking-tight">
+                                    <tr className="border-b border-[#E2DFD7] text-[#76746E] uppercase font-bold tracking-tight">
                                         <th className="py-3 px-2">Nombre</th>
                                         <th className="py-3 px-2">Teléfono</th>
                                         <th className="py-3 px-2">Rol / Cargo</th>
@@ -1987,40 +1991,40 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 </thead>
                                 <tbody>
                                     {employees.map(emp => (
-                                        <tr key={emp.id} className="border-b border-outline/5 hover:bg-surface-variant/20 transition-all">
-                                            <td className="py-3.5 px-2 font-bold text-on-surface cursor-pointer hover:text-primary hover:underline" onClick={() => handleOpenDetail(emp)}>{emp.name} {emp.last_name || ''}</td>
+                                        <tr key={emp.id} className="border-b border-[#E2DFD7] hover:bg-[#FAF8F5] transition-all">
+                                            <td className="py-3.5 px-2 font-bold text-[#161616] cursor-pointer hover:text-[#161616] hover:underline" onClick={() => handleOpenDetail(emp)}>{emp.name} {emp.last_name || ''}</td>
                                             <td className="py-3.5 px-2 font-mono">+{emp.phone}</td>
                                             <td className="py-3.5 px-2">
-                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                                                    emp.role === 'admin' ? 'bg-secondary/15 text-secondary' : 'bg-primary/10 text-primary'
+                                                <span className={`px-2 py-0.5 rounded-none text-[9px] font-bold ${
+                                                    emp.role === 'admin' ? 'bg-secondary/15 text-secondary' : 'bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616]'
                                                 }`}>
                                                     {emp.role.toUpperCase()}
                                                 </span>
                                             </td>
-                                            <td className="py-3.5 px-2 text-on-surface-variant">{emp.department_name || 'Sin Asignar'}</td>
+                                            <td className="py-3.5 px-2 text-[#76746E]">{emp.department_name || 'Sin Asignar'}</td>
                                             <td className="py-3.5 px-2 font-mono">••••</td>
                                             <td className="py-3.5 px-2 text-right space-x-1.5">
                                                 <button 
                                                     onClick={() => handleOpenDetail(emp)}
-                                                    className="px-2.5 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 border-0 rounded-lg text-[10px] font-bold cursor-pointer transition"
+                                                    className="px-2.5 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 border-0 rounded-none text-[10px] font-bold cursor-pointer transition"
                                                 >
                                                     Ficha/Turnos
                                                 </button>
                                                 <button 
                                                     onClick={() => openPayrollModal(emp)}
-                                                    className="px-2.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border-0 rounded-lg text-[10px] font-bold cursor-pointer transition"
+                                                    className="px-2.5 py-1.5 bg-[#FAF8F5] border border-[#E2DFD7] hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] border-0 rounded-none text-[10px] font-bold cursor-pointer transition"
                                                 >
                                                     Nómina
                                                 </button>
                                                 <button 
                                                     onClick={() => openEditEmpModal(emp)}
-                                                    className="p-1.5 text-on-surface hover:bg-surface-variant/40 rounded-lg border-0 cursor-pointer transition-all inline-flex"
+                                                    className="p-1.5 text-[#161616] hover:bg-[#FAF8F5] rounded-none border-0 cursor-pointer transition-all inline-flex"
                                                 >
                                                     <span className="material-symbols-outlined text-[16px]">edit</span>
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDeleteEmp(emp.id, emp.name)}
-                                                    className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg border-0 cursor-pointer transition-all inline-flex"
+                                                    className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-none border-0 cursor-pointer transition-all inline-flex"
                                                 >
                                                     <span className="material-symbols-outlined text-[16px]">delete</span>
                                                 </button>
@@ -2035,21 +2039,21 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                     {/* Quick Stats & Adoption overview */}
                     <div className="lg:col-span-4 space-y-6">
                         {/* Adoption Stats Card */}
-                        <div className="bg-surface-container/30 border border-outline/10 p-6 rounded-2xl">
-                            <h3 className="font-bold text-sm text-on-surface mb-3">Métricas de Adopción</h3>
+                        <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] p-6 rounded-none">
+                            <h3 className="font-bold text-sm text-[#161616] mb-3">Métricas de Adopción</h3>
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center p-3.5 bg-surface-container/50 border border-outline/10 rounded-xl">
+                                <div className="flex justify-between items-center p-3.5 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none">
                                     <div className="flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-primary">groups</span>
-                                        <span className="text-xs text-on-surface-variant">Asesores Totales</span>
+                                        <span className="material-symbols-outlined text-[#161616]">groups</span>
+                                        <span className="text-xs text-[#76746E]">Asesores Totales</span>
                                     </div>
                                     <span className="font-bold text-sm">{employees.length}</span>
                                 </div>
 
-                                <div className="flex justify-between items-center p-3.5 bg-surface-container/50 border border-outline/10 rounded-xl">
+                                <div className="flex justify-between items-center p-3.5 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none">
                                     <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-green-500">work</span>
-                                        <span className="text-xs text-on-surface-variant">Turnos Activos Hoy</span>
+                                        <span className="text-xs text-[#76746E]">Turnos Activos Hoy</span>
                                     </div>
                                     <span className="font-bold text-sm text-green-500">
                                         {employees.filter(e => e.is_active).length}
@@ -2059,12 +2063,12 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                         </div>
 
                         {/* Shift quick check-in instructions helper */}
-                        <div className="bg-primary/5 border border-primary/10 p-6 rounded-2xl text-xs space-y-2">
-                            <h4 className="font-bold text-primary flex items-center gap-1.5">
+                        <div className="bg-primary/5 border border-primary/10 p-6 rounded-none text-xs space-y-2">
+                            <h4 className="font-bold text-[#161616] flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[16px]">info</span>
                                 Marcación Rápida
                             </h4>
-                            <p className="text-on-surface-variant leading-relaxed">
+                            <p className="text-[#76746E] leading-relaxed">
                                 Los empleados pueden marcar su entrada y salida directamente en esta pantalla digitando su PIN secreto. Esto mantendrá activa su sesión y calculará sus horas laboradas.
                             </p>
                         </div>
@@ -2075,48 +2079,48 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             )}
 
             {/* HR Solicitudes & Incapacidades Panel */}
-            <div className="glass-card p-6 rounded-2xl border border-outline/10 mt-6">
-                <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
+            <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none p-6 rounded-none border border-[#E2DFD7] mt-6">
+                <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
                     <div>
-                        <h3 className="font-bold text-sm text-on-surface">Solicitudes y Permisos de Personal (RRHH)</h3>
-                        <p className="text-[10px] text-on-surface-variant">Revisa, aprueba o rechaza solicitudes de vacaciones, permisos e incapacidades médicas cargadas por los empleados.</p>
+                        <h3 className="font-bold text-sm text-[#161616]">Solicitudes y Permisos de Personal (RRHH)</h3>
+                        <p className="text-[10px] text-[#76746E]">Revisa, aprueba o rechaza solicitudes de vacaciones, permisos e incapacidades médicas cargadas por los empleados.</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
                             onClick={() => setIsAdminDocOpen(true)}
-                            className="px-3 py-1.5 bg-primary hover:bg-primary-container text-white text-[10px] font-bold rounded-lg cursor-pointer transition shadow border-0 flex items-center gap-1"
+                            className="px-3 py-1.5 bg-[#161616] hover:bg-[#D9381E] border border-[#161616] hover:border-[#D9381E] text-white text-[10px] font-bold rounded-none cursor-pointer transition shadow border-0 flex items-center gap-1"
                         >
                             <span className="material-symbols-outlined text-[14px]">add_circle</span>
                             Registrar Ausencia / Permiso
                         </button>
-                        <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full font-bold">
+                        <span className="px-2 py-0.5 bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] text-[10px] rounded-none font-bold">
                             {hrDocs.filter(d => d.status === 'pending').length} Pendientes
                         </span>
                     </div>
                 </div>
 
                 {/* Filtros de Solicitudes */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/5 p-3 rounded-xl border border-outline/5 mb-4 text-xs">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/5 p-3 rounded-none border border-[#E2DFD7] mb-4 text-xs">
                     <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-on-surface-variant uppercase">Buscar Colaborador</label>
+                        <label className="block text-[10px] font-bold text-[#76746E] uppercase">Buscar Colaborador</label>
                         <div className="relative flex items-center">
-                            <span className="material-symbols-outlined absolute left-3 text-on-surface-variant/60 text-[16px]">search</span>
+                            <span className="material-symbols-outlined absolute left-3 text-[#76746E] text-[16px]">search</span>
                             <input 
                                 type="text"
                                 placeholder="Nombre, celular o No. de empleado..."
                                 value={docFilterQuery}
                                 onChange={(e) => setDocFilterQuery(e.target.value)}
-                                className="w-full bg-surface-container-high/40 border border-outline/10 pl-9 pr-3 py-2 rounded-xl text-on-surface outline-none focus:border-primary text-xs"
+                                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] pl-9 pr-3 py-2 rounded-none text-[#161616] outline-none focus:border-primary text-xs"
                             />
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-on-surface-variant uppercase">Mes</label>
+                        <label className="block text-[10px] font-bold text-[#76746E] uppercase">Mes</label>
                         <select
                             value={docFilterMonth}
                             onChange={(e) => setDocFilterMonth(e.target.value)}
-                            className="w-full bg-surface-container-high/40 border border-outline/10 p-2 rounded-xl text-on-surface outline-none cursor-pointer text-xs"
+                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none cursor-pointer text-xs"
                         >
                             <option value="">-- Todos los Meses --</option>
                             <option value="01">Enero</option>
@@ -2134,11 +2138,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                         </select>
                     </div>
                     <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-on-surface-variant uppercase">Año</label>
+                        <label className="block text-[10px] font-bold text-[#76746E] uppercase">Año</label>
                         <select
                             value={docFilterYear}
                             onChange={(e) => setDocFilterYear(e.target.value)}
-                            className="w-full bg-surface-container-high/40 border border-outline/10 p-2 rounded-xl text-on-surface outline-none cursor-pointer text-xs"
+                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none cursor-pointer text-xs"
                         >
                             <option value="">-- Todos los Años --</option>
                             <option value="2024">2024</option>
@@ -2152,22 +2156,22 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                 {hrDocsLoading ? (
                     <div className="flex justify-center py-6">
-                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-none animate-spin"></div>
                     </div>
                 ) : hrDocs.length === 0 ? (
-                    <p className="text-xs text-on-surface-variant/60 py-6 text-center italic">No hay solicitudes pendientes o registradas en el sistema.</p>
+                    <p className="text-xs text-[#76746E] py-6 text-center italic">No hay solicitudes pendientes o registradas en el sistema.</p>
                 ) : filteredHrDocs.length === 0 ? (
-                    <p className="text-xs text-on-surface-variant/60 py-6 text-center italic">No se encontraron solicitudes que coincidan con los filtros.</p>
+                    <p className="text-xs text-[#76746E] py-6 text-center italic">No se encontraron solicitudes que coincidan con los filtros.</p>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {filteredHrDocs.map((doc: any) => (
-                            <div key={doc.id} className="p-4 bg-surface-container/20 border border-outline/10 rounded-xl space-y-3">
+                            <div key={doc.id} className="p-4 bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none space-y-3">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <span className="font-bold text-xs text-on-surface block">{doc.employee_name}</span>
-                                        <span className="text-[9px] text-on-surface-variant font-mono">+{doc.employee_phone}</span>
+                                        <span className="font-bold text-xs text-[#161616] block">{doc.employee_name}</span>
+                                        <span className="text-[9px] text-[#76746E] font-mono">+{doc.employee_phone}</span>
                                     </div>
-                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                    <span className={`px-2 py-0.5 rounded-none text-[9px] font-bold uppercase ${
                                         doc.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
                                         doc.status === 'negotiating' ? 'bg-purple-500/10 text-purple-500' :
                                         doc.status === 'approved' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
@@ -2177,17 +2181,17 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 </div>
 
                                 <div className="text-xs space-y-1.5">
-                                    <div className="flex justify-between text-[10px] text-on-surface-variant">
-                                        <span>Tipo: <strong className="text-primary capitalize">{doc.doc_type.replace('_', ' ')}</strong></span>
+                                    <div className="flex justify-between text-[10px] text-[#76746E]">
+                                        <span>Tipo: <strong className="text-[#161616] capitalize">{doc.doc_type.replace('_', ' ')}</strong></span>
                                         <span>Depto: <strong>{doc.department_name || 'Sin asignar'}</strong></span>
                                     </div>
-                                    <div className="flex justify-between text-[10px] text-on-surface-variant">
+                                    <div className="flex justify-between text-[10px] text-[#76746E]">
                                         <span>Rango: <strong>{formatDateOnly(doc.start_date)}{doc.end_date ? ` al ${formatDateOnly(doc.end_date)}` : ''}{doc.return_date ? ` (Regresa: ${formatDateOnly(doc.return_date)})` : ''}</strong></span>
                                     </div>
-                                    <p className="text-on-surface-variant font-medium bg-white/5 p-2 rounded-lg italic">"{doc.notes || doc.reason}"</p>
+                                    <p className="text-[#76746E] font-medium bg-white/5 p-2 rounded-none italic">"{doc.notes || doc.reason}"</p>
                                     {doc.admin_notes && (
-                                        <div className="bg-surface-container-high/40 p-2 rounded-lg border border-outline/5 text-[10px] text-on-surface">
-                                            <span className="font-bold text-primary block mb-0.5">Respuesta de Gestión Humana:</span>
+                                        <div className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-2 rounded-none border border-[#E2DFD7] text-[10px] text-[#161616]">
+                                            <span className="font-bold text-[#161616] block mb-0.5">Respuesta de Gestión Humana:</span>
                                             {doc.admin_notes}
                                         </div>
                                     )}
@@ -2199,7 +2203,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                             href={doc.file_url} 
                                             target="_blank" 
                                             rel="noreferrer"
-                                            className="text-[10px] text-primary font-bold flex items-center gap-1 hover:underline"
+                                            className="text-[10px] text-[#161616] font-bold flex items-center gap-1 hover:underline"
                                         >
                                             <span className="material-symbols-outlined text-[14px]">attachment</span>
                                             Ver archivo adjunto
@@ -2211,7 +2215,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                     const overlaps = checkOverlap(doc);
                                     if (overlaps) {
                                         return (
-                                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] p-2.5 rounded-xl font-medium mt-2 flex items-start gap-1.5 animate-pulse">
+                                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] p-2.5 rounded-none font-medium mt-2 flex items-start gap-1.5 animate-pulse">
                                                 <span className="material-symbols-outlined text-[14px] mt-0.5">warning</span>
                                                 <div>
                                                     <strong>Traslape de Fechas:</strong> Coincide con vacaciones/permisos de: {overlaps} ({doc.department_name || 'mismo departamento'})
@@ -2223,22 +2227,22 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 })()}
 
                                 {(doc.status === 'pending' || doc.status === 'negotiating') && (
-                                    <div className="flex gap-2 justify-end pt-2 border-t border-outline/5">
+                                    <div className="flex gap-2 justify-end pt-2 border-t border-[#E2DFD7]">
                                         <button 
                                             onClick={() => handleUpdateDocStatus(doc.id, 'rejected')}
-                                            className="px-2.5 py-1.5 border border-red-500/30 text-red-500 hover:bg-red-500/5 text-[10px] font-bold rounded-lg cursor-pointer transition bg-transparent"
+                                            className="px-2.5 py-1.5 border border-red-500/30 text-red-500 hover:bg-red-500/5 text-[10px] font-bold rounded-none cursor-pointer transition bg-transparent"
                                         >
                                             Rechazar
                                         </button>
                                         <button 
                                             onClick={() => handleUpdateDocStatus(doc.id, 'negotiating')}
-                                            className="px-2.5 py-1.5 border border-purple-500/30 text-purple-500 hover:bg-purple-500/5 text-[10px] font-bold rounded-lg cursor-pointer transition bg-transparent"
+                                            className="px-2.5 py-1.5 border border-purple-500/30 text-purple-500 hover:bg-purple-500/5 text-[10px] font-bold rounded-none cursor-pointer transition bg-transparent"
                                         >
                                             Negociar
                                         </button>
                                         <button 
                                             onClick={() => handleUpdateDocStatus(doc.id, 'approved')}
-                                            className="px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold rounded-lg cursor-pointer transition border-0"
+                                            className="px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold rounded-none cursor-pointer transition border-0"
                                         >
                                             Aprobar
                                         </button>
@@ -2246,7 +2250,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 )}
 
                                 {doc.status !== 'pending' && doc.status !== 'negotiating' && (
-                                    <div className="flex justify-between items-center pt-2 border-t border-outline/5 text-[9px] text-on-surface-variant/60 font-mono">
+                                    <div className="flex justify-between items-center pt-2 border-t border-[#E2DFD7] text-[9px] text-[#76746E] font-mono">
                                         <span>Gestionado</span>
                                         <button 
                                             onClick={() => handleDeleteDoc(doc.id)}
@@ -2265,19 +2269,19 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             {/* DEPARTMENTS MANAGER MODAL */}
             {isDeptOpen && createPortal(
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
-                            <h3 className="font-bold text-lg text-on-surface">Gestionar Departamentos</h3>
+                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none max-w-md w-full rounded-none overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+                            <h3 className="font-bold text-lg text-[#161616]">Gestionar Departamentos</h3>
                             <button 
                                 onClick={() => setIsDeptOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#FAF8F5] border-0 cursor-pointer text-[#161616]"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
                         {errorMsg && (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl mb-4 font-bold">
+                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-none mb-4 font-bold">
                                 ⚠️ {errorMsg}
                             </div>
                         )}
@@ -2289,13 +2293,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 required
                                 value={deptName}
                                 onChange={(e) => setDeptName(e.target.value)}
-                                className="flex-grow bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface text-xs focus:border-primary outline-none"
+                                className="flex-grow bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] text-xs focus:border-primary outline-none"
                                 placeholder="Ej: Cartera, Recepción..."
                             />
                             <button 
                                 type="submit"
                                 disabled={actionLoading}
-                                className="px-4 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl cursor-pointer transition border-0"
+                                className="px-4 py-2.5 bg-[#161616] hover:bg-[#D9381E] border border-[#161616] hover:border-[#D9381E] text-white text-xs font-bold rounded-none cursor-pointer transition border-0"
                             >
                                 Agregar
                             </button>
@@ -2303,12 +2307,12 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                         {/* Departments list */}
                         <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar">
-                            <h4 className="text-xs font-bold text-on-surface-variant mb-2">Departamentos Activos</h4>
+                            <h4 className="text-xs font-bold text-[#76746E] mb-2">Departamentos Activos</h4>
                             {departments.length === 0 ? (
-                                <p className="text-xs text-on-surface-variant/60 py-3 text-center">No hay departamentos creados.</p>
+                                <p className="text-xs text-[#76746E] py-3 text-center">No hay departamentos creados.</p>
                             ) : (
                                 departments.map(d => (
-                                    <div key={d.id} className="flex justify-between items-center bg-surface-container/30 border border-outline/5 p-3 rounded-xl">
+                                    <div key={d.id} className="flex justify-between items-center bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] p-3 rounded-none">
                                         <span className="text-xs font-bold">{d.name}</span>
                                         <button 
                                             onClick={() => handleDeleteDept(d.id, d.name)}
@@ -2328,12 +2332,12 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             {/* ROLES MANAGER MODAL */}
             {isRoleOpen && createPortal(
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
-                            <h3 className="font-bold text-lg text-on-surface">Gestionar Roles</h3>
+                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none max-w-md w-full rounded-none overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+                            <h3 className="font-bold text-lg text-[#161616]">Gestionar Roles</h3>
                             <button 
                                 onClick={() => setIsRoleOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#FAF8F5] border-0 cursor-pointer text-[#161616]"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
@@ -2345,21 +2349,21 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 required
                                 value={roleName}
                                 onChange={(e) => setRoleName(e.target.value)}
-                                className="flex-grow bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface text-xs focus:border-primary outline-none"
+                                className="flex-grow bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] text-xs focus:border-primary outline-none"
                                 placeholder="Ej: Auxiliar de ventas..."
                             />
                             <button 
                                 type="submit"
-                                className="px-4 py-2.5 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl cursor-pointer transition border-0"
+                                className="px-4 py-2.5 bg-[#161616] hover:bg-[#D9381E] border border-[#161616] hover:border-[#D9381E] text-white text-xs font-bold rounded-none cursor-pointer transition border-0"
                             >
                                 Agregar
                             </button>
                         </form>
 
                         <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar">
-                            <h4 className="text-xs font-bold text-on-surface-variant mb-2">Roles Disponibles</h4>
+                            <h4 className="text-xs font-bold text-[#76746E] mb-2">Roles Disponibles</h4>
                             {workRoles.map((role) => (
-                                <div key={role} className="flex justify-between items-center bg-surface-container/30 border border-outline/5 p-3 rounded-xl">
+                                <div key={role} className="flex justify-between items-center bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] p-3 rounded-none">
                                     <span className="text-xs font-bold capitalize">{role}</span>
                                     <button 
                                         type="button"
@@ -2379,12 +2383,12 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             {/* REGISTER ABSENCE/PERMIT MODAL */}
             {isAdminDocOpen && createPortal(
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
-                            <h3 className="font-bold text-lg text-on-surface">Registrar Ausencia o Permiso</h3>
+                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none max-w-md w-full rounded-none overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+                            <h3 className="font-bold text-lg text-[#161616]">Registrar Ausencia o Permiso</h3>
                             <button 
                                 onClick={() => setIsAdminDocOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#FAF8F5] border-0 cursor-pointer text-[#161616]"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
@@ -2392,12 +2396,12 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                         <form onSubmit={handleCreateAdminDoc} className="space-y-4 text-xs text-left">
                             <div className="space-y-1">
-                                <label className="font-bold text-[10px] text-on-surface-variant uppercase">Colaborador</label>
+                                <label className="font-bold text-[10px] text-[#76746E] uppercase">Colaborador</label>
                                 <select
                                     value={adminDocEmpId}
                                     onChange={(e) => setAdminDocEmpId(e.target.value)}
                                     required
-                                    className="w-full bg-surface-container border border-outline/10 p-2.5 rounded-xl text-xs text-on-surface outline-none cursor-pointer"
+                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-xs text-[#161616] outline-none cursor-pointer"
                                 >
                                     <option value="">-- Seleccionar Empleado --</option>
                                     {employees.map(emp => (
@@ -2408,11 +2412,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Tipo de Registro</label>
+                                    <label className="font-bold text-[10px] text-[#76746E] uppercase">Tipo de Registro</label>
                                     <select
                                         value={adminDocType}
                                         onChange={(e) => setAdminDocType(e.target.value as any)}
-                                        className="w-full bg-surface-container border border-outline/10 p-2.5 rounded-xl text-xs text-on-surface outline-none cursor-pointer"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-xs text-[#161616] outline-none cursor-pointer"
                                     >
                                         <option value="permiso">Permiso / Licencia</option>
                                         <option value="vacaciones">Vacaciones</option>
@@ -2421,11 +2425,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Estado Inicial</label>
+                                    <label className="font-bold text-[10px] text-[#76746E] uppercase">Estado Inicial</label>
                                     <select
                                         value={adminDocStatus}
                                         onChange={(e) => setAdminDocStatus(e.target.value as any)}
-                                        className="w-full bg-surface-container border border-outline/10 p-2.5 rounded-xl text-xs text-on-surface outline-none cursor-pointer"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-xs text-[#161616] outline-none cursor-pointer"
                                     >
                                         <option value="approved">Aprobado inmediatamente</option>
                                         <option value="pending">Pendiente</option>
@@ -2436,7 +2440,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                             <div className="grid grid-cols-3 gap-2">
                                 <div className="space-y-1">
-                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Fecha Inicio</label>
+                                    <label className="font-bold text-[10px] text-[#76746E] uppercase">Fecha Inicio</label>
                                     <input 
                                         type="date"
                                         required
@@ -2447,11 +2451,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                 (e.target as any).showPicker();
                                             } catch (err) {}
                                         }}
-                                        className="w-full bg-surface-container border border-outline/10 p-2 rounded-xl text-on-surface outline-none text-xs cursor-pointer"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none text-xs cursor-pointer"
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Último Día</label>
+                                    <label className="font-bold text-[10px] text-[#76746E] uppercase">Último Día</label>
                                     <input 
                                         type="date"
                                         required
@@ -2462,11 +2466,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                 (e.target as any).showPicker();
                                             } catch (err) {}
                                         }}
-                                        className="w-full bg-surface-container border border-outline/10 p-2 rounded-xl text-on-surface outline-none text-xs cursor-pointer"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none text-xs cursor-pointer"
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Regreso a Labores</label>
+                                    <label className="font-bold text-[10px] text-[#76746E] uppercase">Regreso a Labores</label>
                                     <input 
                                         type="date"
                                         required
@@ -2477,34 +2481,34 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                 (e.target as any).showPicker();
                                             } catch (err) {}
                                         }}
-                                        className="w-full bg-surface-container border border-outline/10 p-2 rounded-xl text-on-surface outline-none text-xs cursor-pointer"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none text-xs cursor-pointer"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-1">
-                                <label className="font-bold text-[10px] text-on-surface-variant uppercase">Justificación / Motivo</label>
+                                <label className="font-bold text-[10px] text-[#76746E] uppercase">Justificación / Motivo</label>
                                 <textarea
                                     value={adminDocNotes}
                                     onChange={(e) => setAdminDocNotes(e.target.value)}
                                     placeholder="Detalla el motivo de la ausencia, licencia o incapacidad..."
                                     required
-                                    className="w-full bg-surface-container border border-outline/10 p-2.5 rounded-xl text-xs text-on-surface outline-none h-20 resize-none animate-pulse-once"
+                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-xs text-[#161616] outline-none h-20 resize-none animate-pulse-once"
                                 />
                             </div>
 
-                            <div className="flex gap-2 justify-end pt-2 border-t border-outline/5">
+                            <div className="flex gap-2 justify-end pt-2 border-t border-[#E2DFD7]">
                                 <button 
                                     type="button"
                                     onClick={() => setIsAdminDocOpen(false)}
-                                    className="px-4 py-2 border border-outline/20 text-on-surface-variant hover:bg-surface-variant/20 text-xs font-bold rounded-lg cursor-pointer transition bg-transparent"
+                                    className="px-4 py-2 border border-[#E2DFD7] text-[#76746E] hover:bg-[#FAF8F5] text-xs font-bold rounded-none cursor-pointer transition bg-transparent"
                                 >
                                     Cancelar
                                 </button>
                                 <button 
                                     type="submit"
                                     disabled={actionLoading}
-                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-lg cursor-pointer transition border-0 shadow"
+                                    className="px-4 py-2 bg-[#161616] hover:bg-[#D9381E] border border-[#161616] hover:border-[#D9381E] text-white text-xs font-bold rounded-none cursor-pointer transition border-0 shadow"
                                 >
                                     {actionLoading ? 'Registrando...' : 'Registrar'}
                                 </button>
@@ -2518,21 +2522,21 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             {/* CREATE/EDIT EMPLOYEE MODAL */}
             {isEmpOpen && createPortal(
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-lg w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
-                            <h3 className="font-bold text-lg text-on-surface">
+                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none max-w-lg w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+                            <h3 className="font-bold text-lg text-[#161616]">
                                 {selectedEmp ? 'Editar Empleado' : 'Registrar Empleado'}
                             </h3>
                             <button 
                                 onClick={() => setIsEmpOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#FAF8F5] border-0 cursor-pointer text-[#161616]"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
                         {errorMsg && (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl mb-4 font-bold">
+                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-none mb-4 font-bold">
                                 ⚠️ {errorMsg}
                             </div>
                         )}
@@ -2540,43 +2544,43 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                         <form onSubmit={handleCreateEmp} className="space-y-4 text-sm">
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Nombre</label>
+                                    <label className="block text-xs font-bold text-[#76746E]">Nombre</label>
                                     <input 
                                         type="text"
                                         required
                                         value={empName}
                                         onChange={(e) => setEmpName(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none"
                                         placeholder="Ej: Laura"
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Apellido</label>
+                                    <label className="block text-xs font-bold text-[#76746E]">Apellido</label>
                                     <input 
                                         type="text"
                                         value={empLastName}
                                         onChange={(e) => setEmpLastName(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none"
                                         placeholder="Ej: Bermúdez"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Número de Teléfono</label>
+                                <label className="block text-xs font-bold text-[#76746E]">Número de Teléfono</label>
                                 <input 
                                     type="text"
                                     required
                                     value={empPhone}
                                     onChange={(e) => setEmpPhone(e.target.value)}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono"
+                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none font-mono"
                                     placeholder="Ej: 3001234567"
                                 />
                             </div>
 
-                            <div className="space-y-3 pt-2 border-t border-outline/10">
+                            <div className="space-y-3 pt-2 border-t border-[#E2DFD7]">
                                 <div className="space-y-2">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Módulos permitidos en el ERP</label>
+                                    <label className="block text-xs font-bold text-[#76746E]">Módulos permitidos en el ERP</label>
                                     <div className="grid grid-cols-2 gap-2">
                                         {MODULES.map((module) => {
                                             const active = employeeAccessPermissions.includes(module.key);
@@ -2585,8 +2589,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                     key={module.key}
                                                     type="button"
                                                     onClick={() => setEmployeeAccessPermissions(prev => prev.includes(module.key) ? prev.filter(item => item !== module.key) : [...prev, module.key])}
-                                                    className={`px-2 py-2 rounded-lg border text-[10px] font-bold transition ${
-                                                        active ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-surface-container-high/40 border-outline/15 text-on-surface-variant hover:border-outline/30'
+                                                    className={`px-2 py-2 rounded-none border text-[10px] font-bold transition ${
+                                                        active ? 'bg-primary/15 border-primary/30 text-[#161616]' : 'bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border-outline/15 text-[#76746E] hover:border-[#E2DFD7]'
                                                     }`}
                                                 >
                                                     {module.label}
@@ -2598,13 +2602,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                             </div>
 
                             {/* Permisos de Sedes (Rotación Multi-Sede) */}
-                            <div className="space-y-2 pt-2 border-t border-outline/10">
-                                <label className="block text-xs font-bold text-on-surface-variant flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-sm text-primary">storefront</span>
+                            <div className="space-y-2 pt-2 border-t border-[#E2DFD7]">
+                                <label className="block text-xs font-bold text-[#76746E] flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm text-[#161616]">storefront</span>
                                     <span>Sedes Autorizadas (Rotación Multi-Sede)</span>
                                 </label>
                                 {branchesList.length <= 1 ? (
-                                    <div className="bg-surface-container-high/30 p-2.5 rounded-xl border border-outline/10 text-[11px] text-on-surface-variant flex items-center gap-2">
+                                    <div className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none/30 p-2.5 rounded-none border border-[#E2DFD7] text-[11px] text-[#76746E] flex items-center gap-2">
                                         <span className="material-symbols-outlined text-xs text-emerald-400">check_circle</span>
                                         <span>Operativo en la sede actual (Sede Principal).</span>
                                     </div>
@@ -2621,10 +2625,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                             ? prev.filter(id => id !== branch.id) 
                                                             : [...prev, branch.id]
                                                     )}
-                                                    className={`px-3 py-2 rounded-xl border text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                                                    className={`px-3 py-2 rounded-none border text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                                                         isSelected 
-                                                            ? 'bg-primary/20 border-primary text-primary shadow-sm' 
-                                                            : 'bg-surface-container-high/40 border-outline/15 text-on-surface-variant hover:border-outline/30'
+                                                            ? 'bg-[#FAF8F5] border border-[#E2DFD7] border-primary text-[#161616] shadow-sm' 
+                                                            : 'bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border-outline/15 text-[#76746E] hover:border-[#E2DFD7]'
                                                     }`}
                                                 >
                                                     <span className="truncate">{branch.name}</span>
@@ -2639,11 +2643,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                             </div>
 
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Cargo o Rol de Trabajo</label>
+                                <label className="block text-xs font-bold text-[#76746E]">Cargo o Rol de Trabajo</label>
                                 <select 
                                     value={empRole}
                                     onChange={(e) => setEmpRole(e.target.value)}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none cursor-pointer"
+                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none cursor-pointer"
                                 >
                                     {workRoles.map((role) => (
                                         <option key={role} value={role}>
@@ -2663,11 +2667,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                             </div>
 
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Departamento Asociado</label>
+                                <label className="block text-xs font-bold text-[#76746E]">Departamento Asociado</label>
                                 <select 
                                     value={empDeptId}
                                     onChange={(e) => setEmpDeptId(e.target.value)}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none cursor-pointer"
+                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none cursor-pointer"
                                 >
                                     <option value="">Ninguno / Sin Asignar</option>
                                     {departments.map(d => (
@@ -2678,7 +2682,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant flex items-center justify-between">
+                                    <label className="block text-xs font-bold text-[#76746E] flex items-center justify-between">
                                         <span>PIN de Seguridad (6 dígitos)</span>
                                         {selectedEmp && <span className="text-[10px] text-amber-500 font-normal">(Opcional)</span>}
                                     </label>
@@ -2688,46 +2692,46 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                         required={!selectedEmp}
                                         value={empPin}
                                         onChange={(e) => setEmpPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono tracking-widest text-center text-lg"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none font-mono tracking-widest text-center text-lg"
                                         placeholder={selectedEmp ? "•••••• (Sin cambios)" : "Ej: 123456"}
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Código / No. Empleado</label>
+                                    <label className="block text-xs font-bold text-[#76746E]">Código / No. Empleado</label>
                                     <input 
                                         type="text"
                                         readOnly
                                         value={empCode}
                                         onChange={(e) => setEmpCode(e.target.value)}
-                                        className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono text-center text-lg font-bold opacity-90"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none font-mono text-center text-lg font-bold opacity-90"
                                         placeholder="Ej: EMP-001"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Registro / Tarjeta Profesional (T.P. Optómetra / Salud)</label>
+                                <label className="block text-xs font-bold text-[#76746E]">Registro / Tarjeta Profesional (T.P. Optómetra / Salud)</label>
                                 <input 
                                     type="text"
                                     value={empProfLicense}
                                     onChange={(e) => setEmpProfLicense(e.target.value)}
-                                    className="w-full bg-surface-container-high/40 border border-outline/20 p-2.5 rounded-xl text-on-surface focus:border-primary outline-none font-mono text-xs"
+                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none font-mono text-xs"
                                     placeholder="Ej: TP-1098234-OPT (Opcional)"
                                 />
                             </div>
 
-                            <div className="flex gap-3 justify-end pt-4 border-t border-outline/10">
+                            <div className="flex gap-3 justify-end pt-4 border-t border-[#E2DFD7]">
                                 <button 
                                     type="button"
                                     onClick={() => setIsEmpOpen(false)}
-                                    className="px-4 py-2 border border-outline/20 text-on-surface hover:bg-surface-variant/20 rounded-xl font-bold cursor-pointer text-xs transition bg-transparent"
+                                    className="px-4 py-2 border border-[#E2DFD7] text-[#161616] hover:bg-[#FAF8F5] rounded-none font-bold cursor-pointer text-xs transition bg-transparent"
                                 >
                                     Cancelar
                                 </button>
                                 <button 
                                     type="submit"
                                     disabled={actionLoading}
-                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-xl font-bold cursor-pointer text-xs transition flex items-center gap-1.5 border-0"
+                                    className="px-4 py-2 bg-[#161616] hover:bg-[#D9381E] border border-[#161616] hover:border-[#D9381E] text-white rounded-none font-bold cursor-pointer text-xs transition flex items-center gap-1.5 border-0"
                                 >
                                     {actionLoading ? 'Guardando...' : 'Guardar'}
                                 </button>
@@ -2741,15 +2745,15 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             {/* PAYROLL SUMMARY MODAL */}
             {isPayrollOpen && selectedEmp && createPortal(
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-2xl w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
-                            <h3 className="font-bold text-lg text-on-surface flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-primary">payments</span>
+                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none max-w-2xl w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+                            <h3 className="font-bold text-lg text-[#161616] flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[#161616]">payments</span>
                                 Liquidación Mensual de Nómina
                             </h3>
                             <button 
                                 onClick={() => setIsPayrollOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#FAF8F5] border-0 cursor-pointer text-[#161616]"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
@@ -2757,43 +2761,43 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                         {payrollLoading ? (
                             <div className="flex flex-col items-center py-12 space-y-3">
-                                <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
-                                <span className="text-xs text-on-surface-variant font-bold">Calculando recargos, horas dominicales y deducciones de ley...</span>
+                                <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-none animate-spin"></div>
+                                <span className="text-xs text-[#76746E] font-bold">Calculando recargos, horas dominicales y deducciones de ley...</span>
                             </div>
                         ) : errorMsg ? (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-4 rounded-2xl font-bold text-center">
+                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-4 rounded-none font-bold text-center">
                                 ⚠️ {errorMsg}
                             </div>
                         ) : payrollSummary ? (
                             <div className="space-y-6 text-xs" id="payroll-slip">
                                 {/* Header paystub info */}
-                                <div className="grid grid-cols-2 gap-4 bg-surface-container/30 p-4 rounded-xl border border-outline/5">
+                                <div className="grid grid-cols-2 gap-4 bg-white border border-[#E2DFD7] shadow-xs rounded-none p-4 rounded-none border border-[#E2DFD7]">
                                     <div>
-                                        <p className="text-[10px] text-on-surface-variant uppercase font-mono">Empleado</p>
-                                        <p className="font-bold text-sm text-primary mt-0.5">{selectedEmp.name} {selectedEmp.last_name || ''}</p>
-                                        <p className="text-on-surface-variant font-mono mt-1">{selectedEmp.role.toUpperCase()}</p>
+                                        <p className="text-[10px] text-[#76746E] uppercase font-mono">Empleado</p>
+                                        <p className="font-bold text-sm text-[#161616] mt-0.5">{selectedEmp.name} {selectedEmp.last_name || ''}</p>
+                                        <p className="text-[#76746E] font-mono mt-1">{selectedEmp.role.toUpperCase()}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] text-on-surface-variant uppercase font-mono">Periodo de Liquidación</p>
-                                        <p className="font-bold text-on-surface mt-0.5">Mensual Actual (30 días)</p>
-                                        <p className="text-on-surface-variant font-mono mt-1">Sueldo Base: ${new Intl.NumberFormat('es-CO').format(payrollSummary.base_salary)} COP</p>
+                                        <p className="text-[10px] text-[#76746E] uppercase font-mono">Periodo de Liquidación</p>
+                                        <p className="font-bold text-[#161616] mt-0.5">Mensual Actual (30 días)</p>
+                                        <p className="text-[#76746E] font-mono mt-1">Sueldo Base: ${new Intl.NumberFormat('es-CO').format(payrollSummary.base_salary)} COP</p>
                                     </div>
                                 </div>
 
                                 {/* Hours & Timesheets overview */}
                                 <div className="space-y-2">
-                                    <h4 className="font-bold text-on-surface border-b border-outline/5 pb-1">1. Registro de Tiempos y Jornada</h4>
+                                    <h4 className="font-bold text-[#161616] border-b border-[#E2DFD7] pb-1">1. Registro de Tiempos y Jornada</h4>
                                     <div className="grid grid-cols-3 gap-3 text-center">
-                                        <div className="bg-white/5 p-2.5 rounded-xl border border-outline/5">
-                                            <p className="text-[10px] text-on-surface-variant">Horas Brutas Registradas</p>
-                                            <p className="font-bold text-sm text-on-surface mt-1">{payrollSummary.hours_worked.toFixed(2)} Hrs</p>
+                                        <div className="bg-white/5 p-2.5 rounded-none border border-[#E2DFD7]">
+                                            <p className="text-[10px] text-[#76746E]">Horas Brutas Registradas</p>
+                                            <p className="font-bold text-sm text-[#161616] mt-1">{payrollSummary.hours_worked.toFixed(2)} Hrs</p>
                                         </div>
-                                        <div className="bg-white/5 p-2.5 rounded-xl border border-outline/5">
-                                            <p className="text-[10px] text-on-surface-variant">Descuento Almuerzo (Mins)</p>
+                                        <div className="bg-white/5 p-2.5 rounded-none border border-[#E2DFD7]">
+                                            <p className="text-[10px] text-[#76746E]">Descuento Almuerzo (Mins)</p>
                                             <p className="font-bold text-sm text-red-500 mt-1">{payrollSummary.lunch_discount_minutes} mins</p>
                                         </div>
-                                        <div className="bg-white/5 p-2.5 rounded-xl border border-outline/5">
-                                            <p className="text-[10px] text-on-surface-variant">Horas Netas Liquidadas</p>
+                                        <div className="bg-white/5 p-2.5 rounded-none border border-[#E2DFD7]">
+                                            <p className="text-[10px] text-[#76746E]">Horas Netas Liquidadas</p>
                                             <p className="font-bold text-sm text-green-500 mt-1">{payrollSummary.net_hours_worked.toFixed(2)} Hrs</p>
                                         </div>
                                     </div>
@@ -2801,8 +2805,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                                 {/* Devengados (Earnings) table */}
                                 <div className="space-y-2">
-                                    <h4 className="font-bold text-on-surface border-b border-outline/5 pb-1">2. Detalle de Devengados (Ingresos)</h4>
-                                    <div className="space-y-1.5 bg-white/5 p-3 rounded-xl border border-outline/5">
+                                    <h4 className="font-bold text-[#161616] border-b border-[#E2DFD7] pb-1">2. Detalle de Devengados (Ingresos)</h4>
+                                    <div className="space-y-1.5 bg-white/5 p-3 rounded-none border border-[#E2DFD7]">
                                         <div className="flex justify-between py-1">
                                             <span>Sueldo de Horas Ordinarias</span>
                                             <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.base_payment)} COP</span>
@@ -2810,24 +2814,24 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                         {payrollSummary.transport_allowance > 0 && (
                                             <div className="flex justify-between py-1 border-t border-white/5">
                                                 <span>Auxilio de Transporte de Ley</span>
-                                                <span className="font-mono text-primary">+${new Intl.NumberFormat('es-CO').format(payrollSummary.transport_allowance)} COP</span>
+                                                <span className="font-mono text-[#161616]">+${new Intl.NumberFormat('es-CO').format(payrollSummary.transport_allowance)} COP</span>
                                             </div>
                                         )}
                                         {payrollSummary.extra_hours_surcharge > 0 && (
                                             <div className="flex justify-between py-1 border-t border-white/5">
                                                 <span>Horas Extras Diurnas (+25%)</span>
-                                                <span className="font-mono text-primary">+${new Intl.NumberFormat('es-CO').format(payrollSummary.extra_hours_surcharge)} COP</span>
+                                                <span className="font-mono text-[#161616]">+${new Intl.NumberFormat('es-CO').format(payrollSummary.extra_hours_surcharge)} COP</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between py-1 border-t border-white/5">
                                             <span>Recargos Nocturnos Liquidados (+35%)</span>
-                                            <span className="font-mono text-primary">+${new Intl.NumberFormat('es-CO').format(payrollSummary.night_surcharge)} COP</span>
+                                            <span className="font-mono text-[#161616]">+${new Intl.NumberFormat('es-CO').format(payrollSummary.night_surcharge)} COP</span>
                                         </div>
                                         <div className="flex justify-between py-1 border-t border-white/5">
                                             <span>Recargos Dominicales/Festivos (+75%)</span>
-                                            <span className="font-mono text-primary">+${new Intl.NumberFormat('es-CO').format(payrollSummary.sunday_surcharge)} COP</span>
+                                            <span className="font-mono text-[#161616]">+${new Intl.NumberFormat('es-CO').format(payrollSummary.sunday_surcharge)} COP</span>
                                         </div>
-                                        <div className="flex justify-between py-1.5 border-t border-white/5 font-bold text-sm text-on-surface">
+                                        <div className="flex justify-between py-1.5 border-t border-white/5 font-bold text-sm text-[#161616]">
                                             <span>Total Devengado (Ingreso Bruto)</span>
                                             <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.gross_earnings)} COP</span>
                                         </div>
@@ -2836,8 +2840,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                                 {/* Deducciones (Deductions) table */}
                                 <div className="space-y-2">
-                                    <h4 className="font-bold text-on-surface border-b border-outline/5 pb-1">3. Deducciones de Ley (Trabajador)</h4>
-                                    <div className="space-y-1.5 bg-white/5 p-3 rounded-xl border border-outline/5">
+                                    <h4 className="font-bold text-[#161616] border-b border-[#E2DFD7] pb-1">3. Deducciones de Ley (Trabajador)</h4>
+                                    <div className="space-y-1.5 bg-white/5 p-3 rounded-none border border-[#E2DFD7]">
                                         <div className="flex justify-between py-1">
                                             <span>Aporte a Salud Obligatoria (4%)</span>
                                             <span className="font-mono text-red-500">-${new Intl.NumberFormat('es-CO').format(payrollSummary.deductions.health)} COP</span>
@@ -2852,7 +2856,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                 <span className="font-mono text-red-500">-${new Intl.NumberFormat('es-CO').format(payrollSummary.deductions.advances)} COP</span>
                                             </div>
                                         )}
-                                        <div className="flex justify-between py-1.5 border-t border-white/5 font-bold text-sm text-on-surface">
+                                        <div className="flex justify-between py-1.5 border-t border-white/5 font-bold text-sm text-[#161616]">
                                             <span>Total Deducciones</span>
                                             <span className="font-mono text-red-500">-${new Intl.NumberFormat('es-CO').format(payrollSummary.total_deductions)} COP</span>
                                         </div>
@@ -2861,10 +2865,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                                 {/* Provisions and Employer taxes */}
                                 <div className="space-y-2">
-                                    <h4 className="font-bold text-on-surface border-b border-outline/5 pb-1">4. Costos Adicionales de Empresa (Seguridad Social &amp; Parafiscales &amp; Provisiones)</h4>
+                                    <h4 className="font-bold text-[#161616] border-b border-[#E2DFD7] pb-1">4. Costos Adicionales de Empresa (Seguridad Social &amp; Parafiscales &amp; Provisiones)</h4>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-white/5 p-3 rounded-xl border border-outline/5 space-y-1.5">
-                                            <p className="font-bold text-[10px] text-on-surface-variant uppercase mb-1">Seguridad Social &amp; Parafiscales</p>
+                                        <div className="bg-white/5 p-3 rounded-none border border-[#E2DFD7] space-y-1.5">
+                                            <p className="font-bold text-[10px] text-[#76746E] uppercase mb-1">Seguridad Social &amp; Parafiscales</p>
                                             <div className="flex justify-between py-0.5 text-[10px]">
                                                 <span>Pensión (12%)</span>
                                                 <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.employer_contributions.pension)}</span>
@@ -2897,9 +2901,9 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                             </div>
                                         </div>
 
-                                        <div className="bg-white/5 p-3 rounded-xl border border-outline/5 space-y-1.5 flex flex-col justify-between">
+                                        <div className="bg-white/5 p-3 rounded-none border border-[#E2DFD7] space-y-1.5 flex flex-col justify-between">
                                             <div>
-                                                <p className="font-bold text-[10px] text-on-surface-variant uppercase mb-1">Provisiones Prestacionales (Ley)</p>
+                                                <p className="font-bold text-[10px] text-[#76746E] uppercase mb-1">Provisiones Prestacionales (Ley)</p>
                                                 <div className="flex justify-between py-0.5 text-[10px]">
                                                     <span>Prima de Servicios (8.33%)</span>
                                                     <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.provisions.prima)}</span>
@@ -2917,10 +2921,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                     <span className="font-mono">${new Intl.NumberFormat('es-CO').format(payrollSummary.provisions.vacaciones)}</span>
                                                 </div>
                                             </div>
-                                            <div className="border-t border-outline/10 pt-2 text-[10px] text-on-surface-variant/80">
+                                            <div className="border-t border-[#E2DFD7] pt-2 text-[10px] text-[#76746E]">
                                                 <p className="flex justify-between font-bold">
                                                     <span>Total Costo Empresa:</span>
-                                                    <span className="font-mono text-primary">${new Intl.NumberFormat('es-CO').format(payrollSummary.totalEmployerCost)}</span>
+                                                    <span className="font-mono text-[#161616]">${new Intl.NumberFormat('es-CO').format(payrollSummary.totalEmployerCost)}</span>
                                                 </p>
                                             </div>
                                         </div>
@@ -2928,14 +2932,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 </div>
 
                                 {/* Net Payable */}
-                                <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 p-4 rounded-xl flex justify-between items-center font-sans">
+                                <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 p-4 rounded-none flex justify-between items-center font-sans">
                                     <div>
-                                        <p className="text-[10px] text-on-surface-variant uppercase font-mono tracking-wider font-bold">Total Neto a Pagar a Empleado</p>
+                                        <p className="text-[10px] text-[#76746E] uppercase font-mono tracking-wider font-bold">Total Neto a Pagar a Empleado</p>
                                         <p className="text-lg font-black text-white mt-1">${new Intl.NumberFormat('es-CO').format(payrollSummary.net_payment)} COP</p>
                                     </div>
                                     <button 
                                         onClick={() => window.print()}
-                                        className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-xl cursor-pointer flex items-center gap-1.5 transition shadow"
+                                        className="px-4 py-2 bg-[#161616] hover:bg-[#D9381E] border border-[#161616] hover:border-[#D9381E] text-white text-xs font-bold rounded-none cursor-pointer flex items-center gap-1.5 transition shadow"
                                     >
                                         <span className="material-symbols-outlined text-[16px]">print</span>
                                         Imprimir Desprendible
@@ -2951,54 +2955,54 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             {/* EMP DETAIL MODAL */}
             {isDetailOpen && selectedEmpDetail && createPortal(
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-2xl w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto flex flex-col">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
+                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none max-w-2xl w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto flex flex-col">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
                             <div>
-                                <h3 className="font-bold text-lg text-on-surface">Ficha del Empleado</h3>
-                                <p className="text-xs text-on-surface-variant">{selectedEmpDetail.name} {selectedEmpDetail.last_name || ''}</p>
+                                <h3 className="font-bold text-lg text-[#161616]">Ficha del Empleado</h3>
+                                <p className="text-xs text-[#76746E]">{selectedEmpDetail.name} {selectedEmpDetail.last_name || ''}</p>
                             </div>
                             <button 
                                 onClick={() => setIsDetailOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#FAF8F5] border-0 cursor-pointer text-[#161616]"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
                         {/* Modal Navigation Tabs */}
-                        <div className="flex bg-surface-container/50 p-1 rounded-xl border border-outline/10 text-[10px] mb-4 gap-1">
+                        <div className="flex bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-1 rounded-none border border-[#E2DFD7] text-[10px] mb-4 gap-1">
                             <button 
                                 type="button"
                                 onClick={() => setDetailTab('info')}
-                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'info' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
+                                className={`flex-1 py-2 rounded-none font-bold cursor-pointer transition ${detailTab === 'info' ? 'bg-primary text-white font-bold' : 'text-[#76746E] hover:text-[#161616]'}`}
                             >
                                 Información General
                             </button>
                             <button 
                                 type="button"
                                 onClick={() => setDetailTab('shifts')}
-                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'shifts' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
+                                className={`flex-1 py-2 rounded-none font-bold cursor-pointer transition ${detailTab === 'shifts' ? 'bg-primary text-white font-bold' : 'text-[#76746E] hover:text-[#161616]'}`}
                             >
                                 Asistencia
                             </button>
                             <button 
                                 type="button"
                                 onClick={() => setDetailTab('tasks')}
-                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'tasks' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
+                                className={`flex-1 py-2 rounded-none font-bold cursor-pointer transition ${detailTab === 'tasks' ? 'bg-primary text-white font-bold' : 'text-[#76746E] hover:text-[#161616]'}`}
                             >
                                 Tareas ({empTasks.length})
                             </button>
                             <button 
                                 type="button"
                                 onClick={() => setDetailTab('contrato')}
-                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'contrato' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
+                                className={`flex-1 py-2 rounded-none font-bold cursor-pointer transition ${detailTab === 'contrato' ? 'bg-primary text-white font-bold' : 'text-[#76746E] hover:text-[#161616]'}`}
                             >
                                 Nómina & Contrato
                             </button>
                             <button 
                                 type="button"
                                 onClick={() => setDetailTab('permisos')}
-                                className={`flex-1 py-2 rounded-lg font-bold cursor-pointer transition ${detailTab === 'permisos' ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:text-on-surface'}`}
+                                className={`flex-1 py-2 rounded-none font-bold cursor-pointer transition ${detailTab === 'permisos' ? 'bg-primary text-white font-bold' : 'text-[#76746E] hover:text-[#161616]'}`}
                             >
                                 Permisos & Licencias
                             </button>
@@ -3010,26 +3014,26 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                             {/* Tab 1: Info */}
                             {detailTab === 'info' && (
                                 <div className="space-y-4 text-xs">
-                                    <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-xl border border-outline/5">
+                                    <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-none border border-[#E2DFD7]">
                                         <div>
-                                            <span className="text-on-surface-variant block mb-1">Nombre Completo:</span>
-                                            <strong className="text-on-surface text-sm">{selectedEmpDetail.name} {selectedEmpDetail.last_name || ''}</strong>
+                                            <span className="text-[#76746E] block mb-1">Nombre Completo:</span>
+                                            <strong className="text-[#161616] text-sm">{selectedEmpDetail.name} {selectedEmpDetail.last_name || ''}</strong>
                                         </div>
                                         <div>
-                                            <span className="text-on-surface-variant block mb-1">WhatsApp / Teléfono:</span>
-                                            <strong className="text-on-surface text-sm">+{selectedEmpDetail.phone}</strong>
+                                            <span className="text-[#76746E] block mb-1">WhatsApp / Teléfono:</span>
+                                            <strong className="text-[#161616] text-sm">+{selectedEmpDetail.phone}</strong>
                                         </div>
                                         <div>
-                                            <span className="text-on-surface-variant block mb-1">Rol / Cargo:</span>
-                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold inline-block mt-0.5 uppercase ${
-                                                selectedEmpDetail.role === 'admin' ? 'bg-secondary/15 text-secondary' : 'bg-primary/10 text-primary'
+                                            <span className="text-[#76746E] block mb-1">Rol / Cargo:</span>
+                                            <span className={`px-2 py-0.5 rounded-none text-[9px] font-bold inline-block mt-0.5 uppercase ${
+                                                selectedEmpDetail.role === 'admin' ? 'bg-secondary/15 text-secondary' : 'bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616]'
                                             }`}>
                                                 {selectedEmpDetail.role}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-on-surface-variant block mb-1">Departamento:</span>
-                                            <strong className="text-on-surface text-sm">{selectedEmpDetail.department_name || 'Sin Asignar'}</strong>
+                                            <span className="text-[#76746E] block mb-1">Departamento:</span>
+                                            <strong className="text-[#161616] text-sm">{selectedEmpDetail.department_name || 'Sin Asignar'}</strong>
                                         </div>
                                         <div className="col-span-2">
                                             <button
@@ -3038,16 +3042,16 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                     setIsDetailOpen(false);
                                                     handleOpenTransferModal(selectedEmpDetail);
                                                 }}
-                                                className="w-full py-2.5 px-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                                                className="w-full py-2.5 px-3 rounded-none bg-[#FAF8F5] border border-[#E2DFD7] hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] border border-primary/30 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">domain</span>
                                                 🏢 Trasladar de Sede (Reubicar Colaborador)
                                             </button>
                                         </div>
                                         <div>
-                                            <span className="text-on-surface-variant block mb-1">PIN Marcación Rápida:</span>
+                                            <span className="text-[#76746E] block mb-1">PIN Marcación Rápida:</span>
                                             <div className="flex items-center gap-2">
-                                                <strong className="text-on-surface font-mono text-sm tracking-widest bg-surface-container-high/40 px-2.5 py-1 rounded-lg border border-outline/10 text-on-surface-variant">
+                                                <strong className="text-[#161616] font-mono text-sm tracking-widest bg-[#FAF8F5] border border-[#E2DFD7] rounded-none px-2.5 py-1 rounded-none border border-[#E2DFD7] text-[#76746E]">
                                                     ••••••
                                                 </strong>
                                                 <button
@@ -3082,7 +3086,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                             });
                                                         }
                                                     }}
-                                                    className="text-xs bg-primary/10 text-primary hover:bg-primary/20 transition px-2.5 py-1 rounded-lg font-semibold cursor-pointer border border-primary/20 flex items-center gap-1"
+                                                    className="text-xs bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] hover:bg-[#FAF8F5] border border-[#E2DFD7] transition px-2.5 py-1 rounded-none font-semibold cursor-pointer border border-primary/20 flex items-center gap-1"
                                                 >
                                                     <span className="material-symbols-outlined text-[14px]">lock_reset</span>
                                                     Restablecer PIN
@@ -3090,14 +3094,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                             </div>
                                         </div>
                                         <div>
-                                            <span className="text-on-surface-variant block mb-1">Código de Empleado:</span>
-                                            <strong className="text-on-surface font-mono text-sm bg-primary/10 text-primary px-2.5 py-1 rounded-lg border border-primary/20">
+                                            <span className="text-[#76746E] block mb-1">Código de Empleado:</span>
+                                            <strong className="text-[#161616] font-mono text-sm bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] px-2.5 py-1 rounded-none border border-primary/20">
                                                 {(selectedEmpDetail as any).employee_code || `EMP-${String(employees.findIndex(e => e.id === selectedEmpDetail.id) + 1 || 1).padStart(3, '0')}`}
                                             </strong>
                                         </div>
                                         <div>
-                                            <span className="text-on-surface-variant block mb-1">Fecha Registro:</span>
-                                            <span className="text-on-surface">{new Date(selectedEmpDetail.created_at).toLocaleDateString('es-CO')}</span>
+                                            <span className="text-[#76746E] block mb-1">Fecha Registro:</span>
+                                            <span className="text-[#161616]">{new Date(selectedEmpDetail.created_at).toLocaleDateString('es-CO')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -3106,16 +3110,16 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                             {/* Tab 2: Shifts */}
                             {detailTab === 'shifts' && (
                                 <div className="space-y-3">
-                                    <h4 className="font-bold text-xs text-on-surface border-b border-outline/5 pb-1">Historial Reciente de Turnos</h4>
+                                    <h4 className="font-bold text-xs text-[#161616] border-b border-[#E2DFD7] pb-1">Historial Reciente de Turnos</h4>
                                     {shiftsLoading ? (
-                                        <p className="text-xs text-on-surface-variant italic py-2 animate-pulse">Cargando turnos de asistencia...</p>
+                                        <p className="text-xs text-[#76746E] italic py-2 animate-pulse">Cargando turnos de asistencia...</p>
                                     ) : empShifts.length === 0 ? (
-                                        <p className="text-xs text-on-surface-variant/70 italic py-2">No se registran turnos o marcaciones de entrada/salida para este empleado.</p>
+                                        <p className="text-xs text-[#76746E] italic py-2">No se registran turnos o marcaciones de entrada/salida para este empleado.</p>
                                     ) : (
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left text-xs border-collapse">
                                                 <thead>
-                                                    <tr className="border-b border-outline/10 text-on-surface-variant uppercase font-bold text-[10px]">
+                                                    <tr className="border-b border-[#E2DFD7] text-[#76746E] uppercase font-bold text-[10px]">
                                                         <th className="py-2 px-1">Fecha</th>
                                                         <th className="py-2 px-1">Entrada</th>
                                                         <th className="py-2 px-1">Almuerzo</th>
@@ -3136,10 +3140,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                             : '---';
 
                                                         return (
-                                                            <tr key={shift.id} className="border-b border-outline/5 hover:bg-white/5">
+                                                            <tr key={shift.id} className="border-b border-[#E2DFD7] hover:bg-white/5">
                                                                 <td className="py-2 px-1 font-mono text-[10px]">{new Date(shift.created_at).toLocaleDateString('es-CO')}</td>
-                                                                <td className="py-2 px-1 text-primary">{inTime}</td>
-                                                                <td className="py-2 px-1 text-on-surface-variant/80">{lunchStr}</td>
+                                                                <td className="py-2 px-1 text-[#161616]">{inTime}</td>
+                                                                <td className="py-2 px-1 text-[#76746E]">{lunchStr}</td>
                                                                 <td className="py-2 px-1 text-secondary">{outTime}</td>
                                                                 <td className="py-2 px-1 text-right font-mono font-bold text-green-500">{totalHours}</td>
                                                             </tr>
@@ -3156,58 +3160,58 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                             {detailTab === 'tasks' && (
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <h4 className="font-bold text-xs text-on-surface border-b border-outline/5 pb-1">Asignar Nueva Tarea</h4>
-                                        <form onSubmit={handleAssignTask} className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white/5 p-4 rounded-xl border border-outline/5 text-xs">
+                                        <h4 className="font-bold text-xs text-[#161616] border-b border-[#E2DFD7] pb-1">Asignar Nueva Tarea</h4>
+                                        <form onSubmit={handleAssignTask} className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white/5 p-4 rounded-none border border-[#E2DFD7] text-xs">
                                             <div className="space-y-1">
-                                                <label className="font-bold text-[10px] text-on-surface-variant uppercase">Título de la Tarea</label>
+                                                <label className="font-bold text-[10px] text-[#76746E] uppercase">Título de la Tarea</label>
                                                 <input 
                                                     type="text"
                                                     required
                                                     value={newTaskTitle}
                                                     onChange={(e) => setNewTaskTitle(e.target.value)}
-                                                    className="w-full bg-surface-container border border-outline/10 p-2 rounded-lg text-on-surface outline-none"
+                                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none"
                                                     placeholder="Ej: Archivar facturas pendientes"
                                                 />
                                             </div>
                                             <div className="space-y-1">
-                                                <label className="font-bold text-[10px] text-on-surface-variant uppercase">Asignado Por (Tu Nombre)</label>
+                                                <label className="font-bold text-[10px] text-[#76746E] uppercase">Asignado Por (Tu Nombre)</label>
                                                 <input 
                                                     type="text"
                                                     disabled
                                                     value={newTaskCreator}
-                                                    className="w-full bg-surface-container border border-outline/10 p-2 rounded-lg text-on-surface outline-none opacity-60 cursor-not-allowed"
+                                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none opacity-60 cursor-not-allowed"
                                                     placeholder="Ej: Supervisor Carlos (Admin)"
                                                 />
                                             </div>
                                             <div className="space-y-1 md:col-span-2">
-                                                <label className="font-bold text-[10px] text-on-surface-variant uppercase">Descripción / Instrucciones</label>
+                                                <label className="font-bold text-[10px] text-[#76746E] uppercase">Descripción / Instrucciones</label>
                                                 <textarea 
                                                     rows={2}
                                                     value={newTaskDesc}
                                                     onChange={(e) => setNewTaskDesc(e.target.value)}
-                                                    className="w-full bg-surface-container border border-outline/10 p-2 rounded-lg text-on-surface outline-none resize-none"
+                                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none resize-none"
                                                     placeholder="Escribe detalles o instrucciones claras para el empleado..."
                                                 />
                                             </div>
                                             <div className="grid grid-cols-2 gap-2 md:col-span-2">
                                                 <div className="space-y-1">
-                                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Fecha Límite</label>
+                                                    <label className="font-bold text-[10px] text-[#76746E] uppercase">Fecha Límite</label>
                                                     <input 
                                                         type="date"
                                                         required
                                                         value={newTaskDueDate}
                                                         onChange={(e) => setNewTaskDueDate(e.target.value)}
-                                                        className="w-full bg-surface-container border border-outline/10 p-2 rounded-lg text-on-surface outline-none"
+                                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none"
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <label className="font-bold text-[10px] text-on-surface-variant uppercase">Hora Límite</label>
+                                                    <label className="font-bold text-[10px] text-[#76746E] uppercase">Hora Límite</label>
                                                     <input 
                                                         type="time"
                                                         required
                                                         value={newTaskDueTime}
                                                         onChange={(e) => setNewTaskDueTime(e.target.value)}
-                                                        className="w-full bg-surface-container border border-outline/10 p-2 rounded-lg text-on-surface outline-none"
+                                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none"
                                                     />
                                                 </div>
                                             </div>
@@ -3215,7 +3219,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                 <button
                                                     type="submit"
                                                     disabled={actionLoading}
-                                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white font-bold rounded-lg cursor-pointer transition shadow"
+                                                    className="px-4 py-2 bg-[#161616] hover:bg-[#D9381E] border border-[#161616] hover:border-[#D9381E] text-white font-bold rounded-none cursor-pointer transition shadow"
                                                 >
                                                     {actionLoading ? 'Guardando...' : 'Asignar Tarea'}
                                                 </button>
@@ -3224,17 +3228,17 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                     </div>
 
                                     <div className="space-y-3">
-                                        <h4 className="font-bold text-xs text-on-surface border-b border-outline/5 pb-1">Historial de Tareas</h4>
+                                        <h4 className="font-bold text-xs text-[#161616] border-b border-[#E2DFD7] pb-1">Historial de Tareas</h4>
                                         {tasksLoading ? (
-                                            <p className="text-xs text-on-surface-variant italic py-2 animate-pulse">Cargando tareas...</p>
+                                            <p className="text-xs text-[#76746E] italic py-2 animate-pulse">Cargando tareas...</p>
                                         ) : empTasks.length === 0 ? (
-                                            <p className="text-xs text-on-surface-variant/70 italic py-2">No hay tareas asignadas a este empleado.</p>
+                                            <p className="text-xs text-[#76746E] italic py-2">No hay tareas asignadas a este empleado.</p>
                                         ) : (
                                             <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
                                                 {empTasks.map((tsk: any) => (
-                                                    <div key={tsk.id} className="p-3 bg-surface-container/20 border border-outline/5 rounded-xl space-y-1.5 text-xs text-left">
+                                                    <div key={tsk.id} className="p-3 bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none space-y-1.5 text-xs text-left">
                                                         <div className="flex justify-between items-start">
-                                                            <span className="font-bold text-on-surface">{tsk.title}</span>
+                                                            <span className="font-bold text-[#161616]">{tsk.title}</span>
                                                             <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
                                                                 tsk.status === 'pendiente' ? 'bg-amber-500/15 text-amber-500' : 'bg-green-500/10 text-green-500'
                                                             }`}>
@@ -3242,11 +3246,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                             </span>
                                                         </div>
                                                         {tsk.description && (
-                                                            <p className="text-on-surface-variant text-[11px] leading-relaxed">
+                                                            <p className="text-[#76746E] text-[11px] leading-relaxed">
                                                                 {tsk.description}
                                                             </p>
                                                         )}
-                                                        <div className="flex justify-between text-[10px] text-on-surface-variant/70 font-mono border-t border-outline/5 pt-1.5 mt-1.5">
+                                                        <div className="flex justify-between text-[10px] text-[#76746E] font-mono border-t border-[#E2DFD7] pt-1.5 mt-1.5">
                                                             <span>Por: <strong>{tsk.created_by_name || 'Admin'}</strong></span>
                                                             <span>Fecha: {new Date(tsk.created_at).toLocaleDateString('es-CO')}</span>
                                                         </div>
@@ -3260,8 +3264,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                             {detailTab === 'contrato' && (
                                 <form onSubmit={handleSaveContractInfo} className="space-y-4 text-xs text-left">
-                                    <div className="bg-white/5 p-4 rounded-xl border border-outline/5 space-y-4">
-                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider">Condiciones Contractuales</h4>
+                                    <div className="bg-white/5 p-4 rounded-none border border-[#E2DFD7] space-y-4">
+                                        <h4 className="font-bold text-xs text-[#161616] uppercase tracking-wider">Condiciones Contractuales</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="flex flex-col gap-1">
                                                 <CustomDatePicker 
@@ -3271,13 +3275,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                 />
                                             </div>
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Días Vacaciones Acumulados (Ley Colombiana)</label>
+                                                <label className="text-[10px] text-[#76746E] font-medium">Días Vacaciones Acumulados (Ley Colombiana)</label>
                                                 <input 
                                                     type="text" 
                                                     readOnly
                                                     disabled
                                                     value={contrVacations} 
-                                                    className="bg-surface-container/50 border border-outline/20 rounded-xl p-2 text-xs text-on-surface-variant/80 outline-none cursor-not-allowed font-medium mt-0.5"
+                                                    className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#76746E] outline-none cursor-not-allowed font-medium mt-0.5"
                                                     title="Cálculo automático: (Días laborados * 15) / 360 - Días de vacaciones ya tomados y aprobados"
                                                 />
                                             </div>
@@ -3285,11 +3289,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="flex flex-col gap-1 col-span-2">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Tipo de Contrato</label>
+                                                <label className="text-[10px] text-[#76746E] font-medium">Tipo de Contrato</label>
                                                 <select 
                                                     value={contrContractType} 
                                                     onChange={(e: any) => setContrContractType(e.target.value)}
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                    className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none cursor-pointer"
                                                 >
                                                     <option value="indefinido">Término Indefinido</option>
                                                     <option value="fijo">Término Fijo</option>
@@ -3297,7 +3301,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                     <option value="servicios">Prestación de Servicios</option>
                                                     <option value="aprendizaje">Aprendizaje (SENA)</option>
                                                 </select>
-                                                <span className="text-[9px] text-on-surface-variant/70 italic mt-0.5">
+                                                <span className="text-[9px] text-[#76746E] italic mt-0.5">
                                                     * Nota: Prestación de Servicios no aplica provisiones ni aux. transporte. Aprendizaje solo aplica Salud y ARL patronal.
                                                 </span>
                                             </div>
@@ -3305,22 +3309,22 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Estado Vinculación</label>
+                                                <label className="text-[10px] text-[#76746E] font-medium">Estado Vinculación</label>
                                                 <select 
                                                     value={contrEmpStatus} 
                                                     onChange={(e: any) => setContrEmpStatus(e.target.value)}
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                    className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none cursor-pointer"
                                                 >
                                                     <option value="linked">Vinculado (Activo)</option>
                                                     <option value="unlinked">Desvinculado (Despedido/Retirado)</option>
                                                 </select>
                                             </div>
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Estado Actividad</label>
+                                                <label className="text-[10px] text-[#76746E] font-medium">Estado Actividad</label>
                                                 <select 
                                                     value={contrActStatus} 
                                                     onChange={(e: any) => setContrActStatus(e.target.value)}
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                    className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none cursor-pointer"
                                                 >
                                                     <option value="active">Activo (Laborando)</option>
                                                     <option value="inactive">Inactivo (Vacaciones/Permiso/Incapacidad)</option>
@@ -3329,26 +3333,26 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                         </div>
                                     </div>
 
-                                    <div className="bg-white/5 p-4 rounded-xl border border-outline/5 space-y-4">
-                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider">Esquema de Pago y Salario</h4>
+                                    <div className="bg-white/5 p-4 rounded-none border border-[#E2DFD7] space-y-4">
+                                        <h4 className="font-bold text-xs text-[#161616] uppercase tracking-wider">Esquema de Pago y Salario</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Tipo de Salario</label>
+                                                <label className="text-[10px] text-[#76746E] font-medium">Tipo de Salario</label>
                                                 <select 
                                                     value={contrPaymentType} 
                                                     onChange={(e: any) => setContrPaymentType(e.target.value)}
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                    className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none cursor-pointer"
                                                 >
                                                     <option value="fixed">Fijo Mensual</option>
                                                     <option value="hourly">Pago por Horas</option>
                                                 </select>
                                             </div>
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Periodicidad de Pago</label>
+                                                <label className="text-[10px] text-[#76746E] font-medium">Periodicidad de Pago</label>
                                                 <select 
                                                     value={contrPayPeriod} 
                                                     onChange={(e: any) => setContrPayPeriod(e.target.value)}
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                    className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none cursor-pointer"
                                                 >
                                                     <option value="quincenal">Quincenal</option>
                                                     <option value="mensual">Mensual</option>
@@ -3358,7 +3362,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="flex flex-col gap-1 col-span-2">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Salario Base Mensual ($ COP)</label>
+                                                <label className="text-[10px] text-[#76746E] font-medium">Salario Base Mensual ($ COP)</label>
                                                 <input 
                                                     type="number" 
                                                     value={contrBasicSalary} 
@@ -3372,14 +3376,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                         }
                                                     }}
                                                     placeholder="Ej: 1750905"
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none w-full font-mono font-bold text-primary"
+                                                    className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none w-full font-mono font-bold text-[#161616]"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Auxilio de Transporte ($ COP)</label>
+                                                <label className="text-[10px] text-[#76746E] font-medium">Auxilio de Transporte ($ COP)</label>
                                                 <input 
                                                     type="number" 
                                                     value={contrTransportAllowance} 
@@ -3390,25 +3394,25 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                         }
                                                     }}
                                                     placeholder="Ej: 249095"
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none w-full font-mono"
+                                                    className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none w-full font-mono"
                                                 />
                                             </div>
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Valor Hora (Fórmula de Ley)</label>
+                                                <label className="text-[10px] text-[#76746E] font-medium">Valor Hora (Fórmula de Ley)</label>
                                                 <input 
                                                     type="text" 
                                                     readOnly 
                                                     value={contrBasicSalary ? `$${Number(parseFloat(contrBasicSalary) / 240).toLocaleString('es-CO', {maximumFractionDigits: 2})}` : '$0'}
-                                                    className="bg-surface-container/40 border border-outline/10 text-on-surface-variant rounded-xl p-2 text-xs outline-none w-full font-mono cursor-not-allowed font-bold"
+                                                    className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none/40 border border-[#E2DFD7] text-[#76746E] rounded-none p-2 text-xs outline-none w-full font-mono cursor-not-allowed font-bold"
                                                 />
-                                                <span className="text-[9px] text-on-surface-variant/70 italic mt-0.5">Calculado: Salario / 240 Hrs</span>
+                                                <span className="text-[9px] text-[#76746E] italic mt-0.5">Calculado: Salario / 240 Hrs</span>
                                             </div>
                                         </div>
 
                                         {contrPayPeriod === 'mensual' ? (
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="flex flex-col gap-1">
-                                                    <label className="text-[10px] text-on-surface-variant font-medium">Día de Corte Mensual (ej: 30)</label>
+                                                    <label className="text-[10px] text-[#76746E] font-medium">Día de Corte Mensual (ej: 30)</label>
                                                     <input 
                                                         type="number"
                                                         min={1}
@@ -3416,11 +3420,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                         value={contrCutoff1} 
                                                         onChange={(e) => setContrCutoff1(e.target.value)}
                                                         placeholder="Ej: 30"
-                                                        className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono font-bold"
+                                                        className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none font-mono font-bold"
                                                     />
                                                 </div>
                                                 <div className="flex flex-col gap-1">
-                                                    <label className="text-[10px] text-on-surface-variant font-medium">Día de Pago Mensual (ej: 30)</label>
+                                                    <label className="text-[10px] text-[#76746E] font-medium">Día de Pago Mensual (ej: 30)</label>
                                                     <input 
                                                         type="number"
                                                         min={1}
@@ -3428,14 +3432,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                         value={contrPay1} 
                                                         onChange={(e) => setContrPay1(e.target.value)}
                                                         placeholder="Ej: 30"
-                                                        className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono font-bold"
+                                                        className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none font-mono font-bold"
                                                     />
                                                 </div>
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="flex flex-col gap-1">
-                                                    <label className="text-[10px] text-on-surface-variant font-medium">Fechas de Corte Quincenales</label>
+                                                    <label className="text-[10px] text-[#76746E] font-medium">Fechas de Corte Quincenales</label>
                                                     <div className="grid grid-cols-2 gap-1.5">
                                                         <input 
                                                             type="number"
@@ -3444,7 +3448,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                             value={contrCutoff1} 
                                                             onChange={(e) => setContrCutoff1(e.target.value)}
                                                             placeholder="1ª Quinc (15)"
-                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                            className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none font-mono text-center font-bold"
                                                         />
                                                         <input 
                                                             type="number"
@@ -3453,13 +3457,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                             value={contrCutoff2} 
                                                             onChange={(e) => setContrCutoff2(e.target.value)}
                                                             placeholder="2ª Quinc (30)"
-                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                            className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none font-mono text-center font-bold"
                                                         />
                                                     </div>
-                                                    <span className="text-[9px] text-on-surface-variant/70 italic">1ª Quincena | 2ª Quincena</span>
+                                                    <span className="text-[9px] text-[#76746E] italic">1ª Quincena | 2ª Quincena</span>
                                                 </div>
                                                 <div className="flex flex-col gap-1">
-                                                    <label className="text-[10px] text-on-surface-variant font-medium">Fechas de Pago Quincenales</label>
+                                                    <label className="text-[10px] text-[#76746E] font-medium">Fechas de Pago Quincenales</label>
                                                     <div className="grid grid-cols-2 gap-1.5">
                                                         <input 
                                                             type="number"
@@ -3468,7 +3472,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                             value={contrPay1} 
                                                             onChange={(e) => setContrPay1(e.target.value)}
                                                             placeholder="1ª Quinc (15)"
-                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                            className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none font-mono text-center font-bold"
                                                         />
                                                         <input 
                                                             type="number"
@@ -3477,24 +3481,24 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                             value={contrPay2} 
                                                             onChange={(e) => setContrPay2(e.target.value)}
                                                             placeholder="2ª Quinc (30)"
-                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono text-center font-bold"
+                                                            className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none font-mono text-center font-bold"
                                                         />
                                                     </div>
-                                                    <span className="text-[9px] text-on-surface-variant/70 italic">1ª Quincena | 2ª Quincena</span>
+                                                    <span className="text-[9px] text-[#76746E] italic">1ª Quincena | 2ª Quincena</span>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="bg-white/5 p-4 rounded-xl border border-outline/5 space-y-4">
-                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider">Medio de Recepción de Pago</h4>
+                                    <div className="bg-white/5 p-4 rounded-none border border-[#E2DFD7] space-y-4">
+                                        <h4 className="font-bold text-xs text-[#161616] uppercase tracking-wider">Medio de Recepción de Pago</h4>
                                         <div className="grid grid-cols-3 gap-3">
                                             <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-on-surface-variant font-medium">Medio</label>
+                                                <label className="text-[10px] text-[#76746E] font-medium">Medio</label>
                                                 <select 
                                                     value={contrPaymentMethod} 
                                                     onChange={(e: any) => setContrPaymentMethod(e.target.value)}
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                    className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none cursor-pointer"
                                                 >
                                                     <option value="cash">Efectivo</option>
                                                     <option value="transfer">Transferencia</option>
@@ -3503,11 +3507,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                             {contrPaymentMethod === 'transfer' && (
                                                 <>
                                                     <div className="flex flex-col gap-1">
-                                                        <label className="text-[10px] text-on-surface-variant font-medium">Banco / Canal</label>
+                                                        <label className="text-[10px] text-[#76746E] font-medium">Banco / Canal</label>
                                                         <select 
                                                             value={contrBankName} 
                                                             onChange={(e) => setContrBankName(e.target.value)}
-                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none cursor-pointer"
+                                                            className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none cursor-pointer"
                                                         >
                                                             <option value="">Seleccione Banco...</option>
                                                             <option value="Bancolombia">Bancolombia</option>
@@ -3533,13 +3537,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                         </select>
                                                     </div>
                                                     <div className="flex flex-col gap-1">
-                                                        <label className="text-[10px] text-on-surface-variant font-medium">Número Cuenta</label>
+                                                        <label className="text-[10px] text-[#76746E] font-medium">Número Cuenta</label>
                                                         <input 
                                                             type="text" 
                                                             value={contrBankAccount} 
                                                             onChange={(e) => setContrBankAccount(e.target.value)}
                                                             placeholder="Ej: 3001234567"
-                                                            className="bg-surface-container border border-outline/20 rounded-xl p-2 text-xs text-on-surface outline-none font-mono"
+                                                            className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none font-mono"
                                                         />
                                                     </div>
                                                 </>
@@ -3550,7 +3554,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                     <button 
                                         type="submit" 
                                         disabled={savingContract}
-                                        className="w-full py-2.5 bg-primary text-on-primary font-bold text-xs rounded-xl hover:opacity-90 active:scale-95 transition cursor-pointer border-0 shadow"
+                                        className="w-full py-2.5 bg-primary text-on-primary font-bold text-xs rounded-none hover:opacity-90 active:scale-95 transition cursor-pointer border-0 shadow"
                                     >
                                         {savingContract ? 'Guardando Contrato...' : 'Guardar Configuración de Nómina'}
                                     </button>
@@ -3560,45 +3564,45 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                             {/* Tab 5: Permisos */}
                             {detailTab === 'permisos' && (
                                 <div className="space-y-4 text-xs text-left">
-                                    <h4 className="font-bold text-xs text-primary uppercase tracking-wider">Historial de Permisos y Vacaciones</h4>
+                                    <h4 className="font-bold text-xs text-[#161616] uppercase tracking-wider">Historial de Permisos y Vacaciones</h4>
                                     {(() => {
                                         const empDocs = hrDocs.filter((d: any) => d.employee_id === selectedEmpDetail.id);
                                         if (empDocs.length === 0) {
-                                            return <p className="text-xs text-on-surface-variant/60 italic text-center py-4">No hay permisos ni vacaciones registrados para este colaborador.</p>;
+                                            return <p className="text-xs text-[#76746E] italic text-center py-4">No hay permisos ni vacaciones registrados para este colaborador.</p>;
                                         }
                                         return (
                                             <div className="space-y-3">
                                                 {empDocs.map((doc: any) => (
-                                                    <div key={doc.id} className="p-4 bg-white/5 border border-outline/10 rounded-2xl space-y-2">
+                                                    <div key={doc.id} className="p-4 bg-white/5 border border-[#E2DFD7] rounded-none space-y-2">
                                                         <div className="flex justify-between items-center">
-                                                            <span className="font-bold text-primary capitalize text-xs">{doc.doc_type.replace('_', ' ')}</span>
-                                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                                            <span className="font-bold text-[#161616] capitalize text-xs">{doc.doc_type.replace('_', ' ')}</span>
+                                                            <span className={`px-2 py-0.5 rounded-none text-[9px] font-bold ${
                                                                 doc.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
                                                                 doc.status === 'approved' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
                                                             }`}>
                                                                 {doc.status.toUpperCase()}
                                                             </span>
                                                         </div>
-                                                        <div className="grid grid-cols-3 gap-2 bg-white/5 p-2 rounded-xl text-[10px] text-on-surface-variant font-mono">
+                                                        <div className="grid grid-cols-3 gap-2 bg-white/5 p-2 rounded-none text-[10px] text-[#76746E] font-mono">
                                                             <div>
-                                                                <span className="block text-[8px] uppercase font-bold text-on-surface-variant/60">Inicio</span>
+                                                                <span className="block text-[8px] uppercase font-bold text-[#76746E]">Inicio</span>
                                                                 {formatDateOnly(doc.start_date)}
                                                             </div>
                                                             <div>
-                                                                <span className="block text-[8px] uppercase font-bold text-on-surface-variant/60">Último Día</span>
+                                                                <span className="block text-[8px] uppercase font-bold text-[#76746E]">Último Día</span>
                                                                 {doc.end_date ? formatDateOnly(doc.end_date) : 'N/A'}
                                                             </div>
                                                             <div>
-                                                                <span className="block text-[8px] uppercase font-bold text-on-surface-variant/60">Regreso</span>
+                                                                <span className="block text-[8px] uppercase font-bold text-[#76746E]">Regreso</span>
                                                                 {doc.return_date ? formatDateOnly(doc.return_date) : 'N/A'}
                                                             </div>
                                                         </div>
-                                                        <p className="text-xs text-on-surface-variant/90 leading-relaxed bg-white/5 p-2 rounded-xl">
+                                                        <p className="text-xs text-[#76746E]/90 leading-relaxed bg-white/5 p-2 rounded-none">
                                                             <strong>Justificación:</strong> "{doc.notes || doc.reason || 'Sin justificación'}"
                                                         </p>
                                                         {doc.admin_notes && (
-                                                            <div className="bg-surface-container-high/40 p-2.5 rounded-xl border border-outline/5 text-[10px] text-on-surface">
-                                                                <span className="font-bold text-primary block mb-0.5">Respuesta de Gestión Humana:</span>
+                                                            <div className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-2.5 rounded-none border border-[#E2DFD7] text-[10px] text-[#161616]">
+                                                                <span className="font-bold text-[#161616] block mb-0.5">Respuesta de Gestión Humana:</span>
                                                                 {doc.admin_notes}
                                                             </div>
                                                         )}
@@ -3613,11 +3617,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="border-t border-outline/10 pt-4 mt-4 flex justify-end">
+                        <div className="border-t border-[#E2DFD7] pt-4 mt-4 flex justify-end">
                             <button 
                                 type="button"
                                 onClick={() => setIsDetailOpen(false)}
-                                className="px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold rounded-xl cursor-pointer transition border border-outline/20"
+                                className="px-4 py-2 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none hover:bg-[#FAF8F5] border border-[#E2DFD7] rounded-none text-[#161616] text-xs font-bold rounded-none cursor-pointer transition border border-[#E2DFD7]"
                             >
                                 Cerrar Ficha
                             </button>
@@ -3630,35 +3634,35 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             {/* MODAL TRASLADAR EMPLEADO DE SEDE */}
             {isTransferModalOpen && selectedEmpToTransfer && createPortal(
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="glass-card max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl space-y-4 my-auto">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3">
-                            <h3 className="font-bold text-base text-on-surface flex items-center gap-2">
-                                <span className="material-symbols-outlined text-primary">domain</span>
+                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none max-w-md w-full rounded-none overflow-hidden p-6 shadow-2xl space-y-4 my-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                            <h3 className="font-bold text-base text-[#161616] flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#161616]">domain</span>
                                 Trasladar de Sede
                             </h3>
                             <button 
                                 onClick={() => setIsTransferModalOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#FAF8F5] border-0 cursor-pointer text-[#161616]"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
-                        <div className="bg-primary/5 border border-primary/20 p-3 rounded-xl space-y-1 text-xs">
-                            <p className="text-on-surface font-bold">Colaborador: {selectedEmpToTransfer.name} {selectedEmpToTransfer.last_name || ''}</p>
-                            <p className="text-[11px] text-on-surface-variant">
+                        <div className="bg-primary/5 border border-primary/20 p-3 rounded-none space-y-1 text-xs">
+                            <p className="text-[#161616] font-bold">Colaborador: {selectedEmpToTransfer.name} {selectedEmpToTransfer.last_name || ''}</p>
+                            <p className="text-[11px] text-[#76746E]">
                                 Al trasladar este trabajador, su historial pasado (ventas, citas y turnos) se conservará intacto en la sede origen, mientras que sus futuras operaciones se registrarán en la sede destino.
                             </p>
                         </div>
 
                         <form onSubmit={handleExecuteEmployeeTransfer} className="space-y-3 text-xs">
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-on-surface-variant uppercase">Sede Destino *</label>
+                                <label className="text-[10px] font-bold text-[#76746E] uppercase">Sede Destino *</label>
                                 <select
                                     required
                                     value={targetBranchId}
                                     onChange={(e) => setTargetBranchId(e.target.value)}
-                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface font-bold outline-none focus:border-primary"
+                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2.5 text-[#161616] font-bold outline-none focus:border-primary"
                                 >
                                     <option value="">Seleccione la sede de destino...</option>
                                     {branchesList.filter(b => b.id !== clientId).map(b => (
@@ -3670,13 +3674,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                             </div>
 
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-on-surface-variant uppercase">Motivo o Notas de Reubicación</label>
+                                <label className="text-[10px] font-bold text-[#76746E] uppercase">Motivo o Notas de Reubicación</label>
                                 <textarea
                                     rows={2}
                                     placeholder="Ej. Cobertura de vacaciones / Reubicación permanente..."
                                     value={transferReason}
                                     onChange={(e) => setTransferReason(e.target.value)}
-                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary resize-none"
+                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] rounded-none p-2.5 text-[#161616] outline-none focus:border-primary resize-none"
                                 />
                             </div>
 
@@ -3684,14 +3688,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 <button
                                     type="button"
                                     onClick={() => setIsTransferModalOpen(false)}
-                                    className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline/20 font-bold text-on-surface cursor-pointer"
+                                    className="px-4 py-2 rounded-none bg-[#FAF8F5] border border-[#E2DFD7] rounded-none hover:bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] font-bold text-[#161616] cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={transferringEmp}
-                                    className="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold transition cursor-pointer flex items-center gap-1.5"
+                                    className="px-4 py-2 rounded-none bg-primary hover:bg-primary-hover text-on-primary font-bold transition cursor-pointer flex items-center gap-1.5"
                                 >
                                     {transferringEmp ? 'Trasladando...' : 'Confirmar Traslado'}
                                 </button>

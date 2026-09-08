@@ -2028,13 +2028,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         )}
 
         {activeTab === 'empleados' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpEmployees clientId={clientId} />
           </div>
         )}
 
         {activeTab === 'usuarios' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpUsers clientId={clientId} />
           </div>
         )}
@@ -2080,13 +2080,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         )}
 
         {activeTab === 'trazabilidad' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpAuditLogs clientId={clientId} />
           </div>
         )}
 
         {activeTab === 'logs' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SystemAlertsPanel clientId={clientId} />
           </div>
         )}

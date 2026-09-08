@@ -63,22 +63,50 @@ export const SaaSErpAuditLogs: React.FC<SaaSErpAuditLogsProps> = ({ clientId }) 
   };
 
   const getModuleBadge = (moduleName: string) => {
+    let icon = 'info';
     switch (moduleName) {
       case 'Seguridad':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 whitespace-nowrap"><span className="material-symbols-outlined text-[13px]">key</span> Seguridad</span>;
+      case 'Seguridad & Usuarios':
+        icon = 'shield';
+        break;
       case 'Facturación':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap"><span className="material-symbols-outlined text-[13px]">receipt_long</span> Facturación</span>;
+        icon = 'receipt_long';
+        break;
       case 'Inventario':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap"><span className="material-symbols-outlined text-[13px]">inventory_2</span> Inventario</span>;
+        icon = 'inventory_2';
+        break;
       case 'CRM':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 whitespace-nowrap"><span className="material-symbols-outlined text-[13px]">group</span> CRM</span>;
+      case 'CRM & Clientes':
+        icon = 'contacts';
+        break;
+      case 'Cartera':
+        icon = 'payments';
+        break;
       case 'Domicilios':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 whitespace-nowrap"><span className="material-symbols-outlined text-[13px]">local_shipping</span> Domicilios</span>;
+      case 'Domicilios & Envíos':
+        icon = 'local_shipping';
+        break;
+      case 'Optometría':
+      case 'Fórmulas':
+        icon = 'visibility';
+        break;
+      case 'Citas':
+      case 'Agenda':
+        icon = 'calendar_month';
+        break;
       case 'IA & WhatsApp':
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 whitespace-nowrap"><span className="material-symbols-outlined text-[13px]">smart_toy</span> IA & WhatsApp</span>;
+        icon = 'smart_toy';
+        break;
       default:
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20 whitespace-nowrap"><span className="material-symbols-outlined text-[13px]">info</span> {moduleName}</span>;
+        icon = 'folder';
     }
+
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-bold bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] whitespace-nowrap">
+        <span className="material-symbols-outlined text-[12px]">{icon}</span>
+        {moduleName}
+      </span>
+    );
   };
 
   const handleCopyLogDetails = (log: AuditLog) => {
@@ -88,7 +116,8 @@ export const SaaSErpAuditLogs: React.FC<SaaSErpAuditLogsProps> = ({ clientId }) 
 • Módulo: ${log.module}
 • Acción: ${log.action}
 • Descripción: ${log.description}
-${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details)}` : ''}`;
+${log.ip_address ? `• IP: ${log.ip_address}` : ''}
+${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details, null, 2)}` : ''}`;
 
     navigator.clipboard.writeText(textToCopy);
     setCopiedSuccess(true);
@@ -96,37 +125,54 @@ ${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details)}` : ''}`;
   };
 
   const handlePrintLogDetails = (log: AuditLog) => {
-    const printWin = window.open('', '_blank', 'width=650,height=700');
+    const printWin = window.open('', '_blank', 'width=680,height=750');
     if (!printWin) return;
 
     printWin.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Bitácora de Auditoría #${log.id.substring(0, 8)}</title>
+          <title>Comprobante de Auditoría #${log.id.substring(0, 8)}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; color: #1e293b; line-height: 1.5; }
-            h2 { color: #4f46e5; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
-            .meta { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 13px; }
-            .meta-item { margin-bottom: 6px; }
-            .meta-label { font-weight: bold; color: #64748b; }
-            .description { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; margin-bottom: 15px; }
-            pre { background: #0f172a; color: #38bdf8; padding: 12px; border-radius: 8px; font-size: 11px; overflow-x: auto; }
-            .footer { margin-top: 30px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+            @page { size: A4; margin: 20mm; }
+            body { font-family: 'Courier New', Courier, monospace; padding: 24px; color: #161616; background: #fff; line-height: 1.4; font-size: 12px; }
+            .header { border-bottom: 2px solid #161616; padding-bottom: 12px; margin-bottom: 20px; }
+            .eyebrow { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; color: #D9381E; }
+            h2 { margin: 4px 0 0 0; font-size: 18px; font-weight: bold; text-transform: uppercase; }
+            .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 1px solid #E2DFD7; background: #FAF8F5; padding: 14px; margin-bottom: 18px; }
+            .meta-item { font-size: 11px; }
+            .meta-label { font-weight: bold; text-transform: uppercase; color: #76746E; display: block; font-size: 9px; }
+            .section-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #161616; margin: 12px 0 4px 0; }
+            .description { background: #FAF8F5; padding: 12px; border: 1px solid #E2DFD7; font-size: 12px; white-space: pre-wrap; margin-bottom: 14px; }
+            pre { background: #FAF8F5; border: 1px solid #E2DFD7; padding: 10px; font-size: 10px; overflow-x: auto; margin-bottom: 20px; }
+            .footer { margin-top: 30px; font-size: 10px; color: #76746E; text-align: center; border-top: 1px solid #E2DFD7; padding-top: 10px; }
           </style>
         </head>
         <body>
-          <h2>🛡️ Registro de Auditoría y Trazabilidad ERP</h2>
-          <div class="meta">
+          <div class="header">
+            <div class="eyebrow">SISTEMA ERP &mdash; TRAZABILIDAD OFICIAL</div>
+            <h2>Comprobante de Evento de Auditoría</h2>
+          </div>
+          <div class="meta-grid">
+            <div class="meta-item"><span class="meta-label">ID Evento:</span> #${log.id}</div>
             <div class="meta-item"><span class="meta-label">Fecha / Hora:</span> ${new Date(log.created_at).toLocaleString('es-CO')}</div>
-            <div class="meta-item"><span class="meta-label">Usuario / Rol:</span> ${log.user_name} (${log.user_role})</div>
-            <div class="meta-item"><span class="meta-label">Módulo:</span> ${log.module}</div>
-            <div class="meta-item"><span class="meta-label">Acción:</span> ${log.action}</div>
+            <div class="meta-item"><span class="meta-label">Usuario Responsable:</span> ${log.user_name} (${log.user_role})</div>
+            <div class="meta-item"><span class="meta-label">Módulo ERP:</span> ${log.module}</div>
+            <div class="meta-item"><span class="meta-label">Acción Registrada:</span> ${log.action}</div>
             <div class="meta-item"><span class="meta-label">Dirección IP:</span> ${log.ip_address || 'No registrada'}</div>
           </div>
-          <div class="meta-label" style="margin-bottom: 5px;">Descripción Completa del Evento:</div>
+
+          <div class="section-label">Descripción del Evento:</div>
           <div class="description">${log.description}</div>
-          ${log.details ? `<div class="meta-label" style="margin-bottom: 5px;">Detalles Adicionales (JSON):</div><pre>${JSON.stringify(log.details, null, 2)}</pre>` : ''}
-          <div class="footer">Documento Oficial de Registro de Bitácora Generado por el Sistema ERP.</div>
+
+          ${log.details ? `
+            <div class="section-label">Detalles / Payload JSON:</div>
+            <pre>${JSON.stringify(log.details, null, 2)}</pre>
+          ` : ''}
+
+          <div class="footer">
+            Registro inalterable generado automáticamente por el motor de auditoría del ERP.
+          </div>
           <script>
             window.onload = function() { window.print(); setTimeout(function(){ window.close(); }, 500); }
           </script>
@@ -138,105 +184,118 @@ ${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details)}` : ''}`;
 
   const handleShareEmailLog = (log: AuditLog) => {
     const subject = encodeURIComponent(`Bitácora de Auditoría ERP - ${log.action} (${log.module})`);
-    const body = encodeURIComponent(`Hola,\n\nTe comparto el registro oficial de auditoría:\n\n• Fecha: ${new Date(log.created_at).toLocaleString('es-CO')}\n• Usuario: ${log.user_name} (${log.user_role})\n• Módulo: ${log.module}\n• Acción: ${log.action}\n• Descripción: ${log.description}\n\nEnviado desde la plataforma ERP.`);
+    const body = encodeURIComponent(`Registro oficial de auditoría:
+
+• Fecha: ${new Date(log.created_at).toLocaleString('es-CO')}
+• Usuario: ${log.user_name} (${log.user_role})
+• Módulo: ${log.module}
+• Acción: ${log.action}
+• Descripción: ${log.description}
+
+Enviado desde el ERP.`);
     window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
   };
 
   return (
-    <div className="space-y-6">
-      {/* Cabecera del Módulo */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/60 p-6 rounded-2xl border border-slate-800 backdrop-blur-xl">
+    <div className="space-y-6 text-[#161616]">
+      {/* Cabecera Wabi-Sabi */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-4">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-            <span className="material-symbols-outlined text-indigo-400 text-3xl">verified_user</span>
+          <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">
+            SEGURIDAD & AUDITORÍA
+          </span>
+          <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#161616] tracking-tight">
             Trazabilidad & Bitácora de Auditoría
           </h2>
-          <p className="text-slate-400 text-sm mt-1">
-            Registro cronológico inalterable de acciones, inicios de sesión y operaciones realizadas por usuarios y el Bot de IA para confirmación de hechos.
+          <p className="text-xs text-[#76746E] font-sans mt-0.5">
+            Registro cronológico inalterable de operaciones, inicios de sesión y acciones ejecutadas por usuarios y agentes IA.
           </p>
         </div>
+
         <button
           type="button"
           onClick={fetchAuditLogs}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl text-sm font-medium transition-all cursor-pointer"
+          disabled={loading}
+          className="px-4 py-2 border border-[#E2DFD7] bg-white hover:bg-[#FAF8F5] text-xs font-mono font-bold text-[#161616] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
         >
-          <span className={`material-symbols-outlined text-base ${loading ? 'animate-spin' : ''}`}>refresh</span>
-          Actualizar Bitácora
+          <span className={`material-symbols-outlined text-[16px] ${loading ? 'animate-spin' : ''}`}>sync</span>
+          Refrescar Bitácora
         </button>
       </div>
 
-      {/* Barra de Filtros y Búsqueda */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <form onSubmit={handleSearchSubmit} className="md:col-span-8 flex gap-2">
-          <div className="relative flex-1">
-            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">search</span>
-            <input
-              type="text"
-              placeholder="Buscar por usuario, acción o descripción..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500"
-            />
-          </div>
-          <button
-            type="submit"
-            className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-500 transition-colors cursor-pointer border-0"
-          >
-            Buscar
-          </button>
-        </form>
+      {/* Barra de Búsqueda y Filtros */}
+      <div className="bg-white border border-[#E2DFD7] p-3 shadow-xs">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+          <form onSubmit={handleSearchSubmit} className="md:col-span-8 flex gap-2">
+            <div className="relative flex-1">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#76746E] text-[16px] pointer-events-none">
+                search
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar por usuario, acción, descripción o IP..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] pl-9 pr-3 py-2 text-xs font-mono text-[#161616] focus:border-[#161616] focus:bg-white outline-none rounded-none transition-colors"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-[#161616] hover:bg-[#D9381E] text-[#F6F4EE] border border-[#161616] hover:border-[#D9381E] text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer"
+            >
+              Buscar
+            </button>
+          </form>
 
-        <div className="md:col-span-4">
-          <select
-            value={selectedModule}
-            onChange={(e) => setSelectedModule(e.target.value)}
-            className="w-full py-2.5 px-3 bg-slate-900/80 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
-          >
-            <option value="all">Todos los Módulos</option>
-            <option value="Facturación">Facturación</option>
-            <option value="Inventario">Inventario</option>
-            <option value="CRM">CRM & Clientes</option>
-            <option value="Domicilios">Domicilios & Envíos</option>
-            <option value="IA & WhatsApp">IA & WhatsApp</option>
-            <option value="Seguridad">Seguridad & Usuarios</option>
-            <option value="Configuración">Configuración</option>
-          </select>
+          <div className="md:col-span-4">
+            <select
+              value={selectedModule}
+              onChange={(e) => setSelectedModule(e.target.value)}
+              className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs font-mono text-[#161616] focus:border-[#161616] focus:bg-white outline-none rounded-none cursor-pointer transition-colors"
+            >
+              <option value="all">Todos los Módulos</option>
+              <option value="Facturación">Facturación POS</option>
+              <option value="Inventario">Inventario & Stock</option>
+              <option value="Cartera">Cartera & Cobros</option>
+              <option value="CRM">CRM & Clientes</option>
+              <option value="Optometría">Optometría & RX</option>
+              <option value="Citas">Agenda de Citas</option>
+              <option value="Domicilios">Domicilios & Envíos</option>
+              <option value="IA & WhatsApp">IA & WhatsApp</option>
+              <option value="Seguridad">Seguridad & Usuarios</option>
+              <option value="Configuración">Configuración Sede</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Tabla de Registros de Auditoría (Fija, Centrada y Anti-Desplazamiento) */}
-      <div className="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+      {/* Tabla de Registros */}
+      <div className="bg-white border border-[#E2DFD7] overflow-hidden shadow-xs">
         {loading ? (
-          <div className="p-12 text-center text-slate-400 space-y-3">
-            <span className="material-symbols-outlined animate-spin text-3xl text-indigo-400">refresh</span>
-            <p className="text-sm">Cargando registros de auditoría en tiempo real...</p>
+          <div className="p-12 text-center text-[#76746E] space-y-2">
+            <span className="material-symbols-outlined animate-spin text-3xl text-[#161616]">sync</span>
+            <p className="text-xs font-mono uppercase tracking-wider">Consultando eventos de auditoría...</p>
           </div>
         ) : logs.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 space-y-2">
-            <span className="material-symbols-outlined text-4xl text-slate-600">policy</span>
-            <p className="text-lg font-medium text-slate-300">No se encontraron eventos de auditoría</p>
-            <p className="text-sm text-slate-500">Prueba ajustando los filtros de búsqueda o el módulo seleccionado.</p>
+          <div className="p-12 text-center text-[#76746E] space-y-2">
+            <span className="material-symbols-outlined text-4xl text-[#76746E]">policy</span>
+            <p className="text-sm font-serif text-[#161616]">No se encontraron eventos en la bitácora</p>
+            <p className="text-xs font-mono text-[#76746E]">Prueba modificando los términos de búsqueda o el filtro de módulo.</p>
           </div>
         ) : (
           <div className="w-full overflow-x-auto">
-            <table className="w-full text-left border-collapse table-fixed">
-              <colgroup>
-                <col className="w-[190px]" />
-                <col className="w-[150px]" />
-                <col className="w-[140px]" />
-                <col className="w-[150px]" />
-                <col className="w-[280px]" />
-              </colgroup>
+            <table className="w-full text-left border-collapse font-sans">
               <thead>
-                <tr className="bg-slate-800/60 border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="py-3.5 px-4">FECHA / HORA</th>
-                  <th className="py-3.5 px-4">USUARIO / ROL</th>
-                  <th className="py-3.5 px-4">MÓDULO</th>
-                  <th className="py-3.5 px-4">ACCIÓN</th>
-                  <th className="py-3.5 px-4">DESCRIPCIÓN DE EVENTO</th>
+                <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[10px] font-mono font-bold text-[#76746E] uppercase tracking-wider">
+                  <th className="py-2.5 px-3">FECHA / HORA</th>
+                  <th className="py-2.5 px-3">USUARIO / ROL</th>
+                  <th className="py-2.5 px-3">MÓDULO</th>
+                  <th className="py-2.5 px-3">ACCIÓN</th>
+                  <th className="py-2.5 px-3">DESCRIPCIÓN DE EVENTO</th>
+                  <th className="py-2.5 px-3 text-right">DETALLE</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-xs">
+              <tbody className="divide-y divide-[#E2DFD7] text-xs">
                 {logs.map((log) => {
                   const dateStr = new Date(log.created_at).toLocaleString('es-CO', {
                     dateStyle: 'short',
@@ -244,39 +303,45 @@ ${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details)}` : ''}`;
                   });
 
                   return (
-                    <tr key={log.id} className="hover:bg-slate-800/40 transition-colors items-center">
-                      <td className="py-3.5 px-4 text-slate-400 whitespace-nowrap text-xs font-mono">
-                        <div className="flex items-center gap-1.5 truncate">
-                          <span className="material-symbols-outlined text-xs text-slate-500 shrink-0">schedule</span>
-                          <span className="truncate">{dateStr}</span>
+                    <tr key={log.id} className="hover:bg-[#FAF8F5] transition-colors">
+                      <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[11px] text-[#76746E]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[14px] text-[#76746E]">schedule</span>
+                          <span>{dateStr}</span>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <div className="truncate">
-                          <p className="text-slate-200 font-medium text-xs truncate">{log.user_name}</p>
-                          <span className="text-[9px] text-slate-500 uppercase font-semibold block truncate">{log.user_role}</span>
+
+                      <td className="py-2.5 px-3">
+                        <div className="truncate max-w-[160px]">
+                          <p className="font-bold text-xs text-[#161616] truncate">{log.user_name}</p>
+                          <span className="text-[9px] text-[#76746E] uppercase font-mono block truncate">{log.user_role}</span>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap">
+
+                      <td className="py-2.5 px-3 whitespace-nowrap">
                         {getModuleBadge(log.module)}
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap font-mono text-xs text-indigo-300 font-semibold truncate">
+
+                      <td className="py-2.5 px-3 whitespace-nowrap font-mono text-xs font-bold text-[#161616]">
                         {log.action}
                       </td>
-                      <td className="py-3.5 px-4 text-slate-300 text-xs">
-                        <div className="flex items-center justify-between gap-2 bg-slate-950/40 p-1.5 px-2.5 rounded-xl border border-slate-800/50 w-full max-w-[260px] overflow-hidden">
-                          <span className="truncate text-slate-300 font-sans text-xs min-w-0 block flex-1" title={log.description}>
-                            {log.description}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedLog(log)}
-                            className="p-1 hover:bg-amber-500/20 text-[#eab308] hover:text-amber-300 rounded-lg transition-colors border-0 bg-transparent flex items-center justify-center cursor-pointer shrink-0"
-                            title="👁️ Ver detalle completo del evento"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">visibility</span>
-                          </button>
-                        </div>
+
+                      <td className="py-2.5 px-3 text-xs text-[#161616]">
+                        <p className="truncate max-w-[320px] font-sans" title={log.description}>
+                          {log.description}
+                        </p>
+                      </td>
+
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLog(log)}
+                          className="px-2.5 py-1 bg-white hover:bg-[#161616] text-[#161616] hover:text-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] text-[11px] font-mono font-bold transition cursor-pointer flex items-center gap-1 ml-auto"
+                          title="Ver detalle completo"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">visibility</span>
+                          Ver
+                        </button>
                       </td>
                     </tr>
                   );
@@ -287,112 +352,116 @@ ${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details)}` : ''}`;
         )}
       </div>
 
-      {/* Modal Portal Teleportado para Detalle de Auditoría */}
+      {/* Modal de Detalle Wabi-Sabi */}
       {selectedLog && createPortal(
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-[#161616]/60 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 text-left"
           onClick={() => setSelectedLog(null)}
         >
           <div 
-            className="bg-[#141517] border border-[#2a2c32] rounded-2xl max-w-xl w-full overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.9)] animate-in fade-in zoom-in-95 duration-150 relative z-[100000]"
+            className="bg-[#F6F4EE] border border-[#E2DFD7] max-w-xl w-full rounded-none overflow-hidden p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header del Modal */}
-            <div className="p-5 border-b border-[#222428] flex items-center justify-between bg-[#1a1c20]">
-              <h3 className="font-bold text-white text-base flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#eab308]">shield</span>
-                Detalle Completo del Evento de Auditoría
-              </h3>
+            <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-5">
+              <div>
+                <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">
+                  REGISTRO DE AUDITORÍA #{selectedLog.id.substring(0, 8)}
+                </span>
+                <h3 className="font-serif text-2xl font-normal text-[#161616]">
+                  Detalle del Evento
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5 cursor-pointer border-0 bg-transparent transition"
+                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#E2DFD7] border border-transparent hover:border-[#161616] cursor-pointer text-[#161616] transition"
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
             
             {/* Cuerpo del Modal */}
-            <div className="p-6 space-y-4 text-xs text-white max-h-[75vh] overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-2 gap-3 bg-[#0a0b0c] p-4 rounded-xl border border-[#26282d]">
+            <div className="space-y-4 text-xs font-sans">
+              <div className="grid grid-cols-2 gap-3 bg-white p-3.5 border border-[#E2DFD7]">
                 <div>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Fecha y Hora</p>
-                  <p className="text-white font-mono font-bold text-xs mt-0.5">
+                  <p className="text-[9px] text-[#76746E] font-bold uppercase font-mono tracking-wider">Fecha y Hora</p>
+                  <p className="text-[#161616] font-mono font-bold text-xs mt-0.5">
                     {new Date(selectedLog.created_at).toLocaleString('es-CO')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Módulo ERP</p>
+                  <p className="text-[9px] text-[#76746E] font-bold uppercase font-mono tracking-wider">Módulo ERP</p>
                   <div className="mt-0.5">{getModuleBadge(selectedLog.module)}</div>
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Usuario Responsable</p>
-                  <p className="text-white font-bold text-xs mt-0.5">{selectedLog.user_name} ({selectedLog.user_role})</p>
+                  <p className="text-[9px] text-[#76746E] font-bold uppercase font-mono tracking-wider">Usuario Responsable</p>
+                  <p className="text-[#161616] font-bold text-xs mt-0.5">{selectedLog.user_name} ({selectedLog.user_role})</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Dirección IP</p>
-                  <p className="text-amber-400 font-mono text-xs mt-0.5">{selectedLog.ip_address || 'No registrada'}</p>
+                  <p className="text-[9px] text-[#76746E] font-bold uppercase font-mono tracking-wider">Dirección IP</p>
+                  <p className="text-[#161616] font-mono text-xs mt-0.5">{selectedLog.ip_address || 'No registrada'}</p>
                 </div>
               </div>
 
               <div>
-                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">Acción Realizada:</p>
-                <p className="text-indigo-300 font-mono font-bold bg-[#0a0b0c] p-2.5 rounded-xl border border-[#26282d] text-xs">
+                <p className="text-[10px] text-[#76746E] font-bold uppercase font-mono tracking-wider mb-1">Acción Realizada:</p>
+                <div className="text-[#161616] font-mono font-bold bg-[#FAF8F5] p-2.5 border border-[#E2DFD7] text-xs">
                   {selectedLog.action}
-                </p>
+                </div>
               </div>
 
               <div>
-                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">Descripción Completa del Evento:</p>
-                <div className="text-gray-200 bg-[#0a0b0c] p-3.5 rounded-xl border border-[#26282d] text-xs leading-relaxed whitespace-pre-wrap">
+                <p className="text-[10px] text-[#76746E] font-bold uppercase font-mono tracking-wider mb-1">Descripción Completa del Evento:</p>
+                <div className="text-[#161616] bg-[#FAF8F5] p-3 border border-[#E2DFD7] text-xs leading-relaxed whitespace-pre-wrap font-sans">
                   {selectedLog.description}
                 </div>
               </div>
 
               {selectedLog.details && (
                 <div>
-                  <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-1.5">Detalles Adicionales (Payload JSON):</p>
-                  <pre className="bg-[#050506] p-3.5 rounded-xl border border-[#26282d] text-xs text-emerald-400 font-mono overflow-x-auto max-h-44">
+                  <p className="text-[10px] text-[#76746E] font-bold uppercase font-mono tracking-wider mb-1">Detalles Adicionales (Payload JSON):</p>
+                  <pre className="bg-white p-3 border border-[#E2DFD7] text-[11px] text-[#161616] font-mono overflow-x-auto max-h-48">
                     {JSON.stringify(selectedLog.details, null, 2)}
                   </pre>
                 </div>
               )}
             </div>
 
-            {/* Acciones Inferiores del Modal: Copiar, Imprimir, Compartir Email */}
-            <div className="p-4 border-t border-[#222428] bg-[#1a1c20] flex flex-wrap items-center justify-between gap-2">
+            {/* Acciones Inferiores del Modal */}
+            <div className="pt-4 mt-5 border-t border-[#E2DFD7] flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleCopyLogDetails(selectedLog)}
-                  className={`px-3 py-2 text-xs font-bold rounded-xl border transition flex items-center gap-1.5 cursor-pointer ${
+                  className={`px-3 py-1.5 text-xs font-mono font-bold border transition flex items-center gap-1.5 cursor-pointer ${
                     copiedSuccess
-                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                      : 'bg-surface-container border-outline/20 text-on-surface hover:bg-surface-container-high'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-white border-[#E2DFD7] text-[#161616] hover:bg-[#FAF8F5]'
                   }`}
                   title="Copiar resumen al portapapeles"
                 >
-                  <span className="material-symbols-outlined text-[16px]">{copiedSuccess ? 'check' : 'content_copy'}</span>
+                  <span className="material-symbols-outlined text-[15px]">{copiedSuccess ? 'check' : 'content_copy'}</span>
                   {copiedSuccess ? '¡Copiado!' : 'Copiar'}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handlePrintLogDetails(selectedLog)}
-                  className="px-3 py-2 bg-surface-container border border-outline/20 hover:bg-surface-container-high text-on-surface text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer"
-                  title="Imprimir comprobante de bitácora"
+                  className="px-3 py-1.5 bg-white border border-[#E2DFD7] hover:bg-[#FAF8F5] text-[#161616] text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer"
+                  title="Imprimir comprobante oficial"
                 >
-                  <span className="material-symbols-outlined text-[16px]">print</span>
+                  <span className="material-symbols-outlined text-[15px]">print</span>
                   Imprimir
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleShareEmailLog(selectedLog)}
-                  className="px-3 py-2 bg-surface-container border border-outline/20 hover:bg-surface-container-high text-on-surface text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer"
-                  title="Enviar por correo electrónico"
+                  className="px-3 py-1.5 bg-white border border-[#E2DFD7] hover:bg-[#FAF8F5] text-[#161616] text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer"
+                  title="Enviar por correo"
                 >
-                  <span className="material-symbols-outlined text-[16px]">mail</span>
+                  <span className="material-symbols-outlined text-[15px]">mail</span>
                   Compartir Email
                 </button>
               </div>
@@ -400,7 +469,7 @@ ${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details)}` : ''}`;
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="px-4 py-2 bg-primary hover:opacity-90 text-on-primary text-xs font-bold rounded-xl transition cursor-pointer border-0"
+                className="px-4 py-1.5 bg-[#161616] hover:bg-[#D9381E] text-[#F6F4EE] text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer"
               >
                 Cerrar
               </button>
@@ -412,4 +481,3 @@ ${log.details ? `• Payload/Detalles: ${JSON.stringify(log.details)}` : ''}`;
     </div>
   );
 };
-
