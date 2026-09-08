@@ -152,16 +152,16 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
 
     const handleSelectSuggestion = (cust: Customer) => {
         setCrmCustomerId(cust.id);
-        setCustomerName(`${cust.name} ${cust.last_name || ''}`);
+        setCustomerName(`${cust.name} ${cust.last_name || ''}`.trim());
         setCustomerPhone(cust.phone);
         setCustomerDocumentNumber(cust.document_number);
-        setSearchQuery(`${cust.name} ${cust.last_name || ''}`);
+        setSearchQuery(`${cust.name} ${cust.last_name || ''}`.trim());
         setShowSuggestions(false);
     };
 
     // Calendar calculations
-    const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-    const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+    const getDaysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
+    const getFirstDayOfMonth = (y: number, m: number) => new Date(y, m, 1).getDay();
 
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -220,7 +220,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                 });
             } else {
                 setAvailableSlots([]);
-                setAvailabilityMeta({ blocked: true, reason: json.error || 'No hay disponibilidad disponible.' });
+                setAvailabilityMeta({ blocked: true, reason: json.error || 'No hay disponibilidad.' });
             }
         } catch (err) {
             console.error('Error fetching availability:', err);
@@ -251,46 +251,24 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         setIsCreateOpen(true);
     };
 
-    const handleCreateAtSlot = (timeSlot: string) => {
-        setCustomerName('');
-        setCustomerPhone('');
-        setCustomerDocumentNumber('');
-        setCrmCustomerId(null);
-        setSearchQuery('');
-        
-        const d = new Date(selectedDate);
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const dateValue = `${yyyy}-${mm}-${dd}`;
-        setApptOnlyDate(dateValue);
-        setApptOnlyTime(timeSlot);
-        fetchAvailability(dateValue);
-        
-        setVisitReason('examen_vista');
-        setVisitReasonDetails('');
-        setErrorMsg('');
-        setIsCreateOpen(true);
+    const handleCreateAtSlot = (slot: string) => {
+        handleCreateOpen();
+        setApptOnlyTime(slot);
     };
 
     const handleEditOpen = (appt: Appointment) => {
         setSelectedAppt(appt);
-        const nameText = appt.crm_first_name 
-            ? `${appt.crm_first_name} ${appt.crm_last_name || ''}`.trim()
-            : appt.customer_name;
-        setCustomerName(nameText);
+        setCustomerName(appt.crm_first_name ? `${appt.crm_first_name} ${appt.crm_last_name || ''}`.trim() : appt.customer_name);
         setCustomerPhone(appt.customer_phone);
         setCustomerDocumentNumber(appt.customer_document_number || '');
-        setCrmCustomerId(appt.crm_customer_id);
         
-        // Parse date and time from timezone naive string (e.g. 2026-08-12T09:00:00)
-        const [dPart, tPart] = appt.appointment_date.split('T');
-        setApptOnlyDate(dPart || '');
-        setApptOnlyTime(tPart ? tPart.slice(0, 5) : '09:00');
+        const [datePart, timePart] = appt.appointment_date.split('T');
+        setApptOnlyDate(datePart || formatLocalDateInput(new Date()));
+        setApptOnlyTime(timePart ? timePart.slice(0, 5) : '09:00');
         
+        setApptStatus(appt.status || 'scheduled');
         setVisitReason(appt.visit_reason || 'examen_vista');
         setVisitReasonDetails(appt.visit_reason_details || '');
-        setApptStatus(appt.status);
         setErrorMsg('');
         setIsEditOpen(true);
     };
@@ -332,7 +310,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
             if (json.success) {
                 setIsCreateOpen(false);
                 fetchAppointments();
-                fetchCustomers(); // Reload customer list in case a new customer was auto-created
+                fetchCustomers();
             } else {
                 setErrorMsg(json.error || 'Error al registrar la cita.');
             }
@@ -411,7 +389,6 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
     };
 
     const formatApptTime = (dateStr: string) => {
-        // Splitting by 'T' to retrieve the local time part safely
         const [, timePart] = dateStr.split('T');
         if (!timePart) return '00:00';
         const [hourStr, minStr] = timePart.split(':');
@@ -541,37 +518,35 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
         }
     };
 
-    return (
-        <div className="space-y-6 text-on-surface">
-            {/* Header section with view toggles and create action */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 className="text-xl font-bold text-on-surface">Agenda de Citas</h2>
-                    <p className="text-xs text-on-surface-variant">Consulta las citas establecidas por la IA o prográmalas y edítalas manualmente.</p>
-                </div>
-                <div className="flex items-center gap-3 self-start md:self-auto">
-                    {/* View selector toggle */}
-                    <div className="flex bg-[#181a1c] p-1 rounded-md border border-[#2d3036] text-xs">
-                        <button 
-                            onClick={() => setViewMode('calendar')}
-                            className={`px-3 py-1.5 rounded-md font-bold cursor-pointer transition ${viewMode === 'calendar' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
-                        >
-                            Calendario
-                        </button>
-                        <button 
-                            onClick={() => setViewMode('list')}
-                            className={`px-3 py-1.5 rounded-md font-bold cursor-pointer transition ${viewMode === 'list' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}
-                        >
-                            Lista
-                        </button>
-                    </div>
+    const scheduledCount = appointments.filter(a => a.status === 'scheduled').length;
+    const completedCount = appointments.filter(a => a.status === 'completed').length;
+    const cancelledCount = appointments.filter(a => a.status === 'cancelled').length;
 
+    return (
+        <div className="space-y-6 text-[#161616] font-sans antialiased">
+            {/* Header Principal Wabi-Sabi */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E2DFD7]">
+                <div>
+                    <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-mono block mb-1">
+                        CITAS & SALUD VISUAL
+                    </span>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#161616] tracking-tight leading-none">
+                        Programación de Citas
+                    </h2>
+                    <p className="text-xs text-[#76746E] mt-1.5">
+                        Agenda médica, consultas agendadas por IA y control de disponibilidad horaria.
+                    </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
                     <button 
+                        type="button"
                         onClick={() => { fetchAppointments(); fetchCustomers(); }}
-                        className="w-9 h-9 bg-[#181a1c] hover:bg-surface-variant/40 text-on-surface rounded-md flex items-center justify-center border border-[#2d3036] cursor-pointer transition shadow"
+                        className="px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider text-[#161616] bg-white border border-[#E2DFD7] hover:border-[#161616] transition cursor-pointer flex items-center gap-1.5 shadow-xs rounded-none"
                         title="Refrescar Citas"
                     >
-                        <span className="material-symbols-outlined text-[18px]">refresh</span>
+                        <span className="material-symbols-outlined text-[16px]">refresh</span>
+                        Refrescar
                     </button>
                     <button 
                         type="button"
@@ -584,13 +559,15 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                             setBlockReason('Bloqueo administrativo');
                             setIsBlockOpen(true);
                         }}
-                        className="px-3 py-2 border border-[#2d3036] bg-[#181a1c] text-on-surface text-xs font-bold rounded-md cursor-pointer shadow transition"
+                        className="px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider text-[#161616] bg-white border border-[#E2DFD7] hover:border-[#161616] transition cursor-pointer flex items-center gap-1.5 shadow-xs rounded-none"
                     >
-                        Bloquear horario
+                        <span className="material-symbols-outlined text-[16px]">lock_clock</span>
+                        Bloquear Horario
                     </button>
                     <button 
+                        type="button"
                         onClick={handleCreateOpen}
-                        className="px-4 py-2 bg-primary hover:bg-primary-container text-white text-xs font-bold rounded-md flex items-center gap-1.5 cursor-pointer shadow transition"
+                        className="px-4 py-2 bg-[#161616] text-[#F6F4EE] hover:bg-[#2b2b2b] text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 shadow-xs rounded-none"
                     >
                         <span className="material-symbols-outlined text-[16px]">add</span>
                         Nueva Cita
@@ -598,88 +575,145 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                 </div>
             </div>
 
+            {/* Sub-Navegación / Barra Zen de Pestañas & Métricas Rápidas */}
+            <div className="bg-white border border-[#E2DFD7] p-1.5 flex flex-wrap items-center justify-between gap-2 shadow-xs rounded-none">
+                <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setViewMode('calendar')}
+                        className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border rounded-none ${
+                            viewMode === 'calendar'
+                                ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                                : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined text-[16px]">calendar_month</span>
+                        Calendario Mensual
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setViewMode('list')}
+                        className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border rounded-none ${
+                            viewMode === 'list'
+                                ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                                : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined text-[16px]">format_list_bulleted</span>
+                        Lista de Citas ({appointments.length})
+                    </button>
+                </div>
+
+                <div className="hidden md:flex items-center gap-4 text-xs font-mono text-[#76746E] pr-2">
+                    <span>Programadas: <strong className="text-[#161616]">{scheduledCount}</strong></span>
+                    <span>•</span>
+                    <span>Atendidas: <strong className="text-[#2E7D32]">{completedCount}</strong></span>
+                    <span>•</span>
+                    <span>Canceladas: <strong className="text-[#D9381E]">{cancelledCount}</strong></span>
+                </div>
+            </div>
+
             {loading ? (
-                <div className="flex justify-center py-20">
-                    <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex flex-col items-center justify-center py-20 bg-white border border-[#E2DFD7] rounded-none">
+                    <div className="w-8 h-8 border-2 border-[#D9381E] border-t-transparent rounded-full animate-spin mb-3"></div>
+                    <p className="text-xs font-mono uppercase text-[#76746E] tracking-wider">Cargando agenda de citas...</p>
                 </div>
             ) : viewMode === 'list' ? (
-                /* LIST VIEW MODE */
+                /* LIST VIEW MODE WABI-SABI */
                 appointments.length === 0 ? (
-                    <div className="glass-card p-12 text-center rounded-2xl">
-                        <p className="text-sm text-on-surface-variant">No hay citas registradas en el sistema.</p>
+                    <div className="bg-white border border-[#E2DFD7] p-12 text-center rounded-none shadow-xs space-y-2">
+                        <span className="material-symbols-outlined text-[#76746E] text-[36px]">event_busy</span>
+                        <p className="text-sm font-mono text-[#76746E] uppercase">No hay citas registradas en el sistema.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {appointments.map((appt) => (
-                            <div 
-                                key={appt.id} 
-                                onClick={() => handleEditOpen(appt)}
-                                className="glass-card p-5 rounded-2xl flex flex-col justify-between hover:border-primary/50 cursor-pointer transition"
-                            >
-                                <div>
-                                    <div className="flex justify-between items-start mb-3">
-                                        <span className="font-bold text-on-surface text-base">
-                                            {appt.crm_first_name ? `${appt.crm_first_name} ${appt.crm_last_name || ''}` : appt.customer_name}
-                                        </span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                                            appt.status === 'scheduled' ? 'bg-primary/10 text-primary' : 
-                                            appt.status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
-                                        }`}>
-                                            {appt.status.toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <div className="space-y-2 mt-4 text-xs text-on-surface-variant">
-                                        <div className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
-                                            <span>{formatApptDate(appt.appointment_date)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-[16px] text-secondary">schedule</span>
-                                            <span className="font-bold text-on-surface">{formatApptTime(appt.appointment_date)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">call</span>
-                                            <span className="font-mono">{appt.customer_phone ? `+57 ${appt.customer_phone.replace(/^\+?57\s*/, '')}` : 'N/A'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-[16px] text-amber-500">label</span>
-                                            <span>Motivo: <strong className="text-on-surface">{translateReason(appt.visit_reason)}</strong></span>
-                                        </div>
-                                        {appt.visit_reason_details && (
-                                            <div className="text-[11px] bg-surface-container/50 p-2 rounded-lg italic">
-                                                "{appt.visit_reason_details}"
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="border-t border-outline/10 pt-3 mt-4 text-[9px] text-on-surface-variant/60 font-mono flex justify-between items-center">
-                                    <span>Sistema ERP</span>
-                                    <span>{new Date(appt.created_at).toLocaleDateString('es-CO')}</span>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left font-mono text-xs border-collapse">
+                                <thead>
+                                    <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[#76746E] text-[10px] uppercase tracking-wider">
+                                        <th className="py-3 px-4">Paciente</th>
+                                        <th className="py-3 px-4">Documento</th>
+                                        <th className="py-3 px-4">Contacto</th>
+                                        <th className="py-3 px-4">Fecha & Hora</th>
+                                        <th className="py-3 px-4">Motivo</th>
+                                        <th className="py-3 px-4">Estado</th>
+                                        <th className="py-3 px-4 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[#E2DFD7] bg-white">
+                                    {appointments.map((appt) => (
+                                        <tr key={appt.id} className="hover:bg-[#FAF8F5] transition-colors">
+                                            <td className="py-3 px-4 font-bold text-[#161616]">
+                                                {appt.crm_first_name ? `${appt.crm_first_name} ${appt.crm_last_name || ''}`.trim() : appt.customer_name}
+                                                {appt.visit_reason_details && (
+                                                    <p className="text-[10px] text-[#76746E] font-normal italic mt-0.5 truncate max-w-xs">
+                                                        "{appt.visit_reason_details}"
+                                                    </p>
+                                                )}
+                                            </td>
+                                            <td className="py-3 px-4 text-[#76746E]">
+                                                {appt.customer_document_number || '---'}
+                                            </td>
+                                            <td className="py-3 px-4 text-[#161616]">
+                                                {appt.customer_phone ? `+57 ${appt.customer_phone.replace(/^\+?57\s*/, '')}` : 'N/A'}
+                                            </td>
+                                            <td className="py-3 px-4 font-bold text-[#161616]">
+                                                <div>{formatApptDate(appt.appointment_date)}</div>
+                                                <div className="text-[11px] text-[#76746E] font-normal">{formatApptTime(appt.appointment_date)}</div>
+                                            </td>
+                                            <td className="py-3 px-4 text-[#161616]">
+                                                <span className="inline-block px-2 py-0.5 bg-[#FAF8F5] border border-[#E2DFD7] text-[10px] uppercase font-bold text-[#161616]">
+                                                    {translateReason(appt.visit_reason)}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <span className={`inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border rounded-none ${
+                                                    appt.status === 'scheduled' ? 'bg-[#E8F0FE] text-[#1967D2] border-[#D2E3FC]' :
+                                                    appt.status === 'completed' ? 'bg-[#E6F4EA] text-[#137333] border-[#CEEAD6]' :
+                                                    'bg-[#FCE8E6] text-[#C5221F] border-[#FAD2CF]'
+                                                }`}>
+                                                    {appt.status === 'scheduled' ? 'Programada' : appt.status === 'completed' ? 'Atendida' : 'Cancelada'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-right">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleEditOpen(appt)}
+                                                    className="px-2.5 py-1 text-[11px] font-mono font-bold uppercase bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] transition cursor-pointer shadow-2xs"
+                                                >
+                                                    Gestionar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )
             ) : (
-                /* CALENDAR VIEW MODE WITH SIDEBAR DETAIL */
+                /* CALENDAR VIEW MODE WABI-SABI */
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left 2/3 Grid: Monthly Calendar */}
-                    <div className="lg:col-span-2 bg-surface-container/30 rounded-2xl overflow-hidden border border-outline/10 flex flex-col">
+                    <div className="lg:col-span-2 bg-white border border-[#E2DFD7] shadow-xs rounded-none overflow-hidden flex flex-col">
                         {/* Calendar Month Selector Header */}
-                        <div className="flex items-center justify-between px-6 py-4 bg-surface-container-high/20 border-b border-outline/10">
-                            <h3 className="font-bold text-base text-on-surface">
+                        <div className="flex items-center justify-between px-6 py-4 bg-[#FAF8F5] border-b border-[#E2DFD7]">
+                            <h3 className="font-serif text-xl font-normal text-[#161616]">
                                 {monthNames[month]} {year}
                             </h3>
                             <div className="flex items-center gap-1.5">
                                 <button 
+                                    type="button"
                                     onClick={prevMonth}
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-variant/40 text-on-surface border-0 cursor-pointer transition"
+                                    className="w-8 h-8 bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] flex items-center justify-center cursor-pointer transition rounded-none"
                                 >
                                     <span className="material-symbols-outlined text-[18px]">chevron_left</span>
                                 </button>
                                 <button 
+                                    type="button"
                                     onClick={nextMonth}
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-variant/40 text-on-surface border-0 cursor-pointer transition"
+                                    className="w-8 h-8 bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] flex items-center justify-center cursor-pointer transition rounded-none"
                                 >
                                     <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                                 </button>
@@ -687,7 +721,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                         </div>
 
                         {/* Weekday Names Header */}
-                        <div className="grid grid-cols-7 text-center font-bold text-xs py-2 bg-surface-container/30 border-b border-outline/10 text-on-surface-variant">
+                        <div className="grid grid-cols-7 text-center font-mono text-[10px] uppercase font-bold py-2 bg-[#F6F4EE] border-b border-[#E2DFD7] text-[#76746E]">
                             <div>Dom</div>
                             <div>Lun</div>
                             <div>Mar</div>
@@ -698,7 +732,7 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                         </div>
 
                         {/* Monthly Days Grid */}
-                        <div className="grid grid-cols-7 bg-outline/5 gap-[1px]">
+                        <div className="grid grid-cols-7 bg-[#E2DFD7] gap-[1px]">
                             {calendarDays.map((cell, idx) => {
                                 const dayAppts = getAppointmentsForDay(cell.date);
                                 const isToday = new Date().toDateString() === cell.date.toDateString();
@@ -709,28 +743,30 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                     <div 
                                         key={idx}
                                         onClick={() => setSelectedDate(cell.date)}
-                                        className={`min-h-[90px] p-2 flex flex-col justify-between transition cursor-pointer border ${
-                                            isSelected ? 'ring-2 ring-primary ring-inset z-10 bg-primary/5' : 'bg-surface hover:bg-surface-variant/10'
+                                        className={`min-h-[85px] p-2 flex flex-col justify-between transition cursor-pointer ${
+                                            isSelected 
+                                                ? 'bg-[#FAF8F5] ring-2 ring-[#161616] ring-inset z-10' 
+                                                : 'bg-white hover:bg-[#FAF8F5]'
                                         } ${
-                                            cell.isCurrentMonth ? 'text-on-surface' : 'text-on-surface-variant/30'
-                                        } ${
-                                            hasAppointments 
-                                                ? 'bg-amber-500/5 border-t-4 border-t-amber-500/80' 
-                                                : ''
+                                            cell.isCurrentMonth ? 'text-[#161616]' : 'text-[#76746E]/40'
                                         }`}
                                     >
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full ${
-                                                isToday ? 'bg-primary text-white font-black' : ''
-                                            } ${isSelected && !isToday ? 'bg-primary/20 text-primary' : ''}`}>
+                                            <span className={`text-xs font-mono font-bold w-6 h-6 flex items-center justify-center rounded-none ${
+                                                isToday 
+                                                    ? 'bg-[#161616] text-[#F6F4EE]' 
+                                                    : isSelected && !isToday 
+                                                        ? 'bg-[#E2DFD7] text-[#161616]' 
+                                                        : ''
+                                            }`}>
                                                 {cell.dayNum}
                                             </span>
                                         </div>
                                         
-                                        {/* Color block / dot indicator instead of showing full appointment boxes inside cell */}
+                                        {/* Color block / count badge */}
                                         {hasAppointments && (
-                                            <div className="flex items-center gap-1.5 bg-amber-500/10 text-amber-500 font-bold px-1.5 py-0.5 rounded text-[8px] justify-center mt-2 border border-amber-500/20">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                                            <div className="flex items-center gap-1 bg-[#F6F4EE] text-[#D9381E] border border-[#E2DFD7] font-mono font-bold px-1.5 py-0.5 text-[9px] justify-center mt-1">
+                                                <span className="w-1.5 h-1.5 bg-[#D9381E]"></span>
                                                 <span>{dayAppts.length} {dayAppts.length === 1 ? 'Cita' : 'Citas'}</span>
                                             </div>
                                         )}
@@ -741,18 +777,18 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                     </div>
 
                     {/* Right 1/3 Grid: Detailed Agenda for Selected Day */}
-                    <div className="glass-card rounded-2xl p-5 border border-outline/10 flex flex-col justify-start bg-surface-container/20">
-                        <div className="border-b border-outline/10 pb-4 mb-4 flex justify-between items-start">
+                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none p-5 flex flex-col justify-start">
+                        <div className="border-b border-[#E2DFD7] pb-3 mb-4 flex justify-between items-start">
                             <div>
-                                <span className="text-[10px] text-primary uppercase font-bold font-mono tracking-wider">Agenda Diaria</span>
-                                <h3 className="font-bold text-base text-on-surface capitalize mt-0.5">
+                                <span className="text-[10px] text-[#D9381E] uppercase font-bold font-mono tracking-wider block">Agenda del Día</span>
+                                <h3 className="font-serif text-lg font-normal text-[#161616] capitalize mt-0.5">
                                     {formatApptDate(formatLocalDateInput(selectedDate))}
                                 </h3>
                             </div>
                             <button 
                                 type="button"
                                 onClick={() => { fetchAppointments(); fetchCustomers(); }}
-                                className="w-7 h-7 bg-surface-container-high/40 hover:bg-surface-variant/40 text-on-surface rounded-lg flex items-center justify-center border border-outline/10 cursor-pointer transition shrink-0"
+                                className="w-7 h-7 bg-[#FAF8F5] hover:bg-[#E2DFD7] text-[#161616] rounded-none flex items-center justify-center border border-[#E2DFD7] cursor-pointer transition shrink-0"
                                 title="Refrescar agenda diaria"
                             >
                                 <span className="material-symbols-outlined text-[14px]">refresh</span>
@@ -760,13 +796,13 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                         </div>
 
                         {/* List of hours */}
-                        <div className="space-y-3 flex-grow overflow-y-auto max-h-[500px] pr-1 custom-scrollbar">
+                        <div className="space-y-2.5 flex-grow overflow-y-auto max-h-[500px] pr-1">
                             {timeSlots.map((slot) => {
                                 const slotAppts = getAppointmentsForSlot(selectedDate, slot);
                                 return (
-                                    <div key={slot} className="flex gap-4 items-start py-1.5 border-b border-outline/5 last:border-0">
+                                    <div key={slot} className="flex gap-3 items-start py-1 border-b border-[#E2DFD7]/60 last:border-0">
                                         {/* Hour label */}
-                                        <div className="w-12 text-right text-xs font-bold text-on-surface-variant font-mono pt-1">
+                                        <div className="w-11 text-right text-xs font-bold text-[#76746E] font-mono pt-1">
                                             {slot}
                                         </div>
 
@@ -777,33 +813,29 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                                     <div
                                                         key={appt.id}
                                                         onClick={() => handleEditOpen(appt)}
-                                                        className={`p-3 rounded-xl border cursor-pointer hover:border-primary transition text-left ${
-                                                            appt.status === 'scheduled' ? 'bg-primary/5 border-primary/20 text-on-surface' :
-                                                            appt.status === 'completed' ? 'bg-green-500/5 border-green-500/20 text-on-surface' :
-                                                            'bg-red-500/5 border-red-500/20 text-on-surface-variant/60'
-                                                        }`}
+                                                        className="p-2.5 bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] cursor-pointer transition text-left rounded-none shadow-2xs"
                                                     >
                                                         <div className="flex justify-between items-start gap-1">
-                                                            <span className="font-bold text-xs truncate">
-                                                                {appt.crm_first_name ? `${appt.crm_first_name} ${appt.crm_last_name || ''}` : appt.customer_name}
+                                                            <span className="font-bold text-xs text-[#161616] font-mono truncate">
+                                                                {appt.crm_first_name ? `${appt.crm_first_name} ${appt.crm_last_name || ''}`.trim() : appt.customer_name}
                                                             </span>
-                                                            <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase shrink-0 ${
-                                                                appt.status === 'scheduled' ? 'bg-primary/10 text-primary' :
-                                                                appt.status === 'completed' ? 'bg-green-500/10 text-green-500' :
-                                                                'bg-red-500/10 text-red-500'
+                                                            <span className={`text-[9px] px-1.5 py-0.2 font-mono font-bold uppercase shrink-0 border ${
+                                                                appt.status === 'scheduled' ? 'bg-[#E8F0FE] text-[#1967D2] border-[#D2E3FC]' :
+                                                                appt.status === 'completed' ? 'bg-[#E6F4EA] text-[#137333] border-[#CEEAD6]' :
+                                                                'bg-[#FCE8E6] text-[#C5221F] border-[#FAD2CF]'
                                                             }`}>
-                                                                {appt.status}
+                                                                {appt.status === 'scheduled' ? 'Prog' : appt.status === 'completed' ? 'Atendida' : 'Canc'}
                                                             </span>
                                                         </div>
-                                                        <div className="text-[10px] text-amber-500 font-bold mt-1">
+                                                        <div className="text-[10px] text-[#D9381E] font-mono font-bold mt-1">
                                                             🏷️ {translateReason(appt.visit_reason)}
                                                         </div>
                                                         {appt.visit_reason_details && (
-                                                            <p className="text-[10px] text-on-surface-variant italic mt-1 truncate">
+                                                            <p className="text-[10px] text-[#76746E] italic mt-0.5 truncate">
                                                                 "{appt.visit_reason_details}"
                                                             </p>
                                                         )}
-                                                        <div className="flex items-center justify-between text-[10px] text-on-surface-variant/80 mt-2 font-mono">
+                                                        <div className="flex items-center justify-between text-[10px] text-[#76746E] mt-1.5 font-mono border-t border-[#E2DFD7] pt-1">
                                                             <span>📞 +{appt.customer_phone}</span>
                                                             <span>⏰ {formatApptTime(appt.appointment_date)}</span>
                                                         </div>
@@ -811,8 +843,9 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                                 ))
                                             ) : (
                                                 <button
+                                                    type="button"
                                                     onClick={() => handleCreateAtSlot(slot)}
-                                                    className="w-full text-left py-2 px-3 border border-dashed border-outline/25 hover:border-primary/50 text-[10px] text-on-surface-variant hover:text-primary rounded-xl cursor-pointer bg-transparent transition"
+                                                    className="w-full text-left py-1.5 px-2.5 border border-dashed border-[#E2DFD7] hover:border-[#161616] text-[10px] font-mono text-[#76746E] hover:text-[#161616] cursor-pointer bg-white hover:bg-[#FAF8F5] transition rounded-none"
                                                 >
                                                     + Agendar cita a las {slot}
                                                 </button>
@@ -826,32 +859,36 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                 </div>
             )}
 
-            {/* CREATE APPOINTMENT MODAL */}
+            {/* CREATE APPOINTMENT MODAL WABI-SABI */}
             {isCreateOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
-                    <div className="bg-[#141517] border border-[#2d3036] max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
-                            <h3 className="font-bold text-lg text-on-surface">Agendar Cita Manual</h3>
+                <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left">
+                    <div className="bg-[#F6F4EE] border border-[#E2DFD7] max-w-md w-full rounded-none overflow-hidden p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+                            <div>
+                                <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">AGENDAR CITA</span>
+                                <h3 className="font-serif text-xl font-normal text-[#161616]">Nueva Consulta</h3>
+                            </div>
                             <button 
+                                type="button"
                                 onClick={() => setIsCreateOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#E2DFD7] border border-transparent hover:border-[#161616] cursor-pointer text-[#161616] transition"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
                         {errorMsg && (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl mb-4 font-bold">
+                            <div className="bg-[#FCE8E6] border border-[#FAD2CF] text-[#C5221F] text-xs p-3 rounded-none mb-4 font-mono font-bold">
                                 ⚠️ {errorMsg}
                             </div>
                         )}
 
-                        <form onSubmit={handleCreateAppt} className="space-y-4 text-sm">
+                        <form onSubmit={handleCreateAppt} className="space-y-4 text-xs font-sans">
                             {/* CRM Auto-suggest search input */}
-                            <div className="space-y-1.5 relative" ref={dropdownRef}>
-                                <label className="block text-xs font-bold text-primary uppercase tracking-wider ml-1">Buscar Paciente en CRM</label>
+                            <div className="space-y-1 relative" ref={dropdownRef}>
+                                <label className="block text-[10px] font-bold text-[#D9381E] uppercase tracking-wider font-mono">Buscar Paciente en CRM</label>
                                 <div className="relative">
-                                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[18px]">search</span>
+                                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#76746E] text-[18px]">search</span>
                                     <input 
                                         type="text"
                                         value={searchQuery}
@@ -861,25 +898,25 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                             setShowSuggestions(true);
                                         }}
                                         onFocus={() => setShowSuggestions(true)}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] pl-10 pr-4 py-2.5 rounded-md text-on-surface focus:border-primary outline-none"
-                                        placeholder="Escribe nombre, cédula o celular..."
+                                        className="w-full bg-white border border-[#E2DFD7] pl-10 pr-4 py-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
+                                        placeholder="Nombre, cédula o celular..."
                                     />
                                 </div>
                                 {showSuggestions && getFilteredCustomers().length > 0 && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 bg-[#181a1c] border border-[#2d3036] rounded-md shadow-xl z-50 max-h-52 overflow-y-auto divide-y divide-[#2d3036]">
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#161616] rounded-none shadow-xl z-50 max-h-52 overflow-y-auto divide-y divide-[#E2DFD7]">
                                         {getFilteredCustomers().map(c => (
                                             <button
                                                 key={c.id}
                                                 type="button"
                                                 onClick={() => handleSelectSuggestion(c)}
-                                                className="w-full text-left p-3 hover:bg-primary/10 text-xs text-on-surface flex justify-between items-center transition-colors cursor-pointer border-0 bg-transparent"
+                                                className="w-full text-left p-2.5 hover:bg-[#FAF8F5] text-xs text-[#161616] flex justify-between items-center transition-colors cursor-pointer border-0 bg-transparent font-mono"
                                             >
                                                 <div>
-                                                    <p className="font-semibold">{c.name} {c.last_name || ''}</p>
-                                                    <p className="text-[10px] text-on-surface-variant opacity-70">{c.phone}</p>
+                                                    <p className="font-bold text-[#161616]">{c.name} {c.last_name || ''}</p>
+                                                    <p className="text-[10px] text-[#76746E]">{c.phone}</p>
                                                 </div>
-                                                <span className="text-[9px] bg-primary/20 text-primary px-2 py-0.5 rounded-md font-mono font-bold uppercase shrink-0">
-                                                    C.C.: {c.document_number}
+                                                <span className="text-[9px] bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] px-1.5 py-0.5 font-bold uppercase shrink-0">
+                                                    CC: {c.document_number}
                                                 </span>
                                             </button>
                                         ))}
@@ -889,26 +926,26 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Cédula / Documento</label>
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Cédula / Doc *</label>
                                     <input 
                                         type="text"
                                         required
                                         value={customerDocumentNumber}
                                         onChange={(e) => setCustomerDocumentNumber(e.target.value)}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
                                         placeholder="Ej: 10203040"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Teléfono (WhatsApp)</label>
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">WhatsApp *</label>
                                     <input 
                                         type="text"
                                         required
                                         value={customerPhone}
                                         onChange={(e) => setCustomerPhone(e.target.value)}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
-                                        placeholder="Ej: 573001112222"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
+                                        placeholder="Ej: 3001112222"
                                     />
                                 </div>
                             </div>
@@ -916,35 +953,42 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                             {/* Separated Date & Time fields */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Fecha de Cita</label>
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Fecha de Cita *</label>
                                     <input 
                                         type="date"
                                         required
                                         value={apptOnlyDate}
-                                        onChange={(e) => setApptOnlyDate(e.target.value)}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
+                                        onChange={(e) => {
+                                            setApptOnlyDate(e.target.value);
+                                            fetchAvailability(e.target.value);
+                                        }}
+                                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none cursor-pointer"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Hora de Cita (Slot 30 min)</label>
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Hora (Slot 30 min) *</label>
                                     <select 
                                         required
                                         value={apptOnlyTime}
                                         onChange={(e) => setApptOnlyTime(e.target.value)}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono cursor-pointer"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none cursor-pointer"
                                     >
                                         {GENERATED_30MIN_SLOTS.map(slot => {
                                             const busy = isSlotBusy(apptOnlyDate, slot);
                                             const formatted = formatApptTime(`2000-01-01T${slot}:00`);
                                             return (
                                                 <option key={slot} value={slot} disabled={busy}>
-                                                    {formatted} {busy ? '🔴 (Ocupado / Busy)' : '🟢 (Disponible / Free)'}
+                                                    {formatted} {busy ? '🔴 (Ocupado)' : '🟢 (Disponible)'}
                                                 </option>
                                             );
                                         })}
                                     </select>
                                 </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Motivo de Consulta *</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {[
                                         { key: 'examen_vista', label: 'Examen Vista' },
@@ -955,10 +999,10 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                             key={opt.key}
                                             type="button"
                                             onClick={() => setVisitReason(opt.key)}
-                                            className={`py-2 px-3 rounded-md border text-xs font-bold transition cursor-pointer text-center ${
+                                            className={`py-2 px-2 border text-xs font-mono font-bold transition cursor-pointer text-center rounded-none ${
                                                 visitReason === opt.key 
-                                                    ? 'bg-primary text-white border-primary shadow' 
-                                                    : 'bg-[#181a1c] border-[#2d3036] text-on-surface-variant hover:bg-surface-variant/30'
+                                                    ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]' 
+                                                    : 'bg-white border-[#E2DFD7] text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5]'
                                             }`}
                                         >
                                             {opt.label}
@@ -968,30 +1012,30 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                             </div>
 
                             {visitReason === 'otros' && (
-                                <div className="space-y-1 animate-float">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Descripción (Detalle del Motivo)</label>
+                                <div className="space-y-1">
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Descripción del Motivo</label>
                                     <textarea 
                                         rows={2}
                                         value={visitReasonDetails}
                                         onChange={(e) => setVisitReasonDetails(e.target.value)}
                                         placeholder="Ej: Mantenimiento de montura anterior..."
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none resize-none"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none resize-none font-mono rounded-none"
                                     />
                                 </div>
                             )}
 
-                            <div className="flex justify-end gap-2 pt-3 border-t border-[#2d3036]">
+                            <div className="flex justify-end gap-2 pt-3 border-t border-[#E2DFD7]">
                                 <button 
                                     type="button"
                                     onClick={() => setIsCreateOpen(false)}
-                                    className="px-4 py-2 border border-[#2d3036] text-on-surface hover:bg-surface-variant/20 rounded-md font-bold cursor-pointer text-xs transition"
+                                    className="px-4 py-2 border border-[#E2DFD7] text-[#161616] hover:bg-white bg-[#FAF8F5] font-mono font-bold text-xs uppercase cursor-pointer transition rounded-none"
                                 >
                                     Cancelar
                                 </button>
                                 <button 
                                     type="submit"
                                     disabled={actionLoading}
-                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-md font-bold cursor-pointer text-xs transition flex items-center gap-1.5 disabled:opacity-50"
+                                    className="px-4 py-2 bg-[#161616] hover:bg-[#2b2b2b] text-[#F6F4EE] font-mono font-bold uppercase text-xs cursor-pointer transition flex items-center gap-1.5 disabled:opacity-50 rounded-none shadow-xs"
                                 >
                                     {actionLoading ? 'Guardando...' : 'Crear Cita'}
                                 </button>
@@ -1002,78 +1046,83 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                 document.body
             )}
 
+            {/* BLOCK MODAL WABI-SABI */}
             {isBlockOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
-                    <div className="bg-[#141517] border border-[#2d3036] max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
-                            <h3 className="font-bold text-lg text-on-surface">Bloquear Horario / Día</h3>
+                <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left">
+                    <div className="bg-[#F6F4EE] border border-[#E2DFD7] max-w-md w-full rounded-none overflow-hidden p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+                            <div>
+                                <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">DISPONIBILIDAD</span>
+                                <h3 className="font-serif text-xl font-normal text-[#161616]">Bloquear Horario / Día</h3>
+                            </div>
                             <button 
+                                type="button"
                                 onClick={() => setIsBlockOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#E2DFD7] border border-transparent hover:border-[#161616] cursor-pointer text-[#161616] transition"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
-                        <div className="space-y-4 text-sm">
+                        <div className="space-y-4 text-xs font-sans">
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Tipo de bloqueo</label>
+                                <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Tipo de Bloqueo</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setBlockType('slot')}
-                                        className={`py-2 rounded-xl text-xs font-bold border ${blockType === 'slot' ? 'bg-primary text-white border-primary' : 'bg-surface-container border-outline/20 text-on-surface'}`}
+                                        className={`py-2 text-xs font-mono font-bold uppercase border rounded-none ${blockType === 'slot' ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]' : 'bg-white border-[#E2DFD7] text-[#76746E]'}`}
                                     >
                                         Franja Horaria
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setBlockType('day')}
-                                        className={`py-2 rounded-xl text-xs font-bold border ${blockType === 'day' ? 'bg-primary text-white border-primary' : 'bg-surface-container border-outline/20 text-on-surface'}`}
+                                        className={`py-2 text-xs font-mono font-bold uppercase border rounded-none ${blockType === 'day' ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]' : 'bg-white border-[#E2DFD7] text-[#76746E]'}`}
                                     >
-                                        Día completo
+                                        Día Completo
                                     </button>
                                 </div>
                             </div>
 
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Fecha</label>
+                                <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Fecha</label>
                                 <input
                                     type="date"
                                     value={blockDate}
                                     onChange={(e) => setBlockDate(e.target.value)}
-                                    className="w-full bg-surface-container border border-outline/20 p-2.5 rounded-xl text-xs text-on-surface font-semibold outline-none focus:border-primary"
+                                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none cursor-pointer"
                                 />
                             </div>
 
                             {blockType === 'slot' && (
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Hora del Slot</label>
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Hora del Slot</label>
                                     <input
                                         type="time"
                                         value={blockStartTime}
                                         onChange={(e) => setBlockStartTime(e.target.value)}
-                                        className="w-full bg-surface-container border border-outline/20 p-2.5 rounded-xl text-xs text-on-surface font-semibold outline-none focus:border-primary"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
                                     />
                                 </div>
                             )}
 
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Motivo / Notas del Bloqueo</label>
+                                <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Motivo del Bloqueo</label>
                                 <input
                                     type="text"
                                     placeholder="Ej: Mantenimiento, Ausencia médica..."
                                     value={blockReason}
                                     onChange={(e) => setBlockReason(e.target.value)}
-                                    className="w-full bg-surface-container border border-outline/20 p-2.5 rounded-xl text-xs text-on-surface outline-none focus:border-primary"
+                                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-sans rounded-none"
                                 />
                             </div>
 
-                            <div className="flex justify-end gap-2 pt-2 border-t border-outline/10">
+                            <div className="flex justify-end gap-2 pt-3 border-t border-[#E2DFD7]">
                                 <button
                                     type="button"
                                     onClick={() => setIsBlockOpen(false)}
-                                    className="px-4 py-2 border border-outline/20 text-on-surface hover:bg-surface-variant/20 rounded-xl font-bold cursor-pointer text-xs transition"
+                                    className="px-4 py-2 border border-[#E2DFD7] text-[#161616] hover:bg-white bg-[#FAF8F5] font-mono font-bold text-xs uppercase cursor-pointer transition rounded-none"
                                 >
                                     Cancelar
                                 </button>
@@ -1081,9 +1130,9 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                     type="button"
                                     onClick={handleCreateBlock}
                                     disabled={actionLoading}
-                                    className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-xl font-bold cursor-pointer text-xs transition disabled:opacity-50"
+                                    className="px-4 py-2 bg-[#161616] hover:bg-[#2b2b2b] text-[#F6F4EE] font-mono font-bold uppercase text-xs cursor-pointer transition disabled:opacity-50 rounded-none shadow-xs"
                                 >
-                                    {actionLoading ? 'Guardando...' : 'Registrar bloqueo'}
+                                    {actionLoading ? 'Guardando...' : 'Registrar Bloqueo'}
                                 </button>
                             </div>
                         </div>
@@ -1092,56 +1141,60 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                 document.body
             )}
 
-            {/* EDIT APPOINTMENT MODAL */}
+            {/* EDIT APPOINTMENT MODAL WABI-SABI */}
             {isEditOpen && selectedAppt && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
-                    <div className="bg-[#141517] border border-[#2d3036] max-w-md w-full rounded-2xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
-                            <h3 className="font-bold text-lg text-on-surface">Gestionar Cita</h3>
+                <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left">
+                    <div className="bg-[#F6F4EE] border border-[#E2DFD7] max-w-md w-full rounded-none overflow-hidden p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+                            <div>
+                                <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">GESTIÓN DE CITA</span>
+                                <h3 className="font-serif text-xl font-normal text-[#161616]">Detalle & Reprogramación</h3>
+                            </div>
                             <button 
+                                type="button"
                                 onClick={() => setIsEditOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-variant/40 border-0 cursor-pointer text-on-surface"
+                                className="w-8 h-8 rounded-none flex items-center justify-center hover:bg-[#E2DFD7] border border-transparent hover:border-[#161616] cursor-pointer text-[#161616] transition"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
                         {errorMsg && (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl mb-4 font-bold">
+                            <div className="bg-[#FCE8E6] border border-[#FAD2CF] text-[#C5221F] text-xs p-3 rounded-none mb-4 font-mono font-bold">
                                 ⚠️ {errorMsg}
                             </div>
                         )}
 
-                        <form onSubmit={handleEditAppt} className="space-y-4 text-sm">
+                        <form onSubmit={handleEditAppt} className="space-y-4 text-xs font-sans">
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Nombre del Paciente</label>
+                                <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Nombre del Paciente</label>
                                 <input 
                                     type="text"
                                     required
                                     value={customerName}
                                     onChange={(e) => setCustomerName(e.target.value)}
-                                    className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none"
+                                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Cédula</label>
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Cédula</label>
                                     <input 
                                         type="text"
                                         disabled
                                         value={customerDocumentNumber}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface font-mono opacity-60 cursor-not-allowed"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs text-[#76746E] font-mono cursor-not-allowed rounded-none"
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Teléfono (WhatsApp)</label>
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Teléfono WhatsApp *</label>
                                     <input 
                                         type="text"
                                         required
                                         value={customerPhone}
                                         onChange={(e) => setCustomerPhone(e.target.value)}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none"
                                     />
                                 </div>
                             </div>
@@ -1149,30 +1202,30 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                             {/* Separated Date & Time fields */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Fecha de Cita</label>
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Fecha de Cita *</label>
                                     <input 
                                         type="date"
                                         required
                                         value={apptOnlyDate}
                                         onChange={(e) => setApptOnlyDate(e.target.value)}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none cursor-pointer"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Hora de Cita (Slot 30 min)</label>
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Hora (Slot 30 min) *</label>
                                     <select 
                                         required
                                         value={apptOnlyTime}
                                         onChange={(e) => setApptOnlyTime(e.target.value)}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none font-mono cursor-pointer"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono rounded-none cursor-pointer"
                                     >
                                         {GENERATED_30MIN_SLOTS.map(slot => {
                                             const busy = isSlotBusy(apptOnlyDate, slot, selectedAppt?.id);
                                             const formatted = formatApptTime(`2000-01-01T${slot}:00`);
                                             return (
                                                 <option key={slot} value={slot} disabled={busy}>
-                                                    {formatted} {busy ? '🔴 (Ocupado / Busy)' : '🟢 (Disponible / Free)'}
+                                                    {formatted} {busy ? '🔴 (Ocupado)' : '🟢 (Disponible)'}
                                                 </option>
                                             );
                                         })}
@@ -1180,25 +1233,12 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                 </div>
                             </div>
 
-                            {visitReason === 'otros' && (
-                                <div className="space-y-1 animate-float">
-                                    <label className="block text-xs font-bold text-on-surface-variant">Descripción (Detalle del Motivo)</label>
-                                    <textarea 
-                                        rows={2}
-                                        value={visitReasonDetails}
-                                        onChange={(e) => setVisitReasonDetails(e.target.value)}
-                                        placeholder="Ej: Mantenimiento de montura anterior..."
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none resize-none"
-                                    />
-                                </div>
-                            )}
-
                             <div className="space-y-1">
-                                <label className="block text-xs font-bold text-on-surface-variant">Estado de la Cita</label>
+                                <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Estado de la Cita *</label>
                                 <select 
                                     value={apptStatus}
                                     onChange={(e) => setApptStatus(e.target.value)}
-                                    className="w-full bg-[#181a1c] border border-[#2d3036] p-2.5 rounded-md text-on-surface focus:border-primary outline-none cursor-pointer font-mono"
+                                    className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none cursor-pointer font-mono rounded-none"
                                 >
                                     <option value="scheduled">Programada / Agendada</option>
                                     <option value="completed">Completada / Atendida</option>
@@ -1206,11 +1246,24 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                 </select>
                             </div>
 
-                            <div className="flex gap-2 justify-between pt-4 border-t border-[#2d3036]">
+                            {visitReason === 'otros' && (
+                                <div className="space-y-1">
+                                    <label className="block text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold font-mono">Descripción del Motivo</label>
+                                    <textarea 
+                                        rows={2}
+                                        value={visitReasonDetails}
+                                        onChange={(e) => setVisitReasonDetails(e.target.value)}
+                                        placeholder="Ej: Mantenimiento de montura anterior..."
+                                        className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none resize-none font-mono rounded-none"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="flex gap-2 justify-between pt-4 border-t border-[#E2DFD7]">
                                 <button 
                                     type="button"
                                     onClick={handleDeleteAppt}
-                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-bold cursor-pointer text-xs transition flex items-center gap-1"
+                                    className="px-3.5 py-2 bg-[#FCE8E6] border border-[#FAD2CF] text-[#C5221F] hover:bg-[#C5221F] hover:text-white font-mono font-bold text-xs uppercase cursor-pointer transition rounded-none flex items-center gap-1 shadow-2xs"
                                 >
                                     <span className="material-symbols-outlined text-[16px]">delete</span>
                                     Eliminar
@@ -1219,14 +1272,14 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                     <button 
                                         type="button"
                                         onClick={() => setIsEditOpen(false)}
-                                        className="px-4 py-2 border border-[#2d3036] text-on-surface hover:bg-surface-variant/20 rounded-md font-bold cursor-pointer text-xs transition"
+                                        className="px-4 py-2 border border-[#E2DFD7] text-[#161616] hover:bg-white bg-[#FAF8F5] font-mono font-bold text-xs uppercase cursor-pointer transition rounded-none"
                                     >
                                         Cerrar
                                     </button>
                                     <button 
                                         type="submit"
                                         disabled={actionLoading}
-                                        className="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-md font-bold cursor-pointer text-xs transition flex items-center gap-1 disabled:opacity-50"
+                                        className="px-4 py-2 bg-[#161616] hover:bg-[#2b2b2b] text-[#F6F4EE] font-mono font-bold uppercase text-xs cursor-pointer transition flex items-center gap-1.5 disabled:opacity-50 rounded-none shadow-xs"
                                     >
                                         {actionLoading ? 'Guardando...' : 'Guardar Cambios'}
                                     </button>

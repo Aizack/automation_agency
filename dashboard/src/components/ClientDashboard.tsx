@@ -2010,7 +2010,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         )}
 
         {activeTab === 'formulas' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpFormulas clientId={clientId} />
           </div>
         )}
@@ -2022,7 +2022,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         )}
 
         {activeTab === 'agenda' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpAppointments clientId={clientId} />
           </div>
         )}
