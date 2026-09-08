@@ -765,6 +765,9 @@ export const initDatabase = async () => {
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS has_custom_tax_id BOOLEAN DEFAULT false;
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS legal_name VARCHAR(200);
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS custom_tax_id VARCHAR(50);
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
+            ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;
+            ALTER TABLE clients ALTER COLUMN system_prompt DROP NOT NULL;
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS allowed_branches JSONB DEFAULT '[]'::jsonb;
             ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;
 

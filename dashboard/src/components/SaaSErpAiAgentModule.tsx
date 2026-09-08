@@ -422,7 +422,7 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
                       rows={7}
                       value={systemPrompt}
                       onChange={(e) => setSystemPrompt(e.target.value)}
-                      placeholder="Ej: Eres el asistente virtual de la Óptica Nuevo Horizonte. Saluda cordialmente, ofrece información de productos, consulta disponibilidad de citas y transfiere a un asesor humano si lo solicitan."
+                      placeholder="Ej: Eres el asistente virtual de la empresa. Saluda cordialmente, ofrece información de productos, consulta disponibilidad de citas y transfiere a un asesor humano si lo solicitan."
                       className="w-full bg-[#FAF8F3] border border-[#E2DFD7] rounded-2xl p-4 text-xs text-[#1C1B1A] outline-none focus:border-[#C84B31] transition-all font-sans leading-relaxed"
                     />
                   </div>

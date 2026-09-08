@@ -262,7 +262,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   // Estados para Módulo Multi-Sede & Selector de Sucursales
   const [branches, setBranches] = useState<any[]>([]);
   const [branchNameInput, setBranchNameInput] = useState('');
-  const [branchCompanyInput, setBranchCompanyInput] = useState('');
   const [branchPhoneInput, setBranchPhoneInput] = useState('');
   const [branchAddressInput, setBranchAddressInput] = useState('');
   const [hasCustomTaxIdInput, setHasCustomTaxIdInput] = useState(false);
@@ -862,7 +861,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 name="bizName"
                 type="text"
                 className="w-full bg-[#1b2535]/50 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#0a5cff]/50 text-white outline-none"
-                placeholder="Ej. Óptica Bella Vista"
+                placeholder="Ej. Mi Empresa Demo S.A.S."
                 required
               />
             </div>
@@ -1732,10 +1731,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
-                    if (!branchNameInput || !branchCompanyInput) return;
+                    if (!branchNameInput) return;
                     try {
                       setSavingBranch(true);
                       const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+                      const resolvedCompanyName = clientData?.name || branchNameInput;
                       const res = await fetch(`/api/clients/${clientId}/branches`, {
                         method: 'POST',
                         headers: {
@@ -1743,12 +1743,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                           'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({
-                          name: branchCompanyInput,
+                          name: resolvedCompanyName,
                           branch_name: branchNameInput,
                           phone: branchPhoneInput,
                           address: branchAddressInput,
                           has_custom_tax_id: hasCustomTaxIdInput,
-                          legal_name: hasCustomTaxIdInput ? legalNameInput : branchCompanyInput,
+                          legal_name: hasCustomTaxIdInput ? legalNameInput : resolvedCompanyName,
                           custom_tax_id: hasCustomTaxIdInput ? customTaxIdInput : null
                         })
                       });
@@ -1756,7 +1756,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                       if (json.success) {
                         alert(json.message);
                         setBranchNameInput('');
-                        setBranchCompanyInput('');
                         setBranchPhoneInput('');
                         setBranchAddressInput('');
                         setHasCustomTaxIdInput(false);
@@ -1779,21 +1778,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     <input
                       type="text"
                       required
-                      placeholder="Ej. Sede Ciudadela / Sucursal Norte / 1 Óptica Nuevo Horizonte"
+                      placeholder="Ej. Sucursal Norte / Sede Centro / Punto de Venta #2"
                       value={branchNameInput}
                       onChange={(e) => setBranchNameInput(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-on-surface-variant uppercase">Nombre Comercial *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej. Óptica Nuevo Horizonte"
-                      value={branchCompanyInput}
-                      onChange={(e) => setBranchCompanyInput(e.target.value)}
                       className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
                     />
                   </div>
@@ -1846,7 +1833,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                           <input
                             type="text"
                             required={hasCustomTaxIdInput}
-                            placeholder="Ej. 901.234.567-1"
+                            placeholder="Ej. 900.123.456-7"
                             value={customTaxIdInput}
                             onChange={(e) => setCustomTaxIdInput(e.target.value)}
                             className="w-full bg-white border border-[#E2DFD7] rounded-md p-2.5 text-[#161616] outline-none focus:border-primary"
@@ -1857,7 +1844,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                           <input
                             type="text"
                             required={hasCustomTaxIdInput}
-                            placeholder="Ej. 1 Óptica Nuevo Horizonte S.A.S"
+                            placeholder="Ej. Comercializadora Alfa S.A.S."
                             value={legalNameInput}
                             onChange={(e) => setLegalNameInput(e.target.value)}
                             className="w-full bg-white border border-[#E2DFD7] rounded-md p-2.5 text-[#161616] outline-none focus:border-primary"
@@ -1887,7 +1874,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                       <label className="text-[11px] font-bold text-on-surface-variant uppercase">Dirección</label>
                       <input
                         type="text"
-                        placeholder="Ej. Calle 45 # 12-34"
+                        placeholder="Ej. Carrera 10 # 20-30"
                         value={branchAddressInput}
                         onChange={(e) => setBranchAddressInput(e.target.value)}
                         className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
@@ -1958,6 +1945,29 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                             {b.address}
                           </p>
                         )}
+
+                        {/* Botón de Navegación / Cambio Directo de Sede */}
+                        <div className="pt-2 border-t border-outline/10 flex items-center justify-between">
+                          {b.id === clientId ? (
+                            <span className="px-2.5 py-1 rounded-md bg-green-500/10 text-green-700 border border-green-500/20 text-[10px] font-bold flex items-center gap-1.5 w-full justify-center">
+                              <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span>
+                              Sede Actual (Activa)
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                localStorage.setItem('current_client_id', b.id);
+                                window.location.reload();
+                              }}
+                              className="w-full py-1.5 px-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition shadow-xs"
+                              title={`Cambiar la vista activa a la sede ${b.branch_name || b.name}`}
+                            >
+                              <span className="material-symbols-outlined text-sm">login</span>
+                              Entrar / Cambiar a esta Sede
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

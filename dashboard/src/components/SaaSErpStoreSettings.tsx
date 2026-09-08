@@ -299,7 +299,7 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
                 required
                 value={storeName}
                 onChange={(e) => setStoreName(e.target.value)}
-                placeholder="ej. Óptica Nuevo Horizonte S.A.S."
+                placeholder="ej. Empresa Ejemplo S.A.S."
                 className="w-full bg-[#FAF8F3] focus:bg-[#FFFFFF] border border-[#E2DFD7] rounded-none px-3.5 py-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none transition-colors font-semibold"
               />
             </div>

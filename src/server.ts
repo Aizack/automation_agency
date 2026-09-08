@@ -9703,6 +9703,16 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
   app.get('/api/clients/:clientId/branches', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
+
+      // Garantizar dinámicamente la existencia de columnas en clients
+      try {
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone VARCHAR(50);`);
+        await pool.query(`ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;`);
+        await pool.query(`ALTER TABLE clients ALTER COLUMN system_prompt DROP NOT NULL;`);
+      } catch (schemaErr: any) {
+        console.error("[Branches Schema Init Warning]:", schemaErr?.message);
+      }
+
       const result = await pool.query(
         `SELECT id, name, branch_name, is_main_branch, parent_client_id, phone, address, has_custom_tax_id, legal_name, custom_tax_id, created_at 
          FROM clients 
@@ -9726,6 +9736,19 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         return res.status(400).json({ success: false, error: 'Nombre de empresa y nombre de la sede son obligatorios.' });
       }
 
+      // Garantizar dinámicamente la existencia de columnas en clients
+      try {
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone VARCHAR(50);`);
+        await pool.query(`ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;`);
+        await pool.query(`ALTER TABLE clients ALTER COLUMN system_prompt DROP NOT NULL;`);
+      } catch (schemaErr: any) {
+        console.error("[Branches Schema Init Warning]:", schemaErr?.message);
+      }
+
+      // Resolver cliente raíz si la petición se hace desde una sucursal hija
+      const parentCheck = await pool.query('SELECT parent_client_id FROM clients WHERE id = $1', [clientId]);
+      const rootClientId = parentCheck.rows[0]?.parent_client_id || clientId;
+
       const branchId = `branch_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
       await pool.query(
@@ -9733,7 +9756,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
          VALUES ($1, $2, $3, $4, FALSE, $5, $6, TRUE, $7, $8, $9)`,
         [
           branchId, 
-          clientId, 
+          rootClientId, 
           name, 
           branch_name, 
           phone || null, 
@@ -9751,7 +9774,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           id: branchId, 
           name, 
           branch_name, 
-          parent_client_id: clientId,
+          parent_client_id: rootClientId,
           has_custom_tax_id: Boolean(has_custom_tax_id),
           legal_name: legal_name || name,
           custom_tax_id: custom_tax_id || null
