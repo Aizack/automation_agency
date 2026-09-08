@@ -1007,10 +1007,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         }
     };
 
-    const formatPrice = (val: string) => {
+    const formatPrice = (val: string | number) => {
         return new Intl.NumberFormat('es-CO', {
             style: 'currency', currency: 'COP', minimumFractionDigits: 0
-        }).format(parseFloat(val));
+        }).format(parseFloat(val?.toString() || '0') || 0);
     };
 
     const uniqueBrands = Array.from(
@@ -1820,18 +1820,22 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             <table className="inventory-table w-full text-left">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: '14%' }}>MARCA</th>
-                                        <th style={{ width: '26%' }}>REFERENCIA</th>
-                                        <th style={{ width: '18%' }}>VARIANTES</th>
-                                        <th style={{ width: '13%' }}>PRECIO</th>
-                                        <th style={{ width: '10%' }}>DESCUENTO</th>
+                                        <th style={{ width: '12%' }}>MARCA</th>
+                                        <th style={{ width: '21%' }}>REFERENCIA</th>
+                                        <th style={{ width: '15%' }}>VARIANTES</th>
+                                        <th style={{ width: '9%' }}>UNIDADES</th>
+                                        <th style={{ width: '12%' }}>PRECIO</th>
+                                        <th style={{ width: '15%' }}>VALOR TOTAL</th>
+                                        <th style={{ width: '7%' }}>DCTO</th>
                                         <th style={{ width: '9%' }}>IMPUESTOS</th>
-                                        <th style={{ width: '10%', textAlign: 'right' }}>STOCK TOTAL</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredProducts.map((prod) => {
-                                        const isLowStock = (prod.stock || 0) <= (prod.min_stock !== undefined ? prod.min_stock : 5);
+                                        const stockUnits = prod.stock || 0;
+                                        const unitPrice = parseFloat(prod.price?.toString() || '0') || 0;
+                                        const totalValue = unitPrice * stockUnits;
+                                        const isLowStock = stockUnits <= (prod.min_stock !== undefined ? prod.min_stock : 5);
                                         const variantCount = prod.variants?.length || 0;
                                         const hasDiscount = (parseFloat(prod.promo_discount?.toString() || '0') || 0) > 0;
                                         return (
@@ -1890,15 +1894,41 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     </div>
                                                 </td>
 
-                                                {/* 4. PRECIO */}
-                                                <td className="font-mono font-bold text-sm text-[#161616]">
-                                                    {formatPrice(prod.price)} <span className="text-[10px] text-[#6B6862] font-normal font-sans">COP</span>
+                                                {/* 4. UNIDADES (al lado de Variantes) */}
+                                                <td>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className={`text-xs font-bold font-mono ${isLowStock ? 'text-[#D9381E]' : 'text-[#161616]'}`}>
+                                                            {stockUnits} Uds
+                                                        </span>
+                                                        {isLowStock && (
+                                                            <span className="text-[8px] font-mono font-bold bg-[#D9381E]/10 text-[#D9381E] px-1 py-0.2 border border-[#D9381E]/20" title="Bajo stock">
+                                                                Bajo
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </td>
 
-                                                {/* 5. DESCUENTO (si aplica) */}
+                                                {/* 5. PRECIO UNITARIO */}
+                                                <td className="font-mono font-bold text-xs text-[#161616]">
+                                                    {formatPrice(prod.price)} <span className="text-[9px] text-[#6B6862] font-normal font-sans">COP</span>
+                                                </td>
+
+                                                {/* 6. VALOR TOTAL EN STOCK */}
+                                                <td className="font-mono font-bold text-xs text-[#161616]">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-[#161616]">
+                                                            {formatPrice(totalValue)} <span className="text-[9px] text-[#6B6862] font-normal font-sans">COP</span>
+                                                        </span>
+                                                        <span className="text-[9px] text-[#76746E] font-mono font-normal">
+                                                            ({stockUnits} × {formatPrice(prod.price)})
+                                                        </span>
+                                                    </div>
+                                                </td>
+
+                                                {/* 7. DESCUENTO (si aplica) */}
                                                 <td>
                                                     {hasDiscount ? (
-                                                        <span className="bg-[#D9381E]/10 text-[#D9381E] font-bold text-xs px-2 py-0.5 border border-[#D9381E]/20 font-mono">
+                                                        <span className="bg-[#D9381E]/10 text-[#D9381E] font-bold text-xs px-1.5 py-0.5 border border-[#D9381E]/20 font-mono">
                                                             -{prod.promo_discount}%
                                                         </span>
                                                     ) : (
@@ -1906,30 +1936,27 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     )}
                                                 </td>
 
-                                                {/* 6. IMPUESTOS (si aplica) */}
-                                                <td className="text-xs font-medium">
-                                                    {(() => {
-                                                        const rawTax = (prod as any).tax_rate !== undefined && (prod as any).tax_rate !== null 
-                                                            ? (prod as any).tax_rate 
-                                                            : ((prod as any).attributes?.tax_rate !== undefined ? (prod as any).attributes.tax_rate : 0);
-                                                        const rate = parseFloat(rawTax.toString()) || 0;
-                                                        if (rate === 0) return <span className="text-xs font-medium text-[#6B6862]">0% Exento</span>;
-                                                        if (rate === 19) return <span className="text-xs font-bold text-[#161616]">19% IVA</span>;
-                                                        if (rate === 5) return <span className="text-xs font-bold text-[#161616]">5% IVA</span>;
-                                                        if (rate === 8) return <span className="text-xs font-bold text-[#161616]">8% INC</span>;
-                                                        return <span className="text-xs font-bold text-[#161616]">{rate}% Impuesto</span>;
-                                                    })()}
-                                                </td>
-
-                                                {/* 7. STOCK TOTAL & ACCIONES */}
-                                                <td style={{ textAlign: 'right' }}>
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <span className={`text-xs font-bold ${isLowStock ? 'text-[#D9381E]' : 'text-[#161616]'}`}>
-                                                            {prod.stock || 0} Uds
+                                                {/* 8. IMPUESTOS & ACCIONES */}
+                                                <td>
+                                                    <div className="flex items-center justify-between gap-1">
+                                                        <span className="text-xs font-medium whitespace-nowrap">
+                                                            {(() => {
+                                                                const rawTax = (prod as any).tax_rate !== undefined && (prod as any).tax_rate !== null 
+                                                                    ? (prod as any).tax_rate 
+                                                                    : ((prod as any).attributes?.tax_rate !== undefined ? (prod as any).attributes.tax_rate : 0);
+                                                                const rate = parseFloat(rawTax.toString()) || 0;
+                                                                if (rate === 0) return <span className="text-xs font-medium text-[#6B6862]">0% Exento</span>;
+                                                                if (rate === 19) return <span className="text-xs font-bold text-[#161616]">19% IVA</span>;
+                                                                if (rate === 5) return <span className="text-xs font-bold text-[#161616]">5% IVA</span>;
+                                                                if (rate === 8) return <span className="text-xs font-bold text-[#161616]">8% INC</span>;
+                                                                return <span className="text-xs font-bold text-[#161616]">{rate}% Imp.</span>;
+                                                            })()}
                                                         </span>
+
                                                         {/* Acciones Rápidas ERP al Hover */}
-                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 shrink-0">
                                                             <button 
+                                                                type="button"
                                                                 onClick={(e) => { e.stopPropagation(); openRefillModal(prod); }}
                                                                 className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
                                                                 title="Refill / Rellenar Stock"
@@ -1937,6 +1964,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                 <span className="material-symbols-outlined text-[15px]">add_box</span>
                                                             </button>
                                                             <button 
+                                                                type="button"
                                                                 onClick={(e) => { e.stopPropagation(); openPrintModal(prod); }}
                                                                 className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
                                                                 title="Imprimir Etiquetas de Código de Barras"
@@ -1944,6 +1972,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                 <span className="material-symbols-outlined text-[15px]">print</span>
                                                             </button>
                                                             <button 
+                                                                type="button"
                                                                 onClick={(e) => { e.stopPropagation(); handleDelete(prod.id); }}
                                                                 className="p-1 hover:bg-red-500/20 text-red-500 cursor-pointer"
                                                                 title="Eliminar"
