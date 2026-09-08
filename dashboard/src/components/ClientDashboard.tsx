@@ -45,6 +45,17 @@ interface Client {
   logo_url?: string;
   category?: string;
   enabledModules?: any;
+  branchName?: string;
+  branch_name?: string;
+  isMainBranch?: boolean;
+  is_main_branch?: boolean;
+  parentClientId?: string;
+  parent_client_id?: string;
+  hasCustomTaxId?: boolean;
+  legalName?: string;
+  customTaxId?: string;
+  phone?: string;
+  address?: string;
 }
 
 interface Interaction {
@@ -935,8 +946,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           )}
           <div className="brand-info">
-            <div className="brand-name truncate max-w-[200px]">{clientData?.name || 'KOI ERP'}</div>
-            <div className="brand-sub">SaaS Multi-Tenant</div>
+            <div className="brand-name truncate max-w-[200px]" title={clientData?.branchName || (clientData as any)?.branch_name ? `${clientData.name} (${clientData.branchName || (clientData as any).branch_name})` : clientData?.name}>
+              {clientData?.branchName || (clientData as any)?.branch_name
+                ? `${clientData.name} - ${clientData.branchName || (clientData as any).branch_name}`
+                : (clientData?.name || 'KOI ERP')}
+            </div>
+            <div className="brand-sub font-semibold text-primary">
+              {(clientData as any)?.is_main_branch || (clientData as any)?.isMainBranch ? '🏢 Empresa Matriz' : '📍 Sede Sucursal'}
+            </div>
           </div>
         </div>
 

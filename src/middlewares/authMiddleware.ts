@@ -95,7 +95,7 @@ export const requireRole = (allowedRoles: Array<'superadmin' | 'admin' | 'client
 /**
  * Middleware para asegurar que el cliente que accede sea el dueño de los datos o el SuperAdmin global
  */
-export const authorizeClientAccess = (
+export const authorizeClientAccess = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
@@ -112,18 +112,45 @@ export const authorizeClientAccess = (
     return next();
   }
 
-  // Si es admin o usuario del tenant, verificar que su clientId o id coincida exactamente con targetClientId
   const userTenantId = req.user.clientId || req.user.id;
-  if (targetClientId && userTenantId && userTenantId === targetClientId) {
+  if (!targetClientId || !userTenantId) {
     return next();
   }
 
-  // Si es un empleado y pertenece a este cliente inquilino, permitir
-  if (targetClientId && req.user.role === 'employee' && req.user.clientId === targetClientId) {
+  // Coincidencia directa
+  if (userTenantId === targetClientId) {
     return next();
   }
 
-  console.warn(`[Auth Middleware] Acceso denegado: El usuario ${req.user.username} (Tenant User ID: ${req.user.id}) intentó acceder a recursos del cliente (${targetClientId}).`);
+  // Verificar en base de datos si targetClientId es una sede hermana, hija o matriz del usuario
+  try {
+    const result = await pool.query(
+      `SELECT id, parent_client_id FROM clients WHERE id = $1 OR id = $2`,
+      [userTenantId, targetClientId]
+    );
+
+    const userClientRow = result.rows.find(r => r.id === userTenantId);
+    const targetClientRow = result.rows.find(r => r.id === targetClientId);
+
+    if (userClientRow && targetClientRow) {
+      // 1. El usuario pertenece a la Matriz y la tienda solicitada es su sede hija:
+      if (targetClientRow.parent_client_id === userTenantId) {
+        return next();
+      }
+      // 2. El usuario pertenece a una sede hija y la tienda solicitada es su Matriz:
+      if (userClientRow.parent_client_id === targetClientId) {
+        return next();
+      }
+      // 3. Ambos pertenecen a la misma empresa (comparten el mismo parent_client_id):
+      if (userClientRow.parent_client_id && userClientRow.parent_client_id === targetClientRow.parent_client_id) {
+        return next();
+      }
+    }
+  } catch (err) {
+    console.error("[Auth Middleware] Error verificando parent_client_id:", err);
+  }
+
+  console.warn(`[Auth Middleware] Acceso denegado: El usuario ${req.user.username} (Tenant User ID: ${userTenantId}) intentó acceder a recursos del cliente (${targetClientId}).`);
   return res.status(403).json({ success: false, error: 'Acceso denegado. No tienes permisos para gestionar este negocio o tienda.' });
 };
 

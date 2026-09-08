@@ -9716,7 +9716,10 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const result = await pool.query(
         `SELECT id, name, branch_name, is_main_branch, parent_client_id, phone, address, has_custom_tax_id, legal_name, custom_tax_id, created_at 
          FROM clients 
-         WHERE id = $1 OR parent_client_id = $1 OR (parent_client_id = (SELECT parent_client_id FROM clients WHERE id = $1 AND parent_client_id IS NOT NULL))
+         WHERE id = $1 
+            OR parent_client_id = $1 
+            OR id = (SELECT parent_client_id FROM clients WHERE id = $1 AND parent_client_id IS NOT NULL)
+            OR (parent_client_id IS NOT NULL AND parent_client_id = (SELECT parent_client_id FROM clients WHERE id = $1 AND parent_client_id IS NOT NULL))
          ORDER BY is_main_branch DESC, name ASC`,
         [clientId]
       );

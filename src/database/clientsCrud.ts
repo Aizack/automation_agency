@@ -78,7 +78,14 @@ export const getClientById = async (id: string): Promise<ClientConfig | null> =>
         logo_url,
         nit,
         address,
-        invoice_footer AS "invoiceFooter"
+        invoice_footer AS "invoiceFooter",
+        branch_name AS "branchName",
+        is_main_branch AS "isMainBranch",
+        parent_client_id AS "parentClientId",
+        phone,
+        has_custom_tax_id AS "hasCustomTaxId",
+        legal_name AS "legalName",
+        custom_tax_id AS "customTaxId"
        FROM clients 
        WHERE id = $1 LIMIT 1`,
       [id]
@@ -87,7 +94,17 @@ export const getClientById = async (id: string): Promise<ClientConfig | null> =>
     if (res.rows.length === 0) {
       return null;
     }
-    return res.rows[0] as ClientConfig;
+    const client = res.rows[0];
+
+    // Si es una sede hija y no tiene un logo propio, heredar el logo de la empresa matriz
+    if (!client.logo_url && client.parentClientId) {
+      const parentRes = await pool.query(`SELECT logo_url FROM clients WHERE id = $1 LIMIT 1`, [client.parentClientId]);
+      if (parentRes.rows.length > 0 && parentRes.rows[0].logo_url) {
+        client.logo_url = parentRes.rows[0].logo_url;
+      }
+    }
+
+    return client as ClientConfig;
   } catch (error) {
     console.error(`[CRUD] ❌ Error fetching client with ID ${id}:`, error);
     throw error;

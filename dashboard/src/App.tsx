@@ -158,9 +158,11 @@ function App() {
           } else if (user.role === 'employee') {
             localStorage.setItem('employee_role', user.employeeRole || '');
             localStorage.setItem('employee_permissions', JSON.stringify(user.permissions || []));
-            if (user.clientId) {
-              localStorage.setItem('current_client_id', user.clientId);
-              setClientId(user.clientId);
+            const savedClientId = localStorage.getItem('current_client_id');
+            const empClientId = savedClientId || user.clientId;
+            if (empClientId) {
+              localStorage.setItem('current_client_id', empClientId);
+              setClientId(empClientId);
             }
 
             // Si navegó explícitamente a /empleados o /employee -> Portal Personal de Trabajo
@@ -180,7 +182,8 @@ function App() {
               }
             }
           } else {
-            const clientTenantId = user.clientId || user.id;
+            const savedClientId = localStorage.getItem('current_client_id');
+            const clientTenantId = savedClientId || user.clientId || user.id;
             setClientId(clientTenantId);
             setView('client');
             localStorage.setItem('current_client_id', clientTenantId);
