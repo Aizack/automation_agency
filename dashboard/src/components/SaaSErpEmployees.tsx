@@ -453,7 +453,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     const [actionLoading, setActionLoading] = useState(false);
 
     // Turnos Panel states
-    const [activeView, setActiveView] = useState<'list' | 'shifts' | 'advances'>(viewMode === 'turnos' ? 'shifts' : 'list');
+    const [activeView, setActiveView] = useState<'list' | 'shifts' | 'advances' | 'requests'>(viewMode === 'turnos' ? 'shifts' : 'list');
     const [selectedEmpForShifts, setSelectedEmpForShifts] = useState<Employee | null>(null);
     const [shiftsTab, setShiftsTab] = useState<'hoy' | 'historial'>('hoy');
     const [shiftsSubTab, setShiftsSubTab] = useState<'semana' | 'mes' | 'todos'>('semana');
@@ -1193,18 +1193,21 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         return (
             <div className="space-y-6">
                 {/* Header of Shifts View */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#141517] border border-[#222428] p-5 rounded-none">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-[#E2DFD7] p-4 sm:p-5 shadow-xs">
                     <div>
-                        <h3 className="font-extrabold text-lg flex items-center gap-2" style={{ color: '#eab308' }}>
-                            <span className="material-symbols-outlined text-[#eab308]">work_history</span>
-                            CONTROL DE ASISTENCIA Y TURNOS
+                        <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">
+                            ASISTENCIA & PUNTUALIDAD
+                        </span>
+                        <h3 className="font-serif text-xl sm:text-2xl font-normal text-[#161616] flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[#161616] text-[22px]">work_history</span>
+                            Control de Asistencia & Turnos
                         </h3>
-                        <p className="text-xs text-gray-400">Monitorea en tiempo real los registros de entrada, almuerzos, salidas y puntualidad.</p>
+                        <p className="text-xs text-[#76746E] font-sans mt-0.5">Monitorea en tiempo real los registros de entrada, almuerzos, salidas y puntualidad de los colaboradores.</p>
                     </div>
                     {viewMode !== 'turnos' && (
                         <button 
                             onClick={() => { setActiveView('list'); setSelectedEmpForShifts(null); }}
-                            className="px-3 py-1.5 bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white text-[11px] font-bold rounded-none flex items-center gap-1.5 cursor-pointer transition"
+                            className="px-3.5 py-2 bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer transition"
                         >
                             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
                             Volver a Lista
@@ -1213,23 +1216,27 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                 </div>
 
                 {/* Tabs for Shifts View */}
-                <div className="flex border-b border-[#222428] gap-4 text-xs font-bold">
+                <div className="bg-white border border-[#E2DFD7] p-1.5 flex flex-wrap items-center gap-2 shadow-xs">
                     <button 
                         onClick={() => { setShiftsTab('hoy'); fetchTodayShifts(); }}
-                        className={`pb-3 cursor-pointer transition-all border-b-2 px-1 ${
-                            shiftsTab === 'hoy' ? 'border-[#eab308] text-[#eab308] font-black' : 'border-transparent text-gray-400 hover:text-white'
+                        className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border ${
+                            shiftsTab === 'hoy'
+                                ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                                : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
                         }`}
-                        style={{ color: shiftsTab === 'hoy' ? '#eab308' : undefined }}
                     >
+                        <span className="material-symbols-outlined text-[16px]">today</span>
                         Asistencia de Hoy
                     </button>
                     <button 
                         onClick={() => { setShiftsTab('historial'); }}
-                        className={`pb-3 cursor-pointer transition-all border-b-2 px-1 ${
-                            shiftsTab === 'historial' ? 'border-[#eab308] text-[#eab308] font-black' : 'border-transparent text-gray-400 hover:text-white'
+                        className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border ${
+                            shiftsTab === 'historial'
+                                ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                                : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
                         }`}
-                        style={{ color: shiftsTab === 'historial' ? '#eab308' : undefined }}
                     >
+                        <span className="material-symbols-outlined text-[16px]">history</span>
                         Historial de Fichajes
                     </button>
                 </div>
@@ -1237,26 +1244,26 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                 {/* ASISTENCIA DE HOY TAB */}
                 {shiftsTab === 'hoy' && (
                     <div className="space-y-6">
-                        {/* Summary indicators */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-none flex justify-between items-center">
+                        {/* Summary indicators Wabi-Sabi */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="bg-white border border-[#E2DFD7] p-4 shadow-xs flex justify-between items-center">
                                 <div>
-                                    <p className="text-[10px] text-[#eab308] uppercase font-mono font-bold" style={{ color: '#eab308' }}>Fichajes de Hoy</p>
-                                    <p className="text-xl font-black text-white mt-1">{todayShifts.length}</p>
+                                    <p className="text-[10px] text-[#76746E] uppercase font-mono font-bold">Fichajes de Hoy</p>
+                                    <p className="text-2xl font-bold font-mono text-[#161616] mt-1">{todayShifts.length}</p>
                                 </div>
-                                <span className="material-symbols-outlined text-[#eab308] text-[28px]">badge</span>
+                                <span className="material-symbols-outlined text-[#161616] text-[28px]">badge</span>
                             </div>
-                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-none flex justify-between items-center">
+                            <div className="bg-white border border-[#E2DFD7] p-4 shadow-xs flex justify-between items-center">
                                 <div>
-                                    <p className="text-[10px] text-green-400 uppercase font-mono font-bold">En Turno Activo</p>
-                                    <p className="text-xl font-black text-green-400 mt-1">{todayShifts.filter(s => !s.clock_out).length}</p>
+                                    <p className="text-[10px] text-[#76746E] uppercase font-mono font-bold">En Turno Activo</p>
+                                    <p className="text-2xl font-bold font-mono text-emerald-700 mt-1">{todayShifts.filter(s => !s.clock_out).length}</p>
                                 </div>
-                                <span className="material-symbols-outlined text-green-400 text-[28px]">play_circle</span>
+                                <span className="material-symbols-outlined text-emerald-600 text-[28px]">play_circle</span>
                             </div>
-                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-none flex justify-between items-center">
+                            <div className="bg-white border border-[#E2DFD7] p-4 shadow-xs flex justify-between items-center">
                                 <div>
-                                    <p className="text-[10px] text-orange-400 uppercase font-mono font-bold">Retardos (Tarde)</p>
-                                    <p className="text-xl font-black text-orange-400 mt-1">
+                                    <p className="text-[10px] text-[#76746E] uppercase font-mono font-bold">Retardos (Tarde)</p>
+                                    <p className="text-2xl font-bold font-mono text-[#D9381E] mt-1">
                                         {todayShifts.filter(s => {
                                             const date = new Date(s.clock_in);
                                             const hour = date.getHours();
@@ -1265,7 +1272,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                         }).length}
                                     </p>
                                 </div>
-                                <span className="material-symbols-outlined text-orange-400 text-[28px]">schedule</span>
+                                <span className="material-symbols-outlined text-[#D9381E] text-[28px]">schedule</span>
                             </div>
                         </div>
 
@@ -1661,12 +1668,44 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     const renderAdvancesPanel = () => {
         return (
             <div className="space-y-6 text-left">
-                <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none p-6">
-                    <h3 className="font-bold text-sm text-[#161616] mb-4">Gestión de Anticipos y Adelantos de Nómina</h3>
+                {/* Header de Anticipos */}
+                <div className="bg-white border border-[#E2DFD7] p-4 sm:p-5 shadow-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">
+                                NÓMINA & ADELANTOS
+                            </span>
+                            <h3 className="font-serif text-xl sm:text-2xl font-normal text-[#161616] flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#161616] text-[22px]">payments</span>
+                                Gestión de Anticipos & Adelantos de Sueldo
+                            </h3>
+                            <p className="text-xs text-[#76746E] font-sans mt-0.5">
+                                Revisa solicitudes, aprueba montos, desembolsa fondos y gestiona recibos de pago.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={fetchAllAdvances}
+                            className="px-3.5 py-2 border border-[#E2DFD7] bg-white hover:bg-[#FAF8F5] text-xs font-mono font-bold text-[#161616] flex items-center gap-1.5 self-start sm:self-center transition cursor-pointer"
+                        >
+                            <span className="material-symbols-outlined text-[16px]">refresh</span>
+                            Refrescar
+                        </button>
+                    </div>
+                </div>
+
+                <div className="bg-white border border-[#E2DFD7] shadow-xs p-6">
                     {loadingAdvances ? (
-                        <div className="text-center py-12 text-xs text-[#76746E] animate-pulse">Cargando anticipos...</div>
+                        <div className="text-center py-12 text-[#76746E] space-y-2">
+                            <span className="material-symbols-outlined animate-spin text-3xl text-[#161616]">sync</span>
+                            <p className="text-xs font-mono uppercase tracking-wider">Cargando anticipos de nómina...</p>
+                        </div>
                     ) : allAdvances.length === 0 ? (
-                        <div className="text-center py-12 text-xs text-[#76746E] italic">No hay solicitudes de anticipo registradas.</div>
+                        <div className="text-center py-12 text-[#76746E] space-y-2">
+                            <span className="material-symbols-outlined text-4xl text-[#76746E]">payments</span>
+                            <p className="text-sm font-serif text-[#161616]">No hay solicitudes de anticipo registradas</p>
+                            <p className="text-xs font-mono text-[#76746E]">Las solicitudes cargadas por los colaboradores o administradores aparecerán aquí.</p>
+                        </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                             {allAdvances.map(adv => (
@@ -1847,6 +1886,222 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         );
     };
 
+    const renderRequestsPanel = () => {
+        return (
+            <div className="space-y-6 text-left">
+                {/* Header de Solicitudes RRHH */}
+                <div className="bg-white border border-[#E2DFD7] p-4 sm:p-5 shadow-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <span className="text-[10px] font-bold text-[#D9381E] uppercase font-mono tracking-widest block">
+                                GESTIÓN HUMANA & AUSENCIAS
+                            </span>
+                            <h3 className="font-serif text-xl sm:text-2xl font-normal text-[#161616] flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#161616] text-[22px]">description</span>
+                                Solicitudes y Permisos de Personal (RRHH)
+                            </h3>
+                            <p className="text-xs text-[#76746E] font-sans mt-0.5">
+                                Revisa, aprueba o rechaza solicitudes de vacaciones, permisos remunerados e incapacidades médicas.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsAdminDocOpen(true)}
+                                className="px-4 py-2 bg-[#161616] hover:bg-[#D9381E] text-[#F6F4EE] border border-[#161616] hover:border-[#D9381E] text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                                + Registrar Ausencia
+                            </button>
+                            <span className="px-2.5 py-1 bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] text-[11px] font-mono font-bold">
+                                {hrDocs.filter(d => d.status === 'pending').length} Pendientes
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Filtros de Solicitudes */}
+                <div className="bg-white border border-[#E2DFD7] p-3 shadow-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                        <div className="space-y-1">
+                            <label className="block text-[10px] font-bold text-[#76746E] uppercase font-mono">Buscar Colaborador</label>
+                            <div className="relative flex items-center">
+                                <span className="material-symbols-outlined absolute left-3 text-[#76746E] text-[16px] pointer-events-none">search</span>
+                                <input 
+                                    type="text"
+                                    placeholder="Nombre, celular o No. de empleado..."
+                                    value={docFilterQuery}
+                                    onChange={(e) => setDocFilterQuery(e.target.value)}
+                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] pl-9 pr-3 py-2 text-[#161616] font-mono outline-none focus:border-[#161616] focus:bg-white text-xs transition-colors"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block text-[10px] font-bold text-[#76746E] uppercase font-mono">Mes</label>
+                            <select
+                                value={docFilterMonth}
+                                onChange={(e) => setDocFilterMonth(e.target.value)}
+                                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-[#161616] font-mono outline-none focus:border-[#161616] focus:bg-white cursor-pointer text-xs transition-colors"
+                            >
+                                <option value="">-- Todos los Meses --</option>
+                                <option value="01">Enero</option>
+                                <option value="02">Febrero</option>
+                                <option value="03">Marzo</option>
+                                <option value="04">Abril</option>
+                                <option value="05">Mayo</option>
+                                <option value="06">Junio</option>
+                                <option value="07">Julio</option>
+                                <option value="08">Agosto</option>
+                                <option value="09">Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="block text-[10px] font-bold text-[#76746E] uppercase font-mono">Año</label>
+                            <select
+                                value={docFilterYear}
+                                onChange={(e) => setDocFilterYear(e.target.value)}
+                                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-[#161616] font-mono outline-none focus:border-[#161616] focus:bg-white cursor-pointer text-xs transition-colors"
+                            >
+                                <option value="">-- Todos los Años --</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Listado de Solicitudes */}
+                <div className="bg-white border border-[#E2DFD7] p-6 shadow-xs">
+                    {hrDocsLoading ? (
+                        <div className="text-center py-12 text-[#76746E] space-y-2">
+                            <span className="material-symbols-outlined animate-spin text-3xl text-[#161616]">sync</span>
+                            <p className="text-xs font-mono uppercase tracking-wider">Cargando solicitudes...</p>
+                        </div>
+                    ) : hrDocs.length === 0 ? (
+                        <div className="text-center py-12 text-[#76746E] space-y-2">
+                            <span className="material-symbols-outlined text-4xl text-[#76746E]">event_available</span>
+                            <p className="text-sm font-serif text-[#161616]">No hay solicitudes registradas</p>
+                            <p className="text-xs font-mono text-[#76746E]">Las solicitudes de vacaciones, permisos o incapacidades aparecerán aquí.</p>
+                        </div>
+                    ) : filteredHrDocs.length === 0 ? (
+                        <p className="text-xs text-[#76746E] font-mono py-8 text-center italic">No se encontraron solicitudes con los filtros aplicados.</p>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {filteredHrDocs.map((doc: any) => (
+                                <div key={doc.id} className="p-4 bg-white border border-[#E2DFD7] space-y-3 shadow-xs">
+                                    <div className="flex justify-between items-start border-b border-[#E2DFD7] pb-2">
+                                        <div>
+                                            <span className="font-bold text-xs text-[#161616] block">{doc.employee_name}</span>
+                                            <span className="text-[10px] text-[#76746E] font-mono">+{doc.employee_phone}</span>
+                                        </div>
+                                        <span className={`px-2 py-0.5 text-[9px] font-mono font-bold uppercase border ${
+                                            doc.status === 'pending' ? 'bg-[#FAF8F5] text-amber-700 border-amber-400' :
+                                            doc.status === 'negotiating' ? 'bg-[#FAF8F5] text-purple-700 border-purple-400' :
+                                            doc.status === 'approved' ? 'bg-[#FAF8F5] text-emerald-700 border-emerald-400' : 'bg-[#FAF8F5] text-[#D9381E] border-[#D9381E]'
+                                        }`}>
+                                            {doc.status === 'negotiating' ? 'En Negociación' : doc.status === 'approved' ? 'Aprobado' : doc.status === 'pending' ? 'Pendiente' : 'Rechazado'}
+                                        </span>
+                                    </div>
+
+                                    <div className="text-xs space-y-1.5 font-sans">
+                                        <div className="flex justify-between text-[11px] text-[#76746E] font-mono">
+                                            <span>Tipo: <strong className="text-[#161616] capitalize">{doc.doc_type.replace('_', ' ')}</strong></span>
+                                            <span>Depto: <strong>{doc.department_name || 'Sin asignar'}</strong></span>
+                                        </div>
+                                        <div className="flex justify-between text-[11px] text-[#76746E] font-mono">
+                                            <span>Rango: <strong>{formatDateOnly(doc.start_date)}{doc.end_date ? ` al ${formatDateOnly(doc.end_date)}` : ''}{doc.return_date ? ` (Regresa: ${formatDateOnly(doc.return_date)})` : ''}</strong></span>
+                                        </div>
+                                        <p className="text-[#161616] font-sans text-xs bg-[#FAF8F5] p-2.5 border border-[#E2DFD7] italic">"{doc.notes || doc.reason}"</p>
+                                        {doc.admin_notes && (
+                                            <div className="bg-[#FAF8F5] p-2.5 border border-[#E2DFD7] text-[11px] text-[#161616]">
+                                                <span className="font-bold text-[#D9381E] font-mono block mb-0.5 uppercase text-[10px]">Respuesta de Gestión Humana:</span>
+                                                {doc.admin_notes}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {doc.file_url && (
+                                        <div className="pt-1">
+                                            <a 
+                                                href={doc.file_url} 
+                                                target="_blank" 
+                                                rel="noreferrer"
+                                                className="text-[11px] text-[#161616] font-mono font-bold flex items-center gap-1 hover:underline"
+                                            >
+                                                <span className="material-symbols-outlined text-[14px]">attachment</span>
+                                                Ver archivo adjunto
+                                            </a>
+                                        </div>
+                                    )}
+
+                                    {(() => {
+                                        const overlaps = checkOverlap(doc);
+                                        if (overlaps) {
+                                            return (
+                                                <div className="bg-[#FAF8F5] border border-[#D9381E] text-[#D9381E] text-[11px] font-mono p-2.5 font-medium mt-2 flex items-start gap-1.5">
+                                                    <span className="material-symbols-outlined text-[15px] mt-0.5">warning</span>
+                                                    <div>
+                                                        <strong>Traslape de Fechas:</strong> Coincide con vacaciones/permisos de: {overlaps} ({doc.department_name || 'mismo departamento'})
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
+
+                                    {(doc.status === 'pending' || doc.status === 'negotiating') && (
+                                        <div className="flex gap-2 justify-end pt-2 border-t border-[#E2DFD7]">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleUpdateDocStatus(doc.id, 'negotiating')}
+                                                className="px-2.5 py-1 bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[11px] font-mono font-bold text-[#76746E] hover:text-[#161616] transition cursor-pointer"
+                                            >
+                                                Negociar
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleUpdateDocStatus(doc.id, 'rejected')}
+                                                className="px-2.5 py-1 bg-white hover:bg-[#D9381E]/10 border border-[#E2DFD7] hover:border-[#D9381E] text-[11px] font-mono font-bold text-[#D9381E] transition cursor-pointer"
+                                            >
+                                                Rechazar
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleUpdateDocStatus(doc.id, 'approved')}
+                                                className="px-3 py-1 bg-[#161616] hover:bg-[#D9381E] text-[#F6F4EE] border border-[#161616] hover:border-[#D9381E] text-[11px] font-mono font-bold uppercase transition cursor-pointer"
+                                            >
+                                                Aprobar
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {doc.status !== 'pending' && doc.status !== 'negotiating' && (
+                                        <div className="flex justify-between items-center pt-2 border-t border-[#E2DFD7] text-[10px] text-[#76746E] font-mono">
+                                            <span>Gestionado</span>
+                                            <button 
+                                                type="button"
+                                                onClick={() => handleDeleteDoc(doc.id)}
+                                                className="text-[#D9381E] hover:underline border-0 bg-transparent cursor-pointer font-bold"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     const filteredHrDocs = hrDocs.filter((doc: any) => {
         if (docFilterQuery) {
             const query = docFilterQuery.toLowerCase();
@@ -1962,15 +2217,40 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                     <span className="material-symbols-outlined text-[16px]">payments</span>
                     Solicitudes de Anticipos
                 </button>
+                <button
+                    onClick={() => {
+                        setActiveView('requests');
+                        fetchHrDocs();
+                    }}
+                    className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border ${
+                        activeView === 'requests'
+                            ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                            : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
+                    }`}
+                >
+                    <span className="material-symbols-outlined text-[16px]">description</span>
+                    Solicitudes & Permisos
+                    {hrDocs.filter(d => d.status === 'pending').length > 0 && (
+                        <span className={`px-1.5 py-0.2 text-[9px] font-mono font-bold ${
+                            activeView === 'requests' ? 'bg-[#D9381E] text-white' : 'bg-[#D9381E]/10 text-[#D9381E]'
+                        }`}>
+                            {hrDocs.filter(d => d.status === 'pending').length}
+                        </span>
+                    )}
+                </button>
             </div>
 
             {loading ? (
                 <div className="flex justify-center py-20">
-                    <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-none animate-spin"></div>
+                    <div className="w-10 h-10 border-2 border-[#161616] border-t-transparent rounded-none animate-spin"></div>
                 </div>
+            ) : activeView === 'shifts' ? (
+                renderShiftsPanel()
             ) : activeView === 'advances' ? (
                 renderAdvancesPanel()
-            ) : activeView === 'list' ? (
+            ) : activeView === 'requests' ? (
+                renderRequestsPanel()
+            ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Employees list table */}
                     <div className="lg:col-span-8 bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none p-6 overflow-x-auto">
@@ -2074,197 +2354,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                         </div>
                     </div>
                 </div>
-            ) : (
-                renderShiftsPanel()
             )}
-
-            {/* HR Solicitudes & Incapacidades Panel */}
-            <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none p-6 rounded-none border border-[#E2DFD7] mt-6">
-                <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
-                    <div>
-                        <h3 className="font-bold text-sm text-[#161616]">Solicitudes y Permisos de Personal (RRHH)</h3>
-                        <p className="text-[10px] text-[#76746E]">Revisa, aprueba o rechaza solicitudes de vacaciones, permisos e incapacidades médicas cargadas por los empleados.</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setIsAdminDocOpen(true)}
-                            className="px-3 py-1.5 bg-[#161616] hover:bg-[#D9381E] border border-[#161616] hover:border-[#D9381E] text-white text-[10px] font-bold rounded-none cursor-pointer transition shadow border-0 flex items-center gap-1"
-                        >
-                            <span className="material-symbols-outlined text-[14px]">add_circle</span>
-                            Registrar Ausencia / Permiso
-                        </button>
-                        <span className="px-2 py-0.5 bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] text-[10px] rounded-none font-bold">
-                            {hrDocs.filter(d => d.status === 'pending').length} Pendientes
-                        </span>
-                    </div>
-                </div>
-
-                {/* Filtros de Solicitudes */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/5 p-3 rounded-none border border-[#E2DFD7] mb-4 text-xs">
-                    <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-[#76746E] uppercase">Buscar Colaborador</label>
-                        <div className="relative flex items-center">
-                            <span className="material-symbols-outlined absolute left-3 text-[#76746E] text-[16px]">search</span>
-                            <input 
-                                type="text"
-                                placeholder="Nombre, celular o No. de empleado..."
-                                value={docFilterQuery}
-                                onChange={(e) => setDocFilterQuery(e.target.value)}
-                                className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] pl-9 pr-3 py-2 rounded-none text-[#161616] outline-none focus:border-primary text-xs"
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-[#76746E] uppercase">Mes</label>
-                        <select
-                            value={docFilterMonth}
-                            onChange={(e) => setDocFilterMonth(e.target.value)}
-                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none cursor-pointer text-xs"
-                        >
-                            <option value="">-- Todos los Meses --</option>
-                            <option value="01">Enero</option>
-                            <option value="02">Febrero</option>
-                            <option value="03">Marzo</option>
-                            <option value="04">Abril</option>
-                            <option value="05">Mayo</option>
-                            <option value="06">Junio</option>
-                            <option value="07">Julio</option>
-                            <option value="08">Agosto</option>
-                            <option value="09">Septiembre</option>
-                            <option value="10">Octubre</option>
-                            <option value="11">Noviembre</option>
-                            <option value="12">Diciembre</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-[#76746E] uppercase">Año</label>
-                        <select
-                            value={docFilterYear}
-                            onChange={(e) => setDocFilterYear(e.target.value)}
-                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2 rounded-none text-[#161616] outline-none cursor-pointer text-xs"
-                        >
-                            <option value="">-- Todos los Años --</option>
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
-                            <option value="2028">2028</option>
-                        </select>
-                    </div>
-                </div>
-
-                {hrDocsLoading ? (
-                    <div className="flex justify-center py-6">
-                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-none animate-spin"></div>
-                    </div>
-                ) : hrDocs.length === 0 ? (
-                    <p className="text-xs text-[#76746E] py-6 text-center italic">No hay solicitudes pendientes o registradas en el sistema.</p>
-                ) : filteredHrDocs.length === 0 ? (
-                    <p className="text-xs text-[#76746E] py-6 text-center italic">No se encontraron solicitudes que coincidan con los filtros.</p>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filteredHrDocs.map((doc: any) => (
-                            <div key={doc.id} className="p-4 bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none space-y-3">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <span className="font-bold text-xs text-[#161616] block">{doc.employee_name}</span>
-                                        <span className="text-[9px] text-[#76746E] font-mono">+{doc.employee_phone}</span>
-                                    </div>
-                                    <span className={`px-2 py-0.5 rounded-none text-[9px] font-bold uppercase ${
-                                        doc.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
-                                        doc.status === 'negotiating' ? 'bg-purple-500/10 text-purple-500' :
-                                        doc.status === 'approved' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
-                                    }`}>
-                                        {doc.status === 'negotiating' ? 'En Negociación' : doc.status}
-                                    </span>
-                                </div>
-
-                                <div className="text-xs space-y-1.5">
-                                    <div className="flex justify-between text-[10px] text-[#76746E]">
-                                        <span>Tipo: <strong className="text-[#161616] capitalize">{doc.doc_type.replace('_', ' ')}</strong></span>
-                                        <span>Depto: <strong>{doc.department_name || 'Sin asignar'}</strong></span>
-                                    </div>
-                                    <div className="flex justify-between text-[10px] text-[#76746E]">
-                                        <span>Rango: <strong>{formatDateOnly(doc.start_date)}{doc.end_date ? ` al ${formatDateOnly(doc.end_date)}` : ''}{doc.return_date ? ` (Regresa: ${formatDateOnly(doc.return_date)})` : ''}</strong></span>
-                                    </div>
-                                    <p className="text-[#76746E] font-medium bg-white/5 p-2 rounded-none italic">"{doc.notes || doc.reason}"</p>
-                                    {doc.admin_notes && (
-                                        <div className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-2 rounded-none border border-[#E2DFD7] text-[10px] text-[#161616]">
-                                            <span className="font-bold text-[#161616] block mb-0.5">Respuesta de Gestión Humana:</span>
-                                            {doc.admin_notes}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {doc.file_url && (
-                                    <div className="pt-1">
-                                        <a 
-                                            href={doc.file_url} 
-                                            target="_blank" 
-                                            rel="noreferrer"
-                                            className="text-[10px] text-[#161616] font-bold flex items-center gap-1 hover:underline"
-                                        >
-                                            <span className="material-symbols-outlined text-[14px]">attachment</span>
-                                            Ver archivo adjunto
-                                        </a>
-                                    </div>
-                                )}
-
-                                {(() => {
-                                    const overlaps = checkOverlap(doc);
-                                    if (overlaps) {
-                                        return (
-                                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] p-2.5 rounded-none font-medium mt-2 flex items-start gap-1.5 animate-pulse">
-                                                <span className="material-symbols-outlined text-[14px] mt-0.5">warning</span>
-                                                <div>
-                                                    <strong>Traslape de Fechas:</strong> Coincide con vacaciones/permisos de: {overlaps} ({doc.department_name || 'mismo departamento'})
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                })()}
-
-                                {(doc.status === 'pending' || doc.status === 'negotiating') && (
-                                    <div className="flex gap-2 justify-end pt-2 border-t border-[#E2DFD7]">
-                                        <button 
-                                            onClick={() => handleUpdateDocStatus(doc.id, 'rejected')}
-                                            className="px-2.5 py-1.5 border border-red-500/30 text-red-500 hover:bg-red-500/5 text-[10px] font-bold rounded-none cursor-pointer transition bg-transparent"
-                                        >
-                                            Rechazar
-                                        </button>
-                                        <button 
-                                            onClick={() => handleUpdateDocStatus(doc.id, 'negotiating')}
-                                            className="px-2.5 py-1.5 border border-purple-500/30 text-purple-500 hover:bg-purple-500/5 text-[10px] font-bold rounded-none cursor-pointer transition bg-transparent"
-                                        >
-                                            Negociar
-                                        </button>
-                                        <button 
-                                            onClick={() => handleUpdateDocStatus(doc.id, 'approved')}
-                                            className="px-2.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold rounded-none cursor-pointer transition border-0"
-                                        >
-                                            Aprobar
-                                        </button>
-                                    </div>
-                                )}
-
-                                {doc.status !== 'pending' && doc.status !== 'negotiating' && (
-                                    <div className="flex justify-between items-center pt-2 border-t border-[#E2DFD7] text-[9px] text-[#76746E] font-mono">
-                                        <span>Gestionado</span>
-                                        <button 
-                                            onClick={() => handleDeleteDoc(doc.id)}
-                                            className="text-red-500 hover:underline border-0 bg-transparent cursor-pointer"
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
 
             {/* DEPARTMENTS MANAGER MODAL */}
             {isDeptOpen && createPortal(
