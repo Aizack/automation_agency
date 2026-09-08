@@ -691,7 +691,8 @@ app.put('/api/clients/:clientId/profile-settings', authenticateToken as any, aut
       SET name = COALESCE($1, name), 
           nit = $2, 
           address = $3, 
-          phone_number = $4, 
+          phone_number = $4,
+          phone = $4, 
           email = $5, 
           invoice_footer = $6,
           category = COALESCE($7, category),
@@ -9733,7 +9734,19 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
   app.post('/api/clients/:clientId/branches', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
-      const { name, branch_name, phone, address, has_custom_tax_id, legal_name, custom_tax_id } = req.body;
+      const { 
+        name, 
+        branch_name, 
+        phone, 
+        address, 
+        email, 
+        person_type, 
+        category, 
+        invoice_footer, 
+        has_custom_tax_id, 
+        legal_name, 
+        custom_tax_id 
+      } = req.body;
 
       if (!name || !branch_name) {
         return res.status(400).json({ success: false, error: 'Nombre de empresa y nombre de la sede son obligatorios.' });
@@ -9748,15 +9761,24 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         console.error("[Branches Schema Init Warning]:", schemaErr?.message);
       }
 
-      // Resolver cliente raíz si la petición se hace desde una sucursal hija
-      const parentCheck = await pool.query('SELECT parent_client_id FROM clients WHERE id = $1', [clientId]);
-      const rootClientId = parentCheck.rows[0]?.parent_client_id || clientId;
+      // Resolver cliente raíz y sus datos tributarios/comerciales por defecto
+      const parentCheck = await pool.query('SELECT id, parent_client_id, nit, category, person_type, invoice_footer FROM clients WHERE id = $1', [clientId]);
+      const parentRow = parentCheck.rows[0];
+      const rootClientId = parentRow?.parent_client_id || clientId;
+
+      const resolvedPersonType = person_type || parentRow?.person_type || 'persona_juridica';
+      const resolvedCategory = category || parentRow?.category || 'optica';
+      const resolvedInvoiceFooter = invoice_footer || parentRow?.invoice_footer || null;
+      const resolvedNit = has_custom_tax_id ? (custom_tax_id || null) : (parentRow?.nit || null);
 
       const branchId = `branch_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
       await pool.query(
-        `INSERT INTO clients (id, parent_client_id, name, branch_name, is_main_branch, phone, address, is_activated, has_custom_tax_id, legal_name, custom_tax_id)
-         VALUES ($1, $2, $3, $4, FALSE, $5, $6, TRUE, $7, $8, $9)`,
+        `INSERT INTO clients (
+          id, parent_client_id, name, branch_name, is_main_branch, phone, phone_number, address, email, 
+          person_type, category, invoice_footer, nit, is_activated, has_custom_tax_id, legal_name, custom_tax_id
+        )
+         VALUES ($1, $2, $3, $4, FALSE, $5, $5, $6, $7, $8, $9, $10, $11, TRUE, $12, $13, $14)`,
         [
           branchId, 
           rootClientId, 
@@ -9764,6 +9786,11 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           branch_name, 
           phone || null, 
           address || null, 
+          email || null,
+          resolvedPersonType,
+          resolvedCategory,
+          resolvedInvoiceFooter,
+          resolvedNit,
           Boolean(has_custom_tax_id), 
           legal_name || name, 
           custom_tax_id || null
@@ -9778,6 +9805,11 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           name, 
           branch_name, 
           parent_client_id: rootClientId,
+          phone,
+          address,
+          email,
+          person_type: resolvedPersonType,
+          category: resolvedCategory,
           has_custom_tax_id: Boolean(has_custom_tax_id),
           legal_name: legal_name || name,
           custom_tax_id: custom_tax_id || null

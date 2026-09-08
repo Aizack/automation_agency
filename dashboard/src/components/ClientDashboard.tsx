@@ -273,8 +273,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   // Estados para Módulo Multi-Sede & Selector de Sucursales
   const [branches, setBranches] = useState<any[]>([]);
   const [branchNameInput, setBranchNameInput] = useState('');
+  const [branchLegalNameInput, setBranchLegalNameInput] = useState('');
   const [branchPhoneInput, setBranchPhoneInput] = useState('');
   const [branchAddressInput, setBranchAddressInput] = useState('');
+  const [branchEmailInput, setBranchEmailInput] = useState('');
+  const [branchCategoryInput, setBranchCategoryInput] = useState('optica');
+  const [branchPersonTypeInput, setBranchPersonTypeInput] = useState('persona_juridica');
+  const [branchInvoiceFooterInput, setBranchInvoiceFooterInput] = useState('');
   const [hasCustomTaxIdInput, setHasCustomTaxIdInput] = useState(false);
   const [legalNameInput, setLegalNameInput] = useState('');
   const [customTaxIdInput, setCustomTaxIdInput] = useState('');
@@ -1752,7 +1757,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     try {
                       setSavingBranch(true);
                       const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
-                      const resolvedCompanyName = clientData?.name || branchNameInput;
+                      const resolvedCompanyName = branchLegalNameInput || clientData?.name || branchNameInput;
                       const res = await fetch(`/api/clients/${clientId}/branches`, {
                         method: 'POST',
                         headers: {
@@ -1764,6 +1769,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                           branch_name: branchNameInput,
                           phone: branchPhoneInput,
                           address: branchAddressInput,
+                          email: branchEmailInput,
+                          person_type: branchPersonTypeInput,
+                          category: branchCategoryInput,
+                          invoice_footer: branchInvoiceFooterInput,
                           has_custom_tax_id: hasCustomTaxIdInput,
                           legal_name: hasCustomTaxIdInput ? legalNameInput : resolvedCompanyName,
                           custom_tax_id: hasCustomTaxIdInput ? customTaxIdInput : null
@@ -1773,8 +1782,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                       if (json.success) {
                         alert(json.message);
                         setBranchNameInput('');
+                        setBranchLegalNameInput('');
                         setBranchPhoneInput('');
                         setBranchAddressInput('');
+                        setBranchEmailInput('');
+                        setBranchInvoiceFooterInput('');
                         setHasCustomTaxIdInput(false);
                         setLegalNameInput('');
                         setCustomTaxIdInput('');
@@ -1790,16 +1802,56 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                   }}
                   className="space-y-4 text-xs"
                 >
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-on-surface-variant uppercase">Nombre de la Sede / Punto de Venta *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej. Sucursal Norte / Sede Centro / Punto de Venta #2"
-                      value={branchNameInput}
-                      onChange={(e) => setBranchNameInput(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-on-surface-variant uppercase">Nombre de la Sede / Punto de Venta *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej. Sucursal Norte / Sede Ciudadela"
+                        value={branchNameInput}
+                        onChange={(e) => setBranchNameInput(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-on-surface-variant uppercase">Nombre / Razón Social Legal del Negocio *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder={clientData?.name || "Ej. Óptica Nuevo Horizonte S.A.S."}
+                        value={branchLegalNameInput}
+                        onChange={(e) => setBranchLegalNameInput(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-on-surface-variant uppercase">Categoría del Negocio *</label>
+                      <select
+                        value={branchCategoryInput}
+                        onChange={(e) => setBranchCategoryInput(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary font-semibold"
+                      >
+                        <option value="optica">👓 Óptica / Centro Clínico</option>
+                        <option value="restaurante">🍽️ Restaurante / Gastronomía</option>
+                        <option value="retail">🛍️ Comercio / Tienda Retail</option>
+                        <option value="servicios">💼 Servicios Prof. / Salud</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-on-surface-variant uppercase">Tipo de Persona (Tributaria DIAN) *</label>
+                      <select
+                        value={branchPersonTypeInput}
+                        onChange={(e) => setBranchPersonTypeInput(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary font-semibold"
+                      >
+                        <option value="persona_juridica">🏢 Persona Jurídica (Empresa S.A.S. / S.A.)</option>
+                        <option value="persona_natural">👤 Persona Natural (Régimen Simplificado / PN)</option>
+                      </select>
+                    </div>
                   </div>
 
                   {/* Switch / Toggle Fiscal (NIT Propio vs Heredado) - Wabi-Sabi Paper Design */}
@@ -1876,7 +1928,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="text-[11px] font-bold text-on-surface-variant uppercase">Teléfono / WhatsApp</label>
                       <input
@@ -1888,15 +1940,36 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-on-surface-variant uppercase">Dirección</label>
+                      <label className="text-[11px] font-bold text-on-surface-variant uppercase">Email Comercial</label>
+                      <input
+                        type="email"
+                        placeholder="Ej. contacto@minegocio.com"
+                        value={branchEmailInput}
+                        onChange={(e) => setBranchEmailInput(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-on-surface-variant uppercase">Dirección Comercial</label>
                       <input
                         type="text"
-                        placeholder="Ej. Carrera 10 # 20-30"
+                        placeholder="Ej. Carrera 10 # 20-30 Local 1"
                         value={branchAddressInput}
                         onChange={(e) => setBranchAddressInput(e.target.value)}
                         className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
                       />
                     </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-on-surface-variant uppercase">Términos de Garantía y Pie de Factura / POS</label>
+                    <textarea
+                      rows={2}
+                      placeholder="Ej. Garantía de 1 año por defectos de fabricación. No se aceptan devoluciones de lentes formulados personalizados una vez cortados."
+                      value={branchInvoiceFooterInput}
+                      onChange={(e) => setBranchInvoiceFooterInput(e.target.value)}
+                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary resize-none text-xs"
+                    />
                   </div>
 
                   <div className="pt-2 flex justify-end">
