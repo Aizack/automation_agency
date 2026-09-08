@@ -1997,6 +1997,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           </div>
         )}
 
+        {activeTab === 'planeacion_empresarial' && (
+          <div className="animate-fade-in">
+            <EnterprisePlanningModule clientId={clientId} />
+          </div>
+        )}
+
         {activeTab === 'cartera' && (
           <div className="animate-fade-in">
             <SaaSErpCartera clientId={clientId} />
