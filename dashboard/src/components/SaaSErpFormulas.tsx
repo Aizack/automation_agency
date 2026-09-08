@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
-import { SaaSErpLabJobs } from './SaaSErpLabJobs';
 
 interface FormulasProps {
   clientId: string;
-  defaultSubTab?: 'formulas' | 'lab_jobs' | 'historia_clinica';
+  defaultSubTab?: 'formulas' | 'historia_clinica';
   showSubTabs?: boolean;
 }
 
@@ -58,7 +57,7 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Subpestañas
-  const [formulasSubTab, setFormulasSubTab] = useState<'formulas' | 'lab_jobs' | 'historia_clinica'>(defaultSubTab);
+  const [formulasSubTab, setFormulasSubTab] = useState<'formulas' | 'historia_clinica'>(defaultSubTab);
   
   // Historia Clínica
   const [clinicalRecords, setClinicalRecords] = useState<any[]>([]);
@@ -931,19 +930,6 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
               <span className="material-symbols-outlined text-[16px]">clinical_notes</span>
               Historias Clínicas
             </button>
-
-            <button
-              type="button"
-              onClick={() => setFormulasSubTab('lab_jobs')}
-              className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border rounded-none ${
-                formulasSubTab === 'lab_jobs'
-                  ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
-                  : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">precision_manufacturing</span>
-              Órdenes de Laboratorio
-            </button>
           </div>
         </div>
       )}
@@ -1483,11 +1469,6 @@ export const SaaSErpFormulas: React.FC<FormulasProps> = ({ clientId: rawClientId
             </div>
           )}
         </div>
-      )}
-
-      {/* SUBTAB 3: ÓRDENES DE LABORATORIO */}
-      {formulasSubTab === 'lab_jobs' && (
-        <SaaSErpLabJobs clientId={clientId} />
       )}
 
       {/* MODAL CREAR / EDITAR HISTORIA CLÍNICA WABI-SABI (CON ÁREA 1 Y ÁREA 2 COMPARATIVAS) */}
