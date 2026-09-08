@@ -40,6 +40,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [loadingInstallments, setLoadingInstallments] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [carteraTab, setCarteraTab] = useState<'pendientes' | 'liquidadas'>('pendientes');
   
   // Modal de transacción
   const [showPayModal, setShowPayModal] = useState(false);
@@ -54,16 +55,23 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
       const res = await fetch(`/api/clients/${clientId}/invoices`);
       const json = await res.json();
       if (json.success) {
-        // Filtrar facturas a crédito o cuotas
+        // Filtrar exclusivamente facturas vendidas a crédito o cuotas
         const isCreditInvoice = (inv: Invoice) => {
           const method = (inv.payment_method || '').toLowerCase();
-          const hasInstallments = Number(inv.installments_count || 0) > 0;
-          return ['credito', 'crédito', 'cuotas', 'financiamiento'].includes(method) || hasInstallments;
+          return ['credito', 'crédito', 'cuotas', 'financiamiento'].includes(method);
         };
         const creditList = (json.invoices || []).filter(isCreditInvoice);
         setInvoices(creditList);
-        if (creditList.length > 0 && !selectedInvoice) {
+
+        // Auto-seleccionar la primera pendiente
+        const pendingList = creditList.filter((inv: Invoice) => inv.status !== 'paid');
+        if (pendingList.length > 0) {
+          handleSelectInvoice(pendingList[0]);
+        } else if (creditList.length > 0) {
           handleSelectInvoice(creditList[0]);
+        } else {
+          setSelectedInvoice(null);
+          setInstallments([]);
         }
       }
     } catch (err) {
@@ -137,15 +145,19 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(num);
   };
 
-  const filteredInvoices = invoices.filter(inv => 
+  // Filtrado por pestaña (Pendientes vs Liquidadas) y búsqueda
+  const pendingInvoices = invoices.filter(inv => inv.status !== 'paid');
+  const paidInvoices = invoices.filter(inv => inv.status === 'paid');
+
+  const tabInvoices = carteraTab === 'pendientes' ? pendingInvoices : paidInvoices;
+
+  const filteredInvoices = tabInvoices.filter(inv => 
     inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
     inv.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (inv.customer_document_number && inv.customer_document_number.includes(searchQuery))
   );
 
-  const totalCarteraAmount = invoices.reduce((sum, inv) => sum + parseFloat(inv.total_amount || '0'), 0);
-  const totalPendingInvoices = invoices.filter(inv => inv.status !== 'paid').length;
-  const totalPaidInvoices = invoices.filter(inv => inv.status === 'paid').length;
+  const totalCarteraPendiente = pendingInvoices.reduce((sum, inv) => sum + parseFloat(inv.total_amount || '0'), 0);
 
   return (
     <div className="space-y-6 text-[#161616] font-sans antialiased">
@@ -159,7 +171,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
             Módulo de Cartera & Cobranza
           </h2>
           <p className="text-xs text-[#76746E] mt-1.5">
-            Monitorea el plan de amortización, abonos iniciales y acciones negociables de clientes con compras financiadas.
+            Monitorea el plan de amortización, abonos iniciales y cobro de cuotas a clientes con compras financiadas.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -178,28 +190,26 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
       {/* KPI Cards Consolidado de Cartera */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
-          <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Total Cartera Financiada</span>
-          <p className="text-2xl font-bold font-mono text-[#D9381E] mt-1">{formatCOP(totalCarteraAmount)}</p>
+          <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Total Cartera por Cobrar</span>
+          <p className="text-2xl font-bold font-mono text-[#D9381E] mt-1">{formatCOP(totalCarteraPendiente)}</p>
           <p className="text-[10px] text-[#76746E] font-mono mt-2 border-t border-[#E2DFD7] pt-1.5">
-            Monto total financiado a cuotas
+            Saldo pendiente en facturas a crédito
           </p>
         </div>
 
         <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
-          <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Créditos Registrados</span>
-          <p className="text-2xl font-bold font-mono text-[#161616] mt-1">{invoices.length} Créditos</p>
+          <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Créditos Pendientes</span>
+          <p className="text-2xl font-bold font-mono text-[#161616] mt-1">{pendingInvoices.length} Facturas</p>
           <p className="text-[10px] text-[#76746E] font-mono mt-2 border-t border-[#E2DFD7] pt-1.5">
-            {totalPendingInvoices} Pendientes / {totalPaidInvoices} Cancelados
+            Clientes con cuotas activas por recaudar
           </p>
         </div>
 
         <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
-          <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Estado de Recaudo</span>
-          <p className="text-2xl font-bold font-mono text-[#137333] mt-1">
-            {invoices.length > 0 ? `${Math.round((totalPaidInvoices / invoices.length) * 100)}%` : '0%'} Al Día
-          </p>
+          <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Créditos Liquidados</span>
+          <p className="text-2xl font-bold font-mono text-[#137333] mt-1">{paidInvoices.length} Finalizados</p>
           <p className="text-[10px] text-[#76746E] font-mono mt-2 border-t border-[#E2DFD7] pt-1.5">
-            Porcentaje de créditos liquidados al 100%
+            Créditos pagados al 100%
           </p>
         </div>
       </div>
@@ -207,14 +217,36 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Lista de deudores */}
         <div className="lg:col-span-5 bg-white p-4 rounded-none border border-[#E2DFD7] space-y-3 shadow-xs">
-          <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2.5">
-            <h4 className="font-mono font-bold text-[11px] uppercase tracking-wider text-[#76746E] flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[#161616] text-[16px]">folder_shared</span>
-              Facturas Financiadas
-            </h4>
-            <span className="text-[10px] font-mono font-bold bg-[#FAF8F5] text-[#161616] px-2 py-0.5 border border-[#E2DFD7]">
-              {filteredInvoices.length} Créditos
-            </span>
+          {/* Sub-pestañas de Cartera: Pendientes vs Liquidadas */}
+          <div className="flex border-b border-[#E2DFD7] gap-2 select-none pb-2">
+            <button
+              type="button"
+              onClick={() => {
+                setCarteraTab('pendientes');
+                if (pendingInvoices.length > 0) handleSelectInvoice(pendingInvoices[0]);
+              }}
+              className={`px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer border ${
+                carteraTab === 'pendientes'
+                  ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                  : 'bg-[#FAF8F5] text-[#76746E] hover:text-[#161616] border-[#E2DFD7]'
+              }`}
+            >
+              Pendientes ({pendingInvoices.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCarteraTab('liquidadas');
+                if (paidInvoices.length > 0) handleSelectInvoice(paidInvoices[0]);
+              }}
+              className={`px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer border ${
+                carteraTab === 'liquidadas'
+                  ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                  : 'bg-[#FAF8F5] text-[#76746E] hover:text-[#161616] border-[#E2DFD7]'
+              }`}
+            >
+              Liquidadas ({paidInvoices.length})
+            </button>
           </div>
 
           {/* Search box */}
@@ -230,9 +262,11 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
           </div>
           
           {loading ? (
-            <div className="p-8 text-center text-xs font-mono uppercase text-[#76746E] tracking-wider">Cargando cuentas...</div>
+            <div className="p-8 text-center text-xs font-mono uppercase text-[#76746E] tracking-wider">Cargando cartera...</div>
           ) : filteredInvoices.length === 0 ? (
-            <div className="p-8 text-center text-xs text-[#76746E] font-mono">No se encontraron facturas a crédito.</div>
+            <div className="p-8 text-center text-xs text-[#76746E] font-mono">
+              {carteraTab === 'pendientes' ? 'No hay facturas a crédito pendientes de cobro.' : 'No hay créditos liquidados aún.'}
+            </div>
           ) : (
             <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
               {filteredInvoices.map((inv) => {
