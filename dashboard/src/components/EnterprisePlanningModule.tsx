@@ -214,66 +214,91 @@ export const EnterprisePlanningModule: React.FC<EnterprisePlanningModuleProps> =
 
   return (
     <div className="space-y-6 text-[#161616] font-sans antialiased">
-      {/* Encabezado Principal & Sub-Navegación Wabi-Sabi */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5">
+      {/* Encabezado Principal Wabi-Sabi */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#E2DFD7]">
         <div>
           <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-mono block mb-1">
             ESTRATEGIA & FINANZAS
           </span>
-          <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[#161616] tracking-tight leading-none flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#D9381E] text-[28px]">query_stats</span>
+          <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#161616] tracking-tight leading-none">
             Planeación Empresarial & Punto de Equilibrio
           </h2>
-          <p className="text-xs text-[#76746E] mt-2">
-            Modelo financiero sin redundancia: Nómina (+ Prestaciones) + Gastos Fijos + Deuda Bancaria + Punto de Equilibrio REAL.
+          <p className="text-xs text-[#76746E] mt-1.5">
+            Modelo financiero integral: Nómina de ley (+49.5%), Gastos fijos operativos, Servicio a deuda CAPEX y Margen de solvencia.
           </p>
         </div>
 
-        {/* Sub-navegación por Pestañas */}
-        <div className="flex flex-wrap gap-1 bg-white border border-[#E2DFD7] p-1 rounded-none shadow-xs">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={fetchFinancialModel}
+            className="px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider text-[#161616] bg-white border border-[#E2DFD7] hover:border-[#161616] transition cursor-pointer flex items-center gap-2 shadow-xs"
+          >
+            <span className="material-symbols-outlined text-[16px]">refresh</span>
+            Actualizar Modelo
+          </button>
+        </div>
+      </div>
+
+      {/* Sub-Navegación / Barra Zen de Pestañas */}
+      <div className="bg-white border border-[#E2DFD7] p-1.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
           <button
             type="button"
             onClick={() => setActiveTab('financiero_real')}
-            className={`px-3 py-1.5 text-xs font-mono font-bold rounded-none transition cursor-pointer flex items-center gap-1.5 uppercase tracking-wider border-0 ${
-              activeTab === 'financiero_real' ? 'bg-[#161616] text-[#F6F4EE]' : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+            className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border ${
+              activeTab === 'financiero_real'
+                ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
             }`}
           >
-            <span className="material-symbols-outlined text-[15px]">analytics</span>
+            <span className="material-symbols-outlined text-[16px]">analytics</span>
             Equilibrio Real
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('inversion_deuda')}
-            className={`px-3 py-1.5 text-xs font-mono font-bold rounded-none transition cursor-pointer flex items-center gap-1.5 uppercase tracking-wider border-0 ${
-              activeTab === 'inversion_deuda' ? 'bg-[#161616] text-[#F6F4EE]' : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+            className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border ${
+              activeTab === 'inversion_deuda'
+                ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
             }`}
           >
-            <span className="material-symbols-outlined text-[15px]">account_balance</span>
+            <span className="material-symbols-outlined text-[16px]">account_balance</span>
             CAPEX & Deuda
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('pricing')}
-            className={`px-3 py-1.5 text-xs font-mono font-bold rounded-none transition cursor-pointer flex items-center gap-1.5 uppercase tracking-wider border-0 ${
-              activeTab === 'pricing' ? 'bg-[#161616] text-[#F6F4EE]' : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+            className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border ${
+              activeTab === 'pricing'
+                ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
             }`}
           >
-            <span className="material-symbols-outlined text-[15px]">sell</span>
+            <span className="material-symbols-outlined text-[16px]">sell</span>
             Precios & Margen
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('legal_hub')}
-            className={`px-3 py-1.5 text-xs font-mono font-bold rounded-none transition cursor-pointer flex items-center gap-1.5 uppercase tracking-wider border-0 ${
-              activeTab === 'legal_hub' ? 'bg-[#161616] text-[#F6F4EE]' : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+            className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border ${
+              activeTab === 'legal_hub'
+                ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                : 'bg-transparent text-[#76746E] hover:text-[#161616] hover:bg-[#FAF8F5] border-transparent'
             }`}
           >
-            <span className="material-symbols-outlined text-[15px]">balance</span>
+            <span className="material-symbols-outlined text-[16px]">balance</span>
             Legal & IA
           </button>
+        </div>
+
+        <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-[#76746E] pr-2">
+          <span className="w-2 h-2 rounded-full bg-[#137333]"></span>
+          <span>Modelo Activo</span>
         </div>
       </div>
 
