@@ -1237,32 +1237,36 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
                                     {/* 2. Condiciones y Método de Pago */}
                                     <div>
-                                        <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
+                                        <h4 className="font-serif text-lg text-[#161616] border-b border-[#E2DFD7] pb-2 mb-3 font-normal">
                                             2. Condiciones y Método de Pago
                                         </h4>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                                            <div className="flex flex-col gap-1.5">
-                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Método de Pago *</label>
+                                        <div className={`grid grid-cols-1 sm:grid-cols-2 ${paymentMethod === 'credito' ? 'lg:grid-cols-5' : paymentMethod === 'transferencia' ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-3`}>
+                                            <div className="flex flex-col gap-1">
+                                                <label className="text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold truncate" title="Método de Pago">
+                                                    Método de Pago *
+                                                </label>
                                                 <select 
-                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] font-bold outline-none rounded-none cursor-pointer" 
+                                                    className="bg-white border border-[#E2DFD7] px-2.5 py-2 text-xs focus:border-[#161616] text-[#161616] font-semibold outline-none rounded-none cursor-pointer w-full" 
                                                     value={paymentMethod} 
                                                     onChange={(e) => setPaymentMethod(e.target.value as any)}
                                                     required
                                                 >
                                                     <option value="efectivo">💵 Efectivo</option>
-                                                    <option value="transferencia">🏦 Transferencia Bancaria</option>
-                                                    <option value="tarjeta_credito">💳 Tarjeta de Crédito</option>
-                                                    <option value="tarjeta_debito">💳 Tarjeta de Débito</option>
-                                                    <option value="credito">📋 Crédito (por cuotas)</option>
+                                                    <option value="transferencia">🏦 Transferencia</option>
+                                                    <option value="tarjeta_credito">💳 Tarjeta Crédito</option>
+                                                    <option value="tarjeta_debito">💳 Tarjeta Débito</option>
+                                                    <option value="credito">📋 Crédito / Cuotas</option>
                                                 </select>
                                             </div>
 
                                             {paymentMethod === 'transferencia' && (
                                                 <>
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Banco Origen</label>
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold truncate" title="Banco Origen">
+                                                            Banco Origen
+                                                        </label>
                                                         <select
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer"
+                                                            className="bg-white border border-[#E2DFD7] px-2.5 py-2 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer w-full"
                                                             value={transferBankSelect}
                                                             onChange={(e) => {
                                                                 const val = e.target.value;
@@ -1274,7 +1278,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                 }
                                                             }}
                                                         >
-                                                            <option value="">-- Seleccionar Banco Origen --</option>
+                                                            <option value="">-- Seleccionar Banco --</option>
                                                             <option value="Bancolombia">Bancolombia</option>
                                                             <option value="Nequi">Nequi</option>
                                                             <option value="Daviplata">Daviplata</option>
@@ -1290,14 +1294,14 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             <option value="Lulo Bank">Lulo Bank</option>
                                                             <option value="RappiPay">RappiPay</option>
                                                             <option value="Bold / Mercado Pago">Bold / Mercado Pago</option>
-                                                            <option value="otro">➕ Otro / Banco Extranjero...</option>
+                                                            <option value="otro">➕ Otro / Extranjero...</option>
                                                         </select>
 
                                                         {transferBankSelect === 'otro' && (
                                                             <input 
                                                                 type="text" 
-                                                                className="bg-white border border-[#E2DFD7] p-2.5 text-xs focus:border-[#161616] text-[#161616] outline-none mt-1 rounded-none font-sans"
-                                                                placeholder="Escribe el nombre del banco..."
+                                                                className="bg-white border border-[#E2DFD7] px-2.5 py-1.5 text-xs focus:border-[#161616] text-[#161616] outline-none mt-1 rounded-none font-sans w-full"
+                                                                placeholder="Nombre del banco..."
                                                                 value={customTransferBank}
                                                                 onChange={(e) => {
                                                                     setCustomTransferBank(e.target.value);
@@ -1306,15 +1310,17 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             />
                                                         )}
                                                     </div>
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Cuenta Propia de Destino</label>
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold truncate" title="Cuenta Propia de Destino">
+                                                            Cuenta de Destino
+                                                        </label>
                                                         {bankAccounts.length > 0 ? (
                                                             <select 
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer"
+                                                                className="bg-white border border-[#E2DFD7] px-2.5 py-2 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer w-full"
                                                                 value={transferDestinationAccount}
                                                                 onChange={(e) => setTransferDestinationAccount(e.target.value)}
                                                             >
-                                                                <option value="">-- Seleccionar Cuenta Destino --</option>
+                                                                <option value="">-- Seleccionar Cuenta --</option>
                                                                 {bankAccounts.map(b => (
                                                                     <option key={b.id} value={`${b.bank_name} - ${b.account_type} #${b.account_number}`}>
                                                                         {b.bank_name} ({b.account_type}) - #{b.account_number}
@@ -1324,8 +1330,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                         ) : (
                                                             <input 
                                                                 type="text" 
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none font-sans"
-                                                                placeholder="Ej: Ahorros Bancolombia #1234"
+                                                                className="bg-white border border-[#E2DFD7] px-2.5 py-2 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none font-sans w-full"
+                                                                placeholder="Ej: Bancolombia #1234"
                                                                 value={transferDestinationAccount}
                                                                 onChange={(e) => setTransferDestinationAccount(e.target.value)}
                                                             />
@@ -1336,21 +1342,25 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
                                             {paymentMethod === 'credito' && (
                                                 <>
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Abono Inicial ($) *</label>
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold truncate" title="Abono Inicial ($)">
+                                                            Abono Inicial ($) *
+                                                        </label>
                                                         <input 
                                                             type="number" 
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none" 
+                                                            className="bg-white border border-[#E2DFD7] px-2.5 py-2 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none w-full" 
                                                             value={abono} 
                                                             onChange={(e) => setAbono(e.target.value)}
                                                             required
                                                         />
                                                     </div>
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Número de Cuotas *</label>
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold truncate" title="Número de Cuotas">
+                                                            N° de Cuotas *
+                                                        </label>
                                                         <input 
                                                             type="number" 
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none" 
+                                                            className="bg-white border border-[#E2DFD7] px-2.5 py-2 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none w-full" 
                                                             value={installmentsCount} 
                                                             onChange={(e) => {
                                                                 const val = e.target.value;
@@ -1364,10 +1374,12 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             required
                                                         />
                                                     </div>
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Frecuencia de Cobro *</label>
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold truncate" title="Frecuencia de Cobro">
+                                                            Frecuencia *
+                                                        </label>
                                                         <select 
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer" 
+                                                            className="bg-white border border-[#E2DFD7] px-2.5 py-2 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer w-full" 
                                                             value={installmentFrequency} 
                                                             onChange={(e) => {
                                                                 const val = e.target.value as any;
@@ -1381,11 +1393,13 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             <option value="mensual">Mensual</option>
                                                         </select>
                                                     </div>
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Fecha 1ª Cuota / Inicio *</label>
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[10px] uppercase tracking-wider text-[#6B6862] font-semibold truncate" title="Fecha 1ª Cuota / Inicio">
+                                                            Fecha 1ª Cuota *
+                                                        </label>
                                                         <input 
                                                             type="date" 
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none cursor-pointer" 
+                                                            className="bg-white border border-[#E2DFD7] px-2 py-2 text-[11px] focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none cursor-pointer w-full" 
                                                             value={firstDueDate} 
                                                             onChange={(e) => setFirstDueDate(e.target.value)}
                                                             required
