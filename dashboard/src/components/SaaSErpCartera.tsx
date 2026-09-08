@@ -39,6 +39,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [loadingInstallments, setLoadingInstallments] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Modal de transacción
   const [showPayModal, setShowPayModal] = useState(false);
@@ -53,9 +54,17 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
       const res = await fetch(`/api/clients/${clientId}/invoices`);
       const json = await res.json();
       if (json.success) {
-        // Filtrar solo las facturas a cuotas
-        const creditList = (json.invoices || []).filter((inv: Invoice) => inv.payment_method === 'cuotas');
+        // Filtrar facturas a crédito o cuotas
+        const isCreditInvoice = (inv: Invoice) => {
+          const method = (inv.payment_method || '').toLowerCase();
+          const hasInstallments = Number(inv.installments_count || 0) > 0;
+          return ['credito', 'crédito', 'cuotas', 'financiamiento'].includes(method) || hasInstallments;
+        };
+        const creditList = (json.invoices || []).filter(isCreditInvoice);
         setInvoices(creditList);
+        if (creditList.length > 0 && !selectedInvoice) {
+          handleSelectInvoice(creditList[0]);
+        }
       }
     } catch (err) {
       console.error("Error al cargar cartera:", err);
@@ -128,61 +137,113 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(num);
   };
 
+  const filteredInvoices = invoices.filter(inv => 
+    inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    inv.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (inv.customer_document_number && inv.customer_document_number.includes(searchQuery))
+  );
+
+  const totalCarteraAmount = invoices.reduce((sum, inv) => sum + parseFloat(inv.total_amount || '0'), 0);
+  const totalPendingInvoices = invoices.filter(inv => inv.status !== 'paid').length;
+  const totalPaidInvoices = invoices.filter(inv => inv.status === 'paid').length;
+
   return (
     <div className="space-y-6 text-[#161616] font-sans antialiased">
       {/* Header Editorial Wabi-Sabi */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2DFD7] pb-4">
         <div>
           <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-mono block mb-1">
             GESTIÓN DE CRÉDITOS & CUOTAS
           </span>
-          <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[#161616] tracking-tight leading-none flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#D9381E] text-[28px]">payments</span>
+          <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#161616] tracking-tight leading-none">
             Módulo de Cartera & Cobranza
           </h2>
-          <p className="text-xs text-[#76746E] mt-2">
-            Monitorea el plan de amortización, abonos iniciales y acciones negociables de clientes con compras a cuotas.
+          <p className="text-xs text-[#76746E] mt-1.5">
+            Monitorea el plan de amortización, abonos iniciales y acciones negociables de clientes con compras financiadas.
           </p>
         </div>
-        <button 
-          type="button"
-          onClick={fetchCreditInvoices}
-          className="h-9 px-3.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] rounded-none flex items-center justify-center transition cursor-pointer text-xs font-mono font-bold uppercase tracking-wider shadow-xs shrink-0"
-          title="Refrescar Cartera"
-        >
-          <span className="material-symbols-outlined text-[16px] mr-1.5 text-[#D9381E]">refresh</span>
-          Refrescar
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            type="button"
+            onClick={fetchCreditInvoices}
+            className="px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] hover:border-[#161616] rounded-none flex items-center justify-center transition cursor-pointer text-xs font-mono font-bold uppercase tracking-wider shadow-xs"
+            title="Refrescar Cartera"
+          >
+            <span className="material-symbols-outlined text-[16px] mr-1.5">refresh</span>
+            Refrescar
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* KPI Cards Consolidado de Cartera */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
+          <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Total Cartera Financiada</span>
+          <p className="text-2xl font-bold font-mono text-[#D9381E] mt-1">{formatCOP(totalCarteraAmount)}</p>
+          <p className="text-[10px] text-[#76746E] font-mono mt-2 border-t border-[#E2DFD7] pt-1.5">
+            Monto total financiado a cuotas
+          </p>
+        </div>
+
+        <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
+          <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Créditos Registrados</span>
+          <p className="text-2xl font-bold font-mono text-[#161616] mt-1">{invoices.length} Créditos</p>
+          <p className="text-[10px] text-[#76746E] font-mono mt-2 border-t border-[#E2DFD7] pt-1.5">
+            {totalPendingInvoices} Pendientes / {totalPaidInvoices} Cancelados
+          </p>
+        </div>
+
+        <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
+          <span className="text-[10px] text-[#76746E] font-mono font-bold uppercase tracking-wider">Estado de Recaudo</span>
+          <p className="text-2xl font-bold font-mono text-[#137333] mt-1">
+            {invoices.length > 0 ? `${Math.round((totalPaidInvoices / invoices.length) * 100)}%` : '0%'} Al Día
+          </p>
+          <p className="text-[10px] text-[#76746E] font-mono mt-2 border-t border-[#E2DFD7] pt-1.5">
+            Porcentaje de créditos liquidados al 100%
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Lista de deudores */}
-        <div className="lg:col-span-1 bg-white p-4 rounded-none border border-[#E2DFD7] space-y-3 shadow-xs">
+        <div className="lg:col-span-5 bg-white p-4 rounded-none border border-[#E2DFD7] space-y-3 shadow-xs">
           <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2.5">
             <h4 className="font-mono font-bold text-[11px] uppercase tracking-wider text-[#76746E] flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[#D9381E] text-[16px]">folder_shared</span>
+              <span className="material-symbols-outlined text-[#161616] text-[16px]">folder_shared</span>
               Facturas Financiadas
             </h4>
             <span className="text-[10px] font-mono font-bold bg-[#FAF8F5] text-[#161616] px-2 py-0.5 border border-[#E2DFD7]">
-              {invoices.length} Créditos
+              {filteredInvoices.length} Créditos
             </span>
+          </div>
+
+          {/* Search box */}
+          <div className="flex items-center gap-2 bg-[#FAF8F5] border border-[#E2DFD7] px-2.5 py-1.5">
+            <span className="material-symbols-outlined text-[16px] text-[#76746E]">search</span>
+            <input 
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar por cliente o factura..."
+              className="bg-transparent text-xs text-[#161616] outline-none w-full font-mono placeholder:text-[#76746E]"
+            />
           </div>
           
           {loading ? (
             <div className="p-8 text-center text-xs font-mono uppercase text-[#76746E] tracking-wider">Cargando cuentas...</div>
-          ) : invoices.length === 0 ? (
-            <div className="p-8 text-center text-xs text-[#76746E]">No hay facturas a crédito registradas.</div>
+          ) : filteredInvoices.length === 0 ? (
+            <div className="p-8 text-center text-xs text-[#76746E] font-mono">No se encontraron facturas a crédito.</div>
           ) : (
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-              {invoices.map((inv) => {
+            <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
+              {filteredInvoices.map((inv) => {
                 const isSelected = selectedInvoice?.id === inv.id;
                 return (
                   <div 
                     key={inv.id}
                     onClick={() => handleSelectInvoice(inv)}
-                    className={`p-3.5 rounded-none border cursor-pointer transition-all duration-150 relative ${
+                    className={`p-3.5 rounded-none border cursor-pointer transition shadow-xs relative ${
                       isSelected 
-                        ? 'bg-[#FAF8F5] border-[#161616] shadow-xs' 
+                        ? 'bg-[#FAF8F5] border-[#161616] ring-1 ring-[#161616]' 
                         : 'bg-white border-[#E2DFD7] hover:border-[#161616]'
                     }`}
                   >
@@ -190,15 +251,17 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                       <p className="font-mono font-bold text-xs text-[#161616]">#{inv.invoice_number}</p>
                       <span className={`px-2 py-0.5 rounded-none text-[9px] font-mono font-bold uppercase tracking-wider border ${
                         inv.status === 'paid' 
-                          ? 'bg-[#E6F4EA] text-[#137333] border-[#CEEAD6]' 
-                          : 'bg-[#FEF7E0] text-[#B45309] border-[#FDE68A]'
+                          ? 'bg-[#E6F4EA] text-[#137333] border-[#137333]/30' 
+                          : 'bg-[#FEF7E0] text-[#B06000] border-[#B06000]/30'
                       }`}>
                         {inv.status === 'paid' ? 'PAGADA' : 'PENDIENTE'}
                       </span>
                     </div>
                     <h5 className="font-serif font-bold text-sm text-[#161616] mt-1.5 truncate">{inv.customer_name}</h5>
                     <div className="flex justify-between items-end mt-2 pt-2 border-t border-[#E2DFD7] text-[11px]">
-                      <span className="text-[#76746E] font-mono">{inv.installments_count} cuotas ({inv.installment_frequency})</span>
+                      <span className="text-[#76746E] font-mono">
+                        {inv.installments_count ? `${inv.installments_count} cuotas` : 'Crédito'} {inv.installment_frequency ? `(${inv.installment_frequency})` : ''}
+                      </span>
                       <span className="font-mono font-bold text-[#D9381E]">{formatCOP(inv.total_amount)}</span>
                     </div>
                   </div>
@@ -209,18 +272,18 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
         </div>
 
         {/* Plan de amortización */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-none border border-[#E2DFD7] space-y-4 shadow-xs">
+        <div className="lg:col-span-7 bg-white p-6 rounded-none border border-[#E2DFD7] space-y-4 shadow-xs">
           {selectedInvoice ? (
             <>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#E2DFD7] pb-4 gap-4">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#D9381E] font-bold block">PLAN DE AMORTIZACIÓN</span>
-                  <h4 className="font-serif font-bold text-lg text-[#161616] mt-0.5">{selectedInvoice.customer_name}</h4>
+                  <h4 className="font-serif font-bold text-xl text-[#161616] mt-0.5">{selectedInvoice.customer_name}</h4>
                   <p className="text-xs text-[#76746E] font-mono mt-0.5">
-                    Factura: <strong className="text-[#161616]">#{selectedInvoice.invoice_number}</strong> | Doc: {selectedInvoice.customer_document_number}
+                    Factura: <strong className="text-[#161616]">#{selectedInvoice.invoice_number}</strong> | Doc: {selectedInvoice.customer_document_number || 'N/A'}
                   </p>
                 </div>
-                <div className="text-right space-y-1 bg-[#FAF8F5] p-3 border border-[#E2DFD7] min-w-[200px]">
+                <div className="text-right space-y-1 bg-[#FAF8F5] p-3 border border-[#E2DFD7] min-w-[220px]">
                   <div className="flex justify-between text-xs">
                     <span className="text-[#76746E]">Total Facturado:</span>
                     <span className="font-mono font-bold text-[#161616]">{formatCOP(selectedInvoice.total_amount)}</span>
@@ -245,18 +308,25 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
               </div>
 
               {loadingInstallments ? (
-                <div className="p-12 text-center text-xs font-mono uppercase text-[#76746E] tracking-wider">Cargando cuotas del cliente...</div>
+                <div className="flex flex-col items-center justify-center p-12 space-y-2">
+                  <div className="w-6 h-6 border-2 border-[#D9381E] border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-xs font-mono uppercase text-[#76746E] tracking-wider">Cargando cuotas del cliente...</p>
+                </div>
+              ) : installments.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[#76746E] font-mono">
+                  No hay tabla de cuotas discriminada para esta factura.
+                </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-left text-xs">
+                  <table className="w-full border-collapse text-left text-xs min-w-[500px]">
                     <thead>
                       <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[#76746E] font-mono text-[10px] uppercase font-bold tracking-wider">
                         <th className="p-3">Cuota #</th>
-                        <th className="p-3">Fecha Vencimiento</th>
+                        <th className="p-3">Vencimiento</th>
                         <th className="p-3 text-right">Valor Cuota</th>
                         <th className="p-3 text-right">Abonado</th>
                         <th className="p-3 text-center">Estado</th>
-                        <th className="p-3 text-right">Acciones</th>
+                        <th className="p-3 text-right">Acción</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E2DFD7]">
@@ -277,10 +347,10 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                             <td className="p-3 text-center">
                               <span className={`px-2 py-0.5 rounded-none text-[9px] font-mono font-bold uppercase tracking-wider border ${
                                 inst.status === 'paid' 
-                                  ? 'bg-[#E6F4EA] text-[#137333] border-[#CEEAD6]' 
+                                  ? 'bg-[#E6F4EA] text-[#137333] border-[#137333]/30' 
                                   : new Date(inst.due_date) < new Date()
-                                    ? 'bg-[#FCE8E6] text-[#C5221F] border-[#FAD2CF]'
-                                    : 'bg-[#FEF7E0] text-[#B45309] border-[#FDE68A]'
+                                    ? 'bg-[#FCE8E6] text-[#C5221F] border-[#C5221F]/30'
+                                    : 'bg-[#FEF7E0] text-[#B06000] border-[#B06000]/30'
                               }`}>
                                 {inst.status === 'paid' ? 'PAGADO' : new Date(inst.due_date) < new Date() ? 'VENCIDO' : 'PENDIENTE'}
                               </span>
@@ -288,8 +358,9 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                             <td className="p-3 text-right">
                               {inst.status !== 'paid' && (
                                 <button
+                                  type="button"
                                   onClick={() => handleOpenPayModal(inst)}
-                                  className="px-2.5 py-1 bg-[#D9381E] hover:bg-[#b82e18] text-white text-[10px] font-mono font-bold rounded-none transition-colors cursor-pointer inline-flex items-center gap-1 shadow-xs uppercase tracking-wider border-0"
+                                  className="px-2.5 py-1 bg-[#161616] hover:bg-[#2b2b2b] text-[#F6F4EE] text-[10px] font-mono font-bold rounded-none transition-colors cursor-pointer inline-flex items-center gap-1 shadow-xs uppercase tracking-wider border-0"
                                 >
                                   <span className="material-symbols-outlined text-[12px]">point_of_sale</span>
                                   Recibir Pago
@@ -305,10 +376,10 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center p-20 text-[#76746E] space-y-3">
-              <span className="material-symbols-outlined text-5xl text-[#76746E]/40">payments</span>
+            <div className="flex flex-col items-center justify-center py-20 text-[#76746E] space-y-2 text-center">
+              <span className="material-symbols-outlined text-4xl text-[#76746E]/40">payments</span>
               <p className="font-serif text-sm font-bold text-[#161616]">Selecciona una factura financiada</p>
-              <p className="text-xs text-[#76746E]">Haz clic en una factura de la izquierda para ver y liquidar sus cuotas.</p>
+              <p className="text-xs text-[#76746E] font-mono">Haz clic en una factura de la izquierda para ver y liquidar sus cuotas.</p>
             </div>
           )}
         </div>
@@ -316,7 +387,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
 
       {/* Modal de Transacción sobre Cuota */}
       {showPayModal && selectedInstallment && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 text-left animate-fade-in">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#161616]/60 backdrop-blur-xs p-4 text-left animate-fade-in">
           <div className="bg-[#F6F4EE] border border-[#161616] rounded-none w-full max-w-md p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
             <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
               <div>
@@ -324,6 +395,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                 <h4 className="font-serif font-bold text-lg text-[#161616]">Procesar Transacción sobre Cuota</h4>
               </div>
               <button 
+                type="button"
                 onClick={() => setShowPayModal(false)}
                 className="p-1 text-[#76746E] hover:text-[#161616] cursor-pointer border-0 bg-transparent"
               >
@@ -356,7 +428,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                   <select
                     value={actionType}
                     onChange={(e) => setActionType(e.target.value as any)}
-                    className="w-full bg-white border border-[#E2DFD7] rounded-none px-3 py-2 text-[#161616] focus:border-[#161616] outline-none cursor-pointer text-xs"
+                    className="w-full bg-white border border-[#E2DFD7] rounded-none px-3 py-2 text-[#161616] focus:border-[#161616] outline-none cursor-pointer text-xs font-mono"
                   >
                     <option value="pay">💵 Registrar Abono o Pago Normal</option>
                     <option value="accumulate">🔄 Acumulativa (Mudar saldo a cuota siguiente)</option>
@@ -381,13 +453,13 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                 )}
 
                 {actionType === 'accumulate' && (
-                  <p className="text-[11px] text-[#B45309] p-2.5 bg-[#FEF7E0] border border-[#FDE68A] rounded-none">
+                  <p className="text-[11px] text-[#B06000] p-2.5 bg-[#FEF7E0] border border-[#B06000]/30 rounded-none font-mono">
                     ⚠️ <strong>Nota:</strong> Esta acción marcará la cuota actual como resuelta y trasladará automáticamente su saldo pendiente a la siguiente cuota programada.
                   </p>
                 )}
 
                 {actionType === 'refinance' && (
-                  <p className="text-[11px] text-[#161616] p-2.5 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none">
+                  <p className="text-[11px] text-[#161616] p-2.5 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none font-mono">
                     ℹ️ <strong>Nota:</strong> Se creará una cuota adicional al final de la línea de tiempo con la deuda restante de este periodo, extendiendo la fecha original de cobro.
                   </p>
                 )}
@@ -396,13 +468,13 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                   <button
                     type="button"
                     onClick={() => setShowPayModal(false)}
-                    className="flex-1 px-4 py-2 border border-[#E2DFD7] bg-white text-[#161616] font-mono font-bold rounded-none hover:bg-[#FAF8F5] text-xs cursor-pointer uppercase tracking-wider"
+                    className="flex-1 px-4 py-2 border border-[#E2DFD7] bg-white text-[#161616] font-mono font-bold rounded-none hover:bg-[#FAF8F5] text-xs cursor-pointer uppercase tracking-wider shadow-xs"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold rounded-none transition-colors text-xs cursor-pointer uppercase tracking-wider shadow-xs border-0"
+                    className="flex-1 px-4 py-2 bg-[#161616] hover:bg-[#2b2b2b] text-[#F6F4EE] font-mono font-bold rounded-none transition text-xs cursor-pointer uppercase tracking-wider shadow-xs border-0"
                   >
                     Confirmar
                   </button>
