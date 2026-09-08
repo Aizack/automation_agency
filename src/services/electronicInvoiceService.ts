@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { pool } from '../database/postgres';
 import { logAudit } from './auditService';
+import { getFactusAccessToken } from './factusService';
 
 export interface ElectronicInvoiceResult {
   success: boolean;
@@ -91,7 +92,7 @@ export const checkElectronicInvoicePermission = async (
 
 /**
  * Procesa y firma electrónicamente la factura generando CUFE, QR y actualizando inventario de folios del plan.
- * Soporta integración en vivo con Matias API (Sandbox/Producción).
+ * Soporta integración en vivo con Factus API V2 (Sandbox/Producción).
  */
 export const processElectronicInvoice = async (
   clientId: string,
@@ -110,11 +111,12 @@ export const processElectronicInvoice = async (
       };
     }
 
-    // 2. Obtener factura de la base de datos
+    // 2. Obtener factura y cliente de la base de datos
     const invRes = await pool.query(
-      `SELECT id, invoice_number, customer_document_number, total_amount, created_at, electronic_status 
-       FROM invoices 
-       WHERE client_id = $1 AND id = $2`,
+      `SELECT i.*, c.name as business_name, c.nit as business_nit, c.email as business_email 
+       FROM invoices i 
+       JOIN clients c ON i.client_id = c.id
+       WHERE i.client_id = $1 AND i.id = $2`,
       [clientId, invoiceId]
     );
 
@@ -129,72 +131,98 @@ export const processElectronicInvoice = async (
 
     const totalAmt = parseFloat(inv.total_amount || '0');
     const vatAmt = totalAmt * 0.19; // IVA estándar del 19% si aplica
-    const issuerNit = '1129520837'; // NIT emisor registrado
+    const issuerNit = inv.business_nit || '1129520837';
     const customerDoc = inv.customer_document_number || '222222222222';
+
+    // Obtener los ítems de la factura
+    const itemsRes = await pool.query(
+      `SELECT ii.*, p.name as inventory_prod_name, p.sku 
+       FROM invoice_items ii
+       LEFT JOIN products p ON ii.product_id = p.id
+       WHERE ii.invoice_id = $1`,
+      [invoiceId]
+    );
 
     let cufe = '';
     let qrCodeUrl = '';
     let electronicStatus = 'accepted';
 
-    const matiasApiUrl = process.env.MATIAS_API_URL || 'https://sandbox-api.matias-api.com/api/ubl2.1';
-    const matiasApiToken = process.env.MATIAS_API_TOKEN;
+    const factusApiUrl = process.env.FACTUS_API_URL || 'https://api-sandbox.factus.com.co';
+    const factusClientId = process.env.FACTUS_CLIENT_ID;
 
-    // Determinar si es Factura Electrónica (1) o Documento Soporte (11)
-    const isSupportDoc = inv.invoice_number?.startsWith('DS') || inv.document_type === 'DS';
-    const typeDocumentId = isSupportDoc ? 11 : 1;
-
-    // Si hay un token de Matias API configurado, realizamos la petición HTTP en vivo
-    if (matiasApiToken) {
+    // Si Factus está configurado con credenciales válidas
+    if (factusClientId && factusClientId !== 'sandbox_client_id') {
       try {
-        const payload: any = {
-          number: inv.invoice_number,
-          type_document_id: typeDocumentId,
-          date: dateStr,
-          time: timeStr,
+        const token = await getFactusAccessToken();
+
+        const factusItems = (itemsRes.rows || []).map((it: any, idx: number) => ({
+          code_reference: it.sku || `PROD-${idx + 1}`,
+          name: it.product_name || it.inventory_prod_name || 'Artículo de Venta',
+          quantity: parseInt(it.quantity || '1', 10),
+          discount_rate: 0,
+          price: parseFloat(it.price || '0'),
+          tax_rate: '19.00',
+          unit_measure_id: 70, // Unidades
+          standard_code_id: 1,
+          is_excluded: 0,
+          tribute_id: 1, // IVA
+        }));
+
+        const factusPayload: any = {
+          numbering_range_id: 8, // Rango de prueba Sandbox Factus
+          reference_code: inv.invoice_number,
+          observation: `Factura ${inv.invoice_number} emitida desde ERP Multi-Tenant`,
+          payment_method_code: inv.payment_method === 'credito' ? '30' : '10', // 10=Efectivo/Contado, 30=Crédito
           customer: {
-            company_name: inv.customer_name || 'Cliente Final',
-            dni: customerDoc,
-            email: inv.customer_email || 'cliente@correo.com'
+            identification: customerDoc,
+            dv: '3',
+            company: inv.customer_name || 'Consumidor Final',
+            trade_name: inv.customer_name || 'Consumidor Final',
+            names: inv.customer_name || 'Consumidor Final',
+            email: inv.customer_email || 'factura@cliente.com',
+            phone: inv.customer_phone || '3000000000',
+            legal_organization_id: '2', // Persona Natural
+            tribute_id: '21', // No responsable de IVA
+            identification_document_id: inv.customer_document_type === 'NIT' ? '6' : '3', // 3=CC, 6=NIT
+            municipality_id: '980', // Barranquilla por defecto
           },
-          legal_monetary_totals: {
-            line_extension_amount: totalAmt.toFixed(2),
-            tax_exclusive_amount: totalAmt.toFixed(2),
-            tax_inclusive_amount: (totalAmt + vatAmt).toFixed(2),
-            payable_amount: (totalAmt + vatAmt).toFixed(2)
-          }
+          items: factusItems.length > 0 ? factusItems : [
+            {
+              code_reference: 'GEN-001',
+              name: 'Venta General',
+              quantity: 1,
+              discount_rate: 0,
+              price: totalAmt,
+              tax_rate: '19.00',
+              unit_measure_id: 70,
+              standard_code_id: 1,
+              is_excluded: 0,
+              tribute_id: 1,
+            }
+          ]
         };
 
-        // Soporte de campos Sector Salud / RIPS (Resolución Minsalud 948 / 510)
-        if (inv.health_reps_code || inv.health_rips_data) {
-          payload.health_sector = {
-            reps_code: inv.health_reps_code || '000000000000',
-            user_coverage: inv.health_coverage || 'Particular',
-            rips_data: inv.health_rips_data || null
-          };
-        }
-
-        const endpointUrl = isSupportDoc ? `${matiasApiUrl}/support-document` : `${matiasApiUrl}/invoice`;
-        const response = await fetch(endpointUrl, {
+        const response = await fetch(`${factusApiUrl}/v1/bills/validate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'Authorization': `Bearer ${matiasApiToken}`
+            'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(factusPayload)
         });
 
         if (response.ok) {
           const resData: any = await response.json();
-          cufe = resData?.XmlDocumentKey || resData?.data?.cufe || resData?.cufe || resData?.csds;
-          qrCodeUrl = resData?.qr_code_url || resData?.data?.qr_code_url;
+          cufe = resData?.data?.bill?.cufe || resData?.data?.cufe || resData?.cufe;
+          qrCodeUrl = resData?.data?.bill?.qr || resData?.data?.qr_code_url || resData?.qr_code_url;
         }
       } catch (apiErr) {
-        console.warn('[Electronic Invoice Service] Matias API Sandbox request warning, using fallback calculation:', apiErr);
+        console.warn('[Electronic Invoice Service] Factus API Sandbox warning, using fallback calculation:', apiErr);
       }
     }
 
-    // Fallback: Si no hay token de API o para testing instantáneo, calculamos CUFE SHA-384 y QR oficial DIAN
+    // Fallback: Si no hay credenciales de Factus activas aún, calculamos CUFE SHA-384 y QR oficial DIAN
     if (!cufe) {
       cufe = calculateCUFE(
         inv.invoice_number,
@@ -257,4 +285,3 @@ export const processElectronicInvoice = async (
     return { success: false, error: err.message };
   }
 };
-

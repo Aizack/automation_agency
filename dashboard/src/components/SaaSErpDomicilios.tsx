@@ -260,120 +260,146 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
   };
 
   return (
-    <div className="space-y-6 text-white">
+    <div className="space-y-6 text-[#161616] font-sans antialiased">
       {/* Cabecera Principal de Gestión */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#222428] pb-4 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5">
         <div>
-          <h3 className="font-extrabold text-xl text-[#eab308]" style={{ color: '#eab308' }}>LOGÍSTICA DE DESPACHOS Y RUTAS DE ENTREGA</h3>
-          <p className="text-xs text-gray-400">
-            Asigna repartidores, organiza lotes de 10 direcciones por cercanía Haversine y gestiona o reagenda entregas.
+          <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-mono block mb-1">
+            LOGÍSTICA & DESPACHOS
+          </span>
+          <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[#161616] tracking-tight leading-none">
+            Rutas de Entrega y Asignación
+          </h2>
+          <p className="text-xs text-[#76746E] mt-2">
+            Asigna repartidores, organiza lotes de 10 direcciones por cercanía Haversine y gestiona o reagenda entregas en tiempo real.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button 
-            type="button"
-            onClick={fetchDeliveries}
-            className="h-8 px-3 bg-[#181a1c] hover:bg-[#222528] text-white rounded-md flex items-center justify-center border border-[#2d3036] cursor-pointer transition text-xs font-semibold shrink-0"
-            title="Refrescar Lista de Despachos"
-          >
-            <span className="material-symbols-outlined text-[16px] mr-1">refresh</span>
-            Refrescar
-          </button>
-
-          {/* Filtro por Repartidor */}
-          <div className="flex items-center gap-2 bg-[#141517] px-3 py-1.5 rounded-md border border-[#222428]">
-            <span className="material-symbols-outlined text-primary text-[16px]">two_wheeler</span>
-            <select
-              value={selectedGuyFilter}
-              onChange={(e) => {
-                setSelectedGuyFilter(e.target.value);
-                setBatchPage(1);
-              }}
-              className="bg-transparent text-xs font-bold text-on-surface outline-none cursor-pointer"
-            >
-              <option value="all" className="bg-surface-container text-on-surface">Todos los Repartidores</option>
-              <option value="unassigned" className="bg-surface-container text-on-surface">Sin Asignar</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id} className="bg-surface-container text-on-surface">
-                  {emp.name} {emp.last_name || ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Ordenamiento de Rutas */}
-          <div className="bg-surface-container/60 p-1 rounded-xl border border-outline/20 flex gap-1">
-            <button
-              onClick={() => setSortBy('distance')}
-              className={`px-3 py-1.5 rounded-lg border-0 cursor-pointer font-bold text-xs transition-all ${
-                sortBy === 'distance' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface bg-transparent'
-              }`}
-            >
-              Ruta Más Corta (Km)
-            </button>
-            <button
-              onClick={() => setSortBy('date')}
-              className={`px-3 py-1.5 rounded-lg border-0 cursor-pointer font-bold text-xs transition-all ${
-                sortBy === 'date' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface bg-transparent'
-              }`}
-            >
-              Fecha Programada
-            </button>
-          </div>
-        </div>
+        <button 
+          type="button"
+          onClick={fetchDeliveries}
+          className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[11px] font-mono font-bold py-2 px-3.5 flex items-center gap-1.5 transition cursor-pointer uppercase tracking-wider rounded-none shrink-0 shadow-xs h-9"
+          title="Refrescar Lista de Despachos"
+        >
+          <span className="material-symbols-outlined text-[16px] text-[#D9381E]">refresh</span>
+          Refrescar
+        </button>
       </div>
 
-      {/* Control de Lotes / Tandas de 10 Direcciones */}
-      {sortedDeliveries.length > 0 && (
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-surface-container-low/40 border border-outline/10 p-3 rounded-2xl">
+      {/* Barra de Filtros, Ordenamiento y Lotes Unificada */}
+      <div className="bg-white border border-[#E2DFD7] p-3 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+        {/* Izquierda: Repartidor y Orden */}
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Selector de Repartidor */}
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-[18px]">format_list_bulleted</span>
-            <span className="text-xs font-bold text-on-surface">
-              Mostrando {sortedDeliveries.length} direcciones {selectedGuyFilter !== 'all' ? '(Filtradas)' : ''}
+            <span className="text-[10px] font-mono font-bold uppercase text-[#76746E] tracking-wider flex items-center gap-1">
+              <span className="material-symbols-outlined text-[#D9381E] text-[16px]">two_wheeler</span>
+              Repartidor:
             </span>
+            <div className="relative">
+              <select
+                value={selectedGuyFilter}
+                onChange={(e) => {
+                  setSelectedGuyFilter(e.target.value);
+                  setBatchPage(1);
+                }}
+                className="bg-[#FAF8F5] border border-[#E2DFD7] text-xs font-mono font-bold text-[#161616] pl-3 pr-7 py-1.5 outline-none cursor-pointer hover:border-[#161616] transition-colors appearance-none"
+              >
+                <option value="all">Todos los Repartidores</option>
+                <option value="unassigned">Sin Asignar</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name} {emp.last_name || ''}
+                  </option>
+                ))}
+              </select>
+              <span className="material-symbols-outlined text-[16px] text-[#76746E] absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                expand_more
+              </span>
+            </div>
           </div>
 
-          {/* Selector de Lote (Tandas de 10 en 10) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto max-w-full py-1">
-            <span className="text-[11px] font-bold text-on-surface-variant mr-1 uppercase">Lotes (10 en 10):</span>
-            {Array.from({ length: totalBatches }).map((_, idx) => {
-              const pNum = idx + 1;
-              const isSelected = pNum === currentBatchPage;
-              const startIdx = idx * BATCH_SIZE + 1;
-              const endIdx = Math.min((idx + 1) * BATCH_SIZE, sortedDeliveries.length);
+          <div className="hidden md:block h-5 w-px bg-[#E2DFD7]"></div>
 
-              return (
-                <button
-                  key={pNum}
-                  onClick={() => setBatchPage(pNum)}
-                  className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer border ${
-                    isSelected
-                      ? 'bg-primary text-on-primary border-primary shadow-sm'
-                      : 'bg-surface-container/60 text-on-surface-variant hover:bg-surface-container border-outline/20'
-                  }`}
-                >
-                  Lote #{pNum} ({startIdx}-{endIdx})
-                </button>
-              );
-            })}
+          {/* Criterio de Orden */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono font-bold uppercase text-[#76746E] tracking-wider">
+              Ordenar por:
+            </span>
+            <div className="inline-flex border border-[#E2DFD7] bg-[#FAF8F5] p-0.5">
+              <button
+                type="button"
+                onClick={() => setSortBy('distance')}
+                className={`px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer border-0 ${
+                  sortBy === 'distance' 
+                    ? 'bg-[#161616] text-[#F6F4EE]' 
+                    : 'text-[#76746E] hover:text-[#161616] bg-transparent'
+                }`}
+              >
+                Distancia (Km)
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortBy('date')}
+                className={`px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer border-0 ${
+                  sortBy === 'date' 
+                    ? 'bg-[#161616] text-[#F6F4EE]' 
+                    : 'text-[#76746E] hover:text-[#161616] bg-transparent'
+                }`}
+              >
+                Fecha Programada
+              </button>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* Derecha: Selector de Lotes (Tandas de 10 en 10) */}
+        {sortedDeliveries.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-mono font-bold text-[#76746E] uppercase tracking-wider">
+              Lotes ({sortedDeliveries.length} envíos):
+            </span>
+            <div className="flex items-center gap-1 overflow-x-auto max-w-full">
+              {Array.from({ length: totalBatches }).map((_, idx) => {
+                const pNum = idx + 1;
+                const isSelected = pNum === currentBatchPage;
+                const startIdx = idx * BATCH_SIZE + 1;
+                const endIdx = Math.min((idx + 1) * BATCH_SIZE, sortedDeliveries.length);
+
+                return (
+                  <button
+                    key={pNum}
+                    onClick={() => setBatchPage(pNum)}
+                    className={`px-2.5 py-1 text-xs font-mono font-bold transition cursor-pointer border ${
+                      isSelected
+                        ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                        : 'bg-[#FAF8F5] text-[#76746E] hover:text-[#161616] hover:bg-white border-[#E2DFD7]'
+                    }`}
+                  >
+                    #{pNum} ({startIdx}-{endIdx})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Barra de Asignación Masiva por Lote */}
       {currentBatchDeliveries.length > 0 && (
-        <div className="bg-[#141517] border border-[#eab308]/30 p-3.5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-3 shadow-lg">
-          <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-[22px]" style={{ color: '#eab308' }}>two_wheeler</span>
+        <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-4 rounded-none flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-white border border-[#E2DFD7] flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-[#D9381E] text-[20px]">two_wheeler</span>
+            </div>
             <div>
-              <p className="text-xs font-extrabold text-white flex items-center gap-2">
+              <p className="text-xs font-mono font-bold text-[#161616] flex items-center gap-2 uppercase tracking-wide">
                 ASIGNACIÓN MASIVA DEL LOTE #{currentBatchPage}
-                <span className="bg-[#eab308]/20 text-[#eab308] text-[10px] px-2 py-0.5 rounded-full border border-[#eab308]/30 font-mono">
+                <span className="bg-[#F6F4EE] text-[#D9381E] text-[10px] px-2 py-0.5 border border-[#E2DFD7] font-mono font-bold">
                   {currentBatchDeliveries.length} pedidos
                 </span>
               </p>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-[11px] text-[#76746E] mt-0.5">
                 Asigna los {currentBatchDeliveries.length} domicilios de este lote a un mismo repartidor con 1 solo clic.
               </p>
             </div>
@@ -383,7 +409,7 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
             <select
               value={batchTargetGuyId}
               onChange={(e) => setBatchTargetGuyId(e.target.value)}
-              className="bg-[#181a1c] border border-[#2d3036] rounded-lg p-2 text-xs font-bold text-white outline-none cursor-pointer flex-grow md:flex-grow-0"
+              className="bg-white border border-[#E2DFD7] rounded-none px-3 py-2 text-xs font-mono font-medium text-[#161616] outline-none cursor-pointer flex-grow md:flex-grow-0 focus:border-[#161616]"
             >
               <option value="">-- Seleccionar Repartidor para el Lote --</option>
               {employees.map((emp) => (
@@ -397,10 +423,10 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
               type="button"
               disabled={batchUpdating || !batchTargetGuyId}
               onClick={handleBatchAssignDeliveryGuy}
-              className="px-4 py-2 bg-[#eab308] hover:bg-amber-300 disabled:opacity-50 text-black font-extrabold text-xs rounded-lg cursor-pointer shadow flex items-center gap-1.5 transition whitespace-nowrap border-0"
+              className="px-4 py-2 bg-[#D9381E] hover:bg-[#b82e18] disabled:opacity-40 text-white font-mono font-bold text-xs rounded-none cursor-pointer shadow-xs flex items-center gap-1.5 transition-colors whitespace-nowrap border-0 uppercase tracking-wider"
             >
               <span className="material-symbols-outlined text-[16px]">assignment_turned_in</span>
-              {batchUpdating ? 'Asignando Lote...' : `Asignar Lote #${currentBatchPage} (${currentBatchDeliveries.length})`}
+              {batchUpdating ? 'Asignando...' : `Asignar Lote #${currentBatchPage} (${currentBatchDeliveries.length})`}
             </button>
           </div>
         </div>
@@ -408,14 +434,16 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
 
       {/* Grid de Direcciones / Cards de Despacho */}
       {loading ? (
-        <div className="p-12 text-center text-xs text-on-surface-variant">Cargando logística de despachos...</div>
+        <div className="p-16 text-center text-xs font-mono uppercase tracking-widest text-[#76746E]">
+          Cargando logística de despachos...
+        </div>
       ) : currentBatchDeliveries.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-20 text-on-surface-variant/40 space-y-3">
-          <span className="material-symbols-outlined text-6xl">local_shipping</span>
-          <p className="text-sm font-semibold">No hay entregas pendientes para este filtro.</p>
+        <div className="flex flex-col items-center justify-center p-20 bg-white border border-[#E2DFD7] rounded-none space-y-3">
+          <span className="material-symbols-outlined text-5xl text-[#76746E]/40">local_shipping</span>
+          <p className="text-xs font-mono uppercase tracking-wider text-[#76746E]">No hay entregas pendientes para este filtro.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {currentBatchDeliveries.map((dev, index) => {
             const distance = getDistanceKm(dev);
             const isCompleted = dev.delivery_status === 'entregado';
@@ -425,72 +453,76 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
             return (
               <div 
                 key={dev.id}
-                className={`glass-card p-5 rounded-2xl border transition-all duration-200 relative flex flex-col justify-between ${
+                className={`bg-white border rounded-none p-5 transition-all duration-200 relative flex flex-col justify-between shadow-xs ${
                   isCompleted 
-                    ? 'border-outline/10 bg-surface-container-low/20 opacity-70' 
+                    ? 'border-[#E2DFD7] bg-[#FAF8F5]/60 opacity-75' 
                     : isRescheduled
-                      ? 'border-amber-500/30 bg-surface-container/40'
-                      : 'border-outline/20 hover:border-primary/40 bg-surface-container/40'
+                      ? 'border-[#D9381E]/40 hover:border-[#D9381E]'
+                      : 'border-[#E2DFD7] hover:border-[#161616]'
                 }`}
               >
                 <div>
                   {/* Top Header Card: Parada # & Badge Status */}
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-primary/20 text-primary font-black text-xs flex items-center justify-center border border-primary/30 shrink-0">
+                  <div className="flex justify-between items-start mb-3 pb-3 border-b border-[#E2DFD7]">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-6 h-6 bg-[#161616] text-[#F6F4EE] font-mono font-bold text-[11px] flex items-center justify-center rounded-none shrink-0">
                         #{stopNumber}
                       </span>
                       <div>
-                        <span className="text-[10px] text-on-surface-variant font-mono uppercase tracking-wider">Factura #{dev.invoice_number}</span>
-                        <h4 className="font-extrabold text-sm text-on-surface mt-0.5 truncate max-w-[140px]" title={dev.customer_name}>
+                        <span className="text-[10px] text-[#76746E] font-mono uppercase tracking-wider block">
+                          FACTURA #{dev.invoice_number}
+                        </span>
+                        <h4 className="font-serif font-bold text-sm text-[#161616] mt-0.5 truncate max-w-[150px]" title={dev.customer_name}>
                           {dev.customer_name}
                         </h4>
                       </div>
                     </div>
 
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
+                    <span className={`px-2 py-0.5 rounded-none text-[9px] font-mono font-bold uppercase border tracking-wider ${
                       isCompleted
-                        ? 'bg-surface-container-high text-primary border-primary/30'
+                        ? 'bg-[#E6F4EA] text-[#137333] border-[#CEEAD6]'
                         : isRescheduled
-                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                          : 'bg-primary/10 text-primary border-primary/30'
+                          ? 'bg-[#FCE8E6] text-[#C5221F] border-[#FAD2CF]'
+                          : 'bg-[#FEF7E0] text-[#B45309] border-[#FDE68A]'
                     }`}>
                       {dev.delivery_status}
                     </span>
                   </div>
 
                   {/* Detalle de Dirección & Haversine */}
-                  <div className="space-y-2 text-xs border-t border-b border-outline/10 py-3 my-3">
-                    <div className="flex gap-2 items-start justify-between">
+                  <div className="space-y-2 text-xs py-1 my-2">
+                    <div className="flex gap-2 items-start justify-between bg-[#FAF8F5] p-2.5 border border-[#E2DFD7]">
                       <div className="flex gap-2 min-w-0 flex-1">
-                        <span className="material-symbols-outlined text-primary text-[16px] shrink-0 mt-0.5">pin_drop</span>
-                        <span className="text-on-surface font-medium leading-tight break-words">{dev.delivery_address || dev.customer_address}</span>
+                        <span className="material-symbols-outlined text-[#D9381E] text-[16px] shrink-0 mt-0.5">pin_drop</span>
+                        <span className="text-[#161616] font-medium leading-snug break-words text-xs">
+                          {dev.delivery_address || dev.customer_address}
+                        </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleCopyAddress(dev.delivery_address || dev.customer_address, dev.id)}
-                        className="ml-2 shrink-0 px-2 py-1 rounded-lg border border-outline/20 bg-surface-container-high/60 text-[9px] font-bold text-on-surface-variant hover:text-on-surface cursor-pointer transition"
+                        className="ml-2 shrink-0 px-2 py-0.5 bg-white border border-[#E2DFD7] text-[9px] font-mono font-bold text-[#161616] hover:bg-[#EAE6DF] cursor-pointer transition-colors rounded-none uppercase tracking-wider"
                         title="Copiar dirección"
                       >
-                        {copiedId === dev.id ? 'Copiado' : 'Copiar'}
+                        {copiedId === dev.id ? '✓ Copiado' : 'Copiar'}
                       </button>
                     </div>
 
                     <div className="flex justify-between items-center text-[11px] pt-1">
-                      <span className="text-on-surface-variant">Distancia de Tienda:</span>
-                      <span className="font-mono font-bold text-on-surface">{distance.toFixed(2)} km</span>
+                      <span className="text-[#76746E]">Distancia de Tienda:</span>
+                      <span className="font-mono font-bold text-[#161616]">{distance.toFixed(2)} km</span>
                     </div>
 
                     <div className="flex justify-between items-center text-[11px]">
-                      <span className="text-on-surface-variant">Costo Domicilio:</span>
-                      <span className="font-mono text-primary font-bold">
+                      <span className="text-[#76746E]">Costo Domicilio:</span>
+                      <span className="font-mono font-bold text-[#D9381E]">
                         {parseFloat(dev.delivery_fee) > 0 ? `$${parseFloat(dev.delivery_fee).toLocaleString('es-CO')}` : 'Gratis'}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center text-[11px]">
-                      <span className="text-on-surface-variant">Fecha Programada:</span>
-                      <span className="font-bold text-on-surface">
+                      <span className="text-[#76746E]">Fecha Programada:</span>
+                      <span className="font-mono font-bold text-[#161616]">
                         {dev.delivery_date 
                           ? new Date(dev.delivery_date).toLocaleDateString('es-CO', { month: 'short', day: 'numeric', year: 'numeric' })
                           : 'No programada'}
@@ -498,16 +530,16 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
                     </div>
 
                     {/* Asignación de Repartidor */}
-                    <div className="flex justify-between items-center text-[11px] pt-1.5 border-t border-outline/5">
-                      <span className="text-on-surface-variant flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px] text-primary">person</span>
+                    <div className="flex justify-between items-center text-[11px] pt-2 border-t border-[#E2DFD7]">
+                      <span className="text-[#76746E] flex items-center gap-1 font-mono uppercase text-[10px]">
+                        <span className="material-symbols-outlined text-[13px] text-[#D9381E]">person</span>
                         Repartidor:
                       </span>
                       <select
                         value={dev.delivery_guy_id || ''}
                         disabled={updatingId === dev.id}
                         onChange={(e) => handleAssignDeliveryGuy(dev.id, e.target.value)}
-                        className="bg-surface-container border border-outline/20 rounded-lg text-[10px] font-bold text-primary p-1 outline-none cursor-pointer max-w-[130px]"
+                        className="bg-[#FAF8F5] border border-[#E2DFD7] rounded-none text-[10px] font-mono font-bold text-[#161616] p-1 outline-none cursor-pointer max-w-[140px] focus:border-[#161616]"
                       >
                         <option value="">Sin Asignar</option>
                         {employees.map((emp) => (
@@ -521,7 +553,7 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
                 </div>
 
                 {/* Acciones del Domicilio */}
-                <div className="flex items-center justify-end gap-2 pt-1">
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2DFD7] mt-2">
                   {!isCompleted ? (
                     <>
                       {/* Botón Reagendar */}
@@ -529,10 +561,10 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
                         type="button"
                         disabled={updatingId === dev.id}
                         onClick={() => handleOpenReagendaModal(dev)}
-                        className="px-3 py-1.5 bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white font-bold rounded-md text-[11px] cursor-pointer flex items-center gap-1 transition-all"
+                        className="px-3 py-1.5 bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] font-mono font-bold rounded-none text-[11px] cursor-pointer flex items-center gap-1 transition-colors uppercase tracking-wider"
                         title="Cambiar fecha de entrega"
                       >
-                        <span className="material-symbols-outlined text-[15px] text-amber-400" style={{ color: '#eab308' }}>calendar_month</span>
+                        <span className="material-symbols-outlined text-[15px] text-[#76746E]">calendar_month</span>
                         Reagendar
                       </button>
 
@@ -541,16 +573,16 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
                         type="button"
                         disabled={updatingId === dev.id}
                         onClick={() => handleUpdateStatus(dev.id, 'entregado')}
-                        className="px-3 py-1.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold rounded-md text-[11px] cursor-pointer flex items-center gap-1 transition-all shadow"
+                        className="px-3 py-1.5 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold rounded-none text-[11px] cursor-pointer flex items-center gap-1 transition-colors shadow-xs uppercase tracking-wider border-0"
                       >
                         <span className="material-symbols-outlined text-[15px]">check_circle</span>
                         ENTREGADO
                       </button>
                     </>
                   ) : (
-                    <div className="flex items-center gap-1.5 text-xs text-primary font-bold py-1">
+                    <div className="flex items-center gap-1.5 text-xs text-[#137333] font-mono font-bold py-1">
                       <span className="material-symbols-outlined text-[16px]">verified</span>
-                      Entrega Completada
+                      ENTREGA COMPLETADA
                     </div>
                   )}
                 </div>
@@ -562,33 +594,36 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
 
       {/* Modal Reagendar Entrega */}
       {reagendaInvoice && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-surface-container-highest border border-outline/30 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-3">
-              <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[18px]">calendar_month</span>
-                Reagendar Entrega
-              </h4>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-[#F6F4EE] border border-[#161616] rounded-none p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+              <div>
+                <span className="text-[10px] font-mono tracking-widest text-[#D9381E] uppercase block font-bold">LOGÍSTICA</span>
+                <h4 className="font-serif text-lg font-bold text-[#161616] flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#D9381E] text-[18px]">calendar_month</span>
+                  Reagendar Entrega
+                </h4>
+              </div>
               <button
                 onClick={() => setReagendaInvoice(null)}
-                className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg cursor-pointer bg-transparent border-0"
+                className="text-[#76746E] hover:text-[#161616] p-1 cursor-pointer bg-transparent border-0"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs text-on-surface-variant">
-                Selecciona la nueva fecha de entrega para la factura <strong className="text-on-surface">#{reagendaInvoice.invoice_number}</strong> ({reagendaInvoice.customer_name}):
+              <p className="text-xs text-[#76746E]">
+                Selecciona la nueva fecha de entrega para la factura <strong className="text-[#161616] font-mono">#{reagendaInvoice.invoice_number}</strong> ({reagendaInvoice.customer_name}):
               </p>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold uppercase text-on-surface-variant">Nueva Fecha de Entrega</label>
+                <label className="text-[10px] font-mono font-bold uppercase text-[#76746E] tracking-wider block">Nueva Fecha de Entrega</label>
                 <input
                   type="date"
                   value={reagendaDate}
                   onChange={(e) => setReagendaDate(e.target.value)}
-                  className="w-full bg-surface-container border border-outline/30 rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                  className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs font-mono text-[#161616] outline-none focus:border-[#161616]"
                 />
               </div>
 
@@ -601,7 +636,7 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
                     d.setDate(d.getDate() + 1);
                     setReagendaDate(d.toISOString().split('T')[0]);
                   }}
-                  className="px-2.5 py-1 bg-surface-container border border-outline/20 rounded-lg text-[10px] font-bold text-on-surface cursor-pointer hover:bg-surface-container-high"
+                  className="px-2.5 py-1 bg-white border border-[#E2DFD7] rounded-none text-[10px] font-mono font-bold text-[#161616] cursor-pointer hover:bg-[#FAF8F5] uppercase tracking-wider"
                 >
                   Mañana
                 </button>
@@ -612,25 +647,25 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
                     d.setDate(d.getDate() + 2);
                     setReagendaDate(d.toISOString().split('T')[0]);
                   }}
-                  className="px-2.5 py-1 bg-surface-container border border-outline/20 rounded-lg text-[10px] font-bold text-on-surface cursor-pointer hover:bg-surface-container-high"
+                  className="px-2.5 py-1 bg-white border border-[#E2DFD7] rounded-none text-[10px] font-mono font-bold text-[#161616] cursor-pointer hover:bg-[#FAF8F5] uppercase tracking-wider"
                 >
                   En 2 días
                 </button>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-outline/10">
+            <div className="flex justify-end gap-2 pt-4 border-t border-[#E2DFD7]">
               <button
                 type="button"
                 onClick={() => setReagendaInvoice(null)}
-                className="px-4 py-2 border border-outline/20 text-on-surface font-bold text-xs rounded-xl cursor-pointer hover:bg-surface-container-high"
+                className="px-4 py-2 border border-[#E2DFD7] bg-white text-[#161616] font-mono font-bold text-xs rounded-none cursor-pointer hover:bg-[#FAF8F5] uppercase tracking-wider"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleSaveReagenda}
-                className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl cursor-pointer shadow hover:opacity-90"
+                className="px-4 py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold text-xs rounded-none cursor-pointer shadow-xs uppercase tracking-wider border-0"
               >
                 Guardar Reagenda
               </button>

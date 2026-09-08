@@ -1,103 +1,91 @@
 # 🏢 Documentación Oficial: Arquitectura Multi-Sede con NIT Independiente y Rotación Dinámica de Personal (2026)
 
-Este documento constituye la especificación y planificación oficial para la ampliación del módulo Multi-Sede en el ERP Multi-Tenant. Define la compatibilidad con sedes de identidad fiscal propia (NIT / Razón Social independiente) y la rotación dinámica de trabajadores entre múltiples sucursales con cajas chicas y turnos aislados.
+Este documento constituye la especificación y planificación oficial para el módulo **Multi-Sede** en el ERP Multi-Tenant. Define la compatibilidad con sedes de identidad fiscal propia (NIT / Razón Social independiente) y la rotación dinámica de trabajadores entre múltiples sucursales con cajas chicas y turnos aislados.
 
 ---
 
-## 🎯 1. OBJETIVOS DEL PROYECTO
+## 📊 1. AUDITORÍA DEL ESTADO ACTUAL
 
-1. **Sedes con Identidad Fiscal Propia (NIT / Razón Social Opcional)**:
-   - Permitir que un grupo empresarial administre sucursales que comparten el mismo catálogo y operaciones, pero que emiten facturas bajo una razón social o NIT independiente (ej. consorcios, franquicias o sociedades por ciudad).
-   - Si la sede NO tiene NIT propio, hereda automáticamente los datos fiscales de la casa matriz (`parent_client_id`).
-
-2. **Rotación Dinámica de Personal entre Sedes**:
-   - Permitir asignar un colaborador a múltiples sedes de la empresa (relación 1 a N / N a N).
-   - Proveer un **Selector de Sede Activa (`active_branch_id`)** en la Topbar del ERP para que el empleado active el contexto de la sucursal donde trabajará en el turno actual.
-   - Aislar los turnos de caja (`cash_shifts`), ventas y comisiones al `active_branch_id` asignado en el momento de la operación.
+### ✅ A. Lo que YA está implementado en la plataforma:
+1. **Jerarquía Multi-Sede Matriz / Sucursales**:
+   - Columnas `parent_client_id`, `branch_name`, `is_main_branch` en la tabla `clients`.
+   - Endpoints `/api/clients/:clientId/branches` (GET/POST) para alta y consulta de sucursales en backend (`src/server.ts`).
+2. **Interfaz UI/UX Rediseñada**:
+   - Vista principal dedicada **`+ Nueva Sede`** en `ClientDashboard.tsx` (removido el modal emergente y reemplazado por la pestaña completa con lista de sedes activas).
+3. **Aislamiento Dinámico por Vertical de Negocio (`category`)**:
+   - Filtros condicionales según `category` (`optica`, `restaurante`, `tienda`, `clinica`).
+   - Las ópticas ven solo laboratorios, fórmulas y campañas de salud visual; los restaurantes ven solo comandero KDS, mesas y recetas.
+4. **Estructuras SQL Iniciales**:
+   - Tabla `inventory_transfers` para el movimiento de stock entre sedes.
+   - Tabla `employee_branch_transfers` para la auditoría de trasladados.
 
 ---
 
-## 📋 2. PLAN DE IMPLEMENTACIÓN TÉCNICA
+### ⏳ B. Lo que FALTA por implementar (Fase Siguiente):
+1. **Identidad Fiscal Propia por Sede (NIT e Identificación Tributaria)**:
+   - Campos `has_custom_tax_id`, `legal_name`, `custom_tax_id` en la tabla `clients`.
+   - Formulario con *Switch de NIT Independiente* en la vista de alta/edición de sedes.
+   - Herencia automática del NIT y Razón Social de la casa matriz si el switch está desactivado.
+2. **Rotación Dinámica y Permisos Multisede de Personal**:
+   - Campo `allowed_branches JSONB` en la tabla `employees` para autorizar a un colaborador en múltiples tiendas.
+   - Checkboxes de selección de sedes en el módulo de empleados (`SaaSErpEmployees.tsx`).
+   - Selector de Sede Activa (**"Store Switcher"**) en el Topbar para cambiar de contexto en tiempo real.
+3. **Aislamiento de Cajas y Facturación por Sede Activa**:
+   - Registro de la tripleta `(employee_id, active_branch_id, opening_time)` en apertura de turnos de caja (`cash_shifts`).
+   - Congelar el NIT y datos fiscales correspondientes a la sede emisora en cada comprobante o factura de venta.
 
-### 2.1. Modelo de Datos y Esquemas SQL (`src/database/initDb.ts`)
+---
 
+## 📋 2. PLAN DE IMPLEMENTACIÓN PASO A PASO
+
+### Paso 1: Migración e Incremental SQL (`src/database/initDb.ts`)
 ```sql
--- 1. Bandera y datos fiscales independientes por sede en la tabla clients
+-- 1. Agregar banderas de NIT independiente en clients
 ALTER TABLE clients 
 ADD COLUMN IF NOT EXISTS has_custom_tax_id BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS legal_name VARCHAR(200),
 ADD COLUMN IF NOT EXISTS custom_tax_id VARCHAR(50);
 
--- 2. Soporte para sedes múltiples en la tabla employees
+-- 2. Permitir múltiples sedes autorizadas por empleado
 ALTER TABLE employees 
 ADD COLUMN IF NOT EXISTS allowed_branches JSONB DEFAULT '[]'::jsonb;
 
--- 3. Auditoría de traslados/rotación de personal
-CREATE TABLE IF NOT EXISTS employee_branch_transfers (
-    id VARCHAR(50) PRIMARY KEY DEFAULT gen_random_uuid()::text,
-    employee_id VARCHAR(50) NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-    from_client_id VARCHAR(50) NOT NULL REFERENCES clients(id),
-    to_client_id VARCHAR(50) NOT NULL REFERENCES clients(id),
-    transferred_by_user_name VARCHAR(150) NOT NULL,
-    reason TEXT,
-    transferred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- 3. Completar columnas de auditoría en employee_branch_transfers
+ALTER TABLE employee_branch_transfers
+ADD COLUMN IF NOT EXISTS from_client_id VARCHAR(50) REFERENCES clients(id),
+ADD COLUMN IF NOT EXISTS to_client_id VARCHAR(50) REFERENCES clients(id);
 ```
 
----
+### Paso 2: Formulario de Sede con Switch Fiscal (`ClientDashboard.tsx`)
+- En la pestaña de **`+ Nueva Sede`**, incluir el toggle: *"¿Esta sede cuenta con NIT y Razón Social propia?"*.
+- **Si se activa**: Habilita los campos para ingresar NIT con dígito de verificación y Razón Social de la sucursal.
+- **Si está desactivado**: Muestra el aviso *"Heredará los datos fiscales de la Casa Matriz"*.
 
-### 2.2. Frontend - UI / UX
+### Paso 3: Selector de Sede Activa ("Store Switcher") en la Barra Superior
+- En la barra superior (`Topbar`) de `ClientDashboard.tsx`, renderizar un desplegable cuando el usuario tenga más de 1 sede autorizada: `[ 📍 Sede Activa: Sede Norte ▼ ]`.
+- Al cambiar la opción, se actualiza el `active_branch_id` en el estado global y se recargan las ventas, turnos de caja y métricas.
 
-#### A. Modal "Agregar / Editar Sede" (`SaaSErpStoreSettings.tsx`)
-- **Campos Generales**: Nombre comercial de la sede, Dirección, Teléfono, Ciudad.
-- **Switch / Toggle Fiscal**: *"¿Esta sede maneja facturación / NIT independiente?"*.
-- **Comportamiento Dinámico**:
-  - **Activado (`has_custom_tax_id = true`)**: Despliega los campos para *NIT / Documento Fiscal propio*, *Razón Social Legal para Facturación* y *Prefijo/Resolución DIAN independiente*.
-  - **Desactivado (`has_custom_tax_id = false`)**: Muestra la nota informativa: *"Hereda automáticamente el NIT y Razón Social de la casa matriz"*.
+### Paso 4: Selector de Sedes Autorizadas en Empleados (`SaaSErpEmployees.tsx`)
+- En el modal de creación/edición de colaboradores, incluir checkboxes para marcar las sedes en las que el trabajador tiene permiso de operar.
 
-#### B. Selector de Sede Activa ("Store Switcher") (`ClientDashboard.tsx`)
-- En el Topbar/Navbar del ERP:
-  - Si el usuario tiene acceso a una sola sede, se muestra fija.
-  - Si el usuario o empleado tiene acceso a múltiples sucursales: despliega un menú desplegable interactivo: `[ 📍 Sede Actual: Sede Norte ▼ ]`.
-  - Al cambiar de sede activa, se actualiza el contexto global (`active_branch_id`) y se refrescan las métricas, arqueo de caja y facturación del turno.
-
-#### C. Asignación de Sedes a Empleados (`SaaSErpEmployees.tsx`)
-- En el modal de creación y edición de empleados, incluir un selector con checkboxes: *"Sedes autorizadas para operar"*.
+### Paso 5: Emisión de Facturación Aislada por NIT
+- En `POST /api/invoices`, verificar si la sede emisora posee `has_custom_tax_id = true`.
+- Congelar el NIT y Razón Social propios de la sede en la factura, o usar los de la matriz si es `false`.
 
 ---
 
-### 2.3. Lógica de Negocio y Backend (`src/server.ts`)
+## 🧪 3. PLAN DE VERIFICACIÓN
 
-#### A. Facturación y Ventas (POS)
-- En el endpoint de emisión de factura (`POST /api/invoices`):
-  - Verificar si la sede emisora tiene `has_custom_tax_id = true`.
-  - Si es `true`, congelar el NIT, Razón Social y Prefijo propio de esa sucursal en la factura.
-  - Si es `false`, consultar y heredar los datos fiscales de la casa matriz (`parent_client_id`).
-
-#### B. Turnos, Arqueos de Caja y Ventas por Empleado (`cash_shifts`)
-- Toda apertura de turno de caja chica registra la tripleta: `(employee_id, active_branch_id, opening_time)`.
-- Esto garantiza independencia total en la cuadratura de cajas chicas sin cruzar saldos ni efectivo entre sucursales.
-
-#### C. Reportes y Contabilidad
-- Permitir a los administradores:
-  1. Filtrar reportes de ventas y P&L por **Sede Individual** (para declaraciones de impuestos por cada NIT).
-  2. Consultar el **Estado Consolidado del Grupo Empresarial** completo.
+1. **Prueba de NIT Independiente**:
+   - Crear la sede *1 Óptica Nuevo Horizonte* con NIT propio (ej. `901234567-1`).
+   - Crear la sede *2 Óptica Nuevo Horizonte* con NIT propio (ej. `901234568-2`).
+   - Emitir factura en ambas sedes y verificar que los comprobantes reflejen el NIT y Razón Social correspondientes.
+2. **Prueba de Rotación de Empleado**:
+   - Asignar a un optómetra/cajero acceso a ambas sedes.
+   - Cambiar de sede en el Topbar y verificar que el turno de caja y las métricas se ajusten al contexto seleccionado.
 
 ---
 
-## 🧪 3. PLAN DE VERIFICACIÓN Y PRUEBAS
+## 📌 4. WALKTHROUGH & RESUMEN DE CAMBIOS
 
-1. **Compilación Limpia**:
-   - `npm run build:frontend` (Vite / TypeScript sin errores).
-2. **Prueba de Creación de Sede con NIT Independiente**:
-   - Crear una sede con NIT propio y emitir una factura. Verificar que el recibo contenga el NIT independiente.
-   - Crear una sede sin NIT propio. Verificar que la factura salga con el NIT de la casa matriz.
-3. **Prueba de Rotación de Empleado**:
-   - Asignar a un empleado el acceso a Sede Centro y Sede Norte.
-   - Iniciar turno en Sede Centro (Arqueo A) y luego cambiar a Sede Norte (Arqueo B). Verificar que los arqueos de caja sean totalmente independientes.
-
----
-
-## 📌 4. WALKTHROUGH & RESUMEN DE CAMBIOS EJECUTADOS
-
-*(Esta sección se completará formalmente en este mismo documento cuando se ejecute la implementación en el código base)*
+*(Esta sección se completará formalmente una vez que se ejecuten los pasos del plan en el repositorio).*

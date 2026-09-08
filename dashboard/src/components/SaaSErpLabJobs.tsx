@@ -83,62 +83,80 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
 
   const renderLabJobColumn = (title: string, list: any[], colStatus: string) => {
     return (
-      <div className="bg-surface-container/15 border border-outline/5 rounded-2xl p-4 flex flex-col space-y-3 min-h-[450px]">
-        <div className="flex justify-between items-center pb-2 border-b border-outline/5">
-          <h4 className="font-bold text-xs text-on-surface flex items-center gap-1.5 uppercase tracking-wider">
+      <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-4 flex flex-col space-y-3 min-h-[520px] rounded-none">
+        <div className="flex justify-between items-center pb-2 border-b border-[#E2DFD7]">
+          <h4 className="font-serif text-xs text-[#161616] flex items-center gap-1.5 uppercase font-bold tracking-wider">
             {title}
-            <span className="text-[10px] bg-surface-container-highest px-2 py-0.5 rounded-full text-on-surface-variant font-mono">{list.length}</span>
           </h4>
+          <span className="text-[10px] bg-white border border-[#E2DFD7] px-2 py-0.5 text-[#161616] font-mono font-bold">
+            {list.length}
+          </span>
         </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto max-h-[500px] pr-1 custom-scrollbar">
+        <div className="flex-1 space-y-3 overflow-y-auto max-h-[540px] pr-1 custom-scrollbar">
           {list.length === 0 ? (
-            <p className="text-[10px] text-on-surface-variant/40 italic py-6 text-center">Sin trabajos en este estado</p>
+            <p className="text-[10px] text-[#6B6862] italic py-8 text-center font-sans">
+              Sin trabajos en este estado
+            </p>
           ) : (
             list.map(job => (
-              <div key={job.id} className="glass-card p-3.5 rounded-xl border border-outline/5 hover:border-primary/10 transition-all space-y-2 text-xs">
+              <div 
+                key={job.id} 
+                className="bg-white p-4 border border-[#E2DFD7] hover:border-[#161616] transition-all space-y-3 text-xs rounded-none shadow-xs"
+              >
                 <div>
-                  <h5 className="font-bold text-on-surface leading-tight text-xs">{job.customer_name} {job.customer_last_name || ''}</h5>
-                  <p className="text-[9px] text-on-surface-variant opacity-75">{job.customer_phone}</p>
+                  <h5 className="font-bold text-[#161616] leading-tight text-xs">
+                    {job.customer_name} {job.customer_last_name || ''}
+                  </h5>
+                  <p className="text-[10px] text-[#6B6862] font-mono mt-0.5">
+                    {job.customer_phone ? `+${job.customer_phone}` : 'Sin teléfono'}
+                  </p>
                 </div>
 
-                <div className="p-2 bg-surface-container/30 rounded-lg space-y-1 font-mono text-[9px] text-on-surface-variant leading-tight">
-                  <p>Lente: <strong>{job.product_name}</strong></p>
-                  {job.lens_design && <p>Diseño: <strong>{job.lens_design}</strong></p>}
-                  {job.lens_material && <p>Mat: <strong>{job.lens_material}</strong></p>}
-                  {job.lens_treatment && <p>Trat: <strong>{job.lens_treatment}</strong></p>}
+                <div className="p-2.5 bg-[#FAF8F5] border border-[#E2DFD7] space-y-1 font-mono text-[10px] text-[#161616] leading-tight">
+                  <p>Lente: <strong className="text-[#161616] font-sans font-bold">{job.product_name}</strong></p>
+                  {job.lens_design && <p className="text-[#6B6862]">Diseño: <span className="text-[#161616] font-bold">{job.lens_design}</span></p>}
+                  {job.lens_material && <p className="text-[#6B6862]">Mat: <span className="text-[#161616] font-bold">{job.lens_material}</span></p>}
+                  {job.lens_treatment && <p className="text-[#6B6862]">Trat: <span className="text-[#161616] font-bold">{job.lens_treatment}</span></p>}
                 </div>
 
-                {job.od_sphere && (
-                  <div className="text-[9px] text-on-surface-variant border-t border-outline/5 pt-1.5 grid grid-cols-2 gap-1 font-mono leading-tight">
-                    <div>OD: {job.od_sphere}|{job.od_cylinder}|{job.od_axis}</div>
-                    <div>OI: {job.oi_sphere}|{job.oi_cylinder}|{job.oi_axis}</div>
+                {(job.od_sphere || job.oi_sphere) && (
+                  <div className="text-[10px] text-[#161616] border-t border-[#E2DFD7] pt-2 grid grid-cols-2 gap-2 font-mono leading-tight bg-white">
+                    <div className="bg-[#FAF8F5] p-1.5 border border-[#E2DFD7]">
+                      <span className="text-[9px] font-bold text-[#D9381E] block">OD:</span>
+                      {job.od_sphere || '0.00'} | {job.od_cylinder || '0.00'} | {job.od_axis || '0'}°
+                    </div>
+                    <div className="bg-[#FAF8F5] p-1.5 border border-[#E2DFD7]">
+                      <span className="text-[9px] font-bold text-[#D9381E] block">OI:</span>
+                      {job.oi_sphere || '0.00'} | {job.oi_cylinder || '0.00'} | {job.oi_axis || '0'}°
+                    </div>
                   </div>
                 )}
 
                 {job.supplier_name && (
-                  <div className="text-[9px] text-on-surface-variant border-t border-outline/5 pt-1.5 space-y-0.5">
-                    <p>Lab: <strong>{job.supplier_name}</strong></p>
-                    <p>Costo: <strong>${Number(job.job_value || 0).toLocaleString('es-CO')}</strong></p>
+                  <div className="text-[10px] text-[#6B6862] border-t border-[#E2DFD7] pt-2 space-y-0.5">
+                    <p>Lab: <strong className="text-[#161616]">{job.supplier_name}</strong></p>
+                    <p>Costo: <strong className="text-[#D9381E] font-mono">${Number(job.job_value || 0).toLocaleString('es-CO')} COP</strong></p>
                   </div>
                 )}
 
                 {job.notes && (
-                  <p className="text-[9px] text-on-surface-variant/70 italic bg-surface-container/20 p-1.5 rounded">
+                  <p className="text-[10px] text-[#6B6862] italic bg-[#FAF8F5] border border-[#E2DFD7] p-2">
                     "{job.notes}"
                   </p>
                 )}
 
-                <div className="flex flex-col gap-1.5 pt-1">
+                <div className="pt-1">
                   {colStatus === 'pending' && (
                     <button 
+                      type="button"
                       onClick={() => {
                         setAssigningJob(job);
                         setSelectedLabId('');
                         setAssignJobValue('');
                         setAssignJobNotes('');
                       }}
-                      className="w-full py-1.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-[9px] uppercase tracking-wider rounded-lg border-0 transition cursor-pointer"
+                      className="w-full py-2 bg-[#161616] hover:bg-[#D9381E] text-white font-bold text-[10px] uppercase tracking-wider rounded-none border-0 transition cursor-pointer shadow-xs"
                     >
                       Asignar Taller
                     </button>
@@ -146,29 +164,38 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
 
                   {colStatus === 'assigned' && (
                     <button 
+                      type="button"
                       onClick={() => handleUpdateLabJob(job.id, { status: 'sent' })}
-                      className="w-full py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 font-bold text-[9px] uppercase tracking-wider rounded-lg border-0 transition cursor-pointer"
+                      className="w-full py-2 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] hover:border-[#161616] font-bold text-[10px] uppercase tracking-wider rounded-none transition cursor-pointer"
                     >
-                      Enviar a Laboratorio
+                      Enviar a Laboratorio →
                     </button>
                   )}
 
                   {colStatus === 'sent' && (
                     <button 
+                      type="button"
                       onClick={() => handleUpdateLabJob(job.id, { status: 'received' })}
-                      className="w-full py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 font-bold text-[9px] uppercase tracking-wider rounded-lg border-0 transition cursor-pointer"
+                      className="w-full py-2 bg-[#E6F4EA] hover:bg-[#c9ebd0] text-[#1E4620] border border-[#A8DADC] font-bold text-[10px] uppercase tracking-wider rounded-none transition cursor-pointer"
                     >
-                      ✓ Recibido en Óptica
+                      ✓ Recibido en Tienda
                     </button>
                   )}
 
                   {colStatus === 'received' && (
                     <button 
+                      type="button"
                       onClick={() => handleUpdateLabJob(job.id, { status: 'delivered' })}
-                      className="w-full py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-500 font-bold text-[9px] uppercase tracking-wider rounded-lg border-0 transition cursor-pointer"
+                      className="w-full py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white font-bold text-[10px] uppercase tracking-wider rounded-none border-0 transition cursor-pointer shadow-xs"
                     >
-                      ✓ Entregado a Paciente
+                      ✓ Entregar a Paciente
                     </button>
+                  )}
+
+                  {colStatus === 'delivered' && (
+                    <div className="w-full py-1.5 bg-[#E6F4EA] text-[#1E4620] border border-[#A8DADC] font-bold text-[10px] uppercase tracking-wider text-center select-none">
+                      ✓ Entregado al Cliente
+                    </div>
                   )}
                 </div>
               </div>
@@ -182,7 +209,7 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
   if (loadingLabJobs) {
     return (
       <div className="flex justify-center py-12">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-2 border-[#D9381E] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -194,21 +221,31 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
   const delivered = labJobs.filter(j => j.status === 'delivered');
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+    <div className="space-y-6 text-[#161616] font-sans">
+      {/* Header Editorial Wabi-Sabi */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5 mb-8">
         <div>
-          <h3 className="font-headline-md text-headline-md text-on-surface">Trabajos de laboratorio & Taller</h3>
-          <p className="text-on-surface-variant text-body-md opacity-70">Seguimiento logístico de órdenes enviadas a laboratorios y biselado.</p>
+          <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans block mb-1">
+            TALLER ÓPTICO & LABORATORIO
+          </span>
+          <h2 className="font-serif text-4xl sm:text-5xl font-normal text-[#161616] tracking-tight leading-none">
+            Trabajos de Laboratorio & Taller
+          </h2>
+          <p className="text-xs text-[#6B6862] mt-2 font-sans">
+            Seguimiento logístico y control de estados de lentes, biselado y montajes enviados a talleres externos.
+          </p>
         </div>
         <button
+          type="button"
           onClick={fetchLabJobs}
-          className="px-3 py-1.5 rounded-xl border border-outline/20 bg-surface-container hover:bg-surface-container-high text-xs font-bold text-on-surface flex items-center gap-1.5 cursor-pointer"
+          className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[11px] font-bold py-2.5 px-3.5 flex items-center gap-1.5 transition cursor-pointer uppercase tracking-wider rounded-none shrink-0 shadow-xs"
         >
-          <span className="material-symbols-outlined text-[16px]">refresh</span>
+          <span className="material-symbols-outlined text-[16px] text-[#D9381E]">refresh</span>
           Actualizar Estado
         </button>
       </div>
 
+      {/* Tablero Kanban Wabi-Sabi */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         {renderLabJobColumn("Por Asignar", pending, "pending")}
         {renderLabJobColumn("Laboratorio Asignado", assigned, "assigned")}
@@ -217,19 +254,39 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
         {renderLabJobColumn("Entregados", delivered, "delivered")}
       </div>
 
+      {/* Modal Wabi-Sabi de Asignación de Taller */}
       {assigningJob && createPortal(
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] flex items-center justify-center p-4 text-left">
-          <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-3xl w-full max-w-md shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-            <h3 className="font-bold text-sm text-on-surface">Asignar Laboratorio a Orden</h3>
-            <p className="text-xs text-on-surface-variant font-mono">Lente: {assigningJob.product_name}</p>
+        <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[99999] flex items-center justify-center p-4 text-left">
+          <div className="bg-[#F6F4EE] border border-[#161616] p-6 sm:p-8 rounded-none w-full max-w-md shadow-2xl space-y-5 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto animate-fade-in">
             
-            <div className="space-y-3">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-on-surface-variant font-medium">Laboratorio / Taller *</label>
+            <div className="flex justify-between items-start border-b border-[#E2DFD7] pb-3">
+              <div>
+                <span className="text-[10px] font-bold text-[#D9381E] uppercase tracking-widest block">
+                  ASIGNACIÓN DE LABORATORIO
+                </span>
+                <h3 className="font-serif text-2xl font-normal text-[#161616] mt-0.5">
+                  Asignar Taller a Orden
+                </h3>
+                <p className="text-xs text-[#6B6862] font-mono mt-1">
+                  Lente: {assigningJob.product_name}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAssigningJob(null)}
+                className="text-[#161616] hover:text-[#D9381E] text-2xl font-light cursor-pointer border-0 bg-transparent leading-none"
+              >
+                &times;
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Laboratorio / Taller *</label>
                 <select 
                   value={selectedLabId} 
                   onChange={(e) => setSelectedLabId(e.target.value)}
-                  className="w-full bg-[#181a1c] border border-[#2d3036] rounded-xl p-2.5 text-xs text-on-surface outline-none cursor-pointer"
+                  className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] cursor-pointer rounded-none font-sans"
                 >
                   <option value="">Selecciona un Laboratorio...</option>
                   {laboratories.map(lab => (
@@ -238,36 +295,38 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
                 </select>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-on-surface-variant font-medium">Costo Interno ($ COP) *</label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Costo Interno ($ COP) *</label>
                 <input 
                   type="number" 
                   value={assignJobValue} 
                   onChange={(e) => setAssignJobValue(e.target.value)}
                   placeholder="Ej: 45000"
-                  className="w-full bg-[#181a1c] border border-[#2d3036] rounded-xl p-2.5 text-xs text-on-surface outline-none"
+                  className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-mono font-bold outline-none focus:border-[#161616] rounded-none"
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-on-surface-variant font-medium">Indicaciones / Observaciones</label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Indicaciones / Observaciones</label>
                 <textarea 
                   value={assignJobNotes} 
                   onChange={(e) => setAssignJobNotes(e.target.value)}
-                  placeholder="Biselado especial, filtros..."
-                  className="w-full bg-[#181a1c] border border-[#2d3036] rounded-xl p-2.5 text-xs text-on-surface outline-none h-20 resize-none"
+                  placeholder="Biselado especial, tratamientos, especificaciones..."
+                  className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] rounded-none h-24 resize-none font-sans"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
               <button 
+                type="button"
                 onClick={() => setAssigningJob(null)}
-                className="px-4 py-2 border border-outline/20 text-on-surface rounded-xl hover:bg-surface-container text-xs cursor-pointer bg-transparent"
+                className="px-4 py-2.5 bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-xs font-semibold uppercase tracking-wider rounded-none cursor-pointer"
               >
                 Cancelar
               </button>
               <button 
+                type="button"
                 onClick={() => {
                   if (!selectedLabId) {
                     alert('Selecciona un laboratorio.');
@@ -280,7 +339,7 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
                     status: 'assigned'
                   });
                 }}
-                className="px-5 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold cursor-pointer border-0 hover:opacity-90 transition"
+                className="px-6 py-2.5 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer border-0 shadow-sm transition"
               >
                 Confirmar Asignación
               </button>
@@ -292,4 +351,3 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
     </div>
   );
 };
-

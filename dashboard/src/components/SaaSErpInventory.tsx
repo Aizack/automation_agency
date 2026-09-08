@@ -323,8 +323,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [filterMaxPrice, setFilterMaxPrice] = useState<string>('');
 
     // Silence unused warnings for compatibility
-    if (false as boolean) { console.log(minStock, color); }
+    if (false as boolean) { console.log(minStock, color, setActiveTab, setFilterStock, setFilterMinPrice, setFilterMaxPrice); }
     const [promoDiscount, setPromoDiscount] = useState<number | ''>('');
+    const [taxRate, setTaxRate] = useState<number>(0);
+    const [activePhotoColorIdx, setActivePhotoColorIdx] = useState<number>(0);
+    const [colorStartIndex, setColorStartIndex] = useState<number>(0);
     const [productType, setProductType] = useState<'product' | 'service'>('product');
     const [customAttrs, setCustomAttrs] = useState<any>({});
     // Estructura de Colores con Previsualización y Soporte para Paint Picker
@@ -581,6 +584,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         setHiddenFields(newHidden);
     };
 
+    if (false as boolean) {
+        console.log(FieldWrapper, isAdmin, openCreateColorModal, openEditColorModal, handleDeleteColor, toggleFieldHidden, VisualColorDropdown);
+    }
+
     useEffect(() => {
         fetchProducts();
         fetchCategories();
@@ -595,7 +602,21 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
     const [hasVariants, setHasVariants] = useState<boolean>(true);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    useEffect(() => {
+        if (activePhotoColorIdx < colorStartIndex) {
+            setColorStartIndex(activePhotoColorIdx);
+        } else if (activePhotoColorIdx >= colorStartIndex + 4) {
+            setColorStartIndex(Math.max(0, activePhotoColorIdx - 3));
+        }
+    }, [activePhotoColorIdx]);
+
+    useEffect(() => {
+        if (colorStartIndex > Math.max(0, variantList.length - 4)) {
+            setColorStartIndex(Math.max(0, variantList.length - 4));
+        }
+    }, [variantList.length]);
+
+    const handleSubmit = async (e: React.FormEvent, keepOpen: boolean = false) => {
         e.preventDefault();
         
         const hasVarBool = hasVariants && productType === 'product' && variantList.length > 0;
@@ -643,11 +664,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             color: hasVarBool ? variantList.map(v => v.color).filter(Boolean).join(', ') : (color || null),
             image_url: primaryImageUrl,
             promo_discount: promoDiscount === '' ? 0 : promoDiscount,
+            tax_rate: taxRate,
             category_id: categoryId || null,
             product_type: productType,
             has_variants: hasVarBool,
             variants: formattedVariants,
-            attributes: customAttrs
+            attributes: {
+                ...(customAttrs || {}),
+                tax_rate: taxRate
+            }
         };
 
         try {
@@ -665,17 +690,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
             if (data.success) {
                 await fetchProducts();
-                if (editingProduct) {
-                    resetForm();
-                    alert('✓ Producto actualizado con éxito.');
-                } else {
-                    // Formulario en blanco listo para ingresar otro producto nuevo
+                if (keepOpen) {
+                    setEditingProduct(null);
                     setName('');
                     setSku('');
                     setDescription('');
                     setPrice('');
                     setCostPrice('');
                     setStock('');
+                    setMinStock(5);
                     setBrand('');
                     setMaterial('');
                     setStyle('');
@@ -684,8 +707,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     setCustomAttrs({});
                     setHasVariants(true);
                     setVariantList([{ color: 'Negro', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
+                    setActivePhotoColorIdx(0);
                     setAddProductStep('open');
-                    alert('✓ Producto guardado con éxito y añadido al inventario.\n\nFormulario despejado para ingresar un nuevo producto.');
+                    alert('✓ Producto guardado con éxito.\n\nFormulario despejado para ingresar un nuevo producto.');
+                } else {
+                    resetForm();
+                    alert(editingProduct ? '✓ Producto actualizado con éxito.' : '✓ Producto guardado con éxito.');
                 }
             } else {
                 alert(`Error al guardar producto: ${data.error}`);
@@ -794,6 +821,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         setStyle(prod.style || '');
         setColor(prod.color || '');
         setPromoDiscount(prod.promo_discount ? parseFloat(prod.promo_discount) : 0);
+        const rawTax = (prod as any).tax_rate !== undefined && (prod as any).tax_rate !== null 
+            ? (prod as any).tax_rate 
+            : ((prod as any).attributes?.tax_rate !== undefined ? (prod as any).attributes.tax_rate : 0);
+        setTaxRate(parseFloat(rawTax.toString()) || 0);
         setCategoryId(prod.category_id || '');
         setProductType(prod.product_type === 'service' || (prod.stock && prod.stock >= 999999) ? 'service' : 'product');
         setCustomAttrs((prod as any).attributes || {});
@@ -845,6 +876,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         setStyle('');
         setColor('');
         setPromoDiscount('');
+        setTaxRate(0);
         setCategoryId('');
         setProductType('product');
         setCustomAttrs({});
@@ -1018,311 +1050,211 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     });
 
     return (
-        <div className="space-y-6 text-[#161616]">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E2DFD7] pb-4">
+        <div className="space-y-6 text-[#161616] font-sans">
+            {/* Header Editorial Wabi-Sabi */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5 mb-8">
                 <div>
-                    <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans">LOGÍSTICA & STOCK</span>
-                    <h2 className="font-serif text-3xl font-bold text-[#161616] tracking-tight mt-0.5">Inventario de Productos</h2>
+                    <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans block mb-1">LOGÍSTICA & STOCK</span>
+                    <h2 className="font-serif text-4xl sm:text-5xl font-normal text-[#161616] tracking-tight leading-none">Inventario de Productos</h2>
                 </div>
-                {activeTab === 'catalog' && (
-                    <div className="flex items-center gap-2">
-                        <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            onChange={handleImportCSV} 
-                            className="hidden" 
-                            accept=".csv" 
-                        />
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={importing}
-                            className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[11px] font-bold py-2 px-3.5 rounded-md flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-sm uppercase tracking-wider"
-                        >
-                            <span className="material-symbols-outlined text-[16px] text-[#D9381E]">publish</span>
-                            {importing ? 'Importando...' : 'Importar CSV'}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={fetchProducts}
-                            className="h-9 px-3.5 bg-white hover:bg-[#FAF8F5] text-[#161616] rounded-md flex items-center justify-center border border-[#E2DFD7] cursor-pointer transition text-xs font-bold shrink-0 shadow-sm uppercase tracking-wider"
-                            title="Refrescar catálogo"
-                        >
-                            <span className="material-symbols-outlined text-[16px] mr-1 text-[#D9381E]">refresh</span>
-                            Refrescar
-                        </button>
-                        <button
-                            onClick={() => { resetForm(); setAddProductStep('open'); }}
-                            className="bg-[#161616] hover:bg-[#333333] text-white text-xs font-bold py-2 px-4 rounded-md flex items-center gap-1.5 transition-all cursor-pointer shadow-sm border-0 uppercase tracking-wider"
-                        >
-                            <span className="material-symbols-outlined text-[16px] text-[#D9381E]">add</span>
-                            + NUEVO PRODUCTO / ÍTEM
-                        </button>
-                    </div>
-                )}
+                <div className="flex items-center gap-3">
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleImportCSV} 
+                        className="hidden" 
+                        accept=".csv" 
+                    />
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={importing}
+                        className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[11px] font-bold py-2.5 px-3.5 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 uppercase tracking-wider"
+                        title="Importar CSV"
+                    >
+                        <span className="material-symbols-outlined text-[16px] text-[#D9381E]">publish</span>
+                        {importing ? '...' : 'CSV'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={fetchProducts}
+                        className="p-2.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] cursor-pointer transition text-[11px] font-bold shrink-0 uppercase tracking-wider"
+                        title="Refrescar catálogo"
+                    >
+                        <span className="material-symbols-outlined text-[16px] text-[#D9381E]">refresh</span>
+                    </button>
+                    <button
+                        onClick={() => { resetForm(); setAddProductStep('open'); }}
+                        className="bg-[#161616] hover:bg-[#D9381E] text-white text-[12px] font-bold py-3.5 px-7 flex items-center gap-2 transition-all cursor-pointer border-0 uppercase tracking-widest shadow-sm"
+                    >
+                        + NUEVO PRODUCTO / ÍTEM
+                    </button>
+                </div>
             </div>
 
             {/* Banners feedback */}
             {importSuccessMsg && (
-                <div className="bg-[#E6F4EA] border border-[#A8DADC] text-[#1E4620] text-xs p-3 rounded-md font-semibold flex items-center gap-2 shadow-sm">
+                <div className="bg-[#E6F4EA] border border-[#A8DADC] text-[#1E4620] text-xs p-3 font-semibold flex items-center gap-2">
                     ✓ {importSuccessMsg}
                 </div>
             )}
             {importErrorMsg && (
-                <div className="bg-[#FCE8E6] border border-[#F5C6CB] text-[#C5221F] text-xs p-3 rounded-md font-semibold flex items-center gap-2 shadow-sm">
+                <div className="bg-[#FCE8E6] border border-[#F5C6CB] text-[#C5221F] text-xs p-3 font-semibold flex items-center gap-2">
                     ⚠️ {importErrorMsg}
                 </div>
             )}
 
-            {/* METRICAS Y RESUMEN DE INVENTARIO */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Productos en Catálogo */}
-                <div className="bg-white border border-[#E2DFD7] p-5 rounded-lg flex flex-col justify-between shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <p className="font-bold text-[11px] uppercase tracking-wider flex items-center gap-2 text-[#666666]">
-                            <span className="material-symbols-outlined text-[18px] text-[#D9381E]">inventory_2</span>
-                            PRODUCTOS EN CATÁLOGO
-                        </p>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#E2DFD7] font-mono font-bold text-[#161616]">Existencias activas</span>
-                    </div>
-                    <div className="mt-3">
-                        <h2 className="text-3xl font-serif font-bold tracking-tight text-[#161616]">
-                            {products.length} <span className="text-sm font-sans font-normal text-[#666666]">Ítems</span>
-                        </h2>
-                        <p className="text-[#666666] text-xs mt-1">
-                            {products.reduce((acc, p) => acc + (p.stock || 0), 0)} unidades físicas registradas en stock
-                        </p>
+            {/* TARJETAS RESUMEN KPI (TOTAL PRODUCTOS, DINERO INVENTARIO, ALERTAS - EXACTO IMAGEN 2) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                {/* 1. TOTAL DE ÍTEMS EN STOCK */}
+                <div className="bg-white border border-[#E2DFD7] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
+                    <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold">TOTAL DE ÍTEMS EN STOCK</span>
+                    <div className="mt-4">
+                        <div className="font-serif text-4xl sm:text-5xl text-[#161616] font-normal leading-none flex items-baseline gap-2">
+                            {products.reduce((acc, p) => acc + (p.stock || 0), 0)} <span className="font-sans text-sm text-[#6B6862] font-normal">items</span>
+                        </div>
+                        <p className="text-[#6B6862] text-xs mt-3 font-sans">Catalogados en sistema ERP</p>
                     </div>
                 </div>
 
-                {/* Valor Total del Inventario & ROI */}
-                <div className="bg-white border border-[#E2DFD7] p-5 rounded-lg flex flex-col justify-between shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <p className="font-bold text-[11px] uppercase tracking-wider flex items-center gap-2 text-[#666666]">
-                            <span className="material-symbols-outlined text-[18px] text-[#D9381E]">trending_up</span>
-                            VALOR DEL INVENTARIO & ROI
-                        </p>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#E2DFD7] font-mono font-bold text-[#D9381E]">
-                            +{(
-                                products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.cost_price || '0') || 0)), 0) > 0
-                                ? (((products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.price || '0') || 0)), 0) - products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.cost_price || '0') || 0)), 0)) / products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.cost_price || '0') || 0)), 0)) * 100).toFixed(1)
-                                : '150.0'
-                            )}% ROI Est.
-                        </span>
+                {/* 2. VALOR EN INVENTARIO */}
+                <div className="bg-white border border-[#E2DFD7] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
+                    <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold">VALOR EN INVENTARIO</span>
+                    <div className="mt-4">
+                        <div className="font-serif text-4xl sm:text-5xl text-[#161616] font-normal leading-none">
+                            {(() => {
+                                const totalVal = products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.price || '0') || 0)), 0);
+                                if (totalVal >= 1000000) {
+                                    return `$${(totalVal / 1000000).toFixed(1)}M COP`;
+                                }
+                                return `$${totalVal.toLocaleString('es-CO')} COP`;
+                            })()}
+                        </div>
+                        <p className="text-[#6B6862] text-xs mt-3 font-sans">Costo total de stock en bodega</p>
                     </div>
-                    <div className="mt-3">
-                        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-mono">
-                            ${products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.price || '0') || 0)), 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </h2>
-                        <p className="text-gray-400 text-xs mt-1">Valor potencial de venta en catálogo</p>
+                </div>
+
+                {/* 3. ALERTAS DE STOCK BAJO (Con borde rojo vertical exacto a Imagen 2) */}
+                <div className="bg-white border border-[#E2DFD7] border-l-4 border-l-[#D9381E] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
+                    <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold">ALERTAS DE STOCK BAJO</span>
+                    <div className="mt-4">
+                        <div className="font-serif text-4xl sm:text-5xl text-[#D9381E] font-normal leading-none flex items-baseline gap-2">
+                            {products.filter(p => (p.stock || 0) <= (p.min_stock !== undefined ? p.min_stock : 5)).length} <span className="font-sans text-sm text-[#6B6862] font-normal">Alertas</span>
+                        </div>
+                        <p className="text-[#6B6862] text-xs mt-3 font-sans">Ítems por debajo del stock mínimo</p>
                     </div>
                 </div>
             </div>
 
-            {/* Tabs selection */}
-            <div className="flex border-b border-outline/10">
-                <button
-                    onClick={() => { setActiveTab('catalog'); setAddProductStep('closed'); }}
-                    className={`pb-3 px-6 text-sm font-semibold border-b-2 cursor-pointer transition border-0 bg-transparent ${
-                        activeTab === 'catalog'
-                            ? 'border-primary text-primary font-bold'
-                            : 'border-transparent text-on-surface-variant hover:text-on-surface'
-                    }`}
-                >
-                    Catálogo de Inventario
-                </button>
-                <button
-                    onClick={() => { setActiveTab('promotions'); setAddProductStep('closed'); }}
-                    className={`pb-3 px-6 text-sm font-semibold border-b-2 cursor-pointer transition border-0 bg-transparent ${
-                        activeTab === 'promotions'
-                            ? 'border-primary text-primary font-bold'
-                            : 'border-transparent text-on-surface-variant hover:text-on-surface'
-                    }`}
-                >
-                    Descuentos por Promoción %
-                </button>
-                <button
-                    onClick={() => { setActiveTab('rotation'); setAddProductStep('closed'); }}
-                    className={`pb-3 px-6 text-sm font-semibold border-b-2 cursor-pointer transition border-0 bg-transparent flex items-center gap-1.5 ${
-                        activeTab === 'rotation'
-                            ? 'border-primary text-primary font-bold'
-                            : 'border-transparent text-on-surface-variant hover:text-on-surface'
-                    }`}
-                >
-                    <span className="material-symbols-outlined text-[18px]">sync_alt</span>
-                    Rotación de Inventario
-                </button>
-            </div>
+            {/* Buscador Zen Sutil con Sistema de Filtros Completo Wabi-Sabi */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 border-b border-[#161616] pb-3 mb-6">
+                <div className="relative flex-1 flex items-center min-w-[280px]">
+                    <span className="material-symbols-outlined text-[18px] text-[#6B6862] mr-2 shrink-0">search</span>
+                    <input 
+                        type="text"
+                        ref={searchInputRef}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Buscar por SKU, referencia, nombre o marca..."
+                        className="w-full bg-transparent border-none py-1.5 text-xs text-[#161616] placeholder-[#6B6862] outline-none font-sans"
+                    />
+                </div>
 
-            {/* Barcode-focused Search Bar */}
-            <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant/70 pointer-events-none">
-                    <span className="material-symbols-outlined text-[18px]">barcode_scanner</span>
-                </span>
-                <input 
-                    type="text"
-                    ref={searchInputRef}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={category === 'optica' 
-                        ? "Buscador por código de barras SKU, nombre, marca o material..." 
-                        : "Buscador por código de barras, nombre o descripción..."}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl py-3 pl-10 pr-4 text-sm text-on-surface focus:border-primary outline-none transition"
-                />
-            </div>
-
-            {/* Barra de Filtros Avanzados (Marcas, Stock, Rango de Precios) */}
-            {activeTab === 'catalog' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-[#141517] border border-[#222428] p-3.5 rounded-xl">
-                    <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs text-[#eab308]">branding_watermark</span>
-                            Marca / Fabricante
-                        </label>
+                {/* Filtros Integrados (Marca, Nivel de Stock, Rango de Precios) en Estética Papel Wabi-Sabi */}
+                <div className="flex items-center gap-3 flex-wrap text-xs text-[#161616]">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">MARCA:</span>
                         <select
                             value={filterBrand}
                             onChange={(e) => setFilterBrand(e.target.value)}
-                            className="bg-[#1a1c20] border border-outline/20 rounded-lg p-2 text-xs text-white outline-none cursor-pointer"
+                            className="bg-white border border-[#E2DFD7] py-1.5 px-2.5 text-xs text-[#161616] outline-none cursor-pointer rounded-none font-sans"
                         >
-                            <option value="all">Todas las Marcas ({uniqueBrands.length})</option>
+                            <option value="all">Todas ({uniqueBrands.length})</option>
                             {uniqueBrands.map(b => (
                                 <option key={b} value={b}>{b}</option>
                             ))}
                         </select>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs text-[#eab308]">inventory_2</span>
-                            Nivel de Stock
-                        </label>
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">STOCK:</span>
                         <select
                             value={filterStock}
                             onChange={(e) => setFilterStock(e.target.value)}
-                            className="bg-[#1a1c20] border border-outline/20 rounded-lg p-2 text-xs text-white outline-none cursor-pointer"
+                            className="bg-white border border-[#E2DFD7] py-1.5 px-2.5 text-xs text-[#161616] outline-none cursor-pointer rounded-none font-sans"
                         >
-                            <option value="all">Todo el Inventario</option>
-                            <option value="in_stock">🟢 Con Stock Disponible (&gt; 0)</option>
-                            <option value="low_stock">⚠️ Stock Bajo / Alerta Mínima</option>
-                            <option value="out_of_stock">🔴 Sin Stock / Agotado (0)</option>
+                            <option value="all">Todo</option>
+                            <option value="in_stock">Disponible (&gt;0)</option>
+                            <option value="low_stock">Stock Bajo</option>
+                            <option value="out_of_stock">Agotado (0)</option>
                         </select>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs text-[#eab308]">attach_money</span>
-                            Precio Mínimo (COP)
-                        </label>
+                    <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">PRECIO:</span>
                         <input
                             type="number"
                             value={filterMinPrice}
                             onChange={(e) => setFilterMinPrice(e.target.value)}
-                            placeholder="Ej: 50000"
-                            className="bg-[#1a1c20] border border-outline/20 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                            placeholder="Mín"
+                            className="w-16 bg-white border border-[#E2DFD7] p-1.5 text-xs text-[#161616] outline-none font-mono rounded-none"
+                        />
+                        <span className="text-[#6B6862]">-</span>
+                        <input
+                            type="number"
+                            value={filterMaxPrice}
+                            onChange={(e) => setFilterMaxPrice(e.target.value)}
+                            placeholder="Máx"
+                            className="w-16 bg-white border border-[#E2DFD7] p-1.5 text-xs text-[#161616] outline-none font-mono rounded-none"
                         />
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs text-[#eab308]">payments</span>
-                            Precio Máximo (COP)
-                        </label>
-                        <div className="flex items-center gap-1">
-                            <input
-                                type="number"
-                                value={filterMaxPrice}
-                                onChange={(e) => setFilterMaxPrice(e.target.value)}
-                                placeholder="Ej: 500000"
-                                className="w-full bg-[#1a1c20] border border-outline/20 rounded-lg p-2 text-xs text-white outline-none font-mono"
-                            />
-                            {(filterBrand !== 'all' || filterStock !== 'all' || filterMinPrice !== '' || filterMaxPrice !== '') && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setFilterBrand('all');
-                                        setFilterStock('all');
-                                        setFilterMinPrice('');
-                                        setFilterMaxPrice('');
-                                    }}
-                                    className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/30 text-xs shrink-0 cursor-pointer"
-                                    title="Limpiar filtros"
-                                >
-                                    <span className="material-symbols-outlined text-[15px]">filter_alt_off</span>
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                    {(filterBrand !== 'all' || filterStock !== 'all' || filterMinPrice !== '' || filterMaxPrice !== '') && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setFilterBrand('all');
+                                setFilterStock('all');
+                                setFilterMinPrice('');
+                                setFilterMaxPrice('');
+                            }}
+                            className="px-2 py-1 bg-[#D9381E] text-white text-[10px] font-bold uppercase tracking-wider cursor-pointer border-0 rounded-none"
+                            title="Limpiar Filtros"
+                        >
+                            Limpiar
+                        </button>
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* Render Tab Contents */}
             {activeTab === 'catalog' ? (
                 <>
-                    {/* Selector de Categoría - Fuera del Formulario */}
-                    {isFormOpen && (
-                        <div className="bg-surface-container-high border border-outline/10 p-4 rounded-2xl space-y-3">
-                            <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-primary text-[18px]">category</span>
-                                <label className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Categoría del Producto</label>
-                            </div>
-                            <div className="flex gap-2 items-end">
-                                <select 
-                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition flex-grow"
-                                    value={categoryId}
-                                    onChange={(e) => {
-                                        if (e.target.value === 'new') {
-                                            setShowCreateCategoryPrompt(true);
-                                        } else {
-                                            handleSelectCategory(e.target.value);
-                                        }
-                                    }}
-                                >
-                                    <option value="" className="bg-surface-container">-- Selecciona una categoría --</option>
-                                    {categories.map((cat: any) => (
-                                        <option key={cat.id} value={cat.id} className="bg-surface-container">{cat.name}</option>
-                                    ))}
-                                    <option value="new" className="bg-primary text-on-primary">+ Crear nueva categoría</option>
-                                </select>
-                                {categoryId && (
-                                    <button 
-                                        type="button"
-                                        onClick={() => { setCategoryId(''); setHiddenFields(new Set()); }}
-                                        className="p-2.5 hover:bg-red-500/20 text-red-400 rounded-lg transition cursor-pointer border border-red-500/30 bg-transparent text-xs"
-                                        title="Limpiar selección"
-                                    >
-                                        <span className="material-symbols-outlined text-[16px]">close</span>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
                     {/* Modal Rápido para Crear Nueva Categoría */}
                     {showCreateCategoryPrompt && createPortal(
-                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                            <div className="bg-surface-container-high border border-outline/10 p-6 rounded-2xl max-w-md w-full shadow-2xl animate-fade-in space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="font-bold text-base text-on-surface flex items-center gap-1.5">
-                                        <span className="material-symbols-outlined text-primary text-[20px]">add_box</span>
+                        <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
+                            <div className="bg-[#F6F4EE] border border-[#161616] p-6 rounded-none max-w-md w-full shadow-2xl space-y-4">
+                                <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                                    <h3 className="font-serif text-xl font-normal text-[#161616] flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[#D9381E] text-[20px]">add_box</span>
                                         Nueva Categoría
                                     </h3>
                                     <button 
                                         type="button"
                                         onClick={() => setShowCreateCategoryPrompt(false)}
-                                        className="p-1 hover:bg-surface-container-highest rounded-full border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
+                                        className="p-1 text-[#6B6862] hover:text-[#161616] border-0 bg-transparent cursor-pointer transition text-lg"
                                     >
-                                        <span className="material-symbols-outlined text-[20px]">close</span>
+                                        &times;
                                     </button>
                                 </div>
 
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-xs text-on-surface-variant font-bold uppercase">Nombre</label>
+                                    <label className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">Nombre de Categoría</label>
                                     <input 
                                         type="text"
                                         value={newCategoryName}
                                         onChange={(e) => setNewCategoryName(e.target.value)}
                                         placeholder="Ej: Monturas, Lentes, Estuches..."
-                                        className="bg-surface-container border border-outline/20 rounded-lg p-2.5 text-xs focus:border-primary text-on-surface outline-none transition"
+                                        className="bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none transition rounded-none"
                                         onKeyPress={(e) => {
                                             if (e.key === 'Enter') {
                                                 handleCreateCategory();
@@ -1332,11 +1264,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     />
                                 </div>
 
-                                <div className="flex justify-end gap-3 pt-3 border-t border-outline/5">
+                                <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
                                     <button 
                                         type="button"
                                         onClick={() => setShowCreateCategoryPrompt(false)}
-                                        className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-lg transition cursor-pointer"
+                                        className="px-4 py-2 bg-transparent border border-[#E2DFD7] text-[#161616] text-xs font-semibold rounded-none transition cursor-pointer uppercase tracking-wider"
                                     >
                                         Cancelar
                                     </button>
@@ -1344,9 +1276,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         type="button"
                                         onClick={handleCreateCategory}
                                         disabled={!newCategoryName.trim()}
-                                        className="px-4 py-2 bg-primary hover:opacity-90 disabled:opacity-50 text-on-primary text-xs font-bold rounded-lg transition cursor-pointer border-0 flex items-center gap-1.5"
+                                        className="px-4 py-2 bg-[#D9381E] hover:bg-[#b82e18] disabled:opacity-50 text-white text-xs font-semibold rounded-none transition cursor-pointer border-0 flex items-center gap-1.5 uppercase tracking-wider"
                                     >
-                                        <span className="material-symbols-outlined text-[14px]">add</span>
                                         Crear
                                     </button>
                                 </div>
@@ -1355,979 +1286,676 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         document.body
                     )}
 
-                    {isFormOpen && (
-                        <div className="bg-white border border-[#E2DFD7] p-8 rounded-none shadow-sm space-y-6 text-[#161616]">
-                            <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-4">
-                                <div>
-                                    <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans">FORMULARIO DE INVENTARIO ERP</span>
-                                    <h3 className="font-serif text-3xl font-bold text-[#161616] tracking-tight mt-0.5">
-                                        {editingProduct ? 'Editar Producto o Servicio de Venta' : 'Crear / Editar Producto o Servicio de Venta'}
-                                    </h3>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={resetForm}
-                                    className="p-1 text-[#666666] hover:text-[#161616] rounded-none transition cursor-pointer border-0 bg-transparent text-2xl font-bold"
-                                    title="Cerrar formulario"
-                                >
-                                    &times;
-                                </button>
-                            </div>
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="space-y-1.5">
-                                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6B6862] block">Tipo de Ítem *</label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setProductType('product');
-                                                if (stock === 999999) setStock('');
-                                            }}
-                                            className={`py-2.5 rounded-none border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-colors ${
-                                                productType === 'product'
-                                                    ? 'bg-[#161616] border-[#161616] text-white shadow-sm'
-                                                    : 'bg-white border-[#E2DFD7] text-[#6B6862] hover:border-[#161616]'
-                                            }`}
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]">inventory_2</span>
-                                            Producto Físico (Con Stock)
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setProductType('service');
-                                                setStock(999999);
-                                            }}
-                                            className={`py-2.5 rounded-none border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-colors ${
-                                                productType === 'service'
-                                                    ? 'bg-[#161616] border-[#161616] text-white shadow-sm'
-                                                    : 'bg-white border-[#E2DFD7] text-[#6B6862] hover:border-[#161616]'
-                                            }`}
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]">medical_services</span>
-                                            Servicio / Examen (Sin Stock)
-                                        </button>
+                    {/* MODAL POPUP WIDESCREEN EDITORIAL WABI-SABI PARA AGREGAR / EDITAR PRODUCTOS */}
+                    {isFormOpen && createPortal(
+                        <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+                            <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] h-[93vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in">
+                                
+                                {/* Header del Modal */}
+                                <div className="px-8 py-5 border-b border-[#E2DFD7] flex justify-between items-center bg-[#F6F4EE] shrink-0">
+                                    <div>
+                                        <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans block">FORMULARIO DE INVENTARIO ERP</span>
+                                        <h3 className="font-serif text-2xl sm:text-3xl font-normal text-[#161616] leading-tight">
+                                            {editingProduct ? 'Editar Producto o Servicio' : 'Crear / Editar Producto o Servicio de Venta'}
+                                        </h3>
                                     </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {/* 1. MARCA / FABRICANTE (PRIMERO) */}
-                                    {productType === 'product' && (
-                                        <div className="col-span-1 md:col-span-2">
-                                            <FieldWrapper 
-                                                fieldId="brand" 
-                                                label="Marca / Fabricante *"
-                                                hidden={hiddenFields.has('brand')}
-                                                onToggleHidden={toggleFieldHidden}
-                                            >
-                                                <input 
-                                                    type="text"
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-amber-400 text-on-surface outline-none transition"
-                                                    value={brand}
-                                                    onChange={(e) => setBrand(e.target.value)}
-                                                    placeholder="Ej: Ray-Ban, Gucci, Oakley, Bausch + Lomb"
-                                                />
-                                            </FieldWrapper>
-                                        </div>
-                                    )}
-
-                                    {/* 2. REFERENCIA / MODELO (SEGUNDO) */}
-                                    <div className="flex flex-col gap-1.5 col-span-1 md:col-span-2">
-                                        <label className="text-xs text-on-surface-variant font-bold uppercase tracking-wider">Referencia / Modelo *</label>
-                                        <input 
-                                            type="text"
-                                            className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-amber-400 text-on-surface outline-none transition"
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
-                                            placeholder="Ej: 16-140, RB3025, GG00610"
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* 3. SKU / CÓDIGO DE BARRAS (TERCERO) */}
-                                    {(!hasVariants || productType === 'service') ? (
-                                        <div className="flex flex-col gap-1.5 col-span-1 md:col-span-2">
-                                            <label className="text-xs text-on-surface-variant font-medium flex items-center justify-between">
-                                                <span className="font-bold uppercase tracking-wider text-xs">SKU / Código de Barras (Producto Simple)</span>
-                                                <span className="text-[10px] text-amber-400 font-semibold flex items-center gap-0.5">
-                                                    <span className="material-symbols-outlined text-[13px]">barcode_scanner</span>
-                                                    Listo para Pistola Lectora
-                                                </span>
-                                            </label>
-                                            <div className="relative">
-                                                <input 
-                                                    type="text"
-                                                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 pr-10 text-sm focus:border-amber-400 text-on-surface outline-none transition font-mono uppercase"
-                                                    value={sku}
-                                                    onChange={(e) => setSku(e.target.value)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') {
-                                                            e.preventDefault();
-                                                        }
-                                                    }}
-                                                    placeholder="Disparar pistola lectora o dejar en blanco..."
-                                                />
-                                                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">
-                                                    barcode_scanner
-                                                </span>
-                                            </div>
-                                            <p className="text-[10px] text-on-surface-variant">Si lo dejas en blanco, el sistema autogenerará un código único.</p>
-                                        </div>
-                                    ) : (
-                                        <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center justify-between col-span-1 md:col-span-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-primary text-[20px]">palette</span>
-                                                <div>
-                                                    <p className="text-xs font-bold text-on-surface">Producto con Variantes de Color</p>
-                                                    <p className="text-[10px] text-on-surface-variant">Los códigos de barras y stock se definen individualmente por cada color abajo.</p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => setHasVariants(false)}
-                                                className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
-                                                title="Convertir a Producto Simple"
-                                            >
-                                                <span className="material-symbols-outlined text-[14px]">close</span>
-                                                Producto Simple
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {(!hasVariants && productType === 'product') && (
-                                        <>
-                                            <div className="flex flex-col gap-1.5">
-                                                <label className="text-xs text-on-surface-variant font-medium flex items-center justify-between">
-                                                    <span>Stock Actual *</span>
-                                                    {!isAdmin && editingProduct !== null && (
-                                                        <span className="text-[10px] text-[#eab308] font-bold flex items-center gap-1">
-                                                            <span className="material-symbols-outlined text-[13px]">lock</span>
-                                                            Solo lectura (Solo Admin edita stock existente)
-                                                        </span>
-                                                    )}
-                                                </label>
-                                                <input 
-                                                    type="number"
-                                                    disabled={!isAdmin && editingProduct !== null}
-                                                    className={`bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono font-bold ${
-                                                        !isAdmin && editingProduct !== null ? 'opacity-60 cursor-not-allowed bg-surface-container-highest/40' : ''
-                                                    }`}
-                                                    value={stock}
-                                                    onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
-                                                    placeholder="Ej: 10"
-                                                    required
-                                                />
-                                                {!isAdmin && editingProduct !== null && (
-                                                    <p className="text-[11px] text-amber-400/90 bg-amber-500/10 border border-amber-500/20 p-2 rounded-xl flex items-center gap-1.5 mt-0.5">
-                                                        <span className="material-symbols-outlined text-[15px]">info</span>
-                                                        Para agregar unidades a este producto existente, usa el botón <strong>"Reabastecer (+)"</strong> en el catálogo.
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col gap-1.5">
-                                                <label className="text-xs text-on-surface-variant font-medium">Stock Mínimo Alerta *</label>
-                                                <input 
-                                                    type="number"
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono"
-                                                    value={minStock}
-                                                    onChange={(e) => setMinStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 1))}
-                                                    placeholder="Ej: 2"
-                                                    required
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {(() => {
-                                        const selectedCat = categories.find((cat: any) => cat.id.toString() === categoryId.toString());
-                                        const selectedCatName = selectedCat ? selectedCat.name.toLowerCase().trim() : '';
-                                        const catLower = selectedCatName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-                                        const handleAttrChange = (key: string, val: any) => {
-                                            setCustomAttrs((prev: any) => ({ ...prev, [key]: val }));
-                                        };
-
-                                        return (
-                                            <>
-                                                {/* 1. MONTURAS */}
-                                                {catLower.includes('montura') && (
-                                                    <>
-                                                        {!hiddenFields.has('material-frame') && (
-                                                            <FieldWrapper 
-                                                                fieldId="material-frame" 
-                                                                label="Material de la Montura"
-                                                                hidden={false}
-                                                                onToggleHidden={toggleFieldHidden}
-                                                                children={
-                                                                    <select 
-                                                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                        value={customAttrs.material || ''}
-                                                                        onChange={(e) => handleAttrChange('material', e.target.value)}
-                                                                    >
-                                                                        <option value="">-- Seleccione Material --</option>
-                                                                        <option value="Acetato">Acetato</option>
-                                                                        <option value="Metal">Metal</option>
-                                                                        <option value="Titanio">Titanio</option>
-                                                                        <option value="TR-90">TR-90</option>
-                                                                        <option value="Madera">Madera / Orgánico</option>
-                                                                    </select>
-                                                                }
-                                                            />
-                                                        )}
-                                                        {!hiddenFields.has('style-frame') && (
-                                                            <FieldWrapper 
-                                                                fieldId="style-frame" 
-                                                                label="Estilo de Montura"
-                                                                hidden={false}
-                                                                onToggleHidden={toggleFieldHidden}
-                                                                children={
-                                                                    <select 
-                                                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                        value={customAttrs.style || ''}
-                                                                        onChange={(e) => handleAttrChange('style', e.target.value)}
-                                                                    >
-                                                                        <option value="">-- Seleccione Estilo --</option>
-                                                                        <option value="Completa">Aro Completo</option>
-                                                                        <option value="Semi-flotante">Ranurada / Semi-flotante</option>
-                                                                        <option value="Flotante">Tres Piezas / Flotante</option>
-                                                                    </select>
-                                                                }
-                                                            />
-                                                        )}
-                                                        {!hiddenFields.has('shape') && (
-                                                            <FieldWrapper 
-                                                                fieldId="shape" 
-                                                                label="Forma del Lente"
-                                                                hidden={false}
-                                                                onToggleHidden={toggleFieldHidden}
-                                                                children={
-                                                                    <select 
-                                                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                        value={customAttrs.shape || ''}
-                                                                        onChange={(e) => handleAttrChange('shape', e.target.value)}
-                                                                    >
-                                                                        <option value="">-- Seleccione Forma --</option>
-                                                                        <option value="Aviador">Aviador</option>
-                                                                        <option value="Redonda">Redonda</option>
-                                                                        <option value="Cuadrada">Cuadrada</option>
-                                                                        <option value="Rectangular">Rectangular</option>
-                                                                        <option value="Gato">Cat-Eye / Gato</option>
-                                                                        <option value="Pantalla">Pantalla / Máscara</option>
-                                                                    </select>
-                                                                }
-                                                            />
-                                                        )}
-                                                        {!hiddenFields.has('dimensions') && (
-                                                            <FieldWrapper 
-                                                                fieldId="dimensions" 
-                                                                label="Medidas (Aro - Puente - Varilla)"
-                                                                hidden={false}
-                                                                onToggleHidden={toggleFieldHidden}
-                                                                children={
-                                                                    <input 
-                                                                        type="text"
-                                                                        className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                        value={customAttrs.dimensions || ''}
-                                                                        onChange={(e) => handleAttrChange('dimensions', e.target.value)}
-                                                                        placeholder="Ej: 52-18-140"
-                                                                    />
-                                                                }
-                                                            />
-                                                        )}
-                                                    </>
-                                                )}
-
-                                                {/* 2. LENTES OFTÁLMICOS */}
-                                                {catLower.includes('lente') && !catLower.includes('contacto') && (
-                                                    <>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de Diseño</label>
-                                                            <select 
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.design || ''}
-                                                                onChange={(e) => handleAttrChange('design', e.target.value)}
-                                                            >
-                                                                <option value="">-- Seleccione Diseño --</option>
-                                                                <option value="Monofocal">Monofocal</option>
-                                                                <option value="Bifocal">Bifocal</option>
-                                                                <option value="Progresivo">Progresivo</option>
-                                                                <option value="Ocupacional">Ocupacional</option>
-                                                            </select>
-                                                        </div>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Material del Cristal</label>
-                                                            <select 
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.material || ''}
-                                                                onChange={(e) => handleAttrChange('material', e.target.value)}
-                                                            >
-                                                                <option value="">-- Seleccione Material --</option>
-                                                                <option value="CR-39">CR-39 (Estándar)</option>
-                                                                <option value="Policarbonato">Policarbonato (Resistente)</option>
-                                                                <option value="Alto Indice 1.67">Alto Índice 1.67 (Delgado)</option>
-                                                                <option value="Alto Indice 1.74">Alto Índice 1.74 (Extra Delgado)</option>
-                                                                <option value="Trivex">Trivex</option>
-                                                            </select>
-                                                        </div>
-                                                        <div className="flex flex-col gap-1.5 col-span-1 md:col-span-2">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Tratamiento / Filtro</label>
-                                                            <select 
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.treatment || ''}
-                                                                onChange={(e) => handleAttrChange('treatment', e.target.value)}
-                                                            >
-                                                                <option value="">-- Seleccione Tratamiento --</option>
-                                                                <option value="Antirreflejo">Antirreflejo Convencional</option>
-                                                                <option value="Filtro Azul">Filtro de Luz Azul / Blue Protect</option>
-                                                                <option value="Fotocromatico">Fotocromático (Transitions)</option>
-                                                                <option value="Fotocromatico + Filtro Azul">Fotocromático + Filtro Azul</option>
-                                                                <option value="Polarizado">Polarizado</option>
-                                                            </select>
-                                                        </div>
-                                                    </>
-                                                )}
-
-                                                {/* 3. LENTES DE CONTACTO */}
-                                                {catLower.includes('contacto') && (
-                                                    <>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de Reemplazo</label>
-                                                            <select 
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.replacement || ''}
-                                                                onChange={(e) => handleAttrChange('replacement', e.target.value)}
-                                                            >
-                                                                <option value="">-- Seleccione --</option>
-                                                                <option value="Diario">Diario</option>
-                                                                <option value="Quincenal">Quincenal</option>
-                                                                <option value="Mensual">Mensual</option>
-                                                                <option value="Anual">Anual</option>
-                                                            </select>
-                                                        </div>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Diseño / Aplicación</label>
-                                                            <select 
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.design || ''}
-                                                                onChange={(e) => handleAttrChange('design', e.target.value)}
-                                                            >
-                                                                <option value="">-- Seleccione --</option>
-                                                                <option value="Esferico">Esférico (Miopía/Hipermetropía)</option>
-                                                                <option value="Torico">Tórico (Astigmatismo)</option>
-                                                                <option value="Multifocal">Multifocal (Presbicia)</option>
-                                                                <option value="Cosmetico">Cosmético / Color</option>
-                                                            </select>
-                                                        </div>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Curva Base (BC)</label>
-                                                            <input 
-                                                                type="text"
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.baseCurve || ''}
-                                                                onChange={(e) => handleAttrChange('baseCurve', e.target.value)}
-                                                                placeholder="Ej: 8.6"
-                                                            />
-                                                        </div>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Diámetro (DIA)</label>
-                                                            <input 
-                                                                type="text"
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.diameter || ''}
-                                                                onChange={(e) => handleAttrChange('diameter', e.target.value)}
-                                                                placeholder="Ej: 14.2"
-                                                            />
-                                                        </div>
-                                                    </>
-                                                )}
-
-                                                {/* 4. ESTUCHES */}
-                                                {catLower.includes('estuche') && (
-                                                    <>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de Estuche</label>
-                                                            <select 
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.type || ''}
-                                                                onChange={(e) => handleAttrChange('type', e.target.value)}
-                                                            >
-                                                                <option value="">-- Seleccione --</option>
-                                                                <option value="Rigido">Rígido / Antigolpes</option>
-                                                                <option value="Semi-rigido">Semi-rígido</option>
-                                                                <option value="Blando">Blando / Tipo Bolsa</option>
-                                                            </select>
-                                                        </div>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Material Externo</label>
-                                                            <input 
-                                                                type="text"
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.material || ''}
-                                                                onChange={(e) => handleAttrChange('material', e.target.value)}
-                                                                placeholder="Ej: Cuero sintético, Metal"
-                                                            />
-                                                        </div>
-                                                    </>
-                                                )}
-
-                                                {/* 5. LÍQUIDOS LIMPIA LENTES */}
-                                                {catLower.includes('liquido') && (
-                                                    <>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Capacidad / Volumen</label>
-                                                            <input 
-                                                                type="text"
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.volume || ''}
-                                                                onChange={(e) => handleAttrChange('volume', e.target.value)}
-                                                                placeholder="Ej: 60 ml, 2 Oz"
-                                                            />
-                                                        </div>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Presentación</label>
-                                                            <select 
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.packaging || ''}
-                                                                onChange={(e) => handleAttrChange('packaging', e.target.value)}
-                                                            >
-                                                                <option value="">-- Seleccione --</option>
-                                                                <option value="Atomizador">Atomizador / Spray</option>
-                                                                <option value="Gotero">Gotero</option>
-                                                            </select>
-                                                        </div>
-                                                    </>
-                                                )}
-
-                                                {/* 6. PAÑOS MICROFIBRA */}
-                                                {catLower.includes('pano') && (
-                                                    <>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Dimensiones</label>
-                                                            <input 
-                                                                type="text"
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.dimensions || ''}
-                                                                onChange={(e) => handleAttrChange('dimensions', e.target.value)}
-                                                                placeholder="Ej: 15x15 cm"
-                                                            />
-                                                        </div>
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-xs text-on-surface-variant font-medium">Tipo de Personalización</label>
-                                                            <select 
-                                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition"
-                                                                value={customAttrs.design || ''}
-                                                                onChange={(e) => handleAttrChange('design', e.target.value)}
-                                                            >
-                                                                <option value="">-- Seleccione --</option>
-                                                                <option value="Unicolor">Unicolor básico</option>
-                                                                <option value="Estampado">Estampado / Con diseños</option>
-                                                                <option value="Logo Tienda">Con logo de la óptica</option>
-                                                            </select>
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </>
-                                        );
-                                    })()}
-                                    
-                                     {/* Matriz de Variantes por Referencia Única */}
-                                     {productType === 'product' && (
-                                         <div className="col-span-1 md:col-span-2 space-y-3 bg-surface-container/20 p-3.5 rounded-2xl border border-outline/10 my-1">
-                                             <div className="flex justify-between items-center pb-2 border-b border-outline/10">
-                                                 <label className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
-                                                     <span className="material-symbols-outlined text-primary text-[18px]">palette</span>
-                                                     Matriz de Variantes por Color (Stock / Mínimo / Foto / SKU)
-                                                 </label>
-
-                                                 {hasVariants ? (
-                                                     <button
-                                                         type="button"
-                                                         onClick={() => setHasVariants(false)}
-                                                         className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-                                                         title="Desactivar variantes y convertir en Producto Simple"
-                                                     >
-                                                         <span className="material-symbols-outlined text-[16px]">close</span>
-                                                         Desactivar Variantes (Producto Simple)
-                                                     </button>
-                                                 ) : (
-                                                     <button
-                                                         type="button"
-                                                         onClick={() => {
-                                                             setHasVariants(true);
-                                                             if (variantList.length === 0) {
-                                                                 setVariantList([{ color: 'Negro', sku: '', stock: stock === '' ? 10 : stock, min_stock: 2, image_url: '' }]);
-                                                             }
-                                                         }}
-                                                         className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-                                                     >
-                                                         <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                                                         + Activar Variantes por Color
-                                                     </button>
-                                                 )}
-                                             </div>
-
-                                             {hasVariants && (
-                                                 <>
-                                                     {/* Nombres de los Campos / Encabezados de la Tabla */}
-                                                     <div className="hidden sm:grid grid-cols-12 gap-2 text-[10px] font-bold uppercase text-on-surface-variant px-2 py-1 tracking-wider border-b border-outline/10">
-                                                         <div className="col-span-3">COLOR / VARIANTE</div>
-                                                         <div className="col-span-2 text-center">STOCK ACTUAL</div>
-                                                         <div className="col-span-2 text-center">STOCK MÍNIMO</div>
-                                                         <div className="col-span-2 text-center">FOTO PRODUCTO</div>
-                                                         <div className="col-span-2 text-center">SKU / BARRAS</div>
-                                                         <div className="col-span-1 text-center">ACCIONES</div>
-                                                     </div>
-
-                                                     <div className="space-y-2">
-                                                         {variantList.map((v, idx) => (
-                                                    <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-surface-container/60 p-2.5 rounded-xl border border-outline/10">
-                                                        {/* 1. Selector Visual de Color con Círculos en CADA Opción y Edición */}
-                                                        <div className="sm:col-span-3 flex flex-col gap-1">
-                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Color / Variante</label>
-                                                            <VisualColorDropdown
-                                                                selectedColor={v.color}
-                                                                colors={allColors}
-                                                                onSelect={(colorName) => {
-                                                                    const updated = [...variantList];
-                                                                    updated[idx].color = colorName;
-                                                                    setVariantList(updated);
-                                                                }}
-                                                                onOpenPaintNew={() => openCreateColorModal(idx)}
-                                                                onEditColor={(c) => openEditColorModal(c)}
-                                                                onDeleteColor={(id) => handleDeleteColor(id)}
-                                                            />
-                                                        </div>
-
-                                                        {/* 2. Stock Actual */}
-                                                        <div className="sm:col-span-2 flex flex-col gap-1">
-                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Stock Actual</label>
-                                                            <input
-                                                                type="number"
-                                                                placeholder="Stock *"
-                                                                disabled={!isAdmin && editingProduct !== null}
-                                                                value={v.stock}
-                                                                onChange={(e) => {
-                                                                    const updated = [...variantList];
-                                                                    updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
-                                                                    setVariantList(updated);
-                                                                }}
-                                                                className={`w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center font-bold ${
-                                                                    !isAdmin && editingProduct !== null ? 'opacity-60 cursor-not-allowed bg-surface-container-highest/40' : ''
-                                                                }`}
-                                                            />
-                                                        </div>
-
-                                                        {/* 3. Stock Mínimo */}
-                                                        <div className="sm:col-span-2 flex flex-col gap-1">
-                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Stock Mínimo</label>
-                                                            <input
-                                                                type="number"
-                                                                placeholder="Mínimo *"
-                                                                value={v.min_stock}
-                                                                onChange={(e) => {
-                                                                    const updated = [...variantList];
-                                                                    updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
-                                                                    setVariantList(updated);
-                                                                }}
-                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none font-mono text-center"
-                                                            />
-                                                        </div>
-
-                                                        {/* 4. Cuadro de Carga de Foto de Producto */}
-                                                        <div className="sm:col-span-2 flex flex-col items-center gap-1">
-                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">Foto del Producto</label>
-                                                            <label className="relative cursor-pointer flex items-center justify-center w-12 h-12 rounded-xl bg-surface-container border-2 border-dashed border-outline/30 hover:border-primary transition group overflow-hidden shadow-sm">
-                                                                {v.image_url ? (
-                                                                    <>
-                                                                        <img src={v.image_url} alt={v.color} className="w-full h-full object-cover rounded-lg" />
-                                                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                                                                            <span className="material-symbols-outlined text-white text-[16px]">edit</span>
-                                                                        </div>
-                                                                    </>
-                                                                ) : (
-                                                                    <div className="flex flex-col items-center justify-center text-on-surface-variant group-hover:text-primary transition p-1 text-center">
-                                                                        <span className="material-symbols-outlined text-[18px]">photo_camera</span>
-                                                                    </div>
-                                                                )}
-                                                                <input
-                                                                    type="file"
-                                                                    accept="image/*"
-                                                                    className="hidden"
-                                                                    onChange={(e) => {
-                                                                        const file = e.target.files?.[0];
-                                                                        if (file) {
-                                                                            const reader = new FileReader();
-                                                                            reader.onloadend = () => {
-                                                                                if (reader.result) {
-                                                                                    const updated = [...variantList];
-                                                                                    updated[idx].image_url = reader.result.toString();
-                                                                                    setVariantList(updated);
-                                                                                }
-                                                                            };
-                                                                            reader.readAsDataURL(file);
-                                                                        }
-                                                                    }}
-                                                                />
-                                                            </label>
-                                                        </div>
-
-                                                        {/* 5. SKU / Código de Barras por Color */}
-                                                        <div className="sm:col-span-2 flex flex-col gap-1">
-                                                            <label className="text-[9px] font-bold text-on-surface-variant uppercase sm:hidden">SKU / Barras</label>
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Escanear / Vacío"
-                                                                value={v.sku || ''}
-                                                                onChange={(e) => {
-                                                                    const updated = [...variantList];
-                                                                    updated[idx].sku = e.target.value;
-                                                                    setVariantList(updated);
-                                                                }}
-                                                                className="w-full bg-surface-container border border-outline/20 rounded-lg p-2 text-[11px] text-on-surface outline-none font-mono text-center focus:border-primary"
-                                                            />
-                                                        </div>
-
-                                                        {/* 6. Acciones / Eliminar */}
-                                                        <div className="sm:col-span-1 flex justify-center">
-                                                            {variantList.length > 1 && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setVariantList(variantList.filter((_, i) => i !== idx))}
-                                                                    className="text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/10 cursor-pointer bg-transparent border-0 transition"
-                                                                    title="Eliminar variante"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => setVariantList([...variantList, { color: 'Carey', sku: '', stock: 5, min_stock: 1, image_url: '' }])}
-                                                className="w-full py-2 bg-primary/10 border border-dashed border-primary/40 rounded-xl text-xs font-bold text-primary hover:bg-primary/20 transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
-                                            >
-                                                <span className="material-symbols-outlined text-[16px]">add</span>
-                                                Agregar Color
-                                            </button>
-                                            </>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Indicador de Stock Total (Sumatoria por Colores) */}
-                                    <div className="col-span-1 md:col-span-2 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between shadow-sm">
-                                        <div className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-amber-400 text-[20px]">inventory_2</span>
-                                            <div>
-                                                <p className="text-xs font-bold text-on-surface uppercase tracking-wider">Stock Total (Sumatoria por Colores)</p>
-                                                <p className="text-[10px] text-on-surface-variant">Suma total de unidades físicas calculada automáticamente por cada color.</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 bg-amber-500/20 px-3.5 py-1.5 rounded-lg border border-amber-500/40">
-                                            <span className="text-base font-black text-amber-400 font-mono">
-                                                {hasVariants ? variantList.reduce((sum, v) => sum + (Number(v.stock) || 0), 0) : (Number(stock) || 0)}
-                                            </span>
-                                            <span className="text-[11px] font-bold text-amber-400/90 uppercase">uds.</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Fila de Precios (Precio Costo | Precio Venta | Descuento Promocional) */}
-                                    <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        <div className="flex flex-col gap-1.5">
-                                            <label className="text-xs text-on-surface-variant font-medium">Precio Costo (COP)</label>
-                                            <input 
-                                                type="number"
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono"
-                                                value={costPrice}
-                                                onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                                                onFocus={(e) => e.target.select()}
-                                                placeholder="Ej: 80000"
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                            <label className="text-xs text-on-surface-variant font-medium">Precio Venta (COP) *</label>
-                                            <input 
-                                                type="number"
-                                                className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono font-bold"
-                                                value={price}
-                                                onChange={(e) => setPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                                                onFocus={(e) => e.target.select()}
-                                                required
-                                            />
-                                        </div>
-                                        {productType === 'product' && (
-                                            <div className="flex flex-col gap-1.5">
-                                                <label className="text-xs text-on-surface-variant font-medium">Descuento Promocional (%)</label>
-                                                <input 
-                                                    type="number"
-                                                    min={0}
-                                                    max={100}
-                                                    className="bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition font-mono"
-                                                    value={promoDiscount}
-                                                    onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
-                                                    onFocus={(e) => e.target.select()}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Fila de Descripción */}
-                                    {!hiddenFields.has('description') && (
-                                        <div className="col-span-1 md:col-span-2">
-                                            <FieldWrapper 
-                                                fieldId="description" 
-                                                label="Descripción"
-                                                hidden={false}
-                                                onToggleHidden={toggleFieldHidden}
-                                                children={
-                                                    <textarea 
-                                                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-sm focus:border-primary text-on-surface outline-none transition min-h-[60px]"
-                                                        value={description}
-                                                        onChange={(e) => setDescription(e.target.value)}
-                                                        placeholder="Escribe la descripción del producto o servicio..."
-                                                    />
-                                                }
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Barcode Display at the bottom of form */}
-                                {(sku || (editingProduct && editingProduct.sku)) && (
-                                    <div className="flex flex-col items-center justify-center p-4 bg-surface-container/30 border border-outline/10 rounded-xl mt-2">
-                                        <span className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider mb-1">Código de Barras Generado</span>
-                                        <BarcodeSVG value={sku || editingProduct?.sku || ''} />
-                                    </div>
-                                )}
-
-                                {/*upsell custom form request*/}
-                                <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl space-y-2 text-center my-3">
-                                    <p className="text-[11px] text-on-surface-variant font-medium">¿Necesitas campos adicionales o un esquema de inventario a tu medida?</p>
-                                    <a 
-                                        href="https://wa.me/573116718652?text=Hola%20Diaz%20Lab%20Automation,%20deseo%20solicitar%20un%20formulario%20personalizado%20para%20el%20inventario%20de%20mi%20empresa."
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 text-xs text-primary font-bold hover:underline"
-                                    >
-                                        <span className="material-symbols-outlined text-[16px]">contact_support</span>
-                                        Solicitar formulario personalizado
-                                    </a>
-                                </div>
-
-                                <div className="flex justify-between items-center gap-3 pt-4 border-t border-outline/5">
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            setName('');
-                                            setSku('');
-                                            setDescription('');
-                                            setPrice('');
-                                            setCostPrice('');
-                                            setStock('');
-                                            setBrand('');
-                                            setMaterial('');
-                                            setStyle('');
-                                            setColor('');
-                                            setPromoDiscount('');
-                                            setCustomAttrs({});
-                                            setHiddenFields(new Set());
-                                        }}
-                                        className="bg-surface-container border border-outline/20 hover:bg-surface-container-high text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer text-on-surface border-0"
+                                        onClick={resetForm}
+                                        className="text-[#161616] hover:text-[#D9381E] text-3xl font-light cursor-pointer border-0 bg-transparent leading-none"
+                                        title="Cerrar modal"
                                     >
-                                        Limpiar
+                                        &times;
                                     </button>
-                                    <div className="flex gap-3">
-                                        <button
-                                            type="button"
+                                </div>
+
+                                {/* Cuerpo Principal del Modal (2 Columnas: Izq Formulario Scrollable, Der Sidebar Fotos & Summary) */}
+                                <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+                                    <div className="flex-1 p-6 sm:p-8 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+                                        
+                                        {/* Columna Izquierda: Formulario Scrollable con amplio espacio para la barra de scroll */}
+                                        <div className="overflow-y-auto pr-8 sm:pr-10 space-y-6 max-h-full">
+                                            
+                                            {/* Sección 1: Información General */}
+                                            <div>
+                                                <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
+                                                    1. Información General del Ítem
+                                                </h4>
+
+                                                {/* Selector Categoría + Selector Tipo de Ítem */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Ítem *</label>
+                                                        <select
+                                                            value={productType}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value as 'product' | 'service';
+                                                                setProductType(val);
+                                                                if (val === 'service') setStock(999999);
+                                                                else if (stock === 999999) setStock('');
+                                                            }}
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition rounded-none"
+                                                        >
+                                                            <option value="product">Producto Inventariable (Físico)</option>
+                                                            <option value="service">Servicio / Honorario Médico (Sin Stock)</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
+                                                            <span>Categoría del Producto *</span>
+                                                        </label>
+                                                        <div className="flex gap-2">
+                                                            <select 
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition w-full rounded-none"
+                                                                value={categoryId}
+                                                                onChange={(e) => {
+                                                                    if (e.target.value === 'new') {
+                                                                        setShowCreateCategoryPrompt(true);
+                                                                    } else {
+                                                                        handleSelectCategory(e.target.value);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <option value="">-- Selecciona Categoría --</option>
+                                                                {categories.map((cat: any) => (
+                                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                                ))}
+                                                                <option value="new" className="font-bold text-[#D9381E]">+ Crear Nueva Categoría</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Marca & Referencia / Modelo */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
+                                                    {productType === 'product' && (
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Marca / Fabricante *</label>
+                                                            <input 
+                                                                type="text"
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans"
+                                                                value={brand}
+                                                                onChange={(e) => setBrand(e.target.value)}
+                                                                placeholder="Ej: Ray-Ban, Gucci, Oakley, Bausch + Lomb"
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    <div className={`flex flex-col gap-1.5 ${productType === 'service' ? 'col-span-2' : ''}`}>
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Nombre / Referencia / Modelo *</label>
+                                                        <input 
+                                                            type="text"
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans font-semibold"
+                                                            value={name}
+                                                            onChange={(e) => setName(e.target.value)}
+                                                            placeholder="Ej: Montura Acetato KOI Titanium Black"
+                                                            required
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* SKU / Código de Barras Simple */}
+                                                {(!hasVariants || productType === 'service') ? (
+                                                    <div className="flex flex-col gap-1.5 mb-4">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
+                                                            <span>SKU / Código de Barras (Producto Simple)</span>
+                                                            <span className="text-[10px] text-[#D9381E] font-bold flex items-center gap-1">
+                                                                <span className="material-symbols-outlined text-[13px]">barcode_scanner</span>
+                                                                Pistola Lectora
+                                                            </span>
+                                                        </label>
+                                                        <input 
+                                                            type="text"
+                                                            className="w-full bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition font-mono uppercase rounded-none"
+                                                            value={sku}
+                                                            onChange={(e) => setSku(e.target.value)}
+                                                            placeholder="Disparar pistola lectora o dejar en blanco..."
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-3 flex items-center justify-between mb-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="material-symbols-outlined text-[#D9381E] text-[20px]">palette</span>
+                                                            <div>
+                                                                <p className="text-xs font-bold text-[#161616]">Producto con Variantes de Color Activas</p>
+                                                                <p className="text-[10px] text-[#6B6862]">Los códigos de barras y stock se definen individualmente por cada color en la tabla abajo.</p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setHasVariants(false)}
+                                                            className="px-3 py-1 bg-[#FCE8E6] hover:bg-[#F5C6CB] text-[#C5221F] border border-[#F5C6CB] text-[10px] font-bold transition flex items-center gap-1 cursor-pointer shrink-0 rounded-none uppercase tracking-wider"
+                                                            title="Convertir a Producto Simple"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[14px]">close</span>
+                                                            Producto Simple
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Sección 2: Variantes de Color & Control de Stock */}
+                                            {productType === 'product' && (
+                                                <div className="border-t border-[#E2DFD7] pt-6">
+                                                    <div className="flex justify-between items-center mb-3">
+                                                        <div>
+                                                            <h4 className="font-serif text-xl text-[#161616] font-normal">
+                                                                2. Variantes de Color & Control de Stock
+                                                            </h4>
+                                                            <p className="text-xs text-[#6B6862] mt-0.5">Define los códigos de barra y existencias físicas por cada color.</p>
+                                                        </div>
+                                                        {hasVariants ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setVariantList([...variantList, { color: 'Negro', sku: '', stock: 5, min_stock: 2, image_url: '' }])}
+                                                                className="bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider cursor-pointer transition rounded-none"
+                                                            >
+                                                                + Agregar Color
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setHasVariants(true);
+                                                                    if (variantList.length === 0) setVariantList([{ color: 'Negro', sku: '', stock: stock === '' ? 10 : stock, min_stock: 2, image_url: '' }]);
+                                                                }}
+                                                                className="bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#D9381E] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider cursor-pointer transition rounded-none"
+                                                            >
+                                                                + Activar Variantes por Color
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {hasVariants && (
+                                                        <div className="variants-section-zen">
+                                                            <table className="variants-table-zen w-full">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style={{ width: '32%' }}>Color / Variante</th>
+                                                                        <th style={{ width: '18%' }}>Stock Actual</th>
+                                                                        <th style={{ width: '18%' }}>Stock Mínimo</th>
+                                                                        <th style={{ width: '26%' }}>EAN / Barras</th>
+                                                                        <th style={{ width: '6%', textAlign: 'center' }}></th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {variantList.map((v, idx) => (
+                                                                        <tr key={idx}>
+                                                                            <td>
+                                                                                <VisualColorDropdown 
+                                                                                    selectedColor={v.color}
+                                                                                    colors={allColors}
+                                                                                    onSelect={(colorName) => {
+                                                                                        const updated = [...variantList];
+                                                                                        updated[idx].color = colorName;
+                                                                                        setVariantList(updated);
+                                                                                    }}
+                                                                                    onOpenPaintNew={() => openCreateColorModal(idx)}
+                                                                                    onEditColor={(c) => openEditColorModal(c)}
+                                                                                    onDeleteColor={(id) => handleDeleteColor(id)}
+                                                                                />
+                                                                            </td>
+                                                                            <td>
+                                                                                <input 
+                                                                                    type="number" 
+                                                                                    value={v.stock}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = [...variantList];
+                                                                                        updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
+                                                                                        setVariantList(updated);
+                                                                                    }}
+                                                                                    className="font-mono text-center font-bold"
+                                                                                />
+                                                                            </td>
+                                                                            <td>
+                                                                                <input 
+                                                                                    type="number" 
+                                                                                    value={v.min_stock}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = [...variantList];
+                                                                                        updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
+                                                                                        setVariantList(updated);
+                                                                                    }}
+                                                                                    className="font-mono text-center"
+                                                                                />
+                                                                            </td>
+                                                                            <td>
+                                                                                <input 
+                                                                                    type="text" 
+                                                                                    placeholder="Escanear / Vacío" 
+                                                                                    value={v.sku || ''}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = [...variantList];
+                                                                                        updated[idx].sku = e.target.value;
+                                                                                        setVariantList(updated);
+                                                                                    }}
+                                                                                    className="font-mono text-xs"
+                                                                                />
+                                                                            </td>
+                                                                            <td style={{ textAlign: 'center' }}>
+                                                                                {variantList.length > 1 && (
+                                                                                    <button 
+                                                                                        type="button"
+                                                                                        onClick={() => setVariantList(variantList.filter((_, i) => i !== idx))}
+                                                                                        className="bg-transparent border-0 text-[#D9381E] cursor-pointer text-lg leading-none"
+                                                                                    >
+                                                                                        &times;
+                                                                                    </button>
+                                                                                )}
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+
+                                                            {/* Stock Total Calculado Display */}
+                                                            <div className="mt-3 pt-3 border-t border-[#E2DFD7] flex justify-between items-center">
+                                                                <span className="text-[11px] font-bold uppercase tracking-widest text-[#6B6862]">Stock Total Calculado:</span>
+                                                                <span className="font-mono text-lg font-bold text-[#D9381E]">
+                                                                    {variantList.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)} Unidades Total
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Sección 3: Precios e Impuestos (DIAN) */}
+                                            <div className="border-t border-[#E2DFD7] pt-6">
+                                                <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
+                                                    3. Precios e Impuestos (DIAN)
+                                                </h4>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 items-end">
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Precio Costo ($)">
+                                                            Precio Costo ($)
+                                                        </label>
+                                                        <input 
+                                                            type="number"
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px] w-full"
+                                                            value={costPrice}
+                                                            onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                                                            placeholder="Ej: 180000"
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Precio Venta Base ($)">
+                                                            Precio Venta ($) *
+                                                        </label>
+                                                        <input 
+                                                            type="number"
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono font-bold focus:border-[#161616] transition rounded-none h-[42px] w-full"
+                                                            value={price}
+                                                            onChange={(e) => setPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                                                            placeholder="Ej: 350000"
+                                                            required
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Descuento Promoción (%)">
+                                                            Desc. Promo (%)
+                                                        </label>
+                                                        <input 
+                                                            type="number"
+                                                            min={0}
+                                                            max={100}
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px] w-full"
+                                                            value={promoDiscount}
+                                                            onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
+
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Impuesto / IVA (DIAN)">
+                                                            Impuesto / IVA
+                                                        </label>
+                                                        <select
+                                                            value={taxRate}
+                                                            onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans cursor-pointer h-[42px] w-full"
+                                                        >
+                                                            <option value={0}>0% (Exento / Gafas)</option>
+                                                            <option value={19}>19% (IVA General)</option>
+                                                            <option value={5}>5% (IVA Reducido)</option>
+                                                            <option value={8}>8% (INC Consumo)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Descripción Comercial</label>
+                                                    <textarea 
+                                                        rows={3}
+                                                        className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans"
+                                                        value={description}
+                                                        onChange={(e) => setDescription(e.target.value)}
+                                                        placeholder="Detalles de garantía, ficha técnica, indicaciones para el cliente..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Columna Derecha (Fixed Modal Sidebar): Fotografía Cuadrada por Variante & Resumen de Registro */}
+                                        <div className="modal-sidebar-fixed flex flex-col gap-6 justify-between h-full">
+                                            <div>
+                                                <div className="flex justify-between items-baseline mb-3 border-b border-[#E2DFD7] pb-2">
+                                                    <h4 className="font-serif text-lg text-[#161616] font-normal">Fotografía del Ítem</h4>
+                                                    <span className="text-[10px] text-[#D9381E] font-bold uppercase tracking-wider">
+                                                        COLOR: {variantList[activePhotoColorIdx]?.color || 'NEGRO'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Área de Foto Cuadrada con Carousel Horizontal de Muestras Abajo */}
+                                                <div className="photo-area-with-swatches flex flex-col items-center gap-3 w-full">
+                                                    {/* Square Photo Dropzone */}
+                                                    <label className="photo-dropzone-compact relative group cursor-pointer shrink-0">
+                                                        {variantList[activePhotoColorIdx]?.image_url ? (
+                                                            <>
+                                                                <img 
+                                                                    src={variantList[activePhotoColorIdx].image_url!} 
+                                                                    alt="Preview" 
+                                                                    className="w-full h-full object-cover" 
+                                                                />
+                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                                                    <span className="material-symbols-outlined text-white text-2xl">edit</span>
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="material-symbols-outlined text-3xl text-[#6B6862] group-hover:text-[#D9381E]">photo_camera</span>
+                                                                <span className="text-[11px] font-medium text-center px-3 text-[#6B6862]">
+                                                                    Subir foto para variante seleccionada
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                        <input 
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    const reader = new FileReader();
+                                                                    reader.onloadend = () => {
+                                                                        if (reader.result) {
+                                                                            const updated = [...variantList];
+                                                                            if (updated[activePhotoColorIdx]) {
+                                                                                updated[activePhotoColorIdx].image_url = reader.result.toString();
+                                                                                setVariantList(updated);
+                                                                            }
+                                                                        }
+                                                                    };
+                                                                    reader.readAsDataURL(file);
+                                                                }
+                                                            }}
+                                                        />
+                                                    </label>
+
+                                                    {/* Carousel Horizontal de Muestras de Color con Ventana de 4 y Flechas Laterales */}
+                                                    {variantList.length > 0 && (
+                                                        <div className="w-full flex flex-col items-center gap-2 mt-1">
+                                                            <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-wider">
+                                                                COLOR SELECCIONADO: {variantList[activePhotoColorIdx]?.color || 'NEGRO'}
+                                                            </span>
+                                                            
+                                                            <div className="flex items-center justify-center gap-2 w-full">
+                                                                {/* Flecha Izquierda: Retrocede al color anterior */}
+                                                                {variantList.length > 1 && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setActivePhotoColorIdx(prev => Math.max(0, prev - 1))}
+                                                                        disabled={activePhotoColorIdx === 0}
+                                                                        className={`w-[22px] h-[22px] flex items-center justify-center text-[#161616] hover:text-[#D9381E] border border-[#E2DFD7] bg-white transition cursor-pointer p-0 shrink-0 select-none shadow-xs ${
+                                                                            activePhotoColorIdx === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100 hover:border-[#161616]'
+                                                                        }`}
+                                                                        title="Color anterior"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-[15px] leading-none">chevron_left</span>
+                                                                    </button>
+                                                                )}
+
+                                                                {/* Ventana Visible de Exactamente 4 Cuadritos de Color */}
+                                                                <div className={`overflow-hidden py-1 px-1 ${variantList.length <= 4 ? 'flex justify-center' : 'w-[104px]'}`}>
+                                                                    <div 
+                                                                        className="flex items-center gap-[8px] transition-transform duration-300 ease-out"
+                                                                        style={{
+                                                                            transform: variantList.length > 4 ? `translateX(-${colorStartIndex * 26}px)` : 'none'
+                                                                        }}
+                                                                    >
+                                                                        {variantList.map((v, idx) => (
+                                                                            <div 
+                                                                                key={idx}
+                                                                                onClick={() => setActivePhotoColorIdx(idx)}
+                                                                                className={`photo-swatch-btn shrink-0 ${idx === activePhotoColorIdx ? 'active' : ''}`}
+                                                                                style={{ background: getColorPreview(v.color) }}
+                                                                                title={`Ver/Subir foto para ${v.color || 'Variante ' + (idx + 1)}`}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Flecha Derecha: Avanza al siguiente color */}
+                                                                {variantList.length > 1 && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setActivePhotoColorIdx(prev => Math.min(variantList.length - 1, prev + 1))}
+                                                                        disabled={activePhotoColorIdx >= variantList.length - 1}
+                                                                        className={`w-[22px] h-[22px] flex items-center justify-center text-[#161616] hover:text-[#D9381E] border border-[#E2DFD7] bg-white transition cursor-pointer p-0 shrink-0 select-none shadow-xs ${
+                                                                            activePhotoColorIdx >= variantList.length - 1 ? 'opacity-0 pointer-events-none' : 'opacity-100 hover:border-[#161616]'
+                                                                        }`}
+                                                                        title="Color siguiente"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-[15px] leading-none">chevron_right</span>
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Live Resumen de Registro Card - Con espaciado suficiente y estética limpia */}
+                                            <div className="summary-card-compact bg-white border border-[#E2DFD7] p-5 shadow-sm mt-auto">
+                                                <div className="summary-card-title text-[10px] font-bold uppercase tracking-widest text-[#6B6862] mb-1">
+                                                    RESUMEN DE REGISTRO
+                                                </div>
+                                                <div className="summary-card-name text-sm font-bold text-[#161616]">
+                                                    {name || 'Montura / Producto Ejemplo'}
+                                                </div>
+                                                {brand && <div className="text-xs text-[#6B6862] font-medium mt-0.5">Marca: {brand}</div>}
+                                                <div className="summary-card-price text-2xl font-mono font-bold text-[#D9381E] mt-3 flex items-baseline gap-1.5">
+                                                    {price ? formatPrice(price.toString()) : '$ 0 COP'}
+                                                    <span className="text-[10px] font-sans font-normal text-[#6B6862]">(IVA Incluido)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer del Modal */}
+                                    <div className="modal-bottom px-8 py-4 border-t border-[#E2DFD7] flex flex-wrap items-center justify-end gap-3 bg-[#F6F4EE] shrink-0">
+                                        <button 
+                                            type="button" 
                                             onClick={resetForm}
-                                            className="bg-surface-container/50 border border-outline/20 hover:bg-surface-container-high text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer text-on-surface border-0 flex items-center gap-1.5"
+                                            className="btn-cancel bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-none cursor-pointer"
                                         >
-                                            <span className="material-symbols-outlined text-[14px]">close</span>
-                                            Terminar
+                                            Cancelar
                                         </button>
-                                        <button
-                                            type="submit"
-                                            className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer border-0 flex items-center gap-1.5"
+                                        <button 
+                                            type="button"
+                                            onClick={(e) => handleSubmit(e, false)}
+                                            className="btn-save bg-[#161616] hover:bg-[#333333] text-white border-0 px-6 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm"
                                         >
-                                            <span className="material-symbols-outlined text-[14px]">save</span>
-                                            {editingProduct ? 'Actualizar' : 'Guardar'}
+                                            {editingProduct ? 'Guardar Cambios' : 'Guardar'}
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            onClick={(e) => handleSubmit(e, true)}
+                                            className="btn-save-new bg-[#D9381E] hover:bg-[#b82e18] text-white border-0 px-6 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-1.5"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                                            Guardar y agregar nuevo producto
                                         </button>
                                     </div>
-                                </div>
-                            </form>
-                        </div>
+                                </form>
+                            </div>
+                        </div>,
+                        document.body
                     )}
 
                     {loading ? (
-                        <div className="flex justify-center py-10">
-                            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <div className="flex justify-center py-12">
+                            <div className="w-8 h-8 border-2 border-[#D9381E] border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     ) : filteredProducts.length === 0 ? (
-                        <div className="glass-card p-12 text-center">
-                            <p className="text-sm text-on-surface-variant">No hay productos que coincidan con la búsqueda.</p>
+                        <div className="bg-white border border-[#E2DFD7] p-12 text-center">
+                            <p className="text-sm text-[#6B6862]">No hay productos que coincidan con la búsqueda o filtros seleccionados.</p>
                         </div>
                     ) : (
-                        <div className="glass-card overflow-hidden">
-                            <table className="w-full text-left border-collapse">
+                        <div className="w-full">
+                            <table className="inventory-table w-full text-left">
                                 <thead>
-                                    <tr className="bg-surface-container/50 border-b border-outline/10 text-xs text-on-surface-variant uppercase font-semibold">
-                                        <th className="p-4">Producto</th>
-                                        <th className="p-4">Código de Barras / SKU</th>
-                                        <th className="p-4">Costo</th>
-                                        <th className="p-4">Precio Venta</th>
-                                        <th className="p-4">Stock</th>
-                                        <th className="p-4 text-right">Acciones</th>
+                                    <tr>
+                                        <th style={{ width: '14%' }}>MARCA</th>
+                                        <th style={{ width: '26%' }}>REFERENCIA</th>
+                                        <th style={{ width: '18%' }}>VARIANTES</th>
+                                        <th style={{ width: '13%' }}>PRECIO</th>
+                                        <th style={{ width: '10%' }}>DESCUENTO</th>
+                                        <th style={{ width: '9%' }}>IMPUESTOS</th>
+                                        <th style={{ width: '10%', textAlign: 'right' }}>STOCK TOTAL</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-outline/10 text-sm">
-                                    {filteredProducts.map((prod) => (
-                                        <tr key={prod.id} className="hover:bg-surface-container/30 transition-colors">
-                                            <td 
-                                                className="p-4 cursor-pointer" 
-                                                onClick={() => openEdit(prod)}
-                                            >
-                                                <div className="flex flex-col">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <h4 className="font-bold text-sm text-on-surface flex items-center gap-1.5 flex-wrap">
-                                                            {prod.brand ? (
-                                                                <>
-                                                                    <span className="text-[#eab308] font-extrabold uppercase text-xs tracking-wider">Marca:</span>
-                                                                    <span className="text-white font-bold text-sm">{prod.brand}</span>
-                                                                    <span className="text-gray-500 font-normal mx-0.5">•</span>
-                                                                </>
-                                                            ) : null}
-                                                            <span className="text-primary font-extrabold uppercase text-xs tracking-wider">Referencia:</span>
-                                                            <span className="text-slate-100 font-bold text-sm">{prod.name}</span>
-                                                        </h4>
+                                <tbody>
+                                    {filteredProducts.map((prod) => {
+                                        const isLowStock = (prod.stock || 0) <= (prod.min_stock !== undefined ? prod.min_stock : 5);
+                                        const variantCount = prod.variants?.length || 0;
+                                        const hasDiscount = (parseFloat(prod.promo_discount?.toString() || '0') || 0) > 0;
+                                        return (
+                                            <tr key={prod.id} className="hover:bg-white/80 transition-colors group cursor-pointer" onClick={() => openEdit(prod)}>
+                                                {/* 1. MARCA */}
+                                                <td>
+                                                    <span className="font-semibold text-xs text-[#161616] tracking-wide">
+                                                        {prod.brand || '—'}
+                                                    </span>
+                                                </td>
 
-                                                        {parseFloat(prod.promo_discount || '0') > 0 && (
-                                                            <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                                                                -{parseFloat(prod.promo_discount)}% Promoción
+                                                {/* 2. REFERENCIA */}
+                                                <td>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-sm text-[#161616] group-hover:text-[#D9381E] transition-colors">
+                                                            {prod.name}
+                                                        </span>
+                                                        {prod.sku && (
+                                                            <span className="font-mono text-[10px] text-[#6B6862]">
+                                                                SKU: {prod.sku}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    {prod.description && <p className="text-xs text-on-surface-variant mt-0.5">{prod.description}</p>}
-                                                    {category === 'optica' && (
-                                                        <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[10px] text-on-surface-variant">
-                                                            {prod.material && <span className="bg-surface-container border border-outline/10 px-1.5 py-0.5 rounded">Material: {prod.material}</span>}
-                                                            {prod.style && <span className="bg-surface-container border border-outline/10 px-1.5 py-0.5 rounded">Estilo: {prod.style}</span>}
-                                                            {prod.color && (
-                                                                <span className="bg-surface-container border border-outline/10 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                                                    Color: 
-                                                                    <span 
-                                                                        className="w-2.5 h-2.5 rounded-full border border-white/20 inline-block"
-                                                                        style={{ background: getColorPreview(prod.color) }}
-                                                                    />
-                                                                    {prod.color}
+                                                </td>
+
+                                                {/* 3. VARIANTES */}
+                                                <td>
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        {variantCount > 0 ? (
+                                                            <>
+                                                                <span className="text-xs font-semibold text-[#161616]">
+                                                                    {variantCount} Variantes
                                                                 </span>
-                                                            )}
+                                                                <div className="flex items-center gap-1">
+                                                                    {prod.variants?.slice(0, 4).map((v, i) => (
+                                                                        <span 
+                                                                            key={i} 
+                                                                            className="color-swatch-box" 
+                                                                            style={{ background: getColorPreview(v.variant_name || v.color) }}
+                                                                            title={v.variant_name || v.color || 'Variante'}
+                                                                        />
+                                                                    ))}
+                                                                    {variantCount > 4 && (
+                                                                        <span className="text-[10px] text-[#6B6862] font-mono">+{variantCount - 4}</span>
+                                                                    )}
+                                                                </div>
+                                                            </>
+                                                        ) : prod.color ? (
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="color-swatch-box" style={{ background: getColorPreview(prod.color) }} title={prod.color} />
+                                                                <span className="text-xs text-[#6B6862]">{prod.color}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-[#6B6862]">Simple</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+
+                                                {/* 4. PRECIO */}
+                                                <td className="font-mono font-bold text-sm text-[#161616]">
+                                                    {formatPrice(prod.price)} <span className="text-[10px] text-[#6B6862] font-normal font-sans">COP</span>
+                                                </td>
+
+                                                {/* 5. DESCUENTO (si aplica) */}
+                                                <td>
+                                                    {hasDiscount ? (
+                                                        <span className="bg-[#D9381E]/10 text-[#D9381E] font-bold text-xs px-2 py-0.5 border border-[#D9381E]/20 font-mono">
+                                                            -{prod.promo_discount}%
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-xs text-[#6B6862]">—</span>
+                                                    )}
+                                                </td>
+
+                                                {/* 6. IMPUESTOS (si aplica) */}
+                                                <td className="text-xs font-medium">
+                                                    {(() => {
+                                                        const rawTax = (prod as any).tax_rate !== undefined && (prod as any).tax_rate !== null 
+                                                            ? (prod as any).tax_rate 
+                                                            : ((prod as any).attributes?.tax_rate !== undefined ? (prod as any).attributes.tax_rate : 0);
+                                                        const rate = parseFloat(rawTax.toString()) || 0;
+                                                        if (rate === 0) return <span className="text-xs font-medium text-[#6B6862]">0% Exento</span>;
+                                                        if (rate === 19) return <span className="text-xs font-bold text-[#161616]">19% IVA</span>;
+                                                        if (rate === 5) return <span className="text-xs font-bold text-[#161616]">5% IVA</span>;
+                                                        if (rate === 8) return <span className="text-xs font-bold text-[#161616]">8% INC</span>;
+                                                        return <span className="text-xs font-bold text-[#161616]">{rate}% Impuesto</span>;
+                                                    })()}
+                                                </td>
+
+                                                {/* 7. STOCK TOTAL & ACCIONES */}
+                                                <td style={{ textAlign: 'right' }}>
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <span className={`text-xs font-bold ${isLowStock ? 'text-[#D9381E]' : 'text-[#161616]'}`}>
+                                                            {prod.stock || 0} Uds
+                                                        </span>
+                                                        {/* Acciones Rápidas ERP al Hover */}
+                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); openRefillModal(prod); }}
+                                                                className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
+                                                                title="Refill / Rellenar Stock"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[15px]">add_box</span>
+                                                            </button>
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); openPrintModal(prod); }}
+                                                                className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
+                                                                title="Imprimir Etiquetas de Código de Barras"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[15px]">print</span>
+                                                            </button>
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleDelete(prod.id); }}
+                                                                className="p-1 hover:bg-red-500/20 text-red-500 cursor-pointer"
+                                                                title="Eliminar"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[15px]">delete</span>
+                                                            </button>
                                                         </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td 
-                                                className="p-4 cursor-pointer"
-                                                onClick={() => (prod.sku || (prod.variants && prod.variants.length > 0)) && openPrintModal(prod)}
-                                                title={prod.sku ? "Haga clic para imprimir etiquetas" : prod.variants?.length ? "Ver códigos de barra por variante" : undefined}
-                                            >
-                                                {prod.sku ? (
-                                                    <BarcodeSVG value={prod.sku} size="sm" />
-                                                ) : prod.variants && prod.variants.length > 0 ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setSelectedVariantProduct(prod);
-                                                            setIsVariantViewModalOpen(true);
-                                                        }}
-                                                        className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-md text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[14px]">visibility</span>
-                                                        {prod.variants.length} Barcodes
-                                                    </button>
-                                                ) : (
-                                                    <span className="text-xs text-on-surface-variant/50 font-mono">-</span>
-                                                )}
-                                            </td>
-                                            <td 
-                                                className="p-4 font-mono text-xs text-on-surface-variant cursor-pointer"
-                                                onClick={() => openEdit(prod)}
-                                            >
-                                                {prod.cost_price ? formatPrice(prod.cost_price) : '$0'}
-                                            </td>
-                                            <td 
-                                                className="p-4 font-semibold text-on-surface cursor-pointer"
-                                                onClick={() => openEdit(prod)}
-                                            >
-                                                {formatPrice(prod.price)}
-                                            </td>
-                                            <td 
-                                                className="p-4 cursor-pointer"
-                                                onClick={() => openEdit(prod)}
-                                            >
-                                                {prod.product_type === 'service' || prod.stock >= 999999 ? (
-                                                    <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1 w-fit">
-                                                        <span className="material-symbols-outlined text-[14px]">medical_services</span>
-                                                        Servicio (Infinito)
-                                                    </span>
-                                                ) : (
-                                                    <span className={`px-2.5 py-1 rounded-md text-xs font-bold font-mono ${
-                                                        prod.stock <= (prod.min_stock !== undefined ? prod.min_stock : 5)
-                                                            ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                                            : prod.stock <= (prod.min_stock !== undefined ? prod.min_stock : 5) * 2
-                                                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                                                : 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                                    }`}>
-                                                        {prod.stock} uds
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="p-4 text-right">
-                                                <div className="flex justify-end gap-1.5">
-                                                    <button 
-                                                        onClick={() => handleOpenCrossStock(prod)}
-                                                        className="p-1.5 hover:bg-blue-500/10 text-blue-400 rounded-md transition cursor-pointer border-0 bg-transparent"
-                                                        title="Ver Stock en Otras Sedes / Solicitar Traspaso"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[16px]">domain</span>
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => openRefillModal(prod)}
-                                                        className="p-1.5 hover:bg-green-500/10 text-green-400 rounded-md transition cursor-pointer border-0 bg-transparent"
-                                                        title="Rellenar Stock (Refill)"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[16px]">add_box</span>
-                                                    </button>
-                                                    {(prod.sku || (prod.variants && prod.variants.length > 0)) && (
-                                                        <button 
-                                                            onClick={() => openPrintModal(prod)}
-                                                            className="p-1.5 hover:bg-secondary/10 text-secondary rounded-md transition cursor-pointer border-0 bg-transparent"
-                                                            title="Imprimir Código de Barras"
-                                                        >
-                                                            <span className="material-symbols-outlined text-[16px]">print</span>
-                                                        </button>
-                                                    )}
-                                                    <button 
-                                                        onClick={() => openEdit(prod)}
-                                                        className="p-1.5 hover:bg-primary/10 text-primary rounded-md transition cursor-pointer border-0 bg-transparent"
-                                                        title="Editar"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[16px]">edit</span>
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(prod.id)}
-                                                        className="p-1.5 hover:bg-red-500/20 text-red-400 rounded-md transition cursor-pointer border-0 bg-transparent"
-                                                        title="Eliminar"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[16px]">delete</span>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
@@ -2465,213 +2093,261 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                 document.body
             )}
 
-            {/* Modal de Impresión de Códigos de Barras */}
-            {isPrintModalOpen && printProduct && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
-                    <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl max-w-md w-full shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-start mb-4 border-b border-outline/10 pb-3">
-                            <div>
-                                <h3 className="font-bold text-base text-on-surface flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary text-[20px]">print</span>
-                                    {isRefillPrompt ? 'Impresión por Reabastecimiento' : 'Imprimir Código de Barras'}
-                                </h3>
-                                <p className="text-xs text-on-surface-variant opacity-75 mt-1 font-mono">
-                                    {printProduct.name}
+            {/* Modal de Impresión de Códigos de Barras - Wabi-Sabi */}
+            {isPrintModalOpen && printProduct && (() => {
+                const activePrintSku = selectedPrintVariant ? (selectedPrintVariant.sku || printProduct.sku || '') : (printProduct.sku || '');
+                const activeVariantLabel = selectedPrintVariant ? (selectedPrintVariant.variant_name || selectedPrintVariant.color) : '';
+                return createPortal(
+                    <div className="fixed inset-0 bg-[#161616]/70 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left">
+                        <div className="bg-[#F6F4EE] border border-[#E2DFD7] p-6 sm:p-7 max-w-lg w-full shadow-2xl space-y-5 rounded-none font-sans max-h-[90vh] overflow-y-auto custom-scrollbar my-auto">
+                            <div className="flex justify-between items-start border-b border-[#E2DFD7] pb-3">
+                                <div>
+                                    <h3 className="font-serif text-2xl text-[#161616] font-normal flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[#D9381E] text-[22px]">print</span>
+                                        {isRefillPrompt ? 'Impresión por Reabastecimiento' : 'Imprimir Código de Barras'}
+                                    </h3>
+                                    <p className="text-xs text-[#6B6862] mt-1 font-mono">
+                                        {printProduct.name}
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={() => setIsPrintModalOpen(false)}
+                                    className="p-1 hover:bg-[#EAE7DE] text-[#6B6862] hover:text-[#161616] border-0 bg-transparent cursor-pointer transition rounded-none"
+                                    title="Cerrar"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">close</span>
+                                </button>
+                            </div>
+
+                            {isRefillPrompt ? (
+                                <div className="bg-white border-l-4 border-l-[#D9381E] border border-[#E2DFD7] p-3 text-xs text-[#161616] leading-relaxed shadow-2xs">
+                                    <strong className="text-[#D9381E]">¡Reabastecimiento detectado!</strong> Se han añadido nuevas unidades al stock. ¿Cuántas etiquetas de códigos de barras deseas imprimir para esta tanda?
+                                </div>
+                            ) : (
+                                <p className="text-xs text-[#6B6862] leading-relaxed">
+                                    Elige cuántas etiquetas autoadhesivas deseas generar para tu impresora térmica (Tamaño estándar 50mm x 30mm).
                                 </p>
-                            </div>
-                            <button 
-                                onClick={() => setIsPrintModalOpen(false)}
-                                className="p-1 hover:bg-surface-container-highest rounded-lg border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
-                            >
-                                <span className="material-symbols-outlined text-[20px]">close</span>
-                            </button>
-                        </div>
+                            )}
 
-                        {isRefillPrompt ? (
-                            <div className="bg-primary/10 border border-primary/20 p-3 rounded-lg mb-4 text-xs text-on-surface-variant leading-relaxed">
-                                <strong className="text-primary">¡Reabastecimiento detectado!</strong> Se han añadido nuevas unidades al stock. ¿Cuántas etiquetas de códigos de barras deseas imprimir para esta tanda?
-                            </div>
-                        ) : (
-                            <p className="text-xs text-on-surface-variant mb-4 leading-relaxed">
-                                Elige cuántas etiquetas autoadhesivas deseas generar para tu impresora térmica (Tamaño estándar 50mm x 30mm).
-                            </p>
-                        )}
+                            <div className="space-y-4">
+                                {/* Selector de Variante / Color si el producto tiene variantes */}
+                                {printProduct.variants && printProduct.variants.length > 0 && (
+                                    <div className="space-y-1.5">
+                                        <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                                            Variante / Color de la Referencia
+                                        </label>
+                                        <select
+                                            value={selectedPrintVariant?.sku || selectedPrintVariant?.variant_name || selectedPrintVariant?.color || ''}
+                                            onChange={(e) => {
+                                                const found = printProduct.variants?.find((v: any) => (
+                                                    v.sku === e.target.value || 
+                                                    v.variant_name === e.target.value || 
+                                                    v.color === e.target.value
+                                                ));
+                                                if (found) {
+                                                    setSelectedPrintVariant(found);
+                                                    setPrintQuantity(found.stock || 1);
+                                                }
+                                            }}
+                                            className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs font-bold text-[#161616] outline-none focus:border-[#161616] cursor-pointer rounded-none"
+                                        >
+                                            {printProduct.variants.map((v: any, idx: number) => (
+                                                <option key={idx} value={v.sku || v.variant_name || v.color}>
+                                                    {v.variant_name || v.color} — (SKU: {v.sku || 'N/A'}) — Stock: {v.stock} uds
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
 
-                        <div className="space-y-4">
-                            {/* Selector de Variante / Color si el producto tiene variantes */}
-                            {printProduct.variants && printProduct.variants.length > 0 && (
+                                {/* Tarjeta Visual Wabi-Sabi: SKU, Precio y Código de Barras Renderizado en Vivo */}
+                                <div className="bg-white p-4 border border-[#E2DFD7] rounded-none shadow-2xs space-y-3">
+                                    <div className="flex items-center justify-between gap-4 border-b border-[#E2DFD7] pb-2.5">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] text-[#6B6862] uppercase font-bold tracking-wider">Código SKU</p>
+                                            <p className="text-sm font-mono text-[#161616] font-bold mt-0.5 truncate">
+                                                {activePrintSku || 'Sin SKU asignado'}
+                                                {activeVariantLabel && (
+                                                    <span className="ml-2 text-[11px] text-[#D9381E] font-sans font-semibold uppercase">
+                                                        • {activeVariantLabel}
+                                                    </span>
+                                                )}
+                                            </p>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className="text-[10px] text-[#6B6862] uppercase font-bold tracking-wider">Precio de Venta</p>
+                                            <p className="text-sm text-[#161616] font-bold font-mono mt-0.5">{formatPrice(printProduct.price)}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Previsualización del Código de Barras del Color Seleccionado */}
+                                    <div className="flex flex-col items-center justify-center p-3 bg-[#FAF8F5] border border-[#E2DFD7]">
+                                        {activePrintSku ? (
+                                            <BarcodeSVG value={activePrintSku} size="md" />
+                                        ) : (
+                                            <div className="py-2 text-center">
+                                                <span className="text-[11px] text-[#6B6862] italic">
+                                                    Sin código de barras asignado a esta variante
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-on-surface-variant uppercase ml-1 block">Variante / Color de la Referencia</label>
+                                    <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                                        Tipo de Etiqueta
+                                    </label>
                                     <select
-                                        value={selectedPrintVariant?.sku || selectedPrintVariant?.variant_name || selectedPrintVariant?.color || ''}
-                                        onChange={(e) => {
-                                            const found = printProduct.variants?.find((v: any) => (
-                                                v.sku === e.target.value || 
-                                                v.variant_name === e.target.value || 
-                                                v.color === e.target.value
-                                            ));
-                                            if (found) {
-                                                setSelectedPrintVariant(found);
-                                                setPrintQuantity(found.stock || 1);
-                                            }
-                                        }}
-                                        className="w-full bg-[#181a1c] border border-[#2d3036] rounded-md p-2.5 text-xs font-bold text-on-surface outline-none focus:border-primary cursor-pointer"
+                                        value={printProfileId}
+                                        onChange={(e) => setPrintProfileId(e.target.value as LabelProfileId)}
+                                        className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-medium outline-none focus:border-[#161616] rounded-none cursor-pointer"
                                     >
-                                        {printProduct.variants.map((v: any, idx: number) => (
-                                            <option key={idx} value={v.sku || v.variant_name || v.color}>
-                                                {v.variant_name || v.color} — (SKU: {v.sku || 'N/A'}) — Stock: {v.stock} uds
+                                        {Object.values(LABEL_PRINT_PROFILES).map((profile) => (
+                                            <option key={profile.id} value={profile.id}>
+                                                {profile.name}
                                             </option>
                                         ))}
                                     </select>
                                 </div>
-                            )}
 
-                            <div className="bg-surface-container p-3 rounded-lg border border-outline/10 flex items-center gap-3">
-                                <div className="flex-grow">
-                                    <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Código SKU</p>
-                                    <p className="text-sm font-mono text-on-surface font-semibold mt-0.5">
-                                        {selectedPrintVariant ? (selectedPrintVariant.sku || printProduct.sku || 'Sin SKU') : (printProduct.sku || 'Sin SKU')}
-                                    </p>
-                                </div>
-                                <div className="w-px h-8 bg-outline/10" />
-                                <div>
-                                    <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Precio de Venta</p>
-                                    <p className="text-sm text-on-surface font-bold mt-0.5">{formatPrice(printProduct.price)}</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-on-surface-variant uppercase ml-1">Tipo de Etiqueta</label>
-                                <select
-                                    value={printProfileId}
-                                    onChange={(e) => setPrintProfileId(e.target.value as LabelProfileId)}
-                                    className="w-full bg-surface-container border border-outline/20 rounded-md p-2.5 text-sm text-on-surface outline-none focus:border-primary"
-                                >
-                                    {Object.values(LABEL_PRINT_PROFILES).map((profile) => (
-                                        <option key={profile.id} value={profile.id}>
-                                            {profile.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-on-surface-variant uppercase ml-1">Cantidad a Imprimir</label>
-                                <div className="flex gap-2">
-                                    <button 
-                                        type="button"
-                                        onClick={() => setPrintQuantity(1)}
-                                        className={`flex-1 py-2 px-3 border rounded-md text-xs font-bold transition cursor-pointer ${printQuantity === 1 ? 'bg-primary/15 border-primary text-primary' : 'bg-transparent border-outline/20 text-on-surface hover:bg-surface-container'}`}
-                                    >
-                                        1 Copia (Prueba)
-                                    </button>
-                                    {isRefillPrompt && (
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                                        Cantidad a Imprimir
+                                    </label>
+                                    <div className="flex gap-2">
                                         <button 
                                             type="button"
-                                            onClick={() => setPrintQuantity(printQuantity)}
-                                            className={`flex-1 py-2 px-3 border rounded-md text-xs font-bold transition cursor-pointer bg-primary/15 border-primary text-primary`}
+                                            onClick={() => setPrintQuantity(1)}
+                                            className={`flex-1 py-2 px-3 border text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none ${
+                                                printQuantity === 1 
+                                                    ? 'bg-white border-2 border-[#D9381E] text-[#D9381E]' 
+                                                    : 'bg-white border-[#E2DFD7] text-[#6B6862] hover:border-[#161616] hover:text-[#161616]'
+                                            }`}
                                         >
-                                            {printQuantity} Copias (Refill)
+                                            1 Copia (Prueba)
                                         </button>
-                                    )}
-                                    <button 
-                                        type="button"
-                                        onClick={() => setPrintQuantity(selectedPrintVariant ? (selectedPrintVariant.stock || 1) : printProduct.stock)}
-                                        className={`flex-1 py-2 px-3 border rounded-md text-xs font-bold transition cursor-pointer ${printQuantity === (selectedPrintVariant ? selectedPrintVariant.stock : printProduct.stock) ? 'bg-primary/15 border-primary text-primary' : 'bg-transparent border-outline/20 text-on-surface hover:bg-surface-container'}`}
-                                    >
-                                        Stock Completo ({selectedPrintVariant ? selectedPrintVariant.stock : printProduct.stock})
-                                    </button>
+                                        {isRefillPrompt && (
+                                            <button 
+                                                type="button"
+                                                onClick={() => setPrintQuantity(printQuantity)}
+                                                className={`flex-1 py-2 px-3 border text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none bg-white border-2 border-[#D9381E] text-[#D9381E]`}
+                                            >
+                                                {printQuantity} Copias (Refill)
+                                            </button>
+                                        )}
+                                        <button 
+                                            type="button"
+                                            onClick={() => setPrintQuantity(selectedPrintVariant ? (selectedPrintVariant.stock || 1) : printProduct.stock)}
+                                            className={`flex-1 py-2 px-3 border text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none ${
+                                                printQuantity === (selectedPrintVariant ? selectedPrintVariant.stock : printProduct.stock)
+                                                    ? 'bg-white border-2 border-[#D9381E] text-[#D9381E]' 
+                                                    : 'bg-white border-[#E2DFD7] text-[#6B6862] hover:border-[#161616] hover:text-[#161616]'
+                                            }`}
+                                        >
+                                            Stock Completo ({selectedPrintVariant ? selectedPrintVariant.stock : printProduct.stock})
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                                        Cantidad Personalizada
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <input 
+                                            type="number" 
+                                            min="1" 
+                                            max="500"
+                                            value={printQuantity}
+                                            onChange={(e) => setPrintQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                            className="bg-white border border-[#E2DFD7] p-2 text-xs font-mono font-bold text-[#161616] outline-none w-24 text-center focus:border-[#161616] rounded-none"
+                                        />
+                                        <span className="text-[11px] text-[#6B6862] font-sans">etiquetas autoadhesivas</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-on-surface-variant uppercase ml-1">Cantidad Personalizada</label>
-                                <div className="flex items-center gap-2">
-                                    <input 
-                                        type="number" 
-                                        min="1" 
-                                        max="500"
-                                        value={printQuantity}
-                                        onChange={(e) => setPrintQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                        className="bg-surface-container border border-outline/20 p-2 rounded-md text-sm font-semibold text-on-surface outline-none w-28 text-center font-mono"
-                                    />
-                                    <span className="text-xs text-on-surface-variant opacity-60 font-sans">etiquetas autoadhesivas</span>
-                                </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t border-[#E2DFD7] mt-5">
+                                <button
+                                    type="button"
+                                    onClick={handlePreviewBarcodes}
+                                    className="px-4 py-2.5 bg-transparent hover:bg-[#EAE7DE] border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none"
+                                >
+                                    Vista previa
+                                </button>
+                                <button 
+                                    onClick={() => setIsPrintModalOpen(false)}
+                                    className="px-4 py-2.5 bg-transparent hover:bg-[#EAE7DE] border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none"
+                                >
+                                    Cancelar
+                                </button>
+                                <button 
+                                    onClick={handlePrintBarcodes}
+                                    className="px-6 py-2.5 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 rounded-none border-0 shadow-xs"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">print</span>
+                                    Confirmar e Imprimir
+                                </button>
                             </div>
                         </div>
-
-                        <div className="flex justify-end gap-3 pt-6 border-t border-outline/10 mt-6">
-                            <button
-                                type="button"
-                                onClick={handlePreviewBarcodes}
-                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-md transition cursor-pointer"
-                            >
-                                Vista previa
-                            </button>
-                            <button 
-                                onClick={() => setIsPrintModalOpen(false)}
-                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-md transition cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button 
-                                onClick={handlePrintBarcodes}
-                                className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-md primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 border-0"
-                            >
-                                <span className="material-symbols-outlined text-[16px]">print</span>
-                                Confirmar e Imprimir
-                            </button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-            {/* Modal de Reabastecimiento Rápido (Refill) */}
+                    </div>,
+                    document.body
+                );
+            })()}
+            {/* Modal de Reabastecimiento Rápido (Refill) - Wabi-Sabi */}
             {isRefillModalOpen && refillProduct && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
-                    <form onSubmit={handleSaveRefill} className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center mb-2 border-b border-outline/10 pb-3">
-                            <h3 className="font-bold text-base text-on-surface flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-green-400">add_box</span>
+                <div className="fixed inset-0 bg-[#161616]/70 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left">
+                    <form onSubmit={handleSaveRefill} className="bg-[#F6F4EE] border border-[#E2DFD7] p-6 sm:p-7 max-w-lg w-full shadow-2xl space-y-5 rounded-none font-sans max-h-[90vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                            <h3 className="font-serif text-2xl text-[#161616] font-normal flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#D9381E] text-[22px]">add_box</span>
                                 Rellenar Inventario
                             </h3>
                             <button 
                                 type="button"
                                 onClick={() => setIsRefillModalOpen(false)}
-                                className="p-1 hover:bg-surface-container-highest rounded-lg border-0 bg-transparent text-on-surface-variant cursor-pointer transition"
+                                className="p-1 hover:bg-[#EAE7DE] text-[#6B6862] hover:text-[#161616] border-0 bg-transparent cursor-pointer transition rounded-none"
+                                title="Cerrar"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
-                        <div className="bg-surface-container p-3 rounded-md border border-outline/10 text-xs space-y-1">
-                            <p className="text-on-surface font-semibold">{refillProduct.name}</p>
-                            <p className="text-on-surface-variant opacity-75 font-mono">SKU: {refillProduct.sku || 'N/A'}</p>
-                            <p className="text-on-surface-variant opacity-75">Stock Actual: <strong className="text-on-surface">{refillProduct.stock} uds</strong> (Mínimo: {refillProduct.min_stock !== undefined ? refillProduct.min_stock : 5} uds)</p>
+                        {/* Tarjeta de Resumen del Producto */}
+                        <div className="bg-white p-4 border border-[#E2DFD7] rounded-none text-xs space-y-1.5 shadow-2xs">
+                            <p className="text-sm font-bold text-[#161616] leading-snug">{refillProduct.name}</p>
+                            <p className="text-[11px] font-mono text-[#6B6862]">
+                                SKU: <span className="text-[#161616] font-semibold">{refillProduct.sku || 'N/A'}</span>
+                            </p>
+                            <p className="text-[11px] text-[#6B6862]">
+                                Stock Actual: <strong className="text-[#161616] font-mono">{refillProduct.stock} uds</strong> 
+                                <span className="opacity-70 ml-1.5">(Mínimo: {refillProduct.min_stock !== undefined ? refillProduct.min_stock : 5} uds)</span>
+                            </p>
                         </div>
 
                         {refillProduct.variants && refillProduct.variants.length > 0 ? (
-                            <div className="space-y-3">
-                                <label className="text-xs font-bold text-on-surface-variant uppercase ml-1 block">
-                                    Rellenar Stock por Color / Variante *
+                            <div className="space-y-2.5">
+                                <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                                    RELLENAR STOCK POR COLOR / VARIANTE *
                                 </label>
-                                <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
+                                <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-1">
                                     {refillProduct.variants.map((v: any, idx: number) => {
                                         const key = v.id || v.sku || v.variant_name || v.color || `var_${idx}`;
                                         return (
-                                            <div key={idx} className="bg-surface-container p-3 rounded-xl border border-outline/10 flex items-center justify-between gap-3">
+                                            <div key={idx} className="bg-white p-3 border border-[#E2DFD7] hover:border-[#161616] flex items-center justify-between gap-3 rounded-none transition shadow-2xs">
                                                 <div className="flex items-center gap-2.5">
                                                     <span 
-                                                        className="w-5 h-5 rounded-full border border-white/30 inline-block shadow-sm"
+                                                        className="w-4 h-4 border border-[#E2DFD7] inline-block shrink-0 rounded-none shadow-2xs"
                                                         style={{ background: getColorPreview(v.color || v.variant_name, v.color_hex) }}
                                                     />
                                                     <div>
-                                                        <p className="text-xs font-bold text-on-surface">{v.variant_name || v.color}</p>
-                                                        <p className="text-[10px] text-on-surface-variant font-mono">Stock actual: {v.stock} uds</p>
+                                                        <p className="text-xs font-bold text-[#161616]">{v.variant_name || v.color}</p>
+                                                        <p className="text-[10px] text-[#6B6862] font-mono">Stock actual: <span className="text-[#161616] font-semibold">{v.stock} uds</span></p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="text-xs font-bold text-green-400">+</span>
+                                                    <span className="text-xs font-bold text-[#D9381E] font-mono">+</span>
                                                     <input 
                                                         type="number" 
                                                         min="0"
@@ -2684,9 +2360,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                 [key]: val
                                                             }));
                                                         }}
-                                                        className="bg-[#181a1c] border border-outline/20 p-2 rounded-lg text-xs font-mono font-bold text-on-surface outline-none w-20 text-center focus:border-primary"
+                                                        className="bg-[#FAF8F5] border border-[#E2DFD7] p-1.5 text-xs font-mono font-bold text-[#161616] outline-none w-20 text-center focus:border-[#161616] focus:bg-white transition rounded-none"
                                                     />
-                                                    <span className="text-[10px] text-on-surface-variant">uds</span>
+                                                    <span className="text-[10px] text-[#6B6862] font-mono">uds</span>
                                                 </div>
                                             </div>
                                         );
@@ -2695,7 +2371,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             </div>
                         ) : (
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-bold text-on-surface-variant uppercase ml-1">Cantidad a ingresar *</label>
+                                <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider">
+                                    CANTIDAD A INGRESAR *
+                                </label>
                                 <input 
                                     type="number" 
                                     required
@@ -2703,32 +2381,34 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     placeholder="Ej: 50"
                                     value={refillQuantity}
                                     onChange={(e) => setRefillQuantity(e.target.value === '' ? '' : parseInt(e.target.value))}
-                                    className="bg-surface-container border border-outline/20 p-3 rounded-md text-sm font-semibold text-on-surface outline-none w-full font-mono"
+                                    className="bg-white border border-[#E2DFD7] p-3 text-xs font-mono font-bold text-[#161616] outline-none w-full focus:border-[#161616] transition rounded-none"
                                 />
                             </div>
                         )}
 
-                        <label className="flex items-center gap-2 cursor-pointer select-none py-1 ml-1 text-xs text-on-surface-variant">
+                        <label className="flex items-center gap-2.5 cursor-pointer select-none py-1 text-xs text-[#161616]">
                             <input 
                                 type="checkbox" 
                                 checked={printAfterRefill} 
                                 onChange={(e) => setPrintAfterRefill(e.target.checked)}
-                                className="accent-primary w-4 h-4 rounded"
+                                className="accent-[#D9381E] w-4 h-4 rounded-none cursor-pointer"
                             />
-                            <span>Imprimir códigos de barra para estas nuevas unidades</span>
+                            <span className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">
+                                Imprimir códigos de barra para estas nuevas unidades
+                            </span>
                         </label>
 
-                        <div className="flex justify-end gap-3 pt-4 border-t border-outline/10 mt-4">
+                        <div className="flex justify-end gap-3 pt-4 border-t border-[#E2DFD7] mt-4">
                             <button 
                                 type="button"
                                 onClick={() => setIsRefillModalOpen(false)}
-                                className="px-4 py-2 bg-transparent hover:bg-surface-container-highest border border-outline/20 text-on-surface text-xs font-bold rounded-md transition cursor-pointer"
+                                className="px-5 py-2.5 bg-transparent hover:bg-[#EAE7DE] border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none"
                             >
                                 Cancelar
                             </button>
                             <button 
                                 type="submit"
-                                className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-md primary-glow hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 border-0"
+                                className="px-6 py-2.5 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 rounded-none border-0 shadow-xs"
                             >
                                 <span className="material-symbols-outlined text-[16px]">done</span>
                                 Confirmar Refill
@@ -2743,26 +2423,31 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                 <InventoryRotationView clientId={clientId} formatPrice={formatPrice} />
             )}
 
-            {/* Modal Estilo Paint para Crear/Editar Colores (Teleportado a document.body con z-[99999]) */}
+            {/* Modal Estilo Paint para Crear/Editar Colores (Wabi-Sabi) */}
             {isPaintModalOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[99999]" onClick={(e) => e.stopPropagation()}>
-                    <div className="bg-surface-container-highest border border-outline/30 rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl relative z-[100000]" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3">
-                            <h4 className="font-bold text-sm text-on-surface flex items-center gap-2">
-                                <span className="material-symbols-outlined text-primary text-[20px]">palette</span>
-                                {editingColor ? 'Editar Color' : 'Crear / Personalizar Nuevo Color (Estilo Paint)'}
+                <div className="fixed inset-0 bg-[#161616]/70 backdrop-blur-xs flex items-center justify-center p-4 z-[99999]" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-[#F6F4EE] border border-[#E2DFD7] p-6 max-w-lg w-full space-y-4 shadow-2xl rounded-none relative z-[100000] font-sans text-left" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                            <h4 className="font-serif text-2xl text-[#161616] font-normal flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#D9381E] text-[22px]">palette</span>
+                                {editingColor ? 'Editar Color Personalizado' : 'Crear / Personalizar Nuevo Color'}
                             </h4>
-                            <button type="button" onClick={() => setIsPaintModalOpen(false)} className="text-on-surface-variant hover:text-on-surface cursor-pointer bg-transparent border-0">
-                                <span className="material-symbols-outlined text-[18px]">close</span>
+                            <button 
+                                type="button" 
+                                onClick={() => setIsPaintModalOpen(false)} 
+                                className="p-1 hover:bg-[#EAE7DE] text-[#6B6862] hover:text-[#161616] cursor-pointer bg-transparent border-0 rounded-none transition"
+                                title="Cerrar"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
                         <form onSubmit={handleSavePaintColor} className="space-y-4">
                             {/* Campo dividido a la mitad 50% / 50% */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-4 items-end">
                                 {/* Izquierda (50%): Nombre del color */}
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold uppercase text-on-surface-variant">
+                                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#6B6862]">
                                         Nombre del Color *
                                     </label>
                                     <input
@@ -2771,50 +2456,53 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         placeholder="Ej. Violeta, Azul Rey"
                                         value={colorNameInput}
                                         onChange={(e) => setColorNameInput(e.target.value)}
-                                        className="w-full bg-surface-container border border-outline/30 rounded-xl p-3 text-xs text-on-surface font-bold outline-none focus:border-primary transition"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-bold outline-none focus:border-[#161616] rounded-none h-[42px]"
                                     />
                                 </div>
 
                                 {/* Derecha (50%): Selector Interactivo Paint */}
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold uppercase text-on-surface-variant">
+                                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#6B6862]">
                                         Color Interactivo (Paint) *
                                     </label>
-                                    <input
-                                        type="color"
-                                        value={colorHexInput}
-                                        onChange={(e) => setColorHexInput(e.target.value)}
-                                        className="w-full h-11 bg-surface-container border border-outline/30 rounded-xl p-1 cursor-pointer outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Previsualización del Color */}
-                            <div className="p-3 bg-surface-container/50 border border-outline/15 rounded-xl flex items-center justify-between">
-                                <span className="text-xs font-bold text-on-surface-variant">Vista Previa:</span>
-                                <div className="flex items-center gap-3">
-                                    <div 
-                                        className="w-8 h-8 rounded-full border-2 border-white/40 shadow-lg transition-all"
-                                        style={{ background: colorHexInput }}
-                                    />
-                                    <div className="text-right">
-                                        <p className="text-xs font-bold text-on-surface">{colorNameInput || 'Sin Nombre'}</p>
-                                        <p className="text-[10px] font-mono text-on-surface-variant uppercase">{colorHexInput}</p>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="color"
+                                            value={colorHexInput}
+                                            onChange={(e) => setColorHexInput(e.target.value)}
+                                            className="w-full h-[42px] bg-white border border-[#E2DFD7] p-1 cursor-pointer outline-none rounded-none"
+                                            title="Haz clic para abrir la paleta interactiva de colores"
+                                        />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex justify-end gap-2 pt-3 border-t border-outline/10">
+                            {/* Previsualización del Color */}
+                            <div className="p-3.5 bg-white border border-[#E2DFD7] rounded-none flex items-center justify-between shadow-2xs">
+                                <span className="text-xs font-bold text-[#6B6862] uppercase tracking-wider">Vista Previa:</span>
+                                <div className="flex items-center gap-3">
+                                    <div 
+                                        className="w-8 h-8 border border-[#E2DFD7] rounded-none shadow-2xs"
+                                        style={{ background: colorHexInput }}
+                                    />
+                                    <div className="text-right">
+                                        <p className="text-xs font-bold text-[#161616]">{colorNameInput || 'Sin Nombre'}</p>
+                                        <p className="text-[10px] font-mono text-[#6B6862] uppercase font-semibold">{colorHexInput}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
                                 <button
                                     type="button"
                                     onClick={() => setIsPaintModalOpen(false)}
-                                    className="px-4 py-2 border border-outline/20 text-on-surface font-bold text-xs rounded-xl cursor-pointer hover:bg-surface-container-high"
+                                    className="px-5 py-2.5 bg-transparent hover:bg-[#EAE7DE] border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-xs font-bold uppercase tracking-wider rounded-none transition cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-5 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl cursor-pointer shadow hover:opacity-90 flex items-center gap-1.5"
+                                    className="px-6 py-2.5 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold uppercase tracking-wider rounded-none transition cursor-pointer flex items-center gap-1.5 border-0 shadow-xs"
                                 >
                                     <span className="material-symbols-outlined text-[16px]">check</span>
                                     {editingColor ? 'Guardar Cambios' : 'Crear Color'}
@@ -3117,7 +2805,7 @@ const InventoryRotationView: React.FC<{ clientId: string; formatPrice: (v: strin
     );
 };
 
-// Componente Selector Visual de Color con Círculos al lado de CADA Nombre de la lista desplegada
+// Componente Selector Visual de Color con Muestras al lado de CADA Nombre de la lista desplegada (Wabi-Sabi)
 const VisualColorDropdown: React.FC<{
     selectedColor: string;
     colors: Array<{ id: string; name: string; value: string; preview: string; isCustom?: boolean }>;
@@ -3127,98 +2815,115 @@ const VisualColorDropdown: React.FC<{
     onDeleteColor: (id: string) => void;
 }> = ({ selectedColor, colors, onSelect, onOpenPaintNew, onEditColor, onDeleteColor }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
 
     const currentItem = colors.find(
         c => c.value.toLowerCase() === (selectedColor || '').toLowerCase() || c.name.toLowerCase() === (selectedColor || '').toLowerCase()
-    ) || { name: selectedColor || 'Negro', preview: '#808080' };
+    ) || { name: selectedColor || 'Negro', preview: '#000000' };
 
     return (
-        <div className="relative w-full">
-            {/* Botón Cerrado con Círculo y Nombre */}
+        <div className="relative w-full" ref={dropdownRef}>
+            {/* Botón Cerrado con Cuadro de Muestra y Nombre */}
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-xs text-on-surface font-bold outline-none cursor-pointer flex items-center justify-between hover:border-primary/50 transition shadow-sm"
+                className="w-full bg-white border border-[#E2DFD7] hover:border-[#161616] p-2 text-xs text-[#161616] font-bold outline-none cursor-pointer flex items-center justify-between transition rounded-none shadow-2xs"
             >
                 <div className="flex items-center gap-2 overflow-hidden">
-                    <div 
-                        className="w-5 h-5 rounded-full border-2 border-outline/40 flex-shrink-0 shadow-sm"
+                    <span 
+                        className="w-3.5 h-3.5 border border-[#E2DFD7] shrink-0 rounded-none shadow-2xs"
                         style={{ background: currentItem.preview }}
                     />
                     <span className="truncate">{currentItem.name}</span>
                 </div>
-                <span className="material-symbols-outlined text-[16px] text-on-surface-variant">
+                <span className="material-symbols-outlined text-[16px] text-[#6B6862]">
                     {isOpen ? 'expand_less' : 'expand_more'}
                 </span>
             </button>
 
-            {/* Menú Desplegable Abierto con Círculos al Lado de CADA Opciones */}
+            {/* Menú Desplegable Abierto con Cuadritos al Lado de CADA Opción */}
             {isOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-surface-container-highest border border-outline/30 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto p-1.5 space-y-1 backdrop-blur-md">
-                    <div className="text-[10px] font-bold text-on-surface-variant uppercase px-2 py-1 tracking-wider border-b border-outline/10">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E2DFD7] shadow-xl z-50 max-h-60 overflow-y-auto p-1.5 space-y-1 rounded-none custom-scrollbar">
+                    <div className="text-[10px] font-bold text-[#6B6862] uppercase px-2 py-1 tracking-wider border-b border-[#E2DFD7]">
                         Colores Disponibles
                     </div>
 
-                    {colors.map((c) => (
-                        <div
-                            key={c.id}
-                            onClick={() => {
-                                onSelect(c.name);
-                                setIsOpen(false);
-                            }}
-                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition text-xs font-bold ${
-                                (selectedColor || '').toLowerCase() === c.name.toLowerCase()
-                                    ? 'bg-primary/20 text-primary'
-                                    : 'text-on-surface hover:bg-surface-container-high'
-                            }`}
-                        >
-                            <div className="flex items-center gap-2.5 truncate">
-                                <div 
-                                    className="w-5 h-5 rounded-full border border-outline/30 flex-shrink-0 shadow-sm"
-                                    style={{ background: c.preview }}
-                                />
-                                <span>{c.name}</span>
-                            </div>
-
-                            {c.isCustom && (
-                                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setIsOpen(false);
-                                            onEditColor(c);
-                                        }}
-                                        className="p-1 text-primary hover:bg-primary/20 rounded cursor-pointer border-0 bg-transparent flex items-center"
-                                        title="Editar este color"
-                                    >
-                                        <span className="material-symbols-outlined text-[14px]">edit</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            onDeleteColor(c.id);
-                                        }}
-                                        className="p-1 text-rose-400 hover:bg-rose-500/20 rounded cursor-pointer border-0 bg-transparent flex items-center"
-                                        title="Eliminar este color"
-                                    >
-                                        <span className="material-symbols-outlined text-[14px]">delete</span>
-                                    </button>
+                    <div className="space-y-0.5 max-h-40 overflow-y-auto custom-scrollbar">
+                        {colors.map((c) => (
+                            <div
+                                key={c.id}
+                                onClick={() => {
+                                    onSelect(c.name);
+                                    setIsOpen(false);
+                                }}
+                                className={`flex items-center justify-between p-2 cursor-pointer transition text-xs font-semibold rounded-none ${
+                                    (selectedColor || '').toLowerCase() === c.name.toLowerCase()
+                                        ? 'bg-[#FAF8F5] text-[#D9381E] font-bold border-l-2 border-l-[#D9381E]'
+                                        : 'text-[#161616] hover:bg-[#F6F4EE]'
+                                }`}
+                            >
+                                <div className="flex items-center gap-2.5 truncate">
+                                    <span 
+                                        className="w-3.5 h-3.5 border border-[#E2DFD7] shrink-0 rounded-none shadow-2xs"
+                                        style={{ background: c.preview }}
+                                    />
+                                    <span className="truncate">{c.name}</span>
                                 </div>
-                            )}
-                        </div>
-                    ))}
 
-                    <div className="pt-1 border-t border-outline/10">
+                                {c.isCustom && (
+                                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsOpen(false);
+                                                onEditColor(c);
+                                            }}
+                                            className="p-1 text-[#6B6862] hover:text-[#161616] hover:bg-[#EAE7DE] rounded-none cursor-pointer border-0 bg-transparent flex items-center transition"
+                                            title="Editar este color"
+                                        >
+                                            <span className="material-symbols-outlined text-[13px]">edit</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                onDeleteColor(c.id);
+                                            }}
+                                            className="p-1 text-[#D9381E] hover:bg-[#FCE8E6] rounded-none cursor-pointer border-0 bg-transparent flex items-center transition"
+                                            title="Eliminar este color"
+                                        >
+                                            <span className="material-symbols-outlined text-[13px]">delete</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="pt-1.5 border-t border-[#E2DFD7]">
                         <button
                             type="button"
                             onClick={() => {
                                 setIsOpen(false);
                                 onOpenPaintNew();
                             }}
-                            className="w-full py-2 px-2 bg-primary/10 text-primary font-bold text-xs rounded-lg hover:bg-primary/20 transition cursor-pointer flex items-center justify-center gap-1.5 border border-dashed border-primary/40"
+                            className="w-full py-2 px-2 bg-[#FAF8F5] hover:bg-[#F6F4EE] text-[#D9381E] border border-dashed border-[#D9381E] font-bold text-[11px] uppercase tracking-wider rounded-none transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                         >
-                            <span className="material-symbols-outlined text-[16px]">palette</span>
-                            + 🎨 Crear Nuevo Color (Paint)
+                            <span className="material-symbols-outlined text-[15px]">palette</span>
+                            + Crear Nuevo Color (Paint)
                         </button>
                     </div>
                 </div>

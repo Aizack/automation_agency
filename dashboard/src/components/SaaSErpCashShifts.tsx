@@ -152,48 +152,62 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
   const pendingShifts = shifts.filter(s => s.status === 'pending_confirmation');
 
   return (
-    <div className="space-y-6 text-white">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#222428] pb-4">
+    <div className="space-y-6 text-[#161616] font-sans antialiased">
+      {/* Header Editorial Wabi-Sabi */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5">
         <div>
-          <h2 className="text-xl font-extrabold text-[#eab308] flex items-center gap-2" style={{ color: '#eab308' }}>
-            <span className="material-symbols-outlined text-[#eab308]">point_of_sale</span>
-            ARQUEO & RELEVO DE CAJA DIARIO
+          <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-mono block mb-1">
+            CONTROL DE CAJA & TURNOS
+          </span>
+          <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[#161616] tracking-tight leading-none flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#D9381E] text-[28px]">point_of_sale</span>
+            Arqueo & Relevo de Caja Diario
           </h2>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-[#76746E] mt-2">
             Mantiene las cuentas claras entre turnos de empleados (Entrega de caja, ventas registradas y confirmación del relevo).
           </p>
         </div>
 
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="px-3 py-1.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] rounded-md shadow transition flex items-center gap-1.5 cursor-pointer border-0"
-        >
-          <span className="material-symbols-outlined text-[16px]">currency_exchange</span>
-          ENTREGAR CAJA / CAMBIO DE TURNO
-        </button>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={fetchData}
+            className="h-9 px-3.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] rounded-none flex items-center justify-center transition cursor-pointer text-xs font-mono font-bold uppercase tracking-wider shadow-xs"
+            title="Refrescar arqueos"
+          >
+            <span className="material-symbols-outlined text-[16px] mr-1.5 text-[#D9381E]">refresh</span>
+            Refrescar
+          </button>
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="h-9 px-4 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold text-xs rounded-none shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer border-0 uppercase tracking-wider"
+          >
+            <span className="material-symbols-outlined text-[16px]">currency_exchange</span>
+            Entregar Caja / Turno
+          </button>
+        </div>
       </div>
 
       {/* Alerta de Cierres Pendientes por Confirmar */}
       {pendingShifts.length > 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/30 p-5 rounded-2xl space-y-3">
-          <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-            <span className="material-symbols-outlined">notification_important</span>
+        <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-5 rounded-none space-y-3 shadow-xs">
+          <div className="flex items-center gap-2 text-[#D9381E] font-mono font-bold text-xs uppercase tracking-wider">
+            <span className="material-symbols-outlined text-[18px]">notification_important</span>
             Tienes {pendingShifts.length} Arqueo(s) de Caja Pendiente(s) de Confirmación
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {pendingShifts.map((shift) => (
-              <div key={shift.id} className="bg-surface border border-outline/20 p-4 rounded-xl space-y-2 text-xs">
+              <div key={shift.id} className="bg-white border border-[#E2DFD7] p-4 rounded-none space-y-2 text-xs shadow-xs">
                 <div className="flex justify-between items-center font-bold">
-                  <span className="text-on-surface">{shift.employee_out_name} ➔ {shift.employee_in_name}</span>
-                  <span className="text-primary font-mono">{new Date(shift.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="text-[#161616] font-serif text-sm">{shift.employee_out_name} ➔ {shift.employee_in_name}</span>
+                  <span className="text-[#D9381E] font-mono text-[11px]">{new Date(shift.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-on-surface-variant bg-surface-container/40 p-2 rounded-lg">
-                  <div>Ventas Efectivo: <strong>{formatCOP(shift.total_cash_sales)}</strong></div>
-                  <div>Efectivo Contado: <strong>{formatCOP(shift.reported_cash_in_drawer)}</strong></div>
-                  <div className="col-span-2 flex justify-between border-t border-outline/10 pt-1">
+                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-[#76746E] bg-[#FAF8F5] p-2.5 border border-[#E2DFD7]">
+                  <div>Ventas Efectivo: <strong className="text-[#161616]">{formatCOP(shift.total_cash_sales)}</strong></div>
+                  <div>Efectivo Contado: <strong className="text-[#161616]">{formatCOP(shift.reported_cash_in_drawer)}</strong></div>
+                  <div className="col-span-2 flex justify-between border-t border-[#E2DFD7] pt-1.5 mt-0.5">
                     <span>Diferencia de Caja:</span>
-                    <span className={shift.cash_difference < 0 ? 'text-red-400 font-bold' : 'text-green-400 font-bold'}>
+                    <span className={shift.cash_difference < 0 ? 'text-[#C5221F] font-bold' : 'text-[#137333] font-bold'}>
                       {formatCOP(shift.cash_difference)}
                     </span>
                   </div>
@@ -201,7 +215,7 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
                 <button
                   onClick={() => handleConfirmShift(shift.id)}
                   disabled={confirmingId === shift.id}
-                  className="w-full py-2 bg-green-500 text-black font-bold rounded-lg hover:opacity-90 transition cursor-pointer border-0 flex items-center justify-center gap-1.5"
+                  className="w-full py-2 bg-[#137333] hover:bg-[#0f5b28] text-white font-mono font-bold text-xs rounded-none transition-colors cursor-pointer border-0 flex items-center justify-center gap-1.5 uppercase tracking-wider shadow-xs disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-[16px]">check_circle</span>
                   {confirmingId === shift.id ? 'Confirmando...' : 'Confirmar Cuentas Claras y Recibir Caja'}
@@ -214,59 +228,60 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
 
       {/* Historial de Turnos y Arqueos */}
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex flex-col items-center justify-center py-16 bg-white border border-[#E2DFD7] rounded-none">
+          <div className="w-8 h-8 border-2 border-[#D9381E] border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p className="text-xs font-mono uppercase text-[#76746E] tracking-wider">Cargando arqueos de caja...</p>
         </div>
       ) : shifts.length === 0 ? (
-        <div className="glass-card p-12 text-center space-y-3">
-          <span className="material-symbols-outlined text-on-surface-variant text-[48px] opacity-40">receipt_long</span>
-          <p className="text-sm text-on-surface-variant">No hay registros de arqueos de caja en este local.</p>
-          <p className="text-xs text-on-surface-variant opacity-60 max-w-md mx-auto">
+        <div className="bg-white border border-[#E2DFD7] rounded-none p-16 text-center space-y-3 shadow-xs">
+          <span className="material-symbols-outlined text-[#76746E]/40 text-[48px]">receipt_long</span>
+          <p className="font-serif text-sm font-bold text-[#161616]">No hay registros de arqueos de caja en este local.</p>
+          <p className="text-xs text-[#76746E] max-w-md mx-auto">
             Usa el botón "Entregar Caja" al finalizar cada turno para cuadrar el dinero en efectivo con las ventas registradas.
           </p>
         </div>
       ) : (
-        <div className="glass-card overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white border border-[#E2DFD7] rounded-none overflow-hidden shadow-xs">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-surface-container/50 border-b border-outline/10 text-xs text-on-surface-variant uppercase font-semibold">
-                <th className="p-4">Fecha / Hora</th>
-                <th className="p-4">Entrega (Sale ➔ Recibe)</th>
-                <th className="p-4">Base Inicial</th>
-                <th className="p-4">Ventas Efectivo</th>
-                <th className="p-4">Dinero Físico Contado</th>
-                <th className="p-4">Diferencia</th>
-                <th className="p-4">Estado Cuentas</th>
+              <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[10px] font-mono text-[#76746E] uppercase font-bold tracking-wider">
+                <th className="p-3.5">Fecha / Hora</th>
+                <th className="p-3.5">Entrega (Sale ➔ Recibe)</th>
+                <th className="p-3.5">Base Inicial</th>
+                <th className="p-3.5">Ventas Efectivo</th>
+                <th className="p-3.5">Dinero Físico Contado</th>
+                <th className="p-3.5">Diferencia</th>
+                <th className="p-3.5">Estado Cuentas</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-outline/10 text-sm">
+            <tbody className="divide-y divide-[#E2DFD7]">
               {shifts.map((shift) => (
-                <tr key={shift.id} className="hover:bg-surface-container/40 transition">
-                  <td className="p-4 font-mono text-xs text-on-surface-variant">
+                <tr key={shift.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
+                  <td className="p-3.5 font-mono text-xs text-[#76746E]">
                     {new Date(shift.created_at).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })} {new Date(shift.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
                   </td>
-                  <td className="p-4">
-                    <p className="font-bold text-on-surface text-xs">{shift.employee_out_name} ➔ {shift.employee_in_name}</p>
-                    {shift.notes && <p className="text-[10px] text-on-surface-variant italic truncate max-w-xs">{shift.notes}</p>}
+                  <td className="p-3.5">
+                    <p className="font-serif font-bold text-[#161616] text-sm">{shift.employee_out_name} ➔ {shift.employee_in_name}</p>
+                    {shift.notes && <p className="text-[10px] text-[#76746E] italic truncate max-w-xs">{shift.notes}</p>}
                   </td>
-                  <td className="p-4 font-mono text-xs">{formatCOP(shift.initial_cash)}</td>
-                  <td className="p-4 font-mono text-xs font-bold text-primary">{formatCOP(shift.total_cash_sales)}</td>
-                  <td className="p-4 font-mono text-xs">{formatCOP(shift.reported_cash_in_drawer)}</td>
-                  <td className="p-4 font-mono font-bold text-xs">
-                    <span className={shift.cash_difference < 0 ? 'text-red-400' : shift.cash_difference > 0 ? 'text-blue-400' : 'text-green-400'}>
+                  <td className="p-3.5 font-mono text-xs text-[#161616]">{formatCOP(shift.initial_cash)}</td>
+                  <td className="p-3.5 font-mono text-xs font-bold text-[#D9381E]">{formatCOP(shift.total_cash_sales)}</td>
+                  <td className="p-3.5 font-mono text-xs text-[#161616]">{formatCOP(shift.reported_cash_in_drawer)}</td>
+                  <td className="p-3.5 font-mono font-bold text-xs">
+                    <span className={shift.cash_difference < 0 ? 'text-[#C5221F]' : shift.cash_difference > 0 ? 'text-[#137333]' : 'text-[#137333]'}>
                       {shift.cash_difference === 0 ? 'Exacto ($0)' : formatCOP(shift.cash_difference)}
                     </span>
                   </td>
-                  <td className="p-4">
+                  <td className="p-3.5">
                     {shift.status === 'confirmed' ? (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-500/10 text-green-400 border border-green-500/20 flex items-center gap-1 w-fit">
+                      <span className="px-2.5 py-1 rounded-none text-[9px] font-mono font-bold uppercase tracking-wider bg-[#E6F4EA] text-[#137333] border border-[#CEEAD6] flex items-center gap-1 w-fit">
                         <span className="material-symbols-outlined text-[12px]">check_circle</span>
                         Cuentas Claras
                       </span>
                     ) : (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1 w-fit">
+                      <span className="px-2.5 py-1 rounded-none text-[9px] font-mono font-bold uppercase tracking-wider bg-[#FEF7E0] text-[#B45309] border border-[#FDE68A] flex items-center gap-1 w-fit">
                         <span className="material-symbols-outlined text-[12px]">schedule</span>
-                        Pendiente Confirmar
+                        Pendiente
                       </span>
                     )}
                   </td>
@@ -279,22 +294,27 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
 
       {/* Modal Arqueo y Cierre de Caja */}
       {isFormOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-          <div className="bg-surface border border-outline/20 p-6 rounded-3xl w-full max-w-lg shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-3">
-              <h3 className="font-bold text-sm text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">point_of_sale</span>
-                Arqueo & Relevo de Caja
-              </h3>
-              <button onClick={() => setIsFormOpen(false)} className="text-on-surface-variant hover:text-on-surface bg-transparent border-0 cursor-pointer">
-                <span className="material-symbols-outlined">close</span>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#F6F4EE] border border-[#161616] p-6 rounded-none w-full max-w-lg shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto text-left">
+            <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+              <div>
+                <span className="text-[10px] font-mono tracking-widest text-[#D9381E] uppercase block font-bold">CONTROL DE CAJA</span>
+                <h3 className="font-serif text-lg font-bold text-[#161616] flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#D9381E]">point_of_sale</span>
+                  Arqueo & Relevo de Caja
+                </h3>
+              </div>
+              <button onClick={() => setIsFormOpen(false)} className="text-[#76746E] hover:text-[#161616] bg-transparent border-0 cursor-pointer p-1">
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
 
             <form onSubmit={handleCreateShiftHandover} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-on-surface-variant">Empleado Saliente (Entrega) *</label>
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Empleado Saliente (Entrega) *
+                  </label>
                   {employees.length > 0 ? (
                     <select
                       value={employeeOutName}
@@ -304,7 +324,7 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
                         const emp = employees.find(m => `${m.name} ${m.last_name || ''}`.trim() === name);
                         setEmployeeOutId(emp ? emp.id : '');
                       }}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary cursor-pointer"
+                      className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] cursor-pointer"
                       required
                     >
                       <option value="">Seleccionar Empleado...</option>
@@ -320,14 +340,16 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
                       placeholder="Ej: Trabajador 1"
                       value={employeeOutName}
                       onChange={(e) => setEmployeeOutName(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616]"
                       required
                     />
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-on-surface-variant">Empleado Entrante (Releva) *</label>
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Empleado Entrante (Releva) *
+                  </label>
                   {employees.length > 0 ? (
                     <select
                       value={employeeInName}
@@ -337,7 +359,7 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
                         const emp = employees.find(m => `${m.name} ${m.last_name || ''}`.trim() === name);
                         setEmployeeInId(emp ? emp.id : '');
                       }}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary cursor-pointer"
+                      className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] cursor-pointer"
                       required
                     >
                       <option value="">Seleccionar Empleado...</option>
@@ -353,7 +375,7 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
                       placeholder="Ej: Trabajador 2"
                       value={employeeInName}
                       onChange={(e) => setEmployeeInName(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                      className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616]"
                       required
                     />
                   )}
@@ -362,53 +384,59 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId }
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-on-surface-variant">Base Inicial de Caja (\$ COP)</label>
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Base Inicial de Caja ($ COP)
+                  </label>
                   <input
                     type="number"
                     placeholder="Ej: 50000"
                     value={initialCash}
                     onChange={(e) => setInitialCash(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono"
+                    className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-on-surface-variant">Efectivo Físico Contado en Caja *</label>
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Efectivo Físico Contado en Caja *
+                  </label>
                   <input
                     type="number"
-                    placeholder="Dinero contado en el cajón..."
+                    placeholder="Dinero contado..."
                     value={reportedCashInDrawer}
                     onChange={(e) => setReportedCashInDrawer(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono font-bold"
+                    className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono font-bold"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-on-surface-variant">Observaciones o Justificación de Novedades</label>
+                <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                  Observaciones o Justificación de Novedades
+                </label>
                 <textarea
-                  placeholder="Ej: Se compraron \$10.000 de papelería en efectivo..."
+                  placeholder="Ej: Se compraron $10.000 de papelería en efectivo..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary h-20 resize-none"
+                  className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] h-20 resize-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-outline/10">
+              <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-2 border border-outline/20 rounded-xl text-on-surface text-xs hover:bg-surface-container cursor-pointer bg-transparent"
+                  className="px-4 py-2 border border-[#E2DFD7] bg-white text-[#161616] font-mono font-bold text-xs rounded-none hover:bg-[#FAF8F5] cursor-pointer uppercase tracking-wider"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-primary text-on-primary font-bold rounded-xl text-xs hover:opacity-90 transition cursor-pointer border-0 flex items-center gap-1.5"
+                  className="px-5 py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold text-xs rounded-none shadow-xs transition-colors cursor-pointer border-0 flex items-center gap-1.5 uppercase tracking-wider"
                 >
                   <span className="material-symbols-outlined text-[16px]">send</span>
-                  Enviar Cierre a {employeeInName || 'Empleado'}
+                  Enviar Cierre
                 </button>
               </div>
             </form>

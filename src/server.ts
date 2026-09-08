@@ -5143,7 +5143,7 @@ app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeC
 
     let result = await pool.query(
       `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, '' AS pin, e.employee_code,
-              COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules, e.is_active, e.created_at,
+              COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules, COALESCE(e.allowed_branches, '[]'::jsonb) AS allowed_branches, e.is_active, e.created_at,
               e.hire_date, e.basic_salary, e.payment_type, e.pay_period, e.cutoff_day_1, e.cutoff_day_2, e.pay_day_1, e.pay_day_2,
               e.hourly_rate, e.transport_allowance, e.employment_status, e.activity_status, e.payment_method, e.bank_name, e.bank_account_number, e.contract_type
        FROM employees e 
@@ -5165,7 +5165,7 @@ app.get('/api/clients/:clientId/employees', authenticateToken as any, authorizeC
 
       result = await pool.query(
         `SELECT e.id, e.name, e.last_name, e.phone, e.role, e.department_id, d.name as department_name, '' AS pin, e.employee_code,
-                COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules, e.is_active, e.created_at,
+                COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules, COALESCE(e.allowed_branches, '[]'::jsonb) AS allowed_branches, e.is_active, e.created_at,
                 e.hire_date, e.basic_salary, e.payment_type, e.pay_period, e.cutoff_day_1, e.cutoff_day_2, e.pay_day_1, e.pay_day_2,
                 e.hourly_rate, e.transport_allowance, e.employment_status, e.activity_status, e.payment_method, e.bank_name, e.bank_account_number, e.contract_type
          FROM employees e 
@@ -5205,7 +5205,7 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
       payment_type, pay_period, cutoff_days, pay_days, cutoff_day_1, cutoff_day_2,
       pay_day_1, pay_day_2, vacation_days_accumulated, hourly_rate, transport_allowance,
       employment_status, activity_status, payment_method, bank_name, bank_account_number,
-      contract_type, employee_code, professional_license, allowed_modules
+      contract_type, employee_code, professional_license, allowed_modules, allowed_branches
     } = req.body;
 
     if (!name || !phone) {
@@ -5232,6 +5232,7 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
     const rawPin = pin || '1234';
     const hashedPin = isHashedPassword(rawPin) ? rawPin : await hashPassword(rawPin);
     const finalModulesJson = JSON.stringify(Array.isArray(allowed_modules) ? allowed_modules : []);
+    const finalBranchesJson = JSON.stringify(Array.isArray(allowed_branches) ? allowed_branches : (clientId ? [clientId] : []));
 
     const result = await pool.query(
       `INSERT INTO employees (
@@ -5240,9 +5241,9 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
          cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
          vacation_days_accumulated, hourly_rate, transport_allowance, employment_status,
          activity_status, payment_method, bank_name, bank_account_number, contract_type,
-         employee_code, allowed_modules
+         employee_code, allowed_modules, allowed_branches
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26::jsonb)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26::jsonb, $27::jsonb)
        RETURNING *`,
       [
         clientId, name, last_name || '', cleanPhone, role || 'agent', department_id || null, hashedPin,
@@ -5250,7 +5251,7 @@ app.post('/api/clients/:clientId/employees', authenticateToken as any, authorize
         c1, c2, p1, p2,
         parseFloat(vacation_days_accumulated) || 0.00, parseFloat(hourly_rate) || 0.00, parseFloat(transport_allowance) || 0.00, employment_status || 'vinculado',
         activity_status || 'activo', payment_method || 'cash', bank_name || null, bank_account_number || null, contract_type || 'indefinido',
-        finalEmpCode, finalModulesJson
+        finalEmpCode, finalModulesJson, finalBranchesJson
       ]
     );
 
@@ -5288,7 +5289,7 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
       cutoff_days, pay_days, cutoff_day_1, cutoff_day_2, pay_day_1, pay_day_2,
       vacation_days_accumulated, hourly_rate, transport_allowance, employment_status,
       activity_status, payment_method, bank_name, bank_account_number, contract_type,
-      allowed_modules
+      allowed_modules, allowed_branches
     } = req.body;
 
     const currentEmpRes = await pool.query(
@@ -5318,6 +5319,9 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
     const finalAllowedModules = allowed_modules !== undefined 
       ? JSON.stringify(Array.isArray(allowed_modules) ? allowed_modules : []) 
       : JSON.stringify(currentEmp.allowed_modules || []);
+    const finalAllowedBranches = allowed_branches !== undefined 
+      ? JSON.stringify(Array.isArray(allowed_branches) ? allowed_branches : []) 
+      : JSON.stringify(currentEmp.allowed_branches || []);
 
     let c1 = currentEmp.cutoff_day_1;
     let c2 = currentEmp.cutoff_day_2;
@@ -5358,8 +5362,8 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
            cutoff_day_1 = $12, cutoff_day_2 = $13, pay_day_1 = $14, pay_day_2 = $15,
            vacation_days_accumulated = $16, hourly_rate = $17, transport_allowance = $18, employment_status = $19,
            activity_status = $20, payment_method = $21, bank_name = $22, bank_account_number = $23, contract_type = $24,
-           employee_code = $25, allowed_modules = $26::jsonb
-       WHERE id = $27 AND client_id = $28
+           employee_code = $25, allowed_modules = $26::jsonb, allowed_branches = $27::jsonb
+       WHERE id = $28 AND client_id = $29
        RETURNING *`,
       [
         finalName, finalLastName || '', finalPhone, finalRole, finalDeptId, finalPin, finalIsActive,
@@ -5367,7 +5371,7 @@ app.put('/api/clients/:clientId/employees/:employeeId', authenticateToken as any
         c1, c2, p1, p2,
         finalVacations, finalHourlyRate, finalTransportAllowance, finalEmploymentStatus,
         finalActivityStatus, finalPaymentMethod, finalBankName, finalBankAccount, finalContractType,
-        finalEmployeeCode, finalAllowedModules, employeeId, clientId
+        finalEmployeeCode, finalAllowedModules, finalAllowedBranches, employeeId, clientId
       ]
     );
 
@@ -9691,7 +9695,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     try {
       const { clientId } = req.params;
       const result = await pool.query(
-        `SELECT id, name, branch_name, is_main_branch, parent_client_id, phone, address, created_at 
+        `SELECT id, name, branch_name, is_main_branch, parent_client_id, phone, address, has_custom_tax_id, legal_name, custom_tax_id, created_at 
          FROM clients 
          WHERE id = $1 OR parent_client_id = $1 OR (parent_client_id = (SELECT parent_client_id FROM clients WHERE id = $1 AND parent_client_id IS NOT NULL))
          ORDER BY is_main_branch DESC, name ASC`,
@@ -9707,7 +9711,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
   app.post('/api/clients/:clientId/branches', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
-      const { name, branch_name, phone, address } = req.body;
+      const { name, branch_name, phone, address, has_custom_tax_id, legal_name, custom_tax_id } = req.body;
 
       if (!name || !branch_name) {
         return res.status(400).json({ success: false, error: 'Nombre de empresa y nombre de la sede son obligatorios.' });
@@ -9716,15 +9720,33 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const branchId = `branch_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
       await pool.query(
-        `INSERT INTO clients (id, parent_client_id, name, branch_name, is_main_branch, phone, address, is_activated)
-         VALUES ($1, $2, $3, $4, FALSE, $5, $6, TRUE)`,
-        [branchId, clientId, name, branch_name, phone || null, address || null]
+        `INSERT INTO clients (id, parent_client_id, name, branch_name, is_main_branch, phone, address, is_activated, has_custom_tax_id, legal_name, custom_tax_id)
+         VALUES ($1, $2, $3, $4, FALSE, $5, $6, TRUE, $7, $8, $9)`,
+        [
+          branchId, 
+          clientId, 
+          name, 
+          branch_name, 
+          phone || null, 
+          address || null, 
+          Boolean(has_custom_tax_id), 
+          legal_name || name, 
+          custom_tax_id || null
+        ]
       );
 
       res.json({ 
         success: true, 
         message: `Sede "${branch_name}" creada exitosamente.`,
-        branch: { id: branchId, name, branch_name, parent_client_id: clientId }
+        branch: { 
+          id: branchId, 
+          name, 
+          branch_name, 
+          parent_client_id: clientId,
+          has_custom_tax_id: Boolean(has_custom_tax_id),
+          legal_name: legal_name || name,
+          custom_tax_id: custom_tax_id || null
+        }
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });

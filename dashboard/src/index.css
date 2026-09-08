@@ -599,31 +599,462 @@ h1, h2, h3, h4, h5, h6, .font-display {
 /* ==========================================================================
    WABI-SABI PAPER RECTANGULAR FORM CONTROLS & CARDS (90° Sharp Edges)
    ========================================================================== */
-input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
-select,
-textarea {
-  border-radius: 0px !important;
-  background-color: #FAF8F3 !important;
-  border: 1px solid #E2DFD7 !important;
-  color: #161616 !important;
-  font-family: var(--font-sans);
-  transition: border-color 0.2s ease, background-color 0.2s ease !important;
-}
-
-input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):focus,
-select:focus,
-textarea:focus {
-  background-color: #FFFFFF !important;
-  border-color: #161616 !important;
-  outline: none !important;
-}
-
 label {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #6B6862;
   font-weight: 600;
+}
+
+/* WABI-SABI PROPOSAL EXACT CLASSES */
+.section-title-wrapper h2 {
+  font-family: var(--font-serif, 'Instrument Serif', Georgia, serif);
+  font-size: 3rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.btn-primary-action {
+  background-color: #161616;
+  color: #FFFFFF;
+  border: 1px solid #161616;
+  padding: 0.9rem 1.8rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary-action:hover {
+  background-color: #D9381E;
+  border-color: #D9381E;
+}
+
+.kpi-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.8rem;
+  margin-bottom: 2.5rem;
+}
+
+.kpi-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2DFD7;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  position: relative;
+  transition: border-color 0.2s;
+}
+
+.kpi-card:hover {
+  border-color: #161616;
+}
+
+.kpi-card.warning {
+  border-left: 3px solid #D9381E;
+}
+
+.kpi-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #6B6862;
+  font-weight: 600;
+}
+
+.kpi-value {
+  font-family: var(--font-serif, 'Instrument Serif', Georgia, serif);
+  font-size: 2.4rem;
+  font-weight: 400;
+  line-height: 1.1;
+  color: #161616;
+}
+
+.kpi-value.warning-text {
+  color: #D9381E;
+}
+
+.kpi-unit {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: #6B6862;
+  font-weight: 400;
+}
+
+.kpi-subtext {
+  font-size: 0.75rem;
+  color: #6B6862;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  color: #6B6862;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 1rem 0;
+  border-bottom: 1px solid #161616;
+}
+
+.inventory-table td {
+  padding: 1.2rem 0;
+  border-bottom: 1px solid #E2DFD7;
+  font-size: 0.9rem;
+}
+
+.badge-code {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.8rem;
+  background: rgba(0,0,0,0.04);
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+}
+
+/* WABI-SABI POPUP MODAL WIDESCREEN */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(22, 22, 22, 0.5);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.modal-widescreen {
+  width: 100%;
+  max-width: 1360px;
+  height: 88vh;
+  background-color: #F6F4EE;
+  border: 1px solid #161616;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+.modal-top {
+  padding: 1.3rem 2.8rem;
+  border-bottom: 1px solid #E2DFD7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #F6F4EE;
+}
+
+.modal-top h3 {
+  font-family: var(--font-serif, 'Instrument Serif', Georgia, serif);
+  font-size: 2.1rem;
+  font-weight: 400;
+}
+
+.modal-content-grid {
+  flex: 1;
+  padding: 2.2rem 2.8rem;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2.8rem;
+}
+
+.modal-form-scrollable {
+  overflow-y: auto;
+  padding-right: 1.5rem;
+  max-height: 100%;
+}
+
+.form-section-title {
+  font-family: var(--font-serif, 'Instrument Serif', Georgia, serif);
+  font-size: 1.4rem;
+  border-bottom: 1px solid #E2DFD7;
+  padding-bottom: 0.4rem;
+  margin-bottom: 1.2rem;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field-group label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6B6862;
+  font-weight: 600;
+}
+
+.field-group input, .field-group select, .field-group textarea {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #E2DFD7;
+  background-color: #FFFFFF;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: #161616;
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 3px !important;
+}
+
+.field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+  border-color: #161616 !important;
+}
+
+.help-hint {
+  font-size: 0.72rem;
+  color: #6B6862;
+  margin-top: 0.15rem;
+}
+
+.variants-section-zen {
+  margin-bottom: 1.8rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid #E2DFD7;
+}
+
+.variants-table-zen {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.8rem;
+}
+
+.variants-table-zen th {
+  text-align: left;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6B6862;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #161616;
+}
+
+.variants-table-zen td {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #E2DFD7;
+  vertical-align: middle;
+}
+
+.color-swatch-box {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 3px;
+  border: 1px solid rgba(0,0,0,0.18);
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.color-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 95%;
+}
+
+.variants-table-zen input, .variants-table-zen select {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #E2DFD7;
+  background-color: #FFFFFF;
+  font-size: 0.85rem;
+  width: 100%;
+  border-radius: 3px !important;
+}
+
+.btn-add-variant-zen {
+  background: transparent;
+  border: 1px solid #E2DFD7;
+  padding: 0.4rem 0.9rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 3px;
+}
+
+.btn-add-variant-zen:hover {
+  border-color: #161616;
+  background-color: #FFFFFF;
+}
+
+.modal-sidebar-fixed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  justify-content: flex-start;
+}
+
+.photo-area-with-swatches {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.photo-color-swatches-horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.photo-color-swatches-horizontal::-webkit-scrollbar {
+  display: none;
+}
+
+.photo-swatch-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+  border: 1.5px solid #E2DFD7;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s, border-color 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.photo-swatch-btn:hover {
+  transform: scale(1.1);
+}
+
+.photo-swatch-btn.active {
+  border-color: #D9381E;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 1.5px #F6F4EE, 0 0 0 3px #D9381E;
+}
+
+.photo-dropzone-compact {
+  width: 170px;
+  height: 170px;
+  border: 2px dashed #E2DFD7;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: #6B6862;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  border-radius: 4px;
+}
+
+.photo-dropzone-compact:hover {
+  border-color: #D9381E;
+  color: #D9381E;
+}
+
+.summary-card-compact {
+  background: #FFFFFF;
+  border: 1px solid #E2DFD7;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card-title {
+  font-size: 0.65rem;
+  color: #6B6862;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.2rem;
+}
+
+.summary-card-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.summary-card-price {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 1.35rem;
+  color: #D9381E;
+  margin-top: 0.4rem;
+  font-weight: 600;
+}
+
+.modal-bottom {
+  padding: 0.75rem 2.8rem;
+  border-top: 1px solid #E2DFD7;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background-color: #F6F4EE;
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid #E2DFD7;
+  padding: 0.55rem 1.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 3px;
+  color: #161616;
+}
+
+.btn-cancel:hover {
+  border-color: #161616;
+}
+
+.btn-save {
+  background-color: #D9381E;
+  color: #FFFFFF;
+  border: none;
+  padding: 0.55rem 1.8rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-weight: 700;
+  border-radius: 3px;
+}
+
+.btn-save:hover {
+  background-color: #b82b14;
 }
 
 /* ==========================================================================

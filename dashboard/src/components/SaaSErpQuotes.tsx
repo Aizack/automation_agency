@@ -151,28 +151,43 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
         setLineItems(prev => prev.filter((_, i) => i !== idx));
     };
 
-    // Calculate totals
     const calcSubtotal = lineItems.reduce((acc, item) => acc + (item.unit_price * item.quantity), 0);
-    const calcDiscounts = lineItems.reduce((acc, item) => {
-        const discPct = item.discount_pct || 0;
-        return acc + ((item.unit_price * (discPct / 100)) * item.quantity);
+    const calcDiscount = lineItems.reduce((acc, item) => {
+        const disc = item.discount_pct || 0;
+        return acc + (item.unit_price * (disc / 100) * item.quantity);
     }, 0);
-    const calcTotal = calcSubtotal - calcDiscounts;
+    const calcTotal = lineItems.reduce((acc, item) => acc + item.subtotal, 0);
+
+    const resetCreateForm = () => {
+        setCustomerName('');
+        setCustomerPhone('');
+        setCustomerEmail('');
+        setCustomerDocument('');
+        setValidDays(15);
+        setNotes('Precios válidos por los días estipulados. Incluye asesoría personalizada.');
+        setSellerName(localStorage.getItem('user_name') || 'Asesor Comercial');
+        setLineItems([]);
+        setProdSearchInput('');
+        setSelectedProdId('');
+        setSelectedProdName('');
+        setAddQty(1);
+        setAddCustomPrice('');
+        setAddDiscountPct(0);
+    };
 
     const handleCreateQuote = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!customerName.trim()) {
-            alert("Por favor ingresa el nombre del cliente.");
+            alert('Por favor ingresa el nombre del cliente o prospecto.');
             return;
         }
         if (lineItems.length === 0) {
-            alert("Agrega al menos un producto o servicio a la cotización.");
+            alert('Debes agregar al menos un ítem o producto a la cotización.');
             return;
         }
 
         const validUntilDate = new Date();
         validUntilDate.setDate(validUntilDate.getDate() + validDays);
-        const validUntilStr = validUntilDate.toISOString().split('T')[0];
 
         const payload = {
             customer_name: customerName.trim(),
@@ -181,12 +196,12 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
             customer_document: customerDocument.trim() || null,
             items: lineItems,
             subtotal: calcSubtotal,
-            discount_amount: calcDiscounts,
+            discount_amount: calcDiscount,
             tax_amount: 0,
             total_amount: calcTotal,
-            valid_until: validUntilStr,
+            valid_until: validUntilDate.toISOString().split('T')[0],
             notes: notes.trim() || null,
-            seller_name: sellerName.trim() || 'Vendedor'
+            seller_name: sellerName.trim() || null
         };
 
         try {
@@ -197,38 +212,23 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
             });
             const json = await res.json();
             if (json.success) {
-                alert(`✓ Cotización ${json.quote.quote_number} generada con éxito y registrada en prospectos CRM.`);
+                alert(`Cotización ${json.quote?.quote_number || ''} creada exitosamente.`);
                 setIsCreateModalOpen(false);
                 resetCreateForm();
                 fetchQuotes();
             } else {
-                alert(`Error: ${json.error}`);
+                alert(json.error || 'Error al guardar la cotización.');
             }
-        } catch (err: any) {
-            alert(`Error al crear la cotización: ${err.message}`);
+        } catch (err) {
+            console.error('Error creating quote:', err);
+            alert('Error de red al guardar la cotización.');
         }
-    };
-
-    const resetCreateForm = () => {
-        setCustomerName('');
-        setCustomerPhone('');
-        setCustomerEmail('');
-        setCustomerDocument('');
-        setLineItems([]);
-        setProdSearchInput('');
-        setSelectedProdId('');
-        setSelectedProdName('');
-        setAddQty(1);
-        setAddCustomPrice('');
-        setAddDiscountPct(0);
-        setValidDays(15);
-        setNotes('Precios válidos por los días estipulados. Incluye asesoría personalizada.');
     };
 
     const handleExecuteConvert = async () => {
         if (!convertQuote) return;
+        setConverting(true);
         try {
-            setConverting(true);
             const res = await fetch(`/api/clients/${clientId}/quotes/${convertQuote.id}/convert-to-invoice`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -236,30 +236,34 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
             });
             const json = await res.json();
             if (json.success) {
-                alert(`🎉 ¡Excelente! La cotización ${convertQuote.quote_number} fue convertida exitosamente a la Factura ${json.invoice.invoice_number}. El inventario ha sido actualizado y el prospecto marcado como cliente activo en el CRM.`);
+                alert(`¡Cotización convertida a Factura ${json.invoice_number} con éxito!`);
                 setConvertQuote(null);
                 fetchQuotes();
             } else {
-                alert(`Error al convertir: ${json.error}`);
+                alert(json.error || 'Error al convertir la cotización a factura.');
             }
-        } catch (err: any) {
-            alert(`Error de conexión: ${err.message}`);
+        } catch (err) {
+            console.error('Error converting quote:', err);
+            alert('Error de red al convertir la cotización.');
         } finally {
             setConverting(false);
         }
     };
 
-    const handleDeleteQuote = async (id: string, qNum: string) => {
-        if (!confirm(`¿Estás seguro de eliminar la cotización ${qNum}?`)) return;
+    const handleDeleteQuote = async (id: string, quoteNumber: string) => {
+        if (!window.confirm(`¿Estás seguro de eliminar la cotización ${quoteNumber}?`)) return;
         try {
-            const res = await fetch(`/api/clients/${clientId}/quotes/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/clients/${clientId}/quotes/${id}`, {
+                method: 'DELETE'
+            });
             const json = await res.json();
             if (json.success) {
                 fetchQuotes();
             } else {
-                alert(`Error: ${json.error}`);
+                alert(json.error || 'Error al eliminar cotización.');
             }
         } catch (err) {
+            console.error('Error deleting quote:', err);
             alert('Error al eliminar la cotización.');
         }
     };
@@ -288,97 +292,101 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
     const conversionRate = totalCount > 0 ? ((convertedCount / totalCount) * 100).toFixed(1) : '0.0';
 
     return (
-        <div className="space-y-6 text-white font-sans">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-6 text-[#161616] font-sans antialiased">
+            {/* Header Editorial Wabi-Sabi */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5">
                 <div>
-                    <h2 className="text-xl font-extrabold text-[#eab308] tracking-tight flex items-center gap-2" style={{ color: '#eab308' }}>
-                        <span className="material-symbols-outlined text-[24px]">request_quote</span>
-                        COTIZACIONES Y PROSPECTOS DE VENTA
+                    <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-mono block mb-1">
+                        VENTAS & PROSPECTOS
+                    </span>
+                    <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[#161616] tracking-tight leading-none">
+                        Cotizaciones y Propuestas Comerciales
                     </h2>
-                    <p className="text-xs text-gray-400 font-medium">Genera cotizaciones profesionales, captura prospectos con alta intención de compra y conviértelas a factura en 1 clic.</p>
+                    <p className="text-xs text-[#76746E] mt-2">
+                        Genera cotizaciones profesionales, captura prospectos con alta intención de compra y conviértelas a factura en 1 clic.
+                    </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5 shrink-0">
                     <button
                         type="button"
                         onClick={fetchQuotes}
-                        className="h-9 px-3 bg-[#181a1c] hover:bg-[#222528] text-white rounded-lg flex items-center justify-center border border-[#2d3036] cursor-pointer transition text-xs font-semibold shrink-0"
+                        className="h-9 px-3.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] rounded-none flex items-center justify-center transition cursor-pointer text-xs font-mono font-bold uppercase tracking-wider shadow-xs"
                         title="Refrescar cotizaciones"
                     >
-                        <span className="material-symbols-outlined text-[16px] mr-1">refresh</span>
+                        <span className="material-symbols-outlined text-[16px] mr-1.5 text-[#D9381E]">refresh</span>
                         Refrescar
                     </button>
                     <button
                         type="button"
                         onClick={() => { resetCreateForm(); setIsCreateModalOpen(true); }}
-                        className="h-9 bg-[#eab308] hover:bg-amber-300 text-black text-xs font-extrabold px-4 rounded-lg flex items-center gap-1.5 transition-all shadow-md cursor-pointer border-0"
+                        className="h-9 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-mono font-bold px-4 rounded-none flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer border-0 uppercase tracking-wider"
                     >
-                        <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                        NUEVA COTIZACIÓN
+                        <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                        Nueva Cotización
                     </button>
                 </div>
             </div>
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-[#141517] border border-[#222428] p-4 rounded-xl flex flex-col justify-between shadow-md">
+                <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">COTIZACIONES EMITIDAS</span>
-                        <span className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
-                            <span className="material-symbols-outlined text-[20px]">description</span>
+                        <span className="text-[10px] font-mono font-bold text-[#76746E] uppercase tracking-wider">COTIZACIONES EMITIDAS</span>
+                        <span className="w-8 h-8 bg-[#FAF8F5] border border-[#E2DFD7] flex items-center justify-center text-[#161616]">
+                            <span className="material-symbols-outlined text-[18px]">description</span>
                         </span>
                     </div>
-                    <div className="mt-2">
-                        <p className="text-2xl font-extrabold text-white font-mono">{totalCount}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Propuestas comerciales creadas</p>
+                    <div className="mt-3">
+                        <p className="text-2xl font-bold text-[#161616] font-mono">{totalCount}</p>
+                        <p className="text-[11px] text-[#76746E] mt-0.5">Propuestas comerciales creadas</p>
                     </div>
                 </div>
 
-                <div className="bg-[#141517] border border-[#222428] p-4 rounded-xl flex flex-col justify-between shadow-md">
+                <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">MONTO TOTAL COTIZADO</span>
-                        <span className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-                            <span className="material-symbols-outlined text-[20px]">attach_money</span>
+                        <span className="text-[10px] font-mono font-bold text-[#76746E] uppercase tracking-wider">MONTO TOTAL COTIZADO</span>
+                        <span className="w-8 h-8 bg-[#FAF8F5] border border-[#E2DFD7] flex items-center justify-center text-[#D9381E]">
+                            <span className="material-symbols-outlined text-[18px]">payments</span>
                         </span>
                     </div>
-                    <div className="mt-2">
-                        <p className="text-2xl font-extrabold text-emerald-400 font-mono">{formatCOP(totalAmountSum)}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Valor potencial en prospectos</p>
+                    <div className="mt-3">
+                        <p className="text-2xl font-bold text-[#D9381E] font-mono">{formatCOP(totalAmountSum)}</p>
+                        <p className="text-[11px] text-[#76746E] mt-0.5">Valor potencial en prospectos</p>
                     </div>
                 </div>
 
-                <div className="bg-[#141517] border border-[#222428] p-4 rounded-xl flex flex-col justify-between shadow-md">
+                <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">TASA CONVERSIÓN A VENTA</span>
-                        <span className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
-                            <span className="material-symbols-outlined text-[20px]">trending_up</span>
+                        <span className="text-[10px] font-mono font-bold text-[#76746E] uppercase tracking-wider">TASA CONVERSIÓN A VENTA</span>
+                        <span className="w-8 h-8 bg-[#FAF8F5] border border-[#E2DFD7] flex items-center justify-center text-[#137333]">
+                            <span className="material-symbols-outlined text-[18px]">trending_up</span>
                         </span>
                     </div>
-                    <div className="mt-2">
-                        <p className="text-2xl font-extrabold text-blue-400 font-mono">{conversionRate}%</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">{convertedCount} cotizaciones facturadas</p>
+                    <div className="mt-3">
+                        <p className="text-2xl font-bold text-[#137333] font-mono">{conversionRate}%</p>
+                        <p className="text-[11px] text-[#76746E] mt-0.5">{convertedCount} cotizaciones facturadas</p>
                     </div>
                 </div>
 
-                <div className="bg-[#141517] border border-[#222428] p-4 rounded-xl flex flex-col justify-between shadow-md">
+                <div className="bg-white border border-[#E2DFD7] p-4.5 rounded-none flex flex-col justify-between shadow-xs">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">PROSPECTOS CRM</span>
-                        <span className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
-                            <span className="material-symbols-outlined text-[20px]">group_add</span>
+                        <span className="text-[10px] font-mono font-bold text-[#76746E] uppercase tracking-wider">PROSPECTOS CRM</span>
+                        <span className="w-8 h-8 bg-[#FAF8F5] border border-[#E2DFD7] flex items-center justify-center text-[#161616]">
+                            <span className="material-symbols-outlined text-[18px]">group_add</span>
                         </span>
                     </div>
-                    <div className="mt-2">
-                        <p className="text-2xl font-extrabold text-purple-300 font-mono">{quotes.filter(q => q.customer_phone).length}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Leads capturados con teléfono</p>
+                    <div className="mt-3">
+                        <p className="text-2xl font-bold text-[#161616] font-mono">{quotes.filter(q => q.customer_phone).length}</p>
+                        <p className="text-[11px] text-[#76746E] mt-0.5">Leads capturados con teléfono</p>
                     </div>
                 </div>
             </div>
 
             {/* Filter and Search Toolbar */}
-            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-[#141517] p-3 rounded-xl border border-[#222428]">
+            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-white p-3 rounded-none border border-[#E2DFD7] shadow-xs">
                 <div className="relative w-full sm:w-80">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#76746E] pointer-events-none">
                         <span className="material-symbols-outlined text-[18px]">search</span>
                     </span>
                     <input
@@ -386,7 +394,7 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Buscar por N° cotización, cliente o teléfono..."
-                        className="w-full bg-[#1c1e22] border border-[#2d3036] rounded-lg py-2 pl-9 pr-3 text-xs text-white placeholder-gray-500 focus:border-[#eab308] outline-none"
+                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none py-2 pl-9 pr-3 text-xs text-[#161616] placeholder-[#76746E] focus:border-[#161616] outline-none font-mono"
                     />
                 </div>
 
@@ -396,24 +404,24 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                             key={st}
                             type="button"
                             onClick={() => setStatusFilter(st)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer border-0 capitalize shrink-0 ${
+                            className={`px-3 py-1.5 rounded-none text-xs font-mono font-bold transition cursor-pointer border uppercase tracking-wider shrink-0 ${
                                 statusFilter === st
-                                    ? 'bg-[#eab308] text-black shadow'
-                                    : 'bg-[#1c1e22] text-gray-400 hover:text-white border border-[#2d3036]'
+                                    ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                                    : 'bg-[#FAF8F5] text-[#76746E] hover:text-[#161616] hover:bg-white border-[#E2DFD7]'
                             }`}
                         >
-                            {st === 'all' ? 'Todas' : st === 'pending' ? 'Pendientes' : st === 'converted' ? 'Convertidas a Factura' : 'Vencidas'}
+                            {st === 'all' ? 'Todas' : st === 'pending' ? 'Pendientes' : st === 'converted' ? 'Convertidas' : 'Vencidas'}
                         </button>
                     ))}
                 </div>
             </div>
 
             {/* Table */}
-            <div className="bg-[#141517] border border-[#222428] rounded-xl overflow-hidden shadow-lg">
+            <div className="bg-white border border-[#E2DFD7] rounded-none overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                            <tr className="bg-[#1a1c20] text-gray-400 uppercase font-bold border-b border-[#222428]">
+                            <tr className="bg-[#FAF8F5] text-[#76746E] font-mono uppercase font-bold border-b border-[#E2DFD7] text-[10px] tracking-wider">
                                 <th className="p-3.5">N° Cotización</th>
                                 <th className="p-3.5">Cliente / Prospecto</th>
                                 <th className="p-3.5">Fecha & Validez</th>
@@ -422,83 +430,91 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                 <th className="p-3.5 text-right">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#222428]">
+                        <tbody className="divide-y divide-[#E2DFD7]">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="p-8 text-center text-gray-400">
-                                        <span className="material-symbols-outlined animate-spin text-[24px] mb-1">sync</span>
+                                    <td colSpan={6} className="p-12 text-center text-[#76746E] font-mono uppercase text-xs tracking-wider">
+                                        <div className="w-6 h-6 border-2 border-[#D9381E] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                                         <p>Cargando cotizaciones...</p>
                                     </td>
                                 </tr>
                             ) : filteredQuotes.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="p-8 text-center text-gray-400">
-                                        <span className="material-symbols-outlined text-[32px] text-gray-500 mb-1">request_quote</span>
-                                        <p className="font-semibold">No se encontraron cotizaciones.</p>
-                                        <p className="text-[11px] text-gray-500 mt-1">Crea una nueva cotización para registrar prospectos de venta.</p>
+                                    <td colSpan={6} className="p-16 text-center text-[#76746E]">
+                                        <span className="material-symbols-outlined text-[36px] text-[#76746E]/40 mb-1">request_quote</span>
+                                        <p className="font-serif text-sm font-bold text-[#161616]">No se encontraron cotizaciones.</p>
+                                        <p className="text-xs text-[#76746E] mt-1">Crea una nueva cotización para registrar prospectos de venta.</p>
                                     </td>
                                 </tr>
                             ) : (
                                 filteredQuotes.map(q => {
                                     const parsedItems: QuoteItem[] = typeof q.items === 'string' ? JSON.parse(q.items) : (q.items || []);
                                     return (
-                                        <tr key={q.id} className="hover:bg-[#1a1c20]/60 transition-colors">
+                                        <tr key={q.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
                                             <td className="p-3.5">
-                                                <div className="font-bold text-white font-mono flex items-center gap-1.5">
-                                                    <span className="material-symbols-outlined text-amber-400 text-[16px]">receipt_long</span>
+                                                <div className="font-bold text-[#161616] font-mono flex items-center gap-1.5">
+                                                    <span className="material-symbols-outlined text-[#D9381E] text-[16px]">receipt_long</span>
                                                     {q.quote_number}
                                                 </div>
-                                                <span className="text-[10px] text-gray-400">{parsedItems.length} ítems cotizados</span>
+                                                <span className="text-[10px] text-[#76746E] font-mono">{parsedItems.length} ítems cotizados</span>
                                             </td>
 
                                             <td className="p-3.5">
-                                                <p className="font-bold text-white text-sm">{q.customer_name}</p>
+                                                <p className="font-serif font-bold text-[#161616] text-sm">{q.customer_name}</p>
                                                 <div className="flex items-center gap-2 mt-0.5 text-[11px]">
                                                     {q.customer_phone && (
                                                         <a
                                                             href={`https://wa.me/${q.customer_phone.replace(/[^0-9]/g, '')}`}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            className="text-green-400 hover:underline flex items-center gap-0.5 font-mono"
+                                                            className="text-[#137333] hover:underline flex items-center gap-0.5 font-mono font-bold"
                                                             title="Enviar WhatsApp al prospecto"
                                                         >
                                                             <span className="material-symbols-outlined text-[13px]">chat</span>
                                                             {q.customer_phone}
                                                         </a>
                                                     )}
-                                                    {q.customer_document && <span className="text-gray-400">• CC/NIT: {q.customer_document}</span>}
+                                                    {q.customer_document && <span className="text-[#76746E] font-mono">• CC/NIT: {q.customer_document}</span>}
                                                 </div>
                                             </td>
 
-                                            <td className="p-3.5 text-gray-300">
+                                            <td className="p-3.5 text-[#161616] font-mono">
                                                 <p>{new Date(q.created_at).toLocaleDateString('es-CO')}</p>
                                                 {q.valid_until && (
-                                                    <p className="text-[10px] text-amber-400/90 flex items-center gap-1 mt-0.5">
+                                                    <p className="text-[10px] text-[#D9381E] flex items-center gap-1 mt-0.5 font-bold">
                                                         <span className="material-symbols-outlined text-[12px]">schedule</span>
                                                         Vence: {new Date(q.valid_until).toLocaleDateString('es-CO')}
                                                     </p>
                                                 )}
                                             </td>
 
-                                            <td className="p-3.5">
-                                                <p className="font-extrabold text-emerald-400 text-sm font-mono">{formatCOP(q.total_amount)}</p>
+                                            <td className="p-3.5 font-mono font-bold text-sm text-[#161616]">
+                                                {formatCOP(q.total_amount)}
                                             </td>
 
                                             <td className="p-3.5 text-center">
-                                                {q.status === 'converted' ? (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                                {q.status === 'pending' && (
+                                                    <span className="px-2.5 py-1 bg-[#FEF7E0] text-[#B45309] border border-[#FDE68A] text-[9px] font-mono font-bold uppercase tracking-wider inline-flex items-center gap-1">
+                                                        <span className="material-symbols-outlined text-[13px]">hourglass_top</span>
+                                                        Pendiente
+                                                    </span>
+                                                )}
+                                                {q.status === 'converted' && (
+                                                    <span className="px-2.5 py-1 bg-[#E6F4EA] text-[#137333] border border-[#CEEAD6] text-[9px] font-mono font-bold uppercase tracking-wider inline-flex items-center gap-1">
                                                         <span className="material-symbols-outlined text-[13px]">check_circle</span>
-                                                        Facturada 🧾
+                                                        Facturada
                                                     </span>
-                                                ) : q.status === 'pending' ? (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                                                        <span className="material-symbols-outlined text-[13px]">pending</span>
-                                                        Cotizada / Pendiente
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                                )}
+                                                {q.status === 'expired' && (
+                                                    <span className="px-2.5 py-1 bg-[#FCE8E6] text-[#C5221F] border border-[#FAD2CF] text-[9px] font-mono font-bold uppercase tracking-wider inline-flex items-center gap-1">
                                                         <span className="material-symbols-outlined text-[13px]">cancel</span>
-                                                        Vencida / Cancelada
+                                                        Vencida
+                                                    </span>
+                                                )}
+                                                {q.status === 'cancelled' && (
+                                                    <span className="px-2.5 py-1 bg-[#FAF8F5] text-[#76746E] border border-[#E2DFD7] text-[9px] font-mono font-bold uppercase tracking-wider inline-flex items-center gap-1">
+                                                        <span className="material-symbols-outlined text-[13px]">cancel</span>
+                                                        Cancelada
                                                     </span>
                                                 )}
                                             </td>
@@ -508,18 +524,18 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                                     <button
                                                         type="button"
                                                         onClick={() => setConvertQuote(q)}
-                                                        className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg transition-all border-0 cursor-pointer shadow inline-flex items-center gap-1"
+                                                        className="px-2.5 py-1.5 bg-[#137333] hover:bg-[#0f5b28] text-white font-mono font-bold text-[10px] transition-colors border-0 cursor-pointer shadow-xs inline-flex items-center gap-1 rounded-none uppercase tracking-wider"
                                                         title="Convertir a Factura de Venta real"
                                                     >
                                                         <span className="material-symbols-outlined text-[14px]">point_of_sale</span>
-                                                        Convertir a Factura 🧾
+                                                        Facturar
                                                     </button>
                                                 )}
 
                                                 <button
                                                     type="button"
                                                     onClick={() => setViewQuote(q)}
-                                                    className="p-1.5 bg-[#222428] hover:bg-[#2c2f35] text-gray-200 rounded-lg transition border-0 cursor-pointer inline-flex items-center"
+                                                    className="p-1.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] rounded-none transition-colors cursor-pointer inline-flex items-center shadow-xs"
                                                     title="Ver e Imprimir Cotización"
                                                 >
                                                     <span className="material-symbols-outlined text-[16px]">visibility</span>
@@ -528,7 +544,7 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                                 <button
                                                     type="button"
                                                     onClick={() => handleDeleteQuote(q.id, q.quote_number)}
-                                                    className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition border-0 cursor-pointer inline-flex items-center"
+                                                    className="p-1.5 bg-white hover:bg-[#FCE8E6] text-[#C5221F] border border-[#E2DFD7] hover:border-[#FAD2CF] rounded-none transition-colors cursor-pointer inline-flex items-center shadow-xs"
                                                     title="Eliminar cotización"
                                                 >
                                                     <span className="material-symbols-outlined text-[16px]">delete</span>
@@ -545,76 +561,79 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
 
             {/* Modal: Crear Nueva Cotización */}
             {isCreateModalOpen && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
-                    <form onSubmit={handleCreateQuote} className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl max-w-3xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-[#2d3036] pb-3">
-                            <h3 className="font-extrabold text-base text-[#eab308] flex items-center gap-2" style={{ color: '#eab308' }}>
-                                <span className="material-symbols-outlined text-[22px]">request_quote</span>
-                                NUEVA COTIZACIÓN COMERCIAL
-                            </h3>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left animate-fade-in">
+                    <form onSubmit={handleCreateQuote} className="bg-[#F6F4EE] border border-[#161616] p-6 rounded-none max-w-3xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                            <div>
+                                <span className="text-[10px] font-mono tracking-widest text-[#D9381E] uppercase block font-bold">PROPUESTA COMERCIAL</span>
+                                <h3 className="font-serif text-xl font-bold text-[#161616] flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[#D9381E] text-[22px]">request_quote</span>
+                                    Nueva Cotización Comercial
+                                </h3>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => setIsCreateModalOpen(false)}
-                                className="p-1 hover:bg-[#222528] rounded-lg border-0 bg-transparent text-gray-400 cursor-pointer transition"
+                                className="p-1 hover:bg-[#EAE6DF] border-0 bg-transparent text-[#76746E] hover:text-[#161616] cursor-pointer transition"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
                         {/* Datos del Prospecto / Cliente */}
-                        <div className="bg-[#1c1e22] border border-[#2d3036] p-4 rounded-xl space-y-3">
-                            <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <div className="bg-white border border-[#E2DFD7] p-4 rounded-none space-y-3 shadow-xs">
+                            <h4 className="text-[11px] font-mono font-bold text-[#D9381E] uppercase tracking-wider flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[16px]">person_add</span>
                                 Datos del Cliente / Prospecto Comercial
                             </h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-[11px] text-gray-300 font-medium">Nombre Completo *</label>
+                                    <label className="text-[11px] text-[#76746E] font-medium font-mono uppercase">Nombre Completo *</label>
                                     <input
                                         type="text"
                                         required
                                         value={customerName}
                                         onChange={(e) => setCustomerName(e.target.value)}
                                         placeholder="Ej: Carlos Mendoza"
-                                        className="w-full bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none mt-1"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none mt-1"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[11px] text-gray-300 font-medium">Teléfono / WhatsApp *</label>
+                                    <label className="text-[11px] text-[#76746E] font-medium font-mono uppercase">Teléfono / WhatsApp *</label>
                                     <input
                                         type="text"
                                         value={customerPhone}
                                         onChange={(e) => setCustomerPhone(e.target.value)}
                                         placeholder="Ej: 3001234567"
-                                        className="w-full bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none mt-1 font-mono"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none mt-1 font-mono"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[11px] text-gray-300 font-medium">Cédula / NIT</label>
+                                    <label className="text-[11px] text-[#76746E] font-medium font-mono uppercase">Cédula / NIT</label>
                                     <input
                                         type="text"
                                         value={customerDocument}
                                         onChange={(e) => setCustomerDocument(e.target.value)}
                                         placeholder="Ej: 1098765432"
-                                        className="w-full bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none mt-1 font-mono"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none mt-1 font-mono"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[11px] text-gray-300 font-medium">Correo Electrónico</label>
+                                    <label className="text-[11px] text-[#76746E] font-medium font-mono uppercase">Correo Electrónico</label>
                                     <input
                                         type="email"
                                         value={customerEmail}
                                         onChange={(e) => setCustomerEmail(e.target.value)}
                                         placeholder="cliente@ejemplo.com"
-                                        className="w-full bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none mt-1"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none mt-1"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         {/* Agregar Ítems */}
-                        <div className="bg-[#1c1e22] border border-[#2d3036] p-4 rounded-xl space-y-3">
-                            <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <div className="bg-white border border-[#E2DFD7] p-4 rounded-none space-y-3 shadow-xs">
+                            <h4 className="text-[11px] font-mono font-bold text-[#D9381E] uppercase tracking-wider flex items-center gap-1.5">
                                 <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
                                 Seleccionar Productos / Servicios
                             </h4>
@@ -622,9 +641,9 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                             <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
                                 {/* Buscador de producto por Nombre / SKU */}
                                 <div className="sm:col-span-5 relative">
-                                    <label className="text-[10px] text-gray-400 font-bold">Buscar Artículo / Servicio (Nombre o SKU)</label>
+                                    <label className="text-[10px] text-[#76746E] font-mono font-bold uppercase">Buscar Artículo / Servicio</label>
                                     <div className="relative mt-1">
-                                        <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[14px] pointer-events-none">search</span>
+                                        <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[#76746E] text-[14px] pointer-events-none">search</span>
                                         <input
                                             type="text"
                                             placeholder={products.length === 0 ? "Escribe o busca..." : `Buscar entre ${products.length} productos o SKU...`}
@@ -636,8 +655,8 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                                     setSelectedProdName('');
                                                 }
                                             }}
-                                            className={`w-full bg-[#141517] border rounded-lg pl-8 pr-7 py-2 text-xs text-white focus:border-[#eab308] outline-none transition ${
-                                                selectedProdId ? 'border-[#eab308]/60 bg-[#eab308]/10 font-bold' : 'border-[#2d3036]'
+                                            className={`w-full bg-[#FAF8F5] border rounded-none pl-8 pr-7 py-2 text-xs text-[#161616] focus:border-[#161616] outline-none transition ${
+                                                selectedProdId ? 'border-[#161616] bg-white font-bold' : 'border-[#E2DFD7]'
                                             }`}
                                             autoComplete="off"
                                         />
@@ -645,7 +664,7 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                             <button
                                                 type="button"
                                                 onClick={() => { setProdSearchInput(''); setSelectedProdId(''); setSelectedProdName(''); setAddCustomPrice(''); }}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-400 border-0 bg-transparent p-0 cursor-pointer"
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#76746E] hover:text-[#C5221F] border-0 bg-transparent p-0 cursor-pointer"
                                             >
                                                 <span className="material-symbols-outlined text-[14px]">close</span>
                                             </button>
@@ -659,9 +678,9 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                             (p.sku && p.sku.toLowerCase().includes(q))
                                         ).slice(0, 8);
                                         return (
-                                            <div className="absolute left-0 right-0 top-full mt-1 bg-[#1c1e22] border border-[#2d3036] rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto">
+                                            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#161616] rounded-none shadow-2xl z-50 max-h-52 overflow-y-auto">
                                                 {suggestions.length === 0 ? (
-                                                    <div className="p-3 text-xs text-gray-400 italic text-center">No hay productos con ese término. Presiona Agregar para crearlo como ítem libre.</div>
+                                                    <div className="p-3 text-xs text-[#76746E] italic text-center">No hay productos con ese término. Presiona Agregar para crearlo como ítem libre.</div>
                                                 ) : (
                                                     suggestions.map(p => (
                                                         <button
@@ -674,13 +693,13 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                                                 setProdSearchInput(p.name);
                                                                 setAddCustomPrice(parseFloat(p.price || '0'));
                                                             }}
-                                                            className="w-full text-left px-3 py-2 hover:bg-[#eab308]/15 flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent border-b border-[#2d3036]/40 last:border-0"
+                                                            className="w-full text-left px-3 py-2 hover:bg-[#FAF8F5] flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent border-b border-[#E2DFD7] last:border-0"
                                                         >
                                                             <div>
-                                                                <p className="text-xs font-semibold text-white">{p.name}</p>
-                                                                <p className="text-[10px] text-gray-400">{p.sku ? `SKU: ${p.sku} • ` : ''}Stock: {p.stock}</p>
+                                                                <p className="text-xs font-semibold text-[#161616]">{p.name}</p>
+                                                                <p className="text-[10px] text-[#76746E] font-mono">{p.sku ? `SKU: ${p.sku} • ` : ''}Stock: {p.stock}</p>
                                                             </div>
-                                                            <span className="text-xs font-bold text-amber-400 font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
+                                                            <span className="text-xs font-bold text-[#D9381E] font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
                                                         </button>
                                                     ))
                                                 )}
@@ -691,38 +710,38 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
 
                                 {/* Precio Unitario editable */}
                                 <div className="sm:col-span-3">
-                                    <label className="text-[10px] text-gray-400 font-bold">Precio Unit. ($)</label>
+                                    <label className="text-[10px] text-[#76746E] font-mono font-bold uppercase">Precio Unit. ($)</label>
                                     <input
                                         type="number"
                                         placeholder="0"
                                         value={addCustomPrice}
                                         onChange={(e) => setAddCustomPrice(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                                        className="w-full bg-[#141517] border border-[#2d3036] rounded-lg p-2 text-xs text-white text-right font-mono font-bold focus:border-[#eab308] outline-none mt-1"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] text-right font-mono font-bold focus:border-[#161616] outline-none mt-1"
                                     />
                                 </div>
 
                                 {/* Cantidad */}
                                 <div className="sm:col-span-2">
-                                    <label className="text-[10px] text-gray-400 font-bold">Cant.</label>
+                                    <label className="text-[10px] text-[#76746E] font-mono font-bold uppercase">Cant.</label>
                                     <input
                                         type="number"
                                         min="1"
                                         value={addQty}
                                         onChange={(e) => setAddQty(parseInt(e.target.value) || 1)}
-                                        className="w-full bg-[#141517] border border-[#2d3036] rounded-lg p-2 text-xs text-white text-center font-mono font-bold mt-1 focus:border-[#eab308] outline-none"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] text-center font-mono font-bold mt-1 focus:border-[#161616] outline-none"
                                     />
                                 </div>
 
                                 {/* Desc % */}
                                 <div className="sm:col-span-2">
-                                    <label className="text-[10px] text-gray-400 font-bold">% Desc.</label>
+                                    <label className="text-[10px] text-[#76746E] font-mono font-bold uppercase">% Desc.</label>
                                     <input
                                         type="number"
                                         min="0"
                                         max="100"
                                         value={addDiscountPct}
                                         onChange={(e) => setAddDiscountPct(parseFloat(e.target.value) || 0)}
-                                        className="w-full bg-[#141517] border border-[#2d3036] rounded-lg p-2 text-xs text-white text-center font-mono mt-1 focus:border-[#eab308] outline-none"
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] text-center font-mono mt-1 focus:border-[#161616] outline-none"
                                     />
                                 </div>
                             </div>
@@ -733,18 +752,18 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                     type="button"
                                     onClick={handleAddLineItem}
                                     disabled={!selectedProdId && !prodSearchInput.trim()}
-                                    className="bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-xs py-2 px-4 rounded-lg transition-all border-0 cursor-pointer disabled:opacity-40 flex items-center gap-1.5 shadow-sm"
+                                    className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] font-mono font-bold text-xs py-2 px-4 rounded-none transition-colors cursor-pointer disabled:opacity-40 flex items-center gap-1.5 shadow-xs uppercase tracking-wider"
                                 >
-                                    <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                                    + AGREGAR ÍTEM A COTIZACIÓN
+                                    <span className="material-symbols-outlined text-[16px] text-[#D9381E]">add_circle</span>
+                                    + Agregar Ítem a Cotización
                                 </button>
                             </div>
 
                             {/* Lista de Ítems Agregados con edición en línea */}
                             {lineItems.length > 0 && (
-                                <div className="mt-3 border border-[#2d3036] rounded-lg overflow-hidden">
+                                <div className="mt-3 border border-[#E2DFD7] rounded-none overflow-hidden">
                                     <table className="w-full text-left text-xs">
-                                        <thead className="bg-[#141517] text-gray-400 font-bold uppercase border-b border-[#2d3036]">
+                                        <thead className="bg-[#FAF8F5] text-[#76746E] font-mono font-bold uppercase border-b border-[#E2DFD7] text-[10px]">
                                             <tr>
                                                 <th className="p-2">Ítem</th>
                                                 <th className="p-2 text-center">Cant</th>
@@ -754,12 +773,12 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                                 <th className="p-2 text-center"></th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-[#2d3036]">
+                                        <tbody className="divide-y divide-[#E2DFD7]">
                                             {lineItems.map((item, idx) => (
-                                                <tr key={idx} className="hover:bg-[#141517]/50">
-                                                    <td className="p-2 font-semibold text-white">
+                                                <tr key={idx} className="hover:bg-[#FAF8F5]/60">
+                                                    <td className="p-2 font-semibold text-[#161616]">
                                                         {item.name}
-                                                        {item.sku ? <span className="text-[10px] text-gray-400 font-mono ml-1">({item.sku})</span> : null}
+                                                        {item.sku ? <span className="text-[10px] text-[#76746E] font-mono ml-1">({item.sku})</span> : null}
                                                     </td>
                                                     <td className="p-2 text-center">
                                                         <input
@@ -776,7 +795,7 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                                                     return copy;
                                                                 });
                                                             }}
-                                                            className="w-16 bg-[#141517] border border-[#2d3036] rounded px-1.5 py-1 text-xs text-white text-center font-mono font-bold focus:border-[#eab308] outline-none"
+                                                            className="w-16 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none px-1.5 py-1 text-xs text-[#161616] text-center font-mono font-bold focus:border-[#161616] outline-none"
                                                         />
                                                     </td>
                                                     <td className="p-2 text-right">
@@ -794,7 +813,7 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                                                     return copy;
                                                                 });
                                                             }}
-                                                            className="w-24 bg-[#141517] border border-[#2d3036] rounded px-1.5 py-1 text-xs text-white text-right font-mono font-bold focus:border-[#eab308] outline-none"
+                                                            className="w-24 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none px-1.5 py-1 text-xs text-[#161616] text-right font-mono font-bold focus:border-[#161616] outline-none"
                                                         />
                                                     </td>
                                                     <td className="p-2 text-center">
@@ -812,15 +831,15 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                                                     return copy;
                                                                 });
                                                             }}
-                                                            className="w-16 bg-[#141517] border border-[#2d3036] rounded px-1.5 py-1 text-xs text-amber-400 text-center font-mono focus:border-[#eab308] outline-none"
+                                                            className="w-16 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none px-1.5 py-1 text-xs text-[#D9381E] text-center font-mono focus:border-[#161616] outline-none"
                                                         />
                                                     </td>
-                                                    <td className="p-2 text-right font-mono font-bold text-emerald-400">{formatCOP(item.subtotal)}</td>
+                                                    <td className="p-2 text-right font-mono font-bold text-[#161616]">{formatCOP(item.subtotal)}</td>
                                                     <td className="p-2 text-center">
                                                         <button
                                                             type="button"
                                                             onClick={() => handleRemoveLineItem(idx)}
-                                                            className="text-rose-400 hover:text-rose-300 bg-transparent border-0 cursor-pointer p-1"
+                                                            className="text-[#C5221F] hover:text-[#900] bg-transparent border-0 cursor-pointer p-1"
                                                             title="Eliminar ítem"
                                                         >
                                                             <span className="material-symbols-outlined text-[16px]">close</span>
@@ -837,11 +856,11 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                         {/* Validez & Notas */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[11px] text-gray-300 font-medium">Días de Validez de Oferta</label>
+                                <label className="text-[11px] text-[#76746E] font-mono font-medium uppercase">Días de Validez de Oferta</label>
                                 <select
                                     value={validDays}
                                     onChange={(e) => setValidDays(parseInt(e.target.value))}
-                                    className="w-full bg-[#1c1e22] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none mt-1"
+                                    className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none mt-1 font-mono"
                                 >
                                     <option value={7}>7 Días</option>
                                     <option value={15}>15 Días (Recomendado)</option>
@@ -850,37 +869,37 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                             </div>
 
                             <div>
-                                <label className="text-[11px] text-gray-300 font-medium">Asesor Comercial</label>
+                                <label className="text-[11px] text-[#76746E] font-mono font-medium uppercase">Asesor Comercial</label>
                                 <input
                                     type="text"
                                     value={sellerName}
                                     onChange={(e) => setSellerName(e.target.value)}
-                                    className="w-full bg-[#1c1e22] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none mt-1"
+                                    className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none mt-1"
                                 />
                             </div>
                         </div>
 
                         {/* Resumen Total */}
-                        <div className="bg-[#1c1e22] p-4 rounded-xl border border-[#2d3036] flex justify-between items-center">
-                            <span className="text-xs font-bold uppercase text-gray-400">TOTAL COTIZADO</span>
-                            <span className="text-2xl font-extrabold text-emerald-400 font-mono">{formatCOP(calcTotal)}</span>
+                        <div className="bg-white p-4 rounded-none border border-[#E2DFD7] flex justify-between items-center shadow-xs">
+                            <span className="text-xs font-mono font-bold uppercase text-[#76746E]">TOTAL COTIZADO</span>
+                            <span className="text-2xl font-bold text-[#D9381E] font-mono">{formatCOP(calcTotal)}</span>
                         </div>
 
                         {/* Botones de acción */}
-                        <div className="flex justify-end gap-3 pt-3 border-t border-[#2d3036]">
+                        <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
                             <button
                                 type="button"
                                 onClick={() => setIsCreateModalOpen(false)}
-                                className="px-4 py-2 bg-transparent hover:bg-[#222528] text-gray-300 text-xs font-bold rounded-lg border border-[#2d3036] cursor-pointer"
+                                className="px-4 py-2 bg-white hover:bg-[#FAF8F5] text-[#161616] text-xs font-mono font-bold rounded-none border border-[#E2DFD7] cursor-pointer uppercase tracking-wider"
                             >
                                 Cancelar
                             </button>
                             <button
                                 type="submit"
-                                className="px-5 py-2.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-xs rounded-lg transition-all border-0 cursor-pointer shadow-md flex items-center gap-1.5"
+                                className="px-5 py-2.5 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold text-xs rounded-none transition-colors border-0 cursor-pointer shadow-xs flex items-center gap-1.5 uppercase tracking-wider"
                             >
                                 <span className="material-symbols-outlined text-[18px]">send</span>
-                                GENERAR Y GUARDAR COTIZACIÓN
+                                Generar Cotización
                             </button>
                         </div>
                     </form>
@@ -890,50 +909,53 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
 
             {/* Modal: Convertir a Factura */}
             {convertQuote && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
-                    <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4">
-                        <div className="flex justify-between items-center border-b border-[#2d3036] pb-3">
-                            <h3 className="font-extrabold text-base text-emerald-400 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[22px]">point_of_sale</span>
-                                CONVERTIR COTIZACIÓN EN FACTURA 🧾
-                            </h3>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left animate-fade-in">
+                    <div className="bg-[#F6F4EE] border border-[#161616] p-6 rounded-none max-w-md w-full shadow-2xl space-y-4">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                            <div>
+                                <span className="text-[10px] font-mono tracking-widest text-[#137333] uppercase block font-bold">FACTURACIÓN RÁPIDA</span>
+                                <h3 className="font-serif text-lg font-bold text-[#161616] flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[#137333] text-[22px]">point_of_sale</span>
+                                    Convertir Cotización en Factura
+                                </h3>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => setConvertQuote(null)}
-                                className="p-1 hover:bg-[#222528] rounded-lg border-0 bg-transparent text-gray-400 cursor-pointer transition"
+                                className="p-1 hover:bg-[#EAE6DF] border-0 bg-transparent text-[#76746E] hover:text-[#161616] cursor-pointer transition"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
-                        <div className="bg-[#1c1e22] p-3 rounded-xl border border-[#2d3036] text-xs space-y-1">
-                            <p className="text-white font-bold">{convertQuote.quote_number} - {convertQuote.customer_name}</p>
-                            <p className="text-gray-400">Total a facturar: <strong className="text-emerald-400 text-sm font-mono">{formatCOP(convertQuote.total_amount)}</strong></p>
+                        <div className="bg-white p-3.5 rounded-none border border-[#E2DFD7] text-xs space-y-1 shadow-xs">
+                            <p className="text-[#161616] font-bold font-serif">{convertQuote.quote_number} - {convertQuote.customer_name}</p>
+                            <p className="text-[#76746E]">Total a facturar: <strong className="text-[#161616] text-sm font-mono">{formatCOP(convertQuote.total_amount)}</strong></p>
                         </div>
 
                         <div>
-                            <label className="text-xs font-bold text-gray-300 uppercase">Método de Pago *</label>
+                            <label className="text-xs font-mono font-bold text-[#76746E] uppercase tracking-wider block mb-1">Método de Pago *</label>
                             <select
                                 value={convertPaymentMethod}
                                 onChange={(e) => setConvertPaymentMethod(e.target.value as any)}
-                                className="w-full bg-[#1c1e22] border border-[#2d3036] rounded-lg p-3 text-xs text-white focus:border-emerald-400 outline-none mt-1 font-bold"
+                                className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] focus:border-[#161616] outline-none font-mono font-bold"
                             >
                                 <option value="efectivo">Efectivo 💵</option>
-                                <option value="transferencia">Transferencia Bancaria / Nequi / Daviplata 📲</option>
-                                <option value="tarjeta">Datafono / Tarjeta 💳</option>
+                                <option value="transferencia">Transferencia / Nequi / Daviplata 📲</option>
+                                <option value="tarjeta">Datáfono / Tarjeta 💳</option>
                                 <option value="credito">Crédito / Cuotas 🤝</option>
                             </select>
                         </div>
 
-                        <p className="text-[11px] text-amber-400/90 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
-                            ℹ️ Al confirmar, el sistema creará la Factura de Venta oficial, descontará el stock de inventario y actualizará al prospecto a <strong>Cliente Activo</strong> en el CRM.
+                        <p className="text-[11px] text-[#B45309] bg-[#FEF7E0] p-3 rounded-none border border-[#FDE68A] leading-relaxed">
+                            ℹ️ Al confirmar, el sistema creará la Factura de Venta oficial, descontará el stock de inventario y registrará al cliente.
                         </p>
 
-                        <div className="flex justify-end gap-3 pt-3 border-t border-[#2d3036]">
+                        <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
                             <button
                                 type="button"
                                 onClick={() => setConvertQuote(null)}
-                                className="px-4 py-2 bg-transparent hover:bg-[#222528] text-gray-300 text-xs font-bold rounded-lg border border-[#2d3036] cursor-pointer"
+                                className="px-4 py-2 bg-white hover:bg-[#FAF8F5] text-[#161616] text-xs font-mono font-bold rounded-none border border-[#E2DFD7] cursor-pointer uppercase tracking-wider"
                             >
                                 Cancelar
                             </button>
@@ -941,10 +963,10 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                 type="button"
                                 onClick={handleExecuteConvert}
                                 disabled={converting}
-                                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-lg transition-all border-0 cursor-pointer shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                                className="px-5 py-2 bg-[#137333] hover:bg-[#0f5b28] text-white font-mono font-bold text-xs rounded-none transition-colors border-0 cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5 uppercase tracking-wider"
                             >
                                 <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                                {converting ? 'Facturando...' : 'CONFIRMAR Y FACTURAR'}
+                                {converting ? 'Facturando...' : 'Confirmar Factura'}
                             </button>
                         </div>
                     </div>
@@ -954,89 +976,92 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
 
             {/* Modal: Vista e Impresión de Cotización */}
             {viewQuote && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
-                    <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl max-w-2xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                        <div className="flex justify-between items-center border-b border-[#2d3036] pb-3">
-                            <h3 className="font-extrabold text-base text-[#eab308] flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[22px]">description</span>
-                                COTIZACIÓN {viewQuote.quote_number}
-                            </h3>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left animate-fade-in">
+                    <div className="bg-[#F6F4EE] border border-[#161616] p-6 rounded-none max-w-2xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                            <div>
+                                <span className="text-[10px] font-mono tracking-widest text-[#D9381E] uppercase block font-bold">VISTA DE DOCUMENTO</span>
+                                <h3 className="font-serif text-xl font-bold text-[#161616] flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[#D9381E] text-[22px]">description</span>
+                                    Cotización {viewQuote.quote_number}
+                                </h3>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => setViewQuote(null)}
-                                className="p-1 hover:bg-[#222528] rounded-lg border-0 bg-transparent text-gray-400 cursor-pointer transition"
+                                className="p-1 hover:bg-[#EAE6DF] border-0 bg-transparent text-[#76746E] hover:text-[#161616] cursor-pointer transition"
                             >
                                 <span className="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         </div>
 
-                        {/* Vista Imprimible / Ticket elegante */}
-                        <div className="bg-[#1c1e22] p-5 rounded-xl border border-[#2d3036] space-y-4 text-xs">
-                            <div className="flex justify-between items-start border-b border-[#2d3036] pb-3">
+                        {/* Vista Imprimible / Ticket elegante Wabi-Sabi */}
+                        <div className="bg-white p-5 rounded-none border border-[#E2DFD7] space-y-4 text-xs shadow-xs">
+                            <div className="flex justify-between items-start border-b border-[#E2DFD7] pb-3">
                                 <div>
-                                    <h4 className="font-bold text-sm text-white">{viewQuote.customer_name}</h4>
-                                    <p className="text-gray-400">Tel: {viewQuote.customer_phone || 'N/A'}</p>
-                                    <p className="text-gray-400">CC/NIT: {viewQuote.customer_document || 'N/A'}</p>
+                                    <h4 className="font-serif font-bold text-sm text-[#161616]">{viewQuote.customer_name}</h4>
+                                    <p className="text-[#76746E] font-mono">Tel: {viewQuote.customer_phone || 'N/A'}</p>
+                                    <p className="text-[#76746E] font-mono">CC/NIT: {viewQuote.customer_document || 'N/A'}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-mono text-amber-400 font-bold">{viewQuote.quote_number}</p>
-                                    <p className="text-gray-400">{new Date(viewQuote.created_at).toLocaleDateString('es-CO')}</p>
-                                    <p className="text-gray-400">Asesor: {viewQuote.seller_name || 'Óptica'}</p>
+                                    <p className="font-mono text-[#D9381E] font-bold">{viewQuote.quote_number}</p>
+                                    <p className="text-[#76746E] font-mono">{new Date(viewQuote.created_at).toLocaleDateString('es-CO')}</p>
+                                    <p className="text-[#76746E]">Asesor: {viewQuote.seller_name || 'Comercial'}</p>
                                 </div>
                             </div>
 
                             <table className="w-full text-left text-xs">
-                                <thead className="text-gray-400 border-b border-[#2d3036]">
+                                <thead className="text-[#76746E] font-mono uppercase text-[10px] border-b border-[#E2DFD7]">
                                     <tr>
-                                        <th className="py-1">Ítem</th>
-                                        <th className="py-1 text-center">Cant</th>
-                                        <th className="py-1 text-right">Precio Unit</th>
-                                        <th className="py-1 text-right">Subtotal</th>
+                                        <th className="py-1.5">Ítem</th>
+                                        <th className="py-1.5 text-center">Cant</th>
+                                        <th className="py-1.5 text-right">Precio Unit</th>
+                                        <th className="py-1.5 text-right">Subtotal</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#2d3036]/50">
+                                <tbody className="divide-y divide-[#E2DFD7]">
                                     {(typeof viewQuote.items === 'string' ? JSON.parse(viewQuote.items) : (viewQuote.items || [])).map((it: QuoteItem, idx: number) => (
                                         <tr key={idx}>
-                                            <td className="py-2 text-white">{it.name}</td>
+                                            <td className="py-2 text-[#161616] font-medium">{it.name}</td>
                                             <td className="py-2 text-center font-mono">{it.quantity}</td>
                                             <td className="py-2 text-right font-mono">{formatCOP(it.unit_price)}</td>
-                                            <td className="py-2 text-right font-mono font-bold text-emerald-400">{formatCOP(it.subtotal)}</td>
+                                            <td className="py-2 text-right font-mono font-bold text-[#161616]">{formatCOP(it.subtotal)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
 
-                            <div className="border-t border-[#2d3036] pt-3 flex justify-between items-center text-sm">
-                                <span className="font-bold text-gray-300">TOTAL</span>
-                                <span className="font-extrabold text-emerald-400 font-mono text-lg">{formatCOP(viewQuote.total_amount)}</span>
+                            <div className="border-t border-[#E2DFD7] pt-3 flex justify-between items-center text-sm">
+                                <span className="font-mono font-bold uppercase text-[#76746E]">TOTAL</span>
+                                <span className="font-bold text-[#D9381E] font-mono text-lg">{formatCOP(viewQuote.total_amount)}</span>
                             </div>
 
                             {viewQuote.notes && (
-                                <div className="bg-[#141517] p-2.5 rounded-lg border border-[#2d3036] text-[11px] text-gray-400">
+                                <div className="bg-[#FAF8F5] p-2.5 rounded-none border border-[#E2DFD7] text-[11px] text-[#76746E]">
                                     📌 {viewQuote.notes}
                                 </div>
                             )}
                         </div>
 
-                        <div className="flex justify-end gap-3">
+                        <div className="flex justify-end gap-2.5">
                             {viewQuote.customer_phone && (
                                 <a
                                     href={`https://wa.me/${viewQuote.customer_phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola ${viewQuote.customer_name}, te enviamos la cotización ${viewQuote.quote_number} por un valor de ${formatCOP(viewQuote.total_amount)}. ¡Quedamos atentos a tus comentarios!`)}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold text-xs rounded-lg transition-all inline-flex items-center gap-1.5"
+                                    className="px-4 py-2 bg-[#137333] hover:bg-[#0f5b28] text-white font-mono font-bold text-xs rounded-none transition-colors inline-flex items-center gap-1.5 uppercase tracking-wider"
                                 >
                                     <span className="material-symbols-outlined text-[16px]">chat</span>
-                                    Compartir por WhatsApp
+                                    WhatsApp
                                 </a>
                             )}
                             <button
                                 type="button"
                                 onClick={() => window.print()}
-                                className="px-4 py-2 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-xs rounded-lg transition-all border-0 cursor-pointer flex items-center gap-1.5"
+                                className="px-4 py-2 bg-[#161616] hover:bg-[#2c2f35] text-[#F6F4EE] font-mono font-bold text-xs rounded-none transition-colors border-0 cursor-pointer flex items-center gap-1.5 uppercase tracking-wider"
                             >
                                 <span className="material-symbols-outlined text-[16px]">print</span>
-                                Imprimir Cotización
+                                Imprimir
                             </button>
                         </div>
                     </div>

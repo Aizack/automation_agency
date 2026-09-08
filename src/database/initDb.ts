@@ -762,11 +762,17 @@ export const initDatabase = async () => {
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS parent_client_id VARCHAR(50) REFERENCES clients(id) ON DELETE CASCADE;
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS branch_name VARCHAR(150);
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_main_branch BOOLEAN DEFAULT true;
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS has_custom_tax_id BOOLEAN DEFAULT false;
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS legal_name VARCHAR(200);
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS custom_tax_id VARCHAR(50);
+            ALTER TABLE employees ADD COLUMN IF NOT EXISTS allowed_branches JSONB DEFAULT '[]'::jsonb;
             ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;
 
             CREATE TABLE IF NOT EXISTS employee_branch_transfers (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+                from_client_id VARCHAR(50) REFERENCES clients(id),
+                to_client_id VARCHAR(50) REFERENCES clients(id),
                 transferred_by_user_name VARCHAR(150) NOT NULL,
                 reason TEXT,
                 transferred_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

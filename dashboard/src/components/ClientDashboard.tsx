@@ -120,7 +120,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     return 'configuracion';
   };
 
-  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'dian_habilitacion' | 'cotizaciones' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(() => {
+  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'dian_habilitacion' | 'nueva_sede' | 'cotizaciones' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(() => {
     const saved = localStorage.getItem('client_active_tab');
     if (saved) return saved as any;
     return getDefaultTab();
@@ -147,7 +147,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   };
 
   useEffect(() => {
-    if (['configuracion', 'dian_habilitacion'].includes(activeTab)) {
+    if (['configuracion', 'dian_habilitacion', 'nueva_sede'].includes(activeTab)) {
       setOpenSubMenus(prev => ({ ...prev, empresa: true }));
     } else if (activeTab === 'resumen') {
       setOpenSubMenus(prev => ({ ...prev, agente_ia: true }));
@@ -261,11 +261,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
   // Estados para Módulo Multi-Sede & Selector de Sucursales
   const [branches, setBranches] = useState<any[]>([]);
-  const [isAddBranchModalOpen, setIsAddBranchModalOpen] = useState(false);
   const [branchNameInput, setBranchNameInput] = useState('');
   const [branchCompanyInput, setBranchCompanyInput] = useState('');
   const [branchPhoneInput, setBranchPhoneInput] = useState('');
   const [branchAddressInput, setBranchAddressInput] = useState('');
+  const [hasCustomTaxIdInput, setHasCustomTaxIdInput] = useState(false);
+  const [legalNameInput, setLegalNameInput] = useState('');
+  const [customTaxIdInput, setCustomTaxIdInput] = useState('');
   const [savingBranch, setSavingBranch] = useState(false);
 
   const fetchBranches = async () => {
@@ -946,7 +948,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           {hasPermission('settings') && (
             <div className="nav-item">
               <button 
-                className={`nav-item-btn ${['configuracion', 'dian_habilitacion'].includes(activeTab) ? 'active' : ''}`} 
+                className={`nav-item-btn ${['configuracion', 'dian_habilitacion', 'nueva_sede'].includes(activeTab) ? 'active' : ''}`} 
                 onClick={() => toggleSubMenu('empresa')}
               >
                 <svg className="nav-icon" viewBox="0 0 24 24"><polygon points="12,2 19,7 19,17 12,22 5,17 5,7"/></svg>
@@ -976,8 +978,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 )}
                 <li>
                   <button 
-                    onClick={() => setIsAddBranchModalOpen(true)} 
-                    className="text-[#D9381E] font-bold"
+                    onClick={() => setActiveTab('nueva_sede')} 
+                    className={activeTab === 'nueva_sede' ? 'active-link font-bold text-[#D9381E]' : 'text-[#D9381E] font-bold'}
                   >
                     + Nueva Sede
                   </button>
@@ -991,7 +993,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             <div className="nav-item">
               <button 
                 className={`nav-item-btn ${activeTab === 'resumen' ? 'active' : ''}`}
-                onClick={() => toggleSubMenu('agente_ia')}
+                onClick={() => setActiveTab('resumen')}
               >
                 <svg className="nav-icon" viewBox="0 0 24 24">
                   <rect x="4" y="4" width="16" height="16" rx="2"/>
@@ -1001,23 +1003,60 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 </svg>
                 <span className="nav-text">
                   <span>Configuración Agente IA</span>
-                  <span className={`caret-arrow ${openSubMenus.agente_ia ? 'open' : ''}`}>▾</span>
                 </span>
               </button>
-              <ul className={`sub-menu ${openSubMenus.agente_ia ? 'open' : ''}`}>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('resumen')} 
-                    className={activeTab === 'resumen' ? 'active-link' : ''}
-                  >
-                    Configuración Agente IA
-                  </button>
-                </li>
+            </div>
+          )}
+
+          {/* 3. Logística & Stock */}
+          {(hasPermission('inventory') || hasPermission('lab') || hasPermission('domicilios')) && (
+            <div className="nav-item">
+              <button 
+                className={`nav-item-btn ${['inventario', 'lab_jobs', 'domicilios'].includes(activeTab) ? 'active' : ''}`} 
+                onClick={() => toggleSubMenu('logistica')}
+              >
+                <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <span className="nav-text">
+                  <span>Logística & Stock</span> 
+                  <span className={`caret-arrow ${openSubMenus.logistica ? 'open' : ''}`}>▾</span>
+                </span>
+              </button>
+              <ul className={`sub-menu ${openSubMenus.logistica ? 'open' : ''}`}>
+                {hasPermission('inventory') && clientData?.enabledModules?.inventory !== false && clientData?.category !== 'restaurante' && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('inventario')} 
+                      className={activeTab === 'inventario' ? 'active-link' : ''}
+                    >
+                      Inventario de Productos
+                    </button>
+                  </li>
+                )}
+                {hasPermission('lab') && clientData?.category === 'optica' && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('lab_jobs')} 
+                      className={activeTab === 'lab_jobs' ? 'active-link' : ''}
+                    >
+                      Trabajos de Laboratorio
+                    </button>
+                  </li>
+                )}
+                {hasPermission('domicilios') && clientData?.enabledModules?.billing !== false && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('domicilios')} 
+                      className={activeTab === 'domicilios' ? 'active-link' : ''}
+                    >
+                      Despachos y Domicilios
+                    </button>
+                  </li>
+                )}
               </ul>
             </div>
           )}
 
-          {/* 3. Facturación (Separado) */}
+          {/* 4. Facturación */}
           {(hasPermission('billing') || hasPermission('cartera') || hasPermission('cotizaciones') || hasPermission('documentos_soporte') || hasPermission('arqueo_caja')) && (
             <div className="nav-item">
               <button 
@@ -1095,7 +1134,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           )}
 
-          {/* 4. Finanzas (Separado) */}
+          {/* 5. Finanzas */}
           {(hasPermission('contabilidad') || hasPermission('settings')) && (
             <div className="nav-item">
               <button 
@@ -1145,54 +1184,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                       className={activeTab === 'planeacion_empresarial' ? 'active-link' : ''}
                     >
                       Planeación Empresarial
-                    </button>
-                  </li>
-                )}
-              </ul>
-            </div>
-          )}
-
-          {/* 5. Logística & Stock */}
-          {(hasPermission('inventory') || hasPermission('lab') || hasPermission('domicilios')) && (
-            <div className="nav-item">
-              <button 
-                className={`nav-item-btn ${['inventario', 'lab_jobs', 'domicilios'].includes(activeTab) ? 'active' : ''}`} 
-                onClick={() => toggleSubMenu('logistica')}
-              >
-                <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                <span className="nav-text">
-                  <span>Logística & Stock</span> 
-                  <span className={`caret-arrow ${openSubMenus.logistica ? 'open' : ''}`}>▾</span>
-                </span>
-              </button>
-              <ul className={`sub-menu ${openSubMenus.logistica ? 'open' : ''}`}>
-                {hasPermission('inventory') && clientData?.enabledModules?.inventory !== false && clientData?.category !== 'restaurante' && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('inventario')} 
-                      className={activeTab === 'inventario' ? 'active-link' : ''}
-                    >
-                      Inventario de Productos
-                    </button>
-                  </li>
-                )}
-                {hasPermission('lab') && clientData?.category === 'optica' && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('lab_jobs')} 
-                      className={activeTab === 'lab_jobs' ? 'active-link' : ''}
-                    >
-                      Trabajos de Laboratorio
-                    </button>
-                  </li>
-                )}
-                {hasPermission('domicilios') && clientData?.enabledModules?.billing !== false && (
-                  <li>
-                    <button 
-                      onClick={() => setActiveTab('domicilios')} 
-                      className={activeTab === 'domicilios' ? 'active-link' : ''}
-                    >
-                      Despachos y Domicilios
                     </button>
                   </li>
                 )}
@@ -1647,36 +1638,40 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         )}
 
         {activeTab === 'inventario' && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="flex flex-wrap gap-2 p-1 bg-surface-container-high rounded-xl border border-outline/10 self-start inline-flex">
+          <div className="animate-fade-in space-y-6">
+            {/* Pestañas de Navegación de Inventario - Wabi-Sabi */}
+            <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-[#E2DFD7]">
               <button 
+                type="button"
                 onClick={() => setInventorySubTab('catalog')}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border-0 ${
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 rounded-none border ${
                   inventorySubTab === 'catalog' 
-                    ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' 
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40 bg-transparent'
+                    ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
+                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616] hover:border-[#161616]'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">inventory_2</span>
                 Catálogo de Inventario
               </button>
               <button 
+                type="button"
                 onClick={() => setInventorySubTab('purchase-orders')}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border-0 ${
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 rounded-none border ${
                   inventorySubTab === 'purchase-orders' 
-                    ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' 
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40 bg-transparent'
+                    ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
+                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616] hover:border-[#161616]'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">receipt_long</span>
                 Órdenes de Compra
               </button>
               <button 
+                type="button"
                 onClick={() => setInventorySubTab('suppliers')}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border-0 ${
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 rounded-none border ${
                   inventorySubTab === 'suppliers' 
-                    ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' 
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/40 bg-transparent'
+                    ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
+                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616] hover:border-[#161616]'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">contact_page</span>
@@ -1684,22 +1679,24 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               </button>
             </div>
 
-            <div className="glass-card p-6 rounded-2xl border border-outline/10">
-              {inventorySubTab === 'catalog' && (
-                <SaaSErpInventory clientId={clientId} category={category} />
-              )}
-              {inventorySubTab === 'purchase-orders' && (
+            {inventorySubTab === 'catalog' && (
+              <SaaSErpInventory clientId={clientId} category={category} />
+            )}
+            {inventorySubTab === 'purchase-orders' && (
+              <div className="bg-[#F6F4EE] border border-[#E2DFD7] p-6 rounded-none shadow-xs">
                 <SaaSErpPurchaseOrders clientId={clientId} />
-              )}
-              {inventorySubTab === 'suppliers' && (
+              </div>
+            )}
+            {inventorySubTab === 'suppliers' && (
+              <div className="bg-[#F6F4EE] border border-[#E2DFD7] p-6 rounded-none shadow-xs">
                 <SaaSErpSuppliers clientId={clientId} />
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'facturacion' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpInvoices clientId={clientId} />
           </div>
         )}
@@ -1710,6 +1707,266 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           </div>
         )}
 
+        {activeTab === 'nueva_sede' && (
+          <div className="glass-card p-6 rounded-2xl border border-outline/10 space-y-6">
+            <div className="flex items-center justify-between border-b border-outline/10 pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-on-surface flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-2xl">add_business</span>
+                  Agregar Nueva Sede / Sucursal (Add-on)
+                </h2>
+                <p className="text-xs text-on-surface-variant mt-1">
+                  Registra un nuevo punto de venta o sucursal independiente vinculada a tu cuenta multi-tenant.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Formulario de Creación */}
+              <div className="lg:col-span-2 bg-surface-container-low border border-outline/15 rounded-2xl p-5 space-y-4">
+                <h3 className="text-sm font-bold text-on-surface flex items-center gap-2 border-b border-outline/10 pb-3">
+                  <span className="material-symbols-outlined text-primary text-base">edit_note</span>
+                  Datos de la Nueva Sede
+                </h3>
+
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!branchNameInput || !branchCompanyInput) return;
+                    try {
+                      setSavingBranch(true);
+                      const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+                      const res = await fetch(`/api/clients/${clientId}/branches`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                          name: branchCompanyInput,
+                          branch_name: branchNameInput,
+                          phone: branchPhoneInput,
+                          address: branchAddressInput,
+                          has_custom_tax_id: hasCustomTaxIdInput,
+                          legal_name: hasCustomTaxIdInput ? legalNameInput : branchCompanyInput,
+                          custom_tax_id: hasCustomTaxIdInput ? customTaxIdInput : null
+                        })
+                      });
+                      const json = await res.json();
+                      if (json.success) {
+                        alert(json.message);
+                        setBranchNameInput('');
+                        setBranchCompanyInput('');
+                        setBranchPhoneInput('');
+                        setBranchAddressInput('');
+                        setHasCustomTaxIdInput(false);
+                        setLegalNameInput('');
+                        setCustomTaxIdInput('');
+                        fetchBranches();
+                      } else {
+                        alert(`Error: ${json.error}`);
+                      }
+                    } catch (err: any) {
+                      alert(`Error de conexión: ${err.message}`);
+                    } finally {
+                      setSavingBranch(false);
+                    }
+                  }}
+                  className="space-y-4 text-xs"
+                >
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-on-surface-variant uppercase">Nombre de la Sede / Punto de Venta *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Sede Ciudadela / Sucursal Norte / 1 Óptica Nuevo Horizonte"
+                      value={branchNameInput}
+                      onChange={(e) => setBranchNameInput(e.target.value)}
+                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-on-surface-variant uppercase">Nombre Comercial *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Óptica Nuevo Horizonte"
+                      value={branchCompanyInput}
+                      onChange={(e) => setBranchCompanyInput(e.target.value)}
+                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  {/* Switch / Toggle Fiscal (NIT Propio vs Heredado) - Wabi-Sabi Paper Design */}
+                  <div className={`p-4 rounded-xl border transition-all ${
+                    hasCustomTaxIdInput 
+                      ? 'bg-white border-primary/50 shadow-xs' 
+                      : 'bg-white border-[#E2DFD7]'
+                  }`}>
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-primary text-base">badge</span>
+                          <span className="text-xs font-bold text-[#161616]">
+                            ¿Esta sede maneja NIT / Razón Social independiente?
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#6B6862] mt-0.5">
+                          Actívalo si la sucursal factura con su propio NIT y representante legal distinto a la matriz.
+                        </p>
+                      </div>
+
+                      {/* Wabi-Sabi Rectangular Toggle Control */}
+                      <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={hasCustomTaxIdInput}
+                          onChange={(e) => setHasCustomTaxIdInput(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className={`w-13 h-7 rounded-md border-2 p-0.5 transition-colors flex items-center ${
+                          hasCustomTaxIdInput 
+                            ? 'bg-primary border-primary' 
+                            : 'bg-[#FAF8F3] border-[#161616]'
+                        }`}>
+                          <div className={`w-5 h-5 rounded-sm transition-transform duration-200 ${
+                            hasCustomTaxIdInput 
+                              ? 'translate-x-5.5 bg-white shadow-xs' 
+                              : 'translate-x-0 bg-[#161616]'
+                          }`} />
+                        </div>
+                      </label>
+                    </div>
+
+                    {hasCustomTaxIdInput ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 mt-3 border-t border-[#E2DFD7]">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-[#6B6862] uppercase">NIT / Identificación Fiscal Propia *</label>
+                          <input
+                            type="text"
+                            required={hasCustomTaxIdInput}
+                            placeholder="Ej. 901.234.567-1"
+                            value={customTaxIdInput}
+                            onChange={(e) => setCustomTaxIdInput(e.target.value)}
+                            className="w-full bg-white border border-[#E2DFD7] rounded-md p-2.5 text-[#161616] outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-[#6B6862] uppercase">Razón Social Legal de Facturación *</label>
+                          <input
+                            type="text"
+                            required={hasCustomTaxIdInput}
+                            placeholder="Ej. 1 Óptica Nuevo Horizonte S.A.S"
+                            value={legalNameInput}
+                            onChange={(e) => setLegalNameInput(e.target.value)}
+                            className="w-full bg-white border border-[#E2DFD7] rounded-md p-2.5 text-[#161616] outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-[#D9381E] font-medium italic flex items-center gap-1.5 bg-[#FAF8F3] p-2.5 rounded-md border border-[#E2DFD7] mt-3">
+                        <span className="material-symbols-outlined text-base text-[#D9381E]">info</span>
+                        Esta sede heredará automáticamente el NIT y Razón Social de la Casa Matriz.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-on-surface-variant uppercase">Teléfono / WhatsApp</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 3001234567"
+                        value={branchPhoneInput}
+                        onChange={(e) => setBranchPhoneInput(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-on-surface-variant uppercase">Dirección</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Calle 45 # 12-34"
+                        value={branchAddressInput}
+                        onChange={(e) => setBranchAddressInput(e.target.value)}
+                        className="w-full bg-surface-container border border-outline/20 rounded-xl p-3 text-on-surface outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={savingBranch}
+                      className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold transition cursor-pointer flex items-center gap-2 text-sm shadow-md"
+                    >
+                      <span className="material-symbols-outlined text-base">store</span>
+                      {savingBranch ? 'Guardando...' : 'Crear Sede'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Panel Lateral: Sedes Registradas */}
+              <div className="bg-surface-container-low border border-outline/15 rounded-2xl p-5 space-y-4">
+                <h3 className="text-sm font-bold text-on-surface flex items-center justify-between border-b border-outline/10 pb-3">
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-base">domain</span>
+                    Sedes Activas
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                    {branches.length}
+                  </span>
+                </h3>
+
+                {branches.length === 0 ? (
+                  <p className="text-xs text-on-surface-variant italic py-4 text-center">
+                    No hay sedes adicionales registradas.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5 max-h-[400px] overflow-y-auto pr-1">
+                    {branches.map((b: any, idx: number) => (
+                      <div key={b.id || idx} className="p-3.5 bg-surface-container border border-outline/10 rounded-xl space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-primary text-sm">
+                              {b.is_main_branch ? 'domain' : 'storefront'}
+                            </span>
+                            {b.branch_name || b.name}
+                          </p>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${b.has_custom_tax_id ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 'bg-primary/10 text-primary'}`}>
+                            {b.has_custom_tax_id ? 'NIT Propio' : 'NIT Matriz'}
+                          </span>
+                        </div>
+
+                        {b.has_custom_tax_id && b.custom_tax_id && (
+                          <p className="text-[11px] font-semibold text-on-surface flex items-center gap-1">
+                            <span className="material-symbols-outlined text-xs text-primary">badge</span>
+                            NIT: {b.custom_tax_id} ({b.legal_name || b.name})
+                          </p>
+                        )}
+                        {b.phone && (
+                          <p className="text-[11px] text-on-surface-variant flex items-center gap-1">
+                            <span className="material-symbols-outlined text-xs">call</span>
+                            {b.phone}
+                          </p>
+                        )}
+                        {b.address && (
+                          <p className="text-[11px] text-on-surface-variant flex items-center gap-1">
+                            <span className="material-symbols-outlined text-xs">location_on</span>
+                            {b.address}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'facturacion2' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
             <SaaSErpInvoices2 clientId={clientId} />
@@ -1717,19 +1974,19 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         )}
 
         {activeTab === 'cotizaciones' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpQuotes clientId={clientId} />
           </div>
         )}
 
         {activeTab === 'documentos_soporte' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpSupportDocuments clientId={clientId} />
           </div>
         )}
 
         {activeTab === 'arqueo_caja' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpCashShifts clientId={clientId} />
           </div>
         )}
@@ -1741,13 +1998,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         )}
 
         {activeTab === 'cartera' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpCartera clientId={clientId} />
           </div>
         )}
 
         {activeTab === 'domicilios' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpDomicilios clientId={clientId} />
           </div>
         )}
@@ -1759,7 +2016,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         )}
 
         {activeTab === 'lab_jobs' && (
-          <div className="glass-card p-6 rounded-2xl border border-outline/10">
+          <div className="animate-fade-in">
             <SaaSErpLabJobs clientId={clientId} />
           </div>
         )}
@@ -1840,131 +2097,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
             <div className="bg-surface-container-highest border border-outline/30 rounded-3xl p-6 max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl space-y-4">
               <SaaSErpSupportTickets clientId={clientId} onClose={() => setIsSupportModalOpen(false)} />
-            </div>
-          </div>
-        )}
-
-        {/* Modal de Creación de Nueva Sede / Sucursal (Add-on) */}
-        {isAddBranchModalOpen && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-            <div className="bg-surface-container-highest border border-outline/30 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-outline/10 pb-3">
-                <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">add_business</span>
-                  Agregar Nueva Sede / Sucursal (Add-on)
-                </h3>
-                <button
-                  onClick={() => setIsAddBranchModalOpen(false)}
-                  className="p-1 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container"
-                >
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
-
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  if (!branchNameInput || !branchCompanyInput) return;
-                  try {
-                    setSavingBranch(true);
-                    const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
-                    const res = await fetch(`/api/clients/${clientId}/branches`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                      },
-                      body: JSON.stringify({
-                        name: branchCompanyInput,
-                        branch_name: branchNameInput,
-                        phone: branchPhoneInput,
-                        address: branchAddressInput
-                      })
-                    });
-                    const json = await res.json();
-                    if (json.success) {
-                      alert(json.message);
-                      setIsAddBranchModalOpen(false);
-                      setBranchNameInput('');
-                      setBranchCompanyInput('');
-                      setBranchPhoneInput('');
-                      setBranchAddressInput('');
-                      fetchBranches();
-                    } else {
-                      alert(`Error: ${json.error}`);
-                    }
-                  } catch (err: any) {
-                    alert(`Error de conexión: ${err.message}`);
-                  } finally {
-                    setSavingBranch(false);
-                  }
-                }}
-                className="space-y-3 text-xs"
-              >
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-on-surface-variant uppercase">Nombre de la Sede / Punto de Venta *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Sede Ciudadela / Sucursal Norte"
-                    value={branchNameInput}
-                    onChange={(e) => setBranchNameInput(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-on-surface-variant uppercase">Razón Social / Nombre Comercial *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Óptica La 8 S.A.S"
-                    value={branchCompanyInput}
-                    onChange={(e) => setBranchCompanyInput(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-on-surface-variant uppercase">Teléfono / WhatsApp</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. 3001234567"
-                      value={branchPhoneInput}
-                      onChange={(e) => setBranchPhoneInput(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-on-surface-variant uppercase">Dirección</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. Calle 45 # 12-34"
-                      value={branchAddressInput}
-                      onChange={(e) => setBranchAddressInput(e.target.value)}
-                      className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-3 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddBranchModalOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline/20 font-bold text-on-surface cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={savingBranch}
-                    className="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold transition cursor-pointer flex items-center gap-1.5"
-                  >
-                    {savingBranch ? 'Guardando...' : 'Crear Sede'}
-                  </button>
-                </div>
-              </form>
             </div>
           </div>
         )}

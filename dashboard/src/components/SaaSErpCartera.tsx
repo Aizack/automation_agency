@@ -123,142 +123,173 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
     }
   };
 
+  const formatCOP = (val: number | string) => {
+    const num = typeof val === 'string' ? parseFloat(val || '0') : val;
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(num);
+  };
+
   return (
-    <div className="space-y-6 text-white">
-      <div className="flex justify-between items-center border-b border-[#222428] pb-4">
+    <div className="space-y-6 text-[#161616] font-sans antialiased">
+      {/* Header Editorial Wabi-Sabi */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5">
         <div>
-          <h3 className="font-extrabold text-xl text-[#eab308]" style={{ color: '#eab308' }}>MÓDULO DE CARTERA & COBRANZA</h3>
-          <p className="text-xs text-gray-400">
+          <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-mono block mb-1">
+            GESTIÓN DE CRÉDITOS & CUOTAS
+          </span>
+          <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[#161616] tracking-tight leading-none flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#D9381E] text-[28px]">payments</span>
+            Módulo de Cartera & Cobranza
+          </h2>
+          <p className="text-xs text-[#76746E] mt-2">
             Monitorea el plan de amortización, abonos iniciales y acciones negociables de clientes con compras a cuotas.
           </p>
         </div>
         <button 
+          type="button"
           onClick={fetchCreditInvoices}
-          className="h-8 px-3 bg-[#181a1c] hover:bg-[#222528] text-white rounded-md flex items-center justify-center border border-[#2d3036] cursor-pointer transition text-xs font-semibold"
+          className="h-9 px-3.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] rounded-none flex items-center justify-center transition cursor-pointer text-xs font-mono font-bold uppercase tracking-wider shadow-xs shrink-0"
           title="Refrescar Cartera"
         >
-          <span className="material-symbols-outlined text-[16px] mr-1">refresh</span>
+          <span className="material-symbols-outlined text-[16px] mr-1.5 text-[#D9381E]">refresh</span>
           Refrescar
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lista de deudores */}
-        <div className="lg:col-span-1 bg-[#141517] p-4 rounded-lg border border-[#222428] space-y-4">
-          <h4 className="font-bold text-xs uppercase tracking-wider text-[#eab308]" style={{ color: '#eab308' }}>FACTURAS FINANCIADAS</h4>
+        <div className="lg:col-span-1 bg-white p-4 rounded-none border border-[#E2DFD7] space-y-3 shadow-xs">
+          <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2.5">
+            <h4 className="font-mono font-bold text-[11px] uppercase tracking-wider text-[#76746E] flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[#D9381E] text-[16px]">folder_shared</span>
+              Facturas Financiadas
+            </h4>
+            <span className="text-[10px] font-mono font-bold bg-[#FAF8F5] text-[#161616] px-2 py-0.5 border border-[#E2DFD7]">
+              {invoices.length} Créditos
+            </span>
+          </div>
           
           {loading ? (
-            <div className="p-8 text-center text-xs text-on-surface-variant">Cargando cuentas...</div>
+            <div className="p-8 text-center text-xs font-mono uppercase text-[#76746E] tracking-wider">Cargando cuentas...</div>
           ) : invoices.length === 0 ? (
-            <div className="p-8 text-center text-xs text-on-surface-variant">No hay facturas a crédito registradas.</div>
+            <div className="p-8 text-center text-xs text-[#76746E]">No hay facturas a crédito registradas.</div>
           ) : (
             <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-              {invoices.map((inv) => (
-                <div 
-                  key={inv.id}
-                  onClick={() => handleSelectInvoice(inv)}
-                  className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-150 ${
-                    selectedInvoice?.id === inv.id 
-                      ? 'bg-primary/10 border-primary' 
-                      : 'bg-surface-container/20 border-outline/10 hover:bg-surface-container/40'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <p className="font-bold text-xs text-on-surface"># {inv.invoice_number}</p>
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
-                      inv.status === 'paid' 
-                        ? 'bg-green-500/10 text-green-500 border-green-500/20' 
-                        : 'bg-orange-500/10 text-orange-500 border-orange-500/20'
-                    }`}>
-                      {inv.status === 'paid' ? 'PAGADA' : 'PENDIENTE'}
-                    </span>
+              {invoices.map((inv) => {
+                const isSelected = selectedInvoice?.id === inv.id;
+                return (
+                  <div 
+                    key={inv.id}
+                    onClick={() => handleSelectInvoice(inv)}
+                    className={`p-3.5 rounded-none border cursor-pointer transition-all duration-150 relative ${
+                      isSelected 
+                        ? 'bg-[#FAF8F5] border-[#161616] shadow-xs' 
+                        : 'bg-white border-[#E2DFD7] hover:border-[#161616]'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <p className="font-mono font-bold text-xs text-[#161616]">#{inv.invoice_number}</p>
+                      <span className={`px-2 py-0.5 rounded-none text-[9px] font-mono font-bold uppercase tracking-wider border ${
+                        inv.status === 'paid' 
+                          ? 'bg-[#E6F4EA] text-[#137333] border-[#CEEAD6]' 
+                          : 'bg-[#FEF7E0] text-[#B45309] border-[#FDE68A]'
+                      }`}>
+                        {inv.status === 'paid' ? 'PAGADA' : 'PENDIENTE'}
+                      </span>
+                    </div>
+                    <h5 className="font-serif font-bold text-sm text-[#161616] mt-1.5 truncate">{inv.customer_name}</h5>
+                    <div className="flex justify-between items-end mt-2 pt-2 border-t border-[#E2DFD7] text-[11px]">
+                      <span className="text-[#76746E] font-mono">{inv.installments_count} cuotas ({inv.installment_frequency})</span>
+                      <span className="font-mono font-bold text-[#D9381E]">{formatCOP(inv.total_amount)}</span>
+                    </div>
                   </div>
-                  <h5 className="font-bold text-sm text-on-surface mt-1 truncate">{inv.customer_name}</h5>
-                  <div className="flex justify-between items-end mt-2 pt-2 border-t border-outline/5">
-                    <span className="text-[10px] text-on-surface-variant">{inv.installments_count} cuotas ({inv.installment_frequency})</span>
-                    <span className="text-xs text-on-surface-variant">Tot: ${parseFloat(inv.total_amount).toLocaleString('es-CO')}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
         {/* Plan de amortización */}
-        <div className="lg:col-span-2 glass-card p-6 rounded-2xl border border-outline/10 space-y-4">
+        <div className="lg:col-span-2 bg-white p-6 rounded-none border border-[#E2DFD7] space-y-4 shadow-xs">
           {selectedInvoice ? (
             <>
-              <div className="flex justify-between items-start border-b border-outline/5 pb-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#E2DFD7] pb-4 gap-4">
                 <div>
-                  <h4 className="font-extrabold text-base text-on-surface">Detalle de Financiación</h4>
-                  <p className="text-xs text-on-surface-variant mt-0.5">
-                    Cliente: <strong>{selectedInvoice.customer_name}</strong> | Documento: {selectedInvoice.customer_document_number}
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#D9381E] font-bold block">PLAN DE AMORTIZACIÓN</span>
+                  <h4 className="font-serif font-bold text-lg text-[#161616] mt-0.5">{selectedInvoice.customer_name}</h4>
+                  <p className="text-xs text-[#76746E] font-mono mt-0.5">
+                    Factura: <strong className="text-[#161616]">#{selectedInvoice.invoice_number}</strong> | Doc: {selectedInvoice.customer_document_number}
                   </p>
                 </div>
-                <div className="text-right space-y-1">
-                  <p className="text-[10px] text-on-surface-variant uppercase font-bold">Total Facturado</p>
-                  <p className="font-extrabold text-sm text-on-surface">${parseFloat(selectedInvoice.total_amount).toLocaleString('es-CO')}</p>
+                <div className="text-right space-y-1 bg-[#FAF8F5] p-3 border border-[#E2DFD7] min-w-[200px]">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[#76746E]">Total Facturado:</span>
+                    <span className="font-mono font-bold text-[#161616]">{formatCOP(selectedInvoice.total_amount)}</span>
+                  </div>
                   {loadingInstallments === false && installments.length > 0 && (
                     <>
-                      <p className="text-[10px] text-on-surface-variant uppercase font-bold mt-2">Abono Inicial</p>
-                      <p className="font-bold text-sm text-green-500">${installments.find(i => i.installment_number === 0)?.amount || '0'}</p>
-                      <p className="text-[10px] text-on-surface-variant uppercase font-bold mt-2">Saldo Pendiente</p>
-                      <p className="font-extrabold text-lg text-primary">${(
-                        installments
-                          .filter(i => i.installment_number > 0)
-                          .reduce((sum, i) => sum + (parseFloat(i.amount) - parseFloat(i.paid_amount)), 0)
-                      ).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-[#76746E]">Abono Inicial:</span>
+                        <span className="font-mono font-bold text-[#137333]">{formatCOP(installments.find(i => i.installment_number === 0)?.amount || '0')}</span>
+                      </div>
+                      <div className="flex justify-between text-xs border-t border-[#E2DFD7] pt-1 mt-1">
+                        <span className="font-bold text-[#D9381E]">Saldo Pendiente:</span>
+                        <span className="font-mono font-bold text-sm text-[#D9381E]">{formatCOP(
+                          installments
+                            .filter(i => i.installment_number > 0)
+                            .reduce((sum, i) => sum + (parseFloat(i.amount) - parseFloat(i.paid_amount)), 0)
+                        )}</span>
+                      </div>
                     </>
                   )}
                 </div>
               </div>
 
               {loadingInstallments ? (
-                <div className="p-12 text-center text-xs text-on-surface-variant">Cargando cuotas del cliente...</div>
+                <div className="p-12 text-center text-xs font-mono uppercase text-[#76746E] tracking-wider">Cargando cuotas del cliente...</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-left">
+                  <table className="w-full border-collapse text-left text-xs">
                     <thead>
-                      <tr className="border-b border-outline/10 text-on-surface-variant text-[10px] uppercase font-bold">
-                        <th className="py-2.5">Cuota #</th>
-                        <th className="py-2.5">Fecha Vencimiento</th>
-                        <th className="py-2.5 text-right">Valor Cuota</th>
-                        <th className="py-2.5 text-right">Abonado</th>
-                        <th className="py-2.5 text-center">Estado</th>
-                        <th className="py-2.5 text-right">Acciones</th>
+                      <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[#76746E] font-mono text-[10px] uppercase font-bold tracking-wider">
+                        <th className="p-3">Cuota #</th>
+                        <th className="p-3">Fecha Vencimiento</th>
+                        <th className="p-3 text-right">Valor Cuota</th>
+                        <th className="p-3 text-right">Abonado</th>
+                        <th className="p-3 text-center">Estado</th>
+                        <th className="p-3 text-right">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-outline/5 text-xs text-on-surface">
+                    <tbody className="divide-y divide-[#E2DFD7]">
                       {installments.map((inst) => {
                         const amountVal = parseFloat(inst.amount);
                         const paidVal = parseFloat(inst.paid_amount);
 
                         return (
-                          <tr key={inst.id} className="hover:bg-surface-variant/10">
-                            <td className="py-3 font-mono font-bold">
-                              {inst.installment_number === 0 ? 'Abono Inicial' : `Cuota ${inst.installment_number}`}
+                          <tr key={inst.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
+                            <td className="p-3 font-mono font-bold text-[#161616]">
+                              {inst.installment_number === 0 ? 'Abono Inicial' : `Cuota #${inst.installment_number}`}
                             </td>
-                            <td className="py-3">
+                            <td className="p-3 font-mono text-[#76746E]">
                               {new Date(inst.due_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </td>
-                            <td className="py-3 text-right font-bold">${amountVal.toLocaleString('es-CO')}</td>
-                            <td className="py-3 text-right text-green-500">${paidVal.toLocaleString('es-CO')}</td>
-                            <td className="py-3 text-center">
-                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
+                            <td className="p-3 text-right font-mono font-bold text-[#161616]">{formatCOP(amountVal)}</td>
+                            <td className="p-3 text-right font-mono font-bold text-[#137333]">{formatCOP(paidVal)}</td>
+                            <td className="p-3 text-center">
+                              <span className={`px-2 py-0.5 rounded-none text-[9px] font-mono font-bold uppercase tracking-wider border ${
                                 inst.status === 'paid' 
-                                  ? 'bg-green-500/10 text-green-500 border-green-500/20' 
+                                  ? 'bg-[#E6F4EA] text-[#137333] border-[#CEEAD6]' 
                                   : new Date(inst.due_date) < new Date()
-                                    ? 'bg-red-500/10 text-red-500 border-red-500/20 animate-pulse'
-                                    : 'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                                    ? 'bg-[#FCE8E6] text-[#C5221F] border-[#FAD2CF]'
+                                    : 'bg-[#FEF7E0] text-[#B45309] border-[#FDE68A]'
                               }`}>
                                 {inst.status === 'paid' ? 'PAGADO' : new Date(inst.due_date) < new Date() ? 'VENCIDO' : 'PENDIENTE'}
                               </span>
                             </td>
-                            <td className="py-3 text-right">
+                            <td className="p-3 text-right">
                               {inst.status !== 'paid' && (
                                 <button
                                   onClick={() => handleOpenPayModal(inst)}
-                                  className="px-2.5 py-1 bg-primary text-on-primary text-[10px] font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all cursor-pointer flex items-center gap-1 inline-flex"
+                                  className="px-2.5 py-1 bg-[#D9381E] hover:bg-[#b82e18] text-white text-[10px] font-mono font-bold rounded-none transition-colors cursor-pointer inline-flex items-center gap-1 shadow-xs uppercase tracking-wider border-0"
                                 >
                                   <span className="material-symbols-outlined text-[12px]">point_of_sale</span>
                                   Recibir Pago
@@ -274,9 +305,10 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center p-20 text-on-surface-variant/40 space-y-3">
-              <span className="material-symbols-outlined text-6xl">payments</span>
-              <p className="text-sm font-semibold">Selecciona una factura financiada para ver y liquidar sus cuotas.</p>
+            <div className="flex flex-col items-center justify-center p-20 text-[#76746E] space-y-3">
+              <span className="material-symbols-outlined text-5xl text-[#76746E]/40">payments</span>
+              <p className="font-serif text-sm font-bold text-[#161616]">Selecciona una factura financiada</p>
+              <p className="text-xs text-[#76746E]">Haz clic en una factura de la izquierda para ver y liquidar sus cuotas.</p>
             </div>
           )}
         </div>
@@ -284,42 +316,47 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
 
       {/* Modal de Transacción sobre Cuota */}
       {showPayModal && selectedInstallment && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 text-left">
-          <div className="glass-card w-full max-w-md rounded-3xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-3 mb-4">
-              <h4 className="font-extrabold text-sm text-on-surface">Procesar Transacción sobre Cuota</h4>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 text-left animate-fade-in">
+          <div className="bg-[#F6F4EE] border border-[#161616] rounded-none w-full max-w-md p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+            <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+              <div>
+                <span className="text-[10px] font-mono tracking-widest text-[#D9381E] uppercase block font-bold">GESTIÓN DE COBRO</span>
+                <h4 className="font-serif font-bold text-lg text-[#161616]">Procesar Transacción sobre Cuota</h4>
+              </div>
               <button 
                 onClick={() => setShowPayModal(false)}
-                className="p-1 hover:bg-surface-variant rounded-full text-on-surface-variant cursor-pointer border-0 bg-transparent"
+                className="p-1 text-[#76746E] hover:text-[#161616] cursor-pointer border-0 bg-transparent"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
 
             {transactionSuccess ? (
               <div className="p-8 text-center space-y-2">
-                <span className="material-symbols-outlined text-4xl text-green-500 animate-bounce">check_circle</span>
-                <p className="font-bold text-sm text-on-surface">Transacción guardada con éxito.</p>
+                <span className="material-symbols-outlined text-4xl text-[#137333]">check_circle</span>
+                <p className="font-serif font-bold text-sm text-[#161616]">Transacción guardada con éxito.</p>
               </div>
             ) : (
-              <form onSubmit={handleRegisterPayment} className="space-y-4">
-                <div className="p-3 bg-surface-container/50 rounded-xl space-y-1">
-                  <p className="text-[11px] text-on-surface-variant">INFORMACIÓN DE LA CUOTA</p>
-                  <p className="font-bold text-xs text-on-surface">
+              <form onSubmit={handleRegisterPayment} className="space-y-4 text-xs">
+                <div className="p-3.5 bg-white border border-[#E2DFD7] rounded-none space-y-1 shadow-xs">
+                  <p className="text-[10px] font-mono font-bold text-[#76746E] uppercase tracking-wider">INFORMACIÓN DE LA CUOTA</p>
+                  <p className="font-bold font-serif text-sm text-[#161616]">
                     Cuota #{selectedInstallment.installment_number}
                   </p>
-                  <div className="flex justify-between text-xs pt-1">
-                    <span>Valor Cuota: <strong>${parseFloat(selectedInstallment.amount).toLocaleString('es-CO')}</strong></span>
-                    <span>Saldo Pendiente: <strong>${(parseFloat(selectedInstallment.amount) - parseFloat(selectedInstallment.paid_amount)).toLocaleString('es-CO')}</strong></span>
+                  <div className="flex justify-between text-xs pt-1 font-mono">
+                    <span>Valor Cuota: <strong className="text-[#161616]">{formatCOP(selectedInstallment.amount)}</strong></span>
+                    <span>Saldo: <strong className="text-[#D9381E]">{formatCOP(parseFloat(selectedInstallment.amount) - parseFloat(selectedInstallment.paid_amount))}</strong></span>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-label-md text-on-surface-variant ml-1">Estrategia / Acción comercial</label>
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Estrategia / Acción Comercial
+                  </label>
                   <select
                     value={actionType}
                     onChange={(e) => setActionType(e.target.value as any)}
-                    className="w-full bg-surface-container border border-outline/30 rounded-xl px-4 py-2 text-on-surface focus:border-primary outline-none cursor-pointer text-xs"
+                    className="w-full bg-white border border-[#E2DFD7] rounded-none px-3 py-2 text-[#161616] focus:border-[#161616] outline-none cursor-pointer text-xs"
                   >
                     <option value="pay">💵 Registrar Abono o Pago Normal</option>
                     <option value="accumulate">🔄 Acumulativa (Mudar saldo a cuota siguiente)</option>
@@ -329,43 +366,45 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
 
                 {actionType === 'pay' && (
                   <div className="space-y-1">
-                    <label className="font-label-md text-on-surface-variant ml-1">Monto del Abono ($)</label>
+                    <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                      Monto del Abono ($ COP)
+                    </label>
                     <input
                       type="number"
                       required
                       step="0.01"
                       value={payAmount}
                       onChange={(e) => setPayAmount(e.target.value)}
-                      className="w-full bg-surface-container border-outline/30 border rounded-xl px-4 py-2 text-on-surface focus:border-primary outline-none text-xs font-bold"
+                      className="w-full bg-white border border-[#E2DFD7] rounded-none px-3 py-2 text-[#161616] focus:border-[#161616] outline-none text-xs font-mono font-bold"
                     />
                   </div>
                 )}
 
                 {actionType === 'accumulate' && (
-                  <p className="text-[11px] text-orange-400 p-2.5 bg-orange-400/10 rounded-xl">
+                  <p className="text-[11px] text-[#B45309] p-2.5 bg-[#FEF7E0] border border-[#FDE68A] rounded-none">
                     ⚠️ <strong>Nota:</strong> Esta acción marcará la cuota actual como resuelta y trasladará automáticamente su saldo pendiente a la siguiente cuota programada.
                   </p>
                 )}
 
                 {actionType === 'refinance' && (
-                  <p className="text-[11px] text-blue-400 p-2.5 bg-blue-400/10 rounded-xl">
+                  <p className="text-[11px] text-[#161616] p-2.5 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none">
                     ℹ️ <strong>Nota:</strong> Se creará una cuota adicional al final de la línea de tiempo con la deuda restante de este periodo, extendiendo la fecha original de cobro.
                   </p>
                 )}
 
-                <div className="pt-2 flex gap-3">
+                <div className="pt-2 flex gap-3 border-t border-[#E2DFD7]">
                   <button
                     type="button"
                     onClick={() => setShowPayModal(false)}
-                    className="flex-1 px-4 py-2 border border-outline/20 text-on-surface font-label-md rounded-xl hover:bg-surface-variant/30 text-xs cursor-pointer"
+                    className="flex-1 px-4 py-2 border border-[#E2DFD7] bg-white text-[#161616] font-mono font-bold rounded-none hover:bg-[#FAF8F5] text-xs cursor-pointer uppercase tracking-wider"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-primary text-on-primary font-label-md rounded-xl hover:opacity-90 active:scale-95 transition-all text-xs cursor-pointer"
+                    className="flex-1 px-4 py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold rounded-none transition-colors text-xs cursor-pointer uppercase tracking-wider shadow-xs border-0"
                   >
-                    Confirmar Transacción
+                    Confirmar
                   </button>
                 </div>
               </form>

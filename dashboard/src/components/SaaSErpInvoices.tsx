@@ -883,9 +883,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const renderSuggestions = (queryStr: string, currentFieldVal: string, onSelectNew: () => void) => {
         const filtered = getFilteredCustomers(queryStr);
         return (
-            <div className="absolute left-0 right-0 top-[76px] bg-surface-container border border-outline/30 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto divide-y divide-outline/5">
+            <div className="absolute left-0 right-0 top-[70px] bg-white border border-[#161616] shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-[#E2DFD7] rounded-none">
                 {filtered.length === 0 ? (
-                    <div className="p-3 text-xs text-on-surface-variant italic text-center bg-surface-container">
+                    <div className="p-3 text-xs text-[#6B6862] italic text-center bg-white">
                         No se encontraron coincidencias.
                     </div>
                 ) : (
@@ -894,13 +894,13 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                             key={c.id}
                             type="button"
                             onClick={() => selectCustomer(c)}
-                            className="w-full text-left p-3 hover:bg-primary/10 text-xs text-on-surface font-medium flex justify-between items-center transition-colors cursor-pointer border-0 bg-transparent"
+                            className="w-full text-left p-3 hover:bg-[#FAF8F5] text-xs text-[#161616] font-medium flex justify-between items-center transition-colors cursor-pointer border-0 bg-transparent"
                         >
                             <div className="truncate pr-2">
-                                <p className="font-semibold text-on-surface truncate">{c.name} {c.last_name || ''}</p>
-                                <p className="text-[10px] text-on-surface-variant opacity-75 truncate">{c.email || 'Sin correo'} • {c.phone}</p>
+                                <p className="font-bold text-[#161616] truncate">{c.name} {c.last_name || ''}</p>
+                                <p className="text-[10px] text-[#6B6862] truncate">{c.email || 'Sin correo'} • {c.phone}</p>
                             </div>
-                            <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded font-bold font-mono uppercase shrink-0">
+                            <span className="text-[10px] bg-[#F6F4EE] text-[#161616] border border-[#E2DFD7] px-2 py-0.5 font-bold font-mono uppercase shrink-0">
                                 {c.document_type || 'CC'}: {c.document_number}
                             </span>
                         </button>
@@ -910,7 +910,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                     <button
                         type="button"
                         onClick={onSelectNew}
-                        className="w-full text-left p-3 hover:bg-secondary/15 text-xs text-secondary font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent border-t border-outline/10"
+                        className="w-full text-left p-3 hover:bg-[#FAF8F5] text-xs text-[#D9381E] font-bold flex items-center gap-1.5 transition-colors cursor-pointer border-0 bg-transparent border-t border-[#E2DFD7]"
                     >
                         <span className="material-symbols-outlined text-[16px]">person_add</span>
                         Registrar como cliente nuevo: "{currentFieldVal}"
@@ -921,75 +921,79 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     };
 
     return (
-        <div className="space-y-6 text-white">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-6 text-[#161616] font-sans">
+            {/* Header Editorial Wabi-Sabi */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5 mb-8">
                 <div>
-                    <h2 className="text-xl font-extrabold text-[#eab308]" style={{ color: '#eab308' }}>VENTAS Y FACTURACIÓN ELECTRÓNICA DIAN</h2>
-                    <p className="text-xs text-gray-400">Emite facturas POS y Electrónicas DIAN con CUFE, QR fiscal y tiquetes térmicos 80mm.</p>
+                    <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans block mb-1">VENTAS & FACTURACIÓN</span>
+                    <h2 className="font-serif text-4xl sm:text-5xl font-normal text-[#161616] tracking-tight leading-none">Facturación POS & Electrónica DIAN</h2>
+                    <p className="text-xs text-[#6B6862] mt-2 font-sans">Emisión y control de facturas POS y Electrónicas DIAN con CUFE, QR fiscal y tiquetes térmicos 80mm.</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     <button
+                        type="button"
                         onClick={() => setShowUpgradeModal(true)}
-                        className="bg-[#181a1c] hover:bg-[#222528] text-white border border-[#2d3036] text-[11px] font-bold py-1.5 px-3 rounded-md flex items-center gap-1 transition cursor-pointer shadow"
+                        className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[11px] font-bold py-2.5 px-3.5 flex items-center gap-1.5 transition cursor-pointer uppercase tracking-wider"
                     >
-                        <span className="material-symbols-outlined text-[15px]">workspace_premium</span>
+                        <span className="material-symbols-outlined text-[16px] text-[#D9381E]">workspace_premium</span>
                         Planes & Upgrade
                     </button>
                     <button
+                        type="button"
                         onClick={() => { resetForm(); setIsFormOpen(true); }}
-                        className="bg-[#eab308] hover:bg-amber-300 text-black text-[11px] font-extrabold py-1.5 px-3 rounded-md flex items-center gap-1 transition-colors cursor-pointer shadow"
+                        className="bg-[#161616] hover:bg-[#D9381E] text-white text-[12px] font-bold py-3.5 px-7 flex items-center gap-2 transition-all cursor-pointer border-0 uppercase tracking-widest shadow-sm"
                     >
-                        <span className="material-symbols-outlined text-[15px]">add</span>
-                        CREAR FACTURA
+                        + CREAR FACTURA
                     </button>
                 </div>
             </div>
 
-            {/* METRICAS Y PROGRESO DE FACTURACIÓN */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* METRICAS Y PROGRESO DE FACTURACIÓN WABI-SABI */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
                 {/* Tarjeta Ventas Totales */}
-                <div className="bg-[#141517] border border-[#222428] p-5 rounded-lg flex flex-col justify-between shadow-md">
+                <div className="bg-white border border-[#E2DFD7] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
                     <div className="flex items-center justify-between">
-                        <p className="font-bold text-xs uppercase tracking-wider flex items-center gap-2" style={{ color: '#eab308' }}>
-                            <span className="material-symbols-outlined text-[18px]">payments</span>
+                        <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[16px] text-[#D9381E]">payments</span>
                             VENTAS TOTALES
-                        </p>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#1a170a] border border-amber-500/40 font-mono font-bold" style={{ color: '#eab308' }}>Suma de facturación</span>
+                        </span>
+                        <span className="text-[10px] px-2.5 py-0.5 bg-[#FAF8F5] border border-[#E2DFD7] font-mono font-bold text-[#161616] uppercase tracking-wider">
+                            Suma de facturación
+                        </span>
                     </div>
-                    <div className="mt-3">
-                        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-mono">
-                            ${invoices.reduce((sum, inv) => sum + (parseFloat(inv.total_amount) || 0), 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <div className="mt-4">
+                        <h2 className="font-serif text-4xl sm:text-5xl text-[#161616] font-normal leading-none font-mono">
+                            ${invoices.reduce((sum, inv) => sum + (parseFloat(inv.total_amount) || 0), 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </h2>
-                        <p className="text-gray-400 text-xs mt-1">Total acumulado de ventas facturadas</p>
+                        <p className="text-[#6B6862] text-xs mt-3 font-sans">Total acumulado de ventas facturadas en sistema</p>
                     </div>
                 </div>
 
                 {/* Tarjeta Plan & DIAN Quota */}
                 {planStatus && (
-                    <div className="bg-[#141517] border border-[#222428] p-5 rounded-lg flex flex-col justify-between shadow-md">
+                    <div className="bg-white border border-[#E2DFD7] border-l-4 border-l-[#D9381E] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
                         <div className="flex items-center justify-between">
-                            <p className="font-bold text-xs uppercase tracking-wider flex items-center gap-2" style={{ color: '#eab308' }}>
-                                <span className="material-symbols-outlined text-[18px]">verified</span>
+                            <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[16px] text-[#D9381E]">verified</span>
                                 PLAN ACTUAL & DIAN
-                            </p>
-                            <span className="text-xs font-extrabold uppercase text-[#eab308]" style={{ color: '#eab308' }}>
+                            </span>
+                            <span className="text-xs font-bold uppercase text-[#D9381E] tracking-wider">
                                 {planStatus.planTier === 'enterprise' ? '👑 Enterprise IA' : planStatus.planTier === 'pro' ? '🚀 Pro' : '🟢 Básico'}
                             </span>
                         </div>
-                        <div className="mt-3 flex items-end justify-between gap-2">
+                        <div className="mt-4 flex items-end justify-between gap-4">
                             <div>
-                                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-mono">
-                                    {planStatus.used || 0} <span className="text-sm font-sans text-gray-400 font-normal">/ {planStatus.limit >= 99999 ? '∞' : (planStatus.limit || 10)}</span>
+                                <h2 className="font-serif text-4xl sm:text-5xl text-[#161616] font-normal leading-none font-mono flex items-baseline gap-2">
+                                    {planStatus.used || 0} <span className="font-sans text-sm text-[#6B6862] font-normal">/ {planStatus.limit >= 99999 ? '∞' : (planStatus.limit || 10)}</span>
                                 </h2>
-                                <p className="text-gray-400 text-xs mt-1">Facturas electrónicas DIAN emitidas este mes</p>
+                                <p className="text-[#6B6862] text-xs mt-3 font-sans">Facturas electrónicas DIAN emitidas este mes</p>
                             </div>
                             {planStatus.planTier === 'basic' && (
                                 <button
                                     type="button"
                                     onClick={() => setShowUpgradeModal(true)}
-                                    className="bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] px-3 py-1.5 rounded-md transition shadow flex items-center gap-1 shrink-0 cursor-pointer"
+                                    className="bg-[#D9381E] hover:bg-[#b82e18] text-white font-bold text-[11px] px-3.5 py-2 transition uppercase tracking-wider cursor-pointer border-0 shrink-0"
                                 >
-                                    <span className="material-symbols-outlined text-[15px]">workspace_premium</span>
                                     Upgrade Pro
                                 </button>
                             )}
@@ -998,605 +1002,741 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 )}
             </div>
 
-            {isFormOpen && (
-                <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl shadow-2xl space-y-6 text-left font-sans">
-                    <div className="flex justify-between items-center border-b border-[#2d3036] pb-3">
-                        <h3 className="font-extrabold text-base text-[#eab308] flex items-center gap-2" style={{ color: '#eab308' }}>
-                            <span className="material-symbols-outlined text-[24px]">receipt_long</span>
-                            GENERAR NUEVA FACTURA DE VENTA
-                        </h3>
-                        <button
-                            type="button"
-                            onClick={() => setIsFormOpen(false)}
-                            className="p-1 hover:bg-[#222528] rounded-lg border-0 bg-transparent text-gray-400 cursor-pointer transition"
-                        >
-                            <span className="material-symbols-outlined text-[20px]">close</span>
-                        </button>
-                    </div>
-                    
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Datos del cliente */}
-                        <div className="bg-[#1c1e22] border border-[#2d3036] p-4 rounded-xl space-y-3" ref={dropdownRef}>
-                            <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-[16px]">person_add</span>
-                                Datos del Cliente / Comprador
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-[11px] text-gray-300 font-medium">Factura N° *</label>
-                                    <input type="text" className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none font-mono font-bold" value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} required />
-                                </div>
-                                <div className="flex flex-col gap-1.5 relative">
-                                    <label className="text-[11px] text-gray-300 font-medium">Nombre del Cliente *</label>
-                                    <input 
-                                        type="text" 
-                                        className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none w-full" 
-                                        value={customerName} 
-                                        onChange={(e) => {
-                                            setCustomerName(e.target.value);
-                                            setActiveDropdownField('name');
-                                        }}
-                                        onFocus={() => setActiveDropdownField('name')}
-                                        placeholder="Buscar por nombre o cédula..."
-                                        required 
-                                    />
-                                    {activeDropdownField === 'name' && renderSuggestions(customerName, customerName, () => setActiveDropdownField(null))}
-                                </div>
-                                <div className="flex flex-col gap-1.5 relative">
-                                    <label className="text-[11px] text-gray-300 font-medium">Documento de Identidad *</label>
-                                    <div className="flex gap-1">
-                                        <select className="bg-[#141517] border border-[#2d3036] rounded-lg px-2 text-xs focus:border-[#eab308] outline-none text-white font-bold" value={customerDocumentType} onChange={(e) => setCustomerDocumentType(e.target.value)}>
-                                            <option value="CC" className="bg-[#141517]">CC</option>
-                                            <option value="NIT" className="bg-[#141517]">NIT</option>
-                                            <option value="CE" className="bg-[#141517]">CE</option>
-                                        </select>
-                                        <input 
-                                            type="text" 
-                                            className="w-full bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none font-mono" 
-                                            value={customerDocumentNumber} 
-                                            onChange={(e) => {
-                                                setCustomerDocumentNumber(e.target.value);
-                                                setActiveDropdownField('document');
-                                            }} 
-                                            onFocus={() => setActiveDropdownField('document')}
-                                            placeholder="Número..."
-                                            required 
-                                        />
-                                    </div>
-                                    {activeDropdownField === 'document' && renderSuggestions(customerDocumentNumber, customerDocumentNumber, () => setActiveDropdownField(null))}
-                                </div>
-                                <div className="flex flex-col gap-1.5 relative">
-                                    <label className="text-[11px] text-gray-300 font-medium">WhatsApp *</label>
-                                    <input 
-                                        type="text" 
-                                        className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none w-full font-mono" 
-                                        value={customerPhone} 
-                                        onChange={(e) => {
-                                            setCustomerPhone(e.target.value);
-                                            setActiveDropdownField('phone');
-                                        }} 
-                                        onFocus={() => setActiveDropdownField('phone')}
-                                        placeholder="57300..."
-                                        required 
-                                    />
-                                    {activeDropdownField === 'phone' && renderSuggestions(customerPhone, customerPhone, () => setActiveDropdownField(null))}
-                                </div>
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-[11px] text-gray-300 font-medium">Correo Electrónico *</label>
-                                    <input type="email" className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} required />
-                                </div>
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-[11px] text-gray-300 font-medium">Dirección de Residencia</label>
-                                    <input type="text" className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white focus:border-[#eab308] outline-none" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
-                                </div>
+            {/* MODAL POPUP WIDESCREEN EDITORIAL WABI-SABI PARA CREACIÓN DE FACTURA (createPortal) */}
+            {isFormOpen && createPortal(
+                <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+                    <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] h-[93vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in">
+                        
+                        {/* Header del Modal */}
+                        <div className="px-8 py-5 border-b border-[#E2DFD7] flex justify-between items-center bg-[#F6F4EE] shrink-0">
+                            <div>
+                                <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans block">FACTURACIÓN & CAJA POS / DIAN</span>
+                                <h3 className="font-serif text-2xl sm:text-3xl font-normal text-[#161616] leading-tight">
+                                    Emitir Factura de Venta POS / DIAN
+                                </h3>
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsFormOpen(false)}
+                                className="text-[#161616] hover:text-[#D9381E] text-3xl font-light cursor-pointer border-0 bg-transparent leading-none"
+                                title="Cerrar modal"
+                            >
+                                &times;
+                            </button>
                         </div>
 
-                        {/* Configuración Específica de Restaurantes & Gastronomía */}
-                        {clientProfile?.category === 'restaurante' && (
-                            <div className="border border-amber-500/30 p-4 rounded-xl space-y-3 bg-[#1c1e22]">
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                                    <span className="material-symbols-outlined text-[16px]">restaurant</span>
-                                    Servicio Gastronómico: Mesa, Impoconsumo 8% & Propina Sugerida
-                                </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[11px] text-gray-300 font-bold">Mesa de Servicio</label>
-                                        <select
-                                            className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white font-semibold outline-none focus:border-[#eab308] cursor-pointer"
-                                            value={selectedTableId}
-                                            onChange={(e) => setSelectedTableId(e.target.value)}
-                                        >
-                                            <option value="">🛒 Venta Directa (Barra / Para Llevar)</option>
-                                            {tables.map(t => (
-                                                <option key={t.id} value={t.id}>
-                                                    🪑 Mesa #{t.table_number} ({t.zone})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[11px] text-gray-300 font-bold">Mesero Atribuidor</label>
-                                        <select
-                                            className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs text-white font-semibold outline-none focus:border-[#eab308] cursor-pointer"
-                                            value={selectedWaiterId}
-                                            onChange={(e) => setSelectedWaiterId(e.target.value)}
-                                        >
-                                            <option value="">👤 Sin mesero asignado</option>
-                                            {employees.map(emp => (
-                                                <option key={emp.id} value={emp.id}>
-                                                    👤 {emp.name} ({emp.employee_role || 'Mesero'})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[11px] text-gray-300 font-bold">Impuesto Gastronómico (E.T.)</label>
-                                        <select
-                                            className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs font-bold outline-none focus:border-[#eab308] cursor-pointer text-amber-400"
-                                            value={taxMode}
-                                            onChange={(e) => setTaxMode(e.target.value as any)}
-                                        >
-                                            <option value="impoconsumo_8">🏷️ Impoconsumo (8% E.T.) [Restaurantes]</option>
-                                            <option value="iva_19">🏷️ IVA (19%) [Franquicias/Concesiones]</option>
-                                            <option value="exento">🛡️ Exento de Impuestos (RST)</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1.5 justify-center">
-                                        <label className="text-[11px] text-gray-300 font-bold">💵 Propina Sugerida (Ley 1935)</label>
-                                        <div className="flex items-center gap-2 pt-1">
-                                            <input
-                                                type="checkbox"
-                                                id="includeTipCheck"
-                                                checked={includeTip}
-                                                onChange={(e) => setIncludeTip(e.target.checked)}
-                                                className="w-4 h-4 accent-[#eab308] rounded cursor-pointer"
-                                            />
-                                            <label htmlFor="includeTipCheck" className="text-xs font-bold text-white cursor-pointer flex items-center gap-1">
-                                                <span>Incluir</span>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max="30"
-                                                    value={tipPercentage}
-                                                    onChange={(e) => setTipPercentage(parseFloat(e.target.value) || 0)}
-                                                    className="w-12 bg-[#141517] border border-[#2d3036] rounded px-1 py-0.5 text-xs text-center font-bold text-amber-400 outline-none"
-                                                />
-                                                <span>% Voluntario</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Condiciones de Pago */}
-                        <div className="bg-[#1c1e22] border border-[#2d3036] p-4 rounded-xl space-y-3">
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-[16px]">payments</span>
-                                Condiciones y Método de Pago
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-[11px] text-gray-300 font-medium">Método de Pago *</label>
-                                    <select 
-                                        className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white font-bold outline-none" 
-                                        value={paymentMethod} 
-                                        onChange={(e) => setPaymentMethod(e.target.value as any)}
-                                        required
-                                    >
-                                        <option value="efectivo">💵 Efectivo</option>
-                                        <option value="transferencia">🏦 Transferencia Bancaria</option>
-                                        <option value="tarjeta_credito">💳 Tarjeta de Crédito</option>
-                                        <option value="tarjeta_debito">💳 Tarjeta de Débito</option>
-                                        <option value="credito">📋 Crédito (por cuotas)</option>
-                                    </select>
-                                </div>
-
-                                {paymentMethod === 'transferencia' && (
-                                    <>
-                                        <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] text-gray-300 font-medium">Banco del Cliente (Origen)</label>
-                                            <select
-                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none"
-                                                value={transferBankSelect}
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    setTransferBankSelect(val);
-                                                    if (val !== 'otro') {
-                                                        setTransferBank(val);
-                                                    } else {
-                                                        setTransferBank(customTransferBank);
-                                                    }
-                                                }}
-                                            >
-                                                <option value="">-- Seleccionar Banco Origen --</option>
-                                                <option value="Bancolombia">Bancolombia</option>
-                                                <option value="Nequi">Nequi</option>
-                                                <option value="Daviplata">Daviplata</option>
-                                                <option value="Davivienda">Davivienda</option>
-                                                <option value="Banco de Bogotá">Banco de Bogotá</option>
-                                                <option value="BBVA">BBVA</option>
-                                                <option value="Banco Agrario">Banco Agrario</option>
-                                                <option value="Scotiabank Colpatria">Scotiabank Colpatria</option>
-                                                <option value="Banco Popular">Banco Popular</option>
-                                                <option value="Banco AV Villas">Banco AV Villas</option>
-                                                <option value="Banco Itaú">Banco Itaú</option>
-                                                <option value="Nu Bank">Nu Bank</option>
-                                                <option value="Lulo Bank">Lulo Bank</option>
-                                                <option value="RappiPay">RappiPay</option>
-                                                <option value="Bold / Mercado Pago">Bold / Mercado Pago</option>
-                                                <option value="otro">➕ Otro / Banco Extranjero...</option>
-                                            </select>
-
-                                            {transferBankSelect === 'otro' && (
+                        {/* Formulario en 2 Columnas: Izquierda Formulario Scrollable, Derecha Liquidación Live */}
+                        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+                            <div className="flex-1 p-6 sm:p-8 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
+                                
+                                {/* Columna Izquierda: Secciones de Facturación */}
+                                <div className="overflow-y-auto pr-8 sm:pr-10 space-y-6 max-h-full custom-scrollbar" ref={dropdownRef}>
+                                    
+                                    {/* 1. Datos del Cliente / Comprador */}
+                                    <div>
+                                        <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal flex items-center justify-between">
+                                            <span>1. Datos del Cliente / Comprador</span>
+                                            <span className="text-[11px] text-[#6B6862] font-sans font-semibold uppercase tracking-wider">Requerido para DIAN</span>
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Factura N° *</label>
                                                 <input 
                                                     type="text" 
-                                                    className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none mt-1"
-                                                    placeholder="Escribe el nombre del banco..."
-                                                    value={customTransferBank}
-                                                    onChange={(e) => {
-                                                        setCustomTransferBank(e.target.value);
-                                                        setTransferBank(e.target.value);
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] text-gray-300 font-medium">Cuenta de Destino (Propia)</label>
-                                            {bankAccounts.length > 0 ? (
-                                                <select 
-                                                    className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none"
-                                                    value={transferDestinationAccount}
-                                                    onChange={(e) => setTransferDestinationAccount(e.target.value)}
-                                                >
-                                                    <option value="">-- Seleccionar Cuenta Destino --</option>
-                                                    {bankAccounts.map(b => (
-                                                        <option key={b.id} value={`${b.bank_name} - ${b.account_type} #${b.account_number}`}>
-                                                            {b.bank_name} ({b.account_type}) - #{b.account_number}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            ) : (
-                                                <input 
-                                                    type="text" 
-                                                    className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none"
-                                                    placeholder="Ej: Ahorros Bancolombia #1234"
-                                                    value={transferDestinationAccount}
-                                                    onChange={(e) => setTransferDestinationAccount(e.target.value)}
-                                                />
-                                            )}
-                                        </div>
-                                    </>
-                                )}
-
-                                {paymentMethod === 'credito' && (
-                                    <>
-                                        <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] text-gray-300 font-medium">Abono Inicial ($) *</label>
-                                            <input 
-                                                type="number" 
-                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none font-mono" 
-                                                value={abono} 
-                                                onChange={(e) => setAbono(e.target.value)}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] text-gray-300 font-medium">Número de Cuotas *</label>
-                                            <input 
-                                                type="number" 
-                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none font-mono" 
-                                                value={installmentsCount} 
-                                                onChange={(e) => {
-                                                     const val = e.target.value;
-                                                     if (val === '') {
-                                                         setInstallmentsCount('');
-                                                     } else {
-                                                         setInstallmentsCount(Math.max(1, parseInt(val) || 1));
-                                                     }
-                                                 }}
-                                                min="1"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] text-gray-300 font-medium">Frecuencia de Cobro *</label>
-                                            <select 
-                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none" 
-                                                value={installmentFrequency} 
-                                                onChange={(e) => setInstallmentFrequency(e.target.value as any)}
-                                                required
-                                            >
-                                                <option value="semanal">Semanal</option>
-                                                <option value="quincenal">Quincenal</option>
-                                                <option value="mensual">Mensual</option>
-                                            </select>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Logística de Despacho */}
-                        <div className="bg-[#1c1e22] border border-[#2d3036] p-4 rounded-xl space-y-3">
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-[16px]">local_shipping</span>
-                                Despacho y Logística
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-[11px] text-gray-300 font-medium">Modalidad de Entrega</label>
-                                    <select 
-                                        className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none" 
-                                        value={deliveryMethod} 
-                                        onChange={(e) => setDeliveryMethod(e.target.value as any)}
-                                    >
-                                        <option value="local">Retiro en Local</option>
-                                        <option value="domicilio">Despacho a Domicilio</option>
-                                    </select>
-                                </div>
-
-                                {deliveryMethod === 'domicilio' && (
-                                    <>
-                                        <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] text-gray-300 font-medium">Costo de Domicilio ($)</label>
-                                            <input 
-                                                type="number" 
-                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none font-mono" 
-                                                value={deliveryFee} 
-                                                onChange={(e) => setDeliveryFee(e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] text-gray-300 font-medium">Fecha Estimada de Entrega</label>
-                                            <input 
-                                                type="date" 
-                                                className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none" 
-                                                value={deliveryDate} 
-                                                onChange={(e) => setDeliveryDate(e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="flex items-center gap-2 pt-6">
-                                            <input 
-                                                type="checkbox" 
-                                                id="diffAddress"
-                                                checked={differentDeliveryAddress}
-                                                onChange={(e) => setDifferentDeliveryAddress(e.target.checked)}
-                                                className="w-4 h-4 accent-[#eab308] cursor-pointer"
-                                            />
-                                            <label htmlFor="diffAddress" className="text-xs text-white font-medium cursor-pointer">
-                                                Dirección Alternativa
-                                            </label>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                            
-                            {deliveryMethod === 'domicilio' && differentDeliveryAddress && (
-                                <div className="flex flex-col gap-1.5 pt-2">
-                                    <label className="text-[11px] text-gray-300 font-medium">Dirección de Entrega Alternativa</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Ej. Oficina de trabajo, dirección de familiar..."
-                                        className="bg-[#141517] border border-[#2d3036] rounded-lg p-2.5 text-xs focus:border-[#eab308] text-white outline-none" 
-                                        value={altDeliveryAddress} 
-                                        onChange={(e) => setAltDeliveryAddress(e.target.value)}
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Items / Detalle */}
-                        <div className="bg-[#1c1e22] border border-[#2d3036] p-4 rounded-xl space-y-3">
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
-                                Detalle de la Venta e Inventario
-                            </h4>
-
-                            {/* Barcode Fast Scanner */}
-                            <div className="bg-[#141517] border border-[#2d3036] p-3 rounded-lg flex flex-col md:flex-row items-center gap-3 justify-between">
-                                <div className="flex items-center gap-2 text-amber-400">
-                                    <span className="material-symbols-outlined text-[20px]">barcode_scanner</span>
-                                    <div className="text-left">
-                                        <p className="text-xs font-bold text-white">Lector de Códigos de Barras SKU</p>
-                                        <p className="text-[10px] text-gray-400">Dispara tu lector para cargar productos físicos de stock al instante</p>
-                                    </div>
-                                </div>
-                                <input 
-                                    type="text"
-                                    placeholder="Escanear SKU..."
-                                    value={barcodeScanInput}
-                                    onChange={(e) => setBarcodeScanInput(e.target.value)}
-                                    onKeyDown={handleBarcodeScan}
-                                    className="bg-[#1c1e22] border border-[#2d3036] rounded-lg py-1.5 px-3 text-xs text-white focus:border-[#eab308] outline-none w-full md:w-64 font-mono uppercase"
-                                />
-                            </div>
-
-                            {selectedItems.map((item, index) => {
-                                return (
-                                    <div key={index} className="bg-[#141517] p-3 rounded-xl border border-[#2d3036] space-y-3">
-                                        <div className="grid grid-cols-1 md:grid-cols-[3.4fr_0.7fr_1.2fr_0.7fr_44px] gap-2 items-end">
-                                            
-                                            <div className="flex flex-col gap-1 relative">
-                                                <label className="text-[10px] text-gray-400 font-bold">Buscar Artículo del Inventario</label>
-                                                <div className="relative">
-                                                    <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[14px] pointer-events-none">search</span>
-                                                    <input
-                                                        type="text"
-                                                        placeholder={products.length === 0 ? 'Sin productos en inventario...' : `Buscar entre ${products.length} producto(s)...`}
-                                                        value={item.productSearch}
-                                                        onChange={(e) => handleItemChange(index, 'productSearch', e.target.value)}
-                                                        onBlur={() => setTimeout(() => {
-                                                            if (!item.productId) handleItemChange(index, 'productSearch', '');
-                                                        }, 200)}
-                                                        className={`bg-[#1c1e22] border rounded-lg pl-8 pr-3 py-2 text-xs focus:border-[#eab308] text-white outline-none h-10 w-full transition ${
-                                                            item.productId ? 'border-[#eab308]/60 bg-[#eab308]/10 font-bold' : 'border-[#2d3036]'
-                                                        }`}
-                                                        autoComplete="off"
-                                                    />
-                                                    {item.productId && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { handleItemChange(index, 'productId', ''); handleItemChange(index, 'productSearch', ''); }}
-                                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-400 transition cursor-pointer border-0 bg-transparent p-0"
-                                                            title="Limpiar selección"
-                                                        >
-                                                            <span className="material-symbols-outlined text-[14px]">close</span>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                {/* Dropdown de sugerencias */}
-                                                {item.productSearch && !item.productId && (() => {
-                                                    const query = item.productSearch.trim().toLowerCase();
-                                                    const suggestions = products.filter(p =>
-                                                        p.name.toLowerCase().includes(query) ||
-                                                        (p.sku && p.sku.toLowerCase().includes(query))
-                                                    ).slice(0, 8);
-                                                    return (
-                                                        <div className="absolute left-0 right-0 top-full mt-1 bg-[#1c1e22] border border-[#2d3036] rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto">
-                                                            {suggestions.length === 0 ? (
-                                                                <div className="p-3 text-xs text-gray-400 italic text-center">No se encontraron productos con ese nombre o SKU.</div>
-                                                            ) : (
-                                                                suggestions.map(p => (
-                                                                    <button
-                                                                        key={p.id}
-                                                                        type="button"
-                                                                        onMouseDown={(e) => e.preventDefault()}
-                                                                        onClick={() => {
-                                                                            setSelectedItems(prev => {
-                                                                                const copy = [...prev];
-                                                                                copy[index] = {
-                                                                                    ...copy[index],
-                                                                                    productId: p.id,
-                                                                                    productName: p.name,
-                                                                                    productSearch: p.name,
-                                                                                    categoryId: p.category_id || copy[index].categoryId,
-                                                                                    price: Number(p.price),
-                                                                                    discountPercentage: Number(p.promo_discount || 0)
-                                                                                };
-                                                                                return copy;
-                                                                            });
-                                                                        }}
-                                                                        className="w-full text-left px-3 py-2 hover:bg-[#eab308]/15 flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent border-b border-[#2d3036]/40 last:border-0"
-                                                                    >
-                                                                        <div>
-                                                                            <p className="text-xs font-semibold text-white">{p.name}</p>
-                                                                            <p className="text-[10px] text-gray-400">{p.sku ? `SKU: ${p.sku} • ` : ''}Stock: {p.stock}</p>
-                                                                        </div>
-                                                                        <span className="text-xs font-bold text-amber-400 font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
-                                                                    </button>
-                                                                ))
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </div>
-
-                                            <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-gray-400 font-bold text-center">Cant.</label>
-                                                <input type="number" min={1} className="bg-[#1c1e22] text-center border border-[#2d3036] rounded-lg p-2 text-xs focus:border-[#eab308] text-white outline-none w-full h-10 font-mono font-bold" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required />
-                                            </div>
-                                            
-                                            <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-gray-400 font-bold">Precio Unit.</label>
-                                                <input 
-                                                    type="number" 
-                                                    className="bg-[#1c1e22] border border-[#2d3036] rounded-lg p-2 text-xs focus:border-[#eab308] text-white outline-none w-full h-10 font-mono font-bold" 
-                                                    value={item.price} 
-                                                    onChange={(e) => handleItemChange(index, 'price', e.target.value)} 
-                                                    readOnly={item.productType === 'inventory' && !item.productId}
+                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-mono font-bold" 
+                                                    value={invoiceNumber} 
+                                                    onChange={(e) => setInvoiceNumber(e.target.value)} 
                                                     required 
                                                 />
                                             </div>
-                                            
-                                            <div className="flex flex-col gap-1">
-                                                <label className="text-[10px] text-gray-400 font-bold text-center">% Desc.</label>
-                                                <input type="number" min={0} max={100} className="bg-[#1c1e22] border border-[#2d3036] rounded-lg p-2 text-xs focus:border-[#eab308] text-white outline-none w-full h-10 text-center font-mono" value={item.discountPercentage} onChange={(e) => handleItemChange(index, 'discountPercentage', e.target.value)} />
+                                            <div className="flex flex-col gap-1.5 relative">
+                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Nombre del Cliente *</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans font-semibold w-full" 
+                                                    value={customerName} 
+                                                    onChange={(e) => {
+                                                        setCustomerName(e.target.value);
+                                                        setActiveDropdownField('name');
+                                                    }}
+                                                    onFocus={() => setActiveDropdownField('name')}
+                                                    placeholder="Buscar por nombre o cédula..."
+                                                    required 
+                                                />
+                                                {activeDropdownField === 'name' && renderSuggestions(customerName, customerName, () => setActiveDropdownField(null))}
                                             </div>
-
-                                            <div className="flex justify-center items-end pb-0.5">
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => handleRemoveItem(index)} 
-                                                    className="w-8 h-8 p-0 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg cursor-pointer border-0 flex items-center justify-center transition-all duration-200"
-                                                >
-                                                    <span className="material-symbols-outlined text-[16px] leading-none">close</span>
-                                                </button>
+                                            <div className="flex flex-col gap-1.5 relative">
+                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Documento de Identidad *</label>
+                                                <div className="flex gap-1.5">
+                                                    <select 
+                                                        className="bg-white border border-[#E2DFD7] px-2.5 text-xs focus:border-[#161616] outline-none text-[#161616] font-bold rounded-none cursor-pointer" 
+                                                        value={customerDocumentType} 
+                                                        onChange={(e) => setCustomerDocumentType(e.target.value)}
+                                                    >
+                                                        <option value="CC">CC</option>
+                                                        <option value="NIT">NIT</option>
+                                                        <option value="CE">CE</option>
+                                                        <option value="PP">PP</option>
+                                                    </select>
+                                                    <input 
+                                                        type="text" 
+                                                        className="w-full bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-mono font-semibold" 
+                                                        value={customerDocumentNumber} 
+                                                        onChange={(e) => {
+                                                            setCustomerDocumentNumber(e.target.value);
+                                                            setActiveDropdownField('document');
+                                                        }} 
+                                                        onFocus={() => setActiveDropdownField('document')}
+                                                        placeholder="Número..."
+                                                        required 
+                                                    />
+                                                </div>
+                                                {activeDropdownField === 'document' && renderSuggestions(customerDocumentNumber, customerDocumentNumber, () => setActiveDropdownField(null))}
+                                            </div>
+                                            <div className="flex flex-col gap-1.5 relative">
+                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">WhatsApp *</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-mono w-full" 
+                                                    value={customerPhone} 
+                                                    onChange={(e) => {
+                                                        setCustomerPhone(e.target.value);
+                                                        setActiveDropdownField('phone');
+                                                    }} 
+                                                    onFocus={() => setActiveDropdownField('phone')}
+                                                    placeholder="57300..."
+                                                    required 
+                                                />
+                                                {activeDropdownField === 'phone' && renderSuggestions(customerPhone, customerPhone, () => setActiveDropdownField(null))}
+                                            </div>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Correo Electrónico *</label>
+                                                <input 
+                                                    type="email" 
+                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans" 
+                                                    value={customerEmail} 
+                                                    onChange={(e) => setCustomerEmail(e.target.value)} 
+                                                    placeholder="cliente@correo.com"
+                                                    required 
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Dirección de Residencia</label>
+                                                <input 
+                                                    type="text" 
+                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans" 
+                                                    value={customerAddress} 
+                                                    onChange={(e) => setCustomerAddress(e.target.value)} 
+                                                    placeholder="Calle / Carrera / Ciudad..."
+                                                />
                                             </div>
                                         </div>
                                     </div>
-                                );
-                            })}
 
-                            <div className="pt-1">
-                                <button
-                                    type="button"
-                                    onClick={handleAddItem}
-                                    className="bg-[#141517] border border-[#2d3036] hover:bg-[#222528] text-amber-400 text-xs font-bold py-2 px-4 rounded-lg flex items-center gap-1.5 cursor-pointer transition-all duration-200"
+                                    {/* Configuración Específica de Restaurantes & Gastronomía (Si aplica) */}
+                                    {clientProfile?.category === 'restaurante' && (
+                                        <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-5">
+                                            <h4 className="font-serif text-lg text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-[#D9381E] text-[20px]">restaurant</span>
+                                                Servicio Gastronómico: Mesa, Impoconsumo 8% & Propina Sugerida
+                                            </h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Mesa de Servicio</label>
+                                                    <select
+                                                        className="bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] cursor-pointer rounded-none"
+                                                        value={selectedTableId}
+                                                        onChange={(e) => setSelectedTableId(e.target.value)}
+                                                    >
+                                                        <option value="">🛒 Venta Directa (Barra / Llevar)</option>
+                                                        {tables.map(t => (
+                                                            <option key={t.id} value={t.id}>
+                                                                🪑 Mesa #{t.table_number} ({t.zone})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Mesero Atribuidor</label>
+                                                    <select
+                                                        className="bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] cursor-pointer rounded-none"
+                                                        value={selectedWaiterId}
+                                                        onChange={(e) => setSelectedWaiterId(e.target.value)}
+                                                    >
+                                                        <option value="">👤 Sin mesero asignado</option>
+                                                        {employees.map(emp => (
+                                                            <option key={emp.id} value={emp.id}>
+                                                                👤 {emp.name} ({emp.employee_role || 'Mesero'})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Impuesto Gastronómico</label>
+                                                    <select
+                                                        className="bg-white border border-[#E2DFD7] p-2.5 text-xs font-bold outline-none focus:border-[#161616] cursor-pointer text-[#D9381E] rounded-none"
+                                                        value={taxMode}
+                                                        onChange={(e) => setTaxMode(e.target.value as any)}
+                                                    >
+                                                        <option value="impoconsumo_8">🏷️ Impoconsumo (8% E.T.)</option>
+                                                        <option value="iva_19">🏷️ IVA (19%)</option>
+                                                        <option value="exento">🛡️ Exento de Impuestos (RST)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div className="flex flex-col gap-1.5 justify-center">
+                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Propina (Ley 1935)</label>
+                                                    <div className="flex items-center gap-2 pt-1">
+                                                        <input
+                                                            type="checkbox"
+                                                            id="includeTipCheck"
+                                                            checked={includeTip}
+                                                            onChange={(e) => setIncludeTip(e.target.checked)}
+                                                            className="w-4 h-4 accent-[#D9381E] cursor-pointer"
+                                                        />
+                                                        <label htmlFor="includeTipCheck" className="text-xs font-bold text-[#161616] cursor-pointer flex items-center gap-1">
+                                                            <span>Incluir</span>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                max="30"
+                                                                value={tipPercentage}
+                                                                onChange={(e) => setTipPercentage(parseFloat(e.target.value) || 0)}
+                                                                className="w-12 bg-white border border-[#E2DFD7] px-1 py-0.5 text-xs text-center font-bold text-[#D9381E] outline-none rounded-none"
+                                                            />
+                                                            <span>% Voluntario</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* 2. Condiciones y Método de Pago */}
+                                    <div>
+                                        <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
+                                            2. Condiciones y Método de Pago
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Método de Pago *</label>
+                                                <select 
+                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] font-bold outline-none rounded-none cursor-pointer" 
+                                                    value={paymentMethod} 
+                                                    onChange={(e) => setPaymentMethod(e.target.value as any)}
+                                                    required
+                                                >
+                                                    <option value="efectivo">💵 Efectivo</option>
+                                                    <option value="transferencia">🏦 Transferencia Bancaria</option>
+                                                    <option value="tarjeta_credito">💳 Tarjeta de Crédito</option>
+                                                    <option value="tarjeta_debito">💳 Tarjeta de Débito</option>
+                                                    <option value="credito">📋 Crédito (por cuotas)</option>
+                                                </select>
+                                            </div>
+
+                                            {paymentMethod === 'transferencia' && (
+                                                <>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Banco Origen</label>
+                                                        <select
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer"
+                                                            value={transferBankSelect}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                setTransferBankSelect(val);
+                                                                if (val !== 'otro') {
+                                                                    setTransferBank(val);
+                                                                } else {
+                                                                    setTransferBank(customTransferBank);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <option value="">-- Seleccionar Banco Origen --</option>
+                                                            <option value="Bancolombia">Bancolombia</option>
+                                                            <option value="Nequi">Nequi</option>
+                                                            <option value="Daviplata">Daviplata</option>
+                                                            <option value="Davivienda">Davivienda</option>
+                                                            <option value="Banco de Bogotá">Banco de Bogotá</option>
+                                                            <option value="BBVA">BBVA</option>
+                                                            <option value="Banco Agrario">Banco Agrario</option>
+                                                            <option value="Scotiabank Colpatria">Scotiabank Colpatria</option>
+                                                            <option value="Banco Popular">Banco Popular</option>
+                                                            <option value="Banco AV Villas">Banco AV Villas</option>
+                                                            <option value="Banco Itaú">Banco Itaú</option>
+                                                            <option value="Nu Bank">Nu Bank</option>
+                                                            <option value="Lulo Bank">Lulo Bank</option>
+                                                            <option value="RappiPay">RappiPay</option>
+                                                            <option value="Bold / Mercado Pago">Bold / Mercado Pago</option>
+                                                            <option value="otro">➕ Otro / Banco Extranjero...</option>
+                                                        </select>
+
+                                                        {transferBankSelect === 'otro' && (
+                                                            <input 
+                                                                type="text" 
+                                                                className="bg-white border border-[#E2DFD7] p-2.5 text-xs focus:border-[#161616] text-[#161616] outline-none mt-1 rounded-none font-sans"
+                                                                placeholder="Escribe el nombre del banco..."
+                                                                value={customTransferBank}
+                                                                onChange={(e) => {
+                                                                    setCustomTransferBank(e.target.value);
+                                                                    setTransferBank(e.target.value);
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Cuenta Propia de Destino</label>
+                                                        {bankAccounts.length > 0 ? (
+                                                            <select 
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer"
+                                                                value={transferDestinationAccount}
+                                                                onChange={(e) => setTransferDestinationAccount(e.target.value)}
+                                                            >
+                                                                <option value="">-- Seleccionar Cuenta Destino --</option>
+                                                                {bankAccounts.map(b => (
+                                                                    <option key={b.id} value={`${b.bank_name} - ${b.account_type} #${b.account_number}`}>
+                                                                        {b.bank_name} ({b.account_type}) - #{b.account_number}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        ) : (
+                                                            <input 
+                                                                type="text" 
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none font-sans"
+                                                                placeholder="Ej: Ahorros Bancolombia #1234"
+                                                                value={transferDestinationAccount}
+                                                                onChange={(e) => setTransferDestinationAccount(e.target.value)}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {paymentMethod === 'credito' && (
+                                                <>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Abono Inicial ($) *</label>
+                                                        <input 
+                                                            type="number" 
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none" 
+                                                            value={abono} 
+                                                            onChange={(e) => setAbono(e.target.value)}
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Número de Cuotas *</label>
+                                                        <input 
+                                                            type="number" 
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none" 
+                                                            value={installmentsCount} 
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (val === '') {
+                                                                    setInstallmentsCount('');
+                                                                } else {
+                                                                    setInstallmentsCount(Math.max(1, parseInt(val) || 1));
+                                                                }
+                                                            }}
+                                                            min="1"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Frecuencia de Cobro *</label>
+                                                        <select 
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer" 
+                                                            value={installmentFrequency} 
+                                                            onChange={(e) => setInstallmentFrequency(e.target.value as any)}
+                                                            required
+                                                        >
+                                                            <option value="semanal">Semanal</option>
+                                                            <option value="quincenal">Quincenal</option>
+                                                            <option value="mensual">Mensual</option>
+                                                        </select>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 3. Despacho y Logística */}
+                                    <div>
+                                        <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
+                                            3. Despacho y Logística
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Modalidad de Entrega</label>
+                                                <select 
+                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer" 
+                                                    value={deliveryMethod} 
+                                                    onChange={(e) => setDeliveryMethod(e.target.value as any)}
+                                                >
+                                                    <option value="local">🏪 Retiro en Local / Tienda</option>
+                                                    <option value="domicilio">🚚 Despacho a Domicilio</option>
+                                                </select>
+                                            </div>
+
+                                            {deliveryMethod === 'domicilio' && (
+                                                <>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Costo de Domicilio ($)</label>
+                                                        <input 
+                                                            type="number" 
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none" 
+                                                            value={deliveryFee} 
+                                                            onChange={(e) => setDeliveryFee(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Fecha Estimada</label>
+                                                        <input 
+                                                            type="date" 
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none" 
+                                                            value={deliveryDate} 
+                                                            onChange={(e) => setDeliveryDate(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="flex items-center gap-2 pt-6">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            id="diffAddress"
+                                                            checked={differentDeliveryAddress}
+                                                            onChange={(e) => setDifferentDeliveryAddress(e.target.checked)}
+                                                            className="w-4 h-4 accent-[#D9381E] cursor-pointer"
+                                                        />
+                                                        <label htmlFor="diffAddress" className="text-xs text-[#161616] font-semibold cursor-pointer">
+                                                            Dirección Alternativa
+                                                        </label>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                        
+                                        {deliveryMethod === 'domicilio' && differentDeliveryAddress && (
+                                            <div className="flex flex-col gap-1.5 pt-3">
+                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Dirección de Entrega Alternativa</label>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Ej. Oficina de trabajo, dirección de familiar..."
+                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none font-sans" 
+                                                    value={altDeliveryAddress} 
+                                                    onChange={(e) => setAltDeliveryAddress(e.target.value)}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* 4. Detalle de la Venta e Inventario */}
+                                    <div>
+                                        <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
+                                            4. Detalle de la Venta e Inventario
+                                        </h4>
+
+                                        {/* Barcode Fast Scanner Banner */}
+                                        <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-4 flex flex-col md:flex-row items-center gap-4 justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <span className="material-symbols-outlined text-[24px] text-[#D9381E]">barcode_scanner</span>
+                                                <div className="text-left">
+                                                    <p className="text-xs font-bold text-[#161616] uppercase tracking-wider">Lector de Códigos de Barras SKU</p>
+                                                    <p className="text-[10px] text-[#6B6862]">Dispara tu pistola lectora para cargar artículos físicos al instante</p>
+                                                </div>
+                                            </div>
+                                            <input 
+                                                type="text"
+                                                placeholder="Escanear SKU / Pistola..."
+                                                value={barcodeScanInput}
+                                                onChange={(e) => setBarcodeScanInput(e.target.value)}
+                                                onKeyDown={handleBarcodeScan}
+                                                className="bg-white border border-[#E2DFD7] py-2 px-3 text-xs text-[#161616] focus:border-[#161616] outline-none w-full md:w-72 font-mono uppercase rounded-none"
+                                            />
+                                        </div>
+
+                                        {/* Lista de Items */}
+                                        <div className="space-y-3">
+                                            {selectedItems.map((item, index) => {
+                                                return (
+                                                    <div key={index} className="bg-white p-4 border border-[#E2DFD7] space-y-3 transition hover:border-[#161616]">
+                                                        <div className="grid grid-cols-1 md:grid-cols-[3.4fr_0.7fr_1.2fr_0.7fr_44px] gap-3 items-end">
+                                                            
+                                                            <div className="flex flex-col gap-1 relative">
+                                                                <label className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">Artículo del Inventario *</label>
+                                                                <div className="relative">
+                                                                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6B6862] text-[16px] pointer-events-none">search</span>
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder={products.length === 0 ? 'Sin productos en inventario...' : `Buscar entre ${products.length} producto(s)...`}
+                                                                        value={item.productSearch}
+                                                                        onChange={(e) => handleItemChange(index, 'productSearch', e.target.value)}
+                                                                        onBlur={() => setTimeout(() => {
+                                                                            if (!item.productId) handleItemChange(index, 'productSearch', '');
+                                                                        }, 200)}
+                                                                        className={`bg-white border pl-9 pr-8 py-2.5 text-xs focus:border-[#161616] text-[#161616] outline-none h-10 w-full transition rounded-none font-sans ${
+                                                                            item.productId ? 'border-[#161616] font-bold bg-[#FAF8F5]' : 'border-[#E2DFD7]'
+                                                                        }`}
+                                                                        autoComplete="off"
+                                                                    />
+                                                                    {item.productId && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => { handleItemChange(index, 'productId', ''); handleItemChange(index, 'productSearch', ''); }}
+                                                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6B6862] hover:text-[#D9381E] transition cursor-pointer border-0 bg-transparent p-0"
+                                                                            title="Limpiar selección"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-[16px]">close</span>
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Dropdown de sugerencias de productos */}
+                                                                {item.productSearch && !item.productId && (() => {
+                                                                    const query = item.productSearch.trim().toLowerCase();
+                                                                    const suggestions = products.filter(p =>
+                                                                        p.name.toLowerCase().includes(query) ||
+                                                                        (p.sku && p.sku.toLowerCase().includes(query))
+                                                                    ).slice(0, 8);
+                                                                    return (
+                                                                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#161616] shadow-2xl z-50 max-h-52 overflow-y-auto divide-y divide-[#E2DFD7] rounded-none">
+                                                                            {suggestions.length === 0 ? (
+                                                                                <div className="p-3 text-xs text-[#6B6862] italic text-center">No se encontraron productos con ese nombre o SKU.</div>
+                                                                            ) : (
+                                                                                suggestions.map(p => (
+                                                                                    <button
+                                                                                        key={p.id}
+                                                                                        type="button"
+                                                                                        onMouseDown={(e) => e.preventDefault()}
+                                                                                        onClick={() => {
+                                                                                            setSelectedItems(prev => {
+                                                                                                const copy = [...prev];
+                                                                                                copy[index] = {
+                                                                                                    ...copy[index],
+                                                                                                    productId: p.id,
+                                                                                                    productName: p.name,
+                                                                                                    productSearch: p.name,
+                                                                                                    categoryId: p.category_id || copy[index].categoryId,
+                                                                                                    price: Number(p.price),
+                                                                                                    discountPercentage: Number(p.promo_discount || 0)
+                                                                                                };
+                                                                                                return copy;
+                                                                                            });
+                                                                                        }}
+                                                                                        className="w-full text-left px-3 py-2.5 hover:bg-[#FAF8F5] flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent"
+                                                                                    >
+                                                                                        <div>
+                                                                                            <p className="text-xs font-bold text-[#161616]">{p.name}</p>
+                                                                                            <p className="text-[10px] text-[#6B6862]">{p.sku ? `SKU: ${p.sku} • ` : ''}Stock: {p.stock}</p>
+                                                                                        </div>
+                                                                                        <span className="text-xs font-bold text-[#D9381E] font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
+                                                                                    </button>
+                                                                                ))
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })()}
+                                                            </div>
+
+                                                            <div className="flex flex-col gap-1">
+                                                                <label className="text-[10px] text-[#6B6862] font-bold text-center uppercase tracking-wider">Cant.</label>
+                                                                <input 
+                                                                    type="number" 
+                                                                    min={1} 
+                                                                    className="bg-white text-center border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] text-[#161616] outline-none w-full h-10 font-mono font-bold rounded-none" 
+                                                                    value={item.quantity} 
+                                                                    onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} 
+                                                                    required 
+                                                                />
+                                                            </div>
+                                                            
+                                                            <div className="flex flex-col gap-1">
+                                                                <label className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">Precio Unit.</label>
+                                                                <input 
+                                                                    type="number" 
+                                                                    className="bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] text-[#161616] outline-none w-full h-10 font-mono font-bold rounded-none" 
+                                                                    value={item.price} 
+                                                                    onChange={(e) => handleItemChange(index, 'price', e.target.value)} 
+                                                                    readOnly={item.productType === 'inventory' && !item.productId}
+                                                                    required 
+                                                                />
+                                                            </div>
+                                                            
+                                                            <div className="flex flex-col gap-1">
+                                                                <label className="text-[10px] text-[#6B6862] font-bold text-center uppercase tracking-wider">% Desc.</label>
+                                                                <input 
+                                                                    type="number" 
+                                                                    min={0} 
+                                                                    max={100} 
+                                                                    className="bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] text-[#161616] outline-none w-full h-10 text-center font-mono rounded-none" 
+                                                                    value={item.discountPercentage} 
+                                                                    onChange={(e) => handleItemChange(index, 'discountPercentage', e.target.value)} 
+                                                                />
+                                                            </div>
+
+                                                            <div className="flex justify-center items-end pb-0.5">
+                                                                <button 
+                                                                    type="button" 
+                                                                    onClick={() => handleRemoveItem(index)} 
+                                                                    className="w-10 h-10 p-0 bg-transparent hover:bg-[#FAF8F5] text-[#6B6862] hover:text-[#D9381E] border border-[#E2DFD7] hover:border-[#161616] cursor-pointer flex items-center justify-center transition rounded-none"
+                                                                    title="Eliminar línea"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[16px]">close</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="pt-3">
+                                            <button
+                                                type="button"
+                                                onClick={handleAddItem}
+                                                className="bg-white border border-[#E2DFD7] hover:border-[#161616] hover:bg-[#FAF8F5] text-[#161616] text-xs font-bold py-2.5 px-4 rounded-none flex items-center gap-1.5 cursor-pointer transition uppercase tracking-wider"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px] text-[#D9381E]">add_circle</span>
+                                                + AGREGAR OTRO PRODUCTO / LÍNEA
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Columna Derecha: Sidebar con Liquidación y Resumen Live */}
+                                <div className="flex flex-col justify-between space-y-6 h-full">
+                                    <div className="space-y-4">
+                                        {/* Card Resumen de Cliente */}
+                                        <div className="bg-white border border-[#E2DFD7] p-5 shadow-sm space-y-3">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B6862] block border-b border-[#E2DFD7] pb-2">
+                                                CLIENTE ASIGNADO
+                                            </span>
+                                            <div>
+                                                <p className="text-sm font-bold text-[#161616]">{customerName || 'Consumidor Final / Sin Asignar'}</p>
+                                                <p className="text-xs text-[#6B6862] mt-0.5 font-mono">
+                                                    {customerDocumentType}: {customerDocumentNumber || '222222222222'}
+                                                </p>
+                                                {customerPhone && (
+                                                    <p className="text-xs text-[#6B6862] font-mono mt-0.5">Tel: +{customerPhone}</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Card Liquidación de Factura */}
+                                        <div className="bg-white border border-[#E2DFD7] p-5 shadow-sm space-y-3">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B6862] block border-b border-[#E2DFD7] pb-2">
+                                                LIQUIDACIÓN DE FACTURA
+                                            </span>
+                                            
+                                            <div className="text-xs space-y-2 text-[#6B6862]">
+                                                <div className="flex justify-between items-center">
+                                                    <span>Subtotal ({selectedItems.filter(i => i.productId || i.productName).length} ítems):</span>
+                                                    <span className="font-mono font-bold text-[#161616]">{formatPrice(subtotalItems)}</span>
+                                                </div>
+
+                                                {deliveryMethod === 'domicilio' && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span>Despacho a Domicilio:</span>
+                                                        <span className="font-mono font-bold text-[#161616]">{formatPrice(parseFloat(deliveryFee) || 0)}</span>
+                                                    </div>
+                                                )}
+
+                                                {clientProfile?.category === 'restaurante' && taxAmount > 0 && (
+                                                    <div className="flex justify-between items-center text-[#D9381E]">
+                                                        <span>Impuesto ({taxMode === 'impoconsumo_8' ? 'Impoconsumo 8%' : 'IVA 19%'}):</span>
+                                                        <span className="font-mono font-bold">{formatPrice(taxAmount)}</span>
+                                                    </div>
+                                                )}
+
+                                                {clientProfile?.category === 'restaurante' && includeTip && tipAmount > 0 && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span>Propina Sugerida ({tipPercentage}%):</span>
+                                                        <span className="font-mono font-bold text-[#161616]">{formatPrice(tipAmount)}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="border-t border-[#E2DFD7] pt-4 mt-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B6862] block">
+                                                    TOTAL A COBRAR
+                                                </span>
+                                                <div className="font-serif text-3xl font-normal text-[#D9381E] font-mono leading-tight mt-1">
+                                                    {formatPrice(totalAmount + (deliveryMethod === 'domicilio' ? parseFloat(deliveryFee) || 0 : 0))}
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-3 text-xs space-y-1">
+                                                <p className="font-bold text-[#161616] uppercase text-[10px] tracking-wider flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-[14px] text-[#D9381E]">account_balance_wallet</span>
+                                                    Condición: {paymentMethod.toUpperCase()}
+                                                </p>
+                                                {paymentMethod === 'credito' && (
+                                                    <p className="text-[11px] text-[#6B6862]">
+                                                        Abono: <strong className="text-[#161616] font-mono">{formatPrice(parseFloat(abono) || 0)}</strong> • {installmentsCount} cuotas ({installmentFrequency})
+                                                    </p>
+                                                )}
+                                                <p className="text-[10px] text-[#6B6862]">Vence: {dueDate || 'Hoy'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer del Modal */}
+                            <div className="modal-bottom px-8 py-4 border-t border-[#E2DFD7] flex flex-wrap items-center justify-end gap-3 bg-[#F6F4EE] shrink-0">
+                                <button 
+                                    type="button" 
+                                    onClick={resetForm}
+                                    className="bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-none cursor-pointer"
                                 >
-                                    <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                                    + AGREGAR OTRO PRODUCTO / LÍNEA
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Resumen Total y Botones */}
-                        <div className="bg-[#1c1e22] p-4 rounded-xl border border-[#2d3036] flex flex-col md:flex-row justify-between items-center gap-4 shadow-lg">
-                            <div className="text-left">
-                                <p className="text-xs text-gray-400">Subtotal Factura: <span className="font-mono">{formatPrice(totalAmount)}</span></p>
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                    Domicilio: <span className="font-mono">{deliveryMethod === 'domicilio' ? formatPrice(parseFloat(deliveryFee) || 0) : '$0'}</span>
-                                </p>
-                                <p className="text-2xl font-extrabold text-emerald-400 font-mono mt-1">
-                                    TOTAL: {formatPrice(totalAmount + (deliveryMethod === 'domicilio' ? parseFloat(deliveryFee) || 0 : 0))}
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <button type="button" onClick={resetForm} className="px-4 py-2 bg-transparent hover:bg-[#222528] text-gray-300 text-xs font-bold rounded-lg border border-[#2d3036] cursor-pointer">
                                     Cancelar
                                 </button>
-                                <button type="submit" className="px-5 py-2.5 bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-xs rounded-lg transition-all border-0 cursor-pointer shadow-md flex items-center gap-1.5">
-                                    <span className="material-symbols-outlined text-[18px]">send</span>
+                                <button 
+                                    type="submit" 
+                                    className="bg-[#D9381E] hover:bg-[#b82e18] text-white border-0 px-7 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">receipt_long</span>
                                     EMITIR FACTURA DE VENTA 🧾
                                 </button>
                             </div>
-                        </div>
-                    </form>
-                </div>
+                        </form>
+                    </div>
+                </div>,
+                document.body
             )}
 
-            {/* BARRA DE BÚSQUEDA Y FILTROS */}
-            <div className="glass-card p-4 space-y-3">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-                    <div className="relative flex-1 w-full">
-                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
-                        <input
-                            type="text"
-                            placeholder="Buscar por cliente, N° factura, teléfono o cédula..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-surface-container border border-outline/20 rounded-xl pl-10 pr-4 py-2 text-xs text-on-surface focus:border-primary outline-none transition"
-                        />
-                    </div>
-                    <div className="flex items-center gap-2 w-full md:w-auto">
+            {/* BARRA DE BÚSQUEDA Y FILTROS WABI-SABI */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 border-b border-[#161616] pb-3 mb-6">
+                <div className="relative flex-1 flex items-center min-w-[280px]">
+                    <span className="material-symbols-outlined text-[18px] text-[#6B6862] mr-2 shrink-0">search</span>
+                    <input
+                        type="text"
+                        placeholder="Buscar por cliente, N° factura, teléfono o cédula..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-transparent border-none py-1.5 text-xs text-[#161616] placeholder-[#6B6862] outline-none font-sans"
+                    />
+                </div>
+                <div className="flex items-center gap-3 flex-wrap text-xs text-[#161616]">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">ESTADO:</span>
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value as any)}
-                            className="bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface focus:border-primary outline-none transition cursor-pointer"
+                            className="bg-white border border-[#E2DFD7] py-1.5 px-2.5 text-xs text-[#161616] outline-none cursor-pointer rounded-none font-sans"
                         >
                             <option value="all">Todas las Facturas</option>
                             <option value="paid">✅ Pagadas</option>
                             <option value="pending">⏳ Pendientes</option>
                             <option value="overdue">🔴 En Mora</option>
                         </select>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">VENDEDOR:</span>
                         <select
                             value={sellerFilter}
                             onChange={(e) => setSellerFilter(e.target.value)}
-                            className="bg-surface-container border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface focus:border-primary outline-none transition cursor-pointer"
+                            className="bg-white border border-[#E2DFD7] py-1.5 px-2.5 text-xs text-[#161616] outline-none cursor-pointer rounded-none font-sans"
                         >
                             <option value="all">Todos los Vendedores</option>
                             {employees.map(emp => (
@@ -1605,107 +1745,110 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                 </option>
                             ))}
                         </select>
-                        <button
-                            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                            className={`px-3 py-2 rounded-xl border text-xs font-medium flex items-center gap-1 transition cursor-pointer ${
-                                showAdvancedFilters || dateFrom || dateTo || minAmount || maxAmount
-                                    ? 'bg-primary/20 border-primary text-primary'
-                                    : 'bg-surface-container border-outline/20 text-on-surface-variant hover:bg-surface-container-high'
-                            }`}
-                        >
-                            <span className="material-symbols-outlined text-[16px]">tune</span>
-                            Filtros
-                        </button>
-                        {(searchTerm || statusFilter !== 'all' || sellerFilter !== 'all' || dateFrom || dateTo || minAmount || maxAmount) && (
-                            <button
-                                onClick={resetFilters}
-                                className="px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline/20 text-xs text-red-400 font-medium transition cursor-pointer flex items-center gap-1"
-                                title="Limpiar todos los filtros"
-                            >
-                                <span className="material-symbols-outlined text-[16px]">filter_alt_off</span>
-                                Limpiar
-                            </button>
-                        )}
                     </div>
-                </div>
 
-                {/* Filtros Avanzados desplegables */}
-                {showAdvancedFilters && (
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-3 border-t border-outline/10 text-xs">
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[10px] text-on-surface-variant font-medium">Fecha Desde</label>
-                            <input
-                                type="date"
-                                value={dateFrom}
-                                onChange={(e) => setDateFrom(e.target.value)}
-                                className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none focus:border-primary"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[10px] text-on-surface-variant font-medium">Fecha Hasta</label>
-                            <input
-                                type="date"
-                                value={dateTo}
-                                onChange={(e) => setDateTo(e.target.value)}
-                                className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none focus:border-primary"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[10px] text-on-surface-variant font-medium">Monto Mínimo ($)</label>
-                            <input
-                                type="number"
-                                placeholder="Ej: 50000"
-                                value={minAmount}
-                                onChange={(e) => setMinAmount(e.target.value)}
-                                className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none focus:border-primary"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="text-[10px] text-on-surface-variant font-medium">Monto Máximo ($)</label>
-                            <input
-                                type="number"
-                                placeholder="Ej: 500000"
-                                value={maxAmount}
-                                onChange={(e) => setMaxAmount(e.target.value)}
-                                className="bg-surface-container border border-outline/20 rounded-lg p-2 text-xs text-on-surface outline-none focus:border-primary"
-                            />
-                        </div>
-                    </div>
-                )}
+                    <button
+                        onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                        className={`px-3 py-1.5 rounded-none border text-xs font-semibold uppercase tracking-wider flex items-center gap-1 transition cursor-pointer ${
+                            showAdvancedFilters || dateFrom || dateTo || minAmount || maxAmount
+                                ? 'bg-[#161616] text-white border-[#161616]'
+                                : 'bg-white border-[#E2DFD7] text-[#161616] hover:border-[#161616]'
+                        }`}
+                    >
+                        <span className="material-symbols-outlined text-[16px]">tune</span>
+                        Filtros
+                    </button>
+
+                    {(searchTerm || statusFilter !== 'all' || sellerFilter !== 'all' || dateFrom || dateTo || minAmount || maxAmount) && (
+                        <button
+                            onClick={resetFilters}
+                            className="px-3 py-1.5 rounded-none bg-[#D9381E] text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1 border-0"
+                            title="Limpiar todos los filtros"
+                        >
+                            <span className="material-symbols-outlined text-[16px]">filter_alt_off</span>
+                            Limpiar
+                        </button>
+                    )}
+                </div>
             </div>
 
+            {/* Filtros Avanzados desplegables */}
+            {showAdvancedFilters && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-[#FAF8F5] border border-[#E2DFD7] mb-6 text-xs">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">Fecha Desde</label>
+                        <input
+                            type="date"
+                            value={dateFrom}
+                            onChange={(e) => setDateFrom(e.target.value)}
+                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none focus:border-[#161616] rounded-none"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">Fecha Hasta</label>
+                        <input
+                            type="date"
+                            value={dateTo}
+                            onChange={(e) => setDateTo(e.target.value)}
+                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none focus:border-[#161616] rounded-none"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">Monto Mínimo ($)</label>
+                        <input
+                            type="number"
+                            placeholder="Ej: 50000"
+                            value={minAmount}
+                            onChange={(e) => setMinAmount(e.target.value)}
+                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono rounded-none"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">Monto Máximo ($)</label>
+                        <input
+                            type="number"
+                            placeholder="Ej: 500000"
+                            value={maxAmount}
+                            onChange={(e) => setMaxAmount(e.target.value)}
+                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono rounded-none"
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* TABLA DE FACTURAS WABI-SABI */}
             {loading ? (
-                <div className="flex justify-center py-10">
-                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex justify-center py-12">
+                    <div className="w-8 h-8 border-2 border-[#D9381E] border-t-transparent rounded-full animate-spin"></div>
                 </div>
             ) : fetchError ? (
-                <div className="glass-card p-8 text-center space-y-3">
-                    <span className="material-symbols-outlined text-4xl text-red-400">wifi_off</span>
-                    <p className="text-sm font-semibold text-red-400">{fetchError}</p>
+                <div className="bg-white border border-[#E2DFD7] p-8 text-center space-y-3">
+                    <span className="material-symbols-outlined text-4xl text-[#D9381E]">wifi_off</span>
+                    <p className="text-sm font-semibold text-[#D9381E]">{fetchError}</p>
                     <button
                         onClick={() => fetchData()}
-                        className="bg-primary hover:opacity-90 text-on-primary text-xs font-semibold py-2 px-4 rounded-xl transition cursor-pointer"
+                        className="bg-[#161616] hover:bg-[#D9381E] text-white text-xs font-semibold py-2 px-4 rounded-none transition cursor-pointer uppercase tracking-wider border-0"
                     >
                         Reintentar
                     </button>
                 </div>
             ) : filteredInvoices.length === 0 ? (
-                <div className="glass-card p-12 text-center space-y-2">
-                    <span className="material-symbols-outlined text-3xl text-on-surface-variant/40">receipt_long</span>
-                    <p className="text-sm text-on-surface-variant">
+                <div className="bg-white border border-[#E2DFD7] p-12 text-center space-y-2">
+                    <span className="material-symbols-outlined text-3xl text-[#6B6862]">receipt_long</span>
+                    <p className="text-sm text-[#6B6862]">
                         {invoices.length === 0 ? 'Aún no hay facturas registradas. ¡Crea tu primera factura!' : 'No se encontraron facturas con los filtros seleccionados.'}
                     </p>
                     {(searchTerm || statusFilter !== 'all' || dateFrom || dateTo) && (
-                        <button onClick={resetFilters} className="text-xs text-primary hover:underline cursor-pointer border-0 bg-transparent">
+                        <button onClick={resetFilters} className="text-xs text-[#D9381E] hover:underline cursor-pointer border-0 bg-transparent font-bold">
                             Limpiar filtros
                         </button>
                     )}
                 </div>
             ) : (
-                <div className="glass-card overflow-hidden">
+                <div className="bg-white border border-[#E2DFD7] overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-surface-container/50 border-b border-outline/10 text-xs text-on-surface-variant uppercase font-semibold">
+                            <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[11px] text-[#6B6862] uppercase tracking-wider font-semibold">
                                 <th className="p-4">Factura / Cliente</th>
                                 <th className="p-4">WhatsApp</th>
                                 <th className="p-4">Monto Total</th>
@@ -1715,22 +1858,22 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                 <th className="p-4 text-right">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-outline/10 text-sm">
+                        <tbody className="divide-y divide-[#E2DFD7] text-xs">
                             {filteredInvoices.map((inv) => (
                                 <tr 
                                     key={inv.id} 
                                     onClick={() => handleOpenInvoiceDetail(inv)}
-                                    className="hover:bg-surface-container/60 transition-colors cursor-pointer group"
+                                    className="hover:bg-[#FAF8F5] transition-colors cursor-pointer group"
                                 >
                                     <td className="p-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-semibold text-on-surface text-xs font-mono bg-surface-container py-1 px-2 rounded-lg border border-outline/10 group-hover:border-primary/40 transition">
+                                        <div className="flex items-center gap-3">
+                                            <span className="font-semibold text-[#161616] text-xs font-mono bg-[#F6F4EE] py-1 px-2.5 border border-[#E2DFD7] group-hover:border-[#161616] transition shrink-0">
                                                 {inv.invoice_number}
                                             </span>
                                             <div>
-                                                <p className="font-semibold text-on-surface group-hover:text-primary transition">{inv.customer_name}</p>
-                                                <p className="text-[10px] text-on-surface-variant flex items-center gap-1 mt-0.5 font-medium">
-                                                    <span className="material-symbols-outlined text-[12px] opacity-75">payments</span>
+                                                <p className="font-bold text-[#161616] group-hover:text-[#D9381E] transition">{inv.customer_name}</p>
+                                                <p className="text-[10px] text-[#6B6862] flex items-center gap-1 mt-0.5 font-medium">
+                                                    <span className="material-symbols-outlined text-[13px] opacity-75">payments</span>
                                                     {inv.payment_method === 'efectivo' || inv.payment_method === 'contado' ? '💵 Efectivo' :
                                                      inv.payment_method === 'transferencia' ? `🏦 Transf. (${inv.transfer_bank || 'Banco'})` :
                                                      inv.payment_method === 'tarjeta_credito' || inv.payment_method === 'tarjeta' ? '💳 Tarjeta Crédito' :
@@ -1740,27 +1883,27 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="p-4 font-mono text-xs text-on-surface-variant">+{inv.customer_phone}</td>
-                                    <td className="p-4 font-semibold text-on-surface text-xs">
+                                    <td className="p-4 font-mono text-xs text-[#6B6862]">+{inv.customer_phone}</td>
+                                    <td className="p-4 font-bold text-[#161616] text-xs font-mono">
                                         {formatPrice(parseFloat(inv.total_amount) + parseFloat(inv.delivery_fee || '0'))}
                                     </td>
-                                    <td className="p-4 text-xs text-on-surface-variant font-medium">
-                                        <div className="flex items-center gap-1 uppercase text-[9px] font-bold">
-                                            <span className="material-symbols-outlined text-[14px]">
+                                    <td className="p-4 text-xs text-[#6B6862] font-semibold">
+                                        <div className="flex items-center gap-1 uppercase text-[10px] tracking-wider">
+                                            <span className="material-symbols-outlined text-[15px]">
                                                 {inv.delivery_method === 'domicilio' ? 'local_shipping' : 'storefront'}
                                             </span>
                                             {inv.delivery_method === 'domicilio' ? `Envío (${inv.delivery_status})` : 'Local'}
                                         </div>
                                     </td>
-                                    <td className="p-4 text-xs font-medium text-on-surface-variant">
+                                    <td className="p-4 text-xs font-medium text-[#6B6862]">
                                         {new Date(inv.due_date).toLocaleDateString('es-CO')}
                                     </td>
                                     <td className="p-4 space-y-1">
                                         <div className="flex items-center gap-1.5 flex-wrap">
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${
-                                                inv.status === 'paid' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                                                inv.status === 'overdue' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                                                'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                            <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                                inv.status === 'paid' ? 'bg-[#E6F4EA] text-[#1E4620] border border-[#A8DADC]' :
+                                                inv.status === 'overdue' ? 'bg-[#FCE8E6] text-[#C5221F] border border-[#F5C6CB]' :
+                                                'bg-[#FEF7E0] text-[#7A5A00] border border-[#FEEFC3]'
                                             }`}>
                                                 {inv.status === 'paid' ? 'Pagado' : inv.status === 'overdue' ? 'Mora' : 'Pendiente'}
                                             </span>
@@ -1770,10 +1913,10 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                         e.stopPropagation();
                                                         setLightboxUrl(inv.payment_receipt_url!);
                                                     }}
-                                                    className="bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-0.5 hover:bg-primary/30 cursor-pointer"
+                                                    className="bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] hover:border-[#161616] px-1.5 py-0.5 text-[9px] font-bold flex items-center gap-0.5 cursor-pointer uppercase tracking-wider"
                                                     title="Ver foto del comprobante de transferencia"
                                                 >
-                                                    <span className="material-symbols-outlined text-[10px]">receipt_long</span>
+                                                    <span className="material-symbols-outlined text-[11px] text-[#D9381E]">receipt_long</span>
                                                     Soporte 📸
                                                 </span>
                                             )}
@@ -1783,7 +1926,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                         <div className="flex justify-end gap-1.5">
                                             <button 
                                                 onClick={() => handleOpenInvoiceDetail(inv)}
-                                                className="p-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg transition cursor-pointer flex items-center justify-center border border-outline/20"
+                                                className="p-1.5 bg-white hover:bg-[#FAF8F5] text-[#161616] rounded-none transition cursor-pointer flex items-center justify-center border border-[#E2DFD7]"
                                                 title="Ver Detalle Completo de Factura"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">visibility</span>
@@ -1793,15 +1936,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                     <button 
                                                         onClick={() => handlePayInvoice(inv.id)}
                                                         disabled={actionLoadingId === inv.id}
-                                                        className="p-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded-lg transition cursor-pointer flex items-center justify-center disabled:opacity-40"
+                                                        className="p-1.5 bg-[#E6F4EA] hover:bg-[#c9ebd0] text-[#1E4620] border border-[#A8DADC] rounded-none transition cursor-pointer flex items-center justify-center disabled:opacity-40 font-bold"
                                                         title="Registrar Pago"
                                                     >
-                                                        <span className="material-symbols-outlined text-[16px] font-bold">check</span>
+                                                        <span className="material-symbols-outlined text-[16px]">check</span>
                                                     </button>
                                                     <button 
                                                         onClick={() => handleTriggerCollection(inv.id)}
                                                         disabled={actionLoadingId === inv.id}
-                                                        className="p-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition cursor-pointer flex items-center justify-center disabled:opacity-40"
+                                                        className="p-1.5 bg-white hover:bg-[#FAF8F5] text-[#D9381E] border border-[#E2DFD7] rounded-none transition cursor-pointer flex items-center justify-center disabled:opacity-40"
                                                         title="Enviar Cobro por WhatsApp"
                                                     >
                                                         <span className="material-symbols-outlined text-[16px]">send</span>
@@ -1810,7 +1953,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             )}
                                             <button 
                                                 onClick={() => handlePrintInvoice(inv)}
-                                                className="p-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition cursor-pointer flex items-center justify-center"
+                                                className="p-1.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] rounded-none transition cursor-pointer flex items-center justify-center"
                                                 title="Imprimir Recibo Térmico (80mm)"
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">print</span>
@@ -1824,94 +1967,95 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 </div>
             )}
 
-            {/* MODAL DETALLE COMPLETO DE FACTURA */}
+            {/* MODAL DETALLE COMPLETO DE FACTURA WABI-SABI */}
             {selectedInvoice && createPortal(
-                <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="relative bg-[#0a0b0c] border border-[#222428] w-full max-w-3xl max-h-[88vh] flex flex-col rounded-xl shadow-2xl overflow-hidden animate-in fade-in duration-150">
-                        {/* Header Fijo Sticky del Modal - Casi Negro */}
-                        <div className="sticky top-0 z-30 bg-[#070708] border-b border-[#1e2023] p-4 sm:p-5 flex items-center justify-between shadow-md shrink-0">
+                <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="relative bg-[#F6F4EE] border border-[#161616] w-full max-w-4xl max-h-[90vh] flex flex-col rounded-none shadow-2xl overflow-hidden animate-fade-in">
+                        
+                        {/* Header Fijo Sticky del Modal */}
+                        <div className="sticky top-0 z-30 bg-[#F6F4EE] border-b border-[#E2DFD7] p-5 sm:p-6 flex items-center justify-between shadow-xs shrink-0">
                             <div>
-                                <div className="flex items-center gap-2.5">
-                                    <span className="material-symbols-outlined text-amber-400 text-2xl" style={{ color: '#eab308' }}>description</span>
-                                    <h2 className="text-lg sm:text-xl font-bold text-white font-mono">
-                                        Factura #{selectedInvoice.invoice_number}
-                                    </h2>
-                                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                                        selectedInvoice.status === 'paid' ? 'bg-[#1a170a] text-amber-400 border border-amber-500/40' :
-                                        selectedInvoice.status === 'overdue' ? 'bg-[#220d0d] text-red-400 border border-red-500/40' :
-                                        'bg-[#1a170a] text-amber-400 border border-amber-500/40'
-                                    }`} style={{ color: selectedInvoice.status === 'paid' ? '#eab308' : undefined }}>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans block">DOCUMENTO DE FACTURACIÓN</span>
+                                    <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                        selectedInvoice.status === 'paid' ? 'bg-[#E6F4EA] text-[#1E4620] border border-[#A8DADC]' :
+                                        selectedInvoice.status === 'overdue' ? 'bg-[#FCE8E6] text-[#C5221F] border border-[#F5C6CB]' :
+                                        'bg-[#FEF7E0] text-[#7A5A00] border border-[#FEEFC3]'
+                                    }`}>
                                         {selectedInvoice.status === 'paid' ? 'PAGADO' : selectedInvoice.status === 'overdue' ? 'VENCIDO' : 'PENDIENTE'}
                                     </span>
                                 </div>
-                                <p className="text-xs text-gray-400 mt-1 font-medium">
+                                <h2 className="text-2xl sm:text-3xl font-serif font-normal text-[#161616] mt-1">
+                                    Factura #{selectedInvoice.invoice_number}
+                                </h2>
+                                <p className="text-xs text-[#6B6862] mt-1">
                                     Emisión: {new Date(selectedInvoice.created_at || Date.now()).toLocaleString('es-CO')} | Vencimiento: {new Date(selectedInvoice.due_date).toLocaleDateString('es-CO')}
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setSelectedInvoice(null)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 border-0 cursor-pointer text-gray-400 hover:text-white transition"
+                                className="text-[#161616] hover:text-[#D9381E] text-3xl font-light cursor-pointer border-0 bg-transparent leading-none"
                             >
-                                <span className="material-symbols-outlined text-[20px]">close</span>
+                                &times;
                             </button>
                         </div>
 
                         {/* Cuerpo Escroleable del Modal */}
-                        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar space-y-4 flex-grow bg-[#0a0b0c]">
+                        <div className="p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-5 flex-grow bg-[#F6F4EE]">
                             {/* INFORMACIÓN DEL CLIENTE & CONDICIONES */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg space-y-3">
-                                    <h3 className="font-extrabold text-[#eab308] text-xs uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#eab308' }}>
-                                        <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>person</span>
-                                        INFORMACIÓN DEL CLIENTE
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="bg-white border border-[#E2DFD7] p-5 space-y-3">
+                                    <h3 className="font-serif text-lg text-[#161616] border-b border-[#E2DFD7] pb-2 font-normal flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[18px] text-[#D9381E]">person</span>
+                                        Información del Cliente
                                     </h3>
-                                    <div className="text-xs space-y-2 text-gray-300">
-                                        <p><strong className="text-white">Nombre:</strong> {selectedInvoice.customer_name}</p>
-                                        <p><strong className="text-white">Documento:</strong> {selectedInvoice.customer_document_type || 'CC'} {selectedInvoice.customer_document_number || 'N/A'}</p>
-                                        <p><strong className="text-white">WhatsApp:</strong> <span className="font-mono text-white">+{selectedInvoice.customer_phone}</span></p>
-                                        <p><strong className="text-white">Email:</strong> <span className="font-mono text-white">{selectedInvoice.customer_email || 'Sin correo'}</span></p>
+                                    <div className="text-xs space-y-2 text-[#6B6862]">
+                                        <p><strong className="text-[#161616]">Nombre:</strong> {selectedInvoice.customer_name}</p>
+                                        <p><strong className="text-[#161616]">Documento:</strong> {selectedInvoice.customer_document_type || 'CC'} {selectedInvoice.customer_document_number || 'N/A'}</p>
+                                        <p><strong className="text-[#161616]">WhatsApp:</strong> <span className="font-mono text-[#161616]">+{selectedInvoice.customer_phone}</span></p>
+                                        <p><strong className="text-[#161616]">Email:</strong> <span className="font-mono text-[#161616]">{selectedInvoice.customer_email || 'Sin correo'}</span></p>
                                         {selectedInvoice.customer_address && (
-                                            <p className="border-t border-[#1f2125] pt-1.5"><strong className="text-white">Dirección:</strong> {selectedInvoice.customer_address}</p>
+                                            <p className="border-t border-[#E2DFD7] pt-2"><strong className="text-[#161616]">Dirección:</strong> {selectedInvoice.customer_address}</p>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg space-y-3">
-                                    <h3 className="font-extrabold text-[#eab308] text-xs uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#eab308' }}>
-                                        <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>local_shipping</span>
-                                        CONDICIONES DE PAGO & ENVÍO
+                                <div className="bg-white border border-[#E2DFD7] p-5 space-y-3">
+                                    <h3 className="font-serif text-lg text-[#161616] border-b border-[#E2DFD7] pb-2 font-normal flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[18px] text-[#D9381E]">local_shipping</span>
+                                        Condiciones de Pago & Logística
                                     </h3>
-                                    <div className="text-xs space-y-2 text-gray-300">
+                                    <div className="text-xs space-y-2 text-[#6B6862]">
                                         <p className="flex items-center gap-2">
-                                            <strong className="text-white">Método de Pago:</strong> 
-                                            <span className="uppercase font-extrabold bg-[#1a170a] text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded text-[10px]" style={{ color: '#eab308' }}>
+                                            <strong className="text-[#161616]">Método de Pago:</strong> 
+                                            <span className="uppercase font-bold bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] px-2 py-0.5 text-[10px]">
                                                 {selectedInvoice.payment_method || 'Efectivo'}
                                             </span>
                                         </p>
                                         {selectedInvoice.transfer_bank && (
-                                            <p><strong className="text-white">Banco Origen:</strong> {selectedInvoice.transfer_bank}</p>
+                                            <p><strong className="text-[#161616]">Banco Origen:</strong> {selectedInvoice.transfer_bank}</p>
                                         )}
                                         {selectedInvoice.transfer_destination_account && (
-                                            <p><strong className="text-white">Cuenta Destino:</strong> {selectedInvoice.transfer_destination_account}</p>
+                                            <p><strong className="text-[#161616]">Cuenta Destino:</strong> {selectedInvoice.transfer_destination_account}</p>
                                         )}
                                         {selectedInvoice.installments_count && selectedInvoice.installments_count > 1 && (
-                                            <p><strong className="text-white">Plan Cuotas:</strong> {selectedInvoice.installments_count} cuotas ({selectedInvoice.installment_frequency})</p>
+                                            <p><strong className="text-[#161616]">Plan Cuotas:</strong> {selectedInvoice.installments_count} cuotas ({selectedInvoice.installment_frequency})</p>
                                         )}
-                                        <p><strong className="text-white">Logística:</strong> {selectedInvoice.delivery_method === 'domicilio' ? '🚚 Envío a Domicilio' : '🏪 Entrega en Tienda / Local'}</p>
+                                        <p><strong className="text-[#161616]">Logística:</strong> {selectedInvoice.delivery_method === 'domicilio' ? '🚚 Envío a Domicilio' : '🏪 Entrega en Tienda / Local'}</p>
                                         {selectedInvoice.delivery_address && (
-                                            <p><strong className="text-white">Dirección Envío:</strong> {selectedInvoice.delivery_address}</p>
+                                            <p><strong className="text-[#161616]">Dirección Envío:</strong> {selectedInvoice.delivery_address}</p>
                                         )}
 
-                                        <div className="border-t border-[#1f2125] pt-2 mt-2 space-y-1.5">
+                                        <div className="border-t border-[#E2DFD7] pt-2 mt-2 space-y-1.5">
                                             <div className="flex items-center justify-between text-xs">
-                                                <strong className="text-white">Vendedor Asignado:</strong>
-                                                <span className="text-amber-400 font-bold" style={{ color: '#eab308' }}>{selectedInvoice.seller_name || 'Sin asignar'}</span>
+                                                <strong className="text-[#161616]">Vendedor Asignado:</strong>
+                                                <span className="text-[#D9381E] font-bold">{selectedInvoice.seller_name || 'Sin asignar'}</span>
                                             </div>
                                             <select
                                                 value={selectedInvoice.seller_employee_id || ''}
                                                 onChange={(e) => handleAssignSellerToInvoice(selectedInvoice.id, e.target.value)}
-                                                className="w-full bg-[#0a0b0c] border border-[#26282d] rounded-lg p-2 text-xs text-white outline-none focus:border-amber-400 cursor-pointer font-medium"
+                                                className="w-full bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none focus:border-[#161616] cursor-pointer font-medium rounded-none"
                                             >
                                                 <option value="">-- Cambiar / Asignar Vendedor --</option>
                                                 {employees.map(emp => (
@@ -1926,10 +2070,10 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                             </div>
 
                             {/* COMPROBANTE ADJUNTO */}
-                            <div className="bg-[#141517] border border-[#222428] p-4 rounded-lg space-y-3">
-                                <h3 className="font-extrabold text-[#eab308] text-xs uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#eab308' }}>
-                                    <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>receipt</span>
-                                    COMPROBANTE DE PAGO / SOPORTE DE TRANSFERENCIA
+                            <div className="bg-white border border-[#E2DFD7] p-5 space-y-3">
+                                <h3 className="font-serif text-lg text-[#161616] border-b border-[#E2DFD7] pb-2 font-normal flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[18px] text-[#D9381E]">receipt</span>
+                                    Comprobante de Pago / Soporte de Transferencia
                                 </h3>
 
                                 {selectedInvoice.payment_receipt_url ? (
@@ -1938,42 +2082,40 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             src={selectedInvoice.payment_receipt_url}
                                             alt="Comprobante"
                                             onClick={() => setLightboxUrl(selectedInvoice.payment_receipt_url || null)}
-                                            className="w-20 h-20 object-cover rounded-lg border border-outline/20 cursor-pointer hover:scale-105 transition"
+                                            className="w-20 h-20 object-cover border border-[#E2DFD7] cursor-pointer hover:border-[#161616] transition"
                                             title="Clic para ampliar"
                                         />
                                         <div className="text-xs space-y-1">
-                                            <p className="text-green-400 font-semibold flex items-center gap-1">
+                                            <p className="text-[#1E4620] font-bold flex items-center gap-1">
                                                 <span className="material-symbols-outlined text-[16px]">check_circle</span> Comprobante Adjunto
                                             </p>
                                             <a
                                                 href={selectedInvoice.payment_receipt_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="text-amber-400 hover:underline font-mono text-[11px] block"
-                                                style={{ color: '#eab308' }}
+                                                className="text-[#D9381E] hover:underline font-mono text-[11px] block font-bold"
                                             >
                                                 Ver foto en tamaño completo ↗
                                             </a>
                                         </div>
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-gray-400 italic">No hay comprobante de pago adjunto aún a esta factura.</p>
+                                    <p className="text-xs text-[#6B6862] italic">No hay comprobante de pago adjunto aún a esta factura.</p>
                                 )}
 
-                                <div className="flex gap-2 pt-2 border-t border-[#1f2125]">
+                                <div className="flex gap-2 pt-2 border-t border-[#E2DFD7]">
                                     <input
                                         type="text"
                                         placeholder="Pegar URL o enlace de la foto del comprobante..."
                                         value={receiptInputUrl}
                                         onChange={(e) => setReceiptInputUrl(e.target.value)}
-                                        className="flex-grow bg-[#0a0b0c] border border-[#26282d] rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-amber-400 font-medium"
+                                        className="flex-grow bg-white border border-[#E2DFD7] px-3 py-2 text-xs text-[#161616] outline-none focus:border-[#161616] font-medium rounded-none"
                                     />
                                     <button
                                         type="button"
                                         onClick={handleSaveReceiptUrl}
                                         disabled={isUpdatingReceipt || !receiptInputUrl.trim()}
-                                        className="border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-xs font-bold px-4 py-2 rounded-lg transition disabled:opacity-50 cursor-pointer shrink-0"
-                                        style={{ color: '#eab308' }}
+                                        className="bg-[#161616] hover:bg-[#333333] text-white text-xs font-bold px-4 py-2 rounded-none transition disabled:opacity-50 cursor-pointer shrink-0 uppercase tracking-wider border-0"
                                     >
                                         {isUpdatingReceipt ? 'Guardando...' : 'Guardar Comprobante'}
                                     </button>
@@ -1981,131 +2123,128 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                             </div>
 
                             {/* DETALLE DE ÍTEMS COMPRADOS */}
-                            <div className="space-y-2">
-                                <h3 className="font-extrabold text-[#eab308] text-xs uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#eab308' }}>
-                                    <span className="material-symbols-outlined text-[16px] text-amber-400" style={{ color: '#eab308' }}>shopping_bag</span>
-                                    PRODUCTOS E ÍTEMS DE LA FACTURA
+                            <div className="space-y-3">
+                                <h3 className="font-serif text-lg text-[#161616] border-b border-[#E2DFD7] pb-2 font-normal flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[18px] text-[#D9381E]">shopping_bag</span>
+                                    Productos e Ítems de la Factura
                                 </h3>
                                 {loadingDetail ? (
-                                    <div className="py-6 text-center text-xs text-gray-400 animate-pulse">Cargando productos de la factura...</div>
+                                    <div className="py-6 text-center text-xs text-[#6B6862] animate-pulse">Cargando productos de la factura...</div>
                                 ) : invoiceDetail?.items?.length > 0 ? (
-                                    <div className="bg-[#141517] overflow-hidden border border-[#222428] rounded-lg">
+                                    <div className="bg-white overflow-hidden border border-[#E2DFD7]">
                                         <table className="w-full text-left text-xs border-collapse">
                                             <thead>
-                                                <tr className="bg-[#0e0f11] border-b border-[#222428] text-white uppercase font-extrabold tracking-wider text-[11px]">
+                                                <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[#6B6862] uppercase font-bold tracking-wider text-[11px]">
                                                     <th className="p-3">PRODUCTO / DESCRIPCIÓN</th>
                                                     <th className="p-3 text-center">CANT.</th>
                                                     <th className="p-3 text-right">PRECIO UNIT.</th>
                                                     <th className="p-3 text-right">TOTAL</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-[#1f2125]">
+                                            <tbody className="divide-y divide-[#E2DFD7]">
                                                 {invoiceDetail.items.map((item: any) => (
-                                                    <tr key={item.id}>
+                                                    <tr key={item.id} className="hover:bg-[#FAF8F5]">
                                                         <td className="p-3">
-                                                            <p className="font-bold text-white">{item.product_name || item.inventory_name}</p>
+                                                            <p className="font-bold text-[#161616]">{item.product_name || item.inventory_name}</p>
                                                             {item.product_type === 'optical_lens' && (
                                                                 <div className="flex gap-1.5 mt-1 flex-wrap">
-                                                                    {item.lens_design && <span className="bg-amber-500/10 text-amber-400 text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ color: '#eab308' }}>Diseño: {item.lens_design}</span>}
-                                                                    {item.lens_material && <span className="bg-amber-500/10 text-amber-400 text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ color: '#eab308' }}>Mat: {item.lens_material}</span>}
-                                                                    {item.lens_treatment && <span className="bg-amber-500/10 text-amber-400 text-[9px] px-1.5 py-0.5 rounded font-mono" style={{ color: '#eab308' }}>Trat: {item.lens_treatment}</span>}
+                                                                    {item.lens_design && <span className="bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[9px] px-1.5 py-0.5 font-mono">Diseño: {item.lens_design}</span>}
+                                                                    {item.lens_material && <span className="bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[9px] px-1.5 py-0.5 font-mono">Mat: {item.lens_material}</span>}
+                                                                    {item.lens_treatment && <span className="bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[9px] px-1.5 py-0.5 font-mono">Trat: {item.lens_treatment}</span>}
                                                                 </div>
                                                             )}
                                                         </td>
-                                                        <td className="p-3 text-center font-mono font-bold text-white">{item.quantity}</td>
-                                                        <td className="p-3 text-right font-mono text-gray-400">{formatPrice(parseFloat(item.price))}</td>
-                                                        <td className="p-3 text-right font-bold text-white font-mono">{formatPrice(parseFloat(item.price) * item.quantity)}</td>
+                                                        <td className="p-3 text-center font-mono font-bold text-[#161616]">{item.quantity}</td>
+                                                        <td className="p-3 text-right font-mono text-[#6B6862]">{formatPrice(parseFloat(item.price))}</td>
+                                                        <td className="p-3 text-right font-bold text-[#161616] font-mono">{formatPrice(parseFloat(item.price) * item.quantity)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-gray-400 italic">No se encontraron ítems detallados.</p>
+                                    <p className="text-xs text-[#6B6862] italic">No se encontraron ítems detallados.</p>
                                 )}
                             </div>
                         </div>
 
-                        {/* Pie Fijo Sticky del Modal con Grid de Botones Ultra Compacto */}
-                        <div className="sticky bottom-0 z-30 bg-[#070708] border-t border-[#1e2023] p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg shrink-0">
+                        {/* Pie Fijo Sticky del Modal con Grid de Botones Wabi-Sabi */}
+                        <div className="sticky bottom-0 z-30 bg-[#F6F4EE] border-t border-[#E2DFD7] p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg shrink-0">
                             <div className="shrink-0 min-w-[160px]">
-                                <p className="text-xs text-gray-400">
-                                    Envío Domicilio: <span className="font-semibold text-white">{formatPrice(parseFloat(selectedInvoice.delivery_fee || '0'))}</span>
+                                <p className="text-xs text-[#6B6862]">
+                                    Envío Domicilio: <span className="font-semibold text-[#161616]">{formatPrice(parseFloat(selectedInvoice.delivery_fee || '0'))}</span>
                                 </p>
-                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-0.5">TOTAL FACTURA</p>
-                                <p className="text-xl sm:text-2xl font-extrabold text-amber-400 font-mono tracking-tight" style={{ color: '#eab308' }}>
+                                <span className="text-[10px] text-[#6B6862] uppercase font-bold tracking-wider mt-0.5 block">TOTAL FACTURA</span>
+                                <p className="text-2xl sm:text-3xl font-serif font-normal text-[#D9381E] font-mono tracking-tight">
                                     {formatPrice(parseFloat(selectedInvoice.total_amount) + parseFloat(selectedInvoice.delivery_fee || '0'))}
                                 </p>
                             </div>
 
-                            {/* Grid 2x3 de Botones de Acción Ultra Compactos */}
-                            <div className="grid grid-cols-3 gap-1.5 max-w-[430px] shrink-0 w-full sm:w-auto">
-                                {/* Fila 1 */}
+                            {/* Grid 2x3 de Botones de Acción */}
+                            <div className="grid grid-cols-3 gap-2 max-w-[460px] shrink-0 w-full sm:w-auto">
                                 <button
                                     type="button"
                                     onClick={() => handleSendInvoiceWhatsApp(selectedInvoice)}
-                                    className="bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white font-semibold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer flex items-center justify-center gap-1 truncate"
+                                    className="bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] font-semibold text-[11px] py-2 px-2.5 rounded-none transition cursor-pointer flex items-center justify-center gap-1 truncate uppercase tracking-wider"
                                     title="Enviar factura por WhatsApp"
                                 >
-                                    <span className="material-symbols-outlined text-[14px] text-emerald-400 shrink-0">chat</span>
-                                    <span className="truncate">Enviar WhatsApp</span>
+                                    <span className="material-symbols-outlined text-[14px] text-emerald-600 shrink-0">chat</span>
+                                    <span className="truncate">WhatsApp</span>
                                 </button>
 
                                 <button
                                     type="button"
                                     onClick={() => handleSendInvoiceEmail(selectedInvoice)}
-                                    className="bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white font-semibold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer flex items-center justify-center gap-1 truncate"
+                                    className="bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] font-semibold text-[11px] py-2 px-2.5 rounded-none transition cursor-pointer flex items-center justify-center gap-1 truncate uppercase tracking-wider"
                                     title="Enviar factura por Correo Electrónico"
                                 >
-                                    <span className="material-symbols-outlined text-[14px] text-blue-400 shrink-0">mail</span>
-                                    <span className="truncate">Enviar Email</span>
+                                    <span className="material-symbols-outlined text-[14px] text-blue-600 shrink-0">mail</span>
+                                    <span className="truncate">Email</span>
                                 </button>
 
                                 <button
                                     type="button"
                                     onClick={() => handlePrintInvoice(selectedInvoice)}
-                                    className="bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white font-semibold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer flex items-center justify-center gap-1 truncate"
+                                    className="bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] font-semibold text-[11px] py-2 px-2.5 rounded-none transition cursor-pointer flex items-center justify-center gap-1 truncate uppercase tracking-wider"
                                 >
                                     <span className="material-symbols-outlined text-[14px] shrink-0">print</span>
                                     <span className="truncate">Imprimir (80mm)</span>
                                 </button>
 
-                                {/* Fila 2 */}
                                 {!selectedInvoice.cufe ? (
                                     <button
                                         type="button"
                                         disabled={generatingElectronicId === selectedInvoice.id}
                                         onClick={() => handleGenerateElectronicInvoice(selectedInvoice.id)}
-                                        className="bg-[#eab308] hover:bg-amber-300 text-black font-extrabold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer flex items-center justify-center gap-1 shadow-md disabled:opacity-50 truncate"
+                                        className="bg-[#D9381E] hover:bg-[#b82e18] text-white font-bold text-[11px] py-2 px-2.5 rounded-none transition cursor-pointer flex items-center justify-center gap-1 shadow-sm disabled:opacity-50 truncate uppercase tracking-wider border-0"
                                         title="Emitir factura electrónica DIAN oficial"
                                     >
                                         <span className="material-symbols-outlined text-[14px] shrink-0">bolt</span>
-                                        <span className="truncate">{generatingElectronicId === selectedInvoice.id ? 'Emitiendo...' : 'Emitir Factura Electrónica DIAN'}</span>
+                                        <span className="truncate">{generatingElectronicId === selectedInvoice.id ? 'Emitiendo...' : 'Factura DIAN'}</span>
                                     </button>
                                 ) : (
                                     <div 
-                                        className="bg-[#1a170a] text-amber-400 border border-amber-500/40 font-extrabold text-[11px] py-1.5 px-2 rounded-md flex items-center justify-center gap-1 select-none truncate"
-                                        style={{ color: '#eab308' }}
+                                        className="bg-[#E6F4EA] text-[#1E4620] border border-[#A8DADC] font-bold text-[11px] py-2 px-2.5 rounded-none flex items-center justify-center gap-1 select-none truncate uppercase tracking-wider"
                                         title="Factura validada ante la DIAN"
                                     >
                                         <span className="material-symbols-outlined text-[14px] shrink-0">verified</span>
-                                        <span className="truncate">DIAN Verificada</span>
+                                        <span className="truncate">DIAN OK</span>
                                     </div>
                                 )}
 
                                 <button
                                     type="button"
                                     onClick={() => handlePrintPOS(selectedInvoice.id)}
-                                    className="bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-white font-semibold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer flex items-center justify-center gap-1 truncate"
+                                    className="bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] font-semibold text-[11px] py-2 px-2.5 rounded-none transition cursor-pointer flex items-center justify-center gap-1 truncate uppercase tracking-wider"
                                 >
                                     <span className="material-symbols-outlined text-[14px] shrink-0">receipt_long</span>
-                                    <span className="truncate">Imprimir POS (80mm)</span>
+                                    <span className="truncate">POS (80mm)</span>
                                 </button>
 
                                 <button
                                     type="button"
                                     onClick={() => setSelectedInvoice(null)}
-                                    className="bg-[#181a1c] hover:bg-[#222528] border border-[#2d3036] text-gray-400 hover:text-white font-semibold text-[11px] py-1.5 px-2 rounded-md transition cursor-pointer text-center truncate"
+                                    className="bg-[#161616] hover:bg-[#333333] border-0 text-white font-semibold text-[11px] py-2 px-2.5 rounded-none transition cursor-pointer text-center truncate uppercase tracking-wider"
                                 >
                                     Cerrar
                                 </button>
@@ -2116,54 +2255,55 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 document.body
             )}
 
-            {/* MODAL DE UPGRADE A PLAN PRO (FEATURE GATING) */}
+            {/* MODAL DE UPGRADE A PLAN PRO (FEATURE GATING) WABI-SABI */}
             {showUpgradeModal && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
-                    <div className="bg-surface-container border border-outline/30 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl relative animate-in fade-in zoom-in duration-200 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
+                <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
+                    <div className="bg-[#F6F4EE] border border-[#161616] rounded-none max-w-lg w-full p-8 space-y-6 shadow-2xl relative animate-fade-in max-h-[85vh] overflow-y-auto custom-scrollbar my-auto text-left">
                         <div className="text-center space-y-2">
-                            <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg">
+                            <div className="w-14 h-14 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none flex items-center justify-center mx-auto text-[#D9381E] shadow-sm">
                                 <span className="material-symbols-outlined text-3xl">workspace_premium</span>
                             </div>
-                            <h3 className="text-xl font-bold text-on-surface">Límite del Plan Básico Alcanzado</h3>
-                            <p className="text-xs text-on-surface-variant max-w-sm mx-auto">
-                                Has emitido las 10 Facturas Electrónicas incluidas de este mes. Pásate al <strong className="text-amber-400">Plan Pro</strong> para disfrutar de emisión ilimitada ante la DIAN.
+                            <span className="text-[10px] font-bold text-[#D9381E] uppercase tracking-widest block">FEATURE GATING</span>
+                            <h3 className="text-2xl font-serif text-[#161616] font-normal">Límite del Plan Básico Alcanzado</h3>
+                            <p className="text-xs text-[#6B6862] max-w-sm mx-auto">
+                                Has emitido las 10 Facturas Electrónicas incluidas de este mes. Pásate al <strong className="text-[#161616]">Plan Pro</strong> para disfrutar de emisión ilimitada ante la DIAN.
                             </p>
                         </div>
 
-                        <div className="bg-surface-container-high/60 border border-outline/15 rounded-2xl p-4 space-y-3">
-                            <div className="flex items-center gap-2 text-xs text-on-surface font-medium">
-                                <span className="material-symbols-outlined text-green-400 text-[18px]">check_circle</span>
+                        <div className="bg-white border border-[#E2DFD7] p-5 space-y-3">
+                            <div className="flex items-center gap-2.5 text-xs text-[#161616] font-medium">
+                                <span className="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
                                 Facturación Electrónica DIAN Ilimitada con CUFE & QR
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-on-surface font-medium">
-                                <span className="material-symbols-outlined text-green-400 text-[18px]">check_circle</span>
+                            <div className="flex items-center gap-2.5 text-xs text-[#161616] font-medium">
+                                <span className="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
                                 Envío automático de PDF por WhatsApp a tus clientes
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-on-surface font-medium">
-                                <span className="material-symbols-outlined text-green-400 text-[18px]">check_circle</span>
+                            <div className="flex items-center gap-2.5 text-xs text-[#161616] font-medium">
+                                <span className="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
                                 Impresiones Térmicas POS 80mm ilimitadas
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-on-surface font-medium">
-                                <span className="material-symbols-outlined text-green-400 text-[18px]">check_circle</span>
+                            <div className="flex items-center gap-2.5 text-xs text-[#161616] font-medium">
+                                <span className="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
                                 Soporte técnico prioritario 24/7 para habilitación fiscal
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 pt-2">
                             <button
                                 type="button"
                                 onClick={() => {
                                     alert('🚀 ¡Solicitud enviada! Nuestro equipo se pondrá en contacto para activar tu Plan Pro.');
                                     setShowUpgradeModal(false);
                                 }}
-                                className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-white font-bold text-sm py-3 rounded-xl transition text-center cursor-pointer shadow-lg"
+                                className="flex-1 bg-[#D9381E] hover:bg-[#b82e18] text-white font-bold text-xs py-3 rounded-none transition text-center cursor-pointer shadow-sm uppercase tracking-wider border-0"
                             >
                                 Actualizar a Plan Pro Ahora
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setShowUpgradeModal(false)}
-                                className="px-4 py-3 bg-surface-container-high hover:bg-surface-container border border-outline/20 text-on-surface-variant font-semibold text-xs rounded-xl transition cursor-pointer"
+                                className="px-5 py-3 bg-transparent hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] font-semibold text-xs rounded-none transition cursor-pointer uppercase tracking-wider"
                             >
                                 Cancelar
                             </button>
@@ -2173,32 +2313,32 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 document.body
             )}
 
-            {/* LIGHTBOX FULLSCREEN PARA FOTO DE COMPROBANTE */}
+            {/* LIGHTBOX FULLSCREEN PARA FOTO DE COMPROBANTE WABI-SABI */}
             {lightboxUrl && createPortal(
                 <div 
                     onClick={() => setLightboxUrl(null)}
-                    className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer animate-in fade-in duration-200"
+                    className="fixed inset-0 z-[999999] flex items-center justify-center bg-[#161616]/85 backdrop-blur-md p-4 cursor-pointer animate-fade-in"
                 >
                     <div className="relative max-w-4xl max-h-[90vh] p-2" onClick={(e) => e.stopPropagation()}>
                         <button
                             type="button"
                             onClick={() => setLightboxUrl(null)}
-                            className="absolute -top-12 right-0 text-white hover:text-red-400 text-xs font-bold flex items-center gap-1 bg-black/70 px-3 py-1.5 rounded-full border border-white/20 cursor-pointer shadow-lg"
+                            className="absolute -top-10 right-0 text-white hover:text-[#D9381E] text-xs font-bold flex items-center gap-1 bg-[#161616] px-3 py-1.5 rounded-none border border-[#E2DFD7] cursor-pointer shadow-lg uppercase tracking-wider"
                         >
-                            <span className="material-symbols-outlined text-[18px]">close</span>
+                            <span className="material-symbols-outlined text-[16px]">close</span>
                             Cerrar [ESC]
                         </button>
                         <img
                             src={lightboxUrl}
                             alt="Comprobante de Pago Completo"
-                            className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-outline/20"
+                            className="max-w-full max-h-[85vh] object-contain rounded-none shadow-2xl border border-[#E2DFD7]"
                         />
                         <div className="mt-3 text-center">
                             <a
                                 href={lightboxUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-xs text-primary hover:underline font-semibold flex items-center justify-center gap-1"
+                                className="text-xs text-[#F6F4EE] hover:text-[#D9381E] font-semibold inline-flex items-center gap-1 transition"
                             >
                                 <span className="material-symbols-outlined text-[14px]">open_in_new</span>
                                 Abrir imagen en pestaña nueva

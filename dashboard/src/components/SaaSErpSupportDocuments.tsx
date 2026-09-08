@@ -89,7 +89,6 @@ export const SaaSErpSupportDocuments: React.FC<SaaSErpSupportDocumentsProps> = (
     try {
       setLoading(true);
       const gross = parseFloat(grossAmount) || 0;
-
       const nextNum = `DS-${Date.now().toString().slice(-4)}`;
 
       const res = await fetch(`/api/clients/${clientId}/invoices`, {
@@ -165,84 +164,102 @@ export const SaaSErpSupportDocuments: React.FC<SaaSErpSupportDocumentsProps> = (
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-outline/10 pb-4">
+    <div className="space-y-6 text-[#161616] font-sans antialiased">
+      {/* Header Editorial Wabi-Sabi */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5">
         <div>
-          <h2 className="text-xl font-bold text-on-surface flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">description</span>
+          <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-mono block mb-1">
+            DOCUMENTOS ELECTRÓNICOS DIAN
+          </span>
+          <h2 className="font-serif text-3xl sm:text-4xl font-normal text-[#161616] tracking-tight leading-none flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#D9381E] text-[28px]">description</span>
             Documentos Soporte Electrónicos (DS)
           </h2>
-          <p className="text-xs text-on-surface-variant opacity-75">
+          <p className="text-xs text-[#76746E] mt-2">
             Soporta fiscalmente tus compras y contratación a Personas Naturales no obligadas a facturar (Res. 000167 de 2021 DIAN).
           </p>
         </div>
 
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-xl shadow-lg hover:opacity-90 transition flex items-center gap-2 cursor-pointer border-0"
-        >
-          <span className="material-symbols-outlined text-[18px]">add</span>
-          Crear Documento Soporte
-        </button>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={fetchSupportDocuments}
+            className="h-9 px-3.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] rounded-none flex items-center justify-center transition cursor-pointer text-xs font-mono font-bold uppercase tracking-wider shadow-xs"
+            title="Refrescar documentos"
+          >
+            <span className="material-symbols-outlined text-[16px] mr-1.5 text-[#D9381E]">refresh</span>
+            Refrescar
+          </button>
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="h-9 px-4 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold text-xs rounded-none shadow-xs transition-colors flex items-center gap-2 cursor-pointer border-0 uppercase tracking-wider"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            Crear Documento Soporte
+          </button>
+        </div>
       </div>
 
       {/* Tabla de Documentos Soporte */}
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex flex-col items-center justify-center py-16 bg-white border border-[#E2DFD7] rounded-none">
+          <div className="w-8 h-8 border-2 border-[#D9381E] border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p className="text-xs font-mono uppercase text-[#76746E] tracking-wider">Cargando documentos soporte...</p>
         </div>
       ) : documents.length === 0 ? (
-        <div className="glass-card p-12 text-center space-y-3">
-          <span className="material-symbols-outlined text-on-surface-variant text-[48px] opacity-40">assignment_turned_in</span>
-          <p className="text-sm text-on-surface-variant">No registras Documentos Soporte emitidos todavía.</p>
-          <p className="text-xs text-on-surface-variant opacity-60 max-w-md mx-auto">
+        <div className="bg-white border border-[#E2DFD7] rounded-none p-16 text-center space-y-3 shadow-xs">
+          <span className="material-symbols-outlined text-[#76746E]/40 text-[48px]">assignment_turned_in</span>
+          <p className="font-serif text-sm font-bold text-[#161616]">No registras Documentos Soporte emitidos todavía.</p>
+          <p className="text-xs text-[#76746E] max-w-md mx-auto">
             Utiliza este módulo cada vez que contrates un servicio profesional, mantenimiento o compra a una persona natural que no emita factura electrónica.
           </p>
         </div>
       ) : (
-        <div className="glass-card overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white border border-[#E2DFD7] rounded-none overflow-hidden shadow-xs">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-surface-container/50 border-b border-outline/10 text-xs text-on-surface-variant uppercase font-semibold">
-                <th className="p-4">N° Documento</th>
-                <th className="p-4">Proveedor / Contratista</th>
-                <th className="p-4">Valor Bruto</th>
-                <th className="p-4">Retefuente</th>
-                <th className="p-4">Valor Neto</th>
-                <th className="p-4">Estado DIAN</th>
-                <th className="p-4 text-right">Acciones</th>
+              <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[10px] font-mono text-[#76746E] uppercase font-bold tracking-wider">
+                <th className="p-3.5">N° Documento</th>
+                <th className="p-3.5">Proveedor / Contratista</th>
+                <th className="p-3.5">Valor Bruto</th>
+                <th className="p-3.5">Retefuente</th>
+                <th className="p-3.5">Valor Neto</th>
+                <th className="p-3.5">Estado DIAN</th>
+                <th className="p-3.5 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-outline/10 text-sm">
+            <tbody className="divide-y divide-[#E2DFD7]">
               {documents.map((doc) => (
-                <tr key={doc.id} className="hover:bg-surface-container/40 transition">
-                  <td className="p-4 font-mono font-bold text-xs text-primary">{doc.document_number}</td>
-                  <td className="p-4">
-                    <p className="font-bold text-on-surface text-xs">{doc.provider_name}</p>
-                    <p className="text-[10px] text-on-surface-variant font-mono">C.C. {doc.provider_document}</p>
+                <tr key={doc.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
+                  <td className="p-3.5 font-mono font-bold text-xs text-[#161616] flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[#D9381E] text-[16px]">receipt</span>
+                    {doc.document_number}
                   </td>
-                  <td className="p-4 font-mono text-xs">{formatCOP(doc.gross_amount)}</td>
-                  <td className="p-4 font-mono text-xs text-amber-400">-{formatCOP(doc.tax_withholding_amount)} ({doc.tax_withholding_rate}%)</td>
-                  <td className="p-4 font-mono font-bold text-xs text-green-400">{formatCOP(doc.net_amount)}</td>
-                  <td className="p-4">
+                  <td className="p-3.5">
+                    <p className="font-serif font-bold text-[#161616] text-sm">{doc.provider_name}</p>
+                    <p className="text-[10px] text-[#76746E] font-mono">C.C. {doc.provider_document}</p>
+                  </td>
+                  <td className="p-3.5 font-mono text-xs text-[#161616]">{formatCOP(doc.gross_amount)}</td>
+                  <td className="p-3.5 font-mono text-xs text-[#B45309]">-{formatCOP(doc.tax_withholding_amount)} ({doc.tax_withholding_rate}%)</td>
+                  <td className="p-3.5 font-mono font-bold text-xs text-[#137333]">{formatCOP(doc.net_amount)}</td>
+                  <td className="p-3.5">
                     {doc.status === 'accepted' ? (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-500/10 text-green-400 border border-green-500/20 flex items-center gap-1 w-fit">
+                      <span className="px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-wider bg-[#E6F4EA] text-[#137333] border border-[#CEEAD6] flex items-center gap-1 w-fit rounded-none">
                         <span className="material-symbols-outlined text-[12px]">verified</span>
                         Aceptado DIAN
                       </span>
                     ) : (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 w-fit">
+                      <span className="px-2.5 py-1 text-[9px] font-mono font-bold uppercase tracking-wider bg-[#FEF7E0] text-[#B45309] border border-[#FDE68A] w-fit rounded-none">
                         Borrador
                       </span>
                     )}
                   </td>
-                  <td className="p-4 text-right">
+                  <td className="p-3.5 text-right">
                     {doc.status !== 'accepted' && (
                       <button
                         onClick={() => handleTransmitDIAN(doc.id)}
                         disabled={transmittingId === doc.id}
-                        className="px-3 py-1.5 bg-primary/20 hover:bg-primary/30 text-primary font-bold text-xs rounded-lg transition border border-primary/30 cursor-pointer"
+                        className="px-3 py-1.5 bg-[#161616] hover:bg-[#2c2f35] text-[#F6F4EE] font-mono font-bold text-xs rounded-none transition-colors border-0 cursor-pointer uppercase tracking-wider shadow-xs"
                       >
                         {transmittingId === doc.id ? 'Transmitiendo...' : 'Emitir a DIAN'}
                       </button>
@@ -257,85 +274,100 @@ export const SaaSErpSupportDocuments: React.FC<SaaSErpSupportDocumentsProps> = (
 
       {/* Modal Nuevo Documento Soporte */}
       {isFormOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-          <div className="bg-surface border border-outline/20 p-6 rounded-3xl w-full max-w-lg shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-3">
-              <h3 className="font-bold text-sm text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">post_add</span>
-                Nuevo Documento Soporte Electrónico
-              </h3>
-              <button onClick={() => setIsFormOpen(false)} className="text-on-surface-variant hover:text-on-surface bg-transparent border-0 cursor-pointer">
-                <span className="material-symbols-outlined">close</span>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#F6F4EE] border border-[#161616] p-6 rounded-none w-full max-w-lg shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto text-left">
+            <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+              <div>
+                <span className="text-[10px] font-mono tracking-widest text-[#D9381E] uppercase block font-bold">FACTURA ELECTRÓNICA</span>
+                <h3 className="font-serif text-lg font-bold text-[#161616] flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#D9381E]">post_add</span>
+                  Nuevo Documento Soporte Electrónico
+                </h3>
+              </div>
+              <button onClick={() => setIsFormOpen(false)} className="text-[#76746E] hover:text-[#161616] bg-transparent border-0 cursor-pointer p-1">
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
 
             <form onSubmit={handleCreateDocument} className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="font-bold text-on-surface-variant">Nombre Completo del Contratista / Proveedor *</label>
+                <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                  Nombre Completo del Contratista / Proveedor *
+                </label>
                 <input
                   type="text"
                   placeholder="Ej: Fernando Carrillo"
                   value={providerName}
                   onChange={(e) => setProviderName(e.target.value)}
-                  className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                  className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616]"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-on-surface-variant">Cédula (C.C. / NIT) *</label>
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Cédula (C.C. / NIT) *
+                  </label>
                   <input
                     type="text"
                     placeholder="Ej: 1143467534"
                     value={providerDocument}
                     onChange={(e) => setProviderDocument(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono"
+                    className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono"
                     required
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="font-bold text-on-surface-variant">Celular / WhatsApp</label>
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Celular / WhatsApp
+                  </label>
                   <input
                     type="text"
                     placeholder="Ej: 3001234567"
                     value={providerPhone}
                     onChange={(e) => setProviderPhone(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono"
+                    className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-on-surface-variant">Concepto del Servicio o Compra</label>
+                <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                  Concepto del Servicio o Compra
+                </label>
                 <input
                   type="text"
                   placeholder="Ej: Asistencia técnica de sistemas / Honorarios de mantenimiento"
                   value={concept}
                   onChange={(e) => setConcept(e.target.value)}
-                  className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary"
+                  className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-on-surface-variant">Valor Bruto (\$ COP) *</label>
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Valor Bruto ($ COP) *
+                  </label>
                   <input
                     type="number"
                     placeholder="Ej: 3535000"
                     value={grossAmount}
                     onChange={(e) => setGrossAmount(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary font-mono font-bold"
+                    className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono font-bold"
                     required
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-on-surface-variant">Retención en la Fuente %</label>
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Retención en la Fuente %
+                  </label>
                   <select
                     value={withholdingRate}
                     onChange={(e) => setWithholdingRate(e.target.value)}
-                    className="w-full bg-surface-container border border-outline/20 rounded-xl p-2.5 text-on-surface outline-none focus:border-primary cursor-pointer"
+                    className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] cursor-pointer font-mono"
                   >
                     <option value="0">0% (Sin retención)</option>
                     <option value="4">4% (Servicios generales)</option>
@@ -346,33 +378,33 @@ export const SaaSErpSupportDocuments: React.FC<SaaSErpSupportDocumentsProps> = (
               </div>
 
               {grossAmount && (
-                <div className="p-3 bg-surface-container/50 rounded-xl border border-outline/10 font-mono text-xs space-y-1">
-                  <div className="flex justify-between text-on-surface-variant">
+                <div className="p-3.5 bg-white rounded-none border border-[#E2DFD7] font-mono text-xs space-y-1.5 shadow-xs">
+                  <div className="flex justify-between text-[#76746E]">
                     <span>Valor Bruto:</span>
-                    <span>{formatCOP(parseFloat(grossAmount) || 0)}</span>
+                    <span className="text-[#161616]">{formatCOP(parseFloat(grossAmount) || 0)}</span>
                   </div>
-                  <div className="flex justify-between text-amber-400">
+                  <div className="flex justify-between text-[#B45309]">
                     <span>Retefuente ({withholdingRate}%):</span>
                     <span>-{formatCOP(Math.round((parseFloat(grossAmount) || 0) * (parseFloat(withholdingRate) / 100)))}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-green-400 border-t border-outline/10 pt-1 text-sm">
+                  <div className="flex justify-between font-bold text-[#137333] border-t border-[#E2DFD7] pt-1.5 text-sm">
                     <span>Neto a Pagar:</span>
                     <span>{formatCOP(Math.round((parseFloat(grossAmount) || 0) * (1 - parseFloat(withholdingRate) / 100)))}</span>
                   </div>
                 </div>
               )}
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-outline/10">
+              <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-2 border border-outline/20 rounded-xl text-on-surface text-xs hover:bg-surface-container cursor-pointer bg-transparent"
+                  className="px-4 py-2 border border-[#E2DFD7] bg-white text-[#161616] font-mono font-bold text-xs rounded-none hover:bg-[#FAF8F5] cursor-pointer uppercase tracking-wider"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-primary text-on-primary font-bold rounded-xl text-xs hover:opacity-90 transition cursor-pointer border-0"
+                  className="px-5 py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold text-xs rounded-none shadow-xs transition-colors cursor-pointer border-0 uppercase tracking-wider"
                 >
                   Crear Documento
                 </button>

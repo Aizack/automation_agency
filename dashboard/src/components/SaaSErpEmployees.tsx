@@ -12,6 +12,7 @@ interface Employee {
     department_name: string | null;
     pin: string;
     allowed_modules?: string[] | any;
+    allowed_branches?: string[] | any;
     is_active: boolean;
     created_at: string;
     hire_date?: string | null;
@@ -302,6 +303,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     const [workRoles, setWorkRoles] = useState<string[]>(['agent', 'sales', 'delivery', 'admin']);
     const [loading, setLoading] = useState(true);
     const [employeeAccessPermissions, setEmployeeAccessPermissions] = useState<string[]>(['inventory', 'billing', 'crm', 'calendar', 'employees', 'hr', 'deliveries', 'whatsapp_bot']);
+    const [employeeBranchPermissions, setEmployeeBranchPermissions] = useState<string[]>([]);
 
     // Salary advances states
     const [allAdvances, setAllAdvances] = useState<any[]>([]);
@@ -516,21 +518,26 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             setLoading(true);
             const headers = { 'Authorization': `Bearer ${token}` };
             
-            const [empRes, deptRes, rolesRes] = await Promise.all([
+            const [empRes, deptRes, rolesRes, branchesRes] = await Promise.all([
                 fetch(`/api/clients/${clientId}/employees`, { headers }),
                 fetch(`/api/clients/${clientId}/departments`, { headers }),
-                fetch(`/api/clients/${clientId}/employee-roles`, { headers })
+                fetch(`/api/clients/${clientId}/employee-roles`, { headers }),
+                fetch(`/api/clients/${clientId}/branches`, { headers })
             ]);
 
             const empJson = await empRes.json();
             const deptJson = await deptRes.json();
             const rolesJson = await rolesRes.json();
+            const branchesJson = await branchesRes.json();
 
             if (empJson.success) setEmployees(empJson.employees || []);
             if (deptJson.success) setDepartments(deptJson.departments || []);
             if (rolesJson.success) {
                 const roles = (rolesJson.roles || []).map((role: any) => String(role.name || '').trim().toLowerCase()).filter(Boolean);
                 setWorkRoles(Array.from(new Set(['agent', 'sales', 'delivery', 'admin', 'mesero', 'cocinero', 'bartender', 'caja', 'capitan_meseros', ...roles])));
+            }
+            if (branchesJson.success) {
+                setBranchesList(branchesJson.branches || []);
             }
         } catch (err) {
             console.error("Error loading employees data:", err);
@@ -981,6 +988,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                     employee_code: finalEmployeeCode,
                     professional_license: empProfLicense || null,
                     allowed_modules: employeeAccessPermissions,
+                    allowed_branches: employeeBranchPermissions,
                     is_active: true
                 })
             });
@@ -1027,6 +1035,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         setEmpPin('');
         setEmpCode(generateEmployeeCode());
         setEmployeeAccessPermissions(DEFAULT_MODULE_KEYS);
+        setEmployeeBranchPermissions([clientId]);
         setErrorMsg('');
         setIsEmpOpen(true);
     };
@@ -1053,6 +1062,20 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             }
         }
         setEmployeeAccessPermissions(loadedModules);
+
+        let loadedBranches = [clientId];
+        if (emp.allowed_branches) {
+            if (Array.isArray(emp.allowed_branches)) {
+                loadedBranches = emp.allowed_branches.length > 0 ? emp.allowed_branches : [clientId];
+            } else if (typeof emp.allowed_branches === 'string') {
+                try {
+                    const parsed = JSON.parse(emp.allowed_branches);
+                    if (Array.isArray(parsed) && parsed.length > 0) loadedBranches = parsed;
+                } catch (e) {}
+            }
+        }
+        setEmployeeBranchPermissions(loadedBranches);
+
         setErrorMsg('');
         setIsEmpOpen(true);
     };
@@ -2572,6 +2595,47 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                         })}
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Permisos de Sedes (Rotación Multi-Sede) */}
+                            <div className="space-y-2 pt-2 border-t border-outline/10">
+                                <label className="block text-xs font-bold text-on-surface-variant flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm text-primary">storefront</span>
+                                    <span>Sedes Autorizadas (Rotación Multi-Sede)</span>
+                                </label>
+                                {branchesList.length <= 1 ? (
+                                    <div className="bg-surface-container-high/30 p-2.5 rounded-xl border border-outline/10 text-[11px] text-on-surface-variant flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-xs text-emerald-400">check_circle</span>
+                                        <span>Operativo en la sede actual (Sede Principal).</span>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {branchesList.map((branch: any) => {
+                                            const isSelected = employeeBranchPermissions.includes(branch.id);
+                                            return (
+                                                <button
+                                                    key={branch.id}
+                                                    type="button"
+                                                    onClick={() => setEmployeeBranchPermissions(prev => 
+                                                        prev.includes(branch.id) 
+                                                            ? prev.filter(id => id !== branch.id) 
+                                                            : [...prev, branch.id]
+                                                    )}
+                                                    className={`px-3 py-2 rounded-xl border text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                                                        isSelected 
+                                                            ? 'bg-primary/20 border-primary text-primary shadow-sm' 
+                                                            : 'bg-surface-container-high/40 border-outline/15 text-on-surface-variant hover:border-outline/30'
+                                                    }`}
+                                                >
+                                                    <span className="truncate">{branch.name}</span>
+                                                    <span className="material-symbols-outlined text-sm">
+                                                        {isSelected ? 'check_box' : 'checkbox_outline_blank'}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-1">

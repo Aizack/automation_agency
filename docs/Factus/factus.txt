@@ -1,0 +1,11 @@
+(Transcrito por TurboScribe. Actualizar a Ilimitado para eliminar este mensaje.)
+
+Bueno, para configurar la parte del Environment, tenemos que ir a Environment, y acá en Sandbox, vamos a darle click, y aquí vamos a setear la información que pasamos, entonces aquí en la URL de API, el email, el password, el cliente, y el client ID y el secret ID. Entonces, por ejemplo, si ustedes van, vamos a revisar la parte de... Ah, antes de... después de haber seteado las variables de entorno, tienen que ir aquí a la parte superior derecha y seleccionar esas variables de entorno. Es decirle a Postman, yo voy a trabajar con estas variables de entorno, entonces voy a ir aquí a colecciones, en la pregunta concreta, crear factura, ¿Cómo sello el rango de numeración? Nosotros identificamos únicamente con este ID.
+
+Entonces lo que vamos a hacer, antes de formar este JSON, vamos a consultar los rangos de numeración, o bueno, el ID de los rangos de numeración que tengo activos dentro de mi sistema de facturación. Entonces para eso vamos aquí a rangos de numeración, a este endpoint, y simplemente enviando la información, él nos va a responder con un JSON, y en este JSON vienen los rangos que están activos. Los que yo voy a tener activos, o la empresa va a tener activos.
+
+Entonces, si nos vamos aquí a la factura, ese ID corresponde a este. Internamente Factus lo que va a hacer es sacar, por ejemplo, aquí está el prefijo, el desde, hasta, y toda la información requerida para hacer esa validación del rango de numeración. Entonces no es necesario enviar toda esta información, ya que nosotros la tenemos disponible en Factus, la tenemos configurada en Factus.
+
+Entonces el orden es, se autentican, toman el API key, el token, se envía, se consulta los rangos de numeración, el ID del rango de numeración, y luego se pasa aquí. Y ya, esos serían los datos del cliente, que esto no cambiarían, y acá, en ítems, se repite tantas veces hayan productos dentro de la factura, y listo. Gracias.
+
+(Transcrito por TurboScribe. Actualizar a Ilimitado para eliminar este mensaje.)

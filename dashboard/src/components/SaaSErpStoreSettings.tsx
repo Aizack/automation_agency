@@ -15,9 +15,23 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   const [invoiceFooter, setInvoiceFooter] = useState('');
   const [category, setCategory] = useState('optica');
   const [personType, setPersonType] = useState('persona_juridica');
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logos, setLogos] = useState<Array<{ fileName: string, url: string }>>([]);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoBuster, setLogoBuster] = useState(Date.now());
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchLogos = async () => {
+    try {
+      const res = await fetch(`/api/clients/${clientId}/logos`);
+      const json = await res.json();
+      if (json.success) setLogos(json.logos || []);
+    } catch (err) {
+      console.error("Error cargando logotipos:", err);
+    }
+  };
 
   useEffect(() => {
     // Cargar datos actuales del perfil del cliente
@@ -33,13 +47,76 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
           setInvoiceFooter(json.data.invoiceFooter || '');
           setCategory(json.data.category || 'optica');
           setPersonType(json.data.personType || json.data.person_type || 'persona_juridica');
+          setLogoUrl(json.data.logo_url || null);
         }
       })
       .catch(err => {
         console.error("Error al cargar configuracion comercial:", err);
         setError("No se pudo cargar la configuración de la tienda.");
       });
+
+    fetchLogos();
   }, [clientId]);
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('logo', file);
+    try {
+      setUploadingLogo(true);
+      const res = await fetch(`/api/clients/${clientId}/logos`, {
+        method: 'POST',
+        body: formData
+      });
+      const json = await res.json();
+      if (json.success) {
+        setLogoUrl(json.logo_url);
+        setLogoBuster(Date.now());
+        fetchLogos();
+        onProfileUpdated();
+      } else {
+        alert(json.error || 'Error al subir el logotipo.');
+      }
+    } catch (err: any) {
+      alert(`Error de conexión al subir logotipo: ${err.message}`);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleSelectLogo = async (fileName: string) => {
+    try {
+      const res = await fetch(`/api/clients/${clientId}/logos/select`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setLogoUrl(json.logo_url);
+        setLogoBuster(Date.now());
+        onProfileUpdated();
+      }
+    } catch (err) {
+      console.error("Error al seleccionar logo:", err);
+    }
+  };
+
+  const handleDeleteLogo = async (fileName: string) => {
+    if (!confirm('¿Deseas eliminar este logotipo del historial?')) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/logos/${fileName}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) {
+        setLogoUrl(json.logo_url || null);
+        setLogoBuster(Date.now());
+        fetchLogos();
+        onProfileUpdated();
+      }
+    } catch (err) {
+      console.error("Error al eliminar logo:", err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +203,93 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
           </div>
 
           <div className="space-y-4">
+            {/* Sección de Cargado & Gestión de Logotipo Comercial */}
+            <div className="bg-[#FAF8F3] border border-[#E2DFD7] p-4 rounded-md space-y-3">
+              <label className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#6B6862] flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-base text-[#D9381E]">image</span>
+                  Logotipo Comercial de la Empresa
+                </span>
+                {uploadingLogo && <span className="text-[10px] text-[#D9381E] font-mono animate-pulse">Cargando...</span>}
+              </label>
+              
+              <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-3 border border-[#E2DFD7] rounded-md">
+                <div className="w-20 h-20 bg-[#FAF8F3] border border-dashed border-[#E2DFD7] rounded-md flex items-center justify-center p-2 shrink-0 relative group">
+                  {logoUrl ? (
+                    <img 
+                      src={`${logoUrl}?t=${logoBuster}`} 
+                      alt="Logo Empresa" 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <span className="material-symbols-outlined text-3xl text-[#6B6862]">storefront</span>
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-2 text-left">
+                  <p className="text-xs text-[#161616] font-medium">
+                    {logoUrl ? 'Logotipo activo en facturación e interfaz' : 'Aún no has cargado un logotipo comercial.'}
+                  </p>
+                  <p className="text-[11px] text-[#6B6862] leading-tight">
+                    Subirás la imagen oficial de tu marca (PNG, JPG, SVG). Aparecerá en tus facturas electrónicas PDF (A4/Carta) y en el menú del sistema ERP.
+                  </p>
+                  
+                  <div className="pt-1 flex items-center gap-2">
+                    <label className="bg-[#D9381E] hover:bg-[#b82b14] text-white text-[10px] font-bold uppercase tracking-wider px-3.5 py-2 rounded-sm cursor-pointer transition-all inline-flex items-center gap-1.5 border-0 shadow-xs">
+                      <span className="material-symbols-outlined text-sm">cloud_upload</span>
+                      Cargar / Cambiar Logo
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleLogoUpload(e.target.files[0]);
+                          }
+                        }} 
+                      />
+                    </label>
+                    {logoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fileName = logoUrl.split('/').pop();
+                          if (fileName) handleDeleteLogo(fileName);
+                        }}
+                        className="bg-white border border-[#E2DFD7] text-[#6B6862] hover:text-[#D9381E] hover:border-[#D9381E] text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-sm cursor-pointer transition-colors inline-flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                        Eliminar Logo
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Historial de Logotipos Subidos Previamente */}
+              {logos.length > 1 && (
+                <div className="pt-2 border-t border-[#E2DFD7] space-y-1.5">
+                  <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider block">Historial de Logotipos Guardados:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {logos.map(lg => {
+                      const isSelected = logoUrl && logoUrl.includes(lg.fileName);
+                      return (
+                        <div 
+                          key={lg.fileName} 
+                          className={`w-10 h-10 bg-white border p-1 rounded cursor-pointer relative group transition-all ${
+                            isSelected ? 'border-2 border-[#D9381E] shadow-xs ring-2 ring-[#D9381E]/10' : 'border-[#E2DFD7] hover:border-[#161616]'
+                          }`}
+                          onClick={() => handleSelectLogo(lg.fileName)}
+                          title={`Usar este logo (${lg.fileName})`}
+                        >
+                          <img src={`${lg.url}?t=${logoBuster}`} alt="Logo" className="w-full h-full object-contain" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6B6862] block">
                 Nombre / Razón Social Legal del Negocio *
