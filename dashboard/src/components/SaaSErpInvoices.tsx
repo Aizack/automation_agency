@@ -119,8 +119,25 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const [customTransferBank, setCustomTransferBank] = useState('');
     const [transferDestinationAccount, setTransferDestinationAccount] = useState('');
     const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+    const getDefaultFirstDueDate = (freq: 'semanal' | 'quincenal' | 'mensual') => {
+        const d = new Date();
+        if (freq === 'semanal') {
+            d.setDate(d.getDate() + 7);
+        } else if (freq === 'quincenal') {
+            d.setDate(d.getDate() + 15);
+        } else {
+            d.setMonth(d.getMonth() + 1);
+        }
+        return d.toISOString().split('T')[0];
+    };
+
     const [installmentsCount, setInstallmentsCount] = useState<number | string>(1);
     const [installmentFrequency, setInstallmentFrequency] = useState<'semanal' | 'quincenal' | 'mensual'>('mensual');
+    const [firstDueDate, setFirstDueDate] = useState<string>(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 1);
+        return d.toISOString().split('T')[0];
+    });
     const [abono, setAbono] = useState('0'); // Abono inicial
     const [dueDate, setDueDate] = useState('');
 
@@ -327,20 +344,22 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
     useEffect(() => {
         if (paymentMethod === 'credito') {
-            const count = typeof installmentsCount === 'string' ? (parseInt(installmentsCount, 10) || 0) : installmentsCount;
-            const date = new Date();
+            const count = typeof installmentsCount === 'string' ? (parseInt(installmentsCount, 10) || 1) : installmentsCount;
+            const baseDate = firstDueDate ? new Date(firstDueDate + 'T12:00:00') : new Date();
+            const date = new Date(baseDate);
+            const remainingSteps = Math.max(0, count - 1);
             if (installmentFrequency === 'semanal') {
-                date.setDate(date.getDate() + count * 7);
+                date.setDate(date.getDate() + remainingSteps * 7);
             } else if (installmentFrequency === 'quincenal') {
-                date.setDate(date.getDate() + count * 15);
+                date.setDate(date.getDate() + remainingSteps * 15);
             } else {
-                date.setMonth(date.getMonth() + count);
+                date.setMonth(date.getMonth() + remainingSteps);
             }
             setDueDate(date.toISOString().split('T')[0]);
         } else {
             setDueDate(new Date().toISOString().split('T')[0]);
         }
-    }, [paymentMethod, installmentsCount, installmentFrequency]);
+    }, [paymentMethod, installmentsCount, installmentFrequency, firstDueDate]);
 
     const handleAddItem = () => {
         setSelectedItems([...selectedItems, {
@@ -517,7 +536,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             customerEmail,
             customerAddress,
             totalAmount,
-            dueDate,
+            dueDate: paymentMethod === 'credito' ? (dueDate || firstDueDate) : (dueDate || new Date().toISOString().split('T')[0]),
+            firstDueDate: paymentMethod === 'credito' ? firstDueDate : null,
             paymentMethod,
             transferBank: paymentMethod === 'transferencia' ? transferBank : null,
             transferDestinationAccount: paymentMethod === 'transferencia' ? transferDestinationAccount : null,
@@ -566,6 +586,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         setTransferDestinationAccount('');
         setInstallmentsCount(1);
         setInstallmentFrequency('mensual');
+        setFirstDueDate(getDefaultFirstDueDate('mensual'));
         setAbono('0');
         setDeliveryMethod('local');
         setDeliveryFee('0');
@@ -1219,7 +1240,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                         <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
                                             2. Condiciones y Método de Pago
                                         </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Método de Pago *</label>
                                                 <select 
@@ -1348,13 +1369,27 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                         <select 
                                                             className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none rounded-none cursor-pointer" 
                                                             value={installmentFrequency} 
-                                                            onChange={(e) => setInstallmentFrequency(e.target.value as any)}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value as any;
+                                                                setInstallmentFrequency(val);
+                                                                setFirstDueDate(getDefaultFirstDueDate(val));
+                                                            }}
                                                             required
                                                         >
                                                             <option value="semanal">Semanal</option>
                                                             <option value="quincenal">Quincenal</option>
                                                             <option value="mensual">Mensual</option>
                                                         </select>
+                                                    </div>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Fecha 1ª Cuota / Inicio *</label>
+                                                        <input 
+                                                            type="date" 
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none cursor-pointer" 
+                                                            value={firstDueDate} 
+                                                            onChange={(e) => setFirstDueDate(e.target.value)}
+                                                            required
+                                                        />
                                                     </div>
                                                 </>
                                             )}

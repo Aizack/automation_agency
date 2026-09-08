@@ -2667,6 +2667,8 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         installmentsCount,
         installmentFrequency,
         abono, // Abono inicial
+        firstDueDate,
+        first_due_date,
         deliveryMethod, // 'local' o 'domicilio'
         deliveryFee,
         deliveryAddress,
@@ -2842,14 +2844,21 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       if (remainingAmount > 0 && cleanInstallmentsCount > 0) {
         const baseAmount = Math.round((remainingAmount / cleanInstallmentsCount) * 100) / 100;
         
+        // Base start date: usar firstDueDate si fue provista por el usuario
+        const initialDateRaw = firstDueDate || first_due_date || dueDate;
+        const baseStartDate = initialDateRaw ? new Date(initialDateRaw + 'T12:00:00') : new Date();
+
         for (let i = 1; i <= cleanInstallmentsCount; i++) {
-          const installmentDate = new Date();
-          if (installmentFrequency === 'semanal') {
-            installmentDate.setDate(installmentDate.getDate() + i * 7);
-          } else if (installmentFrequency === 'quincenal') {
-            installmentDate.setDate(installmentDate.getDate() + i * 15);
-          } else { // mensual
-            installmentDate.setMonth(installmentDate.getMonth() + i);
+          const installmentDate = new Date(baseStartDate);
+          if (i > 1) {
+            const step = i - 1;
+            if (installmentFrequency === 'semanal') {
+              installmentDate.setDate(installmentDate.getDate() + step * 7);
+            } else if (installmentFrequency === 'quincenal') {
+              installmentDate.setDate(installmentDate.getDate() + step * 15);
+            } else { // mensual
+              installmentDate.setMonth(installmentDate.getMonth() + step);
+            }
           }
 
           // Ajustar decimales de redondeo en la última cuota
