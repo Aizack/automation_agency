@@ -7437,12 +7437,22 @@ app.get('/api/clients/:clientId/lab-jobs', authenticateToken as any, authorizeCl
              s.name as supplier_name,
              f.od_sphere, f.od_cylinder, f.od_axis, f.od_addition,
              f.oi_sphere, f.oi_cylinder, f.oi_axis, f.oi_addition,
-             f.dp_distance, f.height
+             f.dp_distance, f.height, f.notes as formula_notes,
+             i.invoice_number,
+             (
+               SELECT string_agg(ii.product_name, ', ') 
+               FROM invoice_items ii 
+               WHERE ii.invoice_id = j.invoice_id AND (ii.product_type = 'inventory' OR (ii.product_name NOT LIKE 'Lente%' AND ii.product_name NOT LIKE 'Servicio%'))
+             ) as frame_name
       FROM lab_jobs j
       LEFT JOIN crm_customers c ON j.customer_id = c.id
       LEFT JOIN invoices i ON j.invoice_id = i.id
       LEFT JOIN suppliers s ON j.supplier_id = s.id
-      LEFT JOIN formulas f ON j.formula_id = f.id
+      LEFT JOIN LATERAL (
+        SELECT * FROM formulas 
+        WHERE id = j.formula_id OR (j.formula_id IS NULL AND customer_id = j.customer_id) 
+        ORDER BY created_at DESC LIMIT 1
+      ) f ON true
       WHERE j.client_id = $1
       ORDER BY j.created_at DESC
     `, [clientId]);
