@@ -2723,7 +2723,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                                 >
                                                     <span className="truncate">{branch.name}</span>
                                                     <span className="material-symbols-outlined text-sm">
-                                                        {isSelected ? 'check_box' : 'checkbox_outline_blank'}
+                                                        {isSelected ? 'check_box' : 'check_box_outline_blank'}
                                                     </span>
                                                 </button>
                                             );
