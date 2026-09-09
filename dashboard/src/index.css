@@ -1107,24 +1107,32 @@ label {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Siempre Visible & Destacado para Laptop & Touchpad */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #D9381E #EAE6DF;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 9px;
+  height: 9px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+  background: #EAE6DF;
+  border-radius: 4px;
+  border: 1px solid #D8D4C9;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--surface-container-high-val);
-  border-radius: var(--radius-full);
-  transition: background 0.2s ease;
+  background: #D9381E;
+  border-radius: 4px;
+  border: 2px solid #EAE6DF;
+  min-height: 40px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-color);
+  background: #161616;
 }
 
 /* ==========================================================================

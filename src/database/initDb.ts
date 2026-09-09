@@ -1059,6 +1059,13 @@ export const initDatabase = async () => {
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS plan_tier VARCHAR(20) DEFAULT 'basic';
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS electronic_invoices_limit INT DEFAULT 10;
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS electronic_invoices_used INT DEFAULT 0;
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS fe_provider VARCHAR(30) DEFAULT 'factus';
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS fe_credentials JSONB DEFAULT '{}'::jsonb;
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS fe_settings JSONB DEFAULT '{}'::jsonb;
+
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS fe_provider_used VARCHAR(30);
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS external_invoice_id VARCHAR(100);
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS external_pdf_url TEXT;
         `);
 
         await pool.query(`

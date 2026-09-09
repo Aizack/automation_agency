@@ -1139,11 +1139,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
             {/* MODAL POPUP WIDESCREEN EDITORIAL WABI-SABI PARA CREACIÓN DE FACTURA (createPortal) */}
             {isFormOpen && createPortal(
-                <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-                    <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] h-[93vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in">
+                <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+                    <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] max-h-[calc(100vh-2rem)] h-full sm:h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in">
                         
                         {/* Header del Modal */}
-                        <div className="px-8 py-5 border-b border-[#E2DFD7] flex justify-between items-center bg-[#F6F4EE] shrink-0">
+                        <div className="px-5 sm:px-8 py-3.5 sm:py-5 border-b border-[#E2DFD7] flex justify-between items-center bg-[#F6F4EE] shrink-0">
                             <div>
                                 <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans block">FACTURACIÓN & CAJA POS / DIAN</span>
                                 <h3 className="font-serif text-2xl sm:text-3xl font-normal text-[#161616] leading-tight">
@@ -1161,11 +1161,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                         </div>
 
                         {/* Formulario en 2 Columnas: Izquierda Formulario Scrollable, Derecha Liquidación Live */}
-                        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
-                            <div className="flex-1 p-6 sm:p-8 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
+                        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden min-h-0">
+                            <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6 sm:gap-8 min-h-0">
                                 
                                 {/* Columna Izquierda: Secciones de Facturación */}
-                                <div className="overflow-y-auto pr-8 sm:pr-10 space-y-6 max-h-full custom-scrollbar" ref={dropdownRef}>
+                                <div className="overflow-y-auto pr-4 sm:pr-8 space-y-6 max-h-full min-h-0 flex-1 custom-scrollbar" ref={dropdownRef}>
                                     
                                     {/* 1. Datos del Cliente / Comprador */}
                                     <div>
@@ -1777,7 +1777,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                 </div>
 
                                 {/* Columna Derecha: Sidebar con Liquidación y Resumen Live */}
-                                <div className="flex flex-col justify-between space-y-6 h-full">
+                                <div className="flex flex-col justify-between space-y-6 h-full max-h-full overflow-y-auto custom-scrollbar pr-1 min-h-0 flex-1">
                                     <div className="space-y-4">
                                         {/* Card Resumen de Cliente */}
                                         <div className="bg-white border border-[#E2DFD7] p-5 shadow-sm space-y-3">

@@ -57,6 +57,8 @@ import { registerShutdownHandlers, restoreSystemState } from './services/shutdow
 import { startScheduler } from './services/scheduler';
 import { logReqAudit, logAudit } from './services/auditService';
 import { processElectronicInvoice, checkElectronicInvoicePermission } from './services/electronicInvoiceService';
+import { testAlegraConnection } from './services/alegraService';
+import { testSiigoConnection } from './services/siigoService';
 import { getInvoicePrintData, generatePOSThermalTicketHTML } from './services/pdfGeneratorService';
 import { AIAgent } from './agents/base';
 import { getClientConfigById } from './core/config';
@@ -3277,6 +3279,91 @@ app.get('/api/clients/:clientId/plan-status', authenticateToken as any, authoriz
       planUpgradeRequired: permCheck.planUpgradeRequired || false,
       reason: permCheck.reason
     });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Obtener configuración del proveedor de facturación electrónica (Factus, Alegra, Siigo)
+app.get('/api/clients/:clientId/electronic-invoicing/config', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const clientRes = await pool.query(
+      `SELECT fe_provider, fe_credentials, fe_settings FROM clients WHERE id = $1`,
+      [clientId]
+    );
+
+    if (clientRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Cliente no encontrado.' });
+    }
+
+    const { fe_provider = 'factus', fe_credentials = {}, fe_settings = {} } = clientRes.rows[0];
+
+    res.json({
+      success: true,
+      feProvider: fe_provider,
+      feCredentials: typeof fe_credentials === 'string' ? JSON.parse(fe_credentials) : fe_credentials,
+      feSettings: typeof fe_settings === 'string' ? JSON.parse(fe_settings) : fe_settings,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Guardar configuración del proveedor de facturación electrónica
+app.post('/api/clients/:clientId/electronic-invoicing/config', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { feProvider, feCredentials, feSettings } = req.body;
+
+    const validProviders = ['factus', 'alegra', 'siigo', 'manual'];
+    const provider = (feProvider || 'factus').toLowerCase();
+
+    if (!validProviders.includes(provider)) {
+      return res.status(400).json({ success: false, error: `Proveedor no válido. Opciones: ${validProviders.join(', ')}` });
+    }
+
+    await pool.query(
+      `UPDATE clients 
+       SET fe_provider = $1, fe_credentials = $2::jsonb, fe_settings = $3::jsonb 
+       WHERE id = $4`,
+      [provider, JSON.stringify(feCredentials || {}), JSON.stringify(feSettings || {}), clientId]
+    );
+
+    await logReqAudit(
+      req,
+      clientId as string,
+      'CONFIGURAR_PROVEEDOR_FACTURACION',
+      'Facturación',
+      `Configuración de proveedor de facturación electrónica actualizada a '${provider.toUpperCase()}'.`,
+      { provider }
+    );
+
+    res.json({ success: true, message: `Proveedor de facturación electrónica configurado como '${provider.toUpperCase()}'.` });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Probar conexión con el proveedor de facturación electrónica seleccionado
+app.post('/api/clients/:clientId/electronic-invoicing/test-connection', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { provider, credentials } = req.body;
+
+    const selectedProvider = (provider || 'factus').toLowerCase();
+
+    if (selectedProvider === 'alegra') {
+      const result = await testAlegraConnection(credentials || {});
+      return res.json(result);
+    } else if (selectedProvider === 'siigo') {
+      const result = await testSiigoConnection(credentials || {});
+      return res.json(result);
+    } else {
+      return res.json({
+        success: true,
+        message: 'Proveedor por defecto (Factus / DIAN) activo.',
+      });
+    }
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

@@ -506,8 +506,334 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
         </div>
       </div>
 
+      {/* Sección Proveedor de Facturación Electrónica DIAN */}
+      <ElectronicInvoicingProviderSettings clientId={clientId} />
+
       {/* Sección Cuentas Bancarias del Negocio */}
       <BankAccountsManager clientId={clientId} />
+    </div>
+  );
+};
+
+const ElectronicInvoicingProviderSettings: React.FC<{ clientId: string }> = ({ clientId }) => {
+  const [provider, setProvider] = useState<'factus' | 'alegra' | 'siigo' | 'manual'>('factus');
+  const [alegraEmail, setAlegraEmail] = useState('');
+  const [alegraToken, setAlegraToken] = useState('');
+  const [siigoUsername, setSiigoUsername] = useState('');
+  const [siigoAccessKey, setSiigoAccessKey] = useState('');
+  const [siigoPartnerId, setSiigoPartnerId] = useState('');
+  const [testing, setTesting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/clients/${clientId}/electronic-invoicing/config`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success) {
+          setProvider(json.feProvider || 'factus');
+          const creds = json.feCredentials || {};
+          if (json.feProvider === 'alegra') {
+            setAlegraEmail(creds.email || '');
+            setAlegraToken(creds.token || '');
+          } else if (json.feProvider === 'siigo') {
+            setSiigoUsername(creds.username || '');
+            setSiigoAccessKey(creds.access_key || '');
+            setSiigoPartnerId(creds.partner_id || '');
+          }
+        }
+      })
+      .catch((err) => console.error('Error cargando configuración FE:', err));
+  }, [clientId]);
+
+  const handleTestConnection = async () => {
+    setTesting(true);
+    setTestResult(null);
+
+    let credentials: any = {};
+    if (provider === 'alegra') {
+      credentials = { email: alegraEmail, token: alegraToken };
+    } else if (provider === 'siigo') {
+      credentials = { username: siigoUsername, access_key: siigoAccessKey, partner_id: siigoPartnerId };
+    }
+
+    try {
+      const res = await fetch(`/api/clients/${clientId}/electronic-invoicing/test-connection`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider, credentials }),
+      });
+      const json = await res.json();
+      setTestResult({ success: json.success, message: json.message || (json.success ? 'Conexión verificada con éxito.' : 'Error de conexión.') });
+    } catch (err: any) {
+      setTestResult({ success: false, message: `Error de conexión: ${err.message}` });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setSaveSuccess(false);
+
+    let credentials: any = {};
+    if (provider === 'alegra') {
+      credentials = { email: alegraEmail, token: alegraToken };
+    } else if (provider === 'siigo') {
+      credentials = { username: siigoUsername, access_key: siigoAccessKey, partner_id: siigoPartnerId };
+    }
+
+    try {
+      const res = await fetch(`/api/clients/${clientId}/electronic-invoicing/config`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feProvider: provider, feCredentials: credentials, feSettings: {} }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        alert(json.error || 'Error al guardar la configuración.');
+      }
+    } catch (err: any) {
+      alert(`Error de conexión: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 pt-10 border-t border-[#E2DFD7]">
+      <div>
+        <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-[0.2em] block mb-1">
+          Facturación Electrónica Multi-Proveedor
+        </span>
+        <h4 className="font-serif font-normal text-2xl md:text-3xl text-[#161616] leading-none">
+          Proveedor de Facturas Electrónicas
+        </h4>
+        <p className="text-xs text-[#6B6862] mt-2 max-w-2xl leading-relaxed">
+          Elige si deseas emitir facturas electrónicas usando la integración del ERP (**Factus**) o conectar la cuenta que tu negocio ya tiene en **Alegra** o **Siigo**.
+        </p>
+      </div>
+
+      {saveSuccess && (
+        <div className="p-4 bg-[#FFFFFF] border-l-4 border-[#15803d] border-y border-r border-[#E2DFD7] text-[#161616] text-xs font-medium flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <span className="material-symbols-outlined text-[18px] text-[#15803d]">check_circle</span>
+            <span>¡Proveedor de Facturación Electrónica guardado con éxito!</span>
+          </div>
+          <span className="text-[10px] text-[#6B6862] font-mono">200 OK</span>
+        </div>
+      )}
+
+      {/* Selector de Proveedor en Tarjetas Nativas Wabi-Sabi */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Factus Card */}
+        <div
+          onClick={() => setProvider('factus')}
+          className={`p-5 border cursor-pointer transition-all bg-white relative shadow-sm ${
+            provider === 'factus'
+              ? 'border-2 border-[#D9381E] ring-2 ring-[#D9381E]/10'
+              : 'border-[#E2DFD7] hover:border-[#161616]'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FAF8F3] text-[#D9381E] px-2 py-0.5 border border-[#E2DFD7]">
+              Incluido en ERP
+            </span>
+            <span className="material-symbols-outlined text-[20px] text-[#D9381E]">
+              {provider === 'factus' ? 'radio_button_checked' : 'radio_button_unchecked'}
+            </span>
+          </div>
+          <h5 className="font-serif font-normal text-lg text-[#161616]">Factus API</h5>
+          <p className="text-[11px] text-[#6B6862] mt-1.5 leading-relaxed">
+            Emisión directa con la firma electrónica del sistema ERP sin costo de software adicional.
+          </p>
+        </div>
+
+        {/* Alegra Card */}
+        <div
+          onClick={() => setProvider('alegra')}
+          className={`p-5 border cursor-pointer transition-all bg-white relative shadow-sm ${
+            provider === 'alegra'
+              ? 'border-2 border-[#D9381E] ring-2 ring-[#D9381E]/10'
+              : 'border-[#E2DFD7] hover:border-[#161616]'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FAF8F3] text-[#161616] px-2 py-0.5 border border-[#E2DFD7]">
+              Cuenta Propia
+            </span>
+            <span className="material-symbols-outlined text-[20px] text-[#D9381E]">
+              {provider === 'alegra' ? 'radio_button_checked' : 'radio_button_unchecked'}
+            </span>
+          </div>
+          <h5 className="font-serif font-normal text-lg text-[#161616]">Alegra</h5>
+          <p className="text-[11px] text-[#6B6862] mt-1.5 leading-relaxed">
+            Conecta tu cuenta existente de Alegra mediante tu Correo y API Token corporativo.
+          </p>
+        </div>
+
+        {/* Siigo Card */}
+        <div
+          onClick={() => setProvider('siigo')}
+          className={`p-5 border cursor-pointer transition-all bg-white relative shadow-sm ${
+            provider === 'siigo'
+              ? 'border-2 border-[#D9381E] ring-2 ring-[#D9381E]/10'
+              : 'border-[#E2DFD7] hover:border-[#161616]'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FAF8F3] text-[#161616] px-2 py-0.5 border border-[#E2DFD7]">
+              Cuenta Propia
+            </span>
+            <span className="material-symbols-outlined text-[20px] text-[#D9381E]">
+              {provider === 'siigo' ? 'radio_button_checked' : 'radio_button_unchecked'}
+            </span>
+          </div>
+          <h5 className="font-serif font-normal text-lg text-[#161616]">Siigo Nube</h5>
+          <p className="text-[11px] text-[#6B6862] mt-1.5 leading-relaxed">
+            Conecta tu paquete contable Siigo Nube usando tu Usuario e API Access Key.
+          </p>
+        </div>
+      </div>
+
+      {/* Formulario de Credenciales según Proveedor */}
+      <form onSubmit={handleSaveConfig} className="bg-white border border-[#E2DFD7] p-6 space-y-4 shadow-sm">
+        <h5 className="font-serif font-normal text-lg text-[#161616] border-b border-[#E2DFD7] pb-3">
+          Credenciales de API — {provider.toUpperCase()}
+        </h5>
+
+        {provider === 'factus' && (
+          <div className="p-4 bg-[#FAF8F3] border border-[#E2DFD7] text-xs text-[#6B6862] leading-relaxed">
+            <span className="font-semibold text-[#161616]">Proveedor Activo: Factus API.</span> No requiere credenciales externas adicionales. El ERP gestiona automáticamente la firma digital y validación en la DIAN.
+          </div>
+        )}
+
+        {provider === 'alegra' && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6B6862] block">
+                  Correo Registrado en Alegra *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={alegraEmail}
+                  onChange={(e) => setAlegraEmail(e.target.value)}
+                  placeholder="ej. facturacion@miempresa.com"
+                  className="w-full bg-[#FAF8F3] focus:bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6B6862] block">
+                  Token API de Alegra *
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={alegraToken}
+                  onChange={(e) => setAlegraToken(e.target.value)}
+                  placeholder="Token de API (Generado en Configuración > API)"
+                  className="w-full bg-[#FAF8F3] focus:bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none font-mono"
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-[#6B6862]">
+              💡 Encuentra tu Token de API ingresando a Alegra en **Configuración $\rightarrow$ Integraciones $\rightarrow$ Claves de API**.
+            </p>
+          </div>
+        )}
+
+        {provider === 'siigo' && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6B6862] block">
+                  Usuario / Correo Siigo *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={siigoUsername}
+                  onChange={(e) => setSiigoUsername(e.target.value)}
+                  placeholder="ej. usuario@empresa.com"
+                  className="w-full bg-[#FAF8F3] focus:bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6B6862] block">
+                  Clave de Acceso API (Access Key) *
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={siigoAccessKey}
+                  onChange={(e) => setSiigoAccessKey(e.target.value)}
+                  placeholder="Access Key de Siigo API"
+                  className="w-full bg-[#FAF8F3] focus:bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none font-mono"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6B6862] block">
+                Partner ID (Opcional)
+              </label>
+              <input
+                type="text"
+                value={siigoPartnerId}
+                onChange={(e) => setSiigoPartnerId(e.target.value)}
+                placeholder="Partner ID para integradores Siigo"
+                className="w-full bg-[#FAF8F3] focus:bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none font-mono"
+              />
+            </div>
+            <p className="text-[11px] text-[#6B6862]">
+              💡 Genera tu Access Key ingresando a Siigo Nube en **Configuración $\rightarrow$ Integraciones de API**.
+            </p>
+          </div>
+        )}
+
+        {testResult && (
+          <div
+            className={`p-3 text-xs border flex items-center gap-2 ${
+              testResult.success
+                ? 'bg-white border-[#15803d] text-[#15803d]'
+                : 'bg-white border-[#D9381E] text-[#D9381E]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">
+              {testResult.success ? 'check_circle' : 'error'}
+            </span>
+            <span>{testResult.message}</span>
+          </div>
+        )}
+
+        <div className="pt-3 border-t border-[#E2DFD7] flex items-center justify-between">
+          {provider !== 'factus' && provider !== 'manual' ? (
+            <button
+              type="button"
+              disabled={testing}
+              onClick={handleTestConnection}
+              className="px-4 py-2 border border-[#E2DFD7] bg-[#FAF8F3] hover:bg-white text-[11px] font-bold uppercase tracking-wider text-[#161616] cursor-pointer flex items-center gap-1.5 transition-all"
+            >
+              <span className="material-symbols-outlined text-sm">wifi_tethering</span>
+              {testing ? 'Verificando...' : 'Probar Conexión'}
+            </button>
+          ) : <div />}
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-2.5 bg-[#D9381E] hover:bg-[#b82b14] text-white text-[11px] font-bold uppercase tracking-[0.15em] cursor-pointer border-0 shadow-sm transition-all"
+          >
+            {saving ? 'Guardando...' : 'Guardar Proveedor'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

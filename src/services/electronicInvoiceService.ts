@@ -2,12 +2,17 @@ import crypto from 'crypto';
 import { pool } from '../database/postgres';
 import { logAudit } from './auditService';
 import { getFactusAccessToken } from './factusService';
+import { emitAlegraInvoice } from './alegraService';
+import { emitSiigoInvoice } from './siigoService';
 
 export interface ElectronicInvoiceResult {
   success: boolean;
   cufe?: string;
   qrCodeUrl?: string;
   electronicStatus?: string;
+  externalInvoiceId?: string;
+  externalPdfUrl?: string;
+  providerUsed?: string;
   error?: string;
   planUpgradeRequired?: boolean;
 }
@@ -113,7 +118,8 @@ export const processElectronicInvoice = async (
 
     // 2. Obtener factura y cliente de la base de datos
     const invRes = await pool.query(
-      `SELECT i.*, c.name as business_name, c.nit as business_nit, c.email as business_email 
+      `SELECT i.*, c.name as business_name, c.nit as business_nit, c.email as business_email,
+              c.fe_provider, c.fe_credentials, c.fe_settings
        FROM invoices i 
        JOIN clients c ON i.client_id = c.id
        WHERE i.client_id = $1 AND i.id = $2`,
@@ -134,6 +140,10 @@ export const processElectronicInvoice = async (
     const issuerNit = inv.business_nit || '1129520837';
     const customerDoc = inv.customer_document_number || '222222222222';
 
+    const feProvider = (inv.fe_provider || 'factus').toLowerCase();
+    const feCredentials = typeof inv.fe_credentials === 'string' ? JSON.parse(inv.fe_credentials) : (inv.fe_credentials || {});
+    const feSettings = typeof inv.fe_settings === 'string' ? JSON.parse(inv.fe_settings) : (inv.fe_settings || {});
+
     // Obtener los ítems de la factura
     const itemsRes = await pool.query(
       `SELECT ii.*, p.name as inventory_prod_name, p.sku 
@@ -143,86 +153,150 @@ export const processElectronicInvoice = async (
       [invoiceId]
     );
 
+    const invoiceItems = (itemsRes.rows || []).map((it: any) => ({
+      name: it.product_name || it.inventory_prod_name || 'Artículo de Venta',
+      price: parseFloat(it.price || '0'),
+      quantity: parseInt(it.quantity || '1', 10),
+      sku: it.sku,
+    }));
+
     let cufe = '';
     let qrCodeUrl = '';
+    let externalInvoiceId = '';
+    let externalPdfUrl = '';
     let electronicStatus = 'accepted';
 
-    const factusApiUrl = process.env.FACTUS_API_URL || 'https://api-sandbox.factus.com.co';
-    const factusClientId = process.env.FACTUS_CLIENT_ID;
+    // 3. Despacho según Proveedor Seleccionado
+    if (feProvider === 'alegra' && feCredentials.email && feCredentials.token) {
+      const alegraRes = await emitAlegraInvoice(feCredentials, feSettings, {
+        invoiceNumber: inv.invoice_number,
+        issueDate: dateStr,
+        dueDate: dateStr,
+        customer: {
+          name: inv.customer_name || 'Consumidor Final',
+          document: customerDoc,
+          email: inv.customer_email,
+          phone: inv.customer_phone,
+        },
+        items: invoiceItems,
+        totalAmount: totalAmt,
+        paymentMethod: inv.payment_method,
+      });
 
-    // Si Factus está configurado con credenciales válidas
-    if (factusClientId && factusClientId !== 'sandbox_client_id') {
-      try {
-        const token = await getFactusAccessToken();
+      if (alegraRes.success) {
+        cufe = alegraRes.cufe || '';
+        qrCodeUrl = alegraRes.qrCodeUrl || '';
+        externalInvoiceId = alegraRes.externalInvoiceId || '';
+        externalPdfUrl = alegraRes.externalPdfUrl || '';
+        electronicStatus = alegraRes.electronicStatus || 'accepted';
+      } else {
+        console.warn('[Electronic Invoice Service] Error en emisión con Alegra, ejecutando fallback local:', alegraRes.error);
+      }
+    } else if (feProvider === 'siigo' && feCredentials.username && feCredentials.access_key) {
+      const siigoRes = await emitSiigoInvoice(feCredentials, feSettings, {
+        invoiceNumber: inv.invoice_number,
+        issueDate: dateStr,
+        dueDate: dateStr,
+        customer: {
+          name: inv.customer_name || 'Consumidor Final',
+          document: customerDoc,
+          email: inv.customer_email,
+          phone: inv.customer_phone,
+          docType: inv.customer_document_type,
+        },
+        items: invoiceItems,
+        totalAmount: totalAmt,
+        paymentMethod: inv.payment_method,
+      });
 
-        const factusItems = (itemsRes.rows || []).map((it: any, idx: number) => ({
-          code_reference: it.sku || `PROD-${idx + 1}`,
-          name: it.product_name || it.inventory_prod_name || 'Artículo de Venta',
-          quantity: parseInt(it.quantity || '1', 10),
-          discount_rate: 0,
-          price: parseFloat(it.price || '0'),
-          tax_rate: '19.00',
-          unit_measure_id: 70, // Unidades
-          standard_code_id: 1,
-          is_excluded: 0,
-          tribute_id: 1, // IVA
-        }));
+      if (siigoRes.success) {
+        cufe = siigoRes.cufe || '';
+        qrCodeUrl = siigoRes.qrCodeUrl || '';
+        externalInvoiceId = siigoRes.externalInvoiceId || '';
+        externalPdfUrl = siigoRes.externalPdfUrl || '';
+        electronicStatus = siigoRes.electronicStatus || 'accepted';
+      } else {
+        console.warn('[Electronic Invoice Service] Error en emisión con Siigo, ejecutando fallback local:', siigoRes.error);
+      }
+    } else {
+      // Proveedor Factus o por Defecto
+      const factusApiUrl = process.env.FACTUS_API_URL || 'https://api-sandbox.factus.com.co';
+      const factusClientId = process.env.FACTUS_CLIENT_ID;
 
-        const factusPayload: any = {
-          numbering_range_id: 8, // Rango de prueba Sandbox Factus
-          reference_code: inv.invoice_number,
-          observation: `Factura ${inv.invoice_number} emitida desde ERP Multi-Tenant`,
-          payment_method_code: inv.payment_method === 'credito' ? '30' : '10', // 10=Efectivo/Contado, 30=Crédito
-          customer: {
-            identification: customerDoc,
-            dv: '3',
-            company: inv.customer_name || 'Consumidor Final',
-            trade_name: inv.customer_name || 'Consumidor Final',
-            names: inv.customer_name || 'Consumidor Final',
-            email: inv.customer_email || 'factura@cliente.com',
-            phone: inv.customer_phone || '3000000000',
-            legal_organization_id: '2', // Persona Natural
-            tribute_id: '21', // No responsable de IVA
-            identification_document_id: inv.customer_document_type === 'NIT' ? '6' : '3', // 3=CC, 6=NIT
-            municipality_id: '980', // Barranquilla por defecto
-          },
-          items: factusItems.length > 0 ? factusItems : [
-            {
-              code_reference: 'GEN-001',
-              name: 'Venta General',
-              quantity: 1,
-              discount_rate: 0,
-              price: totalAmt,
-              tax_rate: '19.00',
-              unit_measure_id: 70,
-              standard_code_id: 1,
-              is_excluded: 0,
-              tribute_id: 1,
-            }
-          ]
-        };
+      if (factusClientId && factusClientId !== 'sandbox_client_id') {
+        try {
+          const token = await getFactusAccessToken();
 
-        const response = await fetch(`${factusApiUrl}/v1/bills/validate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(factusPayload)
-        });
+          const factusItems = (itemsRes.rows || []).map((it: any, idx: number) => ({
+            code_reference: it.sku || `PROD-${idx + 1}`,
+            name: it.product_name || it.inventory_prod_name || 'Artículo de Venta',
+            quantity: parseInt(it.quantity || '1', 10),
+            discount_rate: 0,
+            price: parseFloat(it.price || '0'),
+            tax_rate: '19.00',
+            unit_measure_id: 70, // Unidades
+            standard_code_id: 1,
+            is_excluded: 0,
+            tribute_id: 1, // IVA
+          }));
 
-        if (response.ok) {
-          const resData: any = await response.json();
-          cufe = resData?.data?.bill?.cufe || resData?.data?.cufe || resData?.cufe;
-          qrCodeUrl = resData?.data?.bill?.qr || resData?.data?.qr_code_url || resData?.qr_code_url;
+          const factusPayload: any = {
+            numbering_range_id: feSettings.numbering_range_id || 8, // Rango de prueba Sandbox Factus
+            reference_code: inv.invoice_number,
+            observation: `Factura ${inv.invoice_number} emitida desde ERP Multi-Tenant`,
+            payment_method_code: inv.payment_method === 'credito' ? '30' : '10', // 10=Efectivo/Contado, 30=Crédito
+            customer: {
+              identification: customerDoc,
+              dv: '3',
+              company: inv.customer_name || 'Consumidor Final',
+              trade_name: inv.customer_name || 'Consumidor Final',
+              names: inv.customer_name || 'Consumidor Final',
+              email: inv.customer_email || 'factura@cliente.com',
+              phone: inv.customer_phone || '3000000000',
+              legal_organization_id: '2', // Persona Natural
+              tribute_id: '21', // No responsable de IVA
+              identification_document_id: inv.customer_document_type === 'NIT' ? '6' : '3', // 3=CC, 6=NIT
+              municipality_id: '980', // Barranquilla por defecto
+            },
+            items: factusItems.length > 0 ? factusItems : [
+              {
+                code_reference: 'GEN-001',
+                name: 'Venta General',
+                quantity: 1,
+                discount_rate: 0,
+                price: totalAmt,
+                tax_rate: '19.00',
+                unit_measure_id: 70,
+                standard_code_id: 1,
+                is_excluded: 0,
+                tribute_id: 1,
+              }
+            ]
+          };
+
+          const response = await fetch(`${factusApiUrl}/v1/bills/validate`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(factusPayload)
+          });
+
+          if (response.ok) {
+            const resData: any = await response.json();
+            cufe = resData?.data?.bill?.cufe || resData?.data?.cufe || resData?.cufe;
+            qrCodeUrl = resData?.data?.bill?.qr || resData?.data?.qr_code_url || resData?.qr_code_url;
+            externalInvoiceId = resData?.data?.bill?.id ? String(resData.data.bill.id) : '';
+          }
+        } catch (apiErr) {
+          console.warn('[Electronic Invoice Service] Factus API warning, using fallback calculation:', apiErr);
         }
-      } catch (apiErr) {
-        console.warn('[Electronic Invoice Service] Factus API Sandbox warning, using fallback calculation:', apiErr);
       }
     }
 
-    // Fallback: Si no hay credenciales de Factus activas aún, calculamos CUFE SHA-384 y QR oficial DIAN
+    // Fallback: Si no hay credenciales activas o falló la API, calculamos CUFE SHA-384 y QR oficial DIAN
     if (!cufe) {
       cufe = calculateCUFE(
         inv.invoice_number,
@@ -246,12 +320,13 @@ export const processElectronicInvoice = async (
       );
     }
 
-    // 4. Actualizar factura en la base de datos
+    // 4. Actualizar factura en la base de datos con los datos del proveedor
     await pool.query(
       `UPDATE invoices 
-       SET cufe = $1, qr_code_url = $2, electronic_status = $3, updated_at = NOW() 
-       WHERE id = $4`,
-      [cufe, qrCodeUrl, electronicStatus, invoiceId]
+       SET cufe = $1, qr_code_url = $2, electronic_status = $3, 
+           fe_provider_used = $4, external_invoice_id = $5, external_pdf_url = $6, updated_at = NOW() 
+       WHERE id = $7`,
+      [cufe, qrCodeUrl, electronicStatus, feProvider, externalInvoiceId || null, externalPdfUrl || null, invoiceId]
     );
 
     // 5. Incrementar contador de facturas electrónicas usadas en la suscripción del cliente
@@ -269,15 +344,18 @@ export const processElectronicInvoice = async (
       userName: userName || 'Sistema ERP',
       action: 'GENERACION_FACTURA_ELECTRONICA',
       module: 'Facturación',
-      description: `Generada Factura Electrónica con CUFE para #${inv.invoice_number} por $${totalAmt.toLocaleString('es-CO')}.`,
-      details: { invoiceId, cufe, qrCodeUrl }
+      description: `Generada Factura Electrónica vía ${feProvider.toUpperCase()} para #${inv.invoice_number} por $${totalAmt.toLocaleString('es-CO')}.`,
+      details: { invoiceId, cufe, qrCodeUrl, feProvider, externalInvoiceId }
     });
 
     return {
       success: true,
       cufe,
       qrCodeUrl,
-      electronicStatus
+      electronicStatus,
+      externalInvoiceId,
+      externalPdfUrl,
+      providerUsed: feProvider,
     };
 
   } catch (err: any) {
