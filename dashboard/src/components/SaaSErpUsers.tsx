@@ -21,7 +21,7 @@ const ALL_MODULES = [
   { key: 'inventory',       label: 'Inventario & Stock',  icon: 'inventory_2' },
   { key: 'billing',         label: 'Facturación POS',     icon: 'receipt_long' },
   { key: 'cartera',         label: 'Cartera y Cobros',    icon: 'payments' },
-  { key: 'crm',             label: 'Clientes / CRM',      icon: 'contacts' },
+  { key: 'crm',             label: 'Directorio de Clientes', icon: 'contacts' },
   { key: 'employees',       label: 'Personal & Turnos',   icon: 'groups' },
   { key: 'appointments',    label: 'Agenda de Citas',     icon: 'calendar_month' },
   { key: 'formulas',        label: 'Optometría & RX',     icon: 'visibility' },

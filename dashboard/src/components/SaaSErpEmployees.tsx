@@ -282,7 +282,7 @@ const MODULES = [
     { key: 'arqueo_caja', label: '📟 Arqueo de Caja' },
     { key: 'contabilidad', label: '📈 Contabilidad' },
     { key: 'cartera', label: '📊 Cartera y Cobros' },
-    { key: 'crm', label: '👤 CRM / Clientes' },
+    { key: 'crm', label: '👥 Directorio de Clientes' },
     { key: 'metas_ventas', label: '👥 Metas & Ventas Personal' },
     { key: 'appointments', label: '📅 Agenda de Citas' },
     { key: 'formulas', label: '👁 Optometría / Fórmulas' },

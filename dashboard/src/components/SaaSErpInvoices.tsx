@@ -111,7 +111,19 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const [customerDocumentNumber, setCustomerDocumentNumber] = useState('');
     const [customerEmail, setCustomerEmail] = useState('');
     const [customerAddress, setCustomerAddress] = useState('');
-    
+
+    // Modal de Creación Rápida de Cliente en Facturación
+    const [isQuickCustomerOpen, setIsQuickCustomerOpen] = useState(false);
+    const [quickCustType, setQuickCustType] = useState<'persona' | 'empresa'>('persona');
+    const [quickCustName, setQuickCustName] = useState('');
+    const [quickCustLastName, setQuickCustLastName] = useState('');
+    const [quickCustDocType, setQuickCustDocType] = useState('CC');
+    const [quickCustDocNum, setQuickCustDocNum] = useState('');
+    const [quickCustPhone, setQuickCustPhone] = useState('');
+    const [quickCustEmail, setQuickCustEmail] = useState('');
+    const [quickCustAddress, setQuickCustAddress] = useState('');
+    const [quickCustSaving, setQuickCustSaving] = useState(false);
+    const [quickCustError, setQuickCustError] = useState<string | null>(null);
     // Condiciones de Pago
     const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'transferencia' | 'tarjeta_credito' | 'tarjeta_debito' | 'credito'>('efectivo');
     const [transferBank, setTransferBank] = useState('');
@@ -890,6 +902,81 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         });
     };
 
+    const openQuickCustomerModal = (prefillValue?: string) => {
+        setActiveDropdownField(null);
+        setQuickCustType('persona');
+        setQuickCustError(null);
+        setQuickCustSaving(false);
+
+        const trimmed = (prefillValue || customerName || customerDocumentNumber || customerPhone || '').trim();
+
+        if (/^\d{5,12}$/.test(trimmed)) {
+            setQuickCustDocNum(trimmed);
+            setQuickCustName('');
+            setQuickCustPhone(customerPhone || '');
+        } else if (/^\+?\d{7,15}$/.test(trimmed)) {
+            setQuickCustPhone(trimmed);
+            setQuickCustName(customerName || '');
+            setQuickCustDocNum(customerDocumentNumber || '');
+        } else {
+            setQuickCustName(trimmed || customerName || '');
+            setQuickCustDocNum(customerDocumentNumber || '');
+            setQuickCustPhone(customerPhone || '');
+        }
+
+        setQuickCustLastName('');
+        setQuickCustDocType('CC');
+        setQuickCustEmail(customerEmail || '');
+        setQuickCustAddress(customerAddress || '');
+        setIsQuickCustomerOpen(true);
+    };
+
+    const handleSaveQuickCustomer = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!quickCustName.trim() || !quickCustDocNum.trim() || !quickCustPhone.trim()) {
+            setQuickCustError('Nombre, número de documento y teléfono son requeridos.');
+            return;
+        }
+
+        try {
+            setQuickCustSaving(true);
+            setQuickCustError(null);
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+
+            const res = await fetch(`/api/clients/${clientId}/crm-customers`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    name: quickCustName.trim(),
+                    last_name: quickCustType === 'empresa' ? '' : quickCustLastName.trim(),
+                    document_type: quickCustType === 'empresa' ? 'NIT' : quickCustDocType,
+                    document_number: quickCustDocNum.trim(),
+                    phone: quickCustPhone.trim(),
+                    email: quickCustEmail.trim() || null,
+                    address: quickCustAddress.trim() || null,
+                    customer_type: quickCustType
+                })
+            });
+
+            const json = await res.json();
+            if (json.success && json.customer) {
+                const newCust = json.customer;
+                setCrmCustomers(prev => [newCust, ...prev]);
+                selectCustomer(newCust);
+                setIsQuickCustomerOpen(false);
+            } else {
+                setQuickCustError(json.error || 'Error al guardar el cliente.');
+            }
+        } catch (err: any) {
+            setQuickCustError(err.message || 'Error de conexión al registrar cliente.');
+        } finally {
+            setQuickCustSaving(false);
+        }
+    };
+
     const selectCustomer = (c: any) => {
         const fullName = c.last_name ? `${c.name} ${c.last_name}` : c.name;
         setCustomerName(fullName);
@@ -1055,8 +1142,19 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     
                                     {/* 1. Datos del Cliente / Comprador */}
                                     <div>
-                                        <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal flex items-center justify-between">
-                                            <span>1. Datos del Cliente / Comprador</span>
+                                        <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal flex flex-wrap items-center justify-between gap-2">
+                                            <div className="flex items-center gap-2.5">
+                                                <span>1. Datos del Cliente / Comprador</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openQuickCustomerModal()}
+                                                    className="px-2 py-0.5 bg-[#161616] text-[#F6F4EE] hover:bg-[#D9381E] text-[10px] font-mono font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1 border-0"
+                                                    title="Registrar nuevo cliente sin salir de la factura"
+                                                >
+                                                    <span className="material-symbols-outlined text-[13px]">person_add</span>
+                                                    + Nuevo Cliente
+                                                </button>
+                                            </div>
                                             <span className="text-[11px] text-[#6B6862] font-sans font-semibold uppercase tracking-wider">Requerido para DIAN</span>
                                         </h4>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1084,7 +1182,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                     placeholder="Buscar por nombre o cédula..."
                                                     required 
                                                 />
-                                                {activeDropdownField === 'name' && renderSuggestions(customerName, customerName, () => setActiveDropdownField(null))}
+                                                {activeDropdownField === 'name' && renderSuggestions(customerName, customerName, () => openQuickCustomerModal(customerName))}
                                             </div>
                                             <div className="flex flex-col gap-1.5 relative">
                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Documento de Identidad *</label>
@@ -1112,7 +1210,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                         required 
                                                     />
                                                 </div>
-                                                {activeDropdownField === 'document' && renderSuggestions(customerDocumentNumber, customerDocumentNumber, () => setActiveDropdownField(null))}
+                                                {activeDropdownField === 'document' && renderSuggestions(customerDocumentNumber, customerDocumentNumber, () => openQuickCustomerModal(customerDocumentNumber))}
                                             </div>
                                             <div className="flex flex-col gap-1.5 relative">
                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">WhatsApp *</label>
@@ -1128,7 +1226,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                     placeholder="57300..."
                                                     required 
                                                 />
-                                                {activeDropdownField === 'phone' && renderSuggestions(customerPhone, customerPhone, () => setActiveDropdownField(null))}
+                                                {activeDropdownField === 'phone' && renderSuggestions(customerPhone, customerPhone, () => openQuickCustomerModal(customerPhone))}
                                             </div>
                                             <div className="flex flex-col gap-1.5">
                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Correo Electrónico *</label>
@@ -2393,6 +2491,182 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                 Abrir imagen en pestaña nueva
                             </a>
                         </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* MODAL POPUP CREACIÓN RÁPIDA DE CLIENTE (createPortal) */}
+            {isQuickCustomerOpen && createPortal(
+                <div className="fixed inset-0 bg-[#161616]/70 backdrop-blur-xs flex items-center justify-center z-[100000] p-4">
+                    <div className="bg-[#F6F4EE] border border-[#161616] max-w-lg w-full rounded-none p-6 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar my-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+                            <div>
+                                <span className="text-[10px] font-mono uppercase font-bold text-[#D9381E] tracking-widest block">FACTURACIÓN RÁPIDA</span>
+                                <h3 className="font-serif font-bold text-xl text-[#161616]">
+                                    {quickCustType === 'empresa' ? 'Registrar Empresa Cliente' : 'Registrar Cliente Nuevo'}
+                                </h3>
+                            </div>
+                            <button 
+                                type="button"
+                                onClick={() => setIsQuickCustomerOpen(false)}
+                                className="w-8 h-8 flex items-center justify-center hover:bg-[#E2DFD7] transition border-0 cursor-pointer text-[#161616]"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        {quickCustError && (
+                            <div className="mb-4 p-3 bg-[#FFF5F5] border-l-4 border-[#D9381E] text-xs text-[#D9381E] font-mono">
+                                {quickCustError}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSaveQuickCustomer} className="space-y-4">
+                            {/* Selector Persona vs Empresa */}
+                            <div className="flex bg-white border border-[#E2DFD7] p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setQuickCustType('persona');
+                                        if (quickCustDocType === 'NIT') setQuickCustDocType('CC');
+                                    }}
+                                    className={`flex-1 py-1.5 text-xs font-mono font-bold uppercase transition border-0 cursor-pointer ${
+                                        quickCustType === 'persona' ? 'bg-[#161616] text-[#F6F4EE]' : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+                                    }`}
+                                >
+                                    👤 Persona Natural
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setQuickCustType('empresa');
+                                        setQuickCustDocType('NIT');
+                                    }}
+                                    className={`flex-1 py-1.5 text-xs font-mono font-bold uppercase transition border-0 cursor-pointer ${
+                                        quickCustType === 'empresa' ? 'bg-[#161616] text-[#F6F4EE]' : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+                                    }`}
+                                >
+                                    🏢 Empresa (NIT)
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="sm:col-span-2">
+                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">
+                                        {quickCustType === 'empresa' ? 'Razón Social / Nombre Empresa *' : 'Nombre *'}
+                                    </label>
+                                    <input 
+                                        type="text"
+                                        value={quickCustName}
+                                        onChange={(e) => setQuickCustName(e.target.value)}
+                                        placeholder={quickCustType === 'empresa' ? 'Ej: Distribuidora S.A.S.' : 'Ej: Juan Pablo'}
+                                        className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-sans font-semibold rounded-none"
+                                        required
+                                    />
+                                </div>
+
+                                {quickCustType === 'persona' && (
+                                    <div className="sm:col-span-2">
+                                        <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">Apellidos</label>
+                                        <input 
+                                            type="text"
+                                            value={quickCustLastName}
+                                            onChange={(e) => setQuickCustLastName(e.target.value)}
+                                            placeholder="Ej: Pérez Gómez"
+                                            className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-sans rounded-none"
+                                        />
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">Tipo Documento</label>
+                                    <select
+                                        value={quickCustDocType}
+                                        onChange={(e) => setQuickCustDocType(e.target.value)}
+                                        className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono font-bold rounded-none cursor-pointer"
+                                    >
+                                        <option value="CC">Cédula (CC)</option>
+                                        <option value="NIT">NIT (Empresa)</option>
+                                        <option value="CE">Cédula Extranjería (CE)</option>
+                                        <option value="PP">Pasaporte (PP)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">Número Documento *</label>
+                                    <input 
+                                        type="text"
+                                        value={quickCustDocNum}
+                                        onChange={(e) => setQuickCustDocNum(e.target.value)}
+                                        placeholder="Ej: 1020304050"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono font-bold rounded-none"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">WhatsApp / Teléfono *</label>
+                                    <input 
+                                        type="text"
+                                        value={quickCustPhone}
+                                        onChange={(e) => setQuickCustPhone(e.target.value)}
+                                        placeholder="Ej: 573001234567"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono rounded-none"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">Correo Electrónico</label>
+                                    <input 
+                                        type="email"
+                                        value={quickCustEmail}
+                                        onChange={(e) => setQuickCustEmail(e.target.value)}
+                                        placeholder="cliente@correo.com"
+                                        className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-sans rounded-none"
+                                    />
+                                </div>
+
+                                <div className="sm:col-span-2">
+                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">Dirección de Residencia / Empresa</label>
+                                    <input 
+                                        type="text"
+                                        value={quickCustAddress}
+                                        onChange={(e) => setQuickCustAddress(e.target.value)}
+                                        placeholder="Calle / Carrera / Ciudad..."
+                                        className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-sans rounded-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-2 border-t border-[#E2DFD7] pt-4 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsQuickCustomerOpen(false)}
+                                    className="px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider text-[#76746E] hover:text-[#161616] bg-transparent border border-[#E2DFD7] hover:border-[#161616] transition cursor-pointer"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={quickCustSaving}
+                                    className="px-5 py-2 text-xs font-mono font-bold uppercase tracking-wider bg-[#D9381E] text-white hover:bg-[#b82a13] transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5 border-0"
+                                >
+                                    {quickCustSaving ? (
+                                        <>
+                                            <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                            Guardando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                                            Guardar y Asignar a Factura
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>,
                 document.body

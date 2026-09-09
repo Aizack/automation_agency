@@ -1255,7 +1255,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                       onClick={() => setActiveTab('clientes')} 
                       className={activeTab === 'clientes' ? 'active-link' : ''}
                     >
-                      CRM Clientes
+                      Directorio de Clientes
                     </button>
                   </li>
                 )}
