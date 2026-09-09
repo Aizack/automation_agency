@@ -2673,6 +2673,8 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
 
       const { 
         invoiceNumber, 
+        customerId,
+        customer_id,
         customerName, 
         customerPhone, 
         customerDocumentType, 
@@ -2698,6 +2700,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         sellerName,
         items 
       } = req.body;
+      const rawCustomerId = customerId || customer_id || null;
 
       const finalSellerEmpId = sellerEmployeeId || seller_employee_id || null;
       let finalSellerName = sellerName || null;
@@ -2993,13 +2996,29 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         ]);
 
         if (isLensSale) {
+          let foundCustId = rawCustomerId;
+          if (!foundCustId && customerDocumentNumber) {
+            const custCheck = await dbClient.query(`
+              SELECT id FROM crm_customers WHERE client_id = $1 AND document_number = $2 LIMIT 1
+            `, [clientId, customerDocumentNumber]);
+            foundCustId = custCheck.rows[0]?.id || null;
+          }
+          if (!foundCustId && customerName) {
+            const custCheck = await dbClient.query(`
+              SELECT id FROM crm_customers 
+              WHERE client_id = $1 AND (LOWER(CONCAT(name, ' ', last_name)) LIKE LOWER(CONCAT('%', $2, '%')) OR LOWER(name) LIKE LOWER(CONCAT('%', $2, '%')))
+              ORDER BY created_at DESC LIMIT 1
+            `, [clientId, customerName.trim()]);
+            foundCustId = custCheck.rows[0]?.id || null;
+          }
+
           let formulaId = null;
-          if (customerId) {
+          if (foundCustId) {
             const formulaRes = await dbClient.query(`
               SELECT id FROM formulas 
               WHERE client_id = $1 AND customer_id = $2 
               ORDER BY created_at DESC LIMIT 1
-            `, [clientId, customerId]);
+            `, [clientId, foundCustId]);
             formulaId = formulaRes.rows[0]?.id || null;
           }
 
@@ -3011,10 +3030,10 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
               product_name, lens_design, lens_material, lens_treatment,
               job_value, status
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending_lab')
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
           `, [
             clientId,
-            customerId || null,
+            foundCustId || null,
             formulaId,
             invoice.id,
             item.productName || 'Lente Formulada',
@@ -3024,7 +3043,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
             jobValue
           ]);
 
-          console.log(`[Invoice Lab Order] ✅ Orden de laboratorio creada para ${customerName} / factura ${invoice.invoice_number} / producto "${item.productName || 'Lente Formulada'}"`);
+          console.log(`[Invoice Lab Order] ✅ Orden de laboratorio creada para ${customerName} (CustID: ${foundCustId}, FormulaID: ${formulaId}) / factura ${invoice.invoice_number} / producto "${item.productName || 'Lente Formulada'}"`);
         }
 
         // Descontar stock de variante específica si aplica
