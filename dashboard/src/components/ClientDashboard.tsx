@@ -32,6 +32,7 @@ import { SaaSErpQuotes } from './SaaSErpQuotes';
 import { SaaSErpHabilitacionDian } from './SaaSErpHabilitacionDian';
 import { SaaSErpAiAgentModule } from './SaaSErpAiAgentModule';
 import { NotificationBell } from './NotificationBell';
+import { AizackAiBar } from './AizackAiBar';
 
 interface Client {
   id: string;
@@ -1453,12 +1454,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               KOI ERP
             </div>
             
-            <div className="search-bar-zen hidden md:flex items-center gap-3 border-b border-[#161616] pb-1 w-80">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-[#161616] stroke-[1.8]">
-                <circle cx="11" cy="11" r="7"/>
-                <line x1="16.5" y1="16.5" x2="21" y2="21"/>
-              </svg>
-              <input type="text" placeholder="Buscar en inventario, facturas, citas..." className="bg-transparent border-none outline-none text-xs text-[#161616] w-full font-sans" />
+            {/* Barra de Inteligencia Artificial ("Habla Conmigo - Aizack AI") */}
+            <div className="hidden md:flex flex-1 max-w-lg">
+              <AizackAiBar 
+                clientId={clientId}
+                onExecuteCommand={(actionType) => {
+                  if (actionType === 'NAV_CONTABILIDAD') setActiveTab('contabilidad' as any);
+                  else if (actionType === 'NAV_POS') setActiveTab('facturacion' as any);
+                  else if (actionType === 'NAV_COMPRAS') setActiveTab('ordenes_compra' as any);
+                }}
+              />
             </div>
           </div>
 
