@@ -1120,15 +1120,20 @@ export const initDatabase = async () => {
                 user_role VARCHAR(50) DEFAULT 'operador',
                 action VARCHAR(100) NOT NULL,
                 module VARCHAR(50) NOT NULL,
+                entity_type VARCHAR(50),
+                entity_id VARCHAR(100),
                 description TEXT NOT NULL,
                 details JSONB,
                 ip_address VARCHAR(45),
                 user_agent TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+            ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS entity_type VARCHAR(50);
+            ALTER TABLE system_audit_logs ADD COLUMN IF NOT EXISTS entity_id VARCHAR(100);
             CREATE INDEX IF NOT EXISTS idx_audit_logs_client ON system_audit_logs(client_id, created_at DESC);
             CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON system_audit_logs(user_id);
             CREATE INDEX IF NOT EXISTS idx_audit_logs_module ON system_audit_logs(module);
+            CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON system_audit_logs(client_id, entity_type, entity_id, created_at DESC);
         `);
 
         console.log("[DB Init] ✅ Módulo de Trazabilidad Global y Bitácora de Auditoría inicializado.");

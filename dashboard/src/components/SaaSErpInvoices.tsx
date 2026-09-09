@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
+import { AuditLogModal } from './AuditLogModal';
 
 interface Invoice {
     id: string;
@@ -77,6 +78,21 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
+    // Estado para Modal de Auditoría Contextual por Factura
+    const [auditModalOpen, setAuditModalOpen] = useState(false);
+    const [auditModalTitle, setAuditModalTitle] = useState('');
+    const [auditModalSubtitle, setAuditModalSubtitle] = useState('');
+    const [auditEntityId, setAuditEntityId] = useState<string | undefined>(undefined);
+    const [auditEntityType, setAuditEntityType] = useState<string | undefined>(undefined);
+
+    const openAuditModalForInvoice = (inv: Invoice) => {
+        setAuditModalTitle(`Historial de Factura #${inv.invoice_number}`);
+        setAuditModalSubtitle(`Cliente: ${inv.customer_name} | ID: ${inv.id}`);
+        setAuditEntityType('invoice');
+        setAuditEntityId(inv.id);
+        setAuditModalOpen(true);
+    };
 
     // Filtros de búsqueda
     const [searchTerm, setSearchTerm] = useState('');
@@ -2132,6 +2148,13 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">print</span>
                                             </button>
+                                            <button 
+                                                onClick={() => openAuditModalForInvoice(inv)}
+                                                className="p-1.5 bg-white hover:bg-[#FAF8F5] text-amber-600 border border-[#E2DFD7] rounded-none transition cursor-pointer flex items-center justify-center"
+                                                title="Ver Historial de Cambios / Auditoría"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">history</span>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -2698,6 +2721,17 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 </div>,
                 document.body
             )}
+            {/* Modal de Historial de Auditoría Contextual por Factura */}
+            <AuditLogModal
+                isOpen={auditModalOpen}
+                onClose={() => setAuditModalOpen(false)}
+                clientId={clientId}
+                title={auditModalTitle}
+                subtitle={auditModalSubtitle}
+                entityType={auditEntityType}
+                entityId={auditEntityId}
+                module="Facturación"
+            />
         </div>
     );
 };

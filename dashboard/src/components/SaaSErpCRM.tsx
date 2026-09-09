@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { authFetch as fetch } from '../utils/api';
+import { AuditLogModal } from './AuditLogModal';
 
 interface Customer {
     id: string;
@@ -68,6 +70,22 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, c
 
     // Form inputs
     const [custType, setCustType] = useState<'persona' | 'empresa'>('persona');
+
+    // Estado para Modal de Auditoría Contextual por Cliente
+    const [auditModalOpen, setAuditModalOpen] = useState(false);
+    const [auditModalTitle, setAuditModalTitle] = useState('');
+    const [auditModalSubtitle, setAuditModalSubtitle] = useState('');
+    const [auditEntityId, setAuditEntityId] = useState<string | undefined>(undefined);
+    const [auditEntityType, setAuditEntityType] = useState<string | undefined>(undefined);
+
+    const openAuditModalForCustomer = (cust: Customer) => {
+        setAuditModalTitle(`Historial de Cliente: ${cust.name} ${cust.last_name || ''}`);
+        setAuditModalSubtitle(`Documento: ${cust.document_type} ${cust.document_number} | ID: ${cust.id}`);
+        setAuditEntityType('customer');
+        setAuditEntityId(cust.id);
+        setAuditModalOpen(true);
+    };
+
     const [custName, setCustName] = useState('');
     const [custLastName, setCustLastName] = useState('');
     const [custDocType, setCustDocType] = useState('CC');
@@ -1074,6 +1092,15 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, c
                                 </button>
                                 <button 
                                     type="button"
+                                    onClick={() => openAuditModalForCustomer(selectedCust)}
+                                    className="px-3 py-1.5 border border-amber-500/30 hover:border-amber-500 bg-amber-500/10 text-amber-800 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer transition shadow-xs"
+                                    title="Ver Bitácora de Auditoría del Cliente"
+                                >
+                                    <span className="material-symbols-outlined text-[16px] text-amber-600">history</span>
+                                    Logs
+                                </button>
+                                <button 
+                                    type="button"
                                     onClick={() => setIsProfileOpen(false)}
                                     className="w-8 h-8 flex items-center justify-center hover:bg-[#E2DFD7] transition border-0 cursor-pointer text-[#161616]"
                                 >
@@ -1352,6 +1379,17 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, c
                 </div>,
                 document.body
             )}
+            {/* Modal de Historial de Auditoría Contextual por Cliente */}
+            <AuditLogModal
+                isOpen={auditModalOpen}
+                onClose={() => setAuditModalOpen(false)}
+                clientId={clientId}
+                title={auditModalTitle}
+                subtitle={auditModalSubtitle}
+                entityType={auditEntityType}
+                entityId={auditEntityId}
+                module="CRM"
+            />
         </div>
     );
 };

@@ -8,7 +8,9 @@ export interface AuditLogOptions {
   userEmail?: string | null;
   userRole?: string | null;
   action: string;
-  module: 'Seguridad' | 'Facturación' | 'Inventario' | 'CRM' | 'Domicilios' | 'IA & WhatsApp' | 'Laboratorio' | 'Configuración';
+  module: 'Seguridad' | 'Facturación' | 'Inventario' | 'CRM' | 'Domicilios' | 'IA & WhatsApp' | 'Laboratorio' | 'Configuración' | 'Contabilidad';
+  entityType?: string | null; // e.g. 'product', 'invoice', 'customer', 'dispatch', 'auth'
+  entityId?: string | null;   // e.g. product UUID, invoice number, customer ID
   description: string;
   details?: any;
   ipAddress?: string | null;
@@ -28,6 +30,8 @@ export const logAudit = async (options: AuditLogOptions): Promise<void> => {
       userRole = 'operador',
       action,
       module,
+      entityType = null,
+      entityId = null,
       description,
       details = null,
       ipAddress = null,
@@ -36,8 +40,8 @@ export const logAudit = async (options: AuditLogOptions): Promise<void> => {
 
     await pool.query(
       `INSERT INTO system_audit_logs 
-        (client_id, user_id, user_name, user_email, user_role, action, module, description, details, ip_address, user_agent)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        (client_id, user_id, user_name, user_email, user_role, action, module, entity_type, entity_id, description, details, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
       [
         clientId,
         userId,
@@ -46,6 +50,8 @@ export const logAudit = async (options: AuditLogOptions): Promise<void> => {
         userRole,
         action,
         module,
+        entityType,
+        entityId,
         description,
         details ? JSON.stringify(details) : null,
         ipAddress,
@@ -53,7 +59,7 @@ export const logAudit = async (options: AuditLogOptions): Promise<void> => {
       ]
     );
 
-    console.log(`[Audit Trail 📜] [${module}] [${action}] por '${userName}' (Tenant: ${clientId}): ${description}`);
+    console.log(`[Audit Trail 📜] [${module}] [${action}] ${entityType && entityId ? `(${entityType}:${entityId})` : ''} por '${userName}' (Tenant: ${clientId}): ${description}`);
   } catch (error) {
     console.error('[Audit Trail ❌] Error al registrar evento de auditoría:', error);
   }
@@ -66,9 +72,11 @@ export const logReqAudit = async (
   req: Request & { user?: any },
   clientId: string,
   action: string,
-  module: 'Seguridad' | 'Facturación' | 'Inventario' | 'CRM' | 'Domicilios' | 'IA & WhatsApp' | 'Laboratorio' | 'Configuración',
+  module: 'Seguridad' | 'Facturación' | 'Inventario' | 'CRM' | 'Domicilios' | 'IA & WhatsApp' | 'Laboratorio' | 'Configuración' | 'Contabilidad',
   description: string,
-  details?: any
+  details?: any,
+  entityType?: string | null,
+  entityId?: string | null
 ): Promise<void> => {
   const user = req.user;
   const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket?.remoteAddress || null;
@@ -82,6 +90,8 @@ export const logReqAudit = async (
     userRole: user?.role || 'operador',
     action,
     module,
+    entityType: entityType || null,
+    entityId: entityId || null,
     description,
     details,
     ipAddress,

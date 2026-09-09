@@ -3478,10 +3478,10 @@ app.get('/api/clients/:clientId/invoices/:invoiceId/pos-print', async (req: Requ
 app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { module, userId, search, limit = '50', offset = '0' } = req.query;
+    const { module, userId, entity_type, entity_id, action, search, limit = '50', offset = '0' } = req.query;
 
     let query = `
-      SELECT id, client_id, user_id, user_name, user_email, user_role, action, module, description, details, ip_address, user_agent, created_at
+      SELECT id, client_id, user_id, user_name, user_email, user_role, action, module, entity_type, entity_id, description, details, ip_address, user_agent, created_at
       FROM system_audit_logs
       WHERE client_id = $1
     `;
@@ -3491,6 +3491,24 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
     if (module && typeof module === 'string' && module.trim().length > 0) {
       query += ` AND module = $${paramIndex}`;
       params.push(module);
+      paramIndex++;
+    }
+
+    if (entity_type && typeof entity_type === 'string' && entity_type.trim().length > 0) {
+      query += ` AND entity_type = $${paramIndex}`;
+      params.push(entity_type);
+      paramIndex++;
+    }
+
+    if (entity_id && typeof entity_id === 'string' && entity_id.trim().length > 0) {
+      query += ` AND (entity_id = $${paramIndex} OR details->>'productId' = $${paramIndex} OR details->>'entityId' = $${paramIndex} OR details->>'invoiceId' = $${paramIndex})`;
+      params.push(entity_id);
+      paramIndex++;
+    }
+
+    if (action && typeof action === 'string' && action.trim().length > 0) {
+      query += ` AND action = $${paramIndex}`;
+      params.push(action);
       paramIndex++;
     }
 
@@ -3540,9 +3558,38 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
       logs: result.rows,
       total: totalCount
     });
-  } catch (err: any) {
-    console.error('[API Audit Logs] Error obteniendo registros de auditoría:', err);
-    res.status(500).json({ success: false, error: err.message });
+  } catch (error: any) {
+    console.error("[Audit API ❌] Error en GET audit-logs:", error);
+    res.status(500).json({ success: false, error: 'Error al consultar bitácora de auditoría.' });
+  }
+});
+
+// Endpoint de Logout explícito con trazabilidad
+app.post('/api/logout', authenticateToken as any, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    if (user && user.clientId) {
+      await logReqAudit(
+        req,
+        user.clientId,
+        'LOGOUT',
+        'Seguridad',
+        `Cierre de sesión de '${user.username || user.name || 'Usuario'}'`,
+        { sessionId: user.sessionId },
+        'auth_session',
+        user.sessionId || user.id
+      );
+
+      // Eliminar sesión activa de la BD
+      await pool.query(
+        `DELETE FROM active_user_sessions WHERE client_id = $1 AND (user_id = $2 OR session_id = $3)`,
+        [user.clientId, user.id, user.sessionId]
+      ).catch(e => console.error("Error limpiando active_user_session:", e));
+    }
+    res.json({ success: true, message: 'Sesión cerrada exitosamente.' });
+  } catch (error: any) {
+    console.error("Error en logout:", error);
+    res.status(500).json({ success: false, error: 'Error al cerrar sesión.' });
   }
 });
 

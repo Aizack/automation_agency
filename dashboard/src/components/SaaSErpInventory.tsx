@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 import JsBarcode from 'jsbarcode';
 import { printBarcodes, previewBarcodes, LABEL_PRINT_PROFILES, DEFAULT_LABEL_PRINT_SETTINGS, type LabelProfileId } from '../utils/barcodePrinter';
+import { AuditLogModal } from './AuditLogModal';
 
 interface ProductVariant {
     id?: string;
@@ -393,6 +394,28 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [filterBrand, setFilterBrand] = useState<string>('all');
     const [filterStock, setFilterStock] = useState<string>('all');
     const [filterMinPrice, setFilterMinPrice] = useState<string>('');
+    // Estado para Modal de Auditoría / Historial Contextual
+    const [auditModalOpen, setAuditModalOpen] = useState(false);
+    const [auditModalTitle, setAuditModalTitle] = useState('');
+    const [auditModalSubtitle, setAuditModalSubtitle] = useState('');
+    const [auditEntityId, setAuditEntityId] = useState<string | undefined>(undefined);
+    const [auditEntityType, setAuditEntityType] = useState<string | undefined>(undefined);
+
+    const openAuditModalForProduct = (prod: Product) => {
+        setAuditModalTitle(`Historial de Registro: ${prod.name}`);
+        setAuditModalSubtitle(`SKU: ${prod.sku || 'Sin SKU'} | ID: ${prod.id}`);
+        setAuditEntityType('product');
+        setAuditEntityId(prod.id);
+        setAuditModalOpen(true);
+    };
+
+    const openAuditModalGeneral = () => {
+        setAuditModalTitle(`Bitácora de Auditoría de Inventario`);
+        setAuditModalSubtitle(`Historial completo de creación, modificaciones, recargas y traslados.`);
+        setAuditEntityType(undefined);
+        setAuditEntityId(undefined);
+        setAuditModalOpen(true);
+    };
     const [filterMaxPrice, setFilterMaxPrice] = useState<string>('');
 
     // Silence unused warnings for compatibility
@@ -1154,6 +1177,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         title="Refrescar catálogo"
                     >
                         <span className="material-symbols-outlined text-[16px] text-[#D9381E]">refresh</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={openAuditModalGeneral}
+                        className="p-2.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] cursor-pointer transition text-[11px] font-bold shrink-0 uppercase tracking-wider flex items-center gap-1.5"
+                        title="Ver Bitácora de Cambios de Inventario"
+                    >
+                        <span className="material-symbols-outlined text-[16px] text-amber-600">history</span>
+                        Historial
                     </button>
                     <button
                         onClick={() => { resetForm(); setAddProductStep('open'); }}
@@ -2072,6 +2104,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 shrink-0">
                                                             <button 
                                                                 type="button"
+                                                                onClick={(e) => { e.stopPropagation(); openAuditModalForProduct(prod); }}
+                                                                className="p-1 hover:bg-[#E2DFD7] text-amber-600 cursor-pointer"
+                                                                title="Ver Historial de Cambios / Bitácora"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[15px]">history</span>
+                                                            </button>
+                                                            <button 
+                                                                type="button"
                                                                 onClick={(e) => { e.stopPropagation(); handleOpenCrossStock(prod); }}
                                                                 className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
                                                                 title="Consultar Stock Inter-Sedes"
@@ -2950,6 +2990,17 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                 </div>,
                 document.body
             )}
+            {/* Componente Modal de Historial de Auditoría Contextual */}
+            <AuditLogModal
+                isOpen={auditModalOpen}
+                onClose={() => setAuditModalOpen(false)}
+                clientId={clientId}
+                title={auditModalTitle}
+                subtitle={auditModalSubtitle}
+                entityType={auditEntityType}
+                entityId={auditEntityId}
+                module="Inventario"
+            />
         </div>
     );
 };
