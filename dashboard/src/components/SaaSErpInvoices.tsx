@@ -1686,89 +1686,126 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                     <div key={index} className="bg-white p-4 border border-[#E2DFD7] space-y-3 transition hover:border-[#161616]">
                                                         <div className="grid grid-cols-1 md:grid-cols-[3.4fr_0.7fr_1.2fr_0.7fr_44px] gap-3 items-end">
                                                             
-                                                            <div className="flex flex-col gap-1 relative">
-                                                                <label className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">Artículo del Inventario *</label>
-                                                                <div className="relative">
-                                                                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6B6862] text-[16px] pointer-events-none">search</span>
-                                                                    <input
-                                                                        type="text"
-                                                                        placeholder={products.length === 0 ? 'Sin productos en inventario...' : `Buscar entre ${products.length} producto(s)...`}
-                                                                        value={item.productSearch}
-                                                                        onChange={(e) => handleItemChange(index, 'productSearch', e.target.value)}
-                                                                        onBlur={() => setTimeout(() => {
-                                                                            if (!item.productId) handleItemChange(index, 'productSearch', '');
-                                                                        }, 200)}
-                                                                        className={`bg-white border pl-9 pr-8 py-2.5 text-xs focus:border-[#161616] text-[#161616] outline-none h-10 w-full transition rounded-none font-sans ${
-                                                                            item.productId ? 'border-[#161616] font-bold bg-[#FAF8F5]' : 'border-[#E2DFD7]'
-                                                                        }`}
-                                                                        autoComplete="off"
-                                                                    />
-                                                                    {item.productId && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => { handleItemChange(index, 'productId', ''); handleItemChange(index, 'productSearch', ''); }}
-                                                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6B6862] hover:text-[#D9381E] transition cursor-pointer border-0 bg-transparent p-0"
-                                                                            title="Limpiar selección"
-                                                                        >
-                                                                            <span className="material-symbols-outlined text-[16px]">close</span>
-                                                                        </button>
-                                                                    )}
+                                                            {item.productType === 'lens' ? (
+                                                                <div className="flex flex-col gap-1 relative">
+                                                                    <label className="text-[10px] text-[#161616] font-bold uppercase tracking-wider flex items-center gap-1">
+                                                                        <span className="material-symbols-outlined text-[14px] text-[#D9381E]">visibility</span>
+                                                                        CONCEPTO DEL SERVICIO DE LENTES
+                                                                    </label>
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={item.productName || 'Servicio de Lentes'}
+                                                                            onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
+                                                                            className="bg-[#FAF8F5] border border-[#161616] px-3 py-2.5 text-xs text-[#161616] font-bold outline-none h-10 w-full rounded-none font-sans"
+                                                                            placeholder="Servicio de Lentes"
+                                                                        />
+                                                                    </div>
                                                                 </div>
+                                                            ) : (
+                                                                <div className="flex flex-col gap-1 relative">
+                                                                    <label className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">Artículo del Inventario *</label>
+                                                                    <div className="relative">
+                                                                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6B6862] text-[16px] pointer-events-none">search</span>
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder={products.length === 0 ? 'Sin productos en inventario...' : `Buscar entre ${products.length} producto(s)...`}
+                                                                            value={item.productSearch}
+                                                                            onChange={(e) => handleItemChange(index, 'productSearch', e.target.value)}
+                                                                            onBlur={() => setTimeout(() => {
+                                                                                if (!item.productId) handleItemChange(index, 'productSearch', '');
+                                                                            }, 200)}
+                                                                            className={`bg-white border pl-9 pr-8 py-2.5 text-xs focus:border-[#161616] text-[#161616] outline-none h-10 w-full transition rounded-none font-sans ${
+                                                                                item.productId ? 'border-[#161616] font-bold bg-[#FAF8F5]' : 'border-[#E2DFD7]'
+                                                                            }`}
+                                                                            autoComplete="off"
+                                                                        />
+                                                                        {item.productId && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => { handleItemChange(index, 'productId', ''); handleItemChange(index, 'productSearch', ''); }}
+                                                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6B6862] hover:text-[#D9381E] transition cursor-pointer border-0 bg-transparent p-0"
+                                                                                title="Limpiar selección"
+                                                                            >
+                                                                                <span className="material-symbols-outlined text-[16px]">close</span>
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
 
-                                                                {/* Dropdown de sugerencias de productos */}
-                                                                {item.productSearch && !item.productId && (() => {
-                                                                    const rawQuery = item.productSearch.trim().toLowerCase();
-                                                                    if (!rawQuery) return null;
-                                                                    const terms = rawQuery.split(/\s+/).filter(Boolean);
+                                                                    {/* Dropdown de sugerencias de productos */}
+                                                                    {item.productSearch && !item.productId && (() => {
+                                                                        const rawQuery = item.productSearch.trim().toLowerCase();
+                                                                        if (!rawQuery) return null;
+                                                                        const terms = rawQuery.split(/\s+/).filter(Boolean);
 
-                                                                    const suggestions: {
-                                                                        productId: string;
-                                                                        variantId?: string;
-                                                                        variantName?: string;
-                                                                        displayName: string;
-                                                                        sku?: string;
-                                                                        color?: string;
-                                                                        brand?: string;
-                                                                        material?: string;
-                                                                        stock: number;
-                                                                        price: number;
-                                                                        discountPercentage: number;
-                                                                        categoryId?: string;
-                                                                    }[] = [];
+                                                                        const suggestions: {
+                                                                            productId: string;
+                                                                            variantId?: string;
+                                                                            variantName?: string;
+                                                                            displayName: string;
+                                                                            sku?: string;
+                                                                            color?: string;
+                                                                            brand?: string;
+                                                                            material?: string;
+                                                                            stock: number;
+                                                                            price: number;
+                                                                            discountPercentage: number;
+                                                                            categoryId?: string;
+                                                                        }[] = [];
 
-                                                                    for (const p of products) {
-                                                                        if (Array.isArray(p.variants) && p.variants.length > 0) {
-                                                                            for (const v of p.variants) {
-                                                                                const varName = v.variant_name || v.name || v.color || v.options || '';
-                                                                                const fullSearchable = `${p.name || ''} ${varName} ${v.sku || p.sku || ''} ${p.brand || ''} ${p.model || ''} ${v.color || p.color || ''} ${p.material || ''} ${p.description || ''}`.toLowerCase();
-                                                                                if (terms.every(t => fullSearchable.includes(t))) {
-                                                                                    suggestions.push({
-                                                                                        productId: p.id,
-                                                                                        variantId: v.id || v.variant_id,
-                                                                                        variantName: varName,
-                                                                                        displayName: varName ? `${p.name} - Color: ${varName}` : p.name,
-                                                                                        sku: v.sku || p.sku || undefined,
-                                                                                        color: v.color || varName || p.color || undefined,
-                                                                                        brand: p.brand || undefined,
-                                                                                        material: p.material || undefined,
-                                                                                        stock: v.stock !== undefined && v.stock !== null ? Number(v.stock) : p.stock,
-                                                                                        price: v.price ? Number(v.price) : Number(p.price),
-                                                                                        discountPercentage: p.promo_discount ? Number(p.promo_discount) : 0,
-                                                                                        categoryId: p.category_id || undefined,
-                                                                                    });
+                                                                        for (const p of products) {
+                                                                            if (Array.isArray(p.variants) && p.variants.length > 0) {
+                                                                                for (const v of p.variants) {
+                                                                                    const varName = v.variant_name || v.name || v.color || v.options || '';
+                                                                                    const fullSearchable = `${p.name || ''} ${varName} ${v.sku || p.sku || ''} ${p.brand || ''} ${p.model || ''} ${v.color || p.color || ''} ${p.material || ''} ${p.description || ''}`.toLowerCase();
+                                                                                    if (terms.every(t => fullSearchable.includes(t))) {
+                                                                                        suggestions.push({
+                                                                                            productId: p.id,
+                                                                                            variantId: v.id || v.variant_id,
+                                                                                            variantName: varName,
+                                                                                            displayName: varName ? `${p.name} - Color: ${varName}` : p.name,
+                                                                                            sku: v.sku || p.sku || undefined,
+                                                                                            color: v.color || varName || p.color || undefined,
+                                                                                            brand: p.brand || undefined,
+                                                                                            material: p.material || undefined,
+                                                                                            stock: v.stock !== undefined && v.stock !== null ? Number(v.stock) : p.stock,
+                                                                                            price: v.price ? Number(v.price) : Number(p.price),
+                                                                                            discountPercentage: p.promo_discount ? Number(p.promo_discount) : 0,
+                                                                                            categoryId: p.category_id || undefined,
+                                                                                        });
+                                                                                    }
                                                                                 }
-                                                                            }
-                                                                        } else if (p.color && p.color.includes(',')) {
-                                                                            const colorList = p.color.split(',').map(c => c.trim()).filter(Boolean);
-                                                                            for (const col of colorList) {
-                                                                                const fullSearchable = `${p.name || ''} ${col} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.material || ''} ${p.description || ''}`.toLowerCase();
+                                                                            } else if (p.color && p.color.includes(',')) {
+                                                                                const colorList = p.color.split(',').map(c => c.trim()).filter(Boolean);
+                                                                                for (const col of colorList) {
+                                                                                    const fullSearchable = `${p.name || ''} ${col} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.material || ''} ${p.description || ''}`.toLowerCase();
+                                                                                    if (terms.every(t => fullSearchable.includes(t))) {
+                                                                                        suggestions.push({
+                                                                                            productId: p.id,
+                                                                                            variantName: col,
+                                                                                            displayName: `${p.name} - Color: ${col}`,
+                                                                                            sku: p.sku || undefined,
+                                                                                            color: col,
+                                                                                            brand: p.brand || undefined,
+                                                                                            material: p.material || undefined,
+                                                                                            stock: p.stock,
+                                                                                            price: Number(p.price),
+                                                                                            discountPercentage: p.promo_discount ? Number(p.promo_discount) : 0,
+                                                                                            categoryId: p.category_id || undefined,
+                                                                                        });
+                                                                                    }
+                                                                                }
+                                                                            } else {
+                                                                                const variantsStr = Array.isArray(p.variants)
+                                                                                    ? p.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
+                                                                                    : '';
+                                                                                const fullSearchable = `${p.name || ''} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.color || ''} ${p.material || ''} ${p.style || ''} ${p.description || ''} ${variantsStr}`.toLowerCase();
                                                                                 if (terms.every(t => fullSearchable.includes(t))) {
                                                                                     suggestions.push({
                                                                                         productId: p.id,
-                                                                                        variantName: col,
-                                                                                        displayName: `${p.name} - Color: ${col}`,
+                                                                                        displayName: p.name,
                                                                                         sku: p.sku || undefined,
-                                                                                        color: col,
+                                                                                        color: p.color || undefined,
                                                                                         brand: p.brand || undefined,
                                                                                         material: p.material || undefined,
                                                                                         stock: p.stock,
@@ -1778,76 +1815,57 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                                     });
                                                                                 }
                                                                             }
-                                                                        } else {
-                                                                            const variantsStr = Array.isArray(p.variants)
-                                                                                ? p.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
-                                                                                : '';
-                                                                            const fullSearchable = `${p.name || ''} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.color || ''} ${p.material || ''} ${p.style || ''} ${p.description || ''} ${variantsStr}`.toLowerCase();
-                                                                            if (terms.every(t => fullSearchable.includes(t))) {
-                                                                                suggestions.push({
-                                                                                    productId: p.id,
-                                                                                    displayName: p.name,
-                                                                                    sku: p.sku || undefined,
-                                                                                    color: p.color || undefined,
-                                                                                    brand: p.brand || undefined,
-                                                                                    material: p.material || undefined,
-                                                                                    stock: p.stock,
-                                                                                    price: Number(p.price),
-                                                                                    discountPercentage: p.promo_discount ? Number(p.promo_discount) : 0,
-                                                                                    categoryId: p.category_id || undefined,
-                                                                                });
-                                                                            }
                                                                         }
-                                                                    }
 
-                                                                    const list = suggestions.slice(0, 20);
+                                                                        const list = suggestions.slice(0, 20);
 
-                                                                    return (
-                                                                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#161616] shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-[#E2DFD7] rounded-none">
-                                                                            {list.length === 0 ? (
-                                                                                <div className="p-3 text-xs text-[#6B6862] italic text-center">No se encontraron productos coincidentes con ese término.</div>
-                                                                            ) : (
-                                                                                list.map((s, sIdx) => (
-                                                                                    <button
-                                                                                        key={`${s.productId}-${s.variantId || s.color || sIdx}`}
-                                                                                        type="button"
-                                                                                        onMouseDown={(e) => e.preventDefault()}
-                                                                                        onClick={() => {
-                                                                                            setSelectedItems(prev => {
-                                                                                                const copy = [...prev];
-                                                                                                copy[index] = {
-                                                                                                    ...copy[index],
-                                                                                                    productId: s.productId,
-                                                                                                    variantId: s.variantId,
-                                                                                                    variantName: s.variantName,
-                                                                                                    productName: s.displayName,
-                                                                                                    productSearch: s.displayName,
-                                                                                                    categoryId: s.categoryId || copy[index].categoryId,
-                                                                                                    price: s.price,
-                                                                                                    discountPercentage: s.discountPercentage
-                                                                                                };
-                                                                                                return copy;
-                                                                                            });
-                                                                                        }}
-                                                                                        className="w-full text-left px-3 py-2.5 hover:bg-[#FAF8F5] flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent"
-                                                                                    >
-                                                                                        <div>
-                                                                                            <p className="text-xs font-bold text-[#161616]">{s.displayName}</p>
-                                                                                            <p className="text-[10px] text-[#6B6862]">
-                                                                                                {s.brand ? <span className="font-semibold text-[#161616]">Marca: {s.brand} • </span> : ''}
-                                                                                                {s.sku ? `SKU: ${s.sku} • ` : ''}
-                                                                                                {s.color ? `Color: ${s.color} • ` : ''}
-                                                                                                Stock: <span className={s.stock > 0 ? "text-[#161616] font-semibold" : "text-[#D9381E] font-bold"}>{s.stock}</span>
-                                                                                            </p>
-                                                                                        </div>
-                                                                                        <span className="text-xs font-bold text-[#D9381E] font-mono shrink-0">${s.price.toLocaleString('es-CO')}</span>
-                                                                                    </button>
-                                                                                ))
-                                                                            )}
-                                                                        </div>
-                                                                    );
-                                                                })()}
-                                                            </div>
+                                                                        return (
+                                                                            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#161616] shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-[#E2DFD7] rounded-none">
+                                                                                {list.length === 0 ? (
+                                                                                    <div className="p-3 text-xs text-[#6B6862] italic text-center">No se encontraron productos coincidentes con ese término.</div>
+                                                                                ) : (
+                                                                                    list.map((s, sIdx) => (
+                                                                                        <button
+                                                                                            key={`${s.productId}-${s.variantId || s.color || sIdx}`}
+                                                                                            type="button"
+                                                                                            onMouseDown={(e) => e.preventDefault()}
+                                                                                            onClick={() => {
+                                                                                                setSelectedItems(prev => {
+                                                                                                    const copy = [...prev];
+                                                                                                    copy[index] = {
+                                                                                                        ...copy[index],
+                                                                                                        productId: s.productId,
+                                                                                                        variantId: s.variantId,
+                                                                                                        variantName: s.variantName,
+                                                                                                        productName: s.displayName,
+                                                                                                        productSearch: s.displayName,
+                                                                                                        categoryId: s.categoryId || copy[index].categoryId,
+                                                                                                        price: s.price,
+                                                                                                        discountPercentage: s.discountPercentage
+                                                                                                    };
+                                                                                                    return copy;
+                                                                                                });
+                                                                                            }}
+                                                                                            className="w-full text-left px-3 py-2.5 hover:bg-[#FAF8F5] flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent"
+                                                                                        >
+                                                                                            <div>
+                                                                                                <p className="text-xs font-bold text-[#161616]">{s.displayName}</p>
+                                                                                                <p className="text-[10px] text-[#6B6862]">
+                                                                                                    {s.brand ? <span className="font-semibold text-[#161616]">Marca: {s.brand} • </span> : ''}
+                                                                                                    {s.sku ? `SKU: ${s.sku} • ` : ''}
+                                                                                                    {s.color ? `Color: ${s.color} • ` : ''}
+                                                                                                    Stock: <span className={s.stock > 0 ? "text-[#161616] font-semibold" : "text-[#D9381E] font-bold"}>{s.stock}</span>
+                                                                                                </p>
+                                                                                            </div>
+                                                                                            <span className="text-xs font-bold text-[#D9381E] font-mono shrink-0">${s.price.toLocaleString('es-CO')}</span>
+                                                                                        </button>
+                                                                                    ))
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })()}
+                                                                </div>
+                                                            )}
 
                                                             <div className="flex flex-col gap-1">
                                                                 <label className="text-[10px] text-[#6B6862] font-bold text-center uppercase tracking-wider">Cant.</label>
