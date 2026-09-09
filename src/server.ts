@@ -9946,24 +9946,85 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const productName = (req.query.name as string) || '';
       const sku = (req.query.sku as string) || '';
 
-      if (!productName && !sku) {
-        return res.status(400).json({ success: false, error: 'Especifique el nombre del producto o SKU para consultar.' });
-      }
-
-      const result = await pool.query(
-        `SELECT p.id as product_id, p.name, p.sku, p.stock, p.price, p.image_url, c.id as client_id, COALESCE(c.branch_name, c.name) as branch_name, c.is_main_branch
+      const queryParams: any[] = [clientId];
+      let sql = `SELECT p.id as product_id, p.name, p.sku, p.brand, p.stock, p.price, p.image_url, c.id as client_id, COALESCE(c.branch_name, c.name) as branch_name, c.is_main_branch
          FROM products p
          JOIN clients c ON p.client_id = c.id
-         WHERE (c.id = $1 OR c.parent_client_id = $1 OR c.parent_client_id = (SELECT parent_client_id FROM clients WHERE id = $1 AND parent_client_id IS NOT NULL))
-           AND (
-             (LOWER(p.name) LIKE LOWER($2) AND $2 != '') OR 
-             (LOWER(p.sku) = LOWER($3) AND $3 != '')
-           )
-         ORDER BY c.is_main_branch DESC, c.name ASC`,
-        [clientId, `%${productName}%`, sku]
+         WHERE (c.id = $1 OR c.parent_client_id = $1 OR c.parent_client_id = (SELECT parent_client_id FROM clients WHERE id = $1 AND parent_client_id IS NOT NULL))`;
+
+      if (productName || sku) {
+        queryParams.push(`%${productName}%`, sku);
+        sql += ` AND (
+          (LOWER(p.name) LIKE LOWER($2) AND $2 != '% %') OR 
+          (LOWER(p.sku) = LOWER($3) AND $3 != '') OR
+          (LOWER(p.brand) LIKE LOWER($2) AND $2 != '% %')
+        )`;
+      }
+
+      sql += ` ORDER BY c.is_main_branch DESC, c.name ASC, p.name ASC`;
+
+      const result = await pool.query(sql, queryParams);
+      res.json({ success: true, cross_stock: result.rows });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 3.5 Buscador Global Superior (Inventario, Facturas, Clientes, Citas)
+  app.get('/api/clients/:clientId/global-search', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const q = ((req.query.q as string) || '').trim();
+
+      if (!q || q.length < 2) {
+        return res.json({ success: true, products: [], invoices: [], clients: [], appointments: [] });
+      }
+
+      const searchTerm = `%${q.toLowerCase()}%`;
+
+      // 1. Products
+      const prodsRes = await pool.query(
+        `SELECT id, name, sku, brand, stock, price, image_url 
+         FROM products 
+         WHERE client_id = $1 AND (LOWER(name) LIKE $2 OR LOWER(COALESCE(sku,'')) LIKE $2 OR LOWER(COALESCE(brand,'')) LIKE $2)
+         ORDER BY name ASC LIMIT 6`,
+        [clientId, searchTerm]
       );
 
-      res.json({ success: true, cross_stock: result.rows });
+      // 2. Invoices / Sales
+      const invsRes = await pool.query(
+        `SELECT id, invoice_number, client_name, total, created_at
+         FROM sales 
+         WHERE client_id = $1 AND (LOWER(COALESCE(invoice_number,'')) LIKE $2 OR LOWER(COALESCE(client_name,'')) LIKE $2)
+         ORDER BY created_at DESC LIMIT 6`,
+        [clientId, searchTerm]
+      );
+
+      // 3. CRM Clients / Patients
+      const clientsRes = await pool.query(
+        `SELECT id, name, phone, email, document_number
+         FROM client_contacts 
+         WHERE client_id = $1 AND (LOWER(name) LIKE $2 OR LOWER(COALESCE(phone,'')) LIKE $2 OR LOWER(COALESCE(document_number,'')) LIKE $2)
+         ORDER BY name ASC LIMIT 6`,
+        [clientId, searchTerm]
+      );
+
+      // 4. Appointments / Citas
+      const apptsRes = await pool.query(
+        `SELECT id, patient_name, doctor_name, appointment_date, appointment_time, status
+         FROM optometry_appointments 
+         WHERE client_id = $1 AND (LOWER(patient_name) LIKE $2 OR LOWER(COALESCE(doctor_name,'')) LIKE $2)
+         ORDER BY appointment_date DESC LIMIT 6`,
+        [clientId, searchTerm]
+      );
+
+      res.json({
+        success: true,
+        products: prodsRes.rows,
+        invoices: invsRes.rows,
+        clients: clientsRes.rows,
+        appointments: apptsRes.rows
+      });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
@@ -9998,7 +10059,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
-  // 5. Traspaso de mercancía e inventario entre sedes
+  // 5. Traspaso individual de mercancía e inventario entre sedes
   app.post('/api/clients/:clientId/inventory/transfer', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
@@ -10013,14 +10074,26 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 
       const transferCode = `TRP-${Date.now().toString().slice(-6)}`;
 
+      // Direct source product lookup
+      const srcProdRes = await pool.query(
+        `SELECT * FROM products WHERE id = $1 AND client_id = $2`,
+        [product_id, clientId]
+      );
+
+      if (srcProdRes.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Producto de origen no encontrado.' });
+      }
+
+      const srcProd = srcProdRes.rows[0];
+
       await pool.query(
         `UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2 AND client_id = $3`,
         [qty, product_id, clientId]
       );
 
       const destProdRes = await pool.query(
-        `SELECT id FROM products WHERE client_id = $1 AND (id = $2 OR LOWER(name) = LOWER($3)) LIMIT 1`,
-        [to_client_id, product_id, product_name]
+        `SELECT id FROM products WHERE client_id = $1 AND (id = $2 OR (sku IS NOT NULL AND sku != '' AND LOWER(sku) = LOWER($3)) OR LOWER(name) = LOWER($4)) LIMIT 1`,
+        [to_client_id, product_id, srcProd.sku || '', srcProd.name]
       );
 
       if (destProdRes.rows.length > 0) {
@@ -10030,18 +10103,114 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         );
       } else {
         await pool.query(
-          `INSERT INTO products (client_id, name, stock, price) VALUES ($1, $2, $3, 0)`,
-          [to_client_id, product_name || 'Producto Traspasado', qty]
+          `INSERT INTO products (client_id, name, brand, sku, description, price, cost_price, color, material, style, stock, min_stock, image_url, variants, attributes) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+          [
+            to_client_id,
+            srcProd.name,
+            srcProd.brand || null,
+            srcProd.sku || null,
+            srcProd.description || null,
+            srcProd.price || 0,
+            srcProd.cost_price || 0,
+            srcProd.color || null,
+            srcProd.material || null,
+            srcProd.style || null,
+            qty,
+            srcProd.min_stock || 2,
+            srcProd.image_url || null,
+            srcProd.variants ? JSON.stringify(srcProd.variants) : null,
+            srcProd.attributes ? JSON.stringify(srcProd.attributes) : null
+          ]
         );
       }
 
       await pool.query(
         `INSERT INTO inventory_transfers (transfer_code, from_client_id, to_client_id, product_id, product_name, quantity, status, requested_by_user, notes)
          VALUES ($1, $2, $3, $4, $5, $6, 'completed', $7, $8)`,
-        [transferCode, clientId, to_client_id, product_id, product_name || 'Producto', qty, userName, notes || null]
+        [transferCode, clientId, to_client_id, product_id, srcProd.name, qty, userName, notes || null]
       );
 
       res.json({ success: true, message: `Traspaso #${transferCode} completado exitosamente de ${qty} unidad(es).` });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 6. Traspaso masivo (Bulk Transfer) de mercancía entre sedes
+  app.post('/api/clients/:clientId/inventory/bulk-transfer', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { to_client_id, items, notes } = req.body;
+      const reqUser = (req as any).user;
+      const userName = reqUser?.name || reqUser?.username || reqUser?.email || 'Usuario ERP';
+
+      if (!to_client_id || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ success: false, error: 'Seleccione al menos un producto y la sede de destino.' });
+      }
+
+      const bulkTransferCode = `TRP-MAS-${Date.now().toString().slice(-6)}`;
+      let transferredCount = 0;
+
+      for (const item of items) {
+        const prodId = item.product_id;
+        const qty = parseFloat(item.quantity) || 0;
+
+        if (!prodId || qty <= 0) continue;
+
+        const srcRes = await pool.query(`SELECT * FROM products WHERE id = $1 AND client_id = $2`, [prodId, clientId]);
+        if (srcRes.rows.length === 0) continue;
+        const srcProd = srcRes.rows[0];
+
+        // Deduct source stock
+        await pool.query(`UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2 AND client_id = $3`, [qty, prodId, clientId]);
+
+        // Destination match or copy
+        const destRes = await pool.query(
+          `SELECT id FROM products WHERE client_id = $1 AND (id = $2 OR (sku IS NOT NULL AND sku != '' AND LOWER(sku) = LOWER($3)) OR LOWER(name) = LOWER($4)) LIMIT 1`,
+          [to_client_id, prodId, srcProd.sku || '', srcProd.name]
+        );
+
+        if (destRes.rows.length > 0) {
+          await pool.query(`UPDATE products SET stock = stock + $1 WHERE id = $2`, [qty, destRes.rows[0].id]);
+        } else {
+          await pool.query(
+            `INSERT INTO products (client_id, name, brand, sku, description, price, cost_price, color, material, style, stock, min_stock, image_url, variants, attributes) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+            [
+              to_client_id,
+              srcProd.name,
+              srcProd.brand || null,
+              srcProd.sku || null,
+              srcProd.description || null,
+              srcProd.price || 0,
+              srcProd.cost_price || 0,
+              srcProd.color || null,
+              srcProd.material || null,
+              srcProd.style || null,
+              qty,
+              srcProd.min_stock || 2,
+              srcProd.image_url || null,
+              srcProd.variants ? JSON.stringify(srcProd.variants) : null,
+              srcProd.attributes ? JSON.stringify(srcProd.attributes) : null
+            ]
+          );
+        }
+
+        // Log audit item
+        await pool.query(
+          `INSERT INTO inventory_transfers (transfer_code, from_client_id, to_client_id, product_id, product_name, quantity, status, requested_by_user, notes)
+           VALUES ($1, $2, $3, $4, $5, $6, 'completed', $7, $8)`,
+          [bulkTransferCode, clientId, to_client_id, prodId, srcProd.name, qty, userName, notes || 'Traslado masivo de inventario']
+        );
+
+        transferredCount++;
+      }
+
+      res.json({
+        success: true,
+        message: `Traslado masivo #${bulkTransferCode} completado exitosamente para ${transferredCount} producto(s).`
+      });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

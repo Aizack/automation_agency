@@ -248,21 +248,48 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     // Cross-Branch Stock Modal State
     const [crossStockModalOpen, setCrossStockModalOpen] = useState(false);
     const [selectedCrossProduct, setSelectedCrossProduct] = useState<Product | null>(null);
+    const [crossSearchQuery, setCrossSearchQuery] = useState('');
     const [crossStockList, setCrossStockList] = useState<any[]>([]);
     const [crossStockLoading, setCrossStockLoading] = useState(false);
     const [transferringBranchId, setTransferringBranchId] = useState<string | null>(null);
     const [transferQty, setTransferQty] = useState<number>(1);
 
+    // Bulk Selection & Transfer State
+    const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+    const [bulkTransferModalOpen, setBulkTransferModalOpen] = useState(false);
+    const [branchesList, setBranchesList] = useState<any[]>([]);
+    const [targetBranchId, setTargetBranchId] = useState<string>('');
+    const [isBulkTransferring, setIsBulkTransferring] = useState(false);
+
     // Variant View Barcodes Modal State
     const [isVariantViewModalOpen, setIsVariantViewModalOpen] = useState(false);
     const [selectedVariantProduct, setSelectedVariantProduct] = useState<Product | null>(null);
 
-    const handleOpenCrossStock = async (prod: Product) => {
-        setSelectedCrossProduct(prod);
+    // Fetch available branches
+    useEffect(() => {
+        if (!clientId) return;
+        fetch(`/api/clients/${clientId}/branches`)
+            .then(res => res.json())
+            .then(json => {
+                if (json.success && Array.isArray(json.branches)) {
+                    setBranchesList(json.branches);
+                }
+            })
+            .catch(err => console.error("Error cargando sedes:", err));
+    }, [clientId]);
+
+    const handleOpenCrossStock = async (prod?: Product | null, initialQuery: string = '') => {
+        setSelectedCrossProduct(prod || null);
+        const queryTerm = prod ? (prod.sku || prod.name) : initialQuery;
+        setCrossSearchQuery(queryTerm);
         setCrossStockModalOpen(true);
+        fetchCrossStock(queryTerm);
+    };
+
+    const fetchCrossStock = async (queryTerm: string) => {
         setCrossStockLoading(true);
         try {
-            const res = await fetch(`/api/clients/${clientId}/products/cross-branch-stock?name=${encodeURIComponent(prod.name)}&sku=${encodeURIComponent(prod.sku || '')}`);
+            const res = await fetch(`/api/clients/${clientId}/products/cross-branch-stock?name=${encodeURIComponent(queryTerm)}&sku=${encodeURIComponent(queryTerm)}`);
             const json = await res.json();
             if (json.success) {
                 setCrossStockList(json.cross_stock || []);
@@ -301,6 +328,52 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             alert(`Error de conexión: ${err.message}`);
         } finally {
             setTransferringBranchId(null);
+        }
+    };
+
+    const handleExecuteBulkTransfer = async () => {
+        if (!targetBranchId) {
+            alert("Por favor seleccione la sede de destino.");
+            return;
+        }
+        if (targetBranchId === clientId) {
+            alert("La sede de destino debe ser diferente a la sede actual.");
+            return;
+        }
+        if (selectedProductIds.length === 0) return;
+
+        try {
+            setIsBulkTransferring(true);
+            const selectedItems = products
+                .filter(p => selectedProductIds.includes(p.id))
+                .map(p => ({
+                    product_id: p.id,
+                    quantity: p.stock || 1
+                }));
+
+            const res = await fetch(`/api/clients/${clientId}/inventory/bulk-transfer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to_client_id: targetBranchId,
+                    items: selectedItems,
+                    notes: 'Traslado masivo de inventario seleccionado'
+                })
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                alert(`✅ ${json.message}`);
+                setSelectedProductIds([]);
+                setBulkTransferModalOpen(false);
+                fetchProducts();
+            } else {
+                alert(`Error: ${json.error}`);
+            }
+        } catch (err: any) {
+            alert(`Error de conexión: ${err.message}`);
+        } finally {
+            setIsBulkTransferring(false);
         }
     };
 
@@ -1223,6 +1296,16 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             Limpiar
                         </button>
                     )}
+
+                    <button
+                        type="button"
+                        onClick={() => handleOpenCrossStock(null, searchTerm)}
+                        className="px-3 py-1.5 bg-[#161616] hover:bg-[#333333] text-white text-xs font-bold uppercase tracking-wider cursor-pointer border-0 rounded-none flex items-center gap-1.5 shadow-sm transition"
+                        title="Consultar disponibilidad de stock en todas las sedes sucursales"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">domain</span>
+                        Stock Inter-Sedes
+                    </button>
                 </div>
             </div>
 
@@ -1820,13 +1903,28 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             <table className="inventory-table w-full text-left">
                                 <thead>
                                     <tr>
+                                        <th style={{ width: '4%' }} className="text-center">
+                                            <input 
+                                                type="checkbox"
+                                                checked={filteredProducts.length > 0 && selectedProductIds.length === filteredProducts.length}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedProductIds(filteredProducts.map(p => p.id));
+                                                    } else {
+                                                        setSelectedProductIds([]);
+                                                    }
+                                                }}
+                                                className="cursor-pointer"
+                                                title="Seleccionar Todos"
+                                            />
+                                        </th>
                                         <th style={{ width: '12%' }}>MARCA</th>
-                                        <th style={{ width: '21%' }}>REFERENCIA</th>
+                                        <th style={{ width: '19%' }}>REFERENCIA</th>
                                         <th style={{ width: '15%' }}>VARIANTES</th>
                                         <th style={{ width: '9%' }}>UNIDADES</th>
                                         <th style={{ width: '12%' }}>PRECIO</th>
-                                        <th style={{ width: '15%' }}>VALOR TOTAL</th>
-                                        <th style={{ width: '7%' }}>DCTO</th>
+                                        <th style={{ width: '14%' }}>VALOR TOTAL</th>
+                                        <th style={{ width: '6%' }}>DCTO</th>
                                         <th style={{ width: '9%' }}>IMPUESTOS</th>
                                     </tr>
                                 </thead>
@@ -1838,8 +1936,25 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         const isLowStock = stockUnits <= (prod.min_stock !== undefined ? prod.min_stock : 5);
                                         const variantCount = prod.variants?.length || 0;
                                         const hasDiscount = (parseFloat(prod.promo_discount?.toString() || '0') || 0) > 0;
+                                        const isSelected = selectedProductIds.includes(prod.id);
                                         return (
-                                            <tr key={prod.id} className="hover:bg-white/80 transition-colors group cursor-pointer" onClick={() => openEdit(prod)}>
+                                            <tr key={prod.id} className={`hover:bg-white/80 transition-colors group cursor-pointer ${isSelected ? 'bg-[#FAF8F5]' : ''}`} onClick={() => openEdit(prod)}>
+                                                {/* Checkbox de selección múltiple */}
+                                                <td className="text-center" onClick={(e) => e.stopPropagation()}>
+                                                    <input 
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedProductIds(prev => [...prev, prod.id]);
+                                                            } else {
+                                                                setSelectedProductIds(prev => prev.filter(id => id !== prod.id));
+                                                            }
+                                                        }}
+                                                        className="cursor-pointer"
+                                                    />
+                                                </td>
+
                                                 {/* 1. MARCA */}
                                                 <td>
                                                     <span className="font-semibold text-xs text-[#161616] tracking-wide">
@@ -1957,6 +2072,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 shrink-0">
                                                             <button 
                                                                 type="button"
+                                                                onClick={(e) => { e.stopPropagation(); handleOpenCrossStock(prod); }}
+                                                                className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
+                                                                title="Consultar Stock Inter-Sedes"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[15px]">domain</span>
+                                                            </button>
+                                                            <button 
+                                                                type="button"
                                                                 onClick={(e) => { e.stopPropagation(); openRefillModal(prod); }}
                                                                 className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
                                                                 title="Refill / Rellenar Stock"
@@ -1987,6 +2110,32 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     })}
                                 </tbody>
                             </table>
+                        </div>
+                    )}
+
+                    {/* Barra Flotante para Traslado Masivo de Productos Seleccionados */}
+                    {selectedProductIds.length > 0 && (
+                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#161616] text-white px-6 py-3.5 shadow-2xl z-[9999] flex items-center gap-5 border border-[#E2DFD7]/30 rounded-none animate-fade-in">
+                            <span className="text-xs font-bold tracking-wider uppercase flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#D9381E] text-[18px]">inventory_2</span>
+                                {selectedProductIds.length} producto(s) seleccionado(s)
+                            </span>
+                            <div className="h-4 w-[1px] bg-white/20"></div>
+                            <button
+                                type="button"
+                                onClick={() => setBulkTransferModalOpen(true)}
+                                className="bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold uppercase tracking-wider px-4 py-2 cursor-pointer border-0 flex items-center gap-1.5 transition shadow-sm"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">local_shipping</span>
+                                Trasladar a otra sede
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedProductIds([])}
+                                className="text-white/70 hover:text-white text-xs uppercase tracking-wider font-semibold cursor-pointer bg-transparent border-0"
+                            >
+                                Descartar
+                            </button>
                         </div>
                     )}
                 </>
@@ -2544,61 +2693,94 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             )}
 
             {/* Modal de Stock Inter-Sedes & Traspasos Directos */}
-            {crossStockModalOpen && selectedCrossProduct && createPortal(
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-[99999] animate-fade-in">
-                    <div className="bg-surface-container-highest border border-outline/30 rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-4">
-                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+            {crossStockModalOpen && createPortal(
+                <div className="fixed inset-0 bg-[#161616]/70 backdrop-blur-xs flex items-center justify-center p-4 z-[99999] animate-fade-in">
+                    <div className="bg-[#F6F4EE] border border-[#161616] p-6 max-w-2xl w-full shadow-2xl space-y-4 rounded-none text-left">
+                        <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-3">
                             <div>
-                                <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary">domain</span>
-                                    Disponibilidad de Stock Inter-Sedes
+                                <h3 className="font-serif text-2xl text-[#161616] font-normal flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[#D9381E] text-[24px]">domain</span>
+                                    Consulta de Stock Inter-Sedes
                                 </h3>
-                                <p className="text-xs text-on-surface-variant font-medium mt-0.5">
-                                    Producto: <strong className="text-primary">{selectedCrossProduct.name}</strong> (SKU: {selectedCrossProduct.sku || 'N/A'})
+                                <p className="text-xs text-[#6B6862] font-medium mt-0.5">
+                                    {selectedCrossProduct ? (
+                                        <>Producto: <strong className="text-[#161616]">{selectedCrossProduct.name}</strong> (SKU: {selectedCrossProduct.sku || 'N/A'})</>
+                                    ) : (
+                                        <>Consulta la disponibilidad en todas las tiendas y sedes sucursales.</>
+                                    )}
                                 </p>
                             </div>
                             <button
                                 onClick={() => setCrossStockModalOpen(false)}
-                                className="p-1 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container"
+                                className="p-1 text-[#6B6862] hover:text-[#161616] bg-transparent border-0 cursor-pointer transition text-xl"
                             >
-                                <span className="material-symbols-outlined">close</span>
+                                &times;
                             </button>
+                        </div>
+
+                        {/* Search Bar inside Modal */}
+                        <div className="flex items-center gap-2 bg-white border border-[#E2DFD7] p-2.5 shadow-2xs">
+                            <span className="material-symbols-outlined text-[18px] text-[#6B6862]">search</span>
+                            <input 
+                                type="text"
+                                value={crossSearchQuery}
+                                onChange={(e) => {
+                                    setCrossSearchQuery(e.target.value);
+                                    fetchCrossStock(e.target.value);
+                                }}
+                                placeholder="Escribe el nombre del producto, marca o SKU..."
+                                className="w-full bg-transparent border-none text-xs text-[#161616] outline-none font-sans"
+                            />
+                            {crossSearchQuery && (
+                                <button 
+                                    onClick={() => { setCrossSearchQuery(''); fetchCrossStock(''); }} 
+                                    className="text-xs text-[#6B6862] hover:text-[#161616] cursor-pointer bg-transparent border-0"
+                                >
+                                    Limpiar
+                                </button>
+                            )}
                         </div>
 
                         {crossStockLoading ? (
                             <div className="flex justify-center py-8">
-                                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-8 h-8 border-2 border-[#D9381E] border-t-transparent rounded-full animate-spin"></div>
                             </div>
                         ) : crossStockList.length === 0 ? (
-                            <div className="p-6 text-center text-xs text-on-surface-variant">
-                                No se encontraron existencias de este producto en otras sedes registradas.
+                            <div className="p-8 text-center text-xs text-[#6B6862] bg-white border border-[#E2DFD7]">
+                                No se encontraron existencias de este producto o término en las sedes registradas.
                             </div>
                         ) : (
-                            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                                 {crossStockList.map((item: any) => {
                                     const isCurrent = item.client_id === clientId;
                                     return (
                                         <div 
-                                            key={item.client_id} 
-                                            className={`p-3.5 rounded-2xl border flex items-center justify-between transition ${
+                                            key={`${item.client_id}-${item.product_id}`} 
+                                            className={`p-4 border flex items-center justify-between transition ${
                                                 isCurrent 
-                                                    ? 'bg-primary/5 border-primary/30' 
-                                                    : 'bg-surface-container/40 border-outline/10 hover:border-outline/30'
+                                                    ? 'bg-[#FAF8F5] border-[#161616]' 
+                                                    : 'bg-white border-[#E2DFD7] hover:border-[#161616]'
                                             }`}
                                         >
-                                            <div className="space-y-0.5">
+                                            <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-bold text-xs text-on-surface">
+                                                    <span className="font-bold text-xs text-[#161616]">
                                                         {item.is_main_branch ? '🏢' : '📍'} {item.branch_name}
                                                     </span>
                                                     {isCurrent && (
-                                                        <span className="text-[9px] font-bold uppercase bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                                                        <span className="text-[9px] font-bold uppercase bg-[#D9381E]/10 text-[#D9381E] px-2 py-0.5 border border-[#D9381E]/20">
                                                             Sede Actual
                                                         </span>
                                                     )}
                                                 </div>
+                                                <p className="text-xs text-[#161616] font-semibold">
+                                                    {item.name} {item.brand ? `(${item.brand})` : ''}
+                                                </p>
                                                 <p className="text-xs font-mono font-bold">
-                                                    Stock: <span className={item.stock > 0 ? 'text-emerald-400 font-extrabold' : 'text-rose-400 font-bold'}>{item.stock} ud.</span>
+                                                    Stock Disponible: <span className={item.stock > 0 ? 'text-[#161616] font-extrabold' : 'text-[#D9381E] font-bold'}>{item.stock} ud.</span>
+                                                    <span className="ml-3 text-[#6B6862] text-[11px] font-normal">
+                                                        Precio: {formatPrice(item.price)} COP
+                                                    </span>
                                                 </p>
                                             </div>
 
@@ -2610,12 +2792,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                         max={item.stock}
                                                         value={transferQty}
                                                         onChange={(e) => setTransferQty(Math.max(1, Math.min(item.stock, parseInt(e.target.value) || 1)))}
-                                                        className="w-14 bg-surface-container border border-outline/20 p-1.5 rounded-lg text-xs text-center font-bold text-on-surface outline-none"
+                                                        className="w-14 bg-white border border-[#E2DFD7] p-1.5 text-xs text-center font-mono font-bold text-[#161616] outline-none"
                                                     />
                                                     <button
                                                         disabled={transferringBranchId === item.client_id}
                                                         onClick={() => handleExecuteTransfer(item.client_id, item.branch_name)}
-                                                        className="px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-sm"
+                                                        className="px-3.5 py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1 border-0 shadow-xs"
                                                     >
                                                         {transferringBranchId === item.client_id ? 'Transfiriendo...' : 'Solicitar Traspaso'}
                                                     </button>
@@ -2626,6 +2808,80 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                 })}
                             </div>
                         )}
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Modal de Traslado Masivo entre Sedes */}
+            {bulkTransferModalOpen && createPortal(
+                <div className="fixed inset-0 bg-[#161616]/70 backdrop-blur-xs flex items-center justify-center p-4 z-[99999] animate-fade-in text-left">
+                    <div className="bg-[#F6F4EE] border border-[#161616] p-6 max-w-lg w-full shadow-2xl space-y-5 rounded-none">
+                        <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-3">
+                            <div>
+                                <h3 className="font-serif text-2xl text-[#161616] font-normal flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[#D9381E] text-[24px]">local_shipping</span>
+                                    Traslado Masivo entre Sedes
+                                </h3>
+                                <p className="text-xs text-[#6B6862] mt-0.5 font-medium">
+                                    Se transferirán <strong className="text-[#161616]">{selectedProductIds.length} producto(s)</strong> desde la sede actual.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setBulkTransferModalOpen(false)}
+                                className="p-1 text-[#6B6862] hover:text-[#161616] bg-transparent border-0 cursor-pointer text-xl"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[11px] font-bold uppercase tracking-wider text-[#6B6862]">
+                                    Seleccione la Sede de Destino *
+                                </label>
+                                <select
+                                    value={targetBranchId}
+                                    onChange={(e) => setTargetBranchId(e.target.value)}
+                                    className="w-full bg-white border border-[#E2DFD7] p-3 text-xs font-bold text-[#161616] outline-none cursor-pointer focus:border-[#161616]"
+                                >
+                                    <option value="">-- Seleccionar Sede Destino --</option>
+                                    {branchesList.map(b => (
+                                        <option key={b.id} value={b.id} disabled={b.id === clientId}>
+                                            {b.is_main_branch ? '🏢' : '📍'} {b.branch_name || b.name} {b.id === clientId ? '(Sede Actual)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="bg-white border border-[#E2DFD7] p-3.5 text-xs text-[#6B6862] space-y-1 font-sans">
+                                <p className="font-bold text-[#161616] flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[#D9381E] text-[16px]">info</span>
+                                    Detalles de la Operación
+                                </p>
+                                <p>• El stock de los productos seleccionados se reducirá en esta sede y se sumará automáticamente en la sede destino.</p>
+                                <p>• Si el producto no existía en la sede destino, se creará conservando su precio, variantes y fotos.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
+                            <button
+                                type="button"
+                                onClick={() => setBulkTransferModalOpen(false)}
+                                className="px-5 py-2.5 bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-xs font-bold uppercase tracking-wider cursor-pointer rounded-none"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isBulkTransferring || !targetBranchId}
+                                onClick={handleExecuteBulkTransfer}
+                                className="px-6 py-2.5 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold uppercase tracking-wider border-0 cursor-pointer flex items-center gap-1.5 shadow-sm transition disabled:opacity-50"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                                {isBulkTransferring ? 'Ejecutando Traslado...' : `Confirmar Traslado (${selectedProductIds.length})`}
+                            </button>
+                        </div>
                     </div>
                 </div>,
                 document.body
