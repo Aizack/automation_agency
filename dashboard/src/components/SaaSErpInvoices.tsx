@@ -188,6 +188,29 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const [includeTip, setIncludeTip] = useState(true);
     const [tipPercentage, setTipPercentage] = useState<number>(10);
 
+    const getNextInvoiceNumber = (invList: Invoice[]) => {
+        if (!invList || invList.length === 0) return 'F-1001';
+
+        let maxNum = 0;
+        let prefix = 'F-';
+
+        for (const inv of invList) {
+            if (!inv.invoice_number) continue;
+            const match = inv.invoice_number.match(/(\d+)/);
+            if (match) {
+                const num = parseInt(match[1], 10);
+                if (!isNaN(num) && num > maxNum) {
+                    maxNum = num;
+                    const prefixMatch = inv.invoice_number.match(/^([^\d]+)/);
+                    if (prefixMatch) prefix = prefixMatch[1];
+                }
+            }
+        }
+
+        const nextNum = maxNum > 0 ? maxNum + 1 : 1001;
+        return `${prefix}${nextNum}`;
+    };
+
     const fetchData = async () => {
         try {
             setLoading(true);
@@ -216,7 +239,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             const empData = empRes.ok ? await empRes.json() : { success: false };
             const tblData = tblRes.ok ? await tblRes.json() : { success: false };
 
-            if (invData.success) setInvoices(invData.invoices || []);
+            if (invData.success) {
+                const fetchedInvoices = invData.invoices || [];
+                setInvoices(fetchedInvoices);
+                setInvoiceNumber(getNextInvoiceNumber(fetchedInvoices));
+            } else if (invData.error) console.warn('[Facturas] Error API:', invData.error);
             else if (invData.error) console.warn('[Facturas] Error API:', invData.error);
             if (prodData.success) setProducts(prodData.products || []);
             else if (prodData.error) console.warn('[Productos] Error API:', prodData.error);
@@ -260,7 +287,6 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         fetchPlanStatus();
         const today = new Date().toISOString().split('T')[0];
         setDueDate(today);
-        setInvoiceNumber(`F-${Math.floor(1000 + Math.random() * 9000)}`);
     }, [clientId]);
 
     const fetchPlanStatus = async () => {
@@ -584,8 +610,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         }
     };
 
-    const resetForm = () => {
-        setInvoiceNumber(`F-${Math.floor(1000 + Math.random() * 9000)}`);
+    const resetForm = (customInvoices?: Invoice[] | any) => {
+        const list = Array.isArray(customInvoices) ? customInvoices : invoices;
+        setInvoiceNumber(getNextInvoiceNumber(list));
         setCustomerName('');
         setCustomerPhone('');
         setCustomerDocumentNumber('');
