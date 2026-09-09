@@ -438,6 +438,25 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         }]);
     };
 
+    const handleAddLensServiceItem = () => {
+        setSelectedItems(prev => [
+            ...prev,
+            {
+                productId: '',
+                categoryId: '',
+                productSearch: 'Servicio de Lentes',
+                productName: 'Servicio de Lentes',
+                quantity: 1,
+                price: 0,
+                discountPercentage: 0,
+                productType: 'lens',
+                lensDesign: '',
+                lensMaterial: '',
+                lensTreatment: ''
+            }
+        ]);
+    };
+
     const handleRemoveItem = (index: number) => {
         const copy = [...selectedItems];
         copy.splice(index, 1);
@@ -488,6 +507,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                     item.price = 0;
                     item.discountPercentage = 0;
                 }
+            } else if (field === 'lensDesign' || field === 'lensMaterial' || field === 'lensTreatment') {
+                (item as any)[field] = value;
+                const parts = [];
+                if (item.lensDesign) parts.push(item.lensDesign);
+                if (item.lensMaterial) parts.push(item.lensMaterial);
+                if (item.lensTreatment) parts.push(item.lensTreatment);
+                const generatedName = parts.length > 0 ? `Lente ${parts.join(' - ')}` : 'Servicio de Lentes';
+                item.productName = generatedName;
+                item.productSearch = generatedName;
             } else {
                 (item as any)[field] = value;
             }
@@ -1692,21 +1720,96 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                     const rawQuery = item.productSearch.trim().toLowerCase();
                                                                     if (!rawQuery) return null;
                                                                     const terms = rawQuery.split(/\s+/).filter(Boolean);
-                                                                    const suggestions = products.filter(p => {
-                                                                        const variantsStr = Array.isArray(p.variants)
-                                                                            ? p.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
-                                                                            : '';
-                                                                        const fullSearchable = `${p.name || ''} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.color || ''} ${p.material || ''} ${p.style || ''} ${p.description || ''} ${variantsStr}`.toLowerCase();
-                                                                        return terms.every(term => fullSearchable.includes(term));
-                                                                    }).slice(0, 15);
+
+                                                                    const suggestions: {
+                                                                        productId: string;
+                                                                        variantId?: string;
+                                                                        variantName?: string;
+                                                                        displayName: string;
+                                                                        sku?: string;
+                                                                        color?: string;
+                                                                        brand?: string;
+                                                                        material?: string;
+                                                                        stock: number;
+                                                                        price: number;
+                                                                        discountPercentage: number;
+                                                                        categoryId?: string;
+                                                                    }[] = [];
+
+                                                                    for (const p of products) {
+                                                                        if (Array.isArray(p.variants) && p.variants.length > 0) {
+                                                                            for (const v of p.variants) {
+                                                                                const varName = v.variant_name || v.name || v.color || v.options || '';
+                                                                                const fullSearchable = `${p.name || ''} ${varName} ${v.sku || p.sku || ''} ${p.brand || ''} ${p.model || ''} ${v.color || p.color || ''} ${p.material || ''} ${p.description || ''}`.toLowerCase();
+                                                                                if (terms.every(t => fullSearchable.includes(t))) {
+                                                                                    suggestions.push({
+                                                                                        productId: p.id,
+                                                                                        variantId: v.id || v.variant_id,
+                                                                                        variantName: varName,
+                                                                                        displayName: varName ? `${p.name} - Color: ${varName}` : p.name,
+                                                                                        sku: v.sku || p.sku || undefined,
+                                                                                        color: v.color || varName || p.color || undefined,
+                                                                                        brand: p.brand || undefined,
+                                                                                        material: p.material || undefined,
+                                                                                        stock: v.stock !== undefined && v.stock !== null ? Number(v.stock) : p.stock,
+                                                                                        price: v.price ? Number(v.price) : Number(p.price),
+                                                                                        discountPercentage: p.promo_discount ? Number(p.promo_discount) : 0,
+                                                                                        categoryId: p.category_id || undefined,
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                        } else if (p.color && p.color.includes(',')) {
+                                                                            const colorList = p.color.split(',').map(c => c.trim()).filter(Boolean);
+                                                                            for (const col of colorList) {
+                                                                                const fullSearchable = `${p.name || ''} ${col} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.material || ''} ${p.description || ''}`.toLowerCase();
+                                                                                if (terms.every(t => fullSearchable.includes(t))) {
+                                                                                    suggestions.push({
+                                                                                        productId: p.id,
+                                                                                        variantName: col,
+                                                                                        displayName: `${p.name} - Color: ${col}`,
+                                                                                        sku: p.sku || undefined,
+                                                                                        color: col,
+                                                                                        brand: p.brand || undefined,
+                                                                                        material: p.material || undefined,
+                                                                                        stock: p.stock,
+                                                                                        price: Number(p.price),
+                                                                                        discountPercentage: p.promo_discount ? Number(p.promo_discount) : 0,
+                                                                                        categoryId: p.category_id || undefined,
+                                                                                    });
+                                                                                }
+                                                                            }
+                                                                        } else {
+                                                                            const variantsStr = Array.isArray(p.variants)
+                                                                                ? p.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
+                                                                                : '';
+                                                                            const fullSearchable = `${p.name || ''} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.color || ''} ${p.material || ''} ${p.style || ''} ${p.description || ''} ${variantsStr}`.toLowerCase();
+                                                                            if (terms.every(t => fullSearchable.includes(t))) {
+                                                                                suggestions.push({
+                                                                                    productId: p.id,
+                                                                                    displayName: p.name,
+                                                                                    sku: p.sku || undefined,
+                                                                                    color: p.color || undefined,
+                                                                                    brand: p.brand || undefined,
+                                                                                    material: p.material || undefined,
+                                                                                    stock: p.stock,
+                                                                                    price: Number(p.price),
+                                                                                    discountPercentage: p.promo_discount ? Number(p.promo_discount) : 0,
+                                                                                    categoryId: p.category_id || undefined,
+                                                                                });
+                                                                            }
+                                                                        }
+                                                                    }
+
+                                                                    const list = suggestions.slice(0, 20);
+
                                                                     return (
                                                                         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#161616] shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-[#E2DFD7] rounded-none">
-                                                                            {suggestions.length === 0 ? (
+                                                                            {list.length === 0 ? (
                                                                                 <div className="p-3 text-xs text-[#6B6862] italic text-center">No se encontraron productos coincidentes con ese término.</div>
                                                                             ) : (
-                                                                                suggestions.map(p => (
+                                                                                list.map((s, sIdx) => (
                                                                                     <button
-                                                                                        key={p.id}
+                                                                                        key={`${s.productId}-${s.variantId || s.color || sIdx}`}
                                                                                         type="button"
                                                                                         onMouseDown={(e) => e.preventDefault()}
                                                                                         onClick={() => {
@@ -1714,12 +1817,14 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                                                 const copy = [...prev];
                                                                                                 copy[index] = {
                                                                                                     ...copy[index],
-                                                                                                    productId: p.id,
-                                                                                                    productName: p.name,
-                                                                                                    productSearch: p.name,
-                                                                                                    categoryId: p.category_id || copy[index].categoryId,
-                                                                                                    price: Number(p.price),
-                                                                                                    discountPercentage: Number(p.promo_discount || 0)
+                                                                                                    productId: s.productId,
+                                                                                                    variantId: s.variantId,
+                                                                                                    variantName: s.variantName,
+                                                                                                    productName: s.displayName,
+                                                                                                    productSearch: s.displayName,
+                                                                                                    categoryId: s.categoryId || copy[index].categoryId,
+                                                                                                    price: s.price,
+                                                                                                    discountPercentage: s.discountPercentage
                                                                                                 };
                                                                                                 return copy;
                                                                                             });
@@ -1727,16 +1832,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                                         className="w-full text-left px-3 py-2.5 hover:bg-[#FAF8F5] flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent"
                                                                                     >
                                                                                         <div>
-                                                                                            <p className="text-xs font-bold text-[#161616]">{p.name}</p>
+                                                                                            <p className="text-xs font-bold text-[#161616]">{s.displayName}</p>
                                                                                             <p className="text-[10px] text-[#6B6862]">
-                                                                                                {p.brand ? <span className="font-semibold text-[#161616]">Marca: {p.brand} • </span> : ''}
-                                                                                                {p.sku ? `SKU: ${p.sku} • ` : ''}
-                                                                                                {p.color ? `Color: ${p.color} • ` : ''}
-                                                                                                {p.material ? `Mat: ${p.material} • ` : ''}
-                                                                                                Stock: <span className={p.stock > 0 ? "text-[#161616] font-semibold" : "text-[#D9381E] font-bold"}>{p.stock}</span>
+                                                                                                {s.brand ? <span className="font-semibold text-[#161616]">Marca: {s.brand} • </span> : ''}
+                                                                                                {s.sku ? `SKU: ${s.sku} • ` : ''}
+                                                                                                {s.color ? `Color: ${s.color} • ` : ''}
+                                                                                                Stock: <span className={s.stock > 0 ? "text-[#161616] font-semibold" : "text-[#D9381E] font-bold"}>{s.stock}</span>
                                                                                             </p>
                                                                                         </div>
-                                                                                        <span className="text-xs font-bold text-[#D9381E] font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
+                                                                                        <span className="text-xs font-bold text-[#D9381E] font-mono shrink-0">${s.price.toLocaleString('es-CO')}</span>
                                                                                     </button>
                                                                                 ))
                                                                             )}
@@ -1792,12 +1896,68 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                 </button>
                                                             </div>
                                                         </div>
+
+                                                        {item.productType === 'lens' && (
+                                                            <div className="mt-3 p-3 bg-[#FAF8F5] border border-[#E2DFD7] grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[10px] text-[#161616] font-bold uppercase tracking-wider">Tipo de Uso</label>
+                                                                    <select
+                                                                        value={item.lensDesign || ''}
+                                                                        onChange={(e) => handleItemChange(index, 'lensDesign', e.target.value)}
+                                                                        className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none rounded-none font-sans"
+                                                                    >
+                                                                        <option value="">-- Seleccionar Uso --</option>
+                                                                        <option value="Monofocal">Monofocal</option>
+                                                                        <option value="Bifocal">Bifocal</option>
+                                                                        <option value="Progresivo">Progresivo</option>
+                                                                        <option value="Lectura">Lectura</option>
+                                                                        <option value="Deportivo">Deportivo</option>
+                                                                        <option value="Trabajo">Trabajo</option>
+                                                                        <option value="Sin Especificar">Sin Especificar</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[10px] text-[#161616] font-bold uppercase tracking-wider">Material del Cristal</label>
+                                                                    <select
+                                                                        value={item.lensMaterial || ''}
+                                                                        onChange={(e) => handleItemChange(index, 'lensMaterial', e.target.value)}
+                                                                        className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none rounded-none font-sans"
+                                                                    >
+                                                                        <option value="">-- Seleccionar Material --</option>
+                                                                        <option value="CR-39 (Estándar)">CR-39 (Estándar)</option>
+                                                                        <option value="Policarbonato">Policarbonato</option>
+                                                                        <option value="Alto Índice 1.67">Alto Índice 1.67</option>
+                                                                        <option value="Alto Índice 1.74">Alto Índice 1.74</option>
+                                                                        <option value="Trivex">Trivex</option>
+                                                                        <option value="Cristal Mineral">Cristal Mineral</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <label className="text-[10px] text-[#161616] font-bold uppercase tracking-wider">Tratamiento / Filtro</label>
+                                                                    <select
+                                                                        value={item.lensTreatment || ''}
+                                                                        onChange={(e) => handleItemChange(index, 'lensTreatment', e.target.value)}
+                                                                        className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none rounded-none font-sans"
+                                                                    >
+                                                                        <option value="">-- Seleccionar Tratamiento --</option>
+                                                                        <option value="Antirreflejo Estándar">Antirreflejo Estándar</option>
+                                                                        <option value="Filtro Azul (Blue Block)">Filtro Azul (Blue Block)</option>
+                                                                        <option value="Fotocromático (Transitions)">Fotocromático (Transitions)</option>
+                                                                        <option value="Antirreflejo + Filtro Azul">Antirreflejo + Filtro Azul</option>
+                                                                        <option value="Antirreflejo + Fotocromático">Antirreflejo + Fotocromático</option>
+                                                                        <option value="Antirreflejo + Transitions + Filtro Azul">Antirreflejo + Transitions + Filtro Azul</option>
+                                                                        <option value="Espejado">Espejado</option>
+                                                                        <option value="Polarizado">Polarizado</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 );
                                             })}
                                         </div>
 
-                                        <div className="pt-3">
+                                        <div className="pt-3 flex flex-wrap gap-2">
                                             <button
                                                 type="button"
                                                 onClick={handleAddItem}
@@ -1805,6 +1965,14 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             >
                                                 <span className="material-symbols-outlined text-[16px] text-[#D9381E]">add_circle</span>
                                                 + AGREGAR OTRO PRODUCTO / LÍNEA
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={handleAddLensServiceItem}
+                                                className="bg-[#161616] hover:bg-[#2c2c2c] text-white text-xs font-bold py-2.5 px-4 rounded-none flex items-center gap-1.5 cursor-pointer transition uppercase tracking-wider shadow-sm"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px] text-[#E2DFD7]">visibility</span>
+                                                + AGREGAR SERVICIO DE LENTES
                                             </button>
                                         </div>
                                     </div>

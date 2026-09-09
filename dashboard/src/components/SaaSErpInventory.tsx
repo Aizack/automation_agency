@@ -744,7 +744,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         e.preventDefault();
         
         const isLensType = isLensMode || (categoryId && categories.find((c: any) => c.id === categoryId)?.name.toLowerCase().includes('lente')) || Boolean(lensDesign || lensMaterial || lensTreatment);
-        const resolvedProductType = isLensType ? 'service' : productType;
+        const resolvedProductType = productType === 'service' ? 'service' : (isLensType ? 'product' : productType);
         const hasVarBool = !isLensType && hasVariants && resolvedProductType === 'product' && variantList.length > 0;
 
         const formattedVariants = hasVarBool ? variantList.map(v => ({
@@ -757,13 +757,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         })) : [];
 
         const calculatedTotalStock = resolvedProductType === 'service'
-            ? 999999
+            ? 0
             : (hasVarBool 
                 ? variantList.reduce((sum, v) => sum + (parseInt(v.stock?.toString() || '0') || 0), 0)
                 : (stock === '' ? 0 : (parseInt(stock.toString()) || 0)));
 
         const calculatedMinStock = resolvedProductType === 'service'
-            ? 1
+            ? 0
             : (hasVarBool 
                 ? (variantList.length > 0 ? (parseInt(variantList[0].min_stock?.toString() || '1') || 1) : 2)
                 : (minStock === '' ? 2 : (parseInt(minStock.toString()) || 2)));
@@ -1264,39 +1264,43 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             {/* TARJETAS RESUMEN KPI (TOTAL PRODUCTOS, DINERO INVENTARIO, ALERTAS - EXACTO IMAGEN 2) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                 {/* 1. TOTAL DE ÍTEMS EN STOCK */}
-                <div className="bg-white border border-[#E2DFD7] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
+                <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
                     <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold">TOTAL DE ÍTEMS EN STOCK</span>
                     <div className="mt-4">
                         <div className="font-serif text-4xl sm:text-5xl text-[#161616] font-normal leading-none flex items-baseline gap-2">
-                            {products.reduce((acc, p) => acc + (p.stock || 0), 0)} <span className="font-sans text-sm text-[#6B6862] font-normal">items</span>
+                            {products.reduce((acc, p) => acc + (p.product_type === 'service' || (p.stock || 0) >= 999999 ? 0 : (p.stock || 0)), 0)} <span className="font-sans text-sm text-[#6B6862] font-normal">items</span>
                         </div>
-                        <p className="text-[#6B6862] text-xs mt-3 font-sans">Catalogados en sistema ERP</p>
+                        <p className="text-[#6B6862] text-xs mt-3 font-sans">Catalogados en sistema ERP (Excluye servicios)</p>
                     </div>
                 </div>
 
                 {/* 2. VALOR EN INVENTARIO */}
-                <div className="bg-white border border-[#E2DFD7] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
+                <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
                     <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold">VALOR EN INVENTARIO</span>
                     <div className="mt-4">
                         <div className="font-serif text-4xl sm:text-5xl text-[#161616] font-normal leading-none">
                             {(() => {
-                                const totalVal = products.reduce((acc, p) => acc + ((p.stock || 0) * (parseFloat(p.price || '0') || 0)), 0);
+                                const totalVal = products.reduce((acc, p) => {
+                                    if (p.product_type === 'service' || (p.stock || 0) >= 999999) return acc;
+                                    const itemPrice = parseFloat(p.cost_price || p.price || '0') || 0;
+                                    return acc + ((p.stock || 0) * itemPrice);
+                                }, 0);
                                 if (totalVal >= 1000000) {
                                     return `$${(totalVal / 1000000).toFixed(1)}M COP`;
                                 }
                                 return `$${totalVal.toLocaleString('es-CO')} COP`;
                             })()}
                         </div>
-                        <p className="text-[#6B6862] text-xs mt-3 font-sans">Costo total de stock en bodega</p>
+                        <p className="text-[#6B6862] text-xs mt-3 font-sans">Costo total de productos físicos en bodega</p>
                     </div>
                 </div>
 
-                {/* 3. ALERTAS DE STOCK BAJO (Con borde rojo vertical exacto a Imagen 2) */}
-                <div className="bg-white border border-[#E2DFD7] border-l-4 border-l-[#D9381E] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
+                {/* 3. ALERTAS DE STOCK BAJO */}
+                <div className="bg-[#FAF8F5] border border-[#E2DFD7] border-l-4 border-l-[#D9381E] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
                     <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold">ALERTAS DE STOCK BAJO</span>
                     <div className="mt-4">
                         <div className="font-serif text-4xl sm:text-5xl text-[#D9381E] font-normal leading-none flex items-baseline gap-2">
-                            {products.filter(p => (p.stock || 0) <= (p.min_stock !== undefined ? p.min_stock : 5)).length} <span className="font-sans text-sm text-[#6B6862] font-normal">Alertas</span>
+                            {products.filter(p => p.product_type !== 'service' && (p.stock || 0) < 999999 && (p.stock || 0) <= (p.min_stock !== undefined ? p.min_stock : 5)).length} <span className="font-sans text-sm text-[#6B6862] font-normal">Alertas</span>
                         </div>
                         <p className="text-[#6B6862] text-xs mt-3 font-sans">Ítems por debajo del stock mínimo</p>
                     </div>
@@ -1560,15 +1564,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                          </div>
 
                                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                             {/* Tipo de Diseño */}
+                                                             {/* Tipo de Uso */}
                                                              <div className="flex flex-col gap-1.5">
-                                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Diseño</label>
+                                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Uso</label>
                                                                  <select
                                                                      value={lensDesign}
                                                                      onChange={(e) => setLensDesign(e.target.value)}
                                                                      className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
                                                                  >
-                                                                     <option value="">– Seleccione Diseño –</option>
+                                                                     <option value="">– Seleccione Tipo de Uso –</option>
                                                                      <option value="Monofocal">Monofocal</option>
                                                                      <option value="Bifocal">Bifocal</option>
                                                                      <option value="Progresivo">Progresivo / Multifocal</option>
@@ -2181,16 +2185,25 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                                                 {/* 4. UNIDADES (al lado de Variantes) */}
                                                 <td>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className={`text-xs font-bold font-mono ${isLowStock ? 'text-[#D9381E]' : 'text-[#161616]'}`}>
-                                                            {stockUnits} Uds
-                                                        </span>
-                                                        {isLowStock && (
-                                                            <span className="text-[8px] font-mono font-bold bg-[#D9381E]/10 text-[#D9381E] px-1 py-0.2 border border-[#D9381E]/20" title="Bajo stock">
-                                                                Bajo
+                                                    {prod.product_type === 'service' || stockUnits >= 999999 ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-xs font-semibold text-[#6B6862] font-mono">—</span>
+                                                            <span className="text-[9px] bg-[#FAF8F5] text-[#6B6862] border border-[#E2DFD7] px-1.5 py-0.5 font-mono uppercase tracking-wider">
+                                                                Servicio
                                                             </span>
-                                                        )}
-                                                    </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className={`text-xs font-bold font-mono ${isLowStock ? 'text-[#D9381E]' : 'text-[#161616]'}`}>
+                                                                {stockUnits} Uds
+                                                            </span>
+                                                            {isLowStock && (
+                                                                <span className="text-[8px] font-mono font-bold bg-[#D9381E]/10 text-[#D9381E] px-1 py-0.2 border border-[#D9381E]/20" title="Bajo stock">
+                                                                    Bajo
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </td>
 
                                                 {/* 5. PRECIO UNITARIO */}
@@ -2200,14 +2213,18 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                                                 {/* 6. VALOR TOTAL EN STOCK */}
                                                 <td className="font-mono font-bold text-xs text-[#161616]">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-[#161616]">
-                                                            {formatPrice(totalValue)} <span className="text-[9px] text-[#6B6862] font-normal font-sans">COP</span>
-                                                        </span>
-                                                        <span className="text-[9px] text-[#76746E] font-mono font-normal">
-                                                            ({stockUnits} × {formatPrice(prod.price)})
-                                                        </span>
-                                                    </div>
+                                                    {prod.product_type === 'service' || stockUnits >= 999999 ? (
+                                                        <span className="text-xs text-[#6B6862] font-mono">—</span>
+                                                    ) : (
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-[#161616]">
+                                                                {formatPrice(totalValue)} <span className="text-[9px] text-[#6B6862] font-normal font-sans">COP</span>
+                                                            </span>
+                                                            <span className="text-[9px] text-[#76746E] font-mono font-normal">
+                                                                ({stockUnits} × {formatPrice(prod.price)})
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </td>
 
                                                 {/* 7. DESCUENTO (si aplica) */}

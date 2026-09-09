@@ -681,42 +681,104 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                         const rawQuery = prodSearchInput.trim().toLowerCase();
                                         if (!rawQuery) return null;
                                         const terms = rawQuery.split(/\s+/).filter(Boolean);
-                                        const suggestions = products.filter(p => {
-                                            const variantsStr = Array.isArray(p.variants)
-                                                ? p.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
-                                                : '';
-                                            const fullSearchable = `${p.name || ''} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.color || ''} ${p.material || ''} ${p.style || ''} ${p.description || ''} ${variantsStr}`.toLowerCase();
-                                            return terms.every(term => fullSearchable.includes(term));
-                                        }).slice(0, 15);
+
+                                        const suggestions: {
+                                            productId: string;
+                                            variantId?: string;
+                                            variantName?: string;
+                                            displayName: string;
+                                            sku?: string;
+                                            color?: string;
+                                            brand?: string;
+                                            stock: number;
+                                            price: number;
+                                        }[] = [];
+
+                                        for (const p of products) {
+                                            if (Array.isArray(p.variants) && p.variants.length > 0) {
+                                                for (const v of p.variants) {
+                                                    const varName = v.variant_name || v.name || v.color || v.options || '';
+                                                    const fullSearchable = `${p.name || ''} ${varName} ${v.sku || p.sku || ''} ${p.brand || ''} ${p.model || ''} ${v.color || p.color || ''} ${p.material || ''} ${p.description || ''}`.toLowerCase();
+                                                    if (terms.every(t => fullSearchable.includes(t))) {
+                                                        suggestions.push({
+                                                            productId: p.id,
+                                                            variantId: v.id || v.variant_id,
+                                                            variantName: varName,
+                                                            displayName: varName ? `${p.name} - Color: ${varName}` : p.name,
+                                                            sku: v.sku || p.sku || undefined,
+                                                            color: v.color || varName || p.color || undefined,
+                                                            brand: p.brand || undefined,
+                                                            stock: v.stock !== undefined && v.stock !== null ? Number(v.stock) : p.stock,
+                                                            price: v.price ? Number(v.price) : Number(p.price),
+                                                        });
+                                                    }
+                                                }
+                                            } else if (p.color && p.color.includes(',')) {
+                                                const colorList = p.color.split(',').map(c => c.trim()).filter(Boolean);
+                                                for (const col of colorList) {
+                                                    const fullSearchable = `${p.name || ''} ${col} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.material || ''} ${p.description || ''}`.toLowerCase();
+                                                    if (terms.every(t => fullSearchable.includes(t))) {
+                                                        suggestions.push({
+                                                            productId: p.id,
+                                                            variantName: col,
+                                                            displayName: `${p.name} - Color: ${col}`,
+                                                            sku: p.sku || undefined,
+                                                            color: col,
+                                                            brand: p.brand || undefined,
+                                                            stock: p.stock,
+                                                            price: Number(p.price),
+                                                        });
+                                                    }
+                                                }
+                                            } else {
+                                                const variantsStr = Array.isArray(p.variants)
+                                                    ? p.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
+                                                    : '';
+                                                const fullSearchable = `${p.name || ''} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.color || ''} ${p.material || ''} ${p.style || ''} ${p.description || ''} ${variantsStr}`.toLowerCase();
+                                                if (terms.every(t => fullSearchable.includes(t))) {
+                                                    suggestions.push({
+                                                        productId: p.id,
+                                                        displayName: p.name,
+                                                        sku: p.sku || undefined,
+                                                        color: p.color || undefined,
+                                                        brand: p.brand || undefined,
+                                                        stock: p.stock,
+                                                        price: Number(p.price),
+                                                    });
+                                                }
+                                            }
+                                        }
+
+                                        const list = suggestions.slice(0, 20);
+
                                         return (
                                             <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#161616] rounded-none shadow-2xl z-50 max-h-60 overflow-y-auto">
-                                                {suggestions.length === 0 ? (
+                                                {list.length === 0 ? (
                                                     <div className="p-3 text-xs text-[#76746E] italic text-center">No hay productos con ese término. Presiona Agregar para crearlo como ítem libre.</div>
                                                 ) : (
-                                                    suggestions.map(p => (
+                                                    list.map((s, sIdx) => (
                                                         <button
-                                                            key={p.id}
+                                                            key={`${s.productId}-${s.variantId || s.color || sIdx}`}
                                                             type="button"
                                                             onMouseDown={(e) => e.preventDefault()}
                                                             onClick={() => {
-                                                                setSelectedProdId(p.id);
-                                                                setSelectedProdName(p.name);
-                                                                setProdSearchInput(p.name);
-                                                                setAddCustomPrice(parseFloat(p.price || '0'));
+                                                                setSelectedProdId(s.productId);
+                                                                setSelectedProdName(s.displayName);
+                                                                setProdSearchInput(s.displayName);
+                                                                setAddCustomPrice(s.price);
                                                             }}
                                                             className="w-full text-left px-3 py-2.5 hover:bg-[#FAF8F5] flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent border-b border-[#E2DFD7] last:border-0"
                                                         >
                                                             <div>
-                                                                <p className="text-xs font-semibold text-[#161616]">{p.name}</p>
+                                                                <p className="text-xs font-semibold text-[#161616]">{s.displayName}</p>
                                                                 <p className="text-[10px] text-[#76746E]">
-                                                                    {p.brand ? <span className="font-semibold text-[#161616]">Marca: {p.brand} • </span> : ''}
-                                                                    {p.sku ? `SKU: ${p.sku} • ` : ''}
-                                                                    {p.color ? `Color: ${p.color} • ` : ''}
-                                                                    {p.material ? `Mat: ${p.material} • ` : ''}
-                                                                    Stock: <span className={p.stock > 0 ? "text-[#161616] font-semibold" : "text-[#D9381E] font-bold"}>{p.stock}</span>
+                                                                    {s.brand ? <span className="font-semibold text-[#161616]">Marca: {s.brand} • </span> : ''}
+                                                                    {s.sku ? `SKU: ${s.sku} • ` : ''}
+                                                                    {s.color ? `Color: ${s.color} • ` : ''}
+                                                                    Stock: <span className={s.stock > 0 ? "text-[#161616] font-semibold" : "text-[#D9381E] font-bold"}>{s.stock}</span>
                                                                 </p>
                                                             </div>
-                                                            <span className="text-xs font-bold text-[#D9381E] font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
+                                                            <span className="text-xs font-bold text-[#D9381E] font-mono shrink-0">${s.price.toLocaleString('es-CO')}</span>
                                                         </button>
                                                     ))
                                                 )}
