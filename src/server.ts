@@ -2736,6 +2736,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
     }
 
     // 0. Registrar/Asegurar cliente en el CRM si no existe por documento
+    let resolvedCustomerId = rawCustomerId;
     if (customerDocumentNumber) {
       const crmCheck = await dbClient.query(`
         SELECT id FROM crm_customers WHERE client_id = $1 AND document_number = $2
@@ -2746,9 +2747,10 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         const firstName = nameParts[0];
         const lastName = nameParts.slice(1).join(' ') || '';
 
-        await dbClient.query(`
+        const newCustRes = await dbClient.query(`
           INSERT INTO crm_customers (client_id, name, last_name, document_type, document_number, phone, email, address)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          RETURNING id
         `, [
           clientId,
           firstName,
@@ -2759,14 +2761,26 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
           customerEmail || null,
           customerAddress || null
         ]);
-        console.log(`[CRM Auto-Enroll] ✅ Cliente ${customerName} registrado en CRM automáticamente.`);
+        resolvedCustomerId = newCustRes.rows[0]?.id || null;
+        console.log(`[CRM Auto-Enroll] ✅ Cliente ${customerName} registrado en CRM automáticamente (ID: ${resolvedCustomerId}).`);
+      } else {
+        resolvedCustomerId = crmCheck.rows[0].id;
       }
+    }
+
+    if (!resolvedCustomerId && customerName) {
+      const nameCheck = await dbClient.query(`
+        SELECT id FROM crm_customers 
+        WHERE client_id = $1 AND (LOWER(CONCAT(name, ' ', last_name)) LIKE LOWER(CONCAT('%', $2, '%')) OR LOWER(name) LIKE LOWER(CONCAT('%', $2, '%')))
+        ORDER BY created_at DESC LIMIT 1
+      `, [clientId, customerName.trim()]);
+      resolvedCustomerId = nameCheck.rows[0]?.id || null;
     }
 
     // 1. Insertar Factura
     const invoiceResult = await dbClient.query(`
       INSERT INTO invoices (
-        client_id, invoice_number, customer_name, customer_phone, 
+        client_id, customer_id, crm_customer_id, invoice_number, customer_name, customer_phone, 
         customer_document_type, customer_document_number, customer_email, 
         customer_address, total_amount, status, due_date, 
         payment_method, installments_count, installment_frequency,
@@ -2774,10 +2788,12 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         transfer_bank, transfer_destination_account,
         seller_employee_id, employee_id, seller_name, created_by_user_id, created_by_user_name
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
-      RETURNING id, invoice_number, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, transfer_bank, transfer_destination_account, seller_employee_id, seller_name, created_by_user_id, created_by_user_name, created_at
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
+      RETURNING id, invoice_number, customer_id, crm_customer_id, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, transfer_bank, transfer_destination_account, seller_employee_id, seller_name, created_by_user_id, created_by_user_name, created_at
     `, [
       clientId, 
+      resolvedCustomerId || null,
+      resolvedCustomerId || null,
       invoiceNumber, 
       customerName, 
       customerPhone, 
@@ -7869,6 +7885,8 @@ export const server = app.listen(PORT, () => {
         ALTER TABLE clients ADD COLUMN IF NOT EXISTS address VARCHAR(255);
         ALTER TABLE clients ADD COLUMN IF NOT EXISTS invoice_footer TEXT;
 
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS customer_id UUID;
+        ALTER TABLE invoices ADD COLUMN IF NOT EXISTS crm_customer_id UUID;
         ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) DEFAULT 'contado';
         ALTER TABLE invoices ADD COLUMN IF NOT EXISTS installments_count INT DEFAULT 1;
         ALTER TABLE invoices ADD COLUMN IF NOT EXISTS installment_frequency VARCHAR(50);
