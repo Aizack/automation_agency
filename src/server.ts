@@ -10143,15 +10143,17 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         [to_client_id, product_id, srcProd.sku || '', srcProd.name]
       );
 
+      let destProdId = '';
       if (destProdRes.rows.length > 0) {
+        destProdId = destProdRes.rows[0].id;
         await pool.query(
           `UPDATE products SET stock = stock + $1 WHERE id = $2`,
-          [qty, destProdRes.rows[0].id]
+          [qty, destProdId]
         );
       } else {
-        await pool.query(
-          `INSERT INTO products (client_id, name, brand, sku, description, price, cost_price, color, material, style, stock, min_stock, image_url, variants, attributes) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+        const insertRes = await pool.query(
+          `INSERT INTO products (client_id, name, brand, sku, description, price, cost_price, color, material, style, stock, min_stock, image_url, attributes, has_variants) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
           [
             to_client_id,
             srcProd.name,
@@ -10166,10 +10168,42 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
             qty,
             srcProd.min_stock || 2,
             srcProd.image_url || null,
-            srcProd.variants ? JSON.stringify(srcProd.variants) : null,
-            srcProd.attributes ? JSON.stringify(srcProd.attributes) : null
+            srcProd.attributes ? (typeof srcProd.attributes === 'string' ? srcProd.attributes : JSON.stringify(srcProd.attributes)) : null,
+            Boolean(srcProd.has_variants)
           ]
         );
+        destProdId = insertRes.rows[0].id;
+      }
+
+      // Copiar/sincronizar variantes en product_variants
+      const srcVarsRes = await pool.query(`SELECT * FROM product_variants WHERE product_id = $1`, [product_id]);
+      if (srcVarsRes.rows.length > 0) {
+        for (const v of srcVarsRes.rows) {
+          const destVarCheck = await pool.query(
+            `SELECT id FROM product_variants WHERE product_id = $1 AND (LOWER(variant_name) = LOWER($2) OR (sku IS NOT NULL AND sku != '' AND LOWER(sku) = LOWER($3))) LIMIT 1`,
+            [destProdId, v.variant_name || '', v.sku || '']
+          );
+          if (destVarCheck.rows.length > 0) {
+            await pool.query(`UPDATE product_variants SET stock = stock + $1 WHERE id = $2`, [v.stock || 0, destVarCheck.rows[0].id]);
+          } else {
+            await pool.query(
+              `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, price, cost_price, stock, min_stock, image_url)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+              [
+                destProdId,
+                to_client_id,
+                v.variant_name || null,
+                v.color_hex || null,
+                v.sku || null,
+                v.price || 0,
+                v.cost_price || 0,
+                v.stock || 0,
+                v.min_stock || 1,
+                v.image_url || null
+              ]
+            );
+          }
+        }
       }
 
       await pool.query(
@@ -10218,12 +10252,14 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           [to_client_id, prodId, srcProd.sku || '', srcProd.name]
         );
 
+        let destProdId = '';
         if (destRes.rows.length > 0) {
-          await pool.query(`UPDATE products SET stock = stock + $1 WHERE id = $2`, [qty, destRes.rows[0].id]);
+          destProdId = destRes.rows[0].id;
+          await pool.query(`UPDATE products SET stock = stock + $1 WHERE id = $2`, [qty, destProdId]);
         } else {
-          await pool.query(
-            `INSERT INTO products (client_id, name, brand, sku, description, price, cost_price, color, material, style, stock, min_stock, image_url, variants, attributes) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+          const insertRes = await pool.query(
+            `INSERT INTO products (client_id, name, brand, sku, description, price, cost_price, color, material, style, stock, min_stock, image_url, attributes, has_variants) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
             [
               to_client_id,
               srcProd.name,
@@ -10238,10 +10274,42 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
               qty,
               srcProd.min_stock || 2,
               srcProd.image_url || null,
-              srcProd.variants ? JSON.stringify(srcProd.variants) : null,
-              srcProd.attributes ? JSON.stringify(srcProd.attributes) : null
+              srcProd.attributes ? (typeof srcProd.attributes === 'string' ? srcProd.attributes : JSON.stringify(srcProd.attributes)) : null,
+              Boolean(srcProd.has_variants)
             ]
           );
+          destProdId = insertRes.rows[0].id;
+        }
+
+        // Transfer/replicate variants
+        const srcVarsRes = await pool.query(`SELECT * FROM product_variants WHERE product_id = $1`, [prodId]);
+        if (srcVarsRes.rows.length > 0) {
+          for (const v of srcVarsRes.rows) {
+            const destVarCheck = await pool.query(
+              `SELECT id FROM product_variants WHERE product_id = $1 AND (LOWER(variant_name) = LOWER($2) OR (sku IS NOT NULL AND sku != '' AND LOWER(sku) = LOWER($3))) LIMIT 1`,
+              [destProdId, v.variant_name || '', v.sku || '']
+            );
+            if (destVarCheck.rows.length > 0) {
+              await pool.query(`UPDATE product_variants SET stock = stock + $1 WHERE id = $2`, [v.stock || 0, destVarCheck.rows[0].id]);
+            } else {
+              await pool.query(
+                `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, price, cost_price, stock, min_stock, image_url)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                [
+                  destProdId,
+                  to_client_id,
+                  v.variant_name || null,
+                  v.color_hex || null,
+                  v.sku || null,
+                  v.price || 0,
+                  v.cost_price || 0,
+                  v.stock || 0,
+                  v.min_stock || 1,
+                  v.image_url || null
+                ]
+              );
+            }
+          }
         }
 
         // Log audit item
