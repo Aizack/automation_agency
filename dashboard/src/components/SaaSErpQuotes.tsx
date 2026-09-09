@@ -40,6 +40,12 @@ interface Product {
     price: string;
     stock: number;
     brand?: string | null;
+    model?: string | null;
+    color?: string | null;
+    material?: string | null;
+    style?: string | null;
+    description?: string | null;
+    variants?: any[] | null;
 }
 
 interface SaaSErpQuotesProps {
@@ -672,13 +678,18 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                     </div>
                                     {/* Desplegable de sugerencias */}
                                     {prodSearchInput && !selectedProdId && (() => {
-                                        const q = prodSearchInput.trim().toLowerCase();
-                                        const suggestions = products.filter(p =>
-                                            p.name.toLowerCase().includes(q) ||
-                                            (p.sku && p.sku.toLowerCase().includes(q))
-                                        ).slice(0, 8);
+                                        const rawQuery = prodSearchInput.trim().toLowerCase();
+                                        if (!rawQuery) return null;
+                                        const terms = rawQuery.split(/\s+/).filter(Boolean);
+                                        const suggestions = products.filter(p => {
+                                            const variantsStr = Array.isArray(p.variants)
+                                                ? p.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
+                                                : '';
+                                            const fullSearchable = `${p.name || ''} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.color || ''} ${p.material || ''} ${p.style || ''} ${p.description || ''} ${variantsStr}`.toLowerCase();
+                                            return terms.every(term => fullSearchable.includes(term));
+                                        }).slice(0, 15);
                                         return (
-                                            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#161616] rounded-none shadow-2xl z-50 max-h-52 overflow-y-auto">
+                                            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#161616] rounded-none shadow-2xl z-50 max-h-60 overflow-y-auto">
                                                 {suggestions.length === 0 ? (
                                                     <div className="p-3 text-xs text-[#76746E] italic text-center">No hay productos con ese término. Presiona Agregar para crearlo como ítem libre.</div>
                                                 ) : (
@@ -693,11 +704,17 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                                                 setProdSearchInput(p.name);
                                                                 setAddCustomPrice(parseFloat(p.price || '0'));
                                                             }}
-                                                            className="w-full text-left px-3 py-2 hover:bg-[#FAF8F5] flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent border-b border-[#E2DFD7] last:border-0"
+                                                            className="w-full text-left px-3 py-2.5 hover:bg-[#FAF8F5] flex items-center justify-between gap-2 transition-colors cursor-pointer border-0 bg-transparent border-b border-[#E2DFD7] last:border-0"
                                                         >
                                                             <div>
                                                                 <p className="text-xs font-semibold text-[#161616]">{p.name}</p>
-                                                                <p className="text-[10px] text-[#76746E] font-mono">{p.sku ? `SKU: ${p.sku} • ` : ''}Stock: {p.stock}</p>
+                                                                <p className="text-[10px] text-[#76746E]">
+                                                                    {p.brand ? <span className="font-semibold text-[#161616]">Marca: {p.brand} • </span> : ''}
+                                                                    {p.sku ? `SKU: ${p.sku} • ` : ''}
+                                                                    {p.color ? `Color: ${p.color} • ` : ''}
+                                                                    {p.material ? `Mat: ${p.material} • ` : ''}
+                                                                    Stock: <span className={p.stock > 0 ? "text-[#161616] font-semibold" : "text-[#D9381E] font-bold"}>{p.stock}</span>
+                                                                </p>
                                                             </div>
                                                             <span className="text-xs font-bold text-[#D9381E] font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
                                                         </button>

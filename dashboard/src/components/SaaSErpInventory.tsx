@@ -29,6 +29,7 @@ interface Product {
     supplier_name: string | null;
     supplier_phone: string | null;
     brand: string | null;
+    model?: string | null;
     material: string | null;
     style: string | null;
     color: string | null;
@@ -1114,16 +1115,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     ).sort();
 
     const filteredProducts = products.filter(prod => {
-        const match = searchTerm.trim().toLowerCase();
-        
-        const matchesSearch = !match || (
-            prod.name.toLowerCase().includes(match) ||
-            (prod.sku && prod.sku.toLowerCase().includes(match)) ||
-            (prod.brand && prod.brand.toLowerCase().includes(match)) ||
-            (prod.material && prod.material.toLowerCase().includes(match)) ||
-            (prod.style && prod.style.toLowerCase().includes(match)) ||
-            (prod.color && prod.color.toLowerCase().includes(match))
-        );
+        const rawMatch = searchTerm.trim().toLowerCase();
+        const terms = rawMatch.split(/\s+/).filter(Boolean);
+        const variantsStr = Array.isArray(prod.variants)
+            ? prod.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
+            : '';
+        const fullSearchable = `${prod.name || ''} ${prod.sku || ''} ${prod.brand || ''} ${prod.model || ''} ${prod.color || ''} ${prod.material || ''} ${prod.style || ''} ${prod.description || ''} ${variantsStr}`.toLowerCase();
+
+        const matchesSearch = terms.length === 0 || terms.every(term => fullSearchable.includes(term));
 
         const matchesBrand = filterBrand === 'all' || (prod.brand && prod.brand.toLowerCase() === filterBrand.toLowerCase());
 

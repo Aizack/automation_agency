@@ -50,6 +50,13 @@ interface Product {
     stock: number;
     category_id?: string;
     promo_discount?: number;
+    brand?: string;
+    model?: string;
+    color?: string;
+    material?: string;
+    style?: string;
+    description?: string;
+    variants?: any[];
 }
 
 interface Category {
@@ -689,10 +696,25 @@ export const SaaSErpInvoices2: React.FC<SaaSErpInvoices2Props> = ({ clientId }) 
                                             />
                                             {/* Product Suggestions Dropdown */}
                                             {it.productSearch && !it.productId && (() => {
-                                                const matches = products.filter(p => p.name.toLowerCase().includes(it.productSearch.toLowerCase()) || (p.sku && p.sku.toLowerCase().includes(it.productSearch.toLowerCase()))).slice(0, 6);
-                                                if (matches.length === 0) return null;
+                                                const rawQuery = it.productSearch.trim().toLowerCase();
+                                                if (!rawQuery) return null;
+                                                const terms = rawQuery.split(/\s+/).filter(Boolean);
+                                                const matches = products.filter(p => {
+                                                    const variantsStr = Array.isArray(p.variants)
+                                                        ? p.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
+                                                        : '';
+                                                    const fullSearchable = `${p.name || ''} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.color || ''} ${p.material || ''} ${p.style || ''} ${p.description || ''} ${variantsStr}`.toLowerCase();
+                                                    return terms.every(term => fullSearchable.includes(term));
+                                                }).slice(0, 15);
+                                                if (matches.length === 0) {
+                                                    return (
+                                                        <div className="absolute left-0 right-0 top-full mt-1 bg-surface-container border border-outline/30 rounded-xl shadow-xl z-50 p-3 text-xs text-on-surface-variant italic text-center">
+                                                            No se encontraron productos coincidentes.
+                                                        </div>
+                                                    );
+                                                }
                                                 return (
-                                                    <div className="absolute left-0 right-0 top-full mt-1 bg-surface-container border border-outline/30 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto">
+                                                    <div className="absolute left-0 right-0 top-full mt-1 bg-surface-container border border-outline/30 rounded-xl shadow-xl z-50 max-h-56 overflow-y-auto">
                                                         {matches.map(p => {
                                                             const cat = categories.find(c => c.id === p.category_id);
                                                             return (
@@ -700,11 +722,14 @@ export const SaaSErpInvoices2: React.FC<SaaSErpInvoices2Props> = ({ clientId }) 
                                                                     key={p.id}
                                                                     type="button"
                                                                     onClick={() => selectProductForItem(idx, p)}
-                                                                    className="w-full text-left p-2 hover:bg-primary/10 flex items-center justify-between text-xs cursor-pointer border-b border-outline/5 last:border-0"
+                                                                    className="w-full text-left p-2.5 hover:bg-primary/10 flex items-center justify-between text-xs cursor-pointer border-b border-outline/5 last:border-0"
                                                                 >
                                                                     <div>
                                                                         <p className="font-semibold text-on-surface">{p.name}</p>
                                                                         <p className="text-[10px] text-on-surface-variant">
+                                                                            {p.brand ? `Marca: ${p.brand} • ` : ''}
+                                                                            {p.sku ? `SKU: ${p.sku} • ` : ''}
+                                                                            {p.color ? `Color: ${p.color} • ` : ''}
                                                                             Stock: {p.stock} {cat ? `• ${cat.name}` : ''}
                                                                         </p>
                                                                     </div>

@@ -44,6 +44,13 @@ interface Product {
     sku?: string | null;
     promo_discount?: string | null;
     category_id?: string | null;
+    brand?: string | null;
+    model?: string | null;
+    color?: string | null;
+    material?: string | null;
+    style?: string | null;
+    description?: string | null;
+    variants?: any[] | null;
 }
 
 interface InvoiceItemInput {
@@ -1682,15 +1689,20 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
                                                                 {/* Dropdown de sugerencias de productos */}
                                                                 {item.productSearch && !item.productId && (() => {
-                                                                    const query = item.productSearch.trim().toLowerCase();
-                                                                    const suggestions = products.filter(p =>
-                                                                        p.name.toLowerCase().includes(query) ||
-                                                                        (p.sku && p.sku.toLowerCase().includes(query))
-                                                                    ).slice(0, 8);
+                                                                    const rawQuery = item.productSearch.trim().toLowerCase();
+                                                                    if (!rawQuery) return null;
+                                                                    const terms = rawQuery.split(/\s+/).filter(Boolean);
+                                                                    const suggestions = products.filter(p => {
+                                                                        const variantsStr = Array.isArray(p.variants)
+                                                                            ? p.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
+                                                                            : '';
+                                                                        const fullSearchable = `${p.name || ''} ${p.sku || ''} ${p.brand || ''} ${p.model || ''} ${p.color || ''} ${p.material || ''} ${p.style || ''} ${p.description || ''} ${variantsStr}`.toLowerCase();
+                                                                        return terms.every(term => fullSearchable.includes(term));
+                                                                    }).slice(0, 15);
                                                                     return (
-                                                                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#161616] shadow-2xl z-50 max-h-52 overflow-y-auto divide-y divide-[#E2DFD7] rounded-none">
+                                                                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#161616] shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-[#E2DFD7] rounded-none">
                                                                             {suggestions.length === 0 ? (
-                                                                                <div className="p-3 text-xs text-[#6B6862] italic text-center">No se encontraron productos con ese nombre o SKU.</div>
+                                                                                <div className="p-3 text-xs text-[#6B6862] italic text-center">No se encontraron productos coincidentes con ese término.</div>
                                                                             ) : (
                                                                                 suggestions.map(p => (
                                                                                     <button
@@ -1716,7 +1728,13 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                                     >
                                                                                         <div>
                                                                                             <p className="text-xs font-bold text-[#161616]">{p.name}</p>
-                                                                                            <p className="text-[10px] text-[#6B6862]">{p.sku ? `SKU: ${p.sku} • ` : ''}Stock: {p.stock}</p>
+                                                                                            <p className="text-[10px] text-[#6B6862]">
+                                                                                                {p.brand ? <span className="font-semibold text-[#161616]">Marca: {p.brand} • </span> : ''}
+                                                                                                {p.sku ? `SKU: ${p.sku} • ` : ''}
+                                                                                                {p.color ? `Color: ${p.color} • ` : ''}
+                                                                                                {p.material ? `Mat: ${p.material} • ` : ''}
+                                                                                                Stock: <span className={p.stock > 0 ? "text-[#161616] font-semibold" : "text-[#D9381E] font-bold"}>{p.stock}</span>
+                                                                                            </p>
                                                                                         </div>
                                                                                         <span className="text-xs font-bold text-[#D9381E] font-mono shrink-0">${Number(p.price).toLocaleString('es-CO')}</span>
                                                                                     </button>
