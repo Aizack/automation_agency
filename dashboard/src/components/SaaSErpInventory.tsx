@@ -426,6 +426,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [activePhotoColorIdx, setActivePhotoColorIdx] = useState<number>(0);
     const [colorStartIndex, setColorStartIndex] = useState<number>(0);
     const [productType, setProductType] = useState<'product' | 'service'>('product');
+    const [lensDesign, setLensDesign] = useState<string>('');
+    const [lensMaterial, setLensMaterial] = useState<string>('');
+    const [lensTreatment, setLensTreatment] = useState<string>('');
+    const [isLensMode, setIsLensMode] = useState<boolean>(false);
     const [customAttrs, setCustomAttrs] = useState<any>({});
     // Estructura de Colores con Previsualización y Soporte para Paint Picker
     const [allColors, setAllColors] = useState<Array<{ id: string; name: string; value: string; preview: string; isCustom?: boolean }>>([
@@ -609,7 +613,24 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             const res = await fetch(`/api/clients/${clientId}/categories`);
             const json = await res.json();
             if (json.success) {
-                setCategories(json.categories || []);
+                let catList = json.categories || [];
+                const hasLentesCat = catList.some((c: any) => c.name.toLowerCase().includes('lente'));
+                if (!hasLentesCat) {
+                    try {
+                        const createRes = await fetch(`/api/clients/${clientId}/categories`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name: 'Lentes' })
+                        });
+                        const createJson = await createRes.json();
+                        if (createJson.success && createJson.category) {
+                            catList = [...catList, createJson.category];
+                        }
+                    } catch (e) {
+                        console.warn("Auto-create category Lentes error:", e);
+                    }
+                }
+                setCategories(catList);
             }
         } catch (err) {
             console.error("Error loading categories:", err);
@@ -645,6 +666,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const handleSelectCategory = (catId: string) => {
         setCategoryId(catId);
         setHiddenFields(new Set());
+        const selectedCat = categories.find((c: any) => c.id === catId);
+        if (selectedCat && selectedCat.name.toLowerCase().includes('lente')) {
+            setIsLensMode(true);
+            setProductType('service');
+            setStock(999999);
+        }
     };
 
     const handleCreateCategory = async () => {
@@ -716,7 +743,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const handleSubmit = async (e: React.FormEvent, keepOpen: boolean = false) => {
         e.preventDefault();
         
-        const hasVarBool = hasVariants && productType === 'product' && variantList.length > 0;
+        const isLensType = isLensMode || (categoryId && categories.find((c: any) => c.id === categoryId)?.name.toLowerCase().includes('lente')) || Boolean(lensDesign || lensMaterial || lensTreatment);
+        const resolvedProductType = isLensType ? 'service' : productType;
+        const hasVarBool = !isLensType && hasVariants && resolvedProductType === 'product' && variantList.length > 0;
 
         const formattedVariants = hasVarBool ? variantList.map(v => ({
             variant_name: v.color || 'Variante',
@@ -727,13 +756,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             image_url: v.image_url || null
         })) : [];
 
-        const calculatedTotalStock = productType === 'service'
+        const calculatedTotalStock = resolvedProductType === 'service'
             ? 999999
             : (hasVarBool 
                 ? variantList.reduce((sum, v) => sum + (parseInt(v.stock?.toString() || '0') || 0), 0)
                 : (stock === '' ? 0 : (parseInt(stock.toString()) || 0)));
 
-        const calculatedMinStock = productType === 'service'
+        const calculatedMinStock = resolvedProductType === 'service'
             ? 1
             : (hasVarBool 
                 ? (variantList.length > 0 ? (parseInt(variantList[0].min_stock?.toString() || '1') || 1) : 2)
@@ -741,34 +770,41 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
         const finalSku = hasVarBool 
             ? null 
-            : (sku.trim() || 'OP' + Math.floor(100000 + Math.random() * 900000));
+            : (sku.trim() || (isLensType ? 'LENS-' + Math.floor(10000 + Math.random() * 90000) : 'OP' + Math.floor(100000 + Math.random() * 900000)));
 
         const primaryImageUrl = hasVarBool 
             ? (variantList.find(v => v.image_url?.trim())?.image_url || null) 
             : null;
 
+        const lensDetailStr = [lensDesign, lensMaterial, lensTreatment].filter(Boolean).join(' - ');
+        const finalName = name.trim() || (isLensType ? `Lente ${lensDetailStr}`.trim() : 'Producto Sin Nombre');
+
         const body = { 
-            name, 
+            name: finalName, 
             sku: finalSku, 
-            description, 
+            description: description.trim() || (isLensType ? lensTreatment : null), 
             price: price === '' ? 0 : price, 
             stock: calculatedTotalStock,
             min_stock: calculatedMinStock,
             cost_price: costPrice === '' ? 0 : costPrice,
-            brand: brand.trim() || null,
-            material: material || null,
-            style: style || null,
+            brand: brand.trim() || (isLensType ? 'Lentes' : null),
+            material: isLensType ? (lensMaterial || material || null) : (material || null),
+            style: isLensType ? (lensDesign || style || null) : (style || null),
             color: hasVarBool ? variantList.map(v => v.color).filter(Boolean).join(', ') : (color || null),
             image_url: primaryImageUrl,
             promo_discount: promoDiscount === '' ? 0 : promoDiscount,
             tax_rate: taxRate,
             category_id: categoryId || null,
-            product_type: productType,
+            product_type: resolvedProductType,
             has_variants: hasVarBool,
             variants: formattedVariants,
             attributes: {
                 ...(customAttrs || {}),
-                tax_rate: taxRate
+                tax_rate: taxRate,
+                is_lens: isLensType,
+                lens_design: lensDesign,
+                lens_material: lensMaterial,
+                lens_treatment: lensTreatment
             }
         };
 
@@ -923,8 +959,22 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             : ((prod as any).attributes?.tax_rate !== undefined ? (prod as any).attributes.tax_rate : 0);
         setTaxRate(parseFloat(rawTax.toString()) || 0);
         setCategoryId(prod.category_id || '');
-        setProductType(prod.product_type === 'service' || (prod.stock && prod.stock >= 999999) ? 'service' : 'product');
-        setCustomAttrs((prod as any).attributes || {});
+        const isService = prod.product_type === 'service' || (prod.stock && prod.stock >= 999999);
+        setProductType(isService ? 'service' : 'product');
+        const attrs = (prod as any).attributes || {};
+        setCustomAttrs(attrs);
+
+        const lDesign = attrs.lens_design || prod.style || '';
+        const lMaterial = attrs.lens_material || prod.material || '';
+        const lTreatment = attrs.lens_treatment || prod.description || '';
+        const isLensCat = prod.category_id && categories.find((c: any) => c.id === prod.category_id)?.name.toLowerCase().includes('lente');
+        const isLens = attrs.is_lens || (isService && (lDesign || lMaterial || lTreatment || isLensCat));
+
+        setIsLensMode(Boolean(isLens));
+        setLensDesign(lDesign);
+        setLensMaterial(lMaterial);
+        setLensTreatment(lTreatment);
+
         setAddProductStep('open');
         setHiddenFields(new Set());
 
@@ -980,6 +1030,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         setHiddenFields(new Set());
         setHasVariants(true);
         setVariantList([{ color: 'Negro', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
+        setLensDesign('');
+        setLensMaterial('');
+        setLensTreatment('');
+        setIsLensMode(false);
         setAddProductStep('closed');
     };
 
@@ -1436,50 +1490,135 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     1. Información General del Ítem
                                                 </h4>
 
-                                                {/* Selector Categoría + Selector Tipo de Ítem */}
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Ítem *</label>
-                                                        <select
-                                                            value={productType}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value as 'product' | 'service';
-                                                                setProductType(val);
-                                                                if (val === 'service') setStock(999999);
-                                                                else if (stock === 999999) setStock('');
-                                                            }}
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                        >
-                                                            <option value="product">Producto Inventariable (Físico)</option>
-                                                            <option value="service">Servicio / Honorario Médico (Sin Stock)</option>
-                                                        </select>
-                                                    </div>
+                                                 {/* Selector Categoría + Selector Tipo de Ítem */}
+                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
+                                                     <div className="flex flex-col gap-1.5">
+                                                         <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Ítem *</label>
+                                                         <select
+                                                             value={isLensMode ? 'lens' : productType}
+                                                             onChange={(e) => {
+                                                                 const val = e.target.value;
+                                                                 if (val === 'lens') {
+                                                                     setIsLensMode(true);
+                                                                     setProductType('service');
+                                                                     setStock(999999);
+                                                                     const lentesCat = categories.find((c: any) => c.name.toLowerCase().includes('lente'));
+                                                                     if (lentesCat) setCategoryId(lentesCat.id);
+                                                                 } else {
+                                                                     setIsLensMode(false);
+                                                                     const pVal = val as 'product' | 'service';
+                                                                     setProductType(pVal);
+                                                                     if (pVal === 'service') setStock(999999);
+                                                                     else if (stock === 999999) setStock('');
+                                                                 }
+                                                             }}
+                                                             className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition rounded-none"
+                                                         >
+                                                             <option value="product">Producto Inventariable (Físico)</option>
+                                                             <option value="service">Servicio / Honorario Médico (Sin Stock)</option>
+                                                             <option value="lens">Lente / Cristal Oftálmico (Servicio Sin Stock)</option>
+                                                         </select>
+                                                     </div>
 
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
-                                                            <span>Categoría del Producto *</span>
-                                                        </label>
-                                                        <div className="flex gap-2">
-                                                            <select 
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition w-full rounded-none"
-                                                                value={categoryId}
-                                                                onChange={(e) => {
-                                                                    if (e.target.value === 'new') {
-                                                                        setShowCreateCategoryPrompt(true);
-                                                                    } else {
-                                                                        handleSelectCategory(e.target.value);
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <option value="">-- Selecciona Categoría --</option>
-                                                                {categories.map((cat: any) => (
-                                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                                                ))}
-                                                                <option value="new" className="font-bold text-[#D9381E]">+ Crear Nueva Categoría</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                     <div className="flex flex-col gap-1.5">
+                                                         <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
+                                                             <span>Categoría del Producto *</span>
+                                                         </label>
+                                                         <div className="flex gap-2">
+                                                             <select 
+                                                                 className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition w-full rounded-none"
+                                                                 value={categoryId}
+                                                                 onChange={(e) => {
+                                                                     if (e.target.value === 'new') {
+                                                                         setShowCreateCategoryPrompt(true);
+                                                                     } else {
+                                                                         handleSelectCategory(e.target.value);
+                                                                     }
+                                                                 }}
+                                                             >
+                                                                 <option value="">-- Selecciona Categoría --</option>
+                                                                 {categories.map((cat: any) => (
+                                                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                                 ))}
+                                                                 <option value="new" className="font-bold text-[#D9381E]">+ Crear Nueva Categoría</option>
+                                                             </select>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+
+                                                 {/* Sección Específica de Características del Lente (Diseño, Material, Tratamiento) */}
+                                                 {(isLensMode || (categoryId && categories.find((c: any) => c.id === categoryId)?.name.toLowerCase().includes('lente'))) && (
+                                                     <div className="bg-[#18181B] border border-[#27272A] p-4 rounded-xl space-y-4 mb-5 shadow-2xl text-white">
+                                                         <div className="flex items-center justify-between border-b border-[#27272A] pb-2.5">
+                                                             <div className="flex items-center gap-2">
+                                                                 <span className="material-symbols-outlined text-[#D9381E] text-[18px]">visibility</span>
+                                                                 <span className="text-xs font-bold text-white uppercase tracking-wider">Características del Lente / Cristal</span>
+                                                             </div>
+                                                             <span className="text-[10px] bg-[#D9381E]/20 text-[#D9381E] px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-[#D9381E]/30">
+                                                                 Servicio Sin Stock
+                                                             </span>
+                                                         </div>
+
+                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                             {/* Tipo de Diseño */}
+                                                             <div className="flex flex-col gap-1.5">
+                                                                 <label className="text-[11px] font-semibold text-gray-300">Tipo de Diseño</label>
+                                                                 <select
+                                                                     value={lensDesign}
+                                                                     onChange={(e) => setLensDesign(e.target.value)}
+                                                                     className="w-full bg-[#09090B] border border-[#3F3F46] text-white p-3 rounded-lg text-xs focus:border-[#D9381E] outline-none transition"
+                                                                 >
+                                                                     <option value="">– Seleccione Diseño –</option>
+                                                                     <option value="Monofocal">Monofocal</option>
+                                                                     <option value="Bifocal">Bifocal</option>
+                                                                     <option value="Progresivo">Progresivo / Multifocal</option>
+                                                                     <option value="Ocupacional">Ocupacional</option>
+                                                                     <option value="Anti-fatiga">Anti-fatiga</option>
+                                                                     <option value="Lente de Contacto">Lente de Contacto</option>
+                                                                 </select>
+                                                             </div>
+
+                                                             {/* Material del Cristal */}
+                                                             <div className="flex flex-col gap-1.5">
+                                                                 <label className="text-[11px] font-semibold text-gray-300">Material del Cristal</label>
+                                                                 <select
+                                                                     value={lensMaterial}
+                                                                     onChange={(e) => setLensMaterial(e.target.value)}
+                                                                     className="w-full bg-[#09090B] border border-[#3F3F46] text-white p-3 rounded-lg text-xs focus:border-[#D9381E] outline-none transition"
+                                                                 >
+                                                                     <option value="">– Seleccione Material –</option>
+                                                                     <option value="CR-39 / Orgánico">CR-39 / Orgánico (1.56)</option>
+                                                                     <option value="Policarbonato">Policarbonato (1.59)</option>
+                                                                     <option value="Alto Índice 1.67">Alto Índice 1.67</option>
+                                                                     <option value="Alto Índice 1.74">Alto Índice 1.74</option>
+                                                                     <option value="Trivex / Polilite">Trivex / Polilite</option>
+                                                                     <option value="Cristal / Vidrio">Cristal / Vidrio</option>
+                                                                     <option value="Hidrogel de Silicona">Hidrogel de Silicona</option>
+                                                                 </select>
+                                                             </div>
+
+                                                             {/* Tratamiento / Filtro */}
+                                                             <div className="flex flex-col gap-1.5 sm:col-span-2">
+                                                                 <label className="text-[11px] font-semibold text-gray-300">Tratamiento / Filtro</label>
+                                                                 <select
+                                                                     value={lensTreatment}
+                                                                     onChange={(e) => setLensTreatment(e.target.value)}
+                                                                     className="w-full bg-[#09090B] border border-[#3F3F46] text-white p-3 rounded-lg text-xs focus:border-[#D9381E] outline-none transition"
+                                                                 >
+                                                                     <option value="">– Seleccione Tratamiento –</option>
+                                                                     <option value="Sencillo / Blanco">Sencillo / Blanco (Sin Filtro)</option>
+                                                                     <option value="Antirreflejo (AR)">Antirreflejo (AR)</option>
+                                                                     <option value="Filtro Azul (Blue Cut)">Filtro Azul (Blue Block / Blue Cut)</option>
+                                                                     <option value="Fotocromático (Transitions)">Fotocromático (Transitions / Chromatic)</option>
+                                                                     <option value="Antirreflejo + Filtro Azul">Antirreflejo + Filtro Azul</option>
+                                                                     <option value="Fotocromático + Antirreflejo">Fotocromático + Antirreflejo</option>
+                                                                     <option value="Polarizado">Polarizado</option>
+                                                                     <option value="Espejado">Espejado</option>
+                                                                 </select>
+                                                             </div>
+                                                         </div>
+                                                     </div>
+                                                 )}
 
                                                 {/* Marca & Referencia / Modelo */}
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
