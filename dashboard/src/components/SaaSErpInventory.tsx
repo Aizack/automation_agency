@@ -1612,10 +1612,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                      <option value="">– Seleccione Tratamiento –</option>
                                                                      <option value="Sencillo / Blanco">Sencillo / Blanco (Sin Filtro)</option>
                                                                      <option value="Antirreflejo (AR)">Antirreflejo (AR)</option>
-                                                                     <option value="Filtro Azul (Blue Cut)">Filtro Azul (Blue Block / Blue Cut)</option>
-                                                                     <option value="Fotocromático (Transitions)">Fotocromático (Transitions / Chromatic)</option>
-                                                                     <option value="Antirreflejo + Filtro Azul">Antirreflejo + Filtro Azul</option>
-                                                                     <option value="Fotocromático + Antirreflejo">Fotocromático + Antirreflejo</option>
+                                                                     <option value="AR-Blue (Filtro Azul)">AR-Blue (Filtro Azul / AR Blue)</option>
+                                                                     <option value="Fotocromático (Transitions)">Fotocromático (Transitions)</option>
+                                                                     <option value="Fotocromático AR-Blue">Fotocromático AR-Blue (Transitions + AR Blue)</option>
                                                                      <option value="Polarizado">Polarizado</option>
                                                                      <option value="Espejado">Espejado</option>
                                                                  </select>

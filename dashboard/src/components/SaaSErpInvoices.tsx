@@ -1958,14 +1958,13 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                         className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] focus:border-[#161616] outline-none rounded-none font-sans"
                                                                     >
                                                                         <option value="">-- Seleccionar Tratamiento --</option>
-                                                                        <option value="Antirreflejo Estándar">Antirreflejo Estándar</option>
-                                                                        <option value="Filtro Azul (Blue Block)">Filtro Azul (Blue Block)</option>
+                                                                        <option value="Sencillo / Blanco">Sencillo / Blanco (Sin Filtro)</option>
+                                                                        <option value="Antirreflejo (AR)">Antirreflejo (AR)</option>
+                                                                        <option value="AR-Blue (Filtro Azul)">AR-Blue (Filtro Azul / AR Blue)</option>
                                                                         <option value="Fotocromático (Transitions)">Fotocromático (Transitions)</option>
-                                                                        <option value="Antirreflejo + Filtro Azul">Antirreflejo + Filtro Azul</option>
-                                                                        <option value="Antirreflejo + Fotocromático">Antirreflejo + Fotocromático</option>
-                                                                        <option value="Antirreflejo + Transitions + Filtro Azul">Antirreflejo + Transitions + Filtro Azul</option>
-                                                                        <option value="Espejado">Espejado</option>
+                                                                        <option value="Fotocromático AR-Blue">Fotocromático AR-Blue (Transitions + AR Blue)</option>
                                                                         <option value="Polarizado">Polarizado</option>
+                                                                        <option value="Espejado">Espejado</option>
                                                                     </select>
                                                                 </div>
                                                             </div>

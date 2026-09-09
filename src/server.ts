@@ -7445,12 +7445,26 @@ app.get('/api/clients/:clientId/lab-jobs', authenticateToken as any, authorizeCl
                WHERE ii.invoice_id = j.invoice_id AND (ii.product_type = 'inventory' OR (ii.product_name NOT LIKE 'Lente%' AND ii.product_name NOT LIKE 'Servicio%'))
              ) as frame_name
       FROM lab_jobs j
-      LEFT JOIN crm_customers c ON j.customer_id = c.id
       LEFT JOIN invoices i ON j.invoice_id = i.id
+      LEFT JOIN LATERAL (
+        SELECT * FROM crm_customers 
+        WHERE client_id = j.client_id AND (
+          id = j.customer_id 
+          OR (i.customer_id IS NOT NULL AND id = i.customer_id)
+          OR (i.customer_document_number IS NOT NULL AND i.customer_document_number != '' AND document_number = i.customer_document_number)
+          OR (i.customer_name IS NOT NULL AND i.customer_name != '' AND (LOWER(CONCAT(name, ' ', last_name)) LIKE LOWER(CONCAT('%', LOWER(i.customer_name), '%')) OR LOWER(i.customer_name) LIKE LOWER(CONCAT('%', LOWER(name), '%'))))
+        )
+        ORDER BY created_at DESC LIMIT 1
+      ) c ON true
       LEFT JOIN suppliers s ON j.supplier_id = s.id
       LEFT JOIN LATERAL (
         SELECT * FROM formulas 
-        WHERE id = j.formula_id OR (j.formula_id IS NULL AND customer_id = j.customer_id) 
+        WHERE client_id = j.client_id AND (
+          id = j.formula_id 
+          OR (j.customer_id IS NOT NULL AND customer_id = j.customer_id)
+          OR (i.customer_id IS NOT NULL AND customer_id = i.customer_id)
+          OR (c.id IS NOT NULL AND customer_id = c.id)
+        ) 
         ORDER BY created_at DESC LIMIT 1
       ) f ON true
       WHERE j.client_id = $1
