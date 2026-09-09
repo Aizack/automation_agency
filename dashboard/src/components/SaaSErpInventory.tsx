@@ -1546,15 +1546,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                      </div>
                                                  </div>
 
-                                                 {/* Sección Específica de Características del Lente (Diseño, Material, Tratamiento) */}
+                                                 {/* Sección Específica de Características del Lente (Diseño, Material, Tratamiento) - Estética Papel Wabi-Sabi */}
                                                  {(isLensMode || (categoryId && categories.find((c: any) => c.id === categoryId)?.name.toLowerCase().includes('lente'))) && (
-                                                     <div className="bg-[#18181B] border border-[#27272A] p-4 rounded-xl space-y-4 mb-5 shadow-2xl text-white">
-                                                         <div className="flex items-center justify-between border-b border-[#27272A] pb-2.5">
+                                                     <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-4 space-y-4 mb-5 rounded-none text-[#161616]">
+                                                         <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2.5">
                                                              <div className="flex items-center gap-2">
                                                                  <span className="material-symbols-outlined text-[#D9381E] text-[18px]">visibility</span>
-                                                                 <span className="text-xs font-bold text-white uppercase tracking-wider">Características del Lente / Cristal</span>
+                                                                 <span className="text-xs font-bold text-[#161616] uppercase tracking-wider">Características del Lente / Cristal</span>
                                                              </div>
-                                                             <span className="text-[10px] bg-[#D9381E]/20 text-[#D9381E] px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-[#D9381E]/30">
+                                                             <span className="text-[10px] bg-white text-[#6B6862] border border-[#E2DFD7] px-2 py-0.5 font-mono uppercase tracking-wider">
                                                                  Servicio Sin Stock
                                                              </span>
                                                          </div>
@@ -1562,11 +1562,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                              {/* Tipo de Diseño */}
                                                              <div className="flex flex-col gap-1.5">
-                                                                 <label className="text-[11px] font-semibold text-gray-300">Tipo de Diseño</label>
+                                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Diseño</label>
                                                                  <select
                                                                      value={lensDesign}
                                                                      onChange={(e) => setLensDesign(e.target.value)}
-                                                                     className="w-full bg-[#09090B] border border-[#3F3F46] text-white p-3 rounded-lg text-xs focus:border-[#D9381E] outline-none transition"
+                                                                     className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
                                                                  >
                                                                      <option value="">– Seleccione Diseño –</option>
                                                                      <option value="Monofocal">Monofocal</option>
@@ -1580,11 +1580,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                                                              {/* Material del Cristal */}
                                                              <div className="flex flex-col gap-1.5">
-                                                                 <label className="text-[11px] font-semibold text-gray-300">Material del Cristal</label>
+                                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Material del Cristal</label>
                                                                  <select
                                                                      value={lensMaterial}
                                                                      onChange={(e) => setLensMaterial(e.target.value)}
-                                                                     className="w-full bg-[#09090B] border border-[#3F3F46] text-white p-3 rounded-lg text-xs focus:border-[#D9381E] outline-none transition"
+                                                                     className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
                                                                  >
                                                                      <option value="">– Seleccione Material –</option>
                                                                      <option value="CR-39 / Orgánico">CR-39 / Orgánico (1.56)</option>
@@ -1599,11 +1599,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                                                              {/* Tratamiento / Filtro */}
                                                              <div className="flex flex-col gap-1.5 sm:col-span-2">
-                                                                 <label className="text-[11px] font-semibold text-gray-300">Tratamiento / Filtro</label>
+                                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tratamiento / Filtro</label>
                                                                  <select
                                                                      value={lensTreatment}
                                                                      onChange={(e) => setLensTreatment(e.target.value)}
-                                                                     className="w-full bg-[#09090B] border border-[#3F3F46] text-white p-3 rounded-lg text-xs focus:border-[#D9381E] outline-none transition"
+                                                                     className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
                                                                  >
                                                                      <option value="">– Seleccione Tratamiento –</option>
                                                                      <option value="Sencillo / Blanco">Sencillo / Blanco (Sin Filtro)</option>
