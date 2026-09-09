@@ -241,28 +241,22 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           <form onSubmit={handleNegocioLogin} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
             
             {/* Sub-selector de tipo de ingreso al ERP */}
-            <div style={{ display: 'flex', gap: 6, background: 'var(--surface-container-val)', padding: 3, borderRadius: 'var(--radius-md)' }}>
+            <div className="login-sub-selector">
               <button
                 type="button"
                 onClick={() => { setNegocioMode('admin'); setError(null); }}
-                style={{
-                  flex: 1, padding: '6px 10px', fontSize: '0.72rem', fontWeight: 700, borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-                  background: negocioMode === 'admin' ? 'var(--surface-bright-val)' : 'transparent',
-                  color: negocioMode === 'admin' ? 'var(--primary-color)' : 'var(--text-muted)'
-                }}
+                className={`login-sub-tab ${negocioMode === 'admin' ? 'active' : ''}`}
               >
-                👑 Dueño / Admin
+                <span>👑</span>
+                <span>Dueño / Admin</span>
               </button>
               <button
                 type="button"
                 onClick={() => { setNegocioMode('employee_erp'); setError(null); }}
-                style={{
-                  flex: 1, padding: '6px 10px', fontSize: '0.72rem', fontWeight: 700, borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer',
-                  background: negocioMode === 'employee_erp' ? 'var(--surface-bright-val)' : 'transparent',
-                  color: negocioMode === 'employee_erp' ? 'var(--primary-color)' : 'var(--text-muted)'
-                }}
+                className={`login-sub-tab ${negocioMode === 'employee_erp' ? 'active' : ''}`}
               >
-                💼 Personal ERP
+                <span>💼</span>
+                <span>Personal ERP</span>
               </button>
             </div>
 

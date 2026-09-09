@@ -1347,36 +1347,82 @@ label,
 
 .login-tabs {
   display: flex;
-  background: var(--surface-container-val);
-  border-radius: var(--radius-lg);
+  background: #F4F1EA;
+  border-radius: 10px;
   padding: 4px;
   gap: 4px;
-  border: 1px solid var(--outline-variant-color);
+  border: 1px solid #D8D4C9;
 }
 
 .login-tab {
   flex: 1;
-  padding: var(--space-2) var(--space-4);
-  border: none;
-  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 7px;
   background: transparent;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: #6B6862;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  letter-spacing: 0.03em;
+  transition: all 0.18s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .login-tab.active {
-  background: var(--primary-color);
-  color: var(--on-primary);
-  box-shadow: var(--shadow-ocre);
+  background: #161616;
+  color: #FFFFFF;
+  border-color: #161616;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 .login-tab:not(.active):hover {
-  color: var(--text-color);
-  background: var(--surface-container-high-val);
+  color: #161616;
+  background: #E5E0D5;
+}
+
+/* Sub-selector de Rol Login (Dueño / Admin vs Personal ERP) */
+.login-sub-selector {
+  display: flex;
+  gap: 6px;
+  background: #F4F1EA;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid #D8D4C9;
+  margin-bottom: 4px;
+}
+
+.login-sub-tab {
+  flex: 1;
+  padding: 9px 12px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  border-radius: 6px;
+  border: 1px solid #D8D4C9;
+  cursor: pointer;
+  transition: all 0.18s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #FFFFFF;
+  color: #6B6862;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.login-sub-tab.active {
+  background: #D9381E;
+  color: #FFFFFF;
+  border-color: #D9381E;
+  box-shadow: 0 2px 8px rgba(217, 56, 30, 0.25);
+}
+
+.login-sub-tab:not(.active):hover {
+  background: #EAE5DB;
+  color: #161616;
+  border-color: #B8B3A6;
 }
 
 /* ==========================================================================
