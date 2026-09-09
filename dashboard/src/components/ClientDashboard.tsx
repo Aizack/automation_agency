@@ -109,6 +109,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     }
   })();
 
+  const employeeAllowedBranches: string[] = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('employee_allowed_branches') || '[]');
+    } catch {
+      return [];
+    }
+  })();
+
   const hasPermission = (moduleKey: string) => {
     if (!isEmployeeSession) return true; // Admins y dueños del negocio ven todo
     return employeePermissions.includes(moduleKey);
@@ -281,7 +289,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   const [branchPersonTypeInput, setBranchPersonTypeInput] = useState('persona_juridica');
   const [branchInvoiceFooterInput, setBranchInvoiceFooterInput] = useState('');
   const [hasCustomTaxIdInput, setHasCustomTaxIdInput] = useState(false);
-  const [legalNameInput, setLegalNameInput] = useState('');
   const [customTaxIdInput, setCustomTaxIdInput] = useState('');
   const [savingBranch, setSavingBranch] = useState(false);
 
@@ -293,7 +300,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
       });
       const json = await res.json();
       if (json.success) {
-        setBranches(json.branches || []);
+        let allBranches = json.branches || [];
+        if (isEmployeeSession && employeeAllowedBranches.length > 0) {
+          const allowed = allBranches.filter((b: any) => employeeAllowedBranches.includes(b.id));
+          allBranches = allowed.length > 0 ? allowed : allBranches;
+        }
+        setBranches(allBranches);
       }
     } catch (err) {
       console.error("Error cargando sucursales:", err);
@@ -303,6 +315,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   useEffect(() => {
     fetchBranches();
   }, [clientId]);
+
+  useEffect(() => {
+    if (isEmployeeSession && employeeAllowedBranches.length > 0 && branches.length > 0) {
+      const isAllowed = branches.some((b: any) => b.id === clientId);
+      if (!isAllowed) {
+        const fallbackBranchId = branches[0].id;
+        localStorage.setItem('current_client_id', fallbackBranchId);
+        window.location.reload();
+      }
+    }
+  }, [branches, clientId, isEmployeeSession]);
 
   // Cargar historial de logotipos
   const fetchLogos = async () => {
@@ -1774,7 +1797,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                           category: branchCategoryInput,
                           invoice_footer: branchInvoiceFooterInput,
                           has_custom_tax_id: hasCustomTaxIdInput,
-                          legal_name: hasCustomTaxIdInput ? legalNameInput : resolvedCompanyName,
+                          legal_name: resolvedCompanyName,
                           custom_tax_id: hasCustomTaxIdInput ? customTaxIdInput : null
                         })
                       });
@@ -1788,7 +1811,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                         setBranchEmailInput('');
                         setBranchInvoiceFooterInput('');
                         setHasCustomTaxIdInput(false);
-                        setLegalNameInput('');
                         setCustomTaxIdInput('');
                         fetchBranches();
                       } else {
@@ -1865,11 +1887,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                         <div className="flex items-center gap-2">
                           <span className="material-symbols-outlined text-primary text-base">badge</span>
                           <span className="text-xs font-bold text-[#161616]">
-                            ¿Esta sede maneja NIT / Razón Social independiente?
+                            ¿Esta sede maneja NIT independiente?
                           </span>
                         </div>
                         <p className="text-[11px] text-[#6B6862] mt-0.5">
-                          Actívalo si la sucursal factura con su propio NIT y representante legal distinto a la matriz.
+                          Actívalo si la sucursal factura con su propio NIT ante la DIAN.
                         </p>
                       </div>
 
@@ -1896,7 +1918,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     </div>
 
                     {hasCustomTaxIdInput ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 mt-3 border-t border-[#E2DFD7]">
+                      <div className="pt-3 mt-3 border-t border-[#E2DFD7]">
                         <div className="space-y-1">
                           <label className="text-[11px] font-bold text-[#6B6862] uppercase">NIT / Identificación Fiscal Propia *</label>
                           <input
@@ -1905,25 +1927,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                             placeholder="Ej. 900.123.456-7"
                             value={customTaxIdInput}
                             onChange={(e) => setCustomTaxIdInput(e.target.value)}
-                            className="w-full bg-white border border-[#E2DFD7] rounded-md p-2.5 text-[#161616] outline-none focus:border-primary"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold text-[#6B6862] uppercase">Razón Social Legal de Facturación *</label>
-                          <input
-                            type="text"
-                            required={hasCustomTaxIdInput}
-                            placeholder="Ej. Comercializadora Alfa S.A.S."
-                            value={legalNameInput}
-                            onChange={(e) => setLegalNameInput(e.target.value)}
-                            className="w-full bg-white border border-[#E2DFD7] rounded-md p-2.5 text-[#161616] outline-none focus:border-primary"
+                            className="w-full bg-white border border-[#E2DFD7] rounded-md p-2.5 text-[#161616] outline-none focus:border-primary font-mono font-semibold"
                           />
                         </div>
                       </div>
                     ) : (
                       <p className="text-xs text-[#D9381E] font-medium italic flex items-center gap-1.5 bg-[#FAF8F3] p-2.5 rounded-md border border-[#E2DFD7] mt-3">
                         <span className="material-symbols-outlined text-base text-[#D9381E]">info</span>
-                        Esta sede heredará automáticamente el NIT y Razón Social de la Casa Matriz.
+                        Esta sede heredará automáticamente el NIT de la Casa Matriz.
                       </p>
                     )}
                   </div>
@@ -2129,7 +2140,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
         {activeTab === 'empleados' && (
           <div className="animate-fade-in">
-            <SaaSErpEmployees clientId={clientId} />
+            <SaaSErpEmployees clientId={clientId} category={clientData?.category || category} />
           </div>
         )}
 

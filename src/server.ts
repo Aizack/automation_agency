@@ -926,6 +926,7 @@ app.post('/api/login', async (req: Request, res: Response) => {
     const employeeUserResult = await pool.query(
       `SELECT e.id AS employee_id, e.name, e.last_name, e.phone, e.pin, e.role AS employee_role, e.client_id, e.is_active,
               COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules,
+              COALESCE(e.allowed_branches, '[]'::jsonb) AS allowed_branches,
               c.name AS client_name, c.is_activated
        FROM employees e
        INNER JOIN clients c ON e.client_id = c.id
@@ -959,6 +960,9 @@ app.post('/api/login', async (req: Request, res: Response) => {
         }
 
         const permissions = Array.isArray(empUser.allowed_modules) ? empUser.allowed_modules : [];
+        const allowedBranches = Array.isArray(empUser.allowed_branches)
+          ? empUser.allowed_branches
+          : (typeof empUser.allowed_branches === 'string' ? JSON.parse(empUser.allowed_branches || '[]') : []);
         const isEmpAdmin = (empUser.employee_role === 'admin' || empUser.employee_role === 'superadmin' || empUser.employee_role === 'dueño');
         const sessionRole = isEmpAdmin ? 'client' : 'employee';
         const sessionId = crypto.randomUUID();
@@ -974,6 +978,7 @@ app.post('/api/login', async (req: Request, res: Response) => {
             role: sessionRole,
             clientId: empUser.client_id,
             permissions,
+            allowedBranches,
             sessionId
           },
           JWT_SECRET,
@@ -992,6 +997,8 @@ app.post('/api/login', async (req: Request, res: Response) => {
             role: sessionRole,
             employeeRole: empUser.employee_role,
             permissions,
+            allowedBranches,
+            allowed_branches: allowedBranches,
             hasErpAccess: true,
             token
           }
@@ -1016,7 +1023,9 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
 
     if (authReq.user.role === 'employee') {
       const employeeResult = await pool.query(
-        `SELECT e.id, e.client_id, e.name, e.phone, e.role, e.is_active
+        `SELECT e.id, e.client_id, e.name, e.phone, e.role, e.is_active,
+                COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules,
+                COALESCE(e.allowed_branches, '[]'::jsonb) AS allowed_branches
          FROM employees e
          WHERE e.id = $1 AND e.is_active = TRUE LIMIT 1`,
         [authReq.user.id]
@@ -1039,10 +1048,14 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
       };
 
       const employeeRoleLower = (emp.role || '').toLowerCase().trim();
-      const defaultPerms = ROLE_PERMISSIONS[employeeRoleLower] ?? ['domicilios', 'cartera'];
-      const permissions = (Array.isArray(emp.allowed_modules) && emp.allowed_modules.length > 0)
-        ? emp.allowed_modules
-        : defaultPerms;
+      const defaultPerms = ROLE_PERMISSIONS[employeeRoleLower] ?? ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad'];
+      const empModules = Array.isArray(emp.allowed_modules) 
+        ? emp.allowed_modules 
+        : (typeof emp.allowed_modules === 'string' ? JSON.parse(emp.allowed_modules || '[]') : []);
+      const permissions = empModules.length > 0 ? empModules : defaultPerms;
+      const allowedBranches = Array.isArray(emp.allowed_branches)
+        ? emp.allowed_branches
+        : (typeof emp.allowed_branches === 'string' ? JSON.parse(emp.allowed_branches || '[]') : []);
 
       return res.json({
         success: true,
@@ -1053,6 +1066,8 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
           role: 'employee',
           employeeRole: emp.role,
           permissions,
+          allowedBranches,
+          allowed_branches: allowedBranches,
           clientId: emp.client_id,
           hasErpAccess: permissions.length > 0,
         }
@@ -5962,10 +5977,11 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
 
     const cleanPhone = phone.replace(/\D/g, '');
 
-    // Buscar en la tabla de empleados incluyendo e.allowed_modules
+    // Buscar en la tabla de empleados incluyendo e.allowed_modules y e.allowed_branches
     const result = await pool.query(
       `SELECT e.id, e.client_id, e.name, e.phone, e.role, e.pin, e.is_active,
               COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules,
+              COALESCE(e.allowed_branches, '[]'::jsonb) AS allowed_branches,
               c.name as client_name, c.category as client_category 
        FROM employees e
        JOIN clients c ON e.client_id = c.id
@@ -6010,6 +6026,10 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
       permissions = ALL_FULL_MODULES;
     }
 
+    const allowedBranches = Array.isArray(emp.allowed_branches)
+      ? emp.allowed_branches
+      : (typeof emp.allowed_branches === 'string' ? JSON.parse(emp.allowed_branches || '[]') : []);
+
     const hasErpAccess = true;
 
     // Firmar token JWT con rol 'employee', clientId y permissions
@@ -6022,6 +6042,7 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
         clientId: emp.client_id,
         name: emp.name,
         permissions,
+        allowedBranches,
         hasErpAccess,
       },
       JWT_SECRET,
@@ -6040,6 +6061,8 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
         clientName: emp.client_name,
         clientCategory: emp.client_category || 'general',
         permissions,
+        allowedBranches,
+        allowed_branches: allowedBranches,
         hasErpAccess,
         token
       }
@@ -9700,19 +9723,35 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 
   // --- MÓDULO MULTI-SEDE & MULTI-BODEGA (PARENT-CHILD TENANT) ---
 
+  // Helper para garantizar dinámicamente las columnas de sedes en la tabla clients
+  const ensureBranchSchema = async () => {
+    const queries = [
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS parent_client_id VARCHAR(50);`,
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS branch_name VARCHAR(150);`,
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_main_branch BOOLEAN DEFAULT true;`,
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS has_custom_tax_id BOOLEAN DEFAULT false;`,
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS legal_name VARCHAR(200);`,
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS custom_tax_id VARCHAR(50);`,
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone VARCHAR(50);`,
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS address VARCHAR(255);`,
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS email VARCHAR(100);`,
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS nit VARCHAR(50);`,
+      `ALTER TABLE clients ADD COLUMN IF NOT EXISTS invoice_footer TEXT;`,
+      `ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;`,
+      `ALTER TABLE clients ALTER COLUMN system_prompt DROP NOT NULL;`
+    ];
+    for (const q of queries) {
+      try {
+        await pool.query(q);
+      } catch (err: any) {}
+    }
+  };
+
   // 1. Obtener sedes sucursales asociadas a la empresa matriz
   app.get('/api/clients/:clientId/branches', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
-
-      // Garantizar dinámicamente la existencia de columnas en clients
-      try {
-        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone VARCHAR(50);`);
-        await pool.query(`ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;`);
-        await pool.query(`ALTER TABLE clients ALTER COLUMN system_prompt DROP NOT NULL;`);
-      } catch (schemaErr: any) {
-        console.error("[Branches Schema Init Warning]:", schemaErr?.message);
-      }
+      await ensureBranchSchema();
 
       const result = await pool.query(
         `SELECT id, name, branch_name, is_main_branch, parent_client_id, phone, address, has_custom_tax_id, legal_name, custom_tax_id, created_at 
@@ -9752,14 +9791,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         return res.status(400).json({ success: false, error: 'Nombre de empresa y nombre de la sede son obligatorios.' });
       }
 
-      // Garantizar dinámicamente la existencia de columnas en clients
-      try {
-        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone VARCHAR(50);`);
-        await pool.query(`ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;`);
-        await pool.query(`ALTER TABLE clients ALTER COLUMN system_prompt DROP NOT NULL;`);
-      } catch (schemaErr: any) {
-        console.error("[Branches Schema Init Warning]:", schemaErr?.message);
-      }
+      await ensureBranchSchema();
 
       // Resolver cliente raíz y sus datos tributarios/comerciales por defecto
       const parentCheck = await pool.query('SELECT id, parent_client_id, nit, category, person_type, invoice_footer FROM clients WHERE id = $1', [clientId]);

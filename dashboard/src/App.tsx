@@ -158,6 +158,7 @@ function App() {
           } else if (user.role === 'employee') {
             localStorage.setItem('employee_role', user.employeeRole || '');
             localStorage.setItem('employee_permissions', JSON.stringify(user.permissions || []));
+            localStorage.setItem('employee_allowed_branches', JSON.stringify(user.allowedBranches || user.allowed_branches || []));
             const savedClientId = localStorage.getItem('current_client_id');
             const empClientId = savedClientId || user.clientId;
             if (empClientId) {
@@ -236,6 +237,7 @@ function App() {
     } else if (role === 'employee') {
       localStorage.setItem('employee_role', extra?.employeeRole || '');
       localStorage.setItem('employee_permissions', JSON.stringify(extra?.permissions || []));
+      localStorage.setItem('employee_allowed_branches', JSON.stringify(extra?.allowedBranches || extra?.allowed_branches || []));
       localStorage.setItem('current_client_id', id);
 
       sessionStorage.setItem('emp_token', token);

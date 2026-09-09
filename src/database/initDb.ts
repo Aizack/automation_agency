@@ -758,18 +758,29 @@ export const initDatabase = async () => {
         await pool.query(`
             ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS birth_date DATE;
             ALTER TABLE crm_customers ADD COLUMN IF NOT EXISTS customer_type VARCHAR(20) DEFAULT 'persona';
+        `);
 
-            ALTER TABLE clients ADD COLUMN IF NOT EXISTS parent_client_id VARCHAR(50) REFERENCES clients(id) ON DELETE CASCADE;
-            ALTER TABLE clients ADD COLUMN IF NOT EXISTS branch_name VARCHAR(150);
-            ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_main_branch BOOLEAN DEFAULT true;
-            ALTER TABLE clients ADD COLUMN IF NOT EXISTS has_custom_tax_id BOOLEAN DEFAULT false;
-            ALTER TABLE clients ADD COLUMN IF NOT EXISTS legal_name VARCHAR(200);
-            ALTER TABLE clients ADD COLUMN IF NOT EXISTS custom_tax_id VARCHAR(50);
-            ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
-            ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;
-            ALTER TABLE clients ALTER COLUMN system_prompt DROP NOT NULL;
-            ALTER TABLE employees ADD COLUMN IF NOT EXISTS allowed_branches JSONB DEFAULT '[]'::jsonb;
-            ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;
+        const safeAlterQueries = [
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS parent_client_id VARCHAR(50);`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS branch_name VARCHAR(150);`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_main_branch BOOLEAN DEFAULT true;`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS has_custom_tax_id BOOLEAN DEFAULT false;`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS legal_name VARCHAR(200);`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS custom_tax_id VARCHAR(50);`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone VARCHAR(50);`,
+            `ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;`,
+            `ALTER TABLE clients ALTER COLUMN system_prompt DROP NOT NULL;`,
+            `ALTER TABLE employees ADD COLUMN IF NOT EXISTS allowed_branches JSONB DEFAULT '[]'::jsonb;`,
+            `ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;`
+        ];
+
+        for (const q of safeAlterQueries) {
+            try {
+                await pool.query(q);
+            } catch (err: any) {}
+        }
+
+        await pool.query(`
 
             CREATE TABLE IF NOT EXISTS employee_branch_transfers (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

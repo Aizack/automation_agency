@@ -47,6 +47,7 @@ interface Shift {
 
 interface SaaSErpEmployeesProps {
     clientId: string;
+    category?: string;
     viewMode?: 'personal' | 'turnos';
 }
 
@@ -294,13 +295,17 @@ const MODULES = [
     { key: 'system_status', label: '🔧 Estado del Sistema' },
 ] as const;
 
-export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: rawClientId, viewMode }) => {
+export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: rawClientId, category, viewMode }) => {
     const clientId = (rawClientId && rawClientId !== 'undefined')
         ? rawClientId
         : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
+
+    const isRestaurant = (category || '').toLowerCase().includes('restauran') || (category || '').toLowerCase().includes('gastro');
+    const restaurantRolesList = ['mesero', 'cocinero', 'bartender', 'capitan_meseros'];
+
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
-    const [workRoles, setWorkRoles] = useState<string[]>(['agent', 'sales', 'delivery', 'admin']);
+    const [workRoles, setWorkRoles] = useState<string[]>(isRestaurant ? ['agent', 'sales', 'delivery', 'admin', 'mesero', 'cocinero', 'bartender', 'caja', 'capitan_meseros'] : ['agent', 'sales', 'delivery', 'admin', 'caja']);
     const [loading, setLoading] = useState(true);
     const [employeeAccessPermissions, setEmployeeAccessPermissions] = useState<string[]>(['inventory', 'billing', 'crm', 'calendar', 'employees', 'hr', 'deliveries', 'whatsapp_bot']);
     const [employeeBranchPermissions, setEmployeeBranchPermissions] = useState<string[]>([]);
@@ -534,7 +539,11 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             if (deptJson.success) setDepartments(deptJson.departments || []);
             if (rolesJson.success) {
                 const roles = (rolesJson.roles || []).map((role: any) => String(role.name || '').trim().toLowerCase()).filter(Boolean);
-                setWorkRoles(Array.from(new Set(['agent', 'sales', 'delivery', 'admin', 'mesero', 'cocinero', 'bartender', 'caja', 'capitan_meseros', ...roles])));
+                const defaultRoles = isRestaurant 
+                    ? ['agent', 'sales', 'delivery', 'admin', 'mesero', 'cocinero', 'bartender', 'caja', 'capitan_meseros']
+                    : ['agent', 'sales', 'delivery', 'admin', 'caja'];
+                const mergedRoles = Array.from(new Set([...defaultRoles, ...roles])).filter(r => isRestaurant || !restaurantRolesList.includes(r));
+                setWorkRoles(mergedRoles);
             }
             if (branchesJson.success) {
                 setBranchesList(branchesJson.branches || []);
@@ -845,12 +854,17 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                 .filter((role): role is string => Boolean(role && role.trim()))
                 .map((role) => role.trim().toLowerCase());
 
-            const merged = Array.from(new Set(['agent', 'sales', 'delivery', 'admin', 'mesero', 'cocinero', 'bartender', 'caja', 'capitan_meseros', ...dbRoles, ...workRoles.map((role) => role.trim().toLowerCase())]));
-            const sorted = merged.filter((role) => role && role.trim().length > 0).sort((a, b) => a.localeCompare(b));
+            const defaultRoles = isRestaurant 
+                ? ['agent', 'sales', 'delivery', 'admin', 'mesero', 'cocinero', 'bartender', 'caja', 'capitan_meseros']
+                : ['agent', 'sales', 'delivery', 'admin', 'caja'];
+            const merged = Array.from(new Set([...defaultRoles, ...dbRoles, ...workRoles.map((role) => role.trim().toLowerCase())]));
+            const sorted = merged
+                .filter((role) => role && role.trim().length > 0 && (isRestaurant || !restaurantRolesList.includes(role)))
+                .sort((a, b) => a.localeCompare(b));
             setWorkRoles(sorted);
             localStorage.setItem(`erp_work_roles_${clientId}`, JSON.stringify(sorted));
         }
-    }, [employees, clientId]);
+    }, [employees, clientId, isRestaurant]);
 
     const handleCreateDept = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -2739,7 +2753,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                     onChange={(e) => setEmpRole(e.target.value)}
                                     className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none cursor-pointer"
                                 >
-                                    {workRoles.map((role) => (
+                                    {workRoles.filter(role => isRestaurant || !restaurantRolesList.includes(role)).map((role) => (
                                         <option key={role} value={role}>
                                             {role === 'agent' ? 'Asesor de Atención / Agente' :
                                              role === 'sales' ? 'Vendedor / Comercial' :
