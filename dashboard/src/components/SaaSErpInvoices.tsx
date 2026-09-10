@@ -539,7 +539,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const tipAmount = (clientProfile?.category === 'restaurante' && includeTip)
         ? subtotalItems * (tipPercentage / 100)
         : 0;
-    const totalAmount = subtotalItems + taxAmount + tipAmount;
+    const cleanFee = deliveryMethod === 'domicilio' ? (parseFloat(deliveryFee) || 0) : 0;
+    const totalAmount = subtotalItems + taxAmount + tipAmount + cleanFee;
 
     const handleBarcodeScan = async (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -603,7 +604,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         }
 
         // Apply discount percentage directly to unit price sent to the database
-        const itemsPayload = selectedItems.map(item => ({
+        const cleanFee = deliveryMethod === 'domicilio' ? (parseFloat(deliveryFee) || 0) : 0;
+        const itemsPayload: any[] = selectedItems.map(item => ({
             productId: item.productId || null,
             variantId: item.variantId || null,
             variantName: item.variantName || null,
@@ -615,6 +617,21 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             lensMaterial: item.productType === 'lens' ? item.lensMaterial : null,
             lensTreatment: item.productType === 'lens' ? item.lensTreatment : null
         }));
+
+        if (deliveryMethod === 'domicilio' && cleanFee > 0) {
+            itemsPayload.push({
+                productId: null,
+                variantId: null,
+                variantName: null,
+                productType: 'service',
+                productName: 'Servicio de Domicilio / Envío',
+                quantity: 1,
+                price: cleanFee,
+                lensDesign: null,
+                lensMaterial: null,
+                lensTreatment: null
+            });
+        }
 
         const body = {
             invoiceNumber,
@@ -2053,7 +2070,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                     TOTAL A COBRAR
                                                 </span>
                                                 <div className="font-serif text-3xl font-normal text-[#D9381E] font-mono leading-tight mt-1">
-                                                    {formatPrice(totalAmount + (deliveryMethod === 'domicilio' ? parseFloat(deliveryFee) || 0 : 0))}
+                                                    {formatPrice(totalAmount)}
                                                 </div>
                                             </div>
 
