@@ -101,7 +101,7 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
             </span>
           </div>
 
-          {list.length > 0 && (
+          {colStatus !== 'pending' && list.length > 0 && (
             <button
               type="button"
               onClick={() => setPrintJobs({ title: `Impresión en Bloque - ${title}`, jobs: list })}
@@ -135,14 +135,16 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
                       {job.customer_phone ? `📞 +${job.customer_phone}` : 'Sin teléfono'}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setPrintJobs({ title: `Orden #${job.invoice_id || 'SN'} - ${job.customer_name}`, jobs: [job] })}
-                    title="Imprimir ticket para laboratorio"
-                    className="p-1 bg-[#FAF8F5] hover:bg-[#161616] text-[#6B6862] hover:text-white border border-[#E2DFD7] transition cursor-pointer shrink-0"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">print</span>
-                  </button>
+                  {colStatus !== 'pending' && (
+                    <button
+                      type="button"
+                      onClick={() => setPrintJobs({ title: `Orden #${job.invoice_id || 'SN'} - ${job.customer_name}`, jobs: [job] })}
+                      title="Imprimir ticket para laboratorio"
+                      className="p-1 bg-[#FAF8F5] hover:bg-[#161616] text-[#6B6862] hover:text-white border border-[#E2DFD7] transition cursor-pointer shrink-0"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">print</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Detalles de Montura y Lente */}
@@ -516,8 +518,36 @@ export const SaaSErpLabJobs: React.FC<LabJobsProps> = ({ clientId: rawClientId }
               </div>
             </div>
 
+            {/* Estilos CSS para Formato Media Carta (5.5 x 8.5 pulgadas) */}
+            <style>{`
+              @media print {
+                @page {
+                  size: 5.5in 8.5in;
+                  margin: 4mm;
+                }
+                body * {
+                  visibility: hidden !important;
+                }
+                .lab-print-area, .lab-print-area * {
+                  visibility: visible !important;
+                }
+                .lab-print-area {
+                  position: absolute !important;
+                  left: 0 !important;
+                  top: 0 !important;
+                  width: 100% !important;
+                  padding: 0 !important;
+                  margin: 0 !important;
+                }
+                .page-break-after-always {
+                  page-break-after: always !important;
+                  break-after: page !important;
+                }
+              }
+            `}</style>
+
             {/* Documento Imprimible */}
-            <div className="space-y-8 font-sans print:m-0 print:p-0">
+            <div className="lab-print-area space-y-6 font-sans print:m-0 print:p-0">
               {printJobs.jobs.map((job, idx) => (
                 <div 
                   key={job.id || idx}

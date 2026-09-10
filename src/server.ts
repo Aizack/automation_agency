@@ -3581,6 +3581,87 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
 
     const result = await pool.query(query, params);
 
+    // Si se consulta un historial de factura específica y no hay registros aún en system_audit_logs, generamos la bitácora automáticamente desde la factura
+    if (result.rows.length === 0 && entity_type === 'invoice' && entity_id && typeof entity_id === 'string') {
+      try {
+        const invCheck = await pool.query(
+          `SELECT i.*, c.name as cust_name, c.last_name as cust_last_name 
+           FROM invoices i 
+           LEFT JOIN customers c ON i.customer_id = c.id 
+           WHERE i.client_id = $1 AND (i.id::text = $2 OR i.invoice_number = $2)`,
+          [clientId, entity_id]
+        );
+
+        if (invCheck.rows.length > 0) {
+          const inv = invCheck.rows[0];
+          const cName = `${inv.cust_name || inv.customer_name || 'Cliente'} ${inv.cust_last_name || inv.customer_last_name || ''}`.trim();
+          const createdUser = inv.created_by_user_name || inv.seller_name || 'Isac';
+          
+          // 1. Log de emisión de factura
+          await pool.query(`
+            INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details, created_at)
+            VALUES ($1, $2, $3, 'admin', 'EMISION_FACTURA', 'Facturación', 'invoice', $4, $5, $6, $7)
+          `, [
+            clientId,
+            inv.created_by_user_id || null,
+            createdUser,
+            inv.id,
+            `Emisión inicial de Factura #${inv.invoice_number} por valor de $${Number(inv.total || 0).toLocaleString('es-CO')} COP para el cliente ${cName}.`,
+            JSON.stringify({ invoice_number: inv.invoice_number, total: inv.total, customer_name: cName, payment_method: inv.payment_method }),
+            inv.created_at || inv.issue_date || new Date()
+          ]);
+
+          // 2. Log de pagos si los hay
+          const pRes = await pool.query(
+            `SELECT * FROM invoice_payments WHERE client_id = $1 AND invoice_id = $2 ORDER BY created_at ASC`,
+            [clientId, inv.id]
+          );
+          for (const p of pRes.rows) {
+            await pool.query(`
+              INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details, created_at)
+              VALUES ($1, $2, $3, 'admin', 'PAGO_REGISTRADO', 'Facturación', 'invoice', $4, $5, $6, $7)
+            `, [
+              clientId,
+              p.created_by || null,
+              p.created_by_name || 'Cajero',
+              inv.id,
+              `Abono/Pago registrado de $${Number(p.amount || 0).toLocaleString('es-CO')} COP mediante ${p.payment_method || 'efectivo'}.`,
+              JSON.stringify({ amount: p.amount, payment_method: p.payment_method }),
+              p.created_at || p.payment_date || new Date()
+            ]);
+          }
+
+          // 3. Log de lab job si lo hay
+          const ljRes = await pool.query(
+            `SELECT lj.*, s.name as supplier_name FROM lab_jobs lj LEFT JOIN suppliers s ON lj.supplier_id = s.id WHERE lj.client_id = $1 AND lj.invoice_id = $2`,
+            [clientId, inv.id]
+          );
+          for (const lj of ljRes.rows) {
+            await pool.query(`
+              INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details, created_at)
+              VALUES ($1, NULL, 'Taller Óptico', 'admin', 'TRABAJO_LABORATORIO', 'Taller', 'invoice', $2, $3, $4, $5)
+            `, [
+              clientId,
+              inv.id,
+              `Trabajo de laboratorio en estado '${lj.status.toUpperCase()}'${lj.supplier_name ? ` asignado a ${lj.supplier_name}` : ''}.`,
+              JSON.stringify({ status: lj.status, supplier: lj.supplier_name, job_value: lj.job_value }),
+              lj.updated_at || lj.created_at || new Date()
+            ]);
+          }
+
+          // Reconsultar los logs recién sembrados
+          const reFetch = await pool.query(query, params);
+          return res.json({
+            success: true,
+            logs: reFetch.rows,
+            total: reFetch.rows.length
+          });
+        }
+      } catch (genErr) {
+        console.error('[Audit API ⚠️] Error al sintetizar historial para factura:', genErr);
+      }
+    }
+
     // Contar total de registros para paginación
     const countRes = await pool.query(`SELECT COUNT(*) FROM system_audit_logs WHERE client_id = $1`, [clientId]);
     let totalCount = parseInt(countRes.rows[0].count, 10);
