@@ -2978,7 +2978,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       const productIds = items
         .filter((item) => item?.productId && item.productType !== 'lens')
         .map((item) => item.productId)
-        .filter(Boolean);
+        .filter((id) => isUUID(id));
 
       const productCategoryMap = new Map<string, string>();
       if (productIds.length > 0) {
@@ -2995,14 +2995,17 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       }
 
       for (const item of items) {
-        const productCategoryName = item.productId ? (productCategoryMap.get(item.productId) || '') : '';
+        const rawProdId = item.productId || null;
+        const validProdId = isUUID(rawProdId) ? rawProdId : null;
+        const productCategoryName = validProdId ? (productCategoryMap.get(validProdId) || '') : '';
         const isLensCategory = productCategoryName.includes('lente') || productCategoryName.includes('cristal');
         const isLegacyLensItem = item.productType === 'lens';
         const hasLensSpecs = Boolean(item.lensDesign || item.lensMaterial || item.lensTreatment);
         const nameHasLens = Boolean(item.productName && item.productName.toLowerCase().includes('lente'));
         const isLensSale = isLegacyLensItem || isLensCategory || hasLensSpecs || nameHasLens;
 
-        const variantId = item.variantId || item.variant_id || null;
+        const rawVariantId = item.variantId || item.variant_id || null;
+        const validVariantId = isUUID(rawVariantId) ? rawVariantId : null;
         const variantName = item.variantName || item.variant_name || null;
 
         await dbClient.query(`
@@ -3013,8 +3016,8 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         `, [
           invoice.id, 
-          isLensSale && item.productId === null ? null : item.productId, 
-          variantId,
+          isLensSale && validProdId === null ? null : validProdId, 
+          validVariantId,
           variantName,
           item.quantity || 1, 
           item.price,
@@ -3026,7 +3029,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         ]);
 
         if (isLensSale) {
-          let foundCustId = rawCustomerId;
+          let foundCustId = validCustomerId;
           if (!foundCustId && customerDocumentNumber) {
             const custCheck = await dbClient.query(`
               SELECT id FROM crm_customers WHERE client_id = $1 AND document_number = $2 LIMIT 1
@@ -3077,22 +3080,22 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         }
 
         // Descontar stock de variante específica si aplica
-        if (variantId) {
+        if (validVariantId) {
           await dbClient.query(`
             UPDATE product_variants 
             SET stock = GREATEST(0, stock - $1) 
             WHERE id = $2 AND client_id = $3
-          `, [item.quantity || 1, variantId, clientId]);
+          `, [item.quantity || 1, validVariantId, clientId]);
         }
 
         // Solo descontar stock si es un producto físico del inventario
-        if (!isLensSale && item.productId) {
+        if (!isLensSale && validProdId) {
           const prodUpdateRes = await dbClient.query(`
             UPDATE products 
             SET stock = GREATEST(0, stock - $1) 
             WHERE id = $2 AND client_id = $3
             RETURNING name, stock, min_stock
-          `, [item.quantity || 1, item.productId, clientId]);
+          `, [item.quantity || 1, validProdId, clientId]);
 
           if (prodUpdateRes.rows.length > 0) {
             const { name: prodName, stock: newStock, min_stock: minStock } = prodUpdateRes.rows[0];
