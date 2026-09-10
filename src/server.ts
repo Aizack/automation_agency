@@ -2702,13 +2702,20 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       } = req.body;
       const rawCustomerId = customerId || customer_id || null;
 
-      const finalSellerEmpId = sellerEmployeeId || seller_employee_id || null;
+      const isUUID = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+      const rawSellerEmpId = sellerEmployeeId || seller_employee_id || null;
+      const finalSellerEmpId = isUUID(rawSellerEmpId) ? rawSellerEmpId : null;
       let finalSellerName = sellerName || null;
 
-      if (finalSellerEmpId && !finalSellerName) {
-        const empCheck = await dbClient.query(`SELECT name, last_name FROM employees WHERE id = $1 LIMIT 1`, [finalSellerEmpId]);
-        if (empCheck.rows.length > 0) {
-          finalSellerName = `${empCheck.rows[0].name || ''} ${empCheck.rows[0].last_name || ''}`.trim();
+      if (rawSellerEmpId && !finalSellerName) {
+        if (isUUID(rawSellerEmpId)) {
+          const empCheck = await dbClient.query(`SELECT name, last_name FROM employees WHERE id = $1 LIMIT 1`, [rawSellerEmpId]);
+          if (empCheck.rows.length > 0) {
+            finalSellerName = `${empCheck.rows[0].name || ''} ${empCheck.rows[0].last_name || ''}`.trim();
+          }
+        } else {
+          finalSellerName = String(rawSellerEmpId);
         }
       }
 
@@ -2736,7 +2743,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
     }
 
     // 0. Registrar/Asegurar cliente en el CRM si no existe por documento
-    let resolvedCustomerId = rawCustomerId;
+    let resolvedCustomerId = isUUID(rawCustomerId) ? rawCustomerId : null;
     if (customerDocumentNumber) {
       const crmCheck = await dbClient.query(`
         SELECT id FROM crm_customers WHERE client_id = $1 AND document_number = $2
@@ -2777,6 +2784,9 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       resolvedCustomerId = nameCheck.rows[0]?.id || null;
     }
 
+    const validCustomerId = isUUID(resolvedCustomerId) ? resolvedCustomerId : null;
+    const validCreatedByUserId = isUUID(createdByUserId) ? createdByUserId : null;
+
     // 1. Insertar Factura
     const invoiceResult = await dbClient.query(`
       INSERT INTO invoices (
@@ -2792,8 +2802,8 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       RETURNING id, invoice_number, customer_id, crm_customer_id, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, transfer_bank, transfer_destination_account, seller_employee_id, seller_name, created_by_user_id, created_by_user_name, created_at
     `, [
       clientId, 
-      resolvedCustomerId || null,
-      resolvedCustomerId || null,
+      validCustomerId,
+      validCustomerId,
       invoiceNumber, 
       customerName, 
       customerPhone, 
@@ -2817,7 +2827,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       finalSellerEmpId,
       finalSellerEmpId,
       finalSellerName,
-      createdByUserId,
+      validCreatedByUserId,
       createdByUserName
     ]);
 
