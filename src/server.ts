@@ -3587,7 +3587,7 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
         const invCheck = await pool.query(
           `SELECT i.*, c.name as cust_name, c.last_name as cust_last_name 
            FROM invoices i 
-           LEFT JOIN customers c ON i.customer_id = c.id 
+           LEFT JOIN crm_customers c ON (i.crm_customer_id = c.id OR i.customer_id = c.id)
            WHERE i.client_id = $1 AND (i.id::text = $2 OR i.invoice_number = $2)`,
           [clientId, entity_id]
         );
@@ -3596,7 +3596,8 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
           const inv = invCheck.rows[0];
           const cName = `${inv.cust_name || inv.customer_name || 'Cliente'} ${inv.cust_last_name || inv.customer_last_name || ''}`.trim();
           const createdUser = inv.created_by_user_name || inv.seller_name || 'Isac';
-          
+          const totVal = parseFloat(inv.total_amount || inv.total || 0);
+
           // 1. Log de emisión de factura
           await pool.query(`
             INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details, created_at)
@@ -3606,8 +3607,8 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
             inv.created_by_user_id || null,
             createdUser,
             inv.id,
-            `Emisión inicial de Factura #${inv.invoice_number} por valor de $${Number(inv.total || 0).toLocaleString('es-CO')} COP para el cliente ${cName}.`,
-            JSON.stringify({ invoice_number: inv.invoice_number, total: inv.total, customer_name: cName, payment_method: inv.payment_method }),
+            `Emisión inicial de Factura #${inv.invoice_number} por valor de $${totVal.toLocaleString('es-CO')} COP para el cliente ${cName}.`,
+            JSON.stringify({ invoice_number: inv.invoice_number, total: totVal, customer_name: cName, payment_method: inv.payment_method }),
             inv.created_at || inv.issue_date || new Date()
           ]);
 
