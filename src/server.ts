@@ -834,7 +834,7 @@ app.post('/api/login', async (req: Request, res: Response) => {
         await registerActiveSession('client', client.id, client.id, sessionId, req);
 
         const token = jwt.sign(
-          { id: client.id, username: client.username, role: sessionRole, clientId: client.id, sessionId },
+          { id: client.id, name: client.contact_name || client.name || 'Isac', username: client.username, role: sessionRole, clientId: client.id, sessionId },
           JWT_SECRET,
           { expiresIn: '4h' }
         );
@@ -2669,7 +2669,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       const { clientId } = req.params;
       const reqUser = (req as any).user;
       const createdByUserId = reqUser?.id || null;
-      const createdByUserName = reqUser?.name || reqUser?.username || reqUser?.email || 'Usuario ERP';
+      const createdByUserName = reqUser?.name || reqUser?.contact_name || (reqUser?.username && reqUser.username !== 'admin' ? reqUser.username : null) || 'Isac';
 
       const { 
         invoiceNumber, 
@@ -2714,9 +2714,13 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
           if (empCheck.rows.length > 0) {
             finalSellerName = `${empCheck.rows[0].name || ''} ${empCheck.rows[0].last_name || ''}`.trim();
           }
-        } else {
+        } else if (rawSellerEmpId !== 'admin') {
           finalSellerName = String(rawSellerEmpId);
         }
+      }
+
+      if (!finalSellerName) {
+        finalSellerName = createdByUserName;
       }
 
     if (!invoiceNumber || !customerName || !customerPhone || !customerDocumentNumber || !customerEmail || !dueDate || totalAmount === undefined) {
