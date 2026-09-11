@@ -448,10 +448,10 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
     };
 
     return (
-        <div className="flex flex-col gap-6 p-6 min-h-screen bg-[#FAF8F5] text-[#161616] font-sans">
+        <div className="flex flex-col gap-4 md:gap-6 p-3 md:p-6 min-h-screen bg-[#FAF8F5] text-[#161616] font-sans w-full max-w-full overflow-x-hidden">
             
             {/* Header del Perfil Wabi-Sabi */}
-            <div className="bg-white border border-[#E2DFD7] p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="bg-white border border-[#E2DFD7] p-4 md:p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-full bg-[#161616] text-[#FAF8F5] flex items-center justify-center font-serif text-2xl font-bold uppercase shadow">
                         {employeeName.charAt(0)}

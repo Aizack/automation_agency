@@ -2105,7 +2105,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             <p className="text-sm text-[#6B6862]">No hay productos que coincidan con la búsqueda o filtros seleccionados.</p>
                         </div>
                     ) : (
-                        <div className="w-full">
+                        <div className="w-full table-responsive-wrapper">
                             <table className="inventory-table w-full text-left">
                                 <thead>
                                     <tr>

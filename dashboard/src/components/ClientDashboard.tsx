@@ -147,6 +147,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     return getDefaultTab();
   });
 
+  // Estado para menú lateral desplegable en teléfonos
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   // Submenús desplegables del menú lateral Wabi-Sabi
   const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({
     empresa: true,
@@ -1522,12 +1525,117 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         </div>
       </aside>
 
-      {/* Main Content Area Wabi-Sabi (64px margin-left) */}
-      <div className="content-area ml-[64px] flex-1 flex flex-col min-h-screen bg-[#F6F4EE]">
-        {/* Top Header Zen (Propuesta Principal KOI ERP) */}
-        <header className="top-header-zen sticky top-0 z-40 bg-[#F6F4EE] border-b border-[#E2DFD7] px-8 py-4 flex items-center justify-between">
-          <div className="top-header-left-zen flex items-center gap-8">
-            <div className="top-header-brand-zen font-serif text-3xl font-normal text-[#161616]" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
+      {/* Mobile Drawer Backdrop & Slide Panel */}
+      <div 
+        className={`mobile-drawer-backdrop ${isMobileMenuOpen ? 'open' : ''}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        <div className="mobile-drawer-panel" onClick={(e) => e.stopPropagation()}>
+          <div className="p-4 border-b border-[#E2DFD7] flex justify-between items-center bg-[#FAF8F5]">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded bg-[#161616] text-white flex items-center justify-center font-serif font-bold text-sm">
+                K
+              </div>
+              <div>
+                <h3 className="font-serif text-base font-bold text-[#161616]">KOI ERP</h3>
+                <span className="text-[10px] text-[#D9381E] font-bold uppercase tracking-wider block">
+                  {clientData?.branchName || (clientData as any)?.branch_name || clientData?.name || 'Sede Principal'}
+                </span>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="bg-transparent border-0 text-[#161616] cursor-pointer p-1"
+            >
+              <span className="material-symbols-outlined text-xl">close</span>
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
+            <button 
+              type="button"
+              onClick={() => { setActiveTab('employee_profile'); setIsMobileMenuOpen(false); }}
+              className={`w-full text-left p-3 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-3 cursor-pointer ${activeTab === 'employee_profile' ? 'bg-[#161616] text-white' : 'text-[#161616] hover:bg-[#EAE6DF]'}`}
+            >
+              <span className="material-symbols-outlined text-lg text-[#D9381E]">schedule</span>
+              <span>Mi Perfil & Jornada</span>
+            </button>
+
+            {hasPermission('settings') && (
+              <button 
+                type="button"
+                onClick={() => { setActiveTab('configuracion'); setIsMobileMenuOpen(false); }}
+                className={`w-full text-left p-3 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-3 cursor-pointer ${activeTab === 'configuracion' ? 'bg-[#161616] text-white' : 'text-[#161616] hover:bg-[#EAE6DF]'}`}
+              >
+                <span className="material-symbols-outlined text-lg">corporate_fare</span>
+                <span>Datos de la Empresa</span>
+              </button>
+            )}
+
+            {hasPermission('billing') && (
+              <button 
+                type="button"
+                onClick={() => { setActiveTab('facturacion'); setIsMobileMenuOpen(false); }}
+                className={`w-full text-left p-3 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-3 cursor-pointer ${activeTab === 'facturacion' ? 'bg-[#161616] text-white' : 'text-[#161616] hover:bg-[#EAE6DF]'}`}
+              >
+                <span className="material-symbols-outlined text-lg">receipt_long</span>
+                <span>Facturación & POS</span>
+              </button>
+            )}
+
+            {hasPermission('inventory') && (
+              <button 
+                type="button"
+                onClick={() => { setActiveTab('inventario'); setIsMobileMenuOpen(false); }}
+                className={`w-full text-left p-3 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-3 cursor-pointer ${activeTab === 'inventario' ? 'bg-[#161616] text-white' : 'text-[#161616] hover:bg-[#EAE6DF]'}`}
+              >
+                <span className="material-symbols-outlined text-lg">inventory_2</span>
+                <span>Catálogo Inventario</span>
+              </button>
+            )}
+
+            {hasPermission('cartera') && (
+              <button 
+                type="button"
+                onClick={() => { setActiveTab('cartera'); setIsMobileMenuOpen(false); }}
+                className={`w-full text-left p-3 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-3 cursor-pointer ${activeTab === 'cartera' ? 'bg-[#161616] text-white' : 'text-[#161616] hover:bg-[#EAE6DF]'}`}
+              >
+                <span className="material-symbols-outlined text-lg">account_balance_wallet</span>
+                <span>Cartera & Creditos</span>
+              </button>
+            )}
+
+            {hasPermission('crm') && (
+              <button 
+                type="button"
+                onClick={() => { setActiveTab('clientes'); setIsMobileMenuOpen(false); }}
+                className={`w-full text-left p-3 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-3 cursor-pointer ${activeTab === 'clientes' ? 'bg-[#161616] text-white' : 'text-[#161616] hover:bg-[#EAE6DF]'}`}
+              >
+                <span className="material-symbols-outlined text-lg">group</span>
+                <span>Clientes CRM</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area Wabi-Sabi (64px margin-left on Desktop, 0px on Mobile) */}
+      <div className="content-area main-content-wrapper ml-[64px] flex-1 flex flex-col min-h-screen bg-[#F6F4EE]">
+        {/* Top Header Zen */}
+        <header className="top-header-zen sticky top-0 z-40 bg-[#F6F4EE] border-b border-[#E2DFD7] px-4 md:px-8 py-3.5 flex items-center justify-between">
+          <div className="top-header-left-zen flex items-center gap-3 md:gap-8">
+            {/* Botón Hamburguesa Móvil (Visible solo en md:hidden) */}
+            <button 
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden bg-transparent border-0 text-[#161616] cursor-pointer p-1.5 flex items-center justify-center rounded-md hover:bg-[#EAE6DF]"
+              title="Abrir Menú"
+            >
+              <span className="material-symbols-outlined text-2xl">menu</span>
+            </button>
+
+            <div className="top-header-brand-zen font-serif text-2xl md:text-3xl font-normal text-[#161616]" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
               KOI ERP
             </div>
             
@@ -2423,6 +2531,45 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           </div>
         )}
+
+        {/* Mobile Bottom Navigation Bar (Visible solo en md:hidden) */}
+        <nav className="mobile-bottom-nav md:hidden">
+          <button 
+            type="button" 
+            onClick={() => setActiveTab('employee_profile')}
+            className={`mobile-bottom-nav-item ${activeTab === 'employee_profile' ? 'active' : ''}`}
+          >
+            <span className="material-symbols-outlined">schedule</span>
+            <span>Jornada</span>
+          </button>
+          
+          <button 
+            type="button" 
+            onClick={() => setActiveTab('facturacion')}
+            className={`mobile-bottom-nav-item ${['facturacion', 'facturacion2'].includes(activeTab) ? 'active' : ''}`}
+          >
+            <span className="material-symbols-outlined">receipt_long</span>
+            <span>Facturar</span>
+          </button>
+
+          <button 
+            type="button" 
+            onClick={() => setActiveTab('inventario')}
+            className={`mobile-bottom-nav-item ${activeTab === 'inventario' ? 'active' : ''}`}
+          >
+            <span className="material-symbols-outlined">inventory_2</span>
+            <span>Stock</span>
+          </button>
+
+          <button 
+            type="button" 
+            onClick={() => setActiveTab('resumen')}
+            className={`mobile-bottom-nav-item ${activeTab === 'resumen' ? 'active' : ''}`}
+          >
+            <span className="material-symbols-outlined">smart_toy</span>
+            <span>IA Bot</span>
+          </button>
+        </nav>
       </div>
     </div>
   );

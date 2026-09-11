@@ -2261,7 +2261,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                     )}
                 </div>
             ) : (
-                <div className="bg-white border border-[#E2DFD7] overflow-x-auto">
+                <div className="bg-white border border-[#E2DFD7] overflow-x-auto table-responsive-wrapper">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[11px] text-[#6B6862] uppercase tracking-wider font-semibold">
