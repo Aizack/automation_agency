@@ -749,6 +749,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         const hasVarBool = !isLensType && hasVariants && resolvedProductType === 'product' && variantList.length > 0;
 
         const formattedVariants = hasVarBool ? variantList.map(v => ({
+            ...(v.id ? { id: v.id } : {}),
             variant_name: v.color || 'Variante',
             color_hex: null,
             sku: v.sku ? v.sku.trim() : '',
@@ -778,10 +779,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             : null;
 
         const lensDetailStr = [lensDesign, lensMaterial, lensTreatment].filter(Boolean).join(' - ');
-        if (editingProduct && !isAdmin) {
-            alert('No tienes permisos de administrador para modificar productos ya creados. Solo puedes reabastecer stock.');
-            return;
-        }
 
         const finalName = name.trim() || (isLensType ? `Lente ${lensDetailStr}`.trim() : 'Producto Sin Nombre');
 
@@ -955,10 +952,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     };
 
     const openEdit = (prod: Product) => {
-        if (!isAdmin) {
-            openRefillModal(prod);
-            return;
-        }
         setEditingProduct(prod);
         setName(prod.name);
         setSku(prod.sku || '');
@@ -1747,6 +1740,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                         )}
                                                     </div>
 
+                                                    {!isAdmin && editingProduct && (
+                                                        <div className="mb-3 p-2.5 bg-[#FAF8F5] border border-[#E2DFD7] text-[11px] text-[#6B6862] flex items-center gap-2">
+                                                            <span className="material-symbols-outlined text-amber-600 text-base">lock</span>
+                                                            <span><strong>Modo Empleado:</strong> Puedes corregir la información del producto (precio de venta, referencia, categoría, colores, etc.). El precio de costo y la cantidad de stock están protegidos. Para agregar unidades usa <em>Reabastecer</em>.</span>
+                                                        </div>
+                                                    )}
+
                                                     {hasVariants && (
                                                         <div className="variants-section-zen">
                                                             <table className="variants-table-zen w-full">
@@ -1780,12 +1780,14 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                                 <input 
                                                                                     type="number" 
                                                                                     value={v.stock}
+                                                                                    disabled={!isAdmin && Boolean(editingProduct)}
                                                                                     onChange={(e) => {
                                                                                         const updated = [...variantList];
                                                                                         updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
                                                                                         setVariantList(updated);
                                                                                     }}
-                                                                                    className="font-mono text-center font-bold"
+                                                                                    className={`font-mono text-center font-bold ${!isAdmin && editingProduct ? 'bg-gray-100 text-gray-500 cursor-not-allowed opacity-75' : ''}`}
+                                                                                    title={!isAdmin && editingProduct ? "Edición de stock protegida para empleados. Usa 'Reabastecer' en el inventario." : ""}
                                                                                 />
                                                                             </td>
                                                                             <td>
