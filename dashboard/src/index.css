@@ -1936,7 +1936,47 @@ label,
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
+
+  /* Modales convertidos en Pantalla Completa por Pasos en Móvil (Full-Screen Stepper) */
+  .modal-stepper-mobile {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #FAF8F5 !important;
+    padding: 0 !important;
+  }
+
+  /* Barra de Subsecciones Compacta (Segmented Control Horizontal) */
+  .compact-subsections-bar {
+    display: flex !important;
+    background: #EAE6DF !important;
+    padding: 3px !important;
+    border-radius: 6px !important;
+    gap: 3px !important;
+    margin-bottom: 12px !important;
+    border: 1px solid #E2DFD7 !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  .compact-subsections-bar button {
+    flex: 1 !important;
+    padding: 8px 6px !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+  }
 }
+
 
 
 

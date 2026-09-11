@@ -1208,7 +1208,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             {/* MODAL POPUP WIDESCREEN EDITORIAL WABI-SABI PARA CREACIÓN DE FACTURA (createPortal) */}
             {isFormOpen && createPortal(
                 <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
-                    <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] max-h-[calc(100vh-2rem)] h-full sm:h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in">
+                    <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] max-h-[calc(100vh-2rem)] h-full sm:h-[88vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in modal-stepper-mobile">
                         
                         {/* Header del Modal */}
                         <div className="px-5 sm:px-8 py-3.5 sm:py-5 border-b border-[#E2DFD7] flex justify-between items-center bg-[#F6F4EE] shrink-0">

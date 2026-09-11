@@ -2630,14 +2630,25 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
         {/* Mobile Bottom Navigation Bar (Visible solo en md:hidden) */}
         <nav className="mobile-bottom-nav md:hidden">
-          <button 
-            type="button" 
-            onClick={() => setActiveTab('employee_profile')}
-            className={`mobile-bottom-nav-item ${activeTab === 'employee_profile' ? 'active' : ''}`}
-          >
-            <span className="material-symbols-outlined">schedule</span>
-            <span>Jornada</span>
-          </button>
+          {!isEmployeeSession ? (
+            <button 
+              type="button" 
+              onClick={() => setActiveTab('configuracion')}
+              className={`mobile-bottom-nav-item ${activeTab === 'configuracion' ? 'active' : ''}`}
+            >
+              <span className="material-symbols-outlined">corporate_fare</span>
+              <span>Empresa</span>
+            </button>
+          ) : (
+            <button 
+              type="button" 
+              onClick={() => setActiveTab('employee_profile')}
+              className={`mobile-bottom-nav-item ${activeTab === 'employee_profile' ? 'active' : ''}`}
+            >
+              <span className="material-symbols-outlined">schedule</span>
+              <span>Jornada</span>
+            </button>
+          )}
           
           <button 
             type="button" 

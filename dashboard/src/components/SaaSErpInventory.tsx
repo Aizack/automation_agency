@@ -1211,6 +1211,31 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
     return (
         <div className="space-y-6 text-[#161616] font-sans">
+            {/* Barra de Subsecciones Compacta para Móvil (Segmented Control Horizontal) */}
+            <div className="compact-subsections-bar md:hidden">
+                <button 
+                    type="button"
+                    onClick={() => setActiveTab('catalog')}
+                    className={`subsection-item cursor-pointer border-0 ${activeTab === 'catalog' ? 'bg-white text-[#161616] shadow-sm font-bold' : 'bg-transparent text-[#6B6862]'}`}
+                >
+                    CATÁLOGO
+                </button>
+                <button 
+                    type="button"
+                    onClick={() => setActiveTab('promotions')}
+                    className={`subsection-item cursor-pointer border-0 ${activeTab === 'promotions' ? 'bg-white text-[#161616] shadow-sm font-bold' : 'bg-transparent text-[#6B6862]'}`}
+                >
+                    PROMOCIONES
+                </button>
+                <button 
+                    type="button"
+                    onClick={() => setActiveTab('rotation')}
+                    className={`subsection-item cursor-pointer border-0 ${activeTab === 'rotation' ? 'bg-white text-[#161616] shadow-sm font-bold' : 'bg-transparent text-[#6B6862]'}`}
+                >
+                    ROTACIÓN & KARDEX
+                </button>
+            </div>
+
             {/* Header Editorial Wabi-Sabi */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E2DFD7] pb-5 mb-8">
                 <div>
@@ -1478,7 +1503,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     {/* MODAL POPUP WIDESCREEN EDITORIAL WABI-SABI PARA AGREGAR / EDITAR PRODUCTOS */}
                     {isFormOpen && createPortal(
                         <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
-                            <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] max-h-[calc(100vh-2.5rem)] h-full sm:h-[86vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in">
+                            <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] max-h-[calc(100vh-2.5rem)] h-full sm:h-[86vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in modal-stepper-mobile">
                                 
                                 {/* Header del Modal */}
                                 <div className="px-6 sm:px-8 py-4 sm:py-5 border-b border-[#E2DFD7] flex justify-between items-center bg-[#F6F4EE] shrink-0">
