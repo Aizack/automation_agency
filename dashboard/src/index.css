@@ -1952,6 +1952,25 @@ label,
     flex-direction: column !important;
     background: #FAF8F5 !important;
     padding: 0 !important;
+    overflow-y: auto !important;
+  }
+
+  .modal-stepper-mobile h3 {
+    font-size: 1.1rem !important;
+  }
+
+  .modal-stepper-mobile .px-6,
+  .modal-stepper-mobile .px-8,
+  .modal-stepper-mobile .p-6,
+  .modal-stepper-mobile .p-8 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .modal-stepper-mobile .py-4,
+  .modal-stepper-mobile .py-5 {
+    padding-top: 0.6rem !important;
+    padding-bottom: 0.6rem !important;
   }
 
   /* Barra de Subsecciones Compacta (Segmented Control Horizontal) */

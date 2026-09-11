@@ -196,43 +196,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Buscador Global de la Barra Superior State
-  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
-  const [globalSearchResults, setGlobalSearchResults] = useState<{
-    products: any[];
-    invoices: any[];
-    clients: any[];
-    appointments: any[];
-  } | null>(null);
-  const [isGlobalSearching, setIsGlobalSearching] = useState(false);
-  const [showGlobalSearchDropdown, setShowGlobalSearchDropdown] = useState(false);
-
-  useEffect(() => {
-    if (!globalSearchQuery || globalSearchQuery.trim().length < 2) {
-      setGlobalSearchResults(null);
-      setShowGlobalSearchDropdown(false);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setIsGlobalSearching(true);
-      try {
-        const res = await fetch(`/api/clients/${clientId}/global-search?q=${encodeURIComponent(globalSearchQuery.trim())}`);
-        const json = await res.json();
-        if (json.success) {
-          setGlobalSearchResults(json);
-          setShowGlobalSearchDropdown(true);
-        }
-      } catch (err) {
-        console.error("Error en búsqueda global:", err);
-      } finally {
-        setIsGlobalSearching(false);
-      }
-    }, 250);
-
-    return () => clearTimeout(timer);
-  }, [globalSearchQuery, clientId]);
-
   // Sistema de Diseño Wabi-Sabi Paper (Exclusivo Frant ERP)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -1697,6 +1660,22 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 <span>Clientes CRM</span>
               </button>
             )}
+
+            {/* Botón Cerrar Sesión en Menú Móvil */}
+            <div className="pt-4 mt-4 border-t border-[#E2DFD7]">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  clearAllSessionData();
+                  onBack();
+                }}
+                className="w-full text-left p-3 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-3 cursor-pointer text-[#D9381E] hover:bg-red-50 transition"
+              >
+                <span className="material-symbols-outlined text-lg">logout</span>
+                <span>Cerrar Sesión</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1719,181 +1698,19 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             <div className="top-header-brand-zen font-serif text-2xl md:text-3xl font-normal text-[#161616]" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
               Frant ERP
             </div>
-            
-            <div className="relative search-bar-zen hidden md:flex items-center gap-3 border-b border-[#161616] pb-1 w-80">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-[#161616] stroke-[1.8] shrink-0">
-                <circle cx="11" cy="11" r="7"/>
-                <line x1="16.5" y1="16.5" x2="21" y2="21"/>
-              </svg>
-              <input 
-                type="text" 
-                value={globalSearchQuery}
-                onChange={(e) => setGlobalSearchQuery(e.target.value)}
-                onFocus={() => { if (globalSearchResults) setShowGlobalSearchDropdown(true); }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && globalSearchQuery.trim()) {
-                    setShowGlobalSearchDropdown(false);
-                    setActiveTab('inventario');
-                  }
-                }}
-                placeholder="Buscar en inventario, facturas, citas..." 
-                className="bg-transparent border-none outline-none text-xs text-[#161616] w-full font-sans" 
-              />
-              {isGlobalSearching && (
-                <div className="w-3 h-3 border border-[#D9381E] border-t-transparent rounded-full animate-spin shrink-0"></div>
-              )}
-              {globalSearchQuery && !isGlobalSearching && (
-                <button 
-                  type="button"
-                  onClick={() => { setGlobalSearchQuery(''); setShowGlobalSearchDropdown(false); }} 
-                  className="text-xs text-[#6B6862] hover:text-[#161616] bg-transparent border-0 cursor-pointer p-0"
-                >
-                  &times;
-                </button>
-              )}
-
-              {/* Panel Desplegable Emergente de Búsqueda Global */}
-              {showGlobalSearchDropdown && globalSearchResults && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-[#F6F4EE] border border-[#161616] shadow-2xl z-[9999] max-h-96 overflow-y-auto font-sans p-3 space-y-3 rounded-none text-left">
-                  {/* 1. Productos / Inventario */}
-                  {globalSearchResults.products && globalSearchResults.products.length > 0 && (
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#D9381E] mb-1.5 flex items-center gap-1 border-b border-[#E2DFD7] pb-1">
-                        <span className="material-symbols-outlined text-[14px]">inventory_2</span>
-                        Inventario ({globalSearchResults.products.length})
-                      </div>
-                      <div className="space-y-1">
-                        {globalSearchResults.products.map(p => (
-                          <div 
-                            key={p.id}
-                            onClick={() => {
-                              setActiveTab('inventario');
-                              setShowGlobalSearchDropdown(false);
-                            }}
-                            className="p-2 bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] cursor-pointer transition flex items-center justify-between"
-                          >
-                            <div>
-                              <p className="font-bold text-xs text-[#161616]">{p.name}</p>
-                              <p className="text-[10px] text-[#6B6862]">{p.brand ? `${p.brand} | ` : ''}SKU: {p.sku || 'N/A'}</p>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-xs font-mono font-bold text-[#161616] block">{p.stock || 0} Uds</span>
-                              <span className="text-[10px] text-[#6B6862] font-mono">${(parseFloat(p.price || 0)).toLocaleString('es-CO')}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 2. Facturas */}
-                  {globalSearchResults.invoices && globalSearchResults.invoices.length > 0 && (
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#D9381E] mb-1.5 flex items-center gap-1 border-b border-[#E2DFD7] pb-1">
-                        <span className="material-symbols-outlined text-[14px]">receipt_long</span>
-                        Facturas POS / Ventas ({globalSearchResults.invoices.length})
-                      </div>
-                      <div className="space-y-1">
-                        {globalSearchResults.invoices.map(inv => (
-                          <div 
-                            key={inv.id}
-                            onClick={() => {
-                              setActiveTab('facturacion');
-                              setShowGlobalSearchDropdown(false);
-                            }}
-                            className="p-2 bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] cursor-pointer transition flex items-center justify-between"
-                          >
-                            <div>
-                              <p className="font-bold text-xs text-[#161616]">{inv.invoice_number || 'Factura'}</p>
-                              <p className="text-[10px] text-[#6B6862]">Cliente: {inv.client_name || 'Mostrador'}</p>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-xs font-mono font-bold text-[#161616] block">${(parseFloat(inv.total || 0)).toLocaleString('es-CO')}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 3. Clientes / CRM */}
-                  {globalSearchResults.clients && globalSearchResults.clients.length > 0 && (
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#D9381E] mb-1.5 flex items-center gap-1 border-b border-[#E2DFD7] pb-1">
-                        <span className="material-symbols-outlined text-[14px]">person</span>
-                        Clientes / CRM ({globalSearchResults.clients.length})
-                      </div>
-                      <div className="space-y-1">
-                        {globalSearchResults.clients.map(c => (
-                          <div 
-                            key={c.id}
-                            onClick={() => {
-                              setActiveTab('clientes');
-                              setShowGlobalSearchDropdown(false);
-                            }}
-                            className="p-2 bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] cursor-pointer transition flex items-center justify-between"
-                          >
-                            <div>
-                              <p className="font-bold text-xs text-[#161616]">{c.name}</p>
-                              <p className="text-[10px] text-[#6B6862]">Tel: {c.phone || 'N/A'} {c.document_number ? `| Doc: ${c.document_number}` : ''}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 4. Citas */}
-                  {globalSearchResults.appointments && globalSearchResults.appointments.length > 0 && (
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#D9381E] mb-1.5 flex items-center gap-1 border-b border-[#E2DFD7] pb-1">
-                        <span className="material-symbols-outlined text-[14px]">calendar_month</span>
-                        Citas / Optometría ({globalSearchResults.appointments.length})
-                      </div>
-                      <div className="space-y-1">
-                        {globalSearchResults.appointments.map(a => (
-                          <div 
-                            key={a.id}
-                            onClick={() => {
-                              setActiveTab('agenda');
-                              setShowGlobalSearchDropdown(false);
-                            }}
-                            className="p-2 bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] cursor-pointer transition flex items-center justify-between"
-                          >
-                            <div>
-                              <p className="font-bold text-xs text-[#161616]">{a.patient_name}</p>
-                              <p className="text-[10px] text-[#6B6862]">Dr. {a.doctor_name || 'Optómetra'} | {a.appointment_date} {a.appointment_time}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {globalSearchResults.products?.length === 0 && globalSearchResults.invoices?.length === 0 && globalSearchResults.clients?.length === 0 && globalSearchResults.appointments?.length === 0 && (
-                    <div className="text-center py-4 text-xs text-[#6B6862]">
-                      No se encontraron resultados para "{globalSearchQuery}".
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
           </div>
 
           <div className="top-header-right-zen flex items-center gap-4">
             {/* Widget del Reloj de Turno en Vivo para la Versión de Escritorio (PC) */}
             <div 
               onClick={() => setActiveTab('employee_profile')}
-              className="hidden lg:flex items-center gap-2.5 bg-white border border-[#E2DFD7] px-3 py-1.5 cursor-pointer hover:border-[#161616] transition shadow-xs"
+              className="hidden lg:flex items-center gap-1.5 cursor-pointer hover:text-[#D9381E] transition text-xs font-semibold text-[#161616]"
               title="Haz clic para ingresar a tu jornada y gestionar tu turno de trabajo"
             >
-              <span className="material-symbols-outlined text-[#D9381E] text-[18px]">schedule</span>
-              <div className="flex flex-col text-left">
-                <span className="text-[9px] uppercase font-bold text-[#6B6862] leading-tight">Mi Turno</span>
-                <span className="font-mono text-xs font-bold text-[#161616]">
-                  {shiftStatus === 'working' ? `${shiftTimer}` : shiftStatus === 'lunch' ? 'En Almuerzo' : 'Fuera de Turno'}
-                </span>
-              </div>
+              <span className="material-symbols-outlined text-[#D9381E] text-[16px]">schedule</span>
+              <span>
+                {shiftStatus === 'working' ? `${shiftTimer}` : shiftStatus === 'lunch' ? 'En Almuerzo' : 'Fuera de Turno'}
+              </span>
             </div>
 
             {/* Campanita de Notificaciones del Sistema */}
@@ -2093,43 +1910,43 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
         {activeTab === 'inventario' && (
           <div className="animate-fade-in space-y-6">
-            {/* Pestañas de Navegación de Inventario - Wabi-Sabi */}
-            <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-[#E2DFD7]">
+            {/* Pestañas de Navegación de Inventario - Segmented Control Horizontal en Móvil */}
+            <div className="compact-subsections-bar md:flex md:bg-transparent md:p-0 md:border-none md:gap-2 pb-2 border-b border-[#E2DFD7]">
               <button 
                 type="button"
                 onClick={() => setInventorySubTab('catalog')}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 rounded-none border ${
+                className={`subsection-item px-3 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 rounded-none border ${
                   inventorySubTab === 'catalog' 
                     ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
-                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616] hover:border-[#161616]'
+                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616]'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">inventory_2</span>
-                Catálogo de Inventario
+                <span>Catálogo</span>
               </button>
               <button 
                 type="button"
                 onClick={() => setInventorySubTab('purchase-orders')}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 rounded-none border ${
+                className={`subsection-item px-3 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 rounded-none border ${
                   inventorySubTab === 'purchase-orders' 
                     ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
-                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616] hover:border-[#161616]'
+                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616]'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-                Órdenes de Compra
+                <span>Órdenes</span>
               </button>
               <button 
                 type="button"
                 onClick={() => setInventorySubTab('suppliers')}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 rounded-none border ${
+                className={`subsection-item px-3 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 rounded-none border ${
                   inventorySubTab === 'suppliers' 
                     ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
-                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616] hover:border-[#161616]'
+                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616]'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]">contact_page</span>
-                Proveedores y Categorías
+                <span>Proveedores</span>
               </button>
             </div>
 
