@@ -1780,20 +1780,22 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                                 <input 
                                                                                     type="number" 
                                                                                     value={v.stock}
-                                                                                    disabled={!isAdmin && Boolean(editingProduct)}
+                                                                                    disabled={!isAdmin && Boolean(editingProduct) && Boolean(v.id)}
+                                                                                    onFocus={(e) => e.target.select()}
                                                                                     onChange={(e) => {
                                                                                         const updated = [...variantList];
                                                                                         updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
                                                                                         setVariantList(updated);
                                                                                     }}
-                                                                                    className={`font-mono text-center font-bold ${!isAdmin && editingProduct ? 'bg-gray-100 text-gray-500 cursor-not-allowed opacity-75' : ''}`}
-                                                                                    title={!isAdmin && editingProduct ? "Edición de stock protegida para empleados. Usa 'Reabastecer' en el inventario." : ""}
+                                                                                    className={`font-mono text-center font-bold ${!isAdmin && editingProduct && v.id ? 'bg-gray-100 text-gray-500 cursor-not-allowed opacity-75' : ''}`}
+                                                                                    title={!isAdmin && editingProduct && v.id ? "Edición de stock protegida para empleados. Usa 'Reabastecer' en el inventario." : ""}
                                                                                 />
                                                                             </td>
                                                                             <td>
                                                                                 <input 
                                                                                     type="number" 
                                                                                     value={v.min_stock}
+                                                                                    onFocus={(e) => e.target.select()}
                                                                                     onChange={(e) => {
                                                                                         const updated = [...variantList];
                                                                                         updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
@@ -1859,6 +1861,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                 type="number"
                                                                 className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px] w-full"
                                                                 value={costPrice}
+                                                                onFocus={(e) => e.target.select()}
                                                                 onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
                                                                 placeholder="Ej: 180000"
                                                             />
@@ -1873,6 +1876,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                             type="number"
                                                             className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono font-bold focus:border-[#161616] transition rounded-none h-[42px] w-full"
                                                             value={price}
+                                                            onFocus={(e) => e.target.select()}
                                                             onChange={(e) => setPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
                                                             placeholder="Ej: 350000"
                                                             required
@@ -1889,6 +1893,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                             max={100}
                                                             className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px] w-full"
                                                             value={promoDiscount}
+                                                            onFocus={(e) => e.target.select()}
                                                             onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
                                                             placeholder="0"
                                                         />

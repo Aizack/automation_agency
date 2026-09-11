@@ -1543,6 +1543,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             type="number" 
                                                             className="bg-white border border-[#E2DFD7] px-2.5 py-2 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none w-full" 
                                                             value={abono} 
+                                                            onFocus={(e) => e.target.select()}
                                                             onChange={(e) => setAbono(e.target.value)}
                                                             required
                                                         />
@@ -1555,6 +1556,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             type="number" 
                                                             className="bg-white border border-[#E2DFD7] px-2.5 py-2 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none w-full" 
                                                             value={installmentsCount} 
+                                                            onFocus={(e) => e.target.select()}
                                                             onChange={(e) => {
                                                                 const val = e.target.value;
                                                                 if (val === '') {
@@ -1629,6 +1631,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             type="number" 
                                                             className="bg-white border border-[#E2DFD7] p-3 text-xs focus:border-[#161616] text-[#161616] outline-none font-mono rounded-none" 
                                                             value={deliveryFee} 
+                                                            onFocus={(e) => e.target.select()}
                                                             onChange={(e) => setDeliveryFee(e.target.value)}
                                                         />
                                                     </div>
@@ -1891,6 +1894,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                     min={1} 
                                                                     className="bg-white text-center border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] text-[#161616] outline-none w-full h-10 font-mono font-bold rounded-none" 
                                                                     value={item.quantity} 
+                                                                    onFocus={(e) => e.target.select()}
                                                                     onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} 
                                                                     required 
                                                                 />
@@ -1902,6 +1906,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                     type="number" 
                                                                     className="bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] text-[#161616] outline-none w-full h-10 font-mono font-bold rounded-none" 
                                                                     value={item.price} 
+                                                                    onFocus={(e) => e.target.select()}
                                                                     onChange={(e) => handleItemChange(index, 'price', e.target.value)} 
                                                                     readOnly={item.productType === 'inventory' && !item.productId}
                                                                     required 
@@ -1916,6 +1921,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                     max={100} 
                                                                     className="bg-white border border-[#E2DFD7] p-2 text-xs focus:border-[#161616] text-[#161616] outline-none w-full h-10 text-center font-mono rounded-none" 
                                                                     value={item.discountPercentage} 
+                                                                    onFocus={(e) => e.target.select()}
                                                                     onChange={(e) => handleItemChange(index, 'discountPercentage', e.target.value)} 
                                                                 />
                                                             </div>
