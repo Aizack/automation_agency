@@ -895,12 +895,12 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                 </div>
             )}
 
-            {/* TAB 5: ASISTENTE IA */}
+            {/* TAB 5: ASISTENTE FRANT IA */}
             {activeTab === 'chat' && (
                 <div className="bg-white border border-[#E2DFD7] p-6 shadow-sm flex flex-col h-[500px]">
                     <h3 className="font-serif text-lg font-semibold text-[#161616] border-b border-[#E2DFD7] pb-3 mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[#D9381E]">smart_toy</span>
-                        Asistente Inteligente KOI ERP
+                        Frant • Asistente IA
                     </h3>
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-3 bg-[#FAF8F5] border border-[#E2DFD7] flex flex-col gap-3 mb-4">

@@ -233,8 +233,63 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     return () => clearTimeout(timer);
   }, [globalSearchQuery, clientId]);
 
-  // Sistema de Diseño Wabi-Sabi Paper (Exclusivo KOI ERP)
+  // Sistema de Diseño Wabi-Sabi Paper (Exclusivo Frant ERP)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  // Estados para Reloj de Turno en la Barra Superior / Sidebar PC
+  const [shiftStatus, setShiftStatus] = useState<'no_started' | 'working' | 'lunch' | 'finished'>('no_started');
+  const [shiftTimer, setShiftTimer] = useState('00:00:00');
+  const [shiftStartTs, setShiftStartTs] = useState<number | null>(null);
+
+  const fetchGlobalShiftStatus = async () => {
+    const empId = localStorage.getItem('emp_id') || localStorage.getItem('user_id');
+    const empToken = localStorage.getItem('emp_token') || localStorage.getItem('auth_token') || localStorage.getItem('token');
+    if (!clientId || !empId) return;
+    try {
+      const res = await fetch(`/api/clients/${clientId}/employees/${empId}/shifts`, {
+        headers: { 'Authorization': `Bearer ${empToken}` }
+      });
+      const json = await res.json();
+      if (json.success && json.shifts && json.shifts.length > 0) {
+        const latest = json.shifts[0];
+        if (!latest.clock_out) {
+          const clockInTs = new Date(latest.clock_in).getTime();
+          setShiftStartTs(clockInTs);
+          if (latest.lunch_start && !latest.lunch_end) {
+            setShiftStatus('lunch');
+          } else {
+            setShiftStatus('working');
+          }
+        } else {
+          setShiftStatus('finished');
+        }
+      } else {
+        setShiftStatus('no_started');
+      }
+    } catch (err) {
+      console.error("Error fetching shift status in header:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchGlobalShiftStatus();
+  }, [clientId]);
+
+  useEffect(() => {
+    let interval: any = null;
+    if ((shiftStatus === 'working' || shiftStatus === 'lunch') && shiftStartTs) {
+      interval = setInterval(() => {
+        const elapsedMs = Date.now() - shiftStartTs;
+        const secs = Math.floor((elapsedMs / 1000) % 60);
+        const mins = Math.floor((elapsedMs / (1000 * 60)) % 60);
+        const hours = Math.floor((elapsedMs / (1000 * 60 * 60)) % 24);
+        setShiftTimer(`${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+      }, 1000);
+    } else {
+      setShiftTimer('00:00:00');
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [shiftStatus, shiftStartTs]);
 
   useEffect(() => {
     localStorage.setItem('app_theme', 'wabi-sabi-koi');
@@ -1019,7 +1074,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             <div className="brand-name truncate max-w-[200px]" title={clientData?.branchName || (clientData as any)?.branch_name ? `${clientData.name} (${clientData.branchName || (clientData as any).branch_name})` : clientData?.name}>
               {clientData?.branchName || (clientData as any)?.branch_name
                 ? `${clientData.name} - ${clientData.branchName || (clientData as any).branch_name}`
-                : (clientData?.name || 'KOI ERP')}
+                : (clientData?.name || 'Frant ERP')}
             </div>
             <div className="brand-sub font-semibold text-primary">
               {(clientData as any)?.is_main_branch || (clientData as any)?.isMainBranch ? '🏢 Empresa Matriz' : '📍 Sede Sucursal'}
@@ -1534,10 +1589,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           <div className="p-4 border-b border-[#E2DFD7] flex justify-between items-center bg-[#FAF8F5]">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded bg-[#161616] text-white flex items-center justify-center font-serif font-bold text-sm">
-                K
+                F
               </div>
               <div>
-                <h3 className="font-serif text-base font-bold text-[#161616]">KOI ERP</h3>
+                <h3 className="font-serif text-base font-bold text-[#161616]">Frant ERP</h3>
                 <span className="text-[10px] text-[#D9381E] font-bold uppercase tracking-wider block">
                   {clientData?.branchName || (clientData as any)?.branch_name || clientData?.name || 'Sede Principal'}
                 </span>
@@ -1550,6 +1605,32 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             >
               <span className="material-symbols-outlined text-xl">close</span>
             </button>
+          </div>
+
+          {/* Tarjeta de Sesión de Usuario & Reloj de Turno dentro del Drawer Móvil */}
+          <div className="p-3 bg-[#FAF8F5] border-b border-[#E2DFD7]">
+            <div 
+              onClick={() => { setActiveTab('employee_profile'); setIsMobileMenuOpen(false); }}
+              className="bg-white border border-[#E2DFD7] p-3 cursor-pointer hover:border-[#161616] transition"
+            >
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="w-9 h-9 rounded-full bg-[#161616] text-white font-serif font-bold text-sm flex items-center justify-center">
+                  {activeUserName.substring(0, 1).toUpperCase()}
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-[#161616] leading-tight">{activeUserName}</h4>
+                  <span className="text-[10px] text-[#6B6862] font-mono uppercase">{activeUserRole}</span>
+                </div>
+              </div>
+              
+              <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-2 flex justify-between items-center text-xs">
+                <span className="text-[10px] font-bold uppercase text-[#6B6862]">Estado Turno:</span>
+                <span className="font-mono font-bold text-[#D9381E] flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">schedule</span>
+                  {shiftStatus === 'working' ? `${shiftTimer}` : shiftStatus === 'lunch' ? 'En Almuerzo' : 'Fuera de Turno'}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
@@ -1636,7 +1717,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </button>
 
             <div className="top-header-brand-zen font-serif text-2xl md:text-3xl font-normal text-[#161616]" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
-              KOI ERP
+              Frant ERP
             </div>
             
             <div className="relative search-bar-zen hidden md:flex items-center gap-3 border-b border-[#161616] pb-1 w-80">
@@ -1800,6 +1881,21 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           </div>
 
           <div className="top-header-right-zen flex items-center gap-4">
+            {/* Widget del Reloj de Turno en Vivo para la Versión de Escritorio (PC) */}
+            <div 
+              onClick={() => setActiveTab('employee_profile')}
+              className="hidden lg:flex items-center gap-2.5 bg-white border border-[#E2DFD7] px-3 py-1.5 cursor-pointer hover:border-[#161616] transition shadow-xs"
+              title="Haz clic para ingresar a tu jornada y gestionar tu turno de trabajo"
+            >
+              <span className="material-symbols-outlined text-[#D9381E] text-[18px]">schedule</span>
+              <div className="flex flex-col text-left">
+                <span className="text-[9px] uppercase font-bold text-[#6B6862] leading-tight">Mi Turno</span>
+                <span className="font-mono text-xs font-bold text-[#161616]">
+                  {shiftStatus === 'working' ? `${shiftTimer}` : shiftStatus === 'lunch' ? 'En Almuerzo' : 'Fuera de Turno'}
+                </span>
+              </div>
+            </div>
+
             {/* Campanita de Notificaciones del Sistema */}
             <NotificationBell 
               clientId={clientId} 
@@ -2567,7 +2663,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             className={`mobile-bottom-nav-item ${activeTab === 'resumen' ? 'active' : ''}`}
           >
             <span className="material-symbols-outlined">smart_toy</span>
-            <span>IA Bot</span>
+            <span>Frant IA</span>
           </button>
         </nav>
       </div>
