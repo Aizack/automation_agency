@@ -2044,11 +2044,5 @@
     "seen": 1789097780.0279727,
     "ast_hash": "ea239c2ebd5a7460e4de1662cfa35c29",
     "semantic_hash": ""
-  },
-  "scratch/deploy_vps_security.py": {
-    "mtime": 1789099153.1326756,
-    "seen": 1789099307.7785797,
-    "ast_hash": "0f6188145be4301accbb367ee7658f70",
-    "semantic_hash": ""
   }
 }

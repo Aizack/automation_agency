@@ -33,6 +33,7 @@ import { SaaSErpHabilitacionDian } from './SaaSErpHabilitacionDian';
 import { SaaSErpAiAgentModule } from './SaaSErpAiAgentModule';
 import { SaaSErpEmployeeProfile } from './SaaSErpEmployeeProfile';
 import { NotificationBell } from './NotificationBell';
+import { FrantErpMobileView } from './FrantErpMobileView';
 
 interface Client {
   id: string;
@@ -198,6 +199,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
   // Sistema de Diseño Wabi-Sabi Paper (Exclusivo Frant ERP)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  // Detección Responsiva para Vista Exclusiva Celular (< 768px)
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Estados para Reloj de Turno en la Barra Superior / Sidebar PC
   const [shiftStatus, setShiftStatus] = useState<'no_started' | 'working' | 'lunch' | 'finished'>('no_started');
@@ -1010,6 +1022,25 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   const rawRole = localStorage.getItem('session_role') || localStorage.getItem('emp_role') || 'client';
   const activeUserRole = rawRole === 'admin' ? 'Super Admin' : rawRole === 'employee' ? (localStorage.getItem('employee_role') || 'Colaborador') : 'Administrador de Tienda';
 
+  if (isMobile) {
+    return (
+      <FrantErpMobileView
+        clientId={clientId}
+        clientData={clientData}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        activeUserName={activeUserName}
+        activeUserRole={activeUserRole}
+        shiftStatus={shiftStatus}
+        shiftTimer={shiftTimer}
+        onBack={onBack}
+        hasPermission={hasPermission}
+        onLogout={clearAllSessionData}
+        onConnectWhatsApp={handleConnectWhatsApp}
+      />
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-[#F6F4EE] text-[#161616] font-sans">
       {/* Sidebar Expandable Wabi-Sabi (64px cerrado -> 290px hover) */}
@@ -1817,6 +1848,76 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         <main className="flex-grow p-8">
 
         {activeTab === 'resumen' && (
+          <div className="space-y-6 animate-fade-in">
+            {/* Panel Ejecutivo Móvil para Administradores (Coincidencia 1:1 con Mockup) */}
+            <div className="md:hidden space-y-4">
+              <h2 className="font-serif text-2xl font-bold text-[#161616]">Panel Ejecutivo Admin</h2>
+              
+              {/* Tarjeta 1: Ventas de Hoy */}
+              <div className="bg-white border border-[#E2DFD7] rounded-xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-bold text-[#6B6862] uppercase tracking-wider">Ventas de Hoy</span>
+                  <span className="material-symbols-outlined text-[#D9381E] text-xl">pie_chart</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-mono text-2xl font-extrabold text-[#161616]">$1.450.000</span>
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">+8.2%</span>
+                </div>
+              </div>
+
+              {/* Tarjetas 2 & 3: Stock y Órdenes Pendientes */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white border border-[#E2DFD7] rounded-xl p-4 shadow-sm">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider">Nivel de Stock</span>
+                    <span className="material-symbols-outlined text-[#161616] text-lg">inventory_2</span>
+                  </div>
+                  <span className="font-mono text-lg font-bold text-[#161616] block">1.977 Ítems</span>
+                  <span className="text-[10px] font-bold text-emerald-600">Adecuado</span>
+                </div>
+                <div className="bg-white border border-[#E2DFD7] rounded-xl p-4 shadow-sm">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider">Órdenes Pendientes</span>
+                    <span className="material-symbols-outlined text-[#161616] text-lg">fact_check</span>
+                  </div>
+                  <span className="font-mono text-lg font-bold text-[#161616] block">45 Órdenes</span>
+                  <span className="text-[10px] font-bold text-amber-600">En Proceso</span>
+                </div>
+              </div>
+
+              {/* Lista de Compras Recientes */}
+              <div className="bg-white border border-[#E2DFD7] rounded-xl p-4 shadow-sm">
+                <span className="text-xs font-bold text-[#161616] uppercase tracking-wider block mb-3">Compras & Movimientos Recientes</span>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#FAF8F5]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#E2DFD7] flex items-center justify-center">
+                        <span className="material-symbols-outlined text-base text-[#161616]">chair</span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#161616]">Sillas de Oficina Ergonómicas</p>
+                        <span className="text-[10px] text-emerald-600 font-bold">Recibido</span>
+                      </div>
+                    </div>
+                    <span className="font-mono text-xs font-bold text-[#161616]">$12.500</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#E2DFD7] flex items-center justify-center">
+                        <span className="material-symbols-outlined text-base text-[#161616]">laptop</span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#161616]">Portátiles Dell Vostro 15</p>
+                        <span className="text-[10px] text-amber-600 font-bold">Pendiente</span>
+                      </div>
+                    </div>
+                    <span className="font-mono text-xs font-bold text-[#161616]">$34.200</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="hidden md:block">
           <SaaSErpAiAgentModule
             clientId={clientId}
             clientData={clientData}
@@ -1876,6 +1977,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             saveSuccess={saveSuccess}
             handleSaveConfig={handleSaveConfig}
           />
+            </div>
+          </div>
         )}
 
         {activeTab === 'planeacion_empresarial' && (

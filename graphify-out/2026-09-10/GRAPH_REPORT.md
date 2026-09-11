@@ -1,16 +1,16 @@
 # Graph Report - Bot multi-tenant-exp  (2026-09-10)
 
 ## Corpus Check
-- 292 files · ~497,578 words
+- 291 files · ~497,447 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2183 nodes · 3157 edges · 201 communities (170 shown, 31 thin omitted)
+- 2181 nodes · 3156 edges · 200 communities (169 shown, 31 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 29 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7a072784`
+- Built from commit: `51c25fc9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -146,7 +146,7 @@
 - generate_audit_report
 - test_risk_score.py
 - Wabi-Sabi Paper Design System Rule
-- test_cli.py
+- build_backend
 - SCA (54 findings)
 - clientsCrud.ts
 - Changelog
@@ -155,13 +155,13 @@
 - authFetch
 - xss.py
 - unified_report.py
-- auditor.py
+- config.py
 - csrf.py
 - xxe.py
 - report.py
 - trend_report.py
 - test_crypto.py
-- http.py
+- auditor.py
 - 🔍 VPulse Security Audit Report
 - RestaurantKdsDisplay.tsx
 - 🔍 VPulse Security Audit Report
@@ -186,7 +186,7 @@
 - SaaSErpSupportDocuments.tsx
 - SaaSErpSupportTickets.tsx
 - ⏳ Línea de Tiempo de una Petición Web
-- idor.py
+- sqli.py
 - test-pre-recorded-voice.ts
 
 ## God Nodes (most connected - your core abstractions)
@@ -208,15 +208,15 @@
   dashboard/src/components/SaaSErpInventory.tsx → dashboard/src/utils/api.ts
 - `sample_config()` --uses--> `AuditConfig`  [INFERRED]
   vpulse/tests/conftest.py → vpulse/vpulse/config.py
-- `test_audit_parser_supports_insecure_and_no_attacks()` --calls--> `build_parser()`  [EXTRACTED]
-  vpulse/tests/test_cli.py → vpulse/vpulse/cli.py
+- `test_default_config_has_sane_defaults()` --uses--> `AuditConfig`  [INFERRED]
+  vpulse/tests/test_config.py → vpulse/vpulse/config.py
 - `_build_config()` --uses--> `AuditConfig`  [INFERRED]
   vpulse/vpulse/cli.py → vpulse/vpulse/config.py
 
 ## Import Cycles
 - 2-file cycle: `src/server.ts -> src/services/shutdownManager.ts -> src/server.ts`
 
-## Communities (201 total, 31 thin omitted)
+## Communities (200 total, 31 thin omitted)
 
 ### Community 0 - "postgres.ts"
 Cohesion: 0.10
@@ -243,8 +243,8 @@ Cohesion: 0.07
 Nodes (27): AgentContact, AudioContact, Client, ClientDashboardProps, Interaction, WhatsappStatus, AlertItem, NotificationBell() (+19 more)
 
 ### Community 6 - "Auditor"
-Cohesion: 0.11
-Nodes (8): Tests for the Auditor orchestration and config wiring., test_auditor_accepts_external_session(), test_auditor_builds_session_from_config(), test_auditor_derives_proxy_and_verify_from_config(), Auditor, Orchestrates a full web security audit against a single target.…, Passively scan crawled page bodies for exposed secrets/credentials., Fingerprint JS libraries linked/inlined on the target and flag known-vulnerable…
+Cohesion: 0.12
+Nodes (6): test_auditor_accepts_external_session(), test_auditor_builds_session_from_config(), Auditor, Orchestrates a full web security audit against a single target.…, Passively scan crawled page bodies for exposed secrets/credentials., Fingerprint JS libraries linked/inlined on the target and flag known-vulnerable…
 
 ### Community 7 - "compilerOptions"
 Cohesion: 0.08
@@ -536,7 +536,7 @@ Nodes (4): 🎯 1. Objetivos del Módulo, 🏗️ 2. Arquitectura de Base de Dat
 
 ### Community 94 - "campaign.py"
 Cohesion: 0.09
-Nodes (31): BaseHTTPRequestHandler, _make_campaign(), Regression tests for the 5 security fixes in the awareness module: secret…, test_load_secret_reads_sidecar(), test_secret_not_embedded_in_campaign_json(), test_secret_sidecar_file_has_owner_only_permissions(), test_serve_refuses_public_bind_without_tls_or_override(), cmd_awareness_generate() (+23 more)
+Nodes (32): BaseHTTPRequestHandler, _make_campaign(), Regression tests for the 5 security fixes in the awareness module: secret…, test_load_secret_reads_sidecar(), test_secret_not_embedded_in_campaign_json(), test_secret_sidecar_file_has_owner_only_permissions(), test_serve_refuses_public_bind_without_tls_or_override(), cmd_awareness_generate() (+24 more)
 
 ### Community 95 - "React + TypeScript + Vite"
 Cohesion: 0.50
@@ -580,11 +580,11 @@ Nodes (5): ⚠️ 1. REGLAS INVIOLABLES DE SEGURIDAD (ANTI-PÉRDIDA DE CÓDIGO),
 
 ### Community 115 - "sca.py"
 Cohesion: 0.10
-Nodes (33): Tests for passive exposure checks: secret detection and SCA (dependency…, test_scan_js_content_flags_old_jquery(), test_scan_js_content_ignores_modern_jquery(), test_scan_local_dependencies_walks_directory(), test_scan_package_json_flags_vulnerable_pin(), test_scan_requirements_txt_flags_vulnerable_pin(), test_scan_text_detects_aws_key_and_redacts_evidence(), test_scan_text_ignores_clean_content() (+25 more)
+Nodes (34): Tests for passive exposure checks: secret detection and SCA (dependency…, test_scan_js_content_flags_old_jquery(), test_scan_js_content_ignores_modern_jquery(), test_scan_local_dependencies_walks_directory(), test_scan_package_json_flags_vulnerable_pin(), test_scan_requirements_txt_flags_vulnerable_pin(), test_scan_text_detects_aws_key_and_redacts_evidence(), test_scan_text_ignores_clean_content() (+26 more)
 
 ### Community 116 - "cli.py"
-Cohesion: 0.15
-Nodes (19): ArgumentParser, test_parser_has_audit_crawl_report_subcommands(), _add_audit_args(), _add_common_args(), _build_config(), build_parser(), cmd_awareness_send(), cmd_awareness_serve() (+11 more)
+Cohesion: 0.12
+Nodes (26): ArgumentParser, CLI unit tests — parser wiring, consent gate, and target normalization., test_audit_parser_supports_insecure_and_no_attacks(), test_check_consent_allows_authorized(), test_check_consent_allows_regular_domains(), test_check_consent_blocks_protected_domains(), test_normalize_target_adds_https(), test_parser_has_audit_crawl_report_subcommands() (+18 more)
 
 ### Community 117 - "📋 2. PLAN DE IMPLEMENTACIÓN PASO A PASO"
 Cohesion: 0.15
@@ -647,8 +647,8 @@ Cohesion: 0.24
 Nodes (6): audit_compliance(), ComplianceChecker, Response, Session, LatAm compliance audit: LGPD, LFPDPPP, LEPD, and more., Checks a target against LatAm data-protection requirements.
 
 ### Community 135 - "test_ticketing.py"
-Cohesion: 0.10
-Nodes (29): _findings(), Tests for the ticketing integration: formatter, dedup state, and dry-run…, test_build_backend_rejects_unknown_name(), test_build_tickets_produces_title_body_and_labels(), test_csv_backend_dry_run_does_not_write_file(), test_csv_backend_live_writes_row(), test_dedup_state_prevents_refiling(), test_filter_by_severity_default_high_excludes_medium_and_info() (+21 more)
+Cohesion: 0.21
+Nodes (19): _findings(), Tests for the ticketing integration: formatter, dedup state, and dry-run…, test_build_tickets_produces_title_body_and_labels(), test_csv_backend_dry_run_does_not_write_file(), test_csv_backend_live_writes_row(), test_dedup_state_prevents_refiling(), test_filter_by_severity_default_high_excludes_medium_and_info(), test_filter_by_severity_medium_includes_critical_and_medium() (+11 more)
 
 ### Community 136 - "generate_audit_report"
 Cohesion: 0.22
@@ -658,9 +658,9 @@ Nodes (15): Reporter unit tests — output generation and HTML escaping (stored-
 Cohesion: 0.24
 Nodes (16): Unified risk score tests — technical + human blending and grading., test_build_risk_assessment_blends_both_dimensions(), test_human_score_defaults_to_perfect_with_no_campaigns(), test_human_score_drops_with_high_click_rate(), test_technical_score_penalizes_critical_more_than_low(), test_technical_score_perfect_with_no_findings(), build_risk_assessment(), compute_human_score() (+8 more)
 
-### Community 139 - "test_cli.py"
-Cohesion: 0.31
-Nodes (9): CLI unit tests — parser wiring, consent gate, and target normalization., test_audit_parser_supports_insecure_and_no_attacks(), test_check_consent_allows_authorized(), test_check_consent_allows_regular_domains(), test_check_consent_blocks_protected_domains(), test_normalize_target_adds_https(), _check_consent(), cmd_audit() (+1 more)
+### Community 139 - "build_backend"
+Cohesion: 0.15
+Nodes (10): test_build_backend_rejects_unknown_name(), build_backend(), CsvBackend, GitHubBackend, JiraBackend, Ticket-filing backends: GitHub Issues, Jira, and a CSV fallback. Consistent…, Appends tickets to a local CSV — a zero-credential fallback for teams that…, Files one GitHub Issue per ticket via the REST API. (+2 more)
 
 ### Community 140 - "SCA (54 findings)"
 Cohesion: 0.04
@@ -679,8 +679,8 @@ Cohesion: 0.27
 Nodes (10): Logger, Tests for the logging module., test_get_logger_returns_logger(), test_setup_logging_info_hides_debug(), test_setup_logging_sets_levels(), get_logger(), Structured logging for VPulse., Configure the root logger. Idempotent — ``logging.basicConfig`` is a no-op if… (+2 more)
 
 ### Community 144 - "send"
-Cohesion: 0.15
-Nodes (21): Response, Issue a request through ``session`` if given, else a bare ``requests`` call.…, send(), _build_finding(), _fix_steps(), Session, _replication_steps(), test_cmdi() (+13 more)
+Cohesion: 0.14
+Nodes (22): Response, Session, Issue a request through ``session`` if given, else a bare ``requests`` call.…, send(), _build_finding(), _fix_steps(), Session, _replication_steps() (+14 more)
 
 ### Community 145 - "authFetch"
 Cohesion: 0.11
@@ -694,9 +694,9 @@ Nodes (7): _build_finding(), _fix_steps(), is_reflected(), Session, _replication
 Cohesion: 0.36
 Nodes (6): cmd_assess(), _esc(), Renders the unified risk assessment (technical + human) to md/html/json., save_assessment(), to_html(), to_markdown()
 
-### Community 148 - "auditor.py"
-Cohesion: 0.19
-Nodes (18): Any, Tests for the AuditConfig dataclass and YAML loader., test_default_config_has_sane_defaults(), test_load_config_empty_file_returns_defaults(), test_load_config_missing_file_returns_defaults(), test_load_config_none_returns_defaults(), test_load_config_parses_yaml(), _as_str_list() (+10 more)
+### Community 148 - "config.py"
+Cohesion: 0.25
+Nodes (14): Any, Tests for the AuditConfig dataclass and YAML loader., test_default_config_has_sane_defaults(), test_load_config_empty_file_returns_defaults(), test_load_config_missing_file_returns_defaults(), test_load_config_none_returns_defaults(), test_load_config_parses_yaml(), _as_str_list() (+6 more)
 
 ### Community 149 - "csrf.py"
 Cohesion: 0.39
@@ -718,9 +718,9 @@ Nodes (6): _esc(), Renders a risk-score trend (sparkline + delta) from assessmen
 Cohesion: 0.23
 Nodes (13): Certificate, Tests for post-quantum cipher classification and TLS audit., test_audit_connection_refused_reports_info(), test_classify_aes256_is_neutral(), test_classify_des_does_not_match_aes(), test_classify_quantum_safe_cipher_is_info(), test_classify_rc4_is_critical(), audit_tls_post_quantum() (+5 more)
 
-### Community 154 - "http.py"
-Cohesion: 0.16
-Nodes (14): HTTPAdapter, Tests for the HTTP session builder and rate limiter., test_build_session_applies_headers_cookies_and_verify(), test_build_session_applies_proxy(), test_rate_limit_adapter_no_sleep_when_idle(), test_rate_limit_adapter_sleeps_when_too_soon(), test_rate_limit_adapter_zero_delay_never_sleeps(), build_session() (+6 more)
+### Community 154 - "auditor.py"
+Cohesion: 0.13
+Nodes (19): HTTPAdapter, Tests for the Auditor orchestration and config wiring., test_auditor_derives_proxy_and_verify_from_config(), Tests for the HTTP session builder and rate limiter., test_build_session_applies_headers_cookies_and_verify(), test_build_session_applies_proxy(), test_rate_limit_adapter_no_sleep_when_idle(), test_rate_limit_adapter_sleeps_when_too_soon() (+11 more)
 
 ### Community 155 - "🔍 VPulse Security Audit Report"
 Cohesion: 0.33
@@ -782,9 +782,9 @@ Nodes (3): SaaSErpSupportTickets(), SaaSErpSupportTicketsProps, SupportTicket
 Cohesion: 0.13
 Nodes (14): 📘 Bitácora de Seguridad: Explicación de Auditoría y Correcciones Aplicadas, **Etapa 1: El usuario entra a tu página**, **Etapa 1: Tu proyecto usa librerías de terceros**, **Etapa 2: Detección de Vulnerabilidades en la Cadena de Suministro (SCA)**, **Etapa 2: Tu servidor procesa la respuesta**, **Etapa 3: Detección de la Vulnerabilidad (¿Dónde estaba el problema?)**, **Etapa 3: La Reparación (¿Cómo lo arreglamos?)**, **Etapa 4: La Reparación (¿Cómo lo arreglamos?)** (+6 more)
 
-### Community 198 - "idor.py"
+### Community 198 - "sqli.py"
 Cohesion: 0.48
-Nodes (6): _build_finding(), _fix_steps(), Session, _replication_steps(), test_idor(), _verification_command()
+Nodes (6): _build_finding(), _fix_steps(), Session, _replication_steps(), test_sqli(), _verification_command()
 
 ## Knowledge Gaps
 - **990 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+985 more)
@@ -794,11 +794,11 @@ Nodes (6): _build_finding(), _fix_steps(), Session, _replication_steps(), test_i
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Auditor` connect `Auditor` to `generate_audit_report`, `auditor.py`, `test_cli.py`, `cli.py`?**
-  _High betweenness centrality (0.007) - this node is a cross-community bridge._
-- **Why does `crawl_site()` connect `PlaywrightBrowser` to `auditor.py`, `Auditor`?**
-  _High betweenness centrality (0.007) - this node is a cross-community bridge._
+- **Why does `Auditor` connect `Auditor` to `generate_audit_report`, `auditor.py`, `cli.py`?**
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **Why does `react` connect `react` to `SaaSErpInventory.tsx`, `api.ts`, `ClientDashboard.tsx`, `SaaSErpDomicilios.tsx`, `authFetch`, `SaaSErpEmployees.tsx`, `plugins`, `EnterprisePlanningModule.tsx`, `SaaSErpAccounting.tsx`, `SaaSErpAppointments.tsx`, `SaaSErpInvoices.tsx`, `RestaurantKdsDisplay.tsx`, `RestaurantWaiterPortal.tsx`, `SaaSErpCartera.tsx`, `PublicRestaurantMenu.tsx`, `SaaSErpAiAgentModule.tsx`, `SaaSErpCampaigns.tsx`, `SaaSErpSuppliers.tsx`, `SaaSErpFormulas.tsx`, `SaaSErpSupportDocuments.tsx`, `SaaSErpInvoices2.tsx`, `SaaSErpSupportTickets.tsx`, `SaaSErpUsers.tsx`, `SaaSErpQuotes.tsx`?**
+  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+- **Why does `crawl_site()` connect `PlaywrightBrowser` to `auditor.py`, `Auditor`?**
   _High betweenness centrality (0.006) - this node is a cross-community bridge._
 - **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
   _990 weakly-connected nodes found - possible documentation gaps or missing edges._
