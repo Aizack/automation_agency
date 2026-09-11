@@ -1499,6 +1499,18 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                 </div>
                                             </div>
                                         )}
+
+                                        {/* Botones de Navegación del Paso 1 */}
+                                        <div className="pt-6 border-t border-[#E2DFD7] flex justify-end">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormStep(2)}
+                                                className="bg-[#161616] hover:bg-[#2c2c2c] text-white border-0 px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-2 transition"
+                                            >
+                                                Siguiente
+                                                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
 
@@ -1824,6 +1836,26 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                 + AGREGAR SERVICIO DE LENTES
                                             </button>
                                         </div>
+
+                                        {/* Botones de Navegación del Paso 2 */}
+                                        <div className="pt-6 border-t border-[#E2DFD7] flex justify-between items-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormStep(1)}
+                                                className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5 transition"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                                                Atrás
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormStep(3)}
+                                                className="bg-[#161616] hover:bg-[#2c2c2c] text-white border-0 px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-2 transition"
+                                            >
+                                                Siguiente
+                                                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
 
@@ -1948,6 +1980,26 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                     />
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        {/* Botones de Navegación del Paso 3 */}
+                                        <div className="pt-6 border-t border-[#E2DFD7] flex justify-between items-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormStep(2)}
+                                                className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5 transition"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                                                Atrás
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormStep(4)}
+                                                className="bg-[#161616] hover:bg-[#2c2c2c] text-white border-0 px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-2 transition"
+                                            >
+                                                Siguiente
+                                                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                                            </button>
                                         </div>
                                     </div>
                                 )}
@@ -2104,51 +2156,27 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Botones de Navegación del Paso 4 */}
+                                        <div className="pt-6 border-t border-[#E2DFD7] flex justify-between items-center pb-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormStep(3)}
+                                                className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5 transition"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                                                Atrás
+                                            </button>
+                                            <button 
+                                                type="submit" 
+                                                className="bg-[#D9381E] hover:bg-[#b82e18] text-white border-0 px-8 py-3.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-md flex items-center gap-2 transition"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                                                EMITIR FACTURA DE VENTA 🧾
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
-                            </div>
-
-                            {/* Footer Navegación del Modal */}
-                            <div className="modal-bottom px-4 sm:px-8 py-4 border-t border-[#E2DFD7] flex flex-wrap items-center justify-between gap-3 bg-[#F6F4EE] shrink-0">
-                                <button 
-                                    type="button" 
-                                    onClick={resetForm}
-                                    className="bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#6B6862] hover:text-[#161616] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-none cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-
-                                <div className="flex items-center gap-2">
-                                    {formStep > 1 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setFormStep(prev => Math.max(1, prev - 1))}
-                                            className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5 transition"
-                                        >
-                                            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-                                            Atrás
-                                        </button>
-                                    )}
-
-                                    {formStep < 4 ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => setFormStep(prev => Math.min(4, prev + 1))}
-                                            className="bg-[#161616] hover:bg-[#2c2c2c] text-white border-0 px-6 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-1.5 transition"
-                                        >
-                                            Siguiente
-                                            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                                        </button>
-                                    ) : (
-                                        <button 
-                                            type="submit" 
-                                            className="bg-[#D9381E] hover:bg-[#b82e18] text-white border-0 px-7 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-md flex items-center gap-2 transition"
-                                        >
-                                            <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-                                            EMITIR FACTURA DE VENTA 🧾
-                                        </button>
-                                    )}
-                                </div>
                             </div>
                         </form>
                     </div>

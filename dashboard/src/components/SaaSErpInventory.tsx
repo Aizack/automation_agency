@@ -242,6 +242,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [loading, setLoading] = useState(true);
     const [addProductStep, setAddProductStep] = useState<'closed' | 'open'>('closed');
     const isFormOpen = addProductStep !== 'closed';
+    const [productFormStep, setProductFormStep] = useState<number>(1);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [activeTab, setActiveTab] = useState<'catalog' | 'promotions' | 'rotation'>('catalog');
     const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set());
@@ -710,7 +711,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     };
 
     if (false as boolean) {
-        console.log(FieldWrapper, isAdmin, openCreateColorModal, openEditColorModal, handleDeleteColor, toggleFieldHidden, VisualColorDropdown);
+        console.log(allColors, FieldWrapper, isAdmin, openCreateColorModal, openEditColorModal, handleDeleteColor, toggleFieldHidden, VisualColorDropdown);
     }
 
     useEffect(() => {
@@ -1021,6 +1022,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     };
 
     const resetForm = () => {
+        setProductFormStep(1);
         setEditingProduct(null);
         setName('');
         setSku('');
@@ -1523,149 +1525,196 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     </button>
                                 </div>
 
-                                {/* Cuerpo Principal del Modal (2 Columnas: Izq Formulario Scrollable, Der Sidebar Fotos & Summary) */}
+                                {/* Indicador Stepper de Pasos Wabi-Sabi */}
+                                <div className="px-4 py-2.5 bg-[#FAF8F5] border-b border-[#E2DFD7] flex items-center justify-between shrink-0">
+                                    <div className="flex items-center gap-1.5 sm:gap-3 overflow-x-auto w-full custom-scrollbar pb-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductFormStep(1)}
+                                            className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider border cursor-pointer transition flex items-center gap-1.5 shrink-0 ${
+                                                productFormStep === 1
+                                                    ? 'bg-[#161616] text-white border-[#161616]'
+                                                    : productFormStep > 1
+                                                    ? 'bg-[#EAE6DF] text-[#161616] border-[#E2DFD7]'
+                                                    : 'bg-white text-[#6B6862] border-[#E2DFD7]'
+                                            }`}
+                                        >
+                                            <span className="w-4 h-4 rounded-full bg-[#D9381E] text-white text-[9px] flex items-center justify-center font-mono font-bold">1</span>
+                                            <span>1. Datos & Foto</span>
+                                        </button>
+
+                                        <span className="text-[#E2DFD7] font-bold text-xs shrink-0">→</span>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductFormStep(2)}
+                                            className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider border cursor-pointer transition flex items-center gap-1.5 shrink-0 ${
+                                                productFormStep === 2
+                                                    ? 'bg-[#161616] text-white border-[#161616]'
+                                                    : productFormStep > 2
+                                                    ? 'bg-[#EAE6DF] text-[#161616] border-[#E2DFD7]'
+                                                    : 'bg-white text-[#6B6862] border-[#E2DFD7]'
+                                            }`}
+                                        >
+                                            <span className="w-4 h-4 rounded-full bg-[#D9381E] text-white text-[9px] flex items-center justify-center font-mono font-bold">2</span>
+                                            <span>2. Variantes & Stock ({variantList.length})</span>
+                                        </button>
+
+                                        <span className="text-[#E2DFD7] font-bold text-xs shrink-0">→</span>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductFormStep(3)}
+                                            className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider border cursor-pointer transition flex items-center gap-1.5 shrink-0 ${
+                                                productFormStep === 3
+                                                    ? 'bg-[#D9381E] text-white border-[#D9381E]'
+                                                    : 'bg-white text-[#6B6862] border-[#E2DFD7]'
+                                            }`}
+                                        >
+                                            <span className="w-4 h-4 rounded-full bg-white text-[#161616] text-[9px] flex items-center justify-center font-mono font-bold">3</span>
+                                            <span>3. Precios & Guardar</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Formulario Dinámico por Pasos */}
                                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden min-h-0">
-                                    <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_310px] gap-6 sm:gap-8 min-h-0">
+                                    <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto custom-scrollbar">
                                         
-                                        {/* Columna Izquierda: Formulario Scrollable con amplio espacio para la barra de scroll */}
-                                        <div className="overflow-y-auto custom-scrollbar pr-4 sm:pr-8 space-y-6 max-h-full min-h-0 flex-1">
-                                            
-                                            {/* Sección 1: Información General */}
-                                            <div>
+                                        {/* PASO 1: DATOS BÁSICOS Y FOTOGRAFÍA */}
+                                        {productFormStep === 1 && (
+                                            <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
                                                 <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
-                                                    1. Información General del Ítem
+                                                    1. Datos Básicos, Clasificación & Fotografía
                                                 </h4>
 
-                                                 {/* Selector Categoría + Selector Tipo de Ítem */}
-                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
-                                                     <div className="flex flex-col gap-1.5">
-                                                         <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Ítem *</label>
-                                                         <select
-                                                             value={isLensMode ? 'lens' : productType}
-                                                             onChange={(e) => {
-                                                                 const val = e.target.value;
-                                                                 if (val === 'lens') {
-                                                                     setIsLensMode(true);
-                                                                     setProductType('service');
-                                                                     setStock(999999);
-                                                                     const lentesCat = categories.find((c: any) => c.name.toLowerCase().includes('lente'));
-                                                                     if (lentesCat) setCategoryId(lentesCat.id);
-                                                                 } else {
-                                                                     setIsLensMode(false);
-                                                                     const pVal = val as 'product' | 'service';
-                                                                     setProductType(pVal);
-                                                                     if (pVal === 'service') setStock(999999);
-                                                                     else if (stock === 999999) setStock('');
-                                                                 }
-                                                             }}
-                                                             className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                         >
-                                                             <option value="product">Producto Inventariable (Físico)</option>
-                                                             <option value="service">Servicio / Honorario Médico (Sin Stock)</option>
-                                                             <option value="lens">Lente / Cristal Oftálmico (Servicio Sin Stock)</option>
-                                                         </select>
-                                                     </div>
+                                                {/* Selector Categoría + Selector Tipo de Ítem */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Ítem *</label>
+                                                        <select
+                                                            value={isLensMode ? 'lens' : productType}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (val === 'lens') {
+                                                                    setIsLensMode(true);
+                                                                    setProductType('service');
+                                                                    setStock(999999);
+                                                                    const lentesCat = categories.find((c: any) => c.name.toLowerCase().includes('lente'));
+                                                                    if (lentesCat) setCategoryId(lentesCat.id);
+                                                                } else {
+                                                                    setIsLensMode(false);
+                                                                    const pVal = val as 'product' | 'service';
+                                                                    setProductType(pVal);
+                                                                    if (pVal === 'service') setStock(999999);
+                                                                    else if (stock === 999999) setStock('');
+                                                                }
+                                                            }}
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition rounded-none"
+                                                        >
+                                                            <option value="product">Producto Inventariable (Físico)</option>
+                                                            <option value="service">Servicio / Honorario Médico (Sin Stock)</option>
+                                                            <option value="lens">Lente / Cristal Oftálmico (Servicio Sin Stock)</option>
+                                                        </select>
+                                                    </div>
 
-                                                     <div className="flex flex-col gap-1.5">
-                                                         <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
-                                                             <span>Categoría del Producto *</span>
-                                                         </label>
-                                                         <div className="flex gap-2">
-                                                             <select 
-                                                                 className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition w-full rounded-none"
-                                                                 value={categoryId}
-                                                                 onChange={(e) => {
-                                                                     if (e.target.value === 'new') {
-                                                                         setShowCreateCategoryPrompt(true);
-                                                                     } else {
-                                                                         handleSelectCategory(e.target.value);
-                                                                     }
-                                                                 }}
-                                                             >
-                                                                 <option value="">-- Selecciona Categoría --</option>
-                                                                 {categories.map((cat: any) => (
-                                                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                                                 ))}
-                                                                 <option value="new" className="font-bold text-[#D9381E]">+ Crear Nueva Categoría</option>
-                                                             </select>
-                                                         </div>
-                                                     </div>
-                                                 </div>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
+                                                            <span>Categoría del Producto *</span>
+                                                        </label>
+                                                        <div className="flex gap-2">
+                                                            <select 
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition w-full rounded-none"
+                                                                value={categoryId}
+                                                                onChange={(e) => {
+                                                                    if (e.target.value === 'new') {
+                                                                        setShowCreateCategoryPrompt(true);
+                                                                    } else {
+                                                                        handleSelectCategory(e.target.value);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <option value="">-- Selecciona Categoría --</option>
+                                                                {categories.map((cat: any) => (
+                                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                                ))}
+                                                                <option value="new" className="font-bold text-[#D9381E]">+ Crear Nueva Categoría</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                                 {/* Sección Específica de Características del Lente (Diseño, Material, Tratamiento) - Estética Papel Wabi-Sabi */}
-                                                 {(isLensMode || (categoryId && categories.find((c: any) => c.id === categoryId)?.name.toLowerCase().includes('lente'))) && (
-                                                     <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-4 space-y-4 mb-5 rounded-none text-[#161616]">
-                                                         <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2.5">
-                                                             <div className="flex items-center gap-2">
-                                                                 <span className="material-symbols-outlined text-[#D9381E] text-[18px]">visibility</span>
-                                                                 <span className="text-xs font-bold text-[#161616] uppercase tracking-wider">Características del Lente / Cristal</span>
-                                                             </div>
-                                                             <span className="text-[10px] bg-white text-[#6B6862] border border-[#E2DFD7] px-2 py-0.5 font-mono uppercase tracking-wider">
-                                                                 Servicio Sin Stock
-                                                             </span>
-                                                         </div>
+                                                {/* Características del Lente */}
+                                                {(isLensMode || (categoryId && categories.find((c: any) => c.id === categoryId)?.name.toLowerCase().includes('lente'))) && (
+                                                    <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-4 space-y-4 mb-5 rounded-none text-[#161616]">
+                                                        <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2.5">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="material-symbols-outlined text-[#D9381E] text-[18px]">visibility</span>
+                                                                <span className="text-xs font-bold text-[#161616] uppercase tracking-wider">Características del Lente / Cristal</span>
+                                                            </div>
+                                                            <span className="text-[10px] bg-white text-[#6B6862] border border-[#E2DFD7] px-2 py-0.5 font-mono uppercase tracking-wider">
+                                                                Servicio Sin Stock
+                                                            </span>
+                                                        </div>
 
-                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                             {/* Tipo de Uso */}
-                                                             <div className="flex flex-col gap-1.5">
-                                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Uso</label>
-                                                                 <select
-                                                                     value={lensDesign}
-                                                                     onChange={(e) => setLensDesign(e.target.value)}
-                                                                     className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                                 >
-                                                                     <option value="">– Seleccione Tipo de Uso –</option>
-                                                                     <option value="Monofocal">Monofocal</option>
-                                                                     <option value="Bifocal">Bifocal</option>
-                                                                     <option value="Progresivo">Progresivo / Multifocal</option>
-                                                                     <option value="Ocupacional">Ocupacional</option>
-                                                                     <option value="Anti-fatiga">Anti-fatiga</option>
-                                                                     <option value="Lente de Contacto">Lente de Contacto</option>
-                                                                 </select>
-                                                             </div>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                            <div className="flex flex-col gap-1.5">
+                                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Uso</label>
+                                                                <select
+                                                                    value={lensDesign}
+                                                                    onChange={(e) => setLensDesign(e.target.value)}
+                                                                    className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
+                                                                >
+                                                                    <option value="">– Seleccione Tipo de Uso –</option>
+                                                                    <option value="Monofocal">Monofocal</option>
+                                                                    <option value="Bifocal">Bifocal</option>
+                                                                    <option value="Progresivo">Progresivo / Multifocal</option>
+                                                                    <option value="Ocupacional">Ocupacional</option>
+                                                                    <option value="Anti-fatiga">Anti-fatiga</option>
+                                                                    <option value="Lente de Contacto">Lente de Contacto</option>
+                                                                </select>
+                                                            </div>
 
-                                                             {/* Material del Cristal */}
-                                                             <div className="flex flex-col gap-1.5">
-                                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Material del Cristal</label>
-                                                                 <select
-                                                                     value={lensMaterial}
-                                                                     onChange={(e) => setLensMaterial(e.target.value)}
-                                                                     className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                                 >
-                                                                     <option value="">– Seleccione Material –</option>
-                                                                     <option value="CR-39 / Orgánico">CR-39 / Orgánico (1.56)</option>
-                                                                     <option value="Policarbonato">Policarbonato (1.59)</option>
-                                                                     <option value="Alto Índice 1.67">Alto Índice 1.67</option>
-                                                                     <option value="Alto Índice 1.74">Alto Índice 1.74</option>
-                                                                     <option value="Trivex / Polilite">Trivex / Polilite</option>
-                                                                     <option value="Cristal / Vidrio">Cristal / Vidrio</option>
-                                                                     <option value="Hidrogel de Silicona">Hidrogel de Silicona</option>
-                                                                 </select>
-                                                             </div>
+                                                            <div className="flex flex-col gap-1.5">
+                                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Material del Cristal</label>
+                                                                <select
+                                                                    value={lensMaterial}
+                                                                    onChange={(e) => setLensMaterial(e.target.value)}
+                                                                    className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
+                                                                >
+                                                                    <option value="">– Seleccione Material –</option>
+                                                                    <option value="CR-39 / Orgánico">CR-39 / Orgánico (1.56)</option>
+                                                                    <option value="Policarbonato">Policarbonato (1.59)</option>
+                                                                    <option value="Alto Índice 1.67">Alto Índice 1.67</option>
+                                                                    <option value="Alto Índice 1.74">Alto Índice 1.74</option>
+                                                                    <option value="Trivex / Polilite">Trivex / Polilite</option>
+                                                                    <option value="Cristal / Vidrio">Cristal / Vidrio</option>
+                                                                    <option value="Hidrogel de Silicona">Hidrogel de Silicona</option>
+                                                                </select>
+                                                            </div>
 
-                                                             {/* Tratamiento / Filtro */}
-                                                             <div className="flex flex-col gap-1.5 sm:col-span-2">
-                                                                 <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tratamiento / Filtro</label>
-                                                                 <select
-                                                                     value={lensTreatment}
-                                                                     onChange={(e) => setLensTreatment(e.target.value)}
-                                                                     className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                                 >
-                                                                     <option value="">– Seleccione Tratamiento –</option>
-                                                                     <option value="Sencillo / Blanco">Sencillo / Blanco (Sin Filtro)</option>
-                                                                     <option value="Antirreflejo (AR)">Antirreflejo (AR)</option>
-                                                                     <option value="AR-Blue (Filtro Azul)">AR-Blue (Filtro Azul / AR Blue)</option>
-                                                                     <option value="Fotocromático (Transitions)">Fotocromático (Transitions)</option>
-                                                                     <option value="Fotocromático AR-Blue">Fotocromático AR-Blue (Transitions + AR Blue)</option>
-                                                                     <option value="Polarizado">Polarizado</option>
-                                                                     <option value="Espejado">Espejado</option>
-                                                                 </select>
-                                                             </div>
-                                                         </div>
-                                                     </div>
-                                                 )}
+                                                            <div className="flex flex-col gap-1.5 sm:col-span-2">
+                                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tratamiento / Filtro</label>
+                                                                <select
+                                                                    value={lensTreatment}
+                                                                    onChange={(e) => setLensTreatment(e.target.value)}
+                                                                    className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
+                                                                >
+                                                                    <option value="">– Seleccione Tratamiento –</option>
+                                                                    <option value="Sencillo / Blanco">Sencillo / Blanco (Sin Filtro)</option>
+                                                                    <option value="Antirreflejo (AR)">Antirreflejo (AR)</option>
+                                                                    <option value="AR-Blue (Filtro Azul)">AR-Blue (Filtro Azul / AR Blue)</option>
+                                                                    <option value="Fotocromático (Transitions)">Fotocromático (Transitions)</option>
+                                                                    <option value="Fotocromático AR-Blue">Fotocromático AR-Blue (Transitions + AR Blue)</option>
+                                                                    <option value="Polarizado">Polarizado</option>
+                                                                    <option value="Espejado">Espejado</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
 
-                                                {/* Marca & Referencia / Modelo */}
+                                                {/* Marca & Referencia */}
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
                                                     {productType === 'product' && (
                                                         <div className="flex flex-col gap-1.5">
@@ -1693,7 +1742,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     </div>
                                                 </div>
 
-                                                {/* SKU / Código de Barras Simple */}
+                                                {/* SKU Producto Simple */}
                                                 {(!hasVariants || productType === 'service') ? (
                                                     <div className="flex flex-col gap-1.5 mb-4">
                                                         <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
@@ -1717,7 +1766,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                             <span className="material-symbols-outlined text-[#D9381E] text-[20px]">palette</span>
                                                             <div>
                                                                 <p className="text-xs font-bold text-[#161616]">Producto con Variantes de Color Activas</p>
-                                                                <p className="text-[10px] text-[#6B6862]">Los códigos de barras y stock se definen individualmente por cada color en la tabla abajo.</p>
+                                                                <p className="text-[10px] text-[#6B6862]">Los códigos de barras y stock se definen individualmente por cada color en el Paso 2.</p>
                                                             </div>
                                                         </div>
                                                         <button
@@ -1731,389 +1780,393 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                         </button>
                                                     </div>
                                                 )}
-                                            </div>
 
-                                            {/* Sección 2: Variantes de Color & Control de Stock */}
-                                            {productType === 'product' && (
-                                                <div className="border-t border-[#E2DFD7] pt-6">
-                                                    <div className="flex justify-between items-center mb-3">
-                                                        <div>
-                                                            <h4 className="font-serif text-xl text-[#161616] font-normal">
-                                                                2. Variantes de Color & Control de Stock
-                                                            </h4>
-                                                            <p className="text-xs text-[#6B6862] mt-0.5">Define los códigos de barra y existencias físicas por cada color.</p>
-                                                        </div>
-                                                        {hasVariants ? (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setVariantList([...variantList, { color: 'Negro', sku: '', stock: 5, min_stock: 2, image_url: '' }])}
-                                                                className="bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider cursor-pointer transition rounded-none"
-                                                            >
-                                                                + Agregar Color
-                                                            </button>
-                                                        ) : (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setHasVariants(true);
-                                                                    if (variantList.length === 0) setVariantList([{ color: 'Negro', sku: '', stock: stock === '' ? 10 : stock, min_stock: 2, image_url: '' }]);
-                                                                }}
-                                                                className="bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#D9381E] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider cursor-pointer transition rounded-none"
-                                                            >
-                                                                + Activar Variantes por Color
-                                                            </button>
-                                                        )}
+                                                {/* Sección de Fotografía del Producto */}
+                                                <div className="bg-white border border-[#E2DFD7] p-5 space-y-4">
+                                                    <div className="flex justify-between items-baseline border-b border-[#E2DFD7] pb-2">
+                                                        <h4 className="font-serif text-lg text-[#161616] font-normal">Fotografía del Ítem</h4>
+                                                        <span className="text-[10px] text-[#D9381E] font-bold uppercase tracking-wider">
+                                                            COLOR: {variantList[activePhotoColorIdx]?.color || 'NEGRO'}
+                                                        </span>
                                                     </div>
 
-                                                    {!isAdmin && editingProduct && (
-                                                        <div className="mb-3 p-2.5 bg-[#FAF8F5] border border-[#E2DFD7] text-[11px] text-[#6B6862] flex items-center gap-2">
-                                                            <span className="material-symbols-outlined text-amber-600 text-base">lock</span>
-                                                            <span><strong>Modo Empleado:</strong> Puedes corregir la información del producto (precio de venta, referencia, categoría, colores, etc.). El precio de costo y la cantidad de stock están protegidos. Para agregar unidades usa <em>Reabastecer</em>.</span>
-                                                        </div>
-                                                    )}
+                                                    <div className="flex flex-col md:flex-row items-center gap-6">
+                                                        <label className="photo-dropzone-compact relative group cursor-pointer shrink-0 w-[160px] h-[160px] border-2 border-dashed border-[#E2DFD7] flex flex-col items-center justify-center bg-[#FAF8F5] hover:border-[#161616] transition">
+                                                            {variantList[activePhotoColorIdx]?.image_url ? (
+                                                                <>
+                                                                    <img 
+                                                                        src={variantList[activePhotoColorIdx].image_url!} 
+                                                                        alt="Preview" 
+                                                                        className="w-full h-full object-cover" 
+                                                                    />
+                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                                                        <span className="material-symbols-outlined text-white text-2xl">edit</span>
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <span className="material-symbols-outlined text-3xl text-[#6B6862] group-hover:text-[#D9381E]">photo_camera</span>
+                                                                    <span className="text-[11px] font-medium text-center px-3 text-[#6B6862] mt-1">
+                                                                        Subir foto para variante
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                            <input 
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="hidden"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (file) {
+                                                                        const reader = new FileReader();
+                                                                        reader.onloadend = () => {
+                                                                            if (reader.result) {
+                                                                                const updated = [...variantList];
+                                                                                if (updated[activePhotoColorIdx]) {
+                                                                                    updated[activePhotoColorIdx].image_url = reader.result.toString();
+                                                                                    setVariantList(updated);
+                                                                                }
+                                                                            }
+                                                                        };
+                                                                        reader.readAsDataURL(file);
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </label>
 
-                                                    {hasVariants && (
-                                                        <div className="variants-section-zen">
-                                                            <table className="variants-table-zen w-full">
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th style={{ width: '32%' }}>Color / Variante</th>
-                                                                        <th style={{ width: '18%' }}>Stock Actual</th>
-                                                                        <th style={{ width: '18%' }}>Stock Mínimo</th>
-                                                                        <th style={{ width: '26%' }}>EAN / Barras</th>
-                                                                        <th style={{ width: '6%', textAlign: 'center' }}></th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    {variantList.map((v, idx) => (
-                                                                        <tr key={idx}>
-                                                                            <td>
-                                                                                <VisualColorDropdown 
-                                                                                    selectedColor={v.color}
-                                                                                    colors={allColors}
-                                                                                    onSelect={(colorName) => {
-                                                                                        const updated = [...variantList];
-                                                                                        updated[idx].color = colorName;
-                                                                                        setVariantList(updated);
-                                                                                    }}
-                                                                                    onOpenPaintNew={() => openCreateColorModal(idx)}
-                                                                                    onEditColor={(c) => openEditColorModal(c)}
-                                                                                    onDeleteColor={(id) => handleDeleteColor(id)}
-                                                                                />
-                                                                            </td>
-                                                                            <td>
-                                                                                <input 
-                                                                                    type="number" 
-                                                                                    value={v.stock}
-                                                                                    disabled={!isAdmin && Boolean(editingProduct) && Boolean(v.id)}
-                                                                                    onFocus={(e) => e.target.select()}
-                                                                                    onChange={(e) => {
-                                                                                        const updated = [...variantList];
-                                                                                        updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
-                                                                                        setVariantList(updated);
-                                                                                    }}
-                                                                                    className={`font-mono text-center font-bold ${!isAdmin && editingProduct && v.id ? 'bg-gray-100 text-gray-500 cursor-not-allowed opacity-75' : ''}`}
-                                                                                    title={!isAdmin && editingProduct && v.id ? "Edición de stock protegida para empleados. Usa 'Reabastecer' en el inventario." : ""}
-                                                                                />
-                                                                            </td>
-                                                                            <td>
-                                                                                <input 
-                                                                                    type="number" 
-                                                                                    value={v.min_stock}
-                                                                                    onFocus={(e) => e.target.select()}
-                                                                                    onChange={(e) => {
-                                                                                        const updated = [...variantList];
-                                                                                        updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
-                                                                                        setVariantList(updated);
-                                                                                    }}
-                                                                                    className="font-mono text-center"
-                                                                                />
-                                                                            </td>
-                                                                            <td>
-                                                                                <input 
-                                                                                    type="text" 
-                                                                                    placeholder="Escanear / Vacío" 
-                                                                                    value={v.sku || ''}
-                                                                                    onChange={(e) => {
-                                                                                        const updated = [...variantList];
-                                                                                        updated[idx].sku = e.target.value;
-                                                                                        setVariantList(updated);
-                                                                                    }}
-                                                                                    className="font-mono text-xs"
-                                                                                />
-                                                                            </td>
-                                                                            <td style={{ textAlign: 'center' }}>
-                                                                                {variantList.length > 1 && (
-                                                                                    <button 
-                                                                                        type="button"
-                                                                                        onClick={() => setVariantList(variantList.filter((_, i) => i !== idx))}
-                                                                                        className="bg-transparent border-0 text-[#D9381E] cursor-pointer text-lg leading-none"
-                                                                                    >
-                                                                                        &times;
-                                                                                    </button>
-                                                                                )}
-                                                                            </td>
-                                                                        </tr>
-                                                                    ))}
-                                                                </tbody>
-                                                            </table>
-
-                                                            {/* Stock Total Calculado Display */}
-                                                            <div className="mt-3 pt-3 border-t border-[#E2DFD7] flex justify-between items-center">
-                                                                <span className="text-[11px] font-bold uppercase tracking-widest text-[#6B6862]">Stock Total Calculado:</span>
-                                                                <span className="font-mono text-lg font-bold text-[#D9381E]">
-                                                                    {variantList.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)} Unidades Total
+                                                        {variantList.length > 0 && (
+                                                            <div className="flex flex-col gap-2 flex-1">
+                                                                <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-wider">
+                                                                    COLOR SELECCIONADO PARA FOTO: {variantList[activePhotoColorIdx]?.color || 'NEGRO'}
                                                                 </span>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {variantList.map((v, idx) => (
+                                                                        <button
+                                                                            key={idx}
+                                                                            type="button"
+                                                                            onClick={() => setActivePhotoColorIdx(idx)}
+                                                                            className={`px-3 py-1.5 text-xs font-bold border cursor-pointer transition flex items-center gap-1.5 ${
+                                                                                idx === activePhotoColorIdx
+                                                                                    ? 'bg-[#161616] text-white border-[#161616]'
+                                                                                    : 'bg-white text-[#161616] border-[#E2DFD7]'
+                                                                            }`}
+                                                                        >
+                                                                            <span 
+                                                                                className="w-3 h-3 rounded-full border border-black/20" 
+                                                                                style={{ background: getColorPreview(v.color) }}
+                                                                            />
+                                                                            <span>{v.color || `Color ${idx + 1}`}</span>
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    )}
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            )}
 
-                                            {/* Sección 3: Precios e Impuestos (DIAN) */}
-                                            <div className="border-t border-[#E2DFD7] pt-6">
+                                                {/* Navegación Paso 1 */}
+                                                <div className="pt-6 border-t border-[#E2DFD7] flex justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setProductFormStep(2)}
+                                                        className="bg-[#161616] hover:bg-[#2c2c2c] text-white border-0 px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-2 transition"
+                                                    >
+                                                        Siguiente
+                                                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* PASO 2: VARIANTES DE COLOR Y STOCK */}
+                                        {productFormStep === 2 && (
+                                            <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
                                                 <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
-                                                    3. Precios e Impuestos (DIAN)
+                                                    2. Variantes de Color & Control de Stock
                                                 </h4>
 
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 items-end">
-                                                    {isAdmin && (
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Precio Costo ($)">
-                                                                Precio Costo ($)
-                                                            </label>
-                                                            <input 
-                                                                type="number"
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px] w-full"
-                                                                value={costPrice}
-                                                                onFocus={(e) => e.target.select()}
-                                                                onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                                                                placeholder="Ej: 180000"
-                                                            />
-                                                        </div>
-                                                    )}
-
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Precio Venta Base ($)">
-                                                            Precio Venta ($) *
-                                                        </label>
-                                                        <input 
-                                                            type="number"
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono font-bold focus:border-[#161616] transition rounded-none h-[42px] w-full"
-                                                            value={price}
-                                                            onFocus={(e) => e.target.select()}
-                                                            onChange={(e) => setPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                                                            placeholder="Ej: 350000"
-                                                            required
-                                                        />
-                                                    </div>
-
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Descuento Promoción (%)">
-                                                            Desc. Promo (%)
-                                                        </label>
-                                                        <input 
-                                                            type="number"
-                                                            min={0}
-                                                            max={100}
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px] w-full"
-                                                            value={promoDiscount}
-                                                            onFocus={(e) => e.target.select()}
-                                                            onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
-                                                            placeholder="0"
-                                                        />
-                                                    </div>
-
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Impuesto / IVA (DIAN)">
-                                                            Impuesto / IVA
-                                                        </label>
-                                                        <select
-                                                            value={taxRate}
-                                                            onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans cursor-pointer h-[42px] w-full"
-                                                        >
-                                                            <option value={0}>0% (Exento / Gafas)</option>
-                                                            <option value={19}>19% (IVA General)</option>
-                                                            <option value={5}>5% (IVA Reducido)</option>
-                                                            <option value={8}>8% (INC Consumo)</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex flex-col gap-1.5">
-                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Descripción Comercial</label>
-                                                    <textarea 
-                                                        rows={3}
-                                                        className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans"
-                                                        value={description}
-                                                        onChange={(e) => setDescription(e.target.value)}
-                                                        placeholder="Detalles de garantía, ficha técnica, indicaciones para el cliente..."
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Columna Derecha (Fixed Modal Sidebar): Fotografía Cuadrada por Variante & Resumen de Registro */}
-                                        <div className="modal-sidebar-fixed flex flex-col gap-4 justify-between h-full max-h-full overflow-y-auto custom-scrollbar pr-2 min-h-0 flex-1">
-                                            <div>
-                                                <div className="flex justify-between items-baseline mb-3 border-b border-[#E2DFD7] pb-2">
-                                                    <h4 className="font-serif text-lg text-[#161616] font-normal">Fotografía del Ítem</h4>
-                                                    <span className="text-[10px] text-[#D9381E] font-bold uppercase tracking-wider">
-                                                        COLOR: {variantList[activePhotoColorIdx]?.color || 'NEGRO'}
-                                                    </span>
-                                                </div>
-
-                                                {/* Área de Foto Cuadrada con Carousel Horizontal de Muestras Abajo */}
-                                                <div className="photo-area-with-swatches flex flex-col items-center gap-3 w-full">
-                                                    {/* Square Photo Dropzone */}
-                                                    <label className="photo-dropzone-compact relative group cursor-pointer shrink-0 w-[145px] h-[145px] sm:w-[160px] sm:h-[160px]">
-                                                        {variantList[activePhotoColorIdx]?.image_url ? (
-                                                            <>
-                                                                <img 
-                                                                    src={variantList[activePhotoColorIdx].image_url!} 
-                                                                    alt="Preview" 
-                                                                    className="w-full h-full object-cover" 
-                                                                />
-                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                                                                    <span className="material-symbols-outlined text-white text-2xl">edit</span>
-                                                                </div>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <span className="material-symbols-outlined text-3xl text-[#6B6862] group-hover:text-[#D9381E]">photo_camera</span>
-                                                                <span className="text-[11px] font-medium text-center px-3 text-[#6B6862]">
-                                                                    Subir foto para variante seleccionada
-                                                                </span>
-                                                            </>
-                                                        )}
-                                                        <input 
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            onChange={(e) => {
-                                                                const file = e.target.files?.[0];
-                                                                if (file) {
-                                                                    const reader = new FileReader();
-                                                                    reader.onloadend = () => {
-                                                                        if (reader.result) {
-                                                                            const updated = [...variantList];
-                                                                            if (updated[activePhotoColorIdx]) {
-                                                                                updated[activePhotoColorIdx].image_url = reader.result.toString();
-                                                                                setVariantList(updated);
-                                                                            }
-                                                                        }
-                                                                    };
-                                                                    reader.readAsDataURL(file);
-                                                                }
-                                                            }}
-                                                        />
-                                                    </label>
-
-                                                    {/* Carousel Horizontal de Muestras de Color con Ventana de 4 y Flechas Laterales */}
-                                                    {variantList.length > 0 && (
-                                                        <div className="w-full flex flex-col items-center gap-2 mt-1">
-                                                            <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-wider">
-                                                                COLOR SELECCIONADO: {variantList[activePhotoColorIdx]?.color || 'NEGRO'}
-                                                            </span>
-                                                            
-                                                            <div className="flex items-center justify-center gap-2 w-full">
-                                                                {/* Flecha Izquierda: Retrocede al color anterior */}
-                                                                {variantList.length > 1 && (
+                                                {productType === 'product' && (
+                                                    <div className="space-y-4">
+                                                        {hasVariants ? (
+                                                            <div className="bg-white p-5 border border-[#E2DFD7] space-y-4">
+                                                                <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                                                                    <div>
+                                                                        <h5 className="font-bold text-xs uppercase tracking-wider text-[#161616]">Tabla de Existencias por Color</h5>
+                                                                        <p className="text-[11px] text-[#6B6862]">Asigna códigos SKU y stock físico para cada variante de color.</p>
+                                                                    </div>
                                                                     <button
                                                                         type="button"
-                                                                        onClick={() => setActivePhotoColorIdx(prev => Math.max(0, prev - 1))}
-                                                                        disabled={activePhotoColorIdx === 0}
-                                                                        className={`w-[22px] h-[22px] flex items-center justify-center text-[#161616] hover:text-[#D9381E] border border-[#E2DFD7] bg-white transition cursor-pointer p-0 shrink-0 select-none shadow-xs ${
-                                                                            activePhotoColorIdx === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100 hover:border-[#161616]'
-                                                                        }`}
-                                                                        title="Color anterior"
+                                                                        onClick={() => setVariantList([...variantList, { color: '', sku: '', stock: 1, min_stock: 2, image_url: '' }])}
+                                                                        className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[10px] font-bold py-2 px-3 rounded-none flex items-center gap-1 transition uppercase tracking-wider"
                                                                     >
-                                                                        <span className="material-symbols-outlined text-[15px] leading-none">chevron_left</span>
+                                                                        <span className="material-symbols-outlined text-[14px] text-[#D9381E]">add</span>
+                                                                        + Color
                                                                     </button>
-                                                                )}
+                                                                </div>
 
-                                                                {/* Ventana Visible de Exactamente 4 Cuadritos de Color */}
-                                                                <div className={`overflow-hidden py-1 px-1 ${variantList.length <= 4 ? 'flex justify-center' : 'w-[104px]'}`}>
-                                                                    <div 
-                                                                        className="flex items-center gap-[8px] transition-transform duration-300 ease-out"
-                                                                        style={{
-                                                                            transform: variantList.length > 4 ? `translateX(-${colorStartIndex * 26}px)` : 'none'
-                                                                        }}
-                                                                    >
-                                                                        {variantList.map((v, idx) => (
-                                                                            <div 
-                                                                                key={idx}
-                                                                                onClick={() => setActivePhotoColorIdx(idx)}
-                                                                                className={`photo-swatch-btn shrink-0 ${idx === activePhotoColorIdx ? 'active' : ''}`}
-                                                                                style={{ background: getColorPreview(v.color) }}
-                                                                                title={`Ver/Subir foto para ${v.color || 'Variante ' + (idx + 1)}`}
-                                                                            />
-                                                                        ))}
+                                                                <div className="overflow-x-auto">
+                                                                    <table className="w-full text-left text-xs border-collapse">
+                                                                        <thead>
+                                                                            <tr className="border-b border-[#E2DFD7] text-[#6B6862] text-[10px] uppercase font-mono">
+                                                                                <th className="py-2 pr-2">Color / Variante</th>
+                                                                                <th className="py-2 px-2">Código SKU / Barras</th>
+                                                                                <th className="py-2 px-2 text-center">Stock</th>
+                                                                                <th className="py-2 px-2 text-center">Min. Stock</th>
+                                                                                <th className="py-2 pl-2 text-right">Acción</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody className="divide-y divide-[#FAF8F5]">
+                                                                            {variantList.map((v, idx) => (
+                                                                                <tr key={idx}>
+                                                                                    <td className="py-2 pr-2">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={v.color}
+                                                                                            onChange={(e) => {
+                                                                                                const updated = [...variantList];
+                                                                                                updated[idx].color = e.target.value;
+                                                                                                setVariantList(updated);
+                                                                                            }}
+                                                                                            placeholder="Ej: Negro Matte"
+                                                                                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-bold outline-none rounded-none w-full"
+                                                                                        />
+                                                                                    </td>
+                                                                                    <td className="py-2 px-2">
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            value={v.sku || ''}
+                                                                                            onChange={(e) => {
+                                                                                                const updated = [...variantList];
+                                                                                                updated[idx].sku = e.target.value;
+                                                                                                setVariantList(updated);
+                                                                                            }}
+                                                                                            placeholder="SKU-COLOR"
+                                                                                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono outline-none rounded-none w-full uppercase"
+                                                                                        />
+                                                                                    </td>
+                                                                                    <td className="py-2 px-2 text-center">
+                                                                                        <input
+                                                                                            type="number"
+                                                                                            min="0"
+                                                                                            value={v.stock}
+                                                                                            onChange={(e) => {
+                                                                                                const updated = [...variantList];
+                                                                                                updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
+                                                                                                setVariantList(updated);
+                                                                                            }}
+                                                                                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono font-bold text-center outline-none rounded-none w-20"
+                                                                                        />
+                                                                                    </td>
+                                                                                    <td className="py-2 px-2 text-center">
+                                                                                        <input
+                                                                                            type="number"
+                                                                                            min="0"
+                                                                                            value={v.min_stock}
+                                                                                            onChange={(e) => {
+                                                                                                const updated = [...variantList];
+                                                                                                updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
+                                                                                                setVariantList(updated);
+                                                                                            }}
+                                                                                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono text-center outline-none rounded-none w-16"
+                                                                                        />
+                                                                                    </td>
+                                                                                    <td className="py-2 pl-2 text-right">
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            disabled={variantList.length === 1}
+                                                                                            onClick={() => setVariantList(variantList.filter((_, i) => i !== idx))}
+                                                                                            className="text-[#6B6862] hover:text-[#D9381E] transition border-0 bg-transparent cursor-pointer disabled:opacity-30"
+                                                                                            title="Eliminar variante"
+                                                                                        >
+                                                                                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                                                        </button>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            ))}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+
+                                                                <div className="pt-3 border-t border-[#E2DFD7] flex justify-between items-center">
+                                                                    <span className="text-[11px] font-bold uppercase tracking-widest text-[#6B6862]">Stock Total Calculado:</span>
+                                                                    <span className="font-mono text-base font-bold text-[#D9381E]">
+                                                                        {variantList.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)} Unidades Físicas
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="bg-white p-5 border border-[#E2DFD7] space-y-4">
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                                    <div className="flex flex-col gap-1.5">
+                                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Stock Disponible *</label>
+                                                                        <input 
+                                                                            type="number"
+                                                                            min="0"
+                                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-mono font-bold outline-none rounded-none"
+                                                                            value={stock}
+                                                                            onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
+                                                                            placeholder="Ej: 15"
+                                                                            required
+                                                                        />
+                                                                    </div>
+                                                                    <div className="flex flex-col gap-1.5">
+                                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Stock Mínimo de Alerta</label>
+                                                                        <input 
+                                                                            type="number"
+                                                                            min="0"
+                                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-mono outline-none rounded-none"
+                                                                            value={minStock}
+                                                                            onChange={(e) => setMinStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
+                                                                            placeholder="5"
+                                                                        />
                                                                     </div>
                                                                 </div>
-
-                                                                {/* Flecha Derecha: Avanza al siguiente color */}
-                                                                {variantList.length > 1 && (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setActivePhotoColorIdx(prev => Math.min(variantList.length - 1, prev + 1))}
-                                                                        disabled={activePhotoColorIdx >= variantList.length - 1}
-                                                                        className={`w-[22px] h-[22px] flex items-center justify-center text-[#161616] hover:text-[#D9381E] border border-[#E2DFD7] bg-white transition cursor-pointer p-0 shrink-0 select-none shadow-xs ${
-                                                                            activePhotoColorIdx >= variantList.length - 1 ? 'opacity-0 pointer-events-none' : 'opacity-100 hover:border-[#161616]'
-                                                                        }`}
-                                                                        title="Color siguiente"
-                                                                    >
-                                                                        <span className="material-symbols-outlined text-[15px] leading-none">chevron_right</span>
-                                                                    </button>
-                                                                )}
                                                             </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Navegación Paso 2 */}
+                                                <div className="pt-6 border-t border-[#E2DFD7] flex justify-between items-center">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setProductFormStep(1)}
+                                                        className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5 transition"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                                                        Atrás
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setProductFormStep(3)}
+                                                        className="bg-[#161616] hover:bg-[#2c2c2c] text-white border-0 px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-2 transition"
+                                                    >
+                                                        Siguiente
+                                                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* PASO 3: PRECIOS, IMPUESTOS Y CONFIRMACIÓN */}
+                                        {productFormStep === 3 && (
+                                            <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
+                                                <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
+                                                    3. Precios, Impuestos (DIAN) & Confirmación
+                                                </h4>
+
+                                                <div className="bg-white p-5 border border-[#E2DFD7] space-y-4">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                                                        {isAdmin && (
+                                                            <div className="flex flex-col gap-1.5">
+                                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Precio Costo ($)</label>
+                                                                <input 
+                                                                    type="number"
+                                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px]"
+                                                                    value={costPrice}
+                                                                    onFocus={(e) => e.target.select()}
+                                                                    onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                                                                    placeholder="Ej: 180000"
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Precio Venta ($) *</label>
+                                                            <input 
+                                                                type="number"
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono font-bold focus:border-[#161616] transition rounded-none h-[42px]"
+                                                                value={price}
+                                                                onFocus={(e) => e.target.select()}
+                                                                onChange={(e) => setPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                                                                placeholder="Ej: 350000"
+                                                                required
+                                                            />
                                                         </div>
-                                                    )}
+
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Desc. Promo (%)</label>
+                                                            <input 
+                                                                type="number"
+                                                                min={0}
+                                                                max={100}
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px]"
+                                                                value={promoDiscount}
+                                                                onFocus={(e) => e.target.select()}
+                                                                onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                                                                placeholder="0"
+                                                            />
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Impuesto / IVA</label>
+                                                            <select
+                                                                value={taxRate}
+                                                                onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans cursor-pointer h-[42px]"
+                                                            >
+                                                                <option value={0}>0% (Exento / Gafas)</option>
+                                                                <option value={19}>19% (IVA General)</option>
+                                                                <option value={5}>5% (IVA Reducido)</option>
+                                                                <option value={8}>8% (INC Consumo)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex flex-col gap-1.5 pt-2">
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Descripción Comercial</label>
+                                                        <textarea 
+                                                            rows={3}
+                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans"
+                                                            value={description}
+                                                            onChange={(e) => setDescription(e.target.value)}
+                                                            placeholder="Detalles de garantía, ficha técnica, indicaciones para el cliente..."
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Live Resumen de Registro Card */}
+                                                <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-5 space-y-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B6862] block">
+                                                        RESUMEN DE REGISTRO
+                                                    </span>
+                                                    <p className="text-base font-bold text-[#161616]">{name || 'Montura / Producto Ejemplo'}</p>
+                                                    {brand && <p className="text-xs text-[#6B6862]">Marca: {brand}</p>}
+                                                    <div className="text-2xl font-serif text-[#D9381E] font-normal pt-1">
+                                                        {price ? formatPrice(price.toString()) : '$ 0 COP'}
+                                                    </div>
+                                                </div>
+
+                                                {/* Navegación Paso 3 (Guardar) */}
+                                                <div className="pt-6 border-t border-[#E2DFD7] flex justify-between items-center pb-4">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setProductFormStep(2)}
+                                                        className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5 transition"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                                                        Atrás
+                                                    </button>
+                                                    <div className="flex items-center gap-2">
+                                                        <button 
+                                                            type="button"
+                                                            onClick={(e) => handleSubmit(e, false)}
+                                                            className="bg-[#161616] hover:bg-[#333333] text-white border-0 px-6 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm transition"
+                                                        >
+                                                            {editingProduct ? 'Guardar Cambios 💾' : 'Guardar Producto 💾'}
+                                                        </button>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={(e) => handleSubmit(e, true)}
+                                                            className="bg-[#D9381E] hover:bg-[#b82e18] text-white border-0 px-6 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-1.5 transition"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                                                            Guardar y Agregar Otro
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-
-                                            {/* Live Resumen de Registro Card - Con espaciado suficiente y estética limpia */}
-                                            <div className="summary-card-compact bg-white border border-[#E2DFD7] p-4 shadow-sm mt-auto shrink-0">
-                                                <div className="summary-card-title text-[10px] font-bold uppercase tracking-widest text-[#6B6862] mb-1">
-                                                    RESUMEN DE REGISTRO
-                                                </div>
-                                                <div className="summary-card-name text-sm font-bold text-[#161616] truncate" title={name || 'Montura / Producto Ejemplo'}>
-                                                    {name || 'Montura / Producto Ejemplo'}
-                                                </div>
-                                                {brand && <div className="text-xs text-[#6B6862] font-medium mt-0.5 truncate">Marca: {brand}</div>}
-                                                <div className="summary-card-price text-xl font-mono font-bold text-[#D9381E] mt-2 flex items-baseline gap-1.5">
-                                                    {price ? formatPrice(price.toString()) : '$ 0 COP'}
-                                                    <span className="text-[10px] font-sans font-normal text-[#6B6862]">(IVA Incluido)</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Footer del Modal */}
-                                    <div className="modal-bottom px-8 py-4 border-t border-[#E2DFD7] flex flex-wrap items-center justify-end gap-3 bg-[#F6F4EE] shrink-0">
-                                        <button 
-                                            type="button" 
-                                            onClick={resetForm}
-                                            className="btn-cancel bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-none cursor-pointer"
-                                        >
-                                            Cancelar
-                                        </button>
-                                        <button 
-                                            type="button"
-                                            onClick={(e) => handleSubmit(e, false)}
-                                            className="btn-save bg-[#161616] hover:bg-[#333333] text-white border-0 px-6 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm"
-                                        >
-                                            {editingProduct ? 'Guardar Cambios' : 'Guardar'}
-                                        </button>
-                                        <button 
-                                            type="button"
-                                            onClick={(e) => handleSubmit(e, true)}
-                                            className="btn-save-new bg-[#D9381E] hover:bg-[#b82e18] text-white border-0 px-6 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-1.5"
-                                        >
-                                            <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                                            Guardar y agregar nuevo producto
-                                        </button>
+                                        )}
                                     </div>
                                 </form>
                             </div>
