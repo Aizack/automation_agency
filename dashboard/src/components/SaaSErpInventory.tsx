@@ -233,9 +233,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const clientId = (rawClientId && rawClientId !== 'undefined' && rawClientId !== 'admin')
         ? rawClientId
         : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
-    const sessionRole = localStorage.getItem('session_role');
-    const empRole = localStorage.getItem('emp_role') || localStorage.getItem('employee_role');
-    const isAdmin = sessionRole === 'admin' || sessionRole === 'superadmin' || sessionRole === 'client' || (!sessionRole && !empRole);
+    const sessionRole = (localStorage.getItem('session_role') || '').toLowerCase();
+    const empRole = (localStorage.getItem('emp_role') || localStorage.getItem('employee_role') || '').toLowerCase();
+    const isEmployee = empRole === 'employee' || empRole === 'vendedor' || empRole === 'optometrista' || sessionRole === 'employee' || sessionRole === 'vendedor';
+    const isAdmin = !isEmployee && (sessionRole === 'admin' || sessionRole === 'superadmin' || sessionRole === 'client' || (!sessionRole && !empRole));
 
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
@@ -777,6 +778,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             : null;
 
         const lensDetailStr = [lensDesign, lensMaterial, lensTreatment].filter(Boolean).join(' - ');
+        if (editingProduct && !isAdmin) {
+            alert('No tienes permisos de administrador para modificar productos ya creados. Solo puedes reabastecer stock.');
+            return;
+        }
+
         const finalName = name.trim() || (isLensType ? `Lente ${lensDetailStr}`.trim() : 'Producto Sin Nombre');
 
         const body = { 
@@ -786,7 +792,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             price: price === '' ? 0 : price, 
             stock: calculatedTotalStock,
             min_stock: calculatedMinStock,
-            cost_price: costPrice === '' ? 0 : costPrice,
+            cost_price: isAdmin ? (costPrice === '' ? 0 : costPrice) : (editingProduct ? (editingProduct.cost_price || 0) : 0),
             brand: brand.trim() || (isLensType ? 'Lentes' : null),
             material: isLensType ? (lensMaterial || material || null) : (material || null),
             style: isLensType ? (lensDesign || style || null) : (style || null),
@@ -856,6 +862,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     };
 
     const handleUpdatePromoDiscount = async (prod: Product, val: number) => {
+        if (!isAdmin) {
+            alert('No tienes permisos de administrador para modificar promociones de productos.');
+            return;
+        }
         const cleanDiscount = Math.max(0, Math.min(100, val));
         const body = {
             name: prod.name,
@@ -892,6 +902,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     };
 
     const handleDelete = async (id: string) => {
+        if (!isAdmin) {
+            alert('No tienes permisos de administrador para eliminar productos.');
+            return;
+        }
         if (!confirm('¿Estás seguro de eliminar este producto?')) return;
         try {
             const res = await fetch(`/api/clients/${clientId}/products/${id}`, {
@@ -941,6 +955,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     };
 
     const openEdit = (prod: Product) => {
+        if (!isAdmin) {
+            openRefillModal(prod);
+            return;
+        }
         setEditingProduct(prod);
         setName(prod.name);
         setSku(prod.sku || '');
@@ -1214,15 +1232,17 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         className="hidden" 
                         accept=".csv" 
                     />
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={importing}
-                        className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[11px] font-bold py-2.5 px-3.5 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 uppercase tracking-wider"
-                        title="Importar CSV"
-                    >
-                        <span className="material-symbols-outlined text-[16px] text-[#D9381E]">publish</span>
-                        {importing ? '...' : 'CSV'}
-                    </button>
+                    {isAdmin && (
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={importing}
+                            className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[11px] font-bold py-2.5 px-3.5 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 uppercase tracking-wider"
+                            title="Importar CSV"
+                        >
+                            <span className="material-symbols-outlined text-[16px] text-[#D9381E]">publish</span>
+                            {importing ? '...' : 'CSV'}
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={fetchProducts}
@@ -1276,13 +1296,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
                 {/* 2. VALOR EN INVENTARIO */}
                 <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-6 flex flex-col justify-between transition-all hover:border-[#161616]">
-                    <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold">VALOR EN INVENTARIO</span>
+                    <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold">
+                        {isAdmin ? 'VALOR EN INVENTARIO' : 'VALOR COMERCIAL EN INVENTARIO'}
+                    </span>
                     <div className="mt-4">
                         <div className="font-serif text-4xl sm:text-5xl text-[#161616] font-normal leading-none">
                             {(() => {
                                 const totalVal = products.reduce((acc, p) => {
                                     if (p.product_type === 'service' || (p.stock || 0) >= 999999) return acc;
-                                    const itemPrice = parseFloat(p.cost_price || p.price || '0') || 0;
+                                    const itemPrice = parseFloat((isAdmin ? (p.cost_price || p.price) : p.price) || '0') || 0;
                                     return acc + ((p.stock || 0) * itemPrice);
                                 }, 0);
                                 if (totalVal >= 1000000) {
@@ -1291,7 +1313,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                 return `$${totalVal.toLocaleString('es-CO')} COP`;
                             })()}
                         </div>
-                        <p className="text-[#6B6862] text-xs mt-3 font-sans">Costo total de productos físicos en bodega</p>
+                        <p className="text-[#6B6862] text-xs mt-3 font-sans">
+                            {isAdmin ? 'Costo total de productos físicos en bodega' : 'Valor total estimado a precio de venta (PVP)'}
+                        </p>
                     </div>
                 </div>
 
@@ -1824,18 +1848,20 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 </h4>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 items-end">
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Precio Costo ($)">
-                                                            Precio Costo ($)
-                                                        </label>
-                                                        <input 
-                                                            type="number"
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px] w-full"
-                                                            value={costPrice}
-                                                            onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                                                            placeholder="Ej: 180000"
-                                                        />
-                                                    </div>
+                                                    {isAdmin && (
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Precio Costo ($)">
+                                                                Precio Costo ($)
+                                                            </label>
+                                                            <input 
+                                                                type="number"
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px] w-full"
+                                                                value={costPrice}
+                                                                onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
+                                                                placeholder="Ej: 180000"
+                                                            />
+                                                        </div>
+                                                    )}
 
                                                     <div className="flex flex-col gap-1.5">
                                                         <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold whitespace-nowrap truncate" title="Precio Venta Base ($)">
@@ -2288,14 +2314,16 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                             >
                                                                 <span className="material-symbols-outlined text-[15px]">print</span>
                                                             </button>
-                                                            <button 
-                                                                type="button"
-                                                                onClick={(e) => { e.stopPropagation(); handleDelete(prod.id); }}
-                                                                className="p-1 hover:bg-red-500/20 text-red-500 cursor-pointer"
-                                                                title="Eliminar"
-                                                            >
-                                                                <span className="material-symbols-outlined text-[15px]">delete</span>
-                                                            </button>
+                                                            {isAdmin && (
+                                                                <button 
+                                                                    type="button"
+                                                                    onClick={(e) => { e.stopPropagation(); handleDelete(prod.id); }}
+                                                                    className="p-1 hover:bg-red-500/20 text-red-500 cursor-pointer"
+                                                                    title="Eliminar"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-[15px]">delete</span>
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </td>
