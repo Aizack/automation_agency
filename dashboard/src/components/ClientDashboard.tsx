@@ -31,6 +31,7 @@ import { SaaSErpSalesTargets } from './SaaSErpSalesTargets';
 import { SaaSErpQuotes } from './SaaSErpQuotes';
 import { SaaSErpHabilitacionDian } from './SaaSErpHabilitacionDian';
 import { SaaSErpAiAgentModule } from './SaaSErpAiAgentModule';
+import { SaaSErpEmployeeProfile } from './SaaSErpEmployeeProfile';
 import { NotificationBell } from './NotificationBell';
 
 interface Client {
@@ -124,6 +125,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
   // Calcular la pestaña por defecto si es colaborador
   const getDefaultTab = () => {
+    if (isEmployeeSession) return 'employee_profile';
     if (!isEmployeeSession) return 'configuracion';
     if (employeePermissions.includes('settings')) return 'configuracion';
     if (employeePermissions.includes('billing')) return 'facturacion';
@@ -139,7 +141,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     return 'configuracion';
   };
 
-  const [activeTab, setActiveTab] = useState<'resumen' | 'inventario' | 'facturacion' | 'dian_habilitacion' | 'nueva_sede' | 'cotizaciones' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(() => {
+  const [activeTab, setActiveTab] = useState<'employee_profile' | 'resumen' | 'inventario' | 'facturacion' | 'dian_habilitacion' | 'nueva_sede' | 'cotizaciones' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(() => {
     const saved = localStorage.getItem('client_active_tab');
     if (saved) return saved as any;
     return getDefaultTab();
@@ -1025,6 +1027,22 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         {/* Navigation Menu List (Orden del Sistema ERP Wabi-Sabi) */}
         <div className="nav-menu-list flex-grow overflow-y-auto custom-scrollbar">
           
+          {/* 0. Mi Perfil & Jornada (Top Priority for Staff & Employees) */}
+          <div className="nav-item">
+            <button 
+              className={`nav-item-btn ${activeTab === 'employee_profile' ? 'active' : ''}`}
+              onClick={() => setActiveTab('employee_profile')}
+            >
+              <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span className="nav-text">
+                <span className="font-bold text-[#D9381E]">Mi Perfil & Jornada</span>
+              </span>
+            </button>
+          </div>
+
           {/* 1. Datos de la Empresa (Pantalla Principal) */}
           {hasPermission('settings') && (
             <div className="nav-item">
@@ -2375,6 +2393,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 })
                 .catch(err => console.error("Error recargando logo/datos:", err));
             }} />
+          </div>
+        )}
+
+        {activeTab === 'employee_profile' && (
+          <div className="animate-fade-in">
+            <SaaSErpEmployeeProfile clientId={clientId} />
           </div>
         )}
 
