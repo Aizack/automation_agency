@@ -6583,6 +6583,46 @@ app.post('/api/clients/:clientId/chats/messages', authenticateToken as any, auth
   }
 });
 
+// --- SAAS ERP: ASISTENTE IA FRANT (CHAT DIRECTO CON GEMINI) ---
+app.post('/api/clients/:clientId/ai-agent/chat', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { prompt } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ success: false, error: 'El prompt es requerido.' });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ success: false, error: 'La API Key de Gemini no está configurada.' });
+    }
+
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    // Consultar información básica de la sede / negocio
+    const clientRes = await pool.query(`SELECT name, system_type, address, phone FROM clients WHERE id = $1`, [clientId]);
+    const clientData = clientRes.rows[0] || {};
+
+    const systemPrompt = `Eres Frant IA, el asistente inteligente oficial de Frant ERP para la empresa "${clientData.name || 'Óptica'}". 
+Tu objetivo es ayudar al usuario (administrador o empleado) a gestionar el inventario, ventas, clientes, facturación y operaciones diarias.
+Responde de forma clara, amable, concisa y en español. Si el usuario te saluda o pregunta qué puedes hacer, preséntate brevemente como Frant IA.`;
+
+    const aiResult = await model.generateContent([
+      { text: systemPrompt },
+      { text: `Consulta del usuario: ${prompt}` }
+    ]);
+
+    const responseText = aiResult.response.text().trim();
+    res.json({ success: true, response: responseText, answer: responseText });
+  } catch (err: any) {
+    console.error("[AI Agent Chat API] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // --- SAAS ERP: CAMPAÑAS / VISITAS DE CALLE Y SITIO (FIELD VISITS) ---
 // Obtener listado de campañas/visitas (con métricas agregadas de clientes captados y ventas ROI)
 app.get('/api/clients/:clientId/field-visits', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
