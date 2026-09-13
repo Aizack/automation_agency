@@ -3,6 +3,7 @@ import { authFetch as fetch } from '../utils/api';
 
 interface DomiciliosProps {
   clientId: string;
+  defaultDeliveryGuyId?: string;
 }
 
 interface Invoice {
@@ -33,7 +34,7 @@ interface Employee {
 const STORE_LAT = 4.60971; 
 const STORE_LNG = -74.08175;
 
-export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClientId }) => {
+export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClientId, defaultDeliveryGuyId }) => {
   const clientId = (rawClientId && rawClientId !== 'undefined')
     ? rawClientId
     : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
@@ -42,7 +43,13 @@ export const SaaSErpDomicilios: React.FC<DomiciliosProps> = ({ clientId: rawClie
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'distance' | 'date'>('distance');
-  const [selectedGuyFilter, setSelectedGuyFilter] = useState<string>('all');
+  const [selectedGuyFilter, setSelectedGuyFilter] = useState<string>(defaultDeliveryGuyId || 'all');
+
+  useEffect(() => {
+    if (defaultDeliveryGuyId) {
+      setSelectedGuyFilter(defaultDeliveryGuyId);
+    }
+  }, [defaultDeliveryGuyId]);
   const [batchPage, setBatchPage] = useState<number>(1);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);

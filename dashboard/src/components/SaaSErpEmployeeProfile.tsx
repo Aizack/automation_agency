@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SaaSErpDomicilios } from './SaaSErpDomicilios';
 
 interface Task {
     id: string;
@@ -41,7 +42,25 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
     const employeeRole = propEmpRole || localStorage.getItem('emp_role') || localStorage.getItem('employee_role') || 'employee';
     const employeeToken = localStorage.getItem('emp_token') || localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
 
-    const [activeTab, setActiveTab] = useState<'jornada' | 'tareas' | 'solicitudes' | 'chat' | 'nomina'>('jornada');
+    const [activeTab, setActiveTab] = useState<'jornada' | 'tareas' | 'solicitudes' | 'chat' | 'nomina' | 'envios'>('jornada');
+
+    // Deliveries State for Delivery Workers
+    const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
+
+    const fetchMyDeliveries = async () => {
+        if (!clientId || !employeeId) return;
+        try {
+            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/deliveries`, {
+                headers: { 'Authorization': `Bearer ${employeeToken}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setMyDeliveries(json.deliveries || []);
+            }
+        } catch (err) {
+            console.error("Error loading employee deliveries:", err);
+        }
+    };
 
     // Shift States
     const [shiftStatus, setShiftStatus] = useState<'no_started' | 'working' | 'lunch' | 'finished'>('no_started');
@@ -90,6 +109,7 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
             fetchTasks();
             fetchRequests();
             fetchMyAdvances();
+            fetchMyDeliveries();
         }
     }, [clientId, employeeId]);
 
@@ -447,6 +467,9 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
         }
     };
 
+    const roleLower = (employeeRole || '').toLowerCase().trim();
+    const isDeliveryWorker = ['delivery', 'domiciliario', 'mensajero', 'driver', 'repartidor', 'admin'].includes(roleLower) || myDeliveries.length > 0;
+
     return (
         <div className="flex flex-col gap-4 md:gap-6 p-3 md:p-6 min-h-screen bg-[#FAF8F5] text-[#161616] font-sans w-full max-w-full overflow-x-hidden">
             
@@ -484,6 +507,16 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                         <span className="material-symbols-outlined text-base">schedule</span>
                         Mi Jornada
                     </button>
+                    {isDeliveryWorker && (
+                        <button
+                            type="button"
+                            onClick={() => { setActiveTab('envios'); fetchMyDeliveries(); }}
+                            className={`px-3 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${activeTab === 'envios' ? 'bg-[#D9381E] text-white shadow-sm' : 'text-[#D9381E] hover:text-[#161616] bg-transparent'}`}
+                        >
+                            <span className="material-symbols-outlined text-base">local_shipping</span>
+                            Mis Envíos ({myDeliveries.length})
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={() => setActiveTab('tareas')}
@@ -518,6 +551,27 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                     </button>
                 </div>
             </div>
+
+            {/* Banner Alerta de Domicilios / Envíos Asignados */}
+            {myDeliveries.length > 0 && (
+                <div className="bg-[#FAF8F5] border-2 border-[#161616] p-4 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-[#D9381E] text-3xl">two_wheeler</span>
+                        <div>
+                            <h4 className="font-serif text-base font-bold text-[#161616]">Tienes {myDeliveries.length} Envíos a Domicilio Asignados para Hoy</h4>
+                            <p className="text-xs text-[#6B6862]">Revisa las direcciones organizadas por cercanía a la sede para realizar las entregas.</p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => { setActiveTab('envios'); fetchMyDeliveries(); }}
+                        className="bg-[#D9381E] hover:bg-[#b82e18] text-white px-4 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none flex items-center gap-1.5 border-0"
+                    >
+                        <span className="material-symbols-outlined text-sm">local_shipping</span>
+                        Ver Ruta de Envíos ({myDeliveries.length})
+                    </button>
+                </div>
+            )}
 
             {/* Banner Alerta de Arqueos de Caja Pendientes por Confirmar */}
             {pendingCashShifts.length > 0 && (
@@ -936,6 +990,13 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                             Enviar
                         </button>
                     </form>
+                </div>
+            )}
+
+            {/* TAB 6: MIS ENVÍOS / RUTAS DE DOMICILIO DE REPARTIDOR */}
+            {activeTab === 'envios' && (
+                <div className="bg-white border border-[#E2DFD7] p-4 md:p-6 shadow-sm animate-fade-in">
+                    <SaaSErpDomicilios clientId={clientId} defaultDeliveryGuyId={employeeId} />
                 </div>
             )}
         </div>
