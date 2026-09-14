@@ -1079,21 +1079,23 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         {/* Navigation Menu List (Orden del Sistema ERP Wabi-Sabi) */}
         <div className="nav-menu-list flex-grow overflow-y-auto custom-scrollbar">
           
-          {/* 0. Mi Perfil & Jornada (Top Priority for Staff & Employees) */}
-          <div className="nav-item">
-            <button 
-              className={`nav-item-btn ${activeTab === 'employee_profile' ? 'active' : ''}`}
-              onClick={() => setActiveTab('employee_profile')}
-            >
-              <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-              <span className="nav-text">
-                <span className="font-bold text-[#D9381E]">Mi Perfil & Jornada</span>
-              </span>
-            </button>
-          </div>
+          {/* 0. Mi Perfil & Jornada (Solo para Colaboradores / Empleados) */}
+          {isEmployeeSession && (
+            <div className="nav-item">
+              <button 
+                className={`nav-item-btn ${activeTab === 'employee_profile' ? 'active' : ''}`}
+                onClick={() => setActiveTab('employee_profile')}
+              >
+                <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span className="nav-text">
+                  <span className="font-bold text-[#D9381E]">Mi Perfil & Jornada</span>
+                </span>
+              </button>
+            </div>
+          )}
 
           {/* 1. Datos de la Empresa (Pantalla Principal) */}
           {hasPermission('settings') && (
@@ -1601,41 +1603,45 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </button>
           </div>
 
-          {/* Tarjeta de Sesión de Usuario & Reloj de Turno dentro del Drawer Móvil */}
-          <div className="p-3 bg-[#FAF8F5] border-b border-[#E2DFD7]">
-            <div 
-              onClick={() => { setActiveTab('employee_profile'); setIsMobileMenuOpen(false); }}
-              className="bg-white border border-[#E2DFD7] p-3 cursor-pointer hover:border-[#161616] transition"
-            >
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-9 h-9 rounded-full bg-[#161616] text-white font-serif font-bold text-sm flex items-center justify-center">
-                  {activeUserName.substring(0, 1).toUpperCase()}
+          {/* Tarjeta de Sesión de Usuario & Reloj de Turno dentro del Drawer Móvil (Solo Empleados) */}
+          {isEmployeeSession && (
+            <div className="p-3 bg-[#FAF8F5] border-b border-[#E2DFD7]">
+              <div 
+                onClick={() => { setActiveTab('employee_profile'); setIsMobileMenuOpen(false); }}
+                className="bg-white border border-[#E2DFD7] p-3 cursor-pointer hover:border-[#161616] transition"
+              >
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-9 h-9 rounded-full bg-[#161616] text-white font-serif font-bold text-sm flex items-center justify-center">
+                    {activeUserName.substring(0, 1).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-[#161616] leading-tight">{activeUserName}</h4>
+                    <span className="text-[10px] text-[#6B6862] font-mono uppercase">{activeUserRole}</span>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-xs text-[#161616] leading-tight">{activeUserName}</h4>
-                  <span className="text-[10px] text-[#6B6862] font-mono uppercase">{activeUserRole}</span>
+                
+                <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-2 flex justify-between items-center text-xs">
+                  <span className="text-[10px] font-bold uppercase text-[#6B6862]">Estado Turno:</span>
+                  <span className="font-mono font-bold text-[#D9381E] flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">schedule</span>
+                    {shiftStatus === 'working' ? `${shiftTimer}` : shiftStatus === 'lunch' ? 'En Almuerzo' : 'Fuera de Turno'}
+                  </span>
                 </div>
-              </div>
-              
-              <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-2 flex justify-between items-center text-xs">
-                <span className="text-[10px] font-bold uppercase text-[#6B6862]">Estado Turno:</span>
-                <span className="font-mono font-bold text-[#D9381E] flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]">schedule</span>
-                  {shiftStatus === 'working' ? `${shiftTimer}` : shiftStatus === 'lunch' ? 'En Almuerzo' : 'Fuera de Turno'}
-                </span>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
-            <button 
-              type="button"
-              onClick={() => { setActiveTab('employee_profile'); setIsMobileMenuOpen(false); }}
-              className={`w-full text-left p-3 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-3 cursor-pointer ${activeTab === 'employee_profile' ? 'bg-[#161616] text-white' : 'text-[#161616] hover:bg-[#EAE6DF]'}`}
-            >
-              <span className="material-symbols-outlined text-lg text-[#D9381E]">schedule</span>
-              <span>Mi Perfil & Jornada</span>
-            </button>
+            {isEmployeeSession && (
+              <button 
+                type="button"
+                onClick={() => { setActiveTab('employee_profile'); setIsMobileMenuOpen(false); }}
+                className={`w-full text-left p-3 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-3 cursor-pointer ${activeTab === 'employee_profile' ? 'bg-[#161616] text-white' : 'text-[#161616] hover:bg-[#EAE6DF]'}`}
+              >
+                <span className="material-symbols-outlined text-lg text-[#D9381E]">schedule</span>
+                <span>Mi Perfil & Jornada</span>
+              </button>
+            )}
 
             {hasPermission('settings') && (
               <button 
@@ -1732,17 +1738,19 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           </div>
 
           <div className="top-header-right-zen flex items-center gap-4">
-            {/* Widget del Reloj de Turno en Vivo para la Versión de Escritorio (PC) */}
-            <div 
-              onClick={() => setActiveTab('employee_profile')}
-              className="hidden lg:flex items-center gap-1.5 cursor-pointer hover:text-[#D9381E] transition text-xs font-semibold text-[#161616]"
-              title="Haz clic para ingresar a tu jornada y gestionar tu turno de trabajo"
-            >
-              <span className="material-symbols-outlined text-[#D9381E] text-[16px]">schedule</span>
-              <span>
-                {shiftStatus === 'working' ? `${shiftTimer}` : shiftStatus === 'lunch' ? 'En Almuerzo' : 'Fuera de Turno'}
-              </span>
-            </div>
+            {/* Widget del Reloj de Turno en Vivo para la Versión de Escritorio (PC) (Solo Empleados) */}
+            {isEmployeeSession && (
+              <div 
+                onClick={() => setActiveTab('employee_profile')}
+                className="hidden lg:flex items-center gap-1.5 cursor-pointer hover:text-[#D9381E] transition text-xs font-semibold text-[#161616]"
+                title="Haz clic para ingresar a tu jornada y gestionar tu turno de trabajo"
+              >
+                <span className="material-symbols-outlined text-[#D9381E] text-[16px]">schedule</span>
+                <span>
+                  {shiftStatus === 'working' ? `${shiftTimer}` : shiftStatus === 'lunch' ? 'En Almuerzo' : 'Fuera de Turno'}
+                </span>
+              </div>
+            )}
 
             {/* Campanita de Notificaciones del Sistema */}
             <NotificationBell 
