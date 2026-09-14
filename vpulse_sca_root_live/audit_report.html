@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VPulse Security Audit - D:\Archivos\proyectos\Agencia Automatización\Bot multi-tenant-exp</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 2rem; }
+.container { max-width: 1400px; margin: 0 auto; }
+h1 { color: #f8fafc; margin-bottom: 0.5rem; }
+h2 { color: #94a3b8; margin: 1.5rem 0 1rem; border-bottom: 1px solid #334155; padding-bottom: 0.5rem; }
+.meta { color: #64748b; margin-bottom: 2rem; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.card { background: #1e293b; border-radius: 12px; padding: 1.5rem; text-align: center; }
+.card .number { font-size: 2.5rem; font-weight: 700; }
+.card .label { color: #94a3b8; font-size: 0.875rem; text-transform: uppercase; }
+.badge { padding: 0.25rem 0.5rem; border-radius: 4px; color: white; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-right: 0.5rem; }
+code, pre { background: #334155; padding: 0.125rem 0.25rem; border-radius: 4px; font-size: 0.875rem; font-family: 'Monaco', 'Menlo', monospace; }
+.code-block { background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 0.75rem; overflow-x: auto; white-space: pre-wrap; font-size: 0.8rem; }
+.footer { text-align: center; color: #64748b; margin-top: 2rem; font-size: 0.875rem; }
+.finding-card { background: #1e293b; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.finding-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.finding-type { color: #64748b; font-size: 0.75rem; margin-left: auto; }
+.finding-id { color: #475569; font-size: 0.7rem; }
+.finding-body p { margin: 0.25rem 0; color: #cbd5e1; }
+.screenshot-preview { margin-top: 0.75rem; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
+.screenshot-preview img { width: 100%; max-width: 600px; display: block; cursor: zoom-in; }
+.shot-link { display: inline-block; padding: 0.25rem 0.5rem; color: #60a5fa; font-size: 0.75rem; }
+.detail-section { margin-top: 0.5rem; color: #94a3b8; }
+.detail-section summary { cursor: pointer; font-size: 0.875rem; padding: 0.25rem 0; color: #60a5fa; }
+.steps-list { margin: 0.5rem 0 0.5rem 1.5rem; color: #94a3b8; font-size: 0.85rem; line-height: 1.6; }
+.steps-list li { margin-bottom: 0.25rem; }
+.screenshot-gallery { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.shot-thumb { width: 120px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #334155; cursor: zoom-in; }
+table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #334155; }
+th { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; }
+.fix-check { width: 18px; height: 18px; cursor: pointer; accent-color: #22c55e; }
+tr:hover { background: #1e293b; }
+.checklist-note { color: #64748b; font-size: 0.875rem; margin-bottom: 1rem; }
+.report-meta { background: #1e293b; border-radius: 8px; padding: 1rem; margin-top: 2rem; font-size: 0.875rem; color: #94a3b8; }
+.report-meta span { margin-right: 1.5rem; }
+</style>
+<script>
+function saveChecklist() {
+    var checks = document.querySelectorAll('.fix-check');
+    var data = {};
+    for (var i = 0; i < checks.length; i++) {
+        var c = checks[i];
+        data[c.dataset.id] = { fix_checklist: c.checked, fixed_date: c.checked ? new Date().toISOString() : null };
+    }
+    localStorage.setItem('vpulse_checklist_D__Archivos_proyectos_Agencia Automatización_Bot multi-tenant-exp', JSON.stringify(data));
+}
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        var key = 'vpulse_checklist_D__Archivos_proyectos_Agencia Automatización_Bot multi-tenant-exp';
+        var saved = JSON.parse(localStorage.getItem(key) || '{}');
+        for (var id in saved) {
+            var cb = document.querySelector('.fix-check[data-id="' + id + '"]');
+            if (cb && saved[id].fix_checklist) cb.checked = true;
+        }
+    } catch(e) {}
+    var checkboxes = document.querySelectorAll('.fix-check');
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].addEventListener('change', saveChecklist);
+    }
+});
+</script>
+</head>
+<body>
+<div class="container">
+    <h1>VPulse Security Audit</h1>
+    <p class="meta">Target: <code>D:\Archivos\proyectos\Agencia Automatización\Bot multi-tenant-exp</code> | Date: 2026-09-11T03:08:27.471323+00:00 | Duration: N/As</p>
+    <div class="summary">
+        <div class="card"><div class="number" style="color:#dc2626">0</div><div class="label">Critical</div></div>
+        <div class="card"><div class="number" style="color:#ea580c">0</div><div class="label">High</div></div>
+        <div class="card"><div class="number" style="color:#ca8a04">60</div><div class="label">Medium</div></div>
+        <div class="card"><div class="number" style="color:#2563eb">0</div><div class="label">Low</div></div>
+        <div class="card"><div class="number">60</div><div class="label">Total</div></div>
+    </div>
+    <h2>Remediation Checklist</h2>
+    <p class="checklist-note">Mark each item as fixed. Progress is saved locally. After fixing, re-run: <code>vpulse audit --target D:\Archivos\proyectos\Agencia Automatización\Bot multi-tenant-exp</code></p>
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Fixed</th>
+            <th>Severity</th>
+            <th>Vulnerability</th>
+            <th>Verification</th>
+        </tr>
+    </thead>
+    <tbody>
+<tr>
+    <td>1</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-535w-7cp7-47q4" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): multer 2.2.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>2</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-qfvm-cv95-jqjf" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): multer 2.2.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>3</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-qvfw-j98x-7q72" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): multer 2.2.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>4</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-wc9g-mqfw-jrwm" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): multer 2.2.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>5</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-fxqj-rqcc-2cmp" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): postcss 8.5.16</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>6</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-r28c-9q8g-f849" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): postcss 8.5.16</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>7</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-9hjg-9r4m-mvj7" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): requests 2.32.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>8</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-gc5v-m9x4-r6x2" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): requests 2.32.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>9</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-1872" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): requests 2.32.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>10</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-2275" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): requests 2.32.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>11</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-537c-gmf6-5ccf" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>12</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-6vqw-3v5j-54x4" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>13</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-79v4-65xg-pq4g" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>14</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-9v9h-cgj8-h64p" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>15</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-h4gh-qq45-vh27" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>16</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-jwv3-5hgf-82ww" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>17</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-m959-cc7f-wv43" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>18</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-r6ph-v2qm-q3c2" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>19</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2024-225" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>20</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-1284" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>21</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-1285" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>22</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-2141" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>23</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-35" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>24</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-3553" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>25</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-3554" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): cryptography 42.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>26</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-3f63-hfp8-52jq" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>27</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-44wm-f244-xhp3" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>28</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-45hq-cxwh-f6vc" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>29</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-4x4j-2g7c-83w6" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>30</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-5x94-69rx-g8h2" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>31</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-62p4-gmf7-7g93" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>32</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-6r8x-57c9-28j4" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>33</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-8v84-f9pq-wr9x" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>34</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-9hw9-ch79-4vh6" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>35</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-fj7v-r99m-22gq" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>36</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-j7hp-h8jx-5ppr" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>37</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-jjj6-mw9f-p565" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>38</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-phj9-mv4w-65pm" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>39</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-r73j-pqj5-w3x7" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>40</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-vjc4-5qp5-m44j" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>41</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-wjx4-4jcj-g98j" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>42</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-GHSA-xj96-63gp-2gmr" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm GHSA-</code></td>
+</tr><tr>
+    <td>43</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2023-175" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>44</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-165" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>45</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-1793" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>46</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-1794" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>47</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-2253" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>48</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-2254" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>49</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-2255" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>50</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-2256" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>51</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-2257" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>52</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-2874" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>53</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-3451" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>54</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-3453" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>55</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-3454" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>56</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-3493" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>57</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-3494" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>58</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-3495" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>59</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-3496" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr><tr>
+    <td>60</td>
+    <td><input type="checkbox" class="fix-check" data-id="SCA-OSV-PYSEC-2026-457" ></td>
+    <td><span class="badge" style="background:#ca8a04">MEDIUM</span></td>
+    <td>Vulnerable Dependency (OSV): Pillow 10.0.0</td>
+    <td><code># re-run: vpulse sca --live-feed and confirm PYSEC</code></td>
+</tr>    </tbody>
+</table>
+    <h2>Detailed Findings (60)</h2>
+    <div class="findings-list">
+<div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): multer 2.2.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-535w-7cp7-47q4</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>package.json</code></p>
+        <p><strong>Evidence:</strong> multer 2.2.0 matches GHSA-535w-7cp7-47q4 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `package.json`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-535w-7cp7-47q4</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade multer past the vulnerable range described in GHSA-535w-7cp7-47q4.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-535w-7cp7-47q4 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): multer 2.2.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-qfvm-cv95-jqjf</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>package.json</code></p>
+        <p><strong>Evidence:</strong> multer 2.2.0 matches GHSA-qfvm-cv95-jqjf on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `package.json`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-qfvm-cv95-jqjf</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade multer past the vulnerable range described in GHSA-qfvm-cv95-jqjf.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-qfvm-cv95-jqjf no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): multer 2.2.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-qvfw-j98x-7q72</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>package.json</code></p>
+        <p><strong>Evidence:</strong> multer 2.2.0 matches GHSA-qvfw-j98x-7q72 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `package.json`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-qvfw-j98x-7q72</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade multer past the vulnerable range described in GHSA-qvfw-j98x-7q72.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-qvfw-j98x-7q72 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): multer 2.2.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-wc9g-mqfw-jrwm</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>package.json</code></p>
+        <p><strong>Evidence:</strong> multer 2.2.0 matches GHSA-wc9g-mqfw-jrwm on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `package.json`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-wc9g-mqfw-jrwm</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade multer past the vulnerable range described in GHSA-wc9g-mqfw-jrwm.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-wc9g-mqfw-jrwm no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): postcss 8.5.16</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-fxqj-rqcc-2cmp</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>dashboard\package.json</code></p>
+        <p><strong>Evidence:</strong> postcss 8.5.16 matches GHSA-fxqj-rqcc-2cmp on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `dashboard\package.json`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-fxqj-rqcc-2cmp</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade postcss past the vulnerable range described in GHSA-fxqj-rqcc-2cmp.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-fxqj-rqcc-2cmp no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): postcss 8.5.16</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-r28c-9q8g-f849</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>dashboard\package.json</code></p>
+        <p><strong>Evidence:</strong> postcss 8.5.16 matches GHSA-r28c-9q8g-f849 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `dashboard\package.json`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-r28c-9q8g-f849</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade postcss past the vulnerable range described in GHSA-r28c-9q8g-f849.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-r28c-9q8g-f849 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): requests 2.32.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-9hjg-9r4m-mvj7</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> requests 2.32.0 matches GHSA-9hjg-9r4m-mvj7 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-9hjg-9r4m-mvj7</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade requests past the vulnerable range described in GHSA-9hjg-9r4m-mvj7.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-9hjg-9r4m-mvj7 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): requests 2.32.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-gc5v-m9x4-r6x2</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> requests 2.32.0 matches GHSA-gc5v-m9x4-r6x2 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-gc5v-m9x4-r6x2</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade requests past the vulnerable range described in GHSA-gc5v-m9x4-r6x2.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-gc5v-m9x4-r6x2 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): requests 2.32.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-1872</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> requests 2.32.0 matches PYSEC-2026-1872 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-1872</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade requests past the vulnerable range described in PYSEC-2026-1872.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-1872 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): requests 2.32.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-2275</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> requests 2.32.0 matches PYSEC-2026-2275 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2275</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade requests past the vulnerable range described in PYSEC-2026-2275.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-2275 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-537c-gmf6-5ccf</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches GHSA-537c-gmf6-5ccf on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-537c-gmf6-5ccf</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in GHSA-537c-gmf6-5ccf.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-537c-gmf6-5ccf no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-6vqw-3v5j-54x4</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches GHSA-6vqw-3v5j-54x4 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-6vqw-3v5j-54x4</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in GHSA-6vqw-3v5j-54x4.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-6vqw-3v5j-54x4 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-79v4-65xg-pq4g</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches GHSA-79v4-65xg-pq4g on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-79v4-65xg-pq4g</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in GHSA-79v4-65xg-pq4g.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-79v4-65xg-pq4g no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-9v9h-cgj8-h64p</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches GHSA-9v9h-cgj8-h64p on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-9v9h-cgj8-h64p</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in GHSA-9v9h-cgj8-h64p.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-9v9h-cgj8-h64p no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-h4gh-qq45-vh27</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches GHSA-h4gh-qq45-vh27 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-h4gh-qq45-vh27</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in GHSA-h4gh-qq45-vh27.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-h4gh-qq45-vh27 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-jwv3-5hgf-82ww</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches GHSA-jwv3-5hgf-82ww on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-jwv3-5hgf-82ww</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in GHSA-jwv3-5hgf-82ww.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-jwv3-5hgf-82ww no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-m959-cc7f-wv43</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches GHSA-m959-cc7f-wv43 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-m959-cc7f-wv43</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in GHSA-m959-cc7f-wv43.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-m959-cc7f-wv43 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-r6ph-v2qm-q3c2</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches GHSA-r6ph-v2qm-q3c2 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-r6ph-v2qm-q3c2</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in GHSA-r6ph-v2qm-q3c2.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-r6ph-v2qm-q3c2 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2024-225</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches PYSEC-2024-225 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2024-225</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in PYSEC-2024-225.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2024-225 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-1284</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches PYSEC-2026-1284 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-1284</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in PYSEC-2026-1284.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-1284 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-1285</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches PYSEC-2026-1285 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-1285</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in PYSEC-2026-1285.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-1285 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-2141</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches PYSEC-2026-2141 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2141</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in PYSEC-2026-2141.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-2141 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-35</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches PYSEC-2026-35 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-35</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in PYSEC-2026-35.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-35 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-3553</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches PYSEC-2026-3553 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3553</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in PYSEC-2026-3553.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-3553 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): cryptography 42.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-3554</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> cryptography 42.0.0 matches PYSEC-2026-3554 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3554</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade cryptography past the vulnerable range described in PYSEC-2026-3554.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-3554 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-3f63-hfp8-52jq</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-3f63-hfp8-52jq on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-3f63-hfp8-52jq</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-3f63-hfp8-52jq.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-3f63-hfp8-52jq no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-44wm-f244-xhp3</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-44wm-f244-xhp3 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-44wm-f244-xhp3</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-44wm-f244-xhp3.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-44wm-f244-xhp3 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-45hq-cxwh-f6vc</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-45hq-cxwh-f6vc on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-45hq-cxwh-f6vc</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-45hq-cxwh-f6vc.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-45hq-cxwh-f6vc no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-4x4j-2g7c-83w6</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-4x4j-2g7c-83w6 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-4x4j-2g7c-83w6</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-4x4j-2g7c-83w6.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-4x4j-2g7c-83w6 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-5x94-69rx-g8h2</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-5x94-69rx-g8h2 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-5x94-69rx-g8h2</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-5x94-69rx-g8h2.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-5x94-69rx-g8h2 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-62p4-gmf7-7g93</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-62p4-gmf7-7g93 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-62p4-gmf7-7g93</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-62p4-gmf7-7g93.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-62p4-gmf7-7g93 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-6r8x-57c9-28j4</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-6r8x-57c9-28j4 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-6r8x-57c9-28j4</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-6r8x-57c9-28j4.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-6r8x-57c9-28j4 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-8v84-f9pq-wr9x</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-8v84-f9pq-wr9x on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-8v84-f9pq-wr9x</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-8v84-f9pq-wr9x.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-8v84-f9pq-wr9x no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-9hw9-ch79-4vh6</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-9hw9-ch79-4vh6 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-9hw9-ch79-4vh6</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-9hw9-ch79-4vh6.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-9hw9-ch79-4vh6 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-fj7v-r99m-22gq</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-fj7v-r99m-22gq on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-fj7v-r99m-22gq</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-fj7v-r99m-22gq.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-fj7v-r99m-22gq no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-j7hp-h8jx-5ppr</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-j7hp-h8jx-5ppr on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-j7hp-h8jx-5ppr</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-j7hp-h8jx-5ppr.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-j7hp-h8jx-5ppr no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-jjj6-mw9f-p565</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-jjj6-mw9f-p565 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-jjj6-mw9f-p565</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-jjj6-mw9f-p565.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-jjj6-mw9f-p565 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-phj9-mv4w-65pm</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-phj9-mv4w-65pm on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-phj9-mv4w-65pm</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-phj9-mv4w-65pm.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-phj9-mv4w-65pm no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-r73j-pqj5-w3x7</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-r73j-pqj5-w3x7 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-r73j-pqj5-w3x7</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-r73j-pqj5-w3x7.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-r73j-pqj5-w3x7 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-vjc4-5qp5-m44j</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-vjc4-5qp5-m44j on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-vjc4-5qp5-m44j</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-vjc4-5qp5-m44j.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-vjc4-5qp5-m44j no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-wjx4-4jcj-g98j</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-wjx4-4jcj-g98j on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-wjx4-4jcj-g98j</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-wjx4-4jcj-g98j.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-wjx4-4jcj-g98j no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-GHSA-xj96-63gp-2gmr</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches GHSA-xj96-63gp-2gmr on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/GHSA-xj96-63gp-2gmr</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in GHSA-xj96-63gp-2gmr.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm GHSA-xj96-63gp-2gmr no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2023-175</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2023-175 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2023-175</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2023-175.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2023-175 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-165</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-165 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-165</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-165.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-165 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-1793</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-1793 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-1793</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-1793.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-1793 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-1794</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-1794 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-1794</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-1794.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-1794 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-2253</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-2253 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2253</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-2253.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-2253 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-2254</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-2254 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2254</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-2254.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-2254 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-2255</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-2255 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2255</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-2255.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-2255 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-2256</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-2256 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2256</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-2256.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-2256 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-2257</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-2257 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2257</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-2257.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-2257 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-2874</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-2874 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2874</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-2874.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-2874 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-3451</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-3451 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3451</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-3451.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-3451 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-3453</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-3453 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3453</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-3453.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-3453 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-3454</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-3454 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3454</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-3454.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-3454 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-3493</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-3493 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3493</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-3493.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-3493 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-3494</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-3494 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3494</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-3494.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-3494 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-3495</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-3495 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3495</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-3495.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-3495 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-3496</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-3496 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3496</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-3496.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-3496 no longer appears</pre>
+        </details>
+    </div>
+</div><div class="finding-card" style="border-left: 4px solid #ca8a04">
+    <div class="finding-header">
+        <span class="badge" style="background:#ca8a04">MEDIUM</span>
+        <strong>Vulnerable Dependency (OSV): Pillow 10.0.0</strong>
+        <span class="finding-type">SCA</span>
+        <span class="finding-id">ID: SCA-OSV-PYSEC-2026-457</span>
+    </div>
+    <div class="finding-body">
+        <p><strong>URL:</strong> <code>vpulse\pyproject.toml</code></p>
+        <p><strong>Evidence:</strong> Pillow 10.0.0 matches PYSEC-2026-457 on OSV.dev — </p>
+        <details class="detail-section">
+            <summary>How to Replicate (PoC)</summary>
+            <ol class="steps-list"><li>## How to Replicate</li><li></li><li>1. Confirm the pinned version in `vpulse\pyproject.toml`.</li><li>2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-457</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>How to Fix</summary>
+            <ol class="steps-list"><li>Upgrade Pillow past the vulnerable range described in PYSEC-2026-457.</li><li>Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears.</li></ol>
+        </details>
+        <details class="detail-section">
+            <summary>Verification Command</summary>
+            <pre class="code-block"># re-run: vpulse sca --live-feed and confirm PYSEC-2026-457 no longer appears</pre>
+        </details>
+    </div>
+</div>
+    </div>
+
+    <div class="report-meta">
+        <span>Generated: 2026-09-11T03:08:27.471323+00:00</span>
+        <span>Tool: VPulse v1.0.0</span>
+        <span>Target: D:\Archivos\proyectos\Agencia Automatización\Bot multi-tenant-exp</span>
+    </div>
+    <div class="footer">Generated by VPulse Security Audit Toolkit</div>
+</div>
+</body>
+</html>

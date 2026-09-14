@@ -1,0 +1,242 @@
+{
+  "SCA-OSV-GHSA-535w-7cp7-47q4": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-qfvm-cv95-jqjf": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-qvfw-j98x-7q72": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-wc9g-mqfw-jrwm": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-fxqj-rqcc-2cmp": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-r28c-9q8g-f849": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-9hjg-9r4m-mvj7": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-gc5v-m9x4-r6x2": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-1872": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-2275": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-537c-gmf6-5ccf": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-6vqw-3v5j-54x4": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-79v4-65xg-pq4g": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-9v9h-cgj8-h64p": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-h4gh-qq45-vh27": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-jwv3-5hgf-82ww": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-m959-cc7f-wv43": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-r6ph-v2qm-q3c2": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2024-225": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-1284": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-1285": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-2141": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-35": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-3553": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-3554": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-3f63-hfp8-52jq": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-44wm-f244-xhp3": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-45hq-cxwh-f6vc": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-4x4j-2g7c-83w6": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-5x94-69rx-g8h2": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-62p4-gmf7-7g93": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-6r8x-57c9-28j4": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-8v84-f9pq-wr9x": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-9hw9-ch79-4vh6": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-fj7v-r99m-22gq": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-j7hp-h8jx-5ppr": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-jjj6-mw9f-p565": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-phj9-mv4w-65pm": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-r73j-pqj5-w3x7": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-vjc4-5qp5-m44j": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-wjx4-4jcj-g98j": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-GHSA-xj96-63gp-2gmr": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2023-175": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-165": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-1793": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-1794": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-2253": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-2254": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-2255": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-2256": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-2257": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-2874": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-3451": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-3453": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-3454": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-3493": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-3494": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-3495": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-3496": {
+    "fix_checklist": false,
+    "fixed_date": null
+  },
+  "SCA-OSV-PYSEC-2026-457": {
+    "fix_checklist": false,
+    "fixed_date": null
+  }
+}

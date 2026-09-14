@@ -463,3 +463,15 @@ Stack:
     at processTicksAndRejections (node:internal/process/task_queues:95:5)
     at async /app/src/server.ts:5109:18
 Stack: 
+[2026-09-09T19:10:25.804Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 
+[2026-09-10T05:17:08.296Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 
+[2026-09-11T03:12:12.715Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 
+[2026-09-11T16:53:12.632Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 
+[2026-09-13T04:33:40.524Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 
+[2026-09-14T15:56:19.889Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 

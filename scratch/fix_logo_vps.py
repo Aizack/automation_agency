@@ -1,7 +1,6 @@
 import paramiko
 import sys
 
-# Ensure UTF-8 output encoding for windows stdout
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
@@ -9,18 +8,18 @@ VPS_IP = '209.145.50.230'
 VPS_USER = 'root'
 VPS_PASS = 'Kadabrocol0726++'
 
-def run_ssh():
+def fix_logo():
     print("Connecting to VPS via SSH...")
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(VPS_IP, username=VPS_USER, password=VPS_PASS, timeout=15)
 
     commands = [
-        "cd /app/agency-bot && git reset --hard && git pull origin feature/backup-alegra-factus",
-        "cd /app/agency-bot/dashboard && npm run build",
-        "pm2 restart all || pm2 restart agency-bot",
-        "systemctl reload nginx 2>/dev/null || true",
-        "pm2 list"
+        "mkdir -p /app/agency-bot/media/clients/client_7fc4wswo/logos",
+        "cp /app/agency-bot/media/clients/branch_1788890550133_542/logos/logo_1788986529338.webp /app/agency-bot/media/clients/client_7fc4wswo/logos/logo_1788986529338.webp",
+        "chmod -R 777 /app/agency-bot/media /app/agency-bot/uploads",
+        "docker exec -i agency_bot_db psql -U agency_user -d agency_db -c \"UPDATE clients SET logo_url = '/media/clients/client_7fc4wswo/logos/logo_1788986529338.webp' WHERE id = 'client_7fc4wswo';\"",
+        "docker exec -i agency_bot_db psql -U agency_user -d agency_db -c \"SELECT id, name, logo_url FROM clients WHERE id IN ('client_7fc4wswo', 'branch_1788890550133_542');\""
     ]
 
     for cmd in commands:
@@ -34,7 +33,6 @@ def run_ssh():
             print("STDERR:\n", err)
 
     client.close()
-    print("\n✅ VPS SSH compilation and PM2 restart finished successfully!")
 
 if __name__ == '__main__':
-    run_ssh()
+    fix_logo()

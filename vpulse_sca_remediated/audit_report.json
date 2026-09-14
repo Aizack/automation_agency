@@ -1,0 +1,1203 @@
+{
+  "target": "D:\\Archivos\\proyectos\\Agencia Automatizaci\u00f3n\\Bot multi-tenant-exp",
+  "timestamp": "2026-09-11T03:15:26.217435+00:00",
+  "summary": {
+    "total": 54,
+    "critical": 0,
+    "high": 0,
+    "medium": 54,
+    "low": 0,
+    "info": 0
+  },
+  "findings": [
+    {
+      "id": "SCA-OSV-GHSA-9hjg-9r4m-mvj7",
+      "title": "Vulnerable Dependency (OSV): requests 2.32.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "requests 2.32.0 matches GHSA-9hjg-9r4m-mvj7 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-9hjg-9r4m-mvj7"
+      ],
+      "fix_steps": [
+        "Upgrade requests past the vulnerable range described in GHSA-9hjg-9r4m-mvj7.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-9hjg-9r4m-mvj7 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-gc5v-m9x4-r6x2",
+      "title": "Vulnerable Dependency (OSV): requests 2.32.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "requests 2.32.0 matches GHSA-gc5v-m9x4-r6x2 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-gc5v-m9x4-r6x2"
+      ],
+      "fix_steps": [
+        "Upgrade requests past the vulnerable range described in GHSA-gc5v-m9x4-r6x2.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-gc5v-m9x4-r6x2 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-1872",
+      "title": "Vulnerable Dependency (OSV): requests 2.32.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "requests 2.32.0 matches PYSEC-2026-1872 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-1872"
+      ],
+      "fix_steps": [
+        "Upgrade requests past the vulnerable range described in PYSEC-2026-1872.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-1872 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-2275",
+      "title": "Vulnerable Dependency (OSV): requests 2.32.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "requests 2.32.0 matches PYSEC-2026-2275 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2275"
+      ],
+      "fix_steps": [
+        "Upgrade requests past the vulnerable range described in PYSEC-2026-2275.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-2275 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-537c-gmf6-5ccf",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches GHSA-537c-gmf6-5ccf on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-537c-gmf6-5ccf"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in GHSA-537c-gmf6-5ccf.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-537c-gmf6-5ccf no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-6vqw-3v5j-54x4",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches GHSA-6vqw-3v5j-54x4 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-6vqw-3v5j-54x4"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in GHSA-6vqw-3v5j-54x4.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-6vqw-3v5j-54x4 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-79v4-65xg-pq4g",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches GHSA-79v4-65xg-pq4g on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-79v4-65xg-pq4g"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in GHSA-79v4-65xg-pq4g.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-79v4-65xg-pq4g no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-9v9h-cgj8-h64p",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches GHSA-9v9h-cgj8-h64p on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-9v9h-cgj8-h64p"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in GHSA-9v9h-cgj8-h64p.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-9v9h-cgj8-h64p no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-h4gh-qq45-vh27",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches GHSA-h4gh-qq45-vh27 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-h4gh-qq45-vh27"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in GHSA-h4gh-qq45-vh27.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-h4gh-qq45-vh27 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-jwv3-5hgf-82ww",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches GHSA-jwv3-5hgf-82ww on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-jwv3-5hgf-82ww"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in GHSA-jwv3-5hgf-82ww.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-jwv3-5hgf-82ww no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-m959-cc7f-wv43",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches GHSA-m959-cc7f-wv43 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-m959-cc7f-wv43"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in GHSA-m959-cc7f-wv43.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-m959-cc7f-wv43 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-r6ph-v2qm-q3c2",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches GHSA-r6ph-v2qm-q3c2 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-r6ph-v2qm-q3c2"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in GHSA-r6ph-v2qm-q3c2.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-r6ph-v2qm-q3c2 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2024-225",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches PYSEC-2024-225 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2024-225"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in PYSEC-2024-225.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2024-225 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-1284",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches PYSEC-2026-1284 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-1284"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in PYSEC-2026-1284.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-1284 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-1285",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches PYSEC-2026-1285 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-1285"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in PYSEC-2026-1285.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-1285 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-2141",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches PYSEC-2026-2141 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2141"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in PYSEC-2026-2141.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-2141 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-35",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches PYSEC-2026-35 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-35"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in PYSEC-2026-35.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-35 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-3553",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches PYSEC-2026-3553 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3553"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in PYSEC-2026-3553.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-3553 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-3554",
+      "title": "Vulnerable Dependency (OSV): cryptography 42.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "cryptography 42.0.0 matches PYSEC-2026-3554 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3554"
+      ],
+      "fix_steps": [
+        "Upgrade cryptography past the vulnerable range described in PYSEC-2026-3554.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-3554 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-3f63-hfp8-52jq",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-3f63-hfp8-52jq on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-3f63-hfp8-52jq"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-3f63-hfp8-52jq.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-3f63-hfp8-52jq no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-44wm-f244-xhp3",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-44wm-f244-xhp3 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-44wm-f244-xhp3"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-44wm-f244-xhp3.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-44wm-f244-xhp3 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-45hq-cxwh-f6vc",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-45hq-cxwh-f6vc on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-45hq-cxwh-f6vc"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-45hq-cxwh-f6vc.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-45hq-cxwh-f6vc no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-4x4j-2g7c-83w6",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-4x4j-2g7c-83w6 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-4x4j-2g7c-83w6"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-4x4j-2g7c-83w6.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-4x4j-2g7c-83w6 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-5x94-69rx-g8h2",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-5x94-69rx-g8h2 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-5x94-69rx-g8h2"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-5x94-69rx-g8h2.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-5x94-69rx-g8h2 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-62p4-gmf7-7g93",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-62p4-gmf7-7g93 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-62p4-gmf7-7g93"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-62p4-gmf7-7g93.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-62p4-gmf7-7g93 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-6r8x-57c9-28j4",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-6r8x-57c9-28j4 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-6r8x-57c9-28j4"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-6r8x-57c9-28j4.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-6r8x-57c9-28j4 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-8v84-f9pq-wr9x",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-8v84-f9pq-wr9x on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-8v84-f9pq-wr9x"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-8v84-f9pq-wr9x.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-8v84-f9pq-wr9x no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-9hw9-ch79-4vh6",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-9hw9-ch79-4vh6 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-9hw9-ch79-4vh6"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-9hw9-ch79-4vh6.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-9hw9-ch79-4vh6 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-fj7v-r99m-22gq",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-fj7v-r99m-22gq on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-fj7v-r99m-22gq"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-fj7v-r99m-22gq.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-fj7v-r99m-22gq no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-j7hp-h8jx-5ppr",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-j7hp-h8jx-5ppr on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-j7hp-h8jx-5ppr"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-j7hp-h8jx-5ppr.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-j7hp-h8jx-5ppr no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-jjj6-mw9f-p565",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-jjj6-mw9f-p565 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-jjj6-mw9f-p565"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-jjj6-mw9f-p565.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-jjj6-mw9f-p565 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-phj9-mv4w-65pm",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-phj9-mv4w-65pm on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-phj9-mv4w-65pm"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-phj9-mv4w-65pm.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-phj9-mv4w-65pm no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-r73j-pqj5-w3x7",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-r73j-pqj5-w3x7 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-r73j-pqj5-w3x7"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-r73j-pqj5-w3x7.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-r73j-pqj5-w3x7 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-vjc4-5qp5-m44j",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-vjc4-5qp5-m44j on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-vjc4-5qp5-m44j"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-vjc4-5qp5-m44j.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-vjc4-5qp5-m44j no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-wjx4-4jcj-g98j",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-wjx4-4jcj-g98j on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-wjx4-4jcj-g98j"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-wjx4-4jcj-g98j.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-wjx4-4jcj-g98j no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-GHSA-xj96-63gp-2gmr",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches GHSA-xj96-63gp-2gmr on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/GHSA-xj96-63gp-2gmr"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in GHSA-xj96-63gp-2gmr.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm GHSA-xj96-63gp-2gmr no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2023-175",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2023-175 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2023-175"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2023-175.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2023-175 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-165",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-165 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-165"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-165.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-165 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-1793",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-1793 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-1793"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-1793.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-1793 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-1794",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-1794 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-1794"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-1794.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-1794 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-2253",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-2253 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2253"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-2253.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-2253 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-2254",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-2254 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2254"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-2254.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-2254 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-2255",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-2255 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2255"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-2255.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-2255 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-2256",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-2256 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2256"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-2256.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-2256 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-2257",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-2257 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2257"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-2257.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-2257 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-2874",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-2874 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-2874"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-2874.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-2874 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-3451",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-3451 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3451"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-3451.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-3451 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-3453",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-3453 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3453"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-3453.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-3453 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-3454",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-3454 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3454"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-3454.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-3454 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-3493",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-3493 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3493"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-3493.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-3493 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-3494",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-3494 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3494"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-3494.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-3494 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-3495",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-3495 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3495"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-3495.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-3495 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-3496",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-3496 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-3496"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-3496.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-3496 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    },
+    {
+      "id": "SCA-OSV-PYSEC-2026-457",
+      "title": "Vulnerable Dependency (OSV): Pillow 10.0.0",
+      "type": "sca",
+      "url": "vpulse\\pyproject.toml",
+      "severity": "MEDIUM",
+      "vulnerable": true,
+      "evidence": "Pillow 10.0.0 matches PYSEC-2026-457 on OSV.dev \u2014 ",
+      "replication_steps": [
+        "## How to Replicate",
+        "",
+        "1. Confirm the pinned version in `vpulse\\pyproject.toml`.",
+        "2. See advisory: https://osv.dev/vulnerability/PYSEC-2026-457"
+      ],
+      "fix_steps": [
+        "Upgrade Pillow past the vulnerable range described in PYSEC-2026-457.",
+        "Re-run `vpulse sca --live-feed` after upgrading to confirm the finding clears."
+      ],
+      "verification_command": "# re-run: vpulse sca --live-feed and confirm PYSEC-2026-457 no longer appears",
+      "fix_checklist": false,
+      "fixed_date": null
+    }
+  ],
+  "screenshots": []
+}

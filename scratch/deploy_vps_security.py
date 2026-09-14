@@ -9,15 +9,16 @@ VPS_IP = '209.145.50.230'
 VPS_USER = 'root'
 VPS_PASS = 'Kadabrocol0726++'
 
-def run_ssh():
-    print("Connecting to VPS via SSH...")
+def run_vps_deploy():
+    print(f"Connecting to VPS ({VPS_IP}) via SSH...")
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(VPS_IP, username=VPS_USER, password=VPS_PASS, timeout=15)
 
     commands = [
-        "cd /app/agency-bot && git reset --hard && git pull origin feature/backup-alegra-factus",
-        "cd /app/agency-bot/dashboard && npm run build",
+        "cd /app/agency-bot && git fetch origin && git checkout backup/pre-vpulse-remediation-2026-09-11 && git pull origin backup/pre-vpulse-remediation-2026-09-11",
+        "cd /app/agency-bot && npm install",
+        "cd /app/agency-bot/dashboard && npm install && npm run build",
         "pm2 restart all || pm2 restart agency-bot",
         "systemctl reload nginx 2>/dev/null || true",
         "pm2 list"
@@ -34,7 +35,7 @@ def run_ssh():
             print("STDERR:\n", err)
 
     client.close()
-    print("\n✅ VPS SSH compilation and PM2 restart finished successfully!")
+    print("\n✅ VPS security updates deployment finished successfully!")
 
 if __name__ == '__main__':
-    run_ssh()
+    run_vps_deploy()

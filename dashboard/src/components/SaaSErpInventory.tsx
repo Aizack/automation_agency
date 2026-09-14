@@ -1742,6 +1742,46 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     </div>
                                                 </div>
 
+                                                {/* Material de Montura / Ítem & Género */}
+                                                {productType === 'product' && (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Material de Montura / Marco</label>
+                                                            <select
+                                                                value={material}
+                                                                onChange={(e) => setMaterial(e.target.value)}
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans font-semibold"
+                                                            >
+                                                                <option value="">– Seleccionar Material –</option>
+                                                                <option value="Acetato">Acetato</option>
+                                                                <option value="Metal / Aleación">Metal / Aleación</option>
+                                                                <option value="TR-90 / Grilamid">TR-90 / Grilamid</option>
+                                                                <option value="Titanio / Beta-Titanio">Titanio / Beta-Titanio</option>
+                                                                <option value="Combinado (Acetato + Metal)">Combinado (Acetato + Metal)</option>
+                                                                <option value="Madera / Bamboo">Madera / Bamboo</option>
+                                                                <option value="Inyectado / Ultem">Inyectado / Ultem</option>
+                                                                <option value="Silicona / Flexible">Silicona / Flexible (Infantil)</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Género / Público Objetivo</label>
+                                                            <select
+                                                                value={style}
+                                                                onChange={(e) => setStyle(e.target.value)}
+                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans font-semibold"
+                                                            >
+                                                                <option value="">– Seleccionar Género –</option>
+                                                                <option value="Unisex">Unisex</option>
+                                                                <option value="Hombre">Hombre</option>
+                                                                <option value="Mujer">Mujer</option>
+                                                                <option value="Niño">Niño</option>
+                                                                <option value="Niña">Niña</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                )}
+
                                                 {/* SKU Producto Simple */}
                                                 {(!hasVariants || productType === 'service') ? (
                                                     <div className="flex flex-col gap-1.5 mb-4">

@@ -1,7 +1,6 @@
 import paramiko
 import sys
 
-# Ensure UTF-8 output encoding for windows stdout
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
@@ -9,18 +8,17 @@ VPS_IP = '209.145.50.230'
 VPS_USER = 'root'
 VPS_PASS = 'Kadabrocol0726++'
 
-def run_ssh():
+def inspect_vps():
     print("Connecting to VPS via SSH...")
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(VPS_IP, username=VPS_USER, password=VPS_PASS, timeout=15)
 
     commands = [
-        "cd /app/agency-bot && git reset --hard && git pull origin feature/backup-alegra-factus",
-        "cd /app/agency-bot/dashboard && npm run build",
-        "pm2 restart all || pm2 restart agency-bot",
-        "systemctl reload nginx 2>/dev/null || true",
-        "pm2 list"
+        "docker ps",
+        "ls -la /app/agency-bot/media/clients/client_7fc4wswo/logos/ 2>/dev/null || true",
+        "ls -la /app/agency-bot/media/clients/branch_1788890550133_542/logos/ 2>/dev/null || true",
+        "cat /app/agency-bot/.env | grep DATABASE_URL || true"
     ]
 
     for cmd in commands:
@@ -34,7 +32,6 @@ def run_ssh():
             print("STDERR:\n", err)
 
     client.close()
-    print("\n✅ VPS SSH compilation and PM2 restart finished successfully!")
 
 if __name__ == '__main__':
-    run_ssh()
+    inspect_vps()
