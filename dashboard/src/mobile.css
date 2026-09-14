@@ -5,9 +5,17 @@
    regla afecte el diseño de la versión de Escritorio / PC (> 1024px).
    ========================================================================== */
 
+/* Ocultar de forma absoluta elementos móviles en Escritorio / PC (> 1024px) */
+.mobile-drawer-backdrop,
+.mobile-drawer-panel,
+.mobile-bottom-nav {
+  display: none !important;
+}
+
 @media (max-width: 1024px) {
-  /* Mobile Drawer Overlay & Content */
+  /* Mobile Drawer Overlay & Content (Solo para Celular / Tablet) */
   .mobile-drawer-backdrop {
+    display: block !important;
     position: fixed;
     top: 0;
     left: 0;
@@ -27,6 +35,7 @@
   }
 
   .mobile-drawer-panel {
+    display: flex !important;
     position: fixed;
     top: 0;
     left: -290px;
@@ -35,7 +44,6 @@
     background-color: var(--bg-paper, #FAF8F5);
     border-right: 1px solid var(--border-thin, #E2DFD7);
     z-index: 1000;
-    display: flex;
     flex-direction: column;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 10px 0 30px rgba(0,0,0,0.15);

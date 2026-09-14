@@ -1574,9 +1574,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         </div>
       </aside>
 
-      {/* Mobile Drawer Backdrop & Slide Panel */}
+      {/* Mobile Drawer Backdrop & Slide Panel (Visible solo en Celulares/Tablets < 1024px) */}
       <div 
-        className={`mobile-drawer-backdrop ${isMobileMenuOpen ? 'open' : ''}`}
+        className={`mobile-drawer-backdrop lg:hidden ${isMobileMenuOpen ? 'open' : ''}`}
         onClick={() => setIsMobileMenuOpen(false)}
       >
         <div className="mobile-drawer-panel" onClick={(e) => e.stopPropagation()}>
