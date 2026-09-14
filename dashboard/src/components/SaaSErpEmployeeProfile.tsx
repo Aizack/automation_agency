@@ -190,7 +190,7 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
 
     const handleClockIn = async () => {
         try {
-            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/shifts/clock-in`, {
+            let res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/clock-in`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -198,6 +198,16 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                 },
                 body: JSON.stringify({ work_modality: workModality })
             });
+            if (res.status === 404) {
+                res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/shifts/clock-in`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${employeeToken}`
+                    },
+                    body: JSON.stringify({ work_modality: workModality })
+                });
+            }
             const json = await res.json();
             if (json.success) {
                 const now = Date.now();
@@ -218,13 +228,22 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
         const endpoint = isStartingLunch ? 'lunch-start' : 'lunch-end';
 
         try {
-            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/shifts/${endpoint}`, {
+            let res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/${endpoint}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${employeeToken}`
                 }
             });
+            if (res.status === 404) {
+                res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/shifts/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${employeeToken}`
+                    }
+                });
+            }
             const json = await res.json();
             if (json.success) {
                 if (isStartingLunch) {
@@ -249,13 +268,22 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
     const handleClockOut = async () => {
         if (!confirm('¿Estás seguro de que deseas finalizar tu turno de trabajo por hoy?')) return;
         try {
-            const res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/shifts/clock-out`, {
+            let res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/clock-out`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${employeeToken}`
                 }
             });
+            if (res.status === 404) {
+                res = await fetch(`/api/clients/${clientId}/employees/${employeeId}/shifts/clock-out`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${employeeToken}`
+                    }
+                });
+            }
             const json = await res.json();
             if (json.success) {
                 setShiftStatus('finished');

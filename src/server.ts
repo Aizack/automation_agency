@@ -5750,7 +5750,10 @@ app.get('/api/clients/:clientId/employees/:employeeId/shifts', authenticateToken
   }
 });
 
-app.post('/api/clients/:clientId/employees/:employeeId/clock-in', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+app.post([
+  '/api/clients/:clientId/employees/:employeeId/clock-in',
+  '/api/clients/:clientId/employees/:employeeId/shifts/clock-in'
+], authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { employeeId } = req.params;
 
@@ -5775,7 +5778,10 @@ app.post('/api/clients/:clientId/employees/:employeeId/clock-in', authenticateTo
   }
 });
 
-app.post('/api/clients/:clientId/employees/:employeeId/clock-out', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+app.post([
+  '/api/clients/:clientId/employees/:employeeId/clock-out',
+  '/api/clients/:clientId/employees/:employeeId/shifts/clock-out'
+], authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { employeeId } = req.params;
 
@@ -5798,7 +5804,10 @@ app.post('/api/clients/:clientId/employees/:employeeId/clock-out', authenticateT
 });
 
 // Registrar inicio de almuerzo (lunch_start)
-app.post('/api/clients/:clientId/employees/:employeeId/lunch-start', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+app.post([
+  '/api/clients/:clientId/employees/:employeeId/lunch-start',
+  '/api/clients/:clientId/employees/:employeeId/shifts/lunch-start'
+], authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { employeeId } = req.params;
     const result = await pool.query(
@@ -5820,7 +5829,10 @@ app.post('/api/clients/:clientId/employees/:employeeId/lunch-start', authenticat
 });
 
 // Registrar fin de almuerzo (lunch_end)
-app.post('/api/clients/:clientId/employees/:employeeId/lunch-end', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+app.post([
+  '/api/clients/:clientId/employees/:employeeId/lunch-end',
+  '/api/clients/:clientId/employees/:employeeId/shifts/lunch-end'
+], authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { employeeId } = req.params;
     const result = await pool.query(
