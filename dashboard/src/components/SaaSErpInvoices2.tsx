@@ -721,7 +721,7 @@ export const SaaSErpInvoices2: React.FC<SaaSErpInvoices2Props> = ({ clientId }) 
                                                                 <button
                                                                     key={p.id}
                                                                     type="button"
-                                                                    onClick={() => selectProductForItem(idx, p)}
+                                                                    onMouseDown={(e) => { e.preventDefault(); selectProductForItem(idx, p); }}
                                                                     className="w-full text-left p-2.5 hover:bg-primary/10 flex items-center justify-between text-xs cursor-pointer border-b border-outline/5 last:border-0"
                                                                 >
                                                                     <div>

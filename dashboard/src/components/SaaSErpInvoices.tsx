@@ -466,6 +466,36 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         setSelectedItems(copy);
     };
 
+    const handleSelectProduct = (index: number, sug: {
+        productId: string;
+        variantId?: string;
+        variantName?: string;
+        displayName: string;
+        sku?: string;
+        color?: string;
+        brand?: string;
+        material?: string;
+        stock: number;
+        price: number;
+        discountPercentage: number;
+        categoryId?: string;
+    }) => {
+        setSelectedItems((prev) => {
+            const copy = [...prev];
+            const item = { ...copy[index] };
+            item.productId = sug.productId;
+            item.productName = sug.displayName;
+            item.productSearch = sug.displayName;
+            item.price = Number(sug.price) || 0;
+            item.discountPercentage = Number(sug.discountPercentage) || 0;
+            if (sug.categoryId) item.categoryId = sug.categoryId;
+            if (sug.variantId) item.variantId = sug.variantId;
+            if (sug.variantName) item.variantName = sug.variantName;
+            copy[index] = item;
+            return copy;
+        });
+    };
+
     const handleItemChange = (index: number, field: keyof InvoiceItemInput, value: any) => {
         setSelectedItems((prev) => {
             const copy = [...prev];
@@ -503,8 +533,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 item.discountPercentage = Math.max(0, Math.min(100, parseFloat(value) || 0));
             } else if (field === 'productSearch') {
                 item.productSearch = value;
-                const currentSelectedName = products.find(p => p.id === item.productId)?.name || '';
-                if (!value.trim() || (item.productId && value.trim() !== currentSelectedName)) {
+                const currentSelectedName = item.productName || products.find(p => p.id === item.productId)?.name || '';
+                if (!value.trim() || (item.productId && currentSelectedName && value.trim() !== currentSelectedName)) {
                     item.productId = '';
                     item.productName = '';
                     item.price = 0;
@@ -1681,14 +1711,9 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                                 {suggestions.slice(0, 15).map((sug, sIdx) => (
                                                                                     <div
                                                                                         key={sIdx}
-                                                                                        onMouseDown={() => {
-                                                                                            handleItemChange(index, 'productId', sug.productId);
-                                                                                            handleItemChange(index, 'productSearch', sug.displayName);
-                                                                                            handleItemChange(index, 'price', sug.price);
-                                                                                            handleItemChange(index, 'discountPercentage', sug.discountPercentage);
-                                                                                            if (sug.categoryId) handleItemChange(index, 'categoryId', sug.categoryId);
-                                                                                            if (sug.variantId) handleItemChange(index, 'variantId', sug.variantId);
-                                                                                            if (sug.variantName) handleItemChange(index, 'variantName', sug.variantName);
+                                                                                        onMouseDown={(e) => {
+                                                                                            e.preventDefault();
+                                                                                            handleSelectProduct(index, sug);
                                                                                         }}
                                                                                         className="p-2.5 hover:bg-[#FAF8F3] cursor-pointer text-xs transition flex justify-between items-center"
                                                                                     >
