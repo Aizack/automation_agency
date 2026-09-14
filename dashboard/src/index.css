@@ -1845,20 +1845,26 @@ label,
   transform: translateX(290px);
 }
 
-/* Mobile Bottom Navigation Bar */
+/* Mobile Bottom Navigation Bar (Oculta por defecto en Escritorio/PC) */
 .mobile-bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100vw;
-  height: 64px;
-  background-color: #FFFFFF;
-  border-top: 1px solid #E2DFD7;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 40;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 64px;
+    background-color: #FFFFFF;
+    border-top: 1px solid #E2DFD7;
+    display: flex !important;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 40;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 .mobile-bottom-nav-item {
