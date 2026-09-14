@@ -1,0 +1,195 @@
+/* ==========================================================================
+   MOBILE & TABLET EXCLUSIVE STYLESHEET (FRANT ERP)
+   Este archivo contiene EXCLUSIVAMENTE las reglas visuales para teléfonos y tablets.
+   Está estrictamente aislado mediante Media Queries para garantizar que NINGUNA
+   regla afecte el diseño de la versión de Escritorio / PC (> 1024px).
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  /* Mobile Drawer Overlay & Content */
+  .mobile-drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .mobile-drawer-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobile-drawer-panel {
+    position: fixed;
+    top: 0;
+    left: -290px;
+    width: 290px;
+    height: 100vh;
+    background-color: var(--bg-paper, #FAF8F5);
+    border-right: 1px solid var(--border-thin, #E2DFD7);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.15);
+  }
+
+  .mobile-drawer-backdrop.open .mobile-drawer-panel {
+    transform: translateX(290px);
+  }
+
+  /* Mobile Bottom Navigation Bar */
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 64px;
+    background-color: #FFFFFF;
+    border-top: 1px solid #E2DFD7;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 40;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mobile-bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: transparent;
+    border: none;
+    color: #6B6862;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    height: 100%;
+    transition: color 0.15s ease;
+  }
+
+  .mobile-bottom-nav-item.active {
+    color: #D9381E;
+  }
+
+  .mobile-bottom-nav-item .material-symbols-outlined {
+    font-size: 22px;
+  }
+
+  /* Desactivar sidebar de escritorio expandible en móviles */
+  .sidebar-expandable {
+    display: none !important;
+  }
+
+  /* Main wrapper ocupa 100% de la pantalla sin margen izquierdo en móviles */
+  .main-content-wrapper {
+    margin-left: 0 !important;
+    padding-bottom: 74px !important; /* Espacio para el bottom nav */
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Ajustar top header en móvil */
+  .top-header-zen {
+    padding: 0.75rem 1rem !important;
+    gap: 0.5rem;
+  }
+
+  .top-header-brand-zen {
+    font-size: 1.4rem !important;
+  }
+
+  .search-bar-zen {
+    width: 100% !important;
+    max-width: 180px;
+  }
+
+  /* Prevenir zoom automático en inputs en iOS/Android */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Contenedores de modales al 94vw */
+  .modal-container, .modal-content-zen {
+    width: 94vw !important;
+    max-width: 94vw !important;
+    padding: 1rem !important;
+    margin: 0 auto !important;
+  }
+
+  /* Forzar desbordamiento suave en tablas anchas */
+  .table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Modales convertidos en Pantalla Completa por Pasos en Móvil (Full-Screen Stepper) */
+  .modal-stepper-mobile {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #FAF8F5 !important;
+    padding: 0 !important;
+    overflow-y: auto !important;
+  }
+
+  .modal-stepper-mobile h3 {
+    font-size: 1.1rem !important;
+  }
+
+  .modal-stepper-mobile .px-6,
+  .modal-stepper-mobile .px-8,
+  .modal-stepper-mobile .p-6,
+  .modal-stepper-mobile .p-8 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .modal-stepper-mobile .py-4,
+  .modal-stepper-mobile .py-5 {
+    padding-top: 0.6rem !important;
+    padding-bottom: 0.6rem !important;
+  }
+
+  /* Barra de Subsecciones Compacta (Segmented Control Horizontal) */
+  .compact-subsections-bar {
+    display: flex !important;
+    background: #EAE6DF !important;
+    padding: 3px !important;
+    border-radius: 6px !important;
+    gap: 3px !important;
+    margin-bottom: 12px !important;
+    border: 1px solid #E2DFD7 !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  .compact-subsections-bar button {
+    flex: 1 !important;
+    padding: 8px 6px !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+  }
+}
