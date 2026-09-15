@@ -129,6 +129,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     // Form fields
     const [formStep, setFormStep] = useState<number>(1);
     const [invoiceNumber, setInvoiceNumber] = useState('');
+    const [issueDate, setIssueDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [customerDocumentType, setCustomerDocumentType] = useState('CC');
@@ -668,6 +669,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
         const body = {
             invoiceNumber,
+            issueDate,
             customerName,
             customerPhone,
             customerDocumentType,
@@ -714,6 +716,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const resetForm = (customInvoices?: Invoice[] | any) => {
         const list = Array.isArray(customInvoices) ? customInvoices : invoices;
         setInvoiceNumber(getNextInvoiceNumber(list));
+        setIssueDate(new Date().toISOString().split('T')[0]);
         setCustomerName('');
         setCustomerPhone('');
         setCustomerDocumentNumber('');
@@ -1354,7 +1357,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                 </div>
                                                 <span className="text-[11px] text-[#6B6862] font-sans font-semibold uppercase tracking-wider">Requerido para DIAN</span>
                                             </h4>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                 <div className="flex flex-col gap-1.5">
                                                     <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Factura N° *</label>
                                                     <input 
@@ -1362,6 +1365,16 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                         className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-mono font-bold" 
                                                         value={invoiceNumber} 
                                                         onChange={(e) => setInvoiceNumber(e.target.value)} 
+                                                        required 
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Fecha de Emisión *</label>
+                                                    <input 
+                                                        type="date" 
+                                                        className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-mono outline-none focus:border-[#161616] transition rounded-none font-semibold" 
+                                                        value={issueDate} 
+                                                        onChange={(e) => setIssueDate(e.target.value)} 
                                                         required 
                                                     />
                                                 </div>

@@ -2676,6 +2676,8 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
 
       const { 
         invoiceNumber, 
+        issueDate,
+        created_at: customCreatedAt,
         customerId,
         customer_id,
         customerName, 
@@ -2794,6 +2796,9 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
     const validCustomerId = isUUID(resolvedCustomerId) ? resolvedCustomerId : null;
     const validCreatedByUserId = isUUID(createdByUserId) ? createdByUserId : null;
 
+    const rawIssueDate = issueDate || customCreatedAt;
+    const validCreatedAt = rawIssueDate ? new Date(rawIssueDate) : new Date();
+
     // 1. Insertar Factura
     const invoiceResult = await dbClient.query(`
       INSERT INTO invoices (
@@ -2803,9 +2808,10 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         payment_method, installments_count, installment_frequency,
         delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status,
         transfer_bank, transfer_destination_account,
-        seller_employee_id, employee_id, seller_name, created_by_user_id, created_by_user_name
+        seller_employee_id, employee_id, seller_name, created_by_user_id, created_by_user_name,
+        created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
       RETURNING id, invoice_number, customer_id, crm_customer_id, customer_name, customer_phone, customer_document_type, customer_document_number, customer_email, customer_address, total_amount, status, due_date, payment_method, installments_count, installment_frequency, delivery_method, delivery_fee, delivery_address, delivery_date, delivery_status, transfer_bank, transfer_destination_account, seller_employee_id, seller_name, created_by_user_id, created_by_user_name, created_at
     `, [
       clientId, 
@@ -2835,7 +2841,8 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       finalSellerEmpId,
       finalSellerName,
       validCreatedByUserId,
-      createdByUserName
+      createdByUserName,
+      validCreatedAt
     ]);
 
     const invoice = invoiceResult.rows[0];
