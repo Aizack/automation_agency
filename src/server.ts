@@ -2678,6 +2678,9 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         invoiceNumber, 
         issueDate,
         created_at: customCreatedAt,
+        isHistorical,
+        is_historical,
+        skipStockDeduction,
         customerId,
         customer_id,
         customerName, 
@@ -2705,6 +2708,7 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         sellerName,
         items 
       } = req.body;
+      const isHistoricalInvoice = Boolean(isHistorical || is_historical || skipStockDeduction);
       const rawCustomerId = customerId || customer_id || null;
 
       const isUUID = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
@@ -3089,8 +3093,8 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
           console.log(`[Invoice Lab Order] ✅ Orden de laboratorio creada para ${customerName} (CustID: ${foundCustId}, FormulaID: ${formulaId}) / factura ${invoice.invoice_number} / producto "${item.productName || 'Lente Formulada'}"`);
         }
 
-        // Descontar stock de variante específica si aplica
-        if (validVariantId) {
+        // Descontar stock de variante específica si aplica (omitir si es factura histórica)
+        if (!isHistoricalInvoice && validVariantId) {
           await dbClient.query(`
             UPDATE product_variants 
             SET stock = GREATEST(0, stock - $1) 
@@ -3098,8 +3102,8 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
           `, [item.quantity || 1, validVariantId, clientId]);
         }
 
-        // Solo descontar stock si es un producto físico del inventario
-        if (!isLensSale && validProdId) {
+        // Solo descontar stock si es un producto físico del inventario (omitir si es factura histórica)
+        if (!isHistoricalInvoice && !isLensSale && validProdId) {
           const prodUpdateRes = await dbClient.query(`
             UPDATE products 
             SET stock = GREATEST(0, stock - $1) 
@@ -3408,6 +3412,295 @@ app.post('/api/clients/:clientId/electronic-invoicing/config', authenticateToken
 });
 
 // Probar conexión con el proveedor de facturación electrónica seleccionado
+// Endpoint OCR IA: Procesar imágenes de facturas por lote usando Gemini Vision
+app.post('/api/clients/:clientId/invoices/ocr-scan-batch', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { images } = req.body; // Array de strings base64
+
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return res.status(400).json({ success: false, error: 'No se enviaron imágenes para procesar.' });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ success: false, error: 'Clave API de Gemini no configurada en el servidor.' });
+    }
+
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const parsedInvoices: any[] = [];
+
+    for (let index = 0; index < images.length; index++) {
+      const rawImage = images[index];
+      if (!rawImage || typeof rawImage !== 'string') continue;
+
+      try {
+        let mimeType = 'image/jpeg';
+        let base64Data = rawImage;
+
+        if (rawImage.startsWith('data:')) {
+          const parts = rawImage.split(';base64,');
+          mimeType = parts[0].replace('data:', '') || 'image/jpeg';
+          base64Data = parts[1] || '';
+        }
+
+        const prompt = `Eres un experto contador y optómetra procesando facturas físicas u órdenes de laboratorio de una óptica/tienda.
+Analiza la imagen adjunta de una factura física y extrae los datos en un objeto JSON estructurado estrictamente con las siguientes propiedades:
+{
+  "invoice_number": "FV-1501",
+  "issue_date": "YYYY-MM-DD",
+  "customer_name": "Nombre completo del cliente",
+  "customer_document_type": "CC",
+  "customer_document_number": "12345678",
+  "customer_phone": "3000000000",
+  "customer_email": "",
+  "customer_address": "",
+  "items": [
+    {
+      "productName": "Nombre del producto/servicio/montura/lente",
+      "quantity": 1,
+      "price": 150000,
+      "total": 150000
+    }
+  ],
+  "total_amount": 150000,
+  "prescription": {
+    "has_prescription": true,
+    "od_sphere": "-1.50",
+    "od_cylinder": "-0.50",
+    "od_axis": "90",
+    "os_sphere": "-1.75",
+    "os_cylinder": "-0.75",
+    "os_axis": "85",
+    "add": "+1.50",
+    "dp": "62",
+    "notes": "Lentes multifocales"
+  },
+  "confidence_score": 0.95
+}
+Si algún dato no es legible o no está presente en la factura, usa valores vacíos "" o 0. Si no hay prescripción óptica, has_prescription debe ser false. Devuelve estrictamente el objeto JSON.`;
+
+        const imagePart = {
+          inlineData: {
+            data: base64Data,
+            mimeType: mimeType
+          }
+        };
+
+        const result = await model.generateContent([prompt, imagePart]);
+        const textResult = result.response.text().trim();
+        const jsonParsed = JSON.parse(textResult);
+
+        parsedInvoices.push({
+          id: `scan-${Date.now()}-${index}`,
+          invoice_number: jsonParsed.invoice_number || `FV-${1000 + index}`,
+          issue_date: jsonParsed.issue_date || new Date().toISOString().split('T')[0],
+          customer_name: jsonParsed.customer_name || 'Cliente General',
+          customer_document_type: jsonParsed.customer_document_type || 'CC',
+          customer_document_number: jsonParsed.customer_document_number || '',
+          customer_phone: jsonParsed.customer_phone || '',
+          customer_email: jsonParsed.customer_email || '',
+          customer_address: jsonParsed.customer_address || '',
+          items: Array.isArray(jsonParsed.items) && jsonParsed.items.length > 0 ? jsonParsed.items : [{ productName: 'Producto General', quantity: 1, price: jsonParsed.total_amount || 0, total: jsonParsed.total_amount || 0 }],
+          total_amount: jsonParsed.total_amount || 0,
+          prescription: jsonParsed.prescription || { has_prescription: false },
+          confidence_score: jsonParsed.confidence_score || 0.9,
+          status: 'verified',
+          image_preview: rawImage
+        });
+      } catch (ocrErr: any) {
+        console.error(`[OCR Batch Scan] Error en imagen #${index}:`, ocrErr);
+        parsedInvoices.push({
+          id: `scan-${Date.now()}-${index}`,
+          invoice_number: `FV-${1000 + index}`,
+          issue_date: new Date().toISOString().split('T')[0],
+          customer_name: 'Cliente General',
+          customer_document_type: 'CC',
+          customer_document_number: '',
+          customer_phone: '',
+          customer_email: '',
+          customer_address: '',
+          items: [{ productName: 'Venta Factura Antigua', quantity: 1, price: 0, total: 0 }],
+          total_amount: 0,
+          prescription: { has_prescription: false },
+          confidence_score: 0.5,
+          status: 'needs_review',
+          image_preview: rawImage,
+          ocr_error: ocrErr.message
+        });
+      }
+    }
+
+    res.json({ success: true, invoices: parsedInvoices });
+  } catch (err: any) {
+    console.error("[OCR Scan Batch] Main Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Endpoint Confirmar Lote de Facturas Históricas y Fórmulas
+app.post('/api/clients/:clientId/invoices/batch-confirm', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  const dbClient = await pool.connect();
+  try {
+    await dbClient.query('BEGIN');
+    const { clientId } = req.params;
+    const reqUser = (req as any).user;
+    const createdByUserId = reqUser?.id || null;
+    const createdByUserName = reqUser?.name || reqUser?.username || 'Sistema OCR IA';
+
+    const { invoices } = req.body;
+    if (!invoices || !Array.isArray(invoices) || invoices.length === 0) {
+      await dbClient.query('ROLLBACK');
+      return res.status(400).json({ success: false, error: 'No hay facturas para confirmar.' });
+    }
+
+    const createdInvoices: any[] = [];
+
+    for (const inv of invoices) {
+      const invNum = inv.invoice_number || `FV-${Date.now().toString().slice(-4)}`;
+      const issueDate = inv.issue_date ? new Date(inv.issue_date) : new Date();
+      const custName = String(inv.customer_name || 'Cliente General').trim();
+      const custDoc = String(inv.customer_document_number || '').trim();
+      const custPhone = String(inv.customer_phone || '').trim();
+      const custEmail = String(inv.customer_email || '').trim();
+      const custAddress = String(inv.customer_address || '').trim();
+      const totalAmt = parseFloat(inv.total_amount) || 0;
+
+      // 1. Resolver / Crear Cliente en CRM
+      let resolvedCustId: string | null = null;
+      if (custDoc) {
+        const crmCheck = await dbClient.query(
+          `SELECT id FROM crm_customers WHERE client_id = $1 AND document_number = $2 LIMIT 1`,
+          [clientId, custDoc]
+        );
+        if (crmCheck.rows.length > 0) {
+          resolvedCustId = crmCheck.rows[0].id;
+        }
+      }
+
+      if (!resolvedCustId && custName && custName !== 'Cliente General') {
+        const nameParts = custName.split(/\s+/);
+        const firstName = nameParts[0] || 'Cliente';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        const newCust = await dbClient.query(`
+          INSERT INTO crm_customers (client_id, name, last_name, document_type, document_number, phone, email, address)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          RETURNING id
+        `, [
+          clientId,
+          firstName,
+          lastName,
+          inv.customer_document_type || 'CC',
+          custDoc || null,
+          custPhone || null,
+          custEmail || null,
+          custAddress || null
+        ]);
+        resolvedCustId = newCust.rows[0]?.id || null;
+      }
+
+      // 2. Si incluye Prescripción / Fórmula Óptica, guardarla en CRM y formulas
+      if (inv.prescription && inv.prescription.has_prescription && resolvedCustId) {
+        const rx = inv.prescription;
+        const rxSummary = `OD: ${rx.od_sphere || '0.00'} ${rx.od_cylinder || ''}x${rx.od_axis || ''} | OI: ${rx.os_sphere || '0.00'} ${rx.os_cylinder || ''}x${rx.os_axis || ''} | ADD: ${rx.add || ''} | DP: ${rx.dp || ''}`;
+
+        // Guardar en crm_customers
+        await dbClient.query(
+          `UPDATE crm_customers SET lens_prescription = $1 WHERE client_id = $2 AND id = $3`,
+          [rxSummary, clientId, resolvedCustId]
+        );
+
+        // Guardar en tabla formulas
+        try {
+          await dbClient.query(`
+            INSERT INTO formulas (
+              client_id, customer_id, 
+              od_sphere, od_cylinder, od_axis, od_addition, 
+              oi_sphere, oi_cylinder, oi_axis, oi_addition, 
+              dp_distance, notes
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          `, [
+            clientId,
+            resolvedCustId,
+            rx.od_sphere || null,
+            rx.od_cylinder || null,
+            rx.od_axis || null,
+            rx.add || null,
+            rx.os_sphere || null,
+            rx.os_cylinder || null,
+            rx.os_axis || null,
+            rx.add || null,
+            rx.dp || null,
+            rx.notes || 'Importado por Escáner IA de Factura Antigua'
+          ]);
+        } catch (fErr) {
+          console.warn('[Batch Confirm] Advertencia al insertar en tabla formulas:', fErr);
+        }
+      }
+
+      // 3. Crear Factura (Marcada con is_historical para NO descontar inventario)
+      const invRes = await dbClient.query(`
+        INSERT INTO invoices (
+          client_id, customer_id, crm_customer_id, invoice_number, customer_name, customer_phone,
+          customer_document_type, customer_document_number, customer_email, customer_address,
+          total_amount, status, due_date, payment_method, seller_name, created_by_user_name, created_at
+        )
+        VALUES ($1, $2, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'paid', $11, 'efectivo', $12, $12, $11)
+        RETURNING id, invoice_number
+      `, [
+        clientId,
+        resolvedCustId,
+        invNum,
+        custName,
+        custPhone,
+        inv.customer_document_type || 'CC',
+        custDoc,
+        custEmail,
+        custAddress,
+        totalAmt,
+        issueDate,
+        createdByUserName
+      ]);
+
+      const newInv = invRes.rows[0];
+
+      // 4. Insertar ítems
+      const rawItems = Array.isArray(inv.items) && inv.items.length > 0 ? inv.items : [{ productName: 'Venta Factura Antigua', quantity: 1, price: totalAmt, total: totalAmt }];
+      for (const item of rawItems) {
+        await dbClient.query(`
+          INSERT INTO invoice_items (invoice_id, product_name, quantity, price, product_type)
+          VALUES ($1, $2, $3, $4, 'inventory')
+        `, [
+          newInv.id,
+          item.productName || item.name || 'Venta Factura Antigua',
+          item.quantity || 1,
+          item.price || item.total || 0
+        ]);
+      }
+
+      createdInvoices.push({ id: newInv.id, invoice_number: newInv.invoice_number, customer: custName });
+    }
+
+    await dbClient.query('COMMIT');
+    console.log(`[Batch Confirm] ✅ ${createdInvoices.length} facturas históricas registradas exitosamente.`);
+    res.json({ success: true, count: createdInvoices.length, invoices: createdInvoices });
+  } catch (err: any) {
+    await dbClient.query('ROLLBACK');
+    console.error("[Batch Confirm] Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    dbClient.release();
+  }
+});
+
 app.post('/api/clients/:clientId/electronic-invoicing/test-connection', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { provider, credentials } = req.body;

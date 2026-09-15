@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 import { AuditLogModal } from './AuditLogModal';
+import { HistoricalInvoicesModal } from './HistoricalInvoicesModal';
 
 interface Invoice {
     id: string;
@@ -125,6 +126,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const [planStatus, setPlanStatus] = useState<any>(null);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [generatingElectronicId, setGeneratingElectronicId] = useState<string | null>(null);
+    const [isHistoricalModalOpen, setIsHistoricalModalOpen] = useState(false);
 
     // Form fields
     const [formStep, setFormStep] = useState<number>(1);
@@ -1177,6 +1179,13 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                     >
                         <span className="material-symbols-outlined text-[16px] text-[#D9381E]">workspace_premium</span>
                         Planes & Upgrade
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setIsHistoricalModalOpen(true)}
+                        className="bg-[#C8A968] hover:bg-[#B39353] text-[#161616] text-[12px] font-bold py-3.5 px-5 flex items-center gap-2 transition-all cursor-pointer border-0 uppercase tracking-widest shadow-sm"
+                    >
+                        🏛️ FACTURAS HISTÓRICAS
                     </button>
                     <button
                         type="button"
@@ -3059,6 +3068,14 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 entityType={auditEntityType}
                 entityId={auditEntityId}
                 module="Facturación"
+            />
+            {/* Modal de Importación de Facturas Antiguas (Secuencial + Escáner IA) */}
+            <HistoricalInvoicesModal
+                isOpen={isHistoricalModalOpen}
+                onClose={() => setIsHistoricalModalOpen(false)}
+                clientId={clientId}
+                onSuccess={fetchData}
+                currentNextInvoiceNumber={invoiceNumber}
             />
         </div>
     );
