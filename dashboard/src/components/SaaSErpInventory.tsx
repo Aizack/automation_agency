@@ -1540,25 +1540,29 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             }`}
                                         >
                                             <span className="w-4 h-4 rounded-full bg-[#D9381E] text-white text-[9px] flex items-center justify-center font-mono font-bold">1</span>
-                                            <span>1. Datos & Foto</span>
+                                            <span>1. Datos Básicos</span>
                                         </button>
 
-                                        <span className="text-[#E2DFD7] font-bold text-xs shrink-0">→</span>
+                                        {productType === 'product' && (
+                                            <>
+                                                <span className="text-[#E2DFD7] font-bold text-xs shrink-0">→</span>
 
-                                        <button
-                                            type="button"
-                                            onClick={() => setProductFormStep(2)}
-                                            className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider border cursor-pointer transition flex items-center gap-1.5 shrink-0 ${
-                                                productFormStep === 2
-                                                    ? 'bg-[#161616] text-white border-[#161616]'
-                                                    : productFormStep > 2
-                                                    ? 'bg-[#EAE6DF] text-[#161616] border-[#E2DFD7]'
-                                                    : 'bg-white text-[#6B6862] border-[#E2DFD7]'
-                                            }`}
-                                        >
-                                            <span className="w-4 h-4 rounded-full bg-[#D9381E] text-white text-[9px] flex items-center justify-center font-mono font-bold">2</span>
-                                            <span>2. Variantes & Stock ({variantList.length})</span>
-                                        </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setProductFormStep(2)}
+                                                    className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider border cursor-pointer transition flex items-center gap-1.5 shrink-0 ${
+                                                        productFormStep === 2
+                                                            ? 'bg-[#161616] text-white border-[#161616]'
+                                                            : productFormStep > 2
+                                                            ? 'bg-[#EAE6DF] text-[#161616] border-[#E2DFD7]'
+                                                            : 'bg-white text-[#6B6862] border-[#E2DFD7]'
+                                                    }`}
+                                                >
+                                                    <span className="w-4 h-4 rounded-full bg-[#D9381E] text-white text-[9px] flex items-center justify-center font-mono font-bold">2</span>
+                                                    <span>2. Variantes & Stock ({variantList.length})</span>
+                                                </button>
+                                            </>
+                                        )}
 
                                         <span className="text-[#E2DFD7] font-bold text-xs shrink-0">→</span>
 
@@ -1571,8 +1575,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     : 'bg-white text-[#6B6862] border-[#E2DFD7]'
                                             }`}
                                         >
-                                            <span className="w-4 h-4 rounded-full bg-white text-[#161616] text-[9px] flex items-center justify-center font-mono font-bold">3</span>
-                                            <span>3. Precios & Guardar</span>
+                                            <span className="w-4 h-4 rounded-full bg-white text-[#161616] text-[9px] flex items-center justify-center font-mono font-bold">
+                                                {productType === 'service' ? '2' : '3'}
+                                            </span>
+                                            <span>{productType === 'service' ? '2. Precios & Guardar' : '3. Precios & Guardar'}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1581,11 +1587,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden min-h-0">
                                     <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto custom-scrollbar">
                                         
-                                        {/* PASO 1: DATOS BÁSICOS Y FOTOGRAFÍA */}
+                                        {/* PASO 1: DATOS BÁSICOS Y CLASIFICACIÓN */}
                                         {productFormStep === 1 && (
                                             <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
                                                 <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
-                                                    1. Datos Básicos, Clasificación & Fotografía
+                                                    1. Datos Básicos & Clasificación
                                                 </h4>
 
                                                 {/* Selector Categoría + Selector Tipo de Ítem */}
@@ -1600,14 +1606,23 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                     setIsLensMode(true);
                                                                     setProductType('service');
                                                                     setStock(999999);
+                                                                    setHasVariants(false);
+                                                                    setVariantList([{ color: 'NEGRO', sku: sku || '', stock: 999999, min_stock: 0, image_url: '' }]);
+                                                                    setActivePhotoColorIdx(0);
                                                                     const lentesCat = categories.find((c: any) => c.name.toLowerCase().includes('lente'));
                                                                     if (lentesCat) setCategoryId(lentesCat.id);
                                                                 } else {
                                                                     setIsLensMode(false);
                                                                     const pVal = val as 'product' | 'service';
                                                                     setProductType(pVal);
-                                                                    if (pVal === 'service') setStock(999999);
-                                                                    else if (stock === 999999) setStock('');
+                                                                    if (pVal === 'service') {
+                                                                        setStock(999999);
+                                                                        setHasVariants(false);
+                                                                        setVariantList([{ color: 'NEGRO', sku: sku || '', stock: 999999, min_stock: 0, image_url: '' }]);
+                                                                        setActivePhotoColorIdx(0);
+                                                                    } else if (stock === 999999) {
+                                                                        setStock('');
+                                                                    }
                                                                 }
                                                             }}
                                                             className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition rounded-none"
@@ -1742,8 +1757,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     </div>
                                                 </div>
 
-                                                {/* Material de Montura / Ítem & Género */}
-                                                {productType === 'product' && (
+                                                {/* Material de Montura / Ítem & Género - SOLO SI LA CATEGORÍA ES MONTURA */}
+                                                {productType === 'product' && Boolean(categoryId && (categories.find((c: any) => String(c.id) === String(categoryId))?.name || '').toLowerCase().includes('montura')) && (
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
                                                         <div className="flex flex-col gap-1.5">
                                                             <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Material de Montura / Marco</label>
@@ -1821,8 +1836,29 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     </div>
                                                 )}
 
-                                                {/* Sección de Fotografía del Producto */}
-                                                <div className="bg-white border border-[#E2DFD7] p-5 space-y-4">
+                                                {/* Navegación Paso 1 */}
+                                                <div className="pt-6 border-t border-[#E2DFD7] flex justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setProductFormStep(productType === 'service' ? 3 : 2)}
+                                                        className="bg-[#161616] hover:bg-[#2c2c2c] text-white border-0 px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-2 transition"
+                                                    >
+                                                        Siguiente
+                                                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* PASO 2: VARIANTES DE COLOR Y STOCK */}
+                                        {productFormStep === 2 && productType === 'product' && (
+                                            <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
+                                                <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
+                                                    2. Variantes de Color, Fotografía & Control de Stock
+                                                </h4>
+
+                                                {/* Sección de Fotografía del Producto por Variante */}
+                                                <div className="bg-white border border-[#E2DFD7] p-5 space-y-4 mb-4">
                                                     <div className="flex justify-between items-baseline border-b border-[#E2DFD7] pb-2">
                                                         <h4 className="font-serif text-lg text-[#161616] font-normal">Fotografía del Ítem</h4>
                                                         <span className="text-[10px] text-[#D9381E] font-bold uppercase tracking-wider">
@@ -1903,27 +1939,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                         )}
                                                     </div>
                                                 </div>
-
-                                                {/* Navegación Paso 1 */}
-                                                <div className="pt-6 border-t border-[#E2DFD7] flex justify-end">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setProductFormStep(2)}
-                                                        className="bg-[#161616] hover:bg-[#2c2c2c] text-white border-0 px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-2 transition"
-                                                    >
-                                                        Siguiente
-                                                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* PASO 2: VARIANTES DE COLOR Y STOCK */}
-                                        {productFormStep === 2 && (
-                                            <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
-                                                <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
-                                                    2. Variantes de Color & Control de Stock
-                                                </h4>
 
                                                 {productType === 'product' && (
                                                     <div className="space-y-4">
@@ -2181,7 +2196,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 <div className="pt-6 border-t border-[#E2DFD7] flex justify-between items-center pb-4">
                                                     <button
                                                         type="button"
-                                                        onClick={() => setProductFormStep(2)}
+                                                        onClick={() => setProductFormStep(productType === 'service' ? 1 : 2)}
                                                         className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5 transition"
                                                     >
                                                         <span className="material-symbols-outlined text-[16px]">arrow_back</span>
