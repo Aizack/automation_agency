@@ -1620,8 +1620,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                         setHasVariants(false);
                                                                         setVariantList([{ color: 'NEGRO', sku: sku || '', stock: 999999, min_stock: 0, image_url: '' }]);
                                                                         setActivePhotoColorIdx(0);
-                                                                    } else if (stock === 999999) {
-                                                                        setStock('');
+                                                                    } else {
+                                                                        if (stock === 999999) setStock('');
+                                                                        setHasVariants(true);
                                                                     }
                                                                 }
                                                             }}
@@ -2051,6 +2052,21 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                             </div>
                                                         ) : (
                                                             <div className="bg-white p-5 border border-[#E2DFD7] space-y-4">
+                                                                <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-3">
+                                                                    <div>
+                                                                        <h5 className="font-bold text-xs uppercase tracking-wider text-[#161616]">Control de Stock Único</h5>
+                                                                        <p className="text-[11px] text-[#6B6862]">Producto simple sin variantes de color.</p>
+                                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setHasVariants(true)}
+                                                                        className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[10px] font-bold py-2 px-3 rounded-none flex items-center gap-1 transition uppercase tracking-wider cursor-pointer"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-[14px] text-[#D9381E]">palette</span>
+                                                                        + Activar Variantes de Color
+                                                                    </button>
+                                                                </div>
+
                                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                     <div className="flex flex-col gap-1.5">
                                                                         <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Stock Disponible *</label>
