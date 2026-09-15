@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { authFetch as fetch } from '../utils/api';
 
 interface HistoricalInvoicesModalProps {
     isOpen: boolean;
@@ -16,6 +17,24 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
     currentNextInvoiceNumber = 'FV-1001'
 }) => {
     const [activeTab, setActiveTab] = useState<'manual' | 'ocr'>('manual');
+
+    // --- ESTADO CLIENTES CRM Y AUTOCOMPLETADO ---
+    const [crmCustomers, setCrmCustomers] = useState<any[]>([]);
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [showCustomerDropdown, setShowCustomerDropdown] = useState<boolean>(false);
+    const [isQuickCustomerOpen, setIsQuickCustomerOpen] = useState<boolean>(false);
+
+    // Formulario Crear Cliente Rápido
+    const [quickCustType, setQuickCustType] = useState<'persona' | 'empresa'>('persona');
+    const [quickCustName, setQuickCustName] = useState<string>('');
+    const [quickCustLastName, setQuickCustLastName] = useState<string>('');
+    const [quickCustDocType, setQuickCustDocType] = useState<string>('CC');
+    const [quickCustDocNum, setQuickCustDocNum] = useState<string>('');
+    const [quickCustPhone, setQuickCustPhone] = useState<string>('');
+    const [quickCustEmail, setQuickCustEmail] = useState<string>('');
+    const [quickCustAddress, setQuickCustAddress] = useState<string>('');
+    const [quickCustRx, setQuickCustRx] = useState<string>('');
+    const [savingQuickCust, setSavingQuickCust] = useState<boolean>(false);
 
     // --- ESTADO TAB 1: MANUAL SECUENCIAL ---
     const currentYear = new Date().getFullYear();
@@ -43,6 +62,20 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
     const [confirmingBatch, setConfirmingBatch] = useState<boolean>(false);
     const [ocrError, setOcrError] = useState<string | null>(null);
 
+    // Cargar clientes CRM al abrir modal
+    useEffect(() => {
+        if (isOpen && clientId) {
+            fetch(`/api/clients/${clientId}/crm-customers`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && Array.isArray(data.customers)) {
+                        setCrmCustomers(data.customers);
+                    }
+                })
+                .catch(err => console.warn('[HistoricalModal] Error al cargar clientes CRM:', err));
+        }
+    }, [isOpen, clientId]);
+
     if (!isOpen) return null;
 
     // Incrementar consecutivo numérico manteniendo prefijo
@@ -55,6 +88,77 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
         const nextNum = parseInt(numStr, 10) + 1;
         const padded = String(nextNum).padStart(numStr.length, '0');
         return `${prefix}${padded}`;
+    };
+
+    // Clientes filtrados para autocompletado
+    const filteredCustomers = crmCustomers.filter(c => {
+        const query = searchQuery.toLowerCase().trim();
+        if (!query) return false;
+        const fullName = `${c.name || ''} ${c.last_name || ''}`.toLowerCase();
+        const doc = (c.document_number || '').toLowerCase();
+        const phone = (c.phone || '').toLowerCase();
+        return fullName.includes(query) || doc.includes(query) || phone.includes(query);
+    });
+
+    const selectCustomer = (c: any) => {
+        const fullName = `${c.name || ''} ${c.last_name || ''}`.trim();
+        setCustomerName(fullName);
+        setCustomerDoc(c.document_number || '');
+        setCustomerPhone(c.phone || '');
+        setSearchQuery('');
+        setShowCustomerDropdown(false);
+    };
+
+    // Crear cliente rápido en el CRM
+    const handleCreateQuickCustomer = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!quickCustName || !quickCustPhone) {
+            alert('Por favor ingresa al menos el Nombre y el Teléfono del cliente.');
+            return;
+        }
+
+        setSavingQuickCust(true);
+        try {
+            const body = {
+                name: quickCustName.trim(),
+                last_name: quickCustLastName.trim(),
+                document_type: quickCustDocType,
+                document_number: quickCustDocNum.trim(),
+                phone: quickCustPhone.trim(),
+                email: quickCustEmail.trim(),
+                address: quickCustAddress.trim(),
+                lens_prescription: quickCustRx.trim() || null,
+                customer_type: quickCustType
+            };
+
+            const res = await fetch(`/api/clients/${clientId}/crm-customers`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const json = await res.json();
+
+            if (json.success && json.data) {
+                const newCustomer = json.data;
+                setCrmCustomers(prev => [newCustomer, ...prev]);
+                selectCustomer(newCustomer);
+                setIsQuickCustomerOpen(false);
+                // Reset form
+                setQuickCustName('');
+                setQuickCustLastName('');
+                setQuickCustDocNum('');
+                setQuickCustPhone('');
+                setQuickCustEmail('');
+                setQuickCustAddress('');
+                setQuickCustRx('');
+            } else {
+                alert(`Error al registrar cliente: ${json.error || 'Error desconocido'}`);
+            }
+        } catch (err: any) {
+            alert(`Error de red: ${err.message}`);
+        } finally {
+            setSavingQuickCust(false);
+        }
     };
 
     // Manejo de guardado rápido manual (Tab 1)
@@ -214,7 +318,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-            <div className="bg-[#FAF8F5] border border-[#E2DFD7] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] font-sans">
+            <div className="bg-[#FAF8F5] border border-[#E2DFD7] w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] font-sans relative">
                 
                 {/* Header del Modal */}
                 <div className="bg-[#161616] text-[#F9F6F0] p-5 flex items-center justify-between border-b border-[#2C2C2C]">
@@ -309,14 +413,24 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                             </div>
 
                             {/* Formulario Rápido Entrada de Datos */}
-                            <form onSubmit={handleSaveManualInvoice} className="bg-white p-5 border border-[#E2DFD7] space-y-4 shadow-sm">
+                            <form onSubmit={handleSaveManualInvoice} className="bg-white p-5 border border-[#E2DFD7] space-y-4 shadow-sm relative">
                                 <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2">
                                     <span className="text-[11px] font-bold uppercase tracking-wider text-[#161616]">
                                         Registrar Factura N° {consecutive} ({selectedYear}-{selectedMonth}-{day})
                                     </span>
-                                    <span className="text-[10px] text-[#2E7D32] bg-[#E8F5E9] font-bold px-2 py-0.5 rounded">
-                                        🛡️ Sin descuento de stock
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsQuickCustomerOpen(true)}
+                                            className="text-[11px] font-bold text-[#C8A968] hover:text-[#B39353] bg-[#FAF8F5] border border-[#E2DFD7] px-2.5 py-1 uppercase tracking-wider transition flex items-center gap-1"
+                                        >
+                                            <span className="material-symbols-outlined text-[13px]">person_add</span>
+                                            + Crear Cliente CRM
+                                        </button>
+                                        <span className="text-[10px] text-[#2E7D32] bg-[#E8F5E9] font-bold px-2 py-1 rounded">
+                                            🛡️ Sin descuento de stock
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -333,24 +447,57 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                                             required
                                         />
                                     </div>
-                                    <div className="md:col-span-2">
-                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Nombre Cliente *</label>
+
+                                    {/* Búsqueda Autocompletado de Cliente */}
+                                    <div className="md:col-span-2 relative">
+                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">
+                                            Nombre Cliente * (Buscar en CRM)
+                                        </label>
                                         <input
                                             type="text"
-                                            placeholder="Nombre o Razón Social"
+                                            placeholder="Buscar por nombre o tipea uno nuevo..."
                                             value={customerName}
-                                            onChange={(e) => setCustomerName(e.target.value)}
+                                            onChange={(e) => {
+                                                setCustomerName(e.target.value);
+                                                setSearchQuery(e.target.value);
+                                                setShowCustomerDropdown(true);
+                                            }}
+                                            onFocus={() => setShowCustomerDropdown(true)}
                                             className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2.5 text-xs font-semibold text-[#161616] outline-none focus:border-[#161616]"
                                             required
                                         />
+
+                                        {/* Dropdown de Autocompletado de Clientes */}
+                                        {showCustomerDropdown && filteredCustomers.length > 0 && (
+                                            <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#E2DFD7] shadow-xl z-20 max-h-48 overflow-y-auto divide-y divide-[#F0ECE1]">
+                                                {filteredCustomers.map(c => (
+                                                    <div
+                                                        key={c.id}
+                                                        onClick={() => selectCustomer(c)}
+                                                        className="p-2.5 hover:bg-[#FAF8F5] cursor-pointer text-xs transition flex items-center justify-between"
+                                                    >
+                                                        <div>
+                                                            <div className="font-bold text-[#161616]">{c.name} {c.last_name}</div>
+                                                            <div className="text-[10px] text-[#6B6862]">Doc: {c.document_number || 'N/A'} | Tel: {c.phone || 'N/A'}</div>
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-[#C8A968] uppercase">Seleccionar</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
+
                                     <div>
                                         <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Cédula / Documento</label>
                                         <input
                                             type="text"
-                                            placeholder="Opcional"
+                                            placeholder="Buscar o tipear doc..."
                                             value={customerDoc}
-                                            onChange={(e) => setCustomerDoc(e.target.value)}
+                                            onChange={(e) => {
+                                                setCustomerDoc(e.target.value);
+                                                setSearchQuery(e.target.value);
+                                                setShowCustomerDropdown(true);
+                                            }}
                                             className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none"
                                         />
                                     </div>
@@ -393,7 +540,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                                     <button
                                         type="submit"
                                         disabled={savingManual}
-                                        className="bg-[#161616] hover:bg-[#2C2C2C] text-white px-6 py-3 text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 shadow-md disabled:opacity-50"
+                                        className="bg-[#161616] hover:bg-[#2C2C2C] text-white px-6 py-3 text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 shadow-md disabled:opacity-50 cursor-pointer"
                                     >
                                         {savingManual ? 'Guardando...' : '⚡ Guardar Factura y Pasar a la Siguiente (Enter)'}
                                     </button>
@@ -460,7 +607,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                                         <button
                                             onClick={handleAnalyzeOcrBatch}
                                             disabled={analyzingOcr}
-                                            className="bg-[#C8A968] hover:bg-[#B39353] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition shadow flex items-center gap-2"
+                                            className="bg-[#C8A968] hover:bg-[#B39353] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition shadow flex items-center gap-2 cursor-pointer"
                                         >
                                             {analyzingOcr ? '🧠 Analizando con IA Gemini...' : '⚡ Analizar Facturas con IA'}
                                         </button>
@@ -504,7 +651,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                                         <button
                                             onClick={handleConfirmBatch}
                                             disabled={confirmingBatch}
-                                            className="bg-[#2E7D32] hover:bg-[#256628] text-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider transition shadow flex items-center gap-2 disabled:opacity-50"
+                                            className="bg-[#2E7D32] hover:bg-[#256628] text-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider transition shadow flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                                         >
                                             {confirmingBatch ? 'Guardando...' : `✅ Confirmar e Importar ${ocrResults.length} Facturas`}
                                         </button>
@@ -594,9 +741,140 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                     )}
                 </div>
 
+                {/* MODAL SECUNDARIO: CREACIÓN RÁPIDA DE CLIENTE EN CRM */}
+                {isQuickCustomerOpen && (
+                    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                        <div className="bg-white border border-[#E2DFD7] w-full max-w-lg shadow-2xl p-6 space-y-4 font-sans">
+                            <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-3">
+                                <div>
+                                    <span className="text-[10px] uppercase font-bold text-[#C8A968] tracking-widest block">Acceso Rápido CRM</span>
+                                    <h3 className="text-lg font-serif font-bold text-[#161616]">👤 Registrar Nuevo Cliente</h3>
+                                </div>
+                                <button
+                                    onClick={() => setIsQuickCustomerOpen(false)}
+                                    className="text-[#9E9E9E] hover:text-black font-bold text-lg"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleCreateQuickCustomer} className="space-y-4">
+                                <div>
+                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Tipo de Cliente</label>
+                                    <select
+                                        value={quickCustType}
+                                        onChange={(e) => setQuickCustType(e.target.value as any)}
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs font-semibold outline-none"
+                                    >
+                                        <option value="persona">👤 Persona Natural</option>
+                                        <option value="empresa">🏢 Empresa / Persona Jurídica</option>
+                                    </select>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Nombre(s) *</label>
+                                        <input
+                                            type="text"
+                                            value={quickCustName}
+                                            onChange={(e) => setQuickCustName(e.target.value)}
+                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs font-semibold outline-none focus:border-[#161616]"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Apellido(s)</label>
+                                        <input
+                                            type="text"
+                                            value={quickCustLastName}
+                                            onChange={(e) => setQuickCustLastName(e.target.value)}
+                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Tipo Doc.</label>
+                                        <select
+                                            value={quickCustDocType}
+                                            onChange={(e) => setQuickCustDocType(e.target.value)}
+                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs outline-none"
+                                        >
+                                            <option value="CC">Cédula (CC)</option>
+                                            <option value="NIT">NIT</option>
+                                            <option value="CE">Cédula Extr. (CE)</option>
+                                            <option value="PASAPORTE">Pasaporte</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Número Documento</label>
+                                        <input
+                                            type="text"
+                                            value={quickCustDocNum}
+                                            onChange={(e) => setQuickCustDocNum(e.target.value)}
+                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs font-mono outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Teléfono / Celular *</label>
+                                        <input
+                                            type="text"
+                                            value={quickCustPhone}
+                                            onChange={(e) => setQuickCustPhone(e.target.value)}
+                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs outline-none"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Correo Electrónico</label>
+                                        <input
+                                            type="email"
+                                            value={quickCustEmail}
+                                            onChange={(e) => setQuickCustEmail(e.target.value)}
+                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Fórmula Óptica (Opcional)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Ej: OD: -1.50 -0.50x90 | OI: -1.75 | ADD: +1.50"
+                                        value={quickCustRx}
+                                        onChange={(e) => setQuickCustRx(e.target.value)}
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs font-mono outline-none"
+                                    />
+                                </div>
+
+                                <div className="pt-2 flex justify-end gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsQuickCustomerOpen(false)}
+                                        className="bg-[#E2DFD7] hover:bg-[#D0CCC2] text-[#161616] px-4 py-2 text-xs font-bold uppercase"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={savingQuickCust}
+                                        className="bg-[#161616] hover:bg-[#2C2C2C] text-white px-5 py-2 text-xs font-bold uppercase tracking-wider transition shadow"
+                                    >
+                                        {savingQuickCust ? 'Guardando...' : 'Guaradar Cliente y Seleccionar'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
                 {/* Footer Modal */}
                 <div className="bg-[#FAF8F5] p-4 border-t border-[#E2DFD7] flex items-center justify-between text-xs text-[#6B6862]">
-                    <span>ℹ️ Las facturas registradas en este módulo omiten el descuento automático de inventario.</span>
+                    <span>ℹ️ Las facturas registradas en este módulo omiten el descuento automático de inventario y actualizan el CRM.</span>
                     <button
                         onClick={onClose}
                         className="bg-[#E2DFD7] hover:bg-[#D0CCC2] text-[#161616] px-5 py-2 font-bold uppercase tracking-wider transition"

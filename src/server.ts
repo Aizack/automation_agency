@@ -2803,6 +2803,14 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
     const rawIssueDate = issueDate || customCreatedAt;
     const validCreatedAt = rawIssueDate ? new Date(rawIssueDate) : new Date();
 
+    if (validCustomerId) {
+      await dbClient.query(`
+        UPDATE crm_customers 
+        SET last_interaction_at = GREATEST(COALESCE(last_interaction_at, '1970-01-01'::timestamp), $1::timestamp)
+        WHERE client_id = $2 AND id = $3
+      `, [validCreatedAt, clientId, validCustomerId]);
+    }
+
     // 1. Insertar Factura
     const invoiceResult = await dbClient.query(`
       INSERT INTO invoices (
@@ -3604,6 +3612,14 @@ app.post('/api/clients/:clientId/invoices/batch-confirm', authenticateToken as a
           custAddress || null
         ]);
         resolvedCustId = newCust.rows[0]?.id || null;
+      }
+
+      if (resolvedCustId) {
+        await dbClient.query(`
+          UPDATE crm_customers 
+          SET last_interaction_at = GREATEST(COALESCE(last_interaction_at, '1970-01-01'::timestamp), $1::timestamp)
+          WHERE client_id = $2 AND id = $3
+        `, [issueDate, clientId, resolvedCustId]);
       }
 
       // 2. Si incluye Prescripción / Fórmula Óptica, guardarla en CRM y formulas
