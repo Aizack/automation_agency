@@ -120,6 +120,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     // Selector de Color Personalizado & Lista de Opciones (Wabi-Sabi)
     const [availableColorOptions, setAvailableColorOptions] = useState<ColorOption[]>(colorOptions);
     const [openColorDropdownIdx, setOpenColorDropdownIdx] = useState<number | null>(null);
+    const [colorDropdownCoords, setColorDropdownCoords] = useState<{ top: number; left: number; width: number } | null>(null);
     const [showCustomColorModal, setShowCustomColorModal] = useState<boolean>(false);
     const [customColorTargetIdx, setCustomColorTargetIdx] = useState<number | null>(null);
     const [newCustomColorName, setNewCustomColorName] = useState<string>('');
@@ -385,7 +386,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+        <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-2 sm:p-4">
             
             {/* Modal Secundario Rápido para Crear Nueva Categoría */}
             {showCreateCategoryPrompt && (
@@ -499,7 +500,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                 </span>
                                 <div className="flex items-center gap-3">
                                     <span 
-                                        className="w-8 h-8 rounded-full border border-black/20 shadow-xs"
+                                        className="w-7 h-7 rounded-none border border-black/20 shadow-xs"
                                         style={{ background: newCustomColorHex }}
                                     />
                                     <div className="text-right">
@@ -1011,7 +1012,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                             }`}
                                                         >
                                                             <span 
-                                                                className="w-3 h-3 rounded-full border border-black/20" 
+                                                                className="w-3.5 h-3.5 rounded-none border border-black/20 shrink-0" 
                                                                 style={{ background: getColorPreview(v.color) }}
                                                             />
                                                             <span>{v.color || `Color ${idx + 1}`}</span>
@@ -1057,75 +1058,37 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                             {variantList.map((v, idx) => (
                                                                 <tr key={idx}>
                                                                     <td className="py-2 pr-2 min-w-[210px] relative">
-                                                                        <div className="relative">
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => setOpenColorDropdownIdx(openColorDropdownIdx === idx ? null : idx)}
-                                                                                className="w-full bg-white border border-[#E2DFD7] hover:border-[#161616] p-2 text-xs text-[#161616] font-normal flex items-center justify-between transition rounded-none cursor-pointer"
-                                                                            >
-                                                                                <div className="flex items-center gap-2 overflow-hidden">
-                                                                                    <span 
-                                                                                        className="w-4 h-4 rounded-full border border-black/20 shrink-0 shadow-xs" 
-                                                                                        style={{ background: getColorPreview(v.color, undefined, availableColorOptions) }}
-                                                                                    />
-                                                                                    <span className="truncate font-sans font-medium text-[#161616]">
-                                                                                        {v.color || 'Seleccionar Color'}
-                                                                                    </span>
-                                                                                </div>
-                                                                                <span className="material-symbols-outlined text-[16px] text-[#6B6862] shrink-0">
-                                                                                    {openColorDropdownIdx === idx ? 'expand_less' : 'expand_more'}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                if (openColorDropdownIdx === idx) {
+                                                                                    setOpenColorDropdownIdx(null);
+                                                                                    setColorDropdownCoords(null);
+                                                                                } else {
+                                                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                                                    setColorDropdownCoords({
+                                                                                        top: rect.bottom + 4,
+                                                                                        left: rect.left,
+                                                                                        width: Math.max(rect.width, 240)
+                                                                                    });
+                                                                                    setOpenColorDropdownIdx(idx);
+                                                                                }
+                                                                            }}
+                                                                            className="w-full bg-white border border-[#E2DFD7] hover:border-[#161616] p-2 text-xs text-[#161616] font-normal flex items-center justify-between transition rounded-none cursor-pointer"
+                                                                        >
+                                                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                                                <span 
+                                                                                    className="w-4 h-4 rounded-none border border-black/20 shrink-0 shadow-xs" 
+                                                                                    style={{ background: getColorPreview(v.color, undefined, availableColorOptions) }}
+                                                                                />
+                                                                                <span className="truncate font-sans font-medium text-[#161616]">
+                                                                                    {v.color || 'Seleccionar Color'}
                                                                                 </span>
-                                                                            </button>
-
-                                                                            {openColorDropdownIdx === idx && (
-                                                                                <>
-                                                                                    <div 
-                                                                                        className="fixed inset-0 z-[10001]" 
-                                                                                        onClick={() => setOpenColorDropdownIdx(null)}
-                                                                                    />
-                                                                                    <div className="absolute left-0 top-full mt-1 w-[240px] bg-[#F6F4EE] border border-[#161616] shadow-xl z-[10002] animate-fade-in py-1 max-h-[260px] overflow-y-auto custom-scrollbar">
-                                                                                        <div className="px-3 py-1.5 border-b border-[#E2DFD7] text-[10px] font-bold text-[#6B6862] uppercase tracking-wider">
-                                                                                            COLORES DISPONIBLES
-                                                                                        </div>
-                                                                                        {availableColorOptions.map((opt, oIdx) => (
-                                                                                            <button
-                                                                                                key={oIdx}
-                                                                                                type="button"
-                                                                                                onClick={() => {
-                                                                                                    const updated = [...variantList];
-                                                                                                    updated[idx].color = opt.value;
-                                                                                                    setVariantList(updated);
-                                                                                                    setOpenColorDropdownIdx(null);
-                                                                                                }}
-                                                                                                className={`w-full text-left px-3 py-2 text-xs font-medium cursor-pointer flex items-center gap-2.5 transition ${
-                                                                                                    (v.color || '').toLowerCase() === opt.value.toLowerCase()
-                                                                                                        ? 'bg-[#161616] text-white'
-                                                                                                        : 'text-[#161616] hover:bg-[#FAF8F5]'
-                                                                                                }`}
-                                                                                            >
-                                                                                                <span 
-                                                                                                    className="w-4 h-4 rounded-full border border-black/20 shrink-0 shadow-xs" 
-                                                                                                    style={{ background: opt.preview }}
-                                                                                                />
-                                                                                                <span className="truncate">{opt.name}</span>
-                                                                                            </button>
-                                                                                        ))}
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            onClick={() => {
-                                                                                                setCustomColorTargetIdx(idx);
-                                                                                                setShowCustomColorModal(true);
-                                                                                                setOpenColorDropdownIdx(null);
-                                                                                            }}
-                                                                                            className="w-full text-left px-3 py-2 text-xs font-bold text-[#D9381E] border-t border-[#E2DFD7] hover:bg-[#FAF8F5] cursor-pointer flex items-center gap-2 transition uppercase tracking-wider mt-1"
-                                                                                        >
-                                                                                            <span className="material-symbols-outlined text-[16px]">palette</span>
-                                                                                            + Crear / Personalizar Color
-                                                                                        </button>
-                                                                                    </div>
-                                                                                </>
-                                                                            )}
-                                                                        </div>
+                                                                            </div>
+                                                                            <span className="material-symbols-outlined text-[16px] text-[#6B6862] shrink-0">
+                                                                                {openColorDropdownIdx === idx ? 'expand_less' : 'expand_more'}
+                                                                            </span>
+                                                                        </button>
                                                                     </td>
                                                                     <td className="py-2 px-2">
                                                                         <input
@@ -1400,6 +1363,71 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                     </div>
                 </form>
             </div>
+
+            {/* Dropdown Flotante en Portal Sin Clipping (Z-Index alto) */}
+            {openColorDropdownIdx !== null && colorDropdownCoords && (
+                <>
+                    <div 
+                        className="fixed inset-0 z-[10008]" 
+                        onClick={() => {
+                            setOpenColorDropdownIdx(null);
+                            setColorDropdownCoords(null);
+                        }}
+                    />
+                    <div 
+                        style={{
+                            position: 'fixed',
+                            top: `${colorDropdownCoords.top}px`,
+                            left: `${colorDropdownCoords.left}px`,
+                            width: `${colorDropdownCoords.width}px`,
+                        }}
+                        className="bg-[#F6F4EE] border border-[#161616] shadow-2xl z-[10009] animate-fade-in py-1 max-h-[260px] overflow-y-auto custom-scrollbar"
+                    >
+                        <div className="px-3 py-1.5 border-b border-[#E2DFD7] text-[10px] font-bold text-[#6B6862] uppercase tracking-wider">
+                            COLORES DISPONIBLES
+                        </div>
+                        {availableColorOptions.map((opt, oIdx) => (
+                            <button
+                                key={oIdx}
+                                type="button"
+                                onClick={() => {
+                                    const updated = [...variantList];
+                                    if (updated[openColorDropdownIdx]) {
+                                        updated[openColorDropdownIdx].color = opt.value;
+                                        setVariantList(updated);
+                                    }
+                                    setOpenColorDropdownIdx(null);
+                                    setColorDropdownCoords(null);
+                                }}
+                                className={`w-full text-left px-3 py-2 text-xs font-medium cursor-pointer flex items-center gap-2.5 transition ${
+                                    (variantList[openColorDropdownIdx]?.color || '').toLowerCase() === opt.value.toLowerCase()
+                                        ? 'bg-[#161616] text-white'
+                                        : 'text-[#161616] hover:bg-[#FAF8F5]'
+                                }`}
+                            >
+                                <span 
+                                    className="w-4 h-4 rounded-none border border-black/20 shrink-0 shadow-xs" 
+                                    style={{ background: opt.preview }}
+                                />
+                                <span className="truncate">{opt.name}</span>
+                            </button>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setCustomColorTargetIdx(openColorDropdownIdx);
+                                setShowCustomColorModal(true);
+                                setOpenColorDropdownIdx(null);
+                                setColorDropdownCoords(null);
+                            }}
+                            className="w-full text-left px-3 py-2 text-xs font-bold text-[#D9381E] border-t border-[#E2DFD7] hover:bg-[#FAF8F5] cursor-pointer flex items-center gap-2 transition uppercase tracking-wider mt-1"
+                        >
+                            <span className="material-symbols-outlined text-[16px]">palette</span>
+                            + Crear / Personalizar Color
+                        </button>
+                    </div>
+                </>
+            )}
         </div>,
         document.body
     );

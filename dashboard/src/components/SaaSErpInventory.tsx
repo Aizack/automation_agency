@@ -2211,7 +2211,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     <div key={idx} className="p-3 bg-[#181a1c] border border-[#2d3036] rounded-xl flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-3">
                                             <div
-                                                className="w-5 h-5 rounded-full border border-white/20 shrink-0 shadow-sm"
+                                                className="w-4 h-4 rounded-none border border-white/20 shrink-0 shadow-sm"
                                                 style={{ background: getColorPreview(v.color || v.variant_name, v.color_hex) }}
                                             />
                                             <div>
