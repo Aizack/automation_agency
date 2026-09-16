@@ -43,11 +43,12 @@ export const getColorHex = (colorName?: string, colorHex?: string) => {
     return '#6b7280';
 };
 
-export const getColorPreview = (name: string, colorHex?: string): string => {
+export const getColorPreview = (name: string, colorHex?: string, customOptions?: ColorOption[]): string => {
     if (colorHex && colorHex.startsWith('#')) return colorHex;
     if (!name) return '#808080';
     const clean = name.trim().toLowerCase();
-    const opt = colorOptions.find(o => 
+    const list = customOptions && customOptions.length > 0 ? customOptions : colorOptions;
+    const opt = list.find(o => 
         o.value.toLowerCase() === clean || 
         o.name.toLowerCase() === clean || 
         clean.includes(o.value.toLowerCase()) || 
@@ -116,9 +117,45 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     const [activePhotoColorIdx, setActivePhotoColorIdx] = useState<number>(0);
     const [customAttrs, setCustomAttrs] = useState<Record<string, any>>({});
 
+    // Selector de Color Personalizado & Lista de Opciones (Wabi-Sabi)
+    const [availableColorOptions, setAvailableColorOptions] = useState<ColorOption[]>(colorOptions);
+    const [openColorDropdownIdx, setOpenColorDropdownIdx] = useState<number | null>(null);
+    const [showCustomColorModal, setShowCustomColorModal] = useState<boolean>(false);
+    const [customColorTargetIdx, setCustomColorTargetIdx] = useState<number | null>(null);
+    const [newCustomColorName, setNewCustomColorName] = useState<string>('');
+    const [newCustomColorHex, setNewCustomColorHex] = useState<string>('#D9381E');
+
     // Categoría modal rápida
     const [showCreateCategoryPrompt, setShowCreateCategoryPrompt] = useState<boolean>(false);
     const [newCategoryName, setNewCategoryName] = useState<string>('');
+
+    const handleCreateCustomColor = () => {
+        if (!newCustomColorName.trim()) return;
+        const colorName = newCustomColorName.trim();
+        const hex = newCustomColorHex;
+        
+        const newOpt: ColorOption = {
+            name: colorName,
+            value: colorName,
+            preview: hex
+        };
+
+        setAvailableColorOptions(prev => {
+            if (prev.some(o => o.value.toLowerCase() === colorName.toLowerCase())) return prev;
+            return [...prev, newOpt];
+        });
+
+        if (customColorTargetIdx !== null && variantList[customColorTargetIdx]) {
+            const updated = [...variantList];
+            updated[customColorTargetIdx].color = colorName;
+            setVariantList(updated);
+        }
+
+        setNewCustomColorName('');
+        setNewCustomColorHex('#D9381E');
+        setShowCustomColorModal(false);
+        setCustomColorTargetIdx(null);
+    };
 
     // Reset or initialize form when opened or editingProduct changes
     useEffect(() => {
@@ -390,6 +427,112 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                 className="px-4 py-2 bg-[#D9381E] hover:bg-[#b82e18] disabled:opacity-50 text-white text-xs font-semibold rounded-none transition cursor-pointer border-0 flex items-center gap-1.5 uppercase tracking-wider"
                             >
                                 Crear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Crear / Personalizar Nuevo Color (Estilo Paint) - Wabi-Sabi */}
+            {showCustomColorModal && (
+                <div className="fixed inset-0 bg-black/60 z-[10005] flex items-center justify-center p-4 backdrop-blur-xs">
+                    <div className="bg-[#F6F4EE] border border-[#161616] p-6 w-full max-w-md shadow-2xl space-y-5 animate-fade-in">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                            <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#D9381E] text-[22px]">palette</span>
+                                <h4 className="font-serif text-lg text-[#161616] font-normal">
+                                    Crear / Personalizar Nuevo Color
+                                </h4>
+                            </div>
+                            <button 
+                                type="button" 
+                                onClick={() => {
+                                    setShowCustomColorModal(false);
+                                    setCustomColorTargetIdx(null);
+                                }}
+                                className="text-[#161616] hover:text-[#D9381E] text-2xl font-light cursor-pointer border-0 bg-transparent"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">
+                                    Nombre del Color *
+                                </label>
+                                <input 
+                                    type="text"
+                                    className="w-full bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] rounded-none font-sans font-medium"
+                                    placeholder="Ej. Violeta, Azul Rey, Verde Esmeralda"
+                                    value={newCustomColorName}
+                                    onChange={(e) => setNewCustomColorName(e.target.value)}
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">
+                                    Color Interactivo (Paint) *
+                                </label>
+                                <div className="flex gap-3 items-center">
+                                    <input 
+                                        type="color"
+                                        className="w-12 h-12 border border-[#E2DFD7] cursor-pointer p-0 bg-transparent rounded-none"
+                                        value={newCustomColorHex}
+                                        onChange={(e) => setNewCustomColorHex(e.target.value)}
+                                    />
+                                    <input 
+                                        type="text"
+                                        className="flex-1 bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-mono outline-none focus:border-[#161616] rounded-none uppercase font-semibold"
+                                        value={newCustomColorHex}
+                                        onChange={(e) => setNewCustomColorHex(e.target.value)}
+                                        placeholder="#HEX"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Card de Vista Previa Wabi-Sabi */}
+                            <div className="bg-white border border-[#E2DFD7] p-4 flex items-center justify-between">
+                                <span className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">
+                                    Vista Previa:
+                                </span>
+                                <div className="flex items-center gap-3">
+                                    <span 
+                                        className="w-8 h-8 rounded-full border border-black/20 shadow-xs"
+                                        style={{ background: newCustomColorHex }}
+                                    />
+                                    <div className="text-right">
+                                        <p className="text-xs font-bold text-[#161616]">
+                                            {newCustomColorName.trim() || 'Sin Nombre'}
+                                        </p>
+                                        <p className="text-[10px] text-[#6B6862] font-mono uppercase">
+                                            {newCustomColorHex}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
+                            <button 
+                                type="button"
+                                onClick={() => {
+                                    setShowCustomColorModal(false);
+                                    setCustomColorTargetIdx(null);
+                                }}
+                                className="px-5 py-2.5 bg-transparent border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-xs font-bold rounded-none transition cursor-pointer uppercase tracking-wider"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={handleCreateCustomColor}
+                                disabled={!newCustomColorName.trim()}
+                                className="px-6 py-2.5 bg-[#161616] hover:bg-[#D9381E] disabled:opacity-50 text-white text-xs font-bold rounded-none transition cursor-pointer border-0 flex items-center gap-1.5 uppercase tracking-wider shadow-sm"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">check</span>
+                                Crear Color
                             </button>
                         </div>
                     </div>
@@ -913,43 +1056,74 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                         <tbody className="divide-y divide-[#FAF8F5]">
                                                             {variantList.map((v, idx) => (
                                                                 <tr key={idx}>
-                                                                    <td className="py-2 pr-2 min-w-[160px]">
-                                                                        <div className="flex flex-col gap-1">
-                                                                            <select
-                                                                                value={colorOptions.some(opt => opt.value.toLowerCase() === (v.color || '').toLowerCase() || opt.name.toLowerCase() === (v.color || '').toLowerCase()) ? (colorOptions.find(opt => opt.value.toLowerCase() === (v.color || '').toLowerCase() || opt.name.toLowerCase() === (v.color || '').toLowerCase())?.value || '') : (v.color ? 'otro' : '')}
-                                                                                onChange={(e) => {
-                                                                                    const selectedVal = e.target.value;
-                                                                                    const updated = [...variantList];
-                                                                                    if (selectedVal === 'otro') {
-                                                                                        updated[idx].color = '';
-                                                                                    } else {
-                                                                                        updated[idx].color = selectedVal;
-                                                                                    }
-                                                                                    setVariantList(updated);
-                                                                                }}
-                                                                                className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-bold outline-none rounded-none w-full cursor-pointer focus:border-[#161616]"
+                                                                    <td className="py-2 pr-2 min-w-[210px] relative">
+                                                                        <div className="relative">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setOpenColorDropdownIdx(openColorDropdownIdx === idx ? null : idx)}
+                                                                                className="w-full bg-white border border-[#E2DFD7] hover:border-[#161616] p-2 text-xs text-[#161616] font-normal flex items-center justify-between transition rounded-none cursor-pointer"
                                                                             >
-                                                                                <option value="">-- Seleccionar Color --</option>
-                                                                                {colorOptions.map((opt) => (
-                                                                                    <option key={opt.value} value={opt.value}>
-                                                                                        {opt.name}
-                                                                                    </option>
-                                                                                ))}
-                                                                                <option value="otro">+ Otro Color / Personalizado</option>
-                                                                            </select>
+                                                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                                                    <span 
+                                                                                        className="w-4 h-4 rounded-full border border-black/20 shrink-0 shadow-xs" 
+                                                                                        style={{ background: getColorPreview(v.color, undefined, availableColorOptions) }}
+                                                                                    />
+                                                                                    <span className="truncate font-sans font-medium text-[#161616]">
+                                                                                        {v.color || 'Seleccionar Color'}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <span className="material-symbols-outlined text-[16px] text-[#6B6862] shrink-0">
+                                                                                    {openColorDropdownIdx === idx ? 'expand_less' : 'expand_more'}
+                                                                                </span>
+                                                                            </button>
 
-                                                                            {(!colorOptions.some(opt => opt.value.toLowerCase() === (v.color || '').toLowerCase() || opt.name.toLowerCase() === (v.color || '').toLowerCase()) || v.color === '') && (
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={v.color || ''}
-                                                                                    onChange={(e) => {
-                                                                                        const updated = [...variantList];
-                                                                                        updated[idx].color = e.target.value;
-                                                                                        setVariantList(updated);
-                                                                                    }}
-                                                                                    placeholder="Escribe el color (Ej: Verde Esmeralda)..."
-                                                                                    className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none rounded-none w-full font-bold focus:border-[#161616]"
-                                                                                />
+                                                                            {openColorDropdownIdx === idx && (
+                                                                                <>
+                                                                                    <div 
+                                                                                        className="fixed inset-0 z-[10001]" 
+                                                                                        onClick={() => setOpenColorDropdownIdx(null)}
+                                                                                    />
+                                                                                    <div className="absolute left-0 top-full mt-1 w-[240px] bg-[#F6F4EE] border border-[#161616] shadow-xl z-[10002] animate-fade-in py-1 max-h-[260px] overflow-y-auto custom-scrollbar">
+                                                                                        <div className="px-3 py-1.5 border-b border-[#E2DFD7] text-[10px] font-bold text-[#6B6862] uppercase tracking-wider">
+                                                                                            COLORES DISPONIBLES
+                                                                                        </div>
+                                                                                        {availableColorOptions.map((opt, oIdx) => (
+                                                                                            <button
+                                                                                                key={oIdx}
+                                                                                                type="button"
+                                                                                                onClick={() => {
+                                                                                                    const updated = [...variantList];
+                                                                                                    updated[idx].color = opt.value;
+                                                                                                    setVariantList(updated);
+                                                                                                    setOpenColorDropdownIdx(null);
+                                                                                                }}
+                                                                                                className={`w-full text-left px-3 py-2 text-xs font-medium cursor-pointer flex items-center gap-2.5 transition ${
+                                                                                                    (v.color || '').toLowerCase() === opt.value.toLowerCase()
+                                                                                                        ? 'bg-[#161616] text-white'
+                                                                                                        : 'text-[#161616] hover:bg-[#FAF8F5]'
+                                                                                                }`}
+                                                                                            >
+                                                                                                <span 
+                                                                                                    className="w-4 h-4 rounded-full border border-black/20 shrink-0 shadow-xs" 
+                                                                                                    style={{ background: opt.preview }}
+                                                                                                />
+                                                                                                <span className="truncate">{opt.name}</span>
+                                                                                            </button>
+                                                                                        ))}
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => {
+                                                                                                setCustomColorTargetIdx(idx);
+                                                                                                setShowCustomColorModal(true);
+                                                                                                setOpenColorDropdownIdx(null);
+                                                                                            }}
+                                                                                            className="w-full text-left px-3 py-2 text-xs font-bold text-[#D9381E] border-t border-[#E2DFD7] hover:bg-[#FAF8F5] cursor-pointer flex items-center gap-2 transition uppercase tracking-wider mt-1"
+                                                                                        >
+                                                                                            <span className="material-symbols-outlined text-[16px]">palette</span>
+                                                                                            + Crear / Personalizar Color
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </>
                                                                             )}
                                                                         </div>
                                                                     </td>
