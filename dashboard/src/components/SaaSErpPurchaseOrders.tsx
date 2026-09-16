@@ -691,63 +691,61 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
                                                 </div>
                                             </div>
 
-                                            {item.is_new_product ? (
-                                                <div className="p-2.5 bg-white rounded-md border border-[#D9381E]/30 text-xs flex justify-between items-center">
-                                                    <div>
-                                                        <p className="font-bold text-[#D9381E]">{item.product_name}</p>
-                                                        <p className="text-[11px] text-[#6B6862]">
-                                                            SKU: {item.sku} • Borrador guardado en JSON (No está en catálogo aún)
-                                                        </p>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleOpenNewProductModal(idx)}
-                                                        className="text-[11px] font-bold text-[#161616] underline cursor-pointer"
-                                                    >
-                                                        Editar Borrador
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                                    <div className="flex flex-col gap-1">
-                                                        <label className="text-[10px] text-[#6B6862] font-semibold">Producto del Catálogo</label>
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-[10px] text-[#6B6862] font-semibold">Producto del Pedido</label>
+                                                    {item.is_new_product ? (
+                                                        <div className="p-2 bg-white rounded-md border border-[#D9381E]/40 text-xs flex justify-between items-center h-[38px]">
+                                                            <div className="overflow-hidden">
+                                                                <p className="font-bold text-[#D9381E] truncate">{item.product_name}</p>
+                                                                <p className="text-[10px] text-[#6B6862] truncate">SKU: {item.sku}</p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleOpenNewProductModal(idx)}
+                                                                className="text-[10px] font-bold text-[#161616] underline cursor-pointer shrink-0 ml-1"
+                                                            >
+                                                                Editar
+                                                            </button>
+                                                        </div>
+                                                    ) : (
                                                         <select 
                                                             required={!item.is_new_product}
                                                             value={item.product_id || ''}
                                                             onChange={(e) => handleItemChange(idx, 'product_id', e.target.value)}
-                                                            className="bg-white border border-[#E2DFD7] rounded-md p-2 text-xs text-[#161616] outline-none cursor-pointer"
+                                                            className="bg-white border border-[#E2DFD7] rounded-md p-2 text-xs text-[#161616] outline-none cursor-pointer h-[38px]"
                                                         >
                                                             <option value="">-- Selecciona del Catálogo --</option>
                                                             {products.map(p => (
                                                                 <option key={p.id} value={p.id}>{p.name} {p.sku ? `(${p.sku})` : ''}</option>
                                                             ))}
                                                         </select>
-                                                    </div>
-                                                    <div className="flex flex-col gap-1">
-                                                        <label className="text-[10px] text-[#6B6862] font-semibold">Cantidad a Pedir</label>
-                                                        <input 
-                                                            type="number" 
-                                                            required
-                                                            min="1"
-                                                            value={item.quantity}
-                                                            onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
-                                                            className="bg-white border border-[#E2DFD7] rounded-md p-2 text-xs text-[#161616] outline-none font-bold"
-                                                        />
-                                                    </div>
-                                                    <div className="flex flex-col gap-1">
-                                                        <label className="text-[10px] text-[#6B6862] font-semibold">Costo Unitario (COP)</label>
-                                                        <input 
-                                                            type="number" 
-                                                            required
-                                                            min="0"
-                                                            value={item.cost_price || ''}
-                                                            onChange={(e) => handleItemChange(idx, 'cost_price', e.target.value)}
-                                                            placeholder="Costo"
-                                                            className="bg-white border border-[#E2DFD7] rounded-md p-2 text-xs text-[#161616] outline-none font-mono"
-                                                        />
-                                                    </div>
+                                                    )}
                                                 </div>
-                                            )}
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-[10px] text-[#6B6862] font-semibold">Cantidad a Pedir *</label>
+                                                    <input 
+                                                        type="number" 
+                                                        required
+                                                        min="1"
+                                                        value={item.quantity}
+                                                        onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
+                                                        className="bg-white border border-[#E2DFD7] rounded-md p-2 text-xs text-[#161616] outline-none font-bold h-[38px]"
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-[10px] text-[#6B6862] font-semibold">Costo Unitario (COP) *</label>
+                                                    <input 
+                                                        type="number" 
+                                                        required
+                                                        min="0"
+                                                        value={item.cost_price ?? 0}
+                                                        onChange={(e) => handleItemChange(idx, 'cost_price', e.target.value)}
+                                                        placeholder="Costo"
+                                                        className="bg-white border border-[#E2DFD7] rounded-md p-2 text-xs text-[#161616] outline-none font-mono h-[38px]"
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
