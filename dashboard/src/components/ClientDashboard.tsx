@@ -2021,7 +2021,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
         {activeTab === 'inventario' && (
           <div className="animate-fade-in space-y-6">
-            {/* Pestañas de Navegación de Inventario - Segmented Control Horizontal en Móvil */}
+            {/* Pestañas de Navegación de Inventario - Segmented Control Horizontal */}
             <div className="compact-subsections-bar md:flex md:bg-transparent md:p-0 md:border-none md:gap-2 pb-2 border-b border-[#E2DFD7]">
               <button 
                 type="button"
@@ -2037,41 +2037,67 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               </button>
               <button 
                 type="button"
-                onClick={() => setInventorySubTab('purchase-orders')}
+                onClick={() => {
+                  if (inventorySubTab === 'catalog') {
+                    setInventorySubTab('suppliers');
+                  }
+                }}
                 className={`subsection-item px-3 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 rounded-none border ${
-                  inventorySubTab === 'purchase-orders' 
+                  inventorySubTab === 'suppliers' || inventorySubTab === 'purchase-orders'
                     ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
                     : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616]'
                 }`}
               >
-                <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-                <span>Órdenes</span>
-              </button>
-              <button 
-                type="button"
-                onClick={() => setInventorySubTab('suppliers')}
-                className={`subsection-item px-3 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 rounded-none border ${
-                  inventorySubTab === 'suppliers' 
-                    ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
-                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616]'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[16px]">contact_page</span>
-                <span>Proveedores</span>
+                <span className="material-symbols-outlined text-[16px]">local_shipping</span>
+                <span>Proveedores y Órdenes</span>
               </button>
             </div>
 
             {inventorySubTab === 'catalog' && (
               <SaaSErpInventory clientId={clientId} category={category} />
             )}
-            {inventorySubTab === 'purchase-orders' && (
-              <div className="bg-[#F6F4EE] border border-[#E2DFD7] p-6 rounded-none shadow-xs">
-                <SaaSErpPurchaseOrders clientId={clientId} />
-              </div>
-            )}
-            {inventorySubTab === 'suppliers' && (
-              <div className="bg-[#F6F4EE] border border-[#E2DFD7] p-6 rounded-none shadow-xs">
-                <SaaSErpSuppliers clientId={clientId} />
+
+            {(inventorySubTab === 'suppliers' || inventorySubTab === 'purchase-orders') && (
+              <div className="space-y-4">
+                {/* Sub-selector de Navegación Interna para Proveedores y Órdenes */}
+                <div className="flex items-center gap-2 bg-[#EAE6DF] p-1 rounded-md w-fit border border-[#E2DFD7]">
+                  <button
+                    type="button"
+                    onClick={() => setInventorySubTab('suppliers')}
+                    className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 rounded-md ${
+                      inventorySubTab === 'suppliers'
+                        ? 'bg-white text-[#161616] shadow-xs font-extrabold'
+                        : 'text-[#6B6862] hover:text-[#161616]'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[15px]">contact_page</span>
+                    <span>Proveedores</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInventorySubTab('purchase-orders')}
+                    className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 rounded-md ${
+                      inventorySubTab === 'purchase-orders'
+                        ? 'bg-white text-[#161616] shadow-xs font-extrabold'
+                        : 'text-[#6B6862] hover:text-[#161616]'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[15px]">receipt_long</span>
+                    <span>Órdenes de Compra</span>
+                  </button>
+                </div>
+
+                {inventorySubTab === 'suppliers' && (
+                  <div className="bg-[#F6F4EE] border border-[#E2DFD7] p-6 rounded-none shadow-xs">
+                    <SaaSErpSuppliers clientId={clientId} />
+                  </div>
+                )}
+
+                {inventorySubTab === 'purchase-orders' && (
+                  <div className="bg-[#F6F4EE] border border-[#E2DFD7] p-6 rounded-none shadow-xs">
+                    <SaaSErpPurchaseOrders clientId={clientId} />
+                  </div>
+                )}
               </div>
             )}
           </div>

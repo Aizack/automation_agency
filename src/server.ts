@@ -2315,17 +2315,21 @@ app.get('/api/clients/:clientId/purchase-orders', authenticateToken as any, auth
     const { clientId } = req.params;
     const result = await pool.query(
       `SELECT po.id, po.order_number, po.status, po.total_amount, po.delivery_method, 
-              po.carrier_name, po.tracking_number, po.shipping_cost, po.notes, po.created_at, po.received_at,
+              po.carrier_name, po.tracking_number, po.shipping_cost, po.notes, po.dispute_notes, po.created_at, po.received_at,
               s.name as supplier_name, s.phone as supplier_phone,
               COALESCE(
                 json_agg(
                   json_build_object(
                     'id', poi.id, 
                     'product_id', poi.product_id,
-                    'product_name', p.name,
-                    'sku', p.sku,
+                    'product_name', COALESCE(p.name, poi.new_product_data->>'name', 'Producto Nuevo'),
+                    'sku', COALESCE(p.sku, poi.new_product_data->>'sku', 'N/A'),
                     'quantity', poi.quantity, 
-                    'cost_price', poi.cost_price
+                    'cost_price', poi.cost_price,
+                    'is_new_product', COALESCE(poi.is_new_product, false),
+                    'new_product_data', poi.new_product_data,
+                    'received_quantity', COALESCE(poi.received_quantity, poi.quantity),
+                    'item_status', COALESCE(poi.item_status, 'pendiente')
                   )
                 ) FILTER (WHERE poi.id IS NOT NULL),
                 '[]'
@@ -2339,7 +2343,14 @@ app.get('/api/clients/:clientId/purchase-orders', authenticateToken as any, auth
        ORDER BY po.created_at DESC`,
       [clientId]
     );
-    res.json({ success: true, purchaseOrders: result.rows });
+
+    // Mapear estados legados 'pending'/'received' a español 'pendiente'/'recibido'
+    const mapped = result.rows.map(po => ({
+      ...po,
+      status: po.status === 'pending' ? 'pendiente' : po.status === 'received' ? 'recibido' : po.status
+    }));
+
+    res.json({ success: true, purchaseOrders: mapped });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -2361,9 +2372,13 @@ app.post('/api/clients/:clientId/purchase-orders', authenticateToken as any, aut
     
     // Validar ítems e incrementar total
     for (const item of items) {
-      if (!item.product_id || !item.quantity || item.quantity <= 0 || !item.cost_price || item.cost_price < 0) {
+      if (!item.is_new_product && !item.product_id) {
         await dbClient.query('ROLLBACK');
-        return res.status(400).json({ success: false, error: 'Cada ítem debe incluir product_id, cantidad > 0 y costo >= 0.' });
+        return res.status(400).json({ success: false, error: 'Cada ítem debe seleccionar un producto existente o definir un producto nuevo.' });
+      }
+      if (!item.quantity || item.quantity <= 0 || item.cost_price === undefined || item.cost_price < 0) {
+        await dbClient.query('ROLLBACK');
+        return res.status(400).json({ success: false, error: 'Cada ítem debe incluir cantidad > 0 y costo >= 0.' });
       }
       totalAmount += parseInt(item.quantity) * parseFloat(item.cost_price);
     }
@@ -2372,7 +2387,7 @@ app.post('/api/clients/:clientId/purchase-orders', authenticateToken as any, aut
       `INSERT INTO purchase_orders (
          client_id, supplier_id, order_number, status, total_amount, 
          delivery_method, carrier_name, tracking_number, shipping_cost, notes
-       ) VALUES ($1, $2, $3, 'pending', $4, $5, $6, $7, $8, $9)
+       ) VALUES ($1, $2, $3, 'pendiente', $4, $5, $6, $7, $8, $9)
        RETURNING id, order_number, status, total_amount, created_at`,
       [
         clientId, supplier_id || null, finalOrderNumber, totalAmount, 
@@ -2384,9 +2399,19 @@ app.post('/api/clients/:clientId/purchase-orders', authenticateToken as any, aut
 
     for (const item of items) {
       await dbClient.query(
-        `INSERT INTO purchase_order_items (purchase_order_id, product_id, quantity, cost_price)
-         VALUES ($1, $2, $3, $4)`,
-        [newOrder.id, item.product_id, item.quantity, item.cost_price]
+        `INSERT INTO purchase_order_items (
+           purchase_order_id, product_id, quantity, cost_price, is_new_product, new_product_data, received_quantity, item_status
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          newOrder.id,
+          item.is_new_product ? null : item.product_id,
+          item.quantity,
+          item.cost_price,
+          Boolean(item.is_new_product),
+          item.is_new_product ? item.new_product_data || null : null,
+          item.quantity,
+          'pendiente'
+        ]
       );
     }
 
@@ -2400,11 +2425,49 @@ app.post('/api/clients/:clientId/purchase-orders', authenticateToken as any, aut
   }
 });
 
+// Ruta para declarar Reclamo a Proveedor
+app.put('/api/clients/:clientId/purchase-orders/:orderId/dispute', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, orderId } = req.params;
+    const { dispute_notes, items } = req.body;
+
+    if (items && Array.isArray(items)) {
+      for (const item of items) {
+        if (item.id) {
+          await pool.query(
+            `UPDATE purchase_order_items 
+             SET received_quantity = $1, item_status = $2 
+             WHERE id = $3 AND purchase_order_id = $4`,
+            [item.received_quantity || 0, item.item_status || 'reclamo', item.id, orderId]
+          );
+        }
+      }
+    }
+
+    const result = await pool.query(
+      `UPDATE purchase_orders 
+       SET status = 'reclamo', dispute_notes = $1 
+       WHERE client_id = $2 AND id = $3 
+       RETURNING *`,
+      [dispute_notes || 'Reclamo reportado por falta o discrepancia de mercancía.', clientId, orderId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Orden de compra no encontrada.' });
+    }
+
+    res.json({ success: true, message: 'Orden marcada en Reclamo a Proveedor.', purchaseOrder: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/clients/:clientId/purchase-orders/:orderId/receive', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   const dbClient = await pool.connect();
   try {
     await dbClient.query('BEGIN');
     const { clientId, orderId } = req.params;
+    const { reviewed_items } = req.body || {}; // Opcional: lista revisada de cantidades/estados
 
     // Obtener orden de compra
     const poCheck = await dbClient.query(
@@ -2418,61 +2481,147 @@ app.post('/api/clients/:clientId/purchase-orders/:orderId/receive', authenticate
     }
 
     const order = poCheck.rows[0];
-    if (order.status === 'received') {
+    if (order.status === 'recibido' || order.status === 'received') {
       await dbClient.query('ROLLBACK');
       return res.status(400).json({ success: false, error: 'Esta orden de compra ya fue recibida.' });
     }
 
-    // Obtener ítems
-    const itemsResult = await dbClient.query(
-      `SELECT product_id, quantity, cost_price FROM purchase_order_items WHERE purchase_order_id = $1`,
-      [orderId]
-    );
-    const items = itemsResult.rows;
-
-    const totalUnits = items.reduce((acc, curr) => acc + curr.quantity, 0);
-    const extraCostPerUnit = totalUnits > 0 ? parseFloat((parseFloat(order.shipping_cost || '0') / totalUnits).toFixed(2)) : 0;
-
-    const productsReceived: any[] = [];
-
-    // Incrementar stock y actualizar precio de costo
-    for (const item of items) {
-      const finalCostPrice = parseFloat(item.cost_price) + extraCostPerUnit;
-
-      const pResult = await dbClient.query(
-        `UPDATE products 
-         SET stock = stock + $1, cost_price = $2
-         WHERE client_id = $3 AND id = $4
-         RETURNING id, name, sku, stock, min_stock, price`,
-        [item.quantity, finalCostPrice, clientId, item.product_id]
-      );
-      
-      if (pResult.rows.length > 0) {
-        const prod = pResult.rows[0];
-        productsReceived.push({
-          id: prod.id,
-          name: prod.name,
-          sku: prod.sku,
-          price: prod.price,
-          quantity: item.quantity,
-          new_stock: prod.stock
-        });
-
-        // Resolver alerta de stock crítico si existía activa
-        if (prod.stock > (prod.min_stock || 5)) {
-          await logger.resolveAlert(
-            `stock_low_${prod.id}`, 
-            `El stock del producto "${prod.name}" se ha restablecido a ${prod.stock} unidades tras recepción de compra.`, 
-            clientId as string
+    // Actualizar cantidades revisadas si fueron pasadas
+    if (reviewed_items && Array.isArray(reviewed_items)) {
+      for (const rItem of reviewed_items) {
+        if (rItem.id) {
+          await dbClient.query(
+            `UPDATE purchase_order_items 
+             SET received_quantity = $1, item_status = $2 
+             WHERE id = $3 AND purchase_order_id = $4`,
+            [parseInt(rItem.received_quantity) || 0, rItem.item_status || 'recibido', rItem.id, orderId]
           );
         }
       }
     }
 
-    // Actualizar estado de la orden
+    // Obtener ítems actualizados
+    const itemsResult = await dbClient.query(
+      `SELECT id, product_id, quantity, cost_price, is_new_product, new_product_data, 
+              COALESCE(received_quantity, quantity) as received_quantity
+       FROM purchase_order_items 
+       WHERE purchase_order_id = $1`,
+      [orderId]
+    );
+    const items = itemsResult.rows;
+
+    const totalUnits = items.reduce((acc, curr) => acc + (curr.received_quantity || 0), 0);
+    const extraCostPerUnit = totalUnits > 0 ? parseFloat((parseFloat(order.shipping_cost || '0') / totalUnits).toFixed(2)) : 0;
+
+    const productsReceived: any[] = [];
+
+    // Incrementar stock y actualizar o crear productos
+    for (const item of items) {
+      const qtyToReceive = parseInt(item.received_quantity) || 0;
+      if (qtyToReceive <= 0) continue;
+
+      const finalCostPrice = parseFloat(item.cost_price) + extraCostPerUnit;
+
+      if (item.is_new_product && item.new_product_data) {
+        // CREACIÓN DE PRODUCTO NUEVO DESDE EL JSON BORRADOR
+        const npData = typeof item.new_product_data === 'string' ? JSON.parse(item.new_product_data) : item.new_product_data;
+        const prodName = npData.name || 'Producto Nuevo Sin Nombre';
+        const prodSku = npData.sku || ('SKU-' + Math.floor(100000 + Math.random() * 900000));
+        const prodCost = finalCostPrice;
+        const prodPrice = parseFloat(npData.price) || (prodCost * 1.5);
+        const prodCategory = npData.category_id || null;
+        const prodType = npData.product_type || 'inventory';
+        const attributesObj = npData.attributes || {};
+        const variantsList = Array.isArray(npData.variants) ? npData.variants : [];
+        const hasVariants = variantsList.length > 0;
+
+        // Insertar producto principal
+        const insertProdRes = await dbClient.query(
+          `INSERT INTO products (
+             client_id, name, sku, price, cost_price, stock, min_stock, category_id, product_type, attributes, has_variants
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+           RETURNING id, name, sku, stock, min_stock, price`,
+          [
+            clientId, prodName, prodSku, prodPrice, prodCost, 
+            hasVariants ? 0 : qtyToReceive, 2, prodCategory, prodType, 
+            JSON.stringify(attributesObj), hasVariants
+          ]
+        );
+        const newProd = insertProdRes.rows[0];
+
+        // Asociar product_id en el ítem de la orden de compra
+        await dbClient.query(
+          `UPDATE purchase_order_items SET product_id = $1 WHERE id = $2`,
+          [newProd.id, item.id]
+        );
+
+        // Crear variantes si existen
+        if (hasVariants) {
+          let totalVariantStock = 0;
+          for (const v of variantsList) {
+            const vName = v.variant_name || v.color || 'Estándar';
+            const vColorHex = v.color_hex || null;
+            const vSku = v.sku || `${newProd.sku}-${vName.substring(0, 3).toUpperCase()}`;
+            const vQty = parseInt(v.quantity) || parseInt(v.qty) || Math.floor(qtyToReceive / variantsList.length);
+            totalVariantStock += vQty;
+
+            await dbClient.query(
+              `INSERT INTO product_variants (
+                 product_id, client_id, variant_name, color_hex, sku, price, cost_price, stock, min_stock
+               ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+              [newProd.id, clientId, vName, vColorHex, vSku, prodPrice, prodCost, vQty, 2]
+            );
+          }
+          // Actualizar stock total del producto principal
+          await dbClient.query(`UPDATE products SET stock = $1 WHERE id = $2`, [totalVariantStock, newProd.id]);
+          newProd.stock = totalVariantStock;
+        }
+
+        productsReceived.push({
+          id: newProd.id,
+          name: newProd.name,
+          sku: newProd.sku,
+          price: newProd.price,
+          quantity: qtyToReceive,
+          new_stock: newProd.stock
+        });
+
+      } else if (item.product_id) {
+        // PRODUCTO EXISTENTE: INCREMENTAR STOCK
+        const pResult = await dbClient.query(
+          `UPDATE products 
+           SET stock = stock + $1, cost_price = $2
+           WHERE client_id = $3 AND id = $4
+           RETURNING id, name, sku, stock, min_stock, price`,
+          [qtyToReceive, finalCostPrice, clientId, item.product_id]
+        );
+        
+        if (pResult.rows.length > 0) {
+          const prod = pResult.rows[0];
+          productsReceived.push({
+            id: prod.id,
+            name: prod.name,
+            sku: prod.sku,
+            price: prod.price,
+            quantity: qtyToReceive,
+            new_stock: prod.stock
+          });
+
+          if (prod.stock > (prod.min_stock || 5)) {
+            await logger.resolveAlert(
+              `stock_low_${prod.id}`, 
+              `El stock del producto "${prod.name}" se ha restablecido a ${prod.stock} unidades tras recepción de compra.`, 
+              clientId as string
+            );
+          }
+        }
+      }
+    }
+
+    // Actualizar estado de la orden a 'recibido'
     await dbClient.query(
       `UPDATE purchase_orders 
-       SET status = 'received', received_at = CURRENT_TIMESTAMP
+       SET status = 'recibido', received_at = CURRENT_TIMESTAMP
        WHERE id = $1`,
       [orderId]
     );
@@ -7410,16 +7559,53 @@ app.post('/api/clients/:clientId/crm-customers', authenticateToken as any, autho
     }
 
     const cleanPhone = phone.replace(/\D/g, '');
+    const cleanDocNum = document_number.toString().trim();
+
+    // Verificar si ya existe un cliente con esta identificación para la sede/empresa
+    const existingCheck = await pool.query(
+      `SELECT * FROM crm_customers WHERE client_id = $1 AND document_number = $2 LIMIT 1`,
+      [clientId, cleanDocNum]
+    );
+
+    if (existingCheck.rows.length > 0) {
+      const existing = existingCheck.rows[0];
+      const fullName = `${existing.name} ${existing.last_name || ''}`.trim();
+      return res.status(400).json({
+        success: false,
+        code: 'DOCUMENT_EXISTS',
+        error: `Ya existe un cliente registrado con la identificación "${cleanDocNum}" (${fullName}).`,
+        existingCustomer: existing
+      });
+    }
 
     const result = await pool.query(
       `INSERT INTO crm_customers (client_id, name, last_name, document_type, document_number, phone, email, address, lens_prescription, customer_type)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [clientId, name, last_name || '', document_type || 'CC', document_number, cleanPhone, email || null, address || null, lens_prescription || null, customer_type || 'persona']
+      [clientId, name, last_name || '', document_type || 'CC', cleanDocNum, cleanPhone, email || null, address || null, lens_prescription || null, customer_type || 'persona']
     );
 
-    res.json({ success: true, customer: result.rows[0] });
+    const cust = result.rows[0];
+    res.json({ success: true, customer: cust, data: cust });
   } catch (err: any) {
+    if (err.code === '23505') {
+      try {
+        const existingCheck = await pool.query(
+          `SELECT * FROM crm_customers WHERE client_id = $1 AND document_number = $2 LIMIT 1`,
+          [req.params.clientId, req.body.document_number?.toString().trim()]
+        );
+        if (existingCheck.rows.length > 0) {
+          const existing = existingCheck.rows[0];
+          const fullName = `${existing.name} ${existing.last_name || ''}`.trim();
+          return res.status(400).json({
+            success: false,
+            code: 'DOCUMENT_EXISTS',
+            error: `Ya existe un cliente registrado con la identificación "${req.body.document_number}" (${fullName}).`,
+            existingCustomer: existing
+          });
+        }
+      } catch (e) {}
+    }
     res.status(500).json({ success: false, error: err.message });
   }
 });

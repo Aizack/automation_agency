@@ -907,7 +907,7 @@ export const initDatabase = async () => {
                 client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
                 supplier_id UUID REFERENCES suppliers(id) ON DELETE SET NULL,
                 order_number VARCHAR(50) NOT NULL,
-                status VARCHAR(20) DEFAULT 'pending',
+                status VARCHAR(30) DEFAULT 'pendiente',
                 total_amount NUMERIC(12, 2) DEFAULT 0.00,
                 delivery_method VARCHAR(50) DEFAULT 'envio_tienda',
                 carrier_name VARCHAR(100),
@@ -924,8 +924,18 @@ export const initDatabase = async () => {
                 purchase_order_id UUID REFERENCES purchase_orders(id) ON DELETE CASCADE,
                 product_id UUID REFERENCES products(id) ON DELETE SET NULL,
                 quantity INT NOT NULL,
-                cost_price NUMERIC(10, 2) NOT NULL
+                cost_price NUMERIC(10, 2) NOT NULL,
+                is_new_product BOOLEAN DEFAULT FALSE,
+                new_product_data JSONB,
+                received_quantity INT,
+                item_status VARCHAR(30) DEFAULT 'pendiente'
             );
+
+            ALTER TABLE purchase_order_items ADD COLUMN IF NOT EXISTS is_new_product BOOLEAN DEFAULT FALSE;
+            ALTER TABLE purchase_order_items ADD COLUMN IF NOT EXISTS new_product_data JSONB;
+            ALTER TABLE purchase_order_items ADD COLUMN IF NOT EXISTS received_quantity INT;
+            ALTER TABLE purchase_order_items ADD COLUMN IF NOT EXISTS item_status VARCHAR(30) DEFAULT 'pendiente';
+            ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS dispute_notes TEXT;
         `);
         await pool.query(`
             ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES product_categories(id) ON DELETE SET NULL;

@@ -4,6 +4,7 @@ import { authFetch as fetch } from '../utils/api';
 import JsBarcode from 'jsbarcode';
 import { printBarcodes, previewBarcodes, LABEL_PRINT_PROFILES, DEFAULT_LABEL_PRINT_SETTINGS, type LabelProfileId } from '../utils/barcodePrinter';
 import { AuditLogModal } from './AuditLogModal';
+import { SaaSErpProductFormModal } from './SaaSErpProductFormModal';
 
 interface ProductVariant {
     id?: string;
@@ -242,11 +243,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [loading, setLoading] = useState(true);
     const [addProductStep, setAddProductStep] = useState<'closed' | 'open'>('closed');
     const isFormOpen = addProductStep !== 'closed';
-    const [productFormStep, setProductFormStep] = useState<number>(1);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [activeTab, setActiveTab] = useState<'catalog' | 'promotions' | 'rotation'>('catalog');
     const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set());
-    const [showCreateCategoryPrompt, setShowCreateCategoryPrompt] = useState(false);
     const [printProfileId, setPrintProfileId] = useState<LabelProfileId>('two-column');
 
     // Cross-Branch Stock Modal State
@@ -381,19 +380,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         }
     };
 
-    // Form fields
-    const [name, setName] = useState('');
-    const [sku, setSku] = useState('');
-    const [description, setDescription] = useState('');
-    const [price, setPrice] = useState<number | ''>('');
-    const [costPrice, setCostPrice] = useState<number | ''>('');
-    const [stock, setStock] = useState<number | ''>('');
-    const [minStock, setMinStock] = useState<number | ''>(5);
-    const [brand, setBrand] = useState('');
-    const [material, setMaterial] = useState('');
-    const [style, setStyle] = useState('');
-    const [color, setColor] = useState('');
-
     const [filterBrand, setFilterBrand] = useState<string>('all');
     const [filterStock, setFilterStock] = useState<string>('all');
     const [filterMinPrice, setFilterMinPrice] = useState<string>('');
@@ -422,17 +408,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [filterMaxPrice, setFilterMaxPrice] = useState<string>('');
 
     // Silence unused warnings for compatibility
-    if (false as boolean) { console.log(minStock, color, setActiveTab, setFilterStock, setFilterMinPrice, setFilterMaxPrice); }
-    const [promoDiscount, setPromoDiscount] = useState<number | ''>('');
-    const [taxRate, setTaxRate] = useState<number>(0);
-    const [activePhotoColorIdx, setActivePhotoColorIdx] = useState<number>(0);
-    const [colorStartIndex, setColorStartIndex] = useState<number>(0);
-    const [productType, setProductType] = useState<'product' | 'service'>('product');
-    const [lensDesign, setLensDesign] = useState<string>('');
-    const [lensMaterial, setLensMaterial] = useState<string>('');
-    const [lensTreatment, setLensTreatment] = useState<string>('');
-    const [isLensMode, setIsLensMode] = useState<boolean>(false);
-    const [customAttrs, setCustomAttrs] = useState<any>({});
+    if (false as boolean) { console.log(setActiveTab, setFilterStock, setFilterMinPrice, setFilterMaxPrice); }
+
     // Estructura de Colores con Previsualización y Soporte para Paint Picker
     const [allColors, setAllColors] = useState<Array<{ id: string; name: string; value: string; preview: string; isCustom?: boolean }>>([
         { id: 'negro', name: 'Negro', value: 'Negro', preview: '#000000' },
@@ -455,13 +432,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [editingColor, setEditingColor] = useState<{ id: string; name: string; preview: string } | null>(null);
     const [colorNameInput, setColorNameInput] = useState('');
     const [colorHexInput, setColorHexInput] = useState('#8a2be2');
-    const [paintTargetVariantIdx, setPaintTargetVariantIdx] = useState<number | null>(null);
-
-    const openCreateColorModal = (targetVariantIdx?: number) => {
+    const openCreateColorModal = () => {
         setEditingColor(null);
         setColorNameInput('');
         setColorHexInput('#8a2be2');
-        setPaintTargetVariantIdx(targetVariantIdx !== undefined ? targetVariantIdx : null);
         setIsPaintModalOpen(true);
     };
 
@@ -480,7 +454,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         if (editingColor) {
             // Actualizar color existente
             setAllColors(prev => prev.map(c => c.id === editingColor.id ? { ...c, name, value: name, preview: colorHexInput } : c));
-            setVariantList(prev => prev.map(v => v.color === editingColor.name ? { ...v, color: name } : v));
         } else {
             // Crear nuevo color personalizado
             const newColorObj = {
@@ -491,27 +464,15 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                 isCustom: true
             };
             setAllColors(prev => [...prev, newColorObj]);
-            if (paintTargetVariantIdx !== null && paintTargetVariantIdx >= 0) {
-                setVariantList(prev => {
-                    const updated = [...prev];
-                    if (updated[paintTargetVariantIdx]) {
-                        updated[paintTargetVariantIdx].color = name;
-                    }
-                    return updated;
-                });
-            }
         }
         setIsPaintModalOpen(false);
     };
+
 
     const handleDeleteColor = (id: string) => {
         if (!window.confirm("¿Deseas eliminar este color personalizado?")) return;
         setAllColors(prev => prev.filter(c => c.id !== id));
     };
-
-    const [variantList, setVariantList] = useState<Array<{ id?: string; color: string; sku?: string; stock: number | ''; min_stock: number | ''; image_url: string }>>([
-        { color: 'Negro', sku: '', stock: 10, min_stock: 2, image_url: '' }
-    ]);
 
     // Search and filter states
     const [searchTerm, setSearchTerm] = useState('');
@@ -576,7 +537,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
     // Categories and Refill States
     const [categories, setCategories] = useState<any[]>([]);
-    const [categoryId, setCategoryId] = useState('');
     const [refillProduct, setRefillProduct] = useState<Product | null>(null);
     const [refillQuantity, setRefillQuantity] = useState<number | ''>('');
     const [refillVariantQuantities, setRefillVariantQuantities] = useState<Record<string, number | ''>>({});
@@ -588,8 +548,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         const parsed = stored ? JSON.parse(stored) : [];
         return [...colorOptions, ...parsed];
     });
-    const [newCategoryName, setNewCategoryName] = useState('');
     const [showNewColorPrompt, setShowNewColorPrompt] = useState(false);
+
     const [newColorName, setNewColorName] = useState('');
     const [newColorHex, setNewColorHex] = useState('#3b82f6');
 
@@ -660,45 +620,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         localStorage.setItem(`custom_colors_${clientId}`, JSON.stringify(nextCustomColors));
 
         setDynamicColorOptions([...colorOptions, ...nextCustomColors]);
-        setColor(colorName);
         setNewColorName('');
         setShowNewColorPrompt(false);
     };
 
-    const handleSelectCategory = (catId: string) => {
-        setCategoryId(catId);
-        setHiddenFields(new Set());
-        const selectedCat = categories.find((c: any) => c.id === catId);
-        if (selectedCat && selectedCat.name.toLowerCase().includes('lente')) {
-            setIsLensMode(true);
-            setProductType('service');
-            setStock(999999);
-        }
-    };
-
-    const handleCreateCategory = async () => {
-        if (!newCategoryName.trim()) return;
-        try {
-            const res = await fetch(`/api/clients/${clientId}/categories`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ name: newCategoryName })
-            });
-            const json = await res.json();
-            if (json.success) {
-                await fetchCategories();
-                setCategoryId(json.category.id.toString());
-                setNewCategoryName('');
-                setShowCreateCategoryPrompt(false);
-            } else {
-                alert(json.error || 'Error al crear la categoría.');
-            }
-        } catch (err: any) {
-            alert('Error de conexión al crear categoría: ' + err.message);
-        }
-    };
 
     const toggleFieldHidden = (fieldName: string) => {
         const newHidden = new Set(hiddenFields);
@@ -726,138 +651,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         }
     }, [loading, isFormOpen, activeTab]);
 
-    const [hasVariants, setHasVariants] = useState<boolean>(true);
-
-    useEffect(() => {
-        if (activePhotoColorIdx < colorStartIndex) {
-            setColorStartIndex(activePhotoColorIdx);
-        } else if (activePhotoColorIdx >= colorStartIndex + 4) {
-            setColorStartIndex(Math.max(0, activePhotoColorIdx - 3));
-        }
-    }, [activePhotoColorIdx]);
-
-    useEffect(() => {
-        if (colorStartIndex > Math.max(0, variantList.length - 4)) {
-            setColorStartIndex(Math.max(0, variantList.length - 4));
-        }
-    }, [variantList.length]);
-
-    const handleSubmit = async (e: React.FormEvent, keepOpen: boolean = false) => {
-        e.preventDefault();
-        
-        const isLensType = isLensMode || (categoryId && categories.find((c: any) => c.id === categoryId)?.name.toLowerCase().includes('lente')) || Boolean(lensDesign || lensMaterial || lensTreatment);
-        const resolvedProductType = productType === 'service' ? 'service' : (isLensType ? 'product' : productType);
-        const hasVarBool = !isLensType && hasVariants && resolvedProductType === 'product' && variantList.length > 0;
-
-        const formattedVariants = hasVarBool ? variantList.map(v => ({
-            ...(v.id ? { id: v.id } : {}),
-            variant_name: v.color || 'Variante',
-            color_hex: null,
-            sku: v.sku ? v.sku.trim() : '',
-            stock: v.stock === '' ? 0 : (parseInt(v.stock.toString()) || 0),
-            min_stock: v.min_stock === '' ? 2 : (parseInt(v.min_stock.toString()) || 2),
-            image_url: v.image_url || null
-        })) : [];
-
-        const calculatedTotalStock = resolvedProductType === 'service'
-            ? 0
-            : (hasVarBool 
-                ? variantList.reduce((sum, v) => sum + (parseInt(v.stock?.toString() || '0') || 0), 0)
-                : (stock === '' ? 0 : (parseInt(stock.toString()) || 0)));
-
-        const calculatedMinStock = resolvedProductType === 'service'
-            ? 0
-            : (hasVarBool 
-                ? (variantList.length > 0 ? (parseInt(variantList[0].min_stock?.toString() || '1') || 1) : 2)
-                : (minStock === '' ? 2 : (parseInt(minStock.toString()) || 2)));
-
-        const finalSku = hasVarBool 
-            ? null 
-            : (sku.trim() || (isLensType ? 'LENS-' + Math.floor(10000 + Math.random() * 90000) : 'OP' + Math.floor(100000 + Math.random() * 900000)));
-
-        const primaryImageUrl = hasVarBool 
-            ? (variantList.find(v => v.image_url?.trim())?.image_url || null) 
-            : null;
-
-        const lensDetailStr = [lensDesign, lensMaterial, lensTreatment].filter(Boolean).join(' - ');
-
-        const finalName = name.trim() || (isLensType ? `Lente ${lensDetailStr}`.trim() : 'Producto Sin Nombre');
-
-        const body = { 
-            name: finalName, 
-            sku: finalSku, 
-            description: description.trim() || (isLensType ? lensTreatment : null), 
-            price: price === '' ? 0 : price, 
-            stock: calculatedTotalStock,
-            min_stock: calculatedMinStock,
-            cost_price: isAdmin ? (costPrice === '' ? 0 : costPrice) : (editingProduct ? (editingProduct.cost_price || 0) : 0),
-            brand: brand.trim() || (isLensType ? 'Lentes' : null),
-            material: isLensType ? (lensMaterial || material || null) : (material || null),
-            style: isLensType ? (lensDesign || style || null) : (style || null),
-            color: hasVarBool ? variantList.map(v => v.color).filter(Boolean).join(', ') : (color || null),
-            image_url: primaryImageUrl,
-            promo_discount: promoDiscount === '' ? 0 : promoDiscount,
-            tax_rate: taxRate,
-            category_id: categoryId || null,
-            product_type: resolvedProductType,
-            has_variants: hasVarBool,
-            variants: formattedVariants,
-            attributes: {
-                ...(customAttrs || {}),
-                tax_rate: taxRate,
-                is_lens: isLensType,
-                lens_design: lensDesign,
-                lens_material: lensMaterial,
-                lens_treatment: lensTreatment
-            }
-        };
-
-        try {
-            const url = editingProduct 
-                ? `/api/clients/${clientId}/products/${editingProduct.id}`
-                : `/api/clients/${clientId}/products`;
-            const method = editingProduct ? 'PUT' : 'POST';
-
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                await fetchProducts();
-                if (keepOpen) {
-                    setEditingProduct(null);
-                    setName('');
-                    setSku('');
-                    setDescription('');
-                    setPrice('');
-                    setCostPrice('');
-                    setStock('');
-                    setMinStock(5);
-                    setBrand('');
-                    setMaterial('');
-                    setStyle('');
-                    setColor('');
-                    setPromoDiscount('');
-                    setCustomAttrs({});
-                    setHasVariants(true);
-                    setVariantList([{ color: 'Negro', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
-                    setActivePhotoColorIdx(0);
-                    setAddProductStep('open');
-                    alert('✓ Producto guardado con éxito.\n\nFormulario despejado para ingresar un nuevo producto.');
-                } else {
-                    resetForm();
-                    alert(editingProduct ? '✓ Producto actualizado con éxito.' : '✓ Producto guardado con éxito.');
-                }
-            } else {
-                alert(`Error al guardar producto: ${data.error}`);
-            }
-        } catch (err: any) {
-            alert(`Error de conexión al guardar el producto: ${err.message}`);
-        }
-    };
 
     const handleUpdatePromoDiscount = async (prod: Product, val: number) => {
         if (!isAdmin) {
@@ -954,99 +747,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
     const openEdit = (prod: Product) => {
         setEditingProduct(prod);
-        setName(prod.name);
-        setSku(prod.sku || '');
-        setDescription(prod.description || '');
-        setPrice(parseFloat(prod.price));
-        setCostPrice(prod.cost_price ? parseFloat(prod.cost_price) : 0);
-        setStock(prod.stock);
-        setMinStock(prod.min_stock !== undefined ? prod.min_stock : 5);
-        setBrand(prod.brand || '');
-        setMaterial(prod.material || '');
-        setStyle(prod.style || '');
-        setColor(prod.color || '');
-        setPromoDiscount(prod.promo_discount ? parseFloat(prod.promo_discount) : 0);
-        const rawTax = (prod as any).tax_rate !== undefined && (prod as any).tax_rate !== null 
-            ? (prod as any).tax_rate 
-            : ((prod as any).attributes?.tax_rate !== undefined ? (prod as any).attributes.tax_rate : 0);
-        setTaxRate(parseFloat(rawTax.toString()) || 0);
-        setCategoryId(prod.category_id || '');
-        const isService = prod.product_type === 'service' || (prod.stock && prod.stock >= 999999);
-        setProductType(isService ? 'service' : 'product');
-        const attrs = (prod as any).attributes || {};
-        setCustomAttrs(attrs);
-
-        const lDesign = attrs.lens_design || prod.style || '';
-        const lMaterial = attrs.lens_material || prod.material || '';
-        const lTreatment = attrs.lens_treatment || prod.description || '';
-        const isLensCat = prod.category_id && categories.find((c: any) => c.id === prod.category_id)?.name.toLowerCase().includes('lente');
-        const isLens = attrs.is_lens || (isService && (lDesign || lMaterial || lTreatment || isLensCat));
-
-        setIsLensMode(Boolean(isLens));
-        setLensDesign(lDesign);
-        setLensMaterial(lMaterial);
-        setLensTreatment(lTreatment);
-
         setAddProductStep('open');
-        setHiddenFields(new Set());
-
-        // Cargar las variantes por color registradas
-        if (prod.variants && prod.variants.length > 0) {
-            setHasVariants(true);
-            setVariantList(prod.variants.map((v: any) => ({
-                id: v.id,
-                color: v.variant_name || v.color || 'Negro',
-                sku: v.sku || '',
-                stock: v.stock !== undefined ? v.stock : 0,
-                min_stock: v.min_stock !== undefined ? v.min_stock : 2,
-                image_url: v.image_url || ''
-            })));
-        } else if (prod.has_variants && prod.color && prod.color.includes(',')) {
-            setHasVariants(true);
-            const colorNames = prod.color.split(',').map((c: string) => c.trim()).filter(Boolean);
-            setVariantList(colorNames.map((c: string) => ({
-                color: c,
-                sku: '',
-                stock: Math.floor((prod.stock || 0) / colorNames.length) || 0,
-                min_stock: prod.min_stock || 2,
-                image_url: ''
-            })));
-        } else {
-            setHasVariants(Boolean(prod.has_variants));
-            if (prod.has_variants) {
-                setVariantList([{ color: prod.color || 'Negro', sku: prod.sku || '', stock: prod.stock || 0, min_stock: prod.min_stock || 2, image_url: '' }]);
-            } else {
-                setVariantList([{ color: 'Negro', sku: '', stock: prod.stock || 0, min_stock: prod.min_stock || 2, image_url: '' }]);
-            }
-        }
     };
 
     const resetForm = () => {
-        setProductFormStep(1);
         setEditingProduct(null);
-        setName('');
-        setSku('');
-        setDescription('');
-        setPrice('');
-        setCostPrice('');
-        setStock('');
-        setMinStock(5);
-        setBrand('');
-        setMaterial('');
-        setStyle('');
-        setColor('');
-        setPromoDiscount('');
-        setTaxRate(0);
-        setCategoryId('');
-        setProductType('product');
-        setCustomAttrs({});
-        setHiddenFields(new Set());
-        setHasVariants(true);
-        setVariantList([{ color: 'Negro', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
-        setLensDesign('');
-        setLensMaterial('');
-        setLensTreatment('');
-        setIsLensMode(false);
         setAddProductStep('closed');
     };
 
@@ -1445,805 +1150,20 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             {/* Render Tab Contents */}
             {activeTab === 'catalog' ? (
                 <>
-                    {/* Modal Rápido para Crear Nueva Categoría */}
-                    {showCreateCategoryPrompt && createPortal(
-                        <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 text-left">
-                            <div className="bg-[#F6F4EE] border border-[#161616] p-6 rounded-none max-w-md w-full shadow-2xl space-y-4">
-                                <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
-                                    <h3 className="font-serif text-xl font-normal text-[#161616] flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-[#D9381E] text-[20px]">add_box</span>
-                                        Nueva Categoría
-                                    </h3>
-                                    <button 
-                                        type="button"
-                                        onClick={() => setShowCreateCategoryPrompt(false)}
-                                        className="p-1 text-[#6B6862] hover:text-[#161616] border-0 bg-transparent cursor-pointer transition text-lg"
-                                    >
-                                        &times;
-                                    </button>
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">Nombre de Categoría</label>
-                                    <input 
-                                        type="text"
-                                        value={newCategoryName}
-                                        onChange={(e) => setNewCategoryName(e.target.value)}
-                                        placeholder="Ej: Monturas, Lentes, Estuches..."
-                                        className="bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none transition rounded-none"
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter') {
-                                                handleCreateCategory();
-                                            }
-                                        }}
-                                        autoFocus
-                                    />
-                                </div>
-
-                                <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
-                                    <button 
-                                        type="button"
-                                        onClick={() => setShowCreateCategoryPrompt(false)}
-                                        className="px-4 py-2 bg-transparent border border-[#E2DFD7] text-[#161616] text-xs font-semibold rounded-none transition cursor-pointer uppercase tracking-wider"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button 
-                                        type="button"
-                                        onClick={handleCreateCategory}
-                                        disabled={!newCategoryName.trim()}
-                                        className="px-4 py-2 bg-[#D9381E] hover:bg-[#b82e18] disabled:opacity-50 text-white text-xs font-semibold rounded-none transition cursor-pointer border-0 flex items-center gap-1.5 uppercase tracking-wider"
-                                    >
-                                        Crear
-                                    </button>
-                                </div>
-                            </div>
-                        </div>,
-                        document.body
-                    )}
-
                     {/* MODAL POPUP WIDESCREEN EDITORIAL WABI-SABI PARA AGREGAR / EDITAR PRODUCTOS */}
-                    {isFormOpen && createPortal(
-                        <div className="fixed inset-0 bg-[#161616]/60 backdrop-blur-md z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
-                            <div className="bg-[#F6F4EE] border border-[#161616] w-full max-w-[1540px] max-h-[calc(100vh-2.5rem)] h-full sm:h-[86vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in modal-stepper-mobile">
-                                
-                                {/* Header del Modal */}
-                                <div className="px-6 sm:px-8 py-4 sm:py-5 border-b border-[#E2DFD7] flex justify-between items-center bg-[#F6F4EE] shrink-0">
-                                    <div>
-                                        <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-widest font-sans block">FORMULARIO DE INVENTARIO ERP</span>
-                                        <h3 className="font-serif text-2xl sm:text-3xl font-normal text-[#161616] leading-tight">
-                                            {editingProduct ? 'Editar Producto o Servicio' : 'Crear / Editar Producto o Servicio de Venta'}
-                                        </h3>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={resetForm}
-                                        className="text-[#161616] hover:text-[#D9381E] text-3xl font-light cursor-pointer border-0 bg-transparent leading-none"
-                                        title="Cerrar modal"
-                                    >
-                                        &times;
-                                    </button>
-                                </div>
 
-                                {/* Indicador Stepper de Pasos Wabi-Sabi */}
-                                <div className="px-4 py-2.5 bg-[#FAF8F5] border-b border-[#E2DFD7] flex items-center justify-between shrink-0">
-                                    <div className="flex items-center gap-1.5 sm:gap-3 overflow-x-auto w-full custom-scrollbar pb-1">
-                                        <button
-                                            type="button"
-                                            onClick={() => setProductFormStep(1)}
-                                            className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider border cursor-pointer transition flex items-center gap-1.5 shrink-0 ${
-                                                productFormStep === 1
-                                                    ? 'bg-[#161616] text-white border-[#161616]'
-                                                    : productFormStep > 1
-                                                    ? 'bg-[#EAE6DF] text-[#161616] border-[#E2DFD7]'
-                                                    : 'bg-white text-[#6B6862] border-[#E2DFD7]'
-                                            }`}
-                                        >
-                                            <span className="w-4 h-4 rounded-full bg-[#D9381E] text-white text-[9px] flex items-center justify-center font-mono font-bold">1</span>
-                                            <span>1. Datos Básicos</span>
-                                        </button>
+                    <SaaSErpProductFormModal
+                        isOpen={isFormOpen}
+                        onClose={resetForm}
+                        clientId={clientId}
+                        categories={categories}
+                        isAdmin={isAdmin}
+                        editingProduct={editingProduct}
+                        isDraftMode={false}
+                        onProductSaved={fetchProducts}
+                        fetchCategories={fetchCategories}
+                    />
 
-                                        {productType === 'product' && (
-                                            <>
-                                                <span className="text-[#E2DFD7] font-bold text-xs shrink-0">→</span>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setProductFormStep(2)}
-                                                    className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider border cursor-pointer transition flex items-center gap-1.5 shrink-0 ${
-                                                        productFormStep === 2
-                                                            ? 'bg-[#161616] text-white border-[#161616]'
-                                                            : productFormStep > 2
-                                                            ? 'bg-[#EAE6DF] text-[#161616] border-[#E2DFD7]'
-                                                            : 'bg-white text-[#6B6862] border-[#E2DFD7]'
-                                                    }`}
-                                                >
-                                                    <span className="w-4 h-4 rounded-full bg-[#D9381E] text-white text-[9px] flex items-center justify-center font-mono font-bold">2</span>
-                                                    <span>2. Variantes & Stock ({variantList.length})</span>
-                                                </button>
-                                            </>
-                                        )}
-
-                                        <span className="text-[#E2DFD7] font-bold text-xs shrink-0">→</span>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setProductFormStep(3)}
-                                            className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider border cursor-pointer transition flex items-center gap-1.5 shrink-0 ${
-                                                productFormStep === 3
-                                                    ? 'bg-[#D9381E] text-white border-[#D9381E]'
-                                                    : 'bg-white text-[#6B6862] border-[#E2DFD7]'
-                                            }`}
-                                        >
-                                            <span className="w-4 h-4 rounded-full bg-white text-[#161616] text-[9px] flex items-center justify-center font-mono font-bold">
-                                                {productType === 'service' ? '2' : '3'}
-                                            </span>
-                                            <span>{productType === 'service' ? '2. Precios & Guardar' : '3. Precios & Guardar'}</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Formulario Dinámico por Pasos */}
-                                <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden min-h-0">
-                                    <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto custom-scrollbar">
-                                        
-                                        {/* PASO 1: DATOS BÁSICOS Y CLASIFICACIÓN */}
-                                        {productFormStep === 1 && (
-                                            <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
-                                                <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
-                                                    1. Datos Básicos & Clasificación
-                                                </h4>
-
-                                                {/* Selector Categoría + Selector Tipo de Ítem */}
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Ítem *</label>
-                                                        <select
-                                                            value={isLensMode ? 'lens' : productType}
-                                                            onChange={(e) => {
-                                                                const val = e.target.value;
-                                                                if (val === 'lens') {
-                                                                    setIsLensMode(true);
-                                                                    setProductType('service');
-                                                                    setStock(999999);
-                                                                    setHasVariants(false);
-                                                                    setVariantList([{ color: 'NEGRO', sku: sku || '', stock: 999999, min_stock: 0, image_url: '' }]);
-                                                                    setActivePhotoColorIdx(0);
-                                                                    const lentesCat = categories.find((c: any) => c.name.toLowerCase().includes('lente'));
-                                                                    if (lentesCat) setCategoryId(lentesCat.id);
-                                                                } else {
-                                                                    setIsLensMode(false);
-                                                                    const pVal = val as 'product' | 'service';
-                                                                    setProductType(pVal);
-                                                                    if (pVal === 'service') {
-                                                                        setStock(999999);
-                                                                        setHasVariants(false);
-                                                                        setVariantList([{ color: 'NEGRO', sku: sku || '', stock: 999999, min_stock: 0, image_url: '' }]);
-                                                                        setActivePhotoColorIdx(0);
-                                                                    } else {
-                                                                        if (stock === 999999) setStock('');
-                                                                        setHasVariants(true);
-                                                                    }
-                                                                }
-                                                            }}
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                        >
-                                                            <option value="product">Producto Inventariable (Físico)</option>
-                                                            <option value="service">Servicio / Honorario Médico (Sin Stock)</option>
-                                                            <option value="lens">Lente / Cristal Oftálmico (Servicio Sin Stock)</option>
-                                                        </select>
-                                                    </div>
-
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
-                                                            <span>Categoría del Producto *</span>
-                                                        </label>
-                                                        <div className="flex gap-2">
-                                                            <select 
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition w-full rounded-none"
-                                                                value={categoryId}
-                                                                onChange={(e) => {
-                                                                    if (e.target.value === 'new') {
-                                                                        setShowCreateCategoryPrompt(true);
-                                                                    } else {
-                                                                        handleSelectCategory(e.target.value);
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <option value="">-- Selecciona Categoría --</option>
-                                                                {categories.map((cat: any) => (
-                                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                                                ))}
-                                                                <option value="new" className="font-bold text-[#D9381E]">+ Crear Nueva Categoría</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Características del Lente */}
-                                                {(isLensMode || (categoryId && categories.find((c: any) => c.id === categoryId)?.name.toLowerCase().includes('lente'))) && (
-                                                    <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-4 space-y-4 mb-5 rounded-none text-[#161616]">
-                                                        <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2.5">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="material-symbols-outlined text-[#D9381E] text-[18px]">visibility</span>
-                                                                <span className="text-xs font-bold text-[#161616] uppercase tracking-wider">Características del Lente / Cristal</span>
-                                                            </div>
-                                                            <span className="text-[10px] bg-white text-[#6B6862] border border-[#E2DFD7] px-2 py-0.5 font-mono uppercase tracking-wider">
-                                                                Servicio Sin Stock
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                            <div className="flex flex-col gap-1.5">
-                                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Uso</label>
-                                                                <select
-                                                                    value={lensDesign}
-                                                                    onChange={(e) => setLensDesign(e.target.value)}
-                                                                    className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                                >
-                                                                    <option value="">– Seleccione Tipo de Uso –</option>
-                                                                    <option value="Monofocal">Monofocal</option>
-                                                                    <option value="Bifocal">Bifocal</option>
-                                                                    <option value="Progresivo">Progresivo / Multifocal</option>
-                                                                    <option value="Ocupacional">Ocupacional</option>
-                                                                    <option value="Anti-fatiga">Anti-fatiga</option>
-                                                                    <option value="Lente de Contacto">Lente de Contacto</option>
-                                                                </select>
-                                                            </div>
-
-                                                            <div className="flex flex-col gap-1.5">
-                                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Material del Cristal</label>
-                                                                <select
-                                                                    value={lensMaterial}
-                                                                    onChange={(e) => setLensMaterial(e.target.value)}
-                                                                    className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                                >
-                                                                    <option value="">– Seleccione Material –</option>
-                                                                    <option value="CR-39 / Orgánico">CR-39 / Orgánico (1.56)</option>
-                                                                    <option value="Policarbonato">Policarbonato (1.59)</option>
-                                                                    <option value="Alto Índice 1.67">Alto Índice 1.67</option>
-                                                                    <option value="Alto Índice 1.74">Alto Índice 1.74</option>
-                                                                    <option value="Trivex / Polilite">Trivex / Polilite</option>
-                                                                    <option value="Cristal / Vidrio">Cristal / Vidrio</option>
-                                                                    <option value="Hidrogel de Silicona">Hidrogel de Silicona</option>
-                                                                </select>
-                                                            </div>
-
-                                                            <div className="flex flex-col gap-1.5 sm:col-span-2">
-                                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tratamiento / Filtro</label>
-                                                                <select
-                                                                    value={lensTreatment}
-                                                                    onChange={(e) => setLensTreatment(e.target.value)}
-                                                                    className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                                >
-                                                                    <option value="">– Seleccione Tratamiento –</option>
-                                                                    <option value="Sencillo / Blanco">Sencillo / Blanco (Sin Filtro)</option>
-                                                                    <option value="Antirreflejo (AR)">Antirreflejo (AR)</option>
-                                                                    <option value="AR-Blue (Filtro Azul)">AR-Blue (Filtro Azul / AR Blue)</option>
-                                                                    <option value="Fotocromático (Transitions)">Fotocromático (Transitions)</option>
-                                                                    <option value="Fotocromático AR-Blue">Fotocromático AR-Blue (Transitions + AR Blue)</option>
-                                                                    <option value="Polarizado">Polarizado</option>
-                                                                    <option value="Espejado">Espejado</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Marca & Referencia */}
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
-                                                    {productType === 'product' && (
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Marca / Fabricante *</label>
-                                                            <input 
-                                                                type="text"
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans"
-                                                                value={brand}
-                                                                onChange={(e) => setBrand(e.target.value)}
-                                                                placeholder="Ej: Ray-Ban, Gucci, Oakley, Bausch + Lomb"
-                                                            />
-                                                        </div>
-                                                    )}
-
-                                                    <div className={`flex flex-col gap-1.5 ${productType === 'service' ? 'col-span-2' : ''}`}>
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Nombre / Referencia / Modelo *</label>
-                                                        <input 
-                                                            type="text"
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans font-semibold"
-                                                            value={name}
-                                                            onChange={(e) => setName(e.target.value)}
-                                                            placeholder="Ej: Montura Acetato KOI Titanium Black"
-                                                            required
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                {/* Material de Montura / Ítem & Género - SOLO SI LA CATEGORÍA ES MONTURA */}
-                                                {productType === 'product' && Boolean(categoryId && (categories.find((c: any) => String(c.id) === String(categoryId))?.name || '').toLowerCase().includes('montura')) && (
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Material de Montura / Marco</label>
-                                                            <select
-                                                                value={material}
-                                                                onChange={(e) => setMaterial(e.target.value)}
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans font-semibold"
-                                                            >
-                                                                <option value="">– Seleccionar Material –</option>
-                                                                <option value="Acetato">Acetato</option>
-                                                                <option value="Metal / Aleación">Metal / Aleación</option>
-                                                                <option value="TR-90 / Grilamid">TR-90 / Grilamid</option>
-                                                                <option value="Titanio / Beta-Titanio">Titanio / Beta-Titanio</option>
-                                                                <option value="Combinado (Acetato + Metal)">Combinado (Acetato + Metal)</option>
-                                                                <option value="Madera / Bamboo">Madera / Bamboo</option>
-                                                                <option value="Inyectado / Ultem">Inyectado / Ultem</option>
-                                                                <option value="Silicona / Flexible">Silicona / Flexible (Infantil)</option>
-                                                            </select>
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Género / Público Objetivo</label>
-                                                            <select
-                                                                value={style}
-                                                                onChange={(e) => setStyle(e.target.value)}
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans font-semibold"
-                                                            >
-                                                                <option value="">– Seleccionar Género –</option>
-                                                                <option value="Unisex">Unisex</option>
-                                                                <option value="Hombre">Hombre</option>
-                                                                <option value="Mujer">Mujer</option>
-                                                                <option value="Niño">Niño</option>
-                                                                <option value="Niña">Niña</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* SKU Producto Simple */}
-                                                {(!hasVariants || productType === 'service') ? (
-                                                    <div className="flex flex-col gap-1.5 mb-4">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
-                                                            <span>SKU / Código de Barras (Producto Simple)</span>
-                                                            <span className="text-[10px] text-[#D9381E] font-bold flex items-center gap-1">
-                                                                <span className="material-symbols-outlined text-[13px]">barcode_scanner</span>
-                                                                Pistola Lectora
-                                                            </span>
-                                                        </label>
-                                                        <input 
-                                                            type="text"
-                                                            className="w-full bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition font-mono uppercase rounded-none"
-                                                            value={sku}
-                                                            onChange={(e) => setSku(e.target.value)}
-                                                            placeholder="Disparar pistola lectora o dejar en blanco..."
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-3 flex items-center justify-between mb-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="material-symbols-outlined text-[#D9381E] text-[20px]">palette</span>
-                                                            <div>
-                                                                <p className="text-xs font-bold text-[#161616]">Producto con Variantes de Color Activas</p>
-                                                                <p className="text-[10px] text-[#6B6862]">Los códigos de barras y stock se definen individualmente por cada color en el Paso 2.</p>
-                                                            </div>
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setHasVariants(false)}
-                                                            className="px-3 py-1 bg-[#FCE8E6] hover:bg-[#F5C6CB] text-[#C5221F] border border-[#F5C6CB] text-[10px] font-bold transition flex items-center gap-1 cursor-pointer shrink-0 rounded-none uppercase tracking-wider"
-                                                            title="Convertir a Producto Simple"
-                                                        >
-                                                            <span className="material-symbols-outlined text-[14px]">close</span>
-                                                            Producto Simple
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                                {/* Navegación Paso 1 */}
-                                                <div className="pt-6 border-t border-[#E2DFD7] flex justify-end">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setProductFormStep(productType === 'service' ? 3 : 2)}
-                                                        className="bg-[#161616] hover:bg-[#2c2c2c] text-white border-0 px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-2 transition"
-                                                    >
-                                                        Siguiente
-                                                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* PASO 2: VARIANTES DE COLOR Y STOCK */}
-                                        {productFormStep === 2 && productType === 'product' && (
-                                            <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
-                                                <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
-                                                    2. Variantes de Color, Fotografía & Control de Stock
-                                                </h4>
-
-                                                {/* Sección de Fotografía del Producto por Variante */}
-                                                <div className="bg-white border border-[#E2DFD7] p-5 space-y-4 mb-4">
-                                                    <div className="flex justify-between items-baseline border-b border-[#E2DFD7] pb-2">
-                                                        <h4 className="font-serif text-lg text-[#161616] font-normal">Fotografía del Ítem</h4>
-                                                        <span className="text-[10px] text-[#D9381E] font-bold uppercase tracking-wider">
-                                                            COLOR: {variantList[activePhotoColorIdx]?.color || 'NEGRO'}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="flex flex-col md:flex-row items-center gap-6">
-                                                        <label className="photo-dropzone-compact relative group cursor-pointer shrink-0 w-[160px] h-[160px] border-2 border-dashed border-[#E2DFD7] flex flex-col items-center justify-center bg-[#FAF8F5] hover:border-[#161616] transition">
-                                                            {variantList[activePhotoColorIdx]?.image_url ? (
-                                                                <>
-                                                                    <img 
-                                                                        src={variantList[activePhotoColorIdx].image_url!} 
-                                                                        alt="Preview" 
-                                                                        className="w-full h-full object-cover" 
-                                                                    />
-                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                                                                        <span className="material-symbols-outlined text-white text-2xl">edit</span>
-                                                                    </div>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <span className="material-symbols-outlined text-3xl text-[#6B6862] group-hover:text-[#D9381E]">photo_camera</span>
-                                                                    <span className="text-[11px] font-medium text-center px-3 text-[#6B6862] mt-1">
-                                                                        Subir foto para variante
-                                                                    </span>
-                                                                </>
-                                                            )}
-                                                            <input 
-                                                                type="file"
-                                                                accept="image/*"
-                                                                className="hidden"
-                                                                onChange={(e) => {
-                                                                    const file = e.target.files?.[0];
-                                                                    if (file) {
-                                                                        const reader = new FileReader();
-                                                                        reader.onloadend = () => {
-                                                                            if (reader.result) {
-                                                                                const updated = [...variantList];
-                                                                                if (updated[activePhotoColorIdx]) {
-                                                                                    updated[activePhotoColorIdx].image_url = reader.result.toString();
-                                                                                    setVariantList(updated);
-                                                                                }
-                                                                            }
-                                                                        };
-                                                                        reader.readAsDataURL(file);
-                                                                    }
-                                                                }}
-                                                            />
-                                                        </label>
-
-                                                        {variantList.length > 0 && (
-                                                            <div className="flex flex-col gap-2 flex-1">
-                                                                <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-wider">
-                                                                    COLOR SELECCIONADO PARA FOTO: {variantList[activePhotoColorIdx]?.color || 'NEGRO'}
-                                                                </span>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    {variantList.map((v, idx) => (
-                                                                        <button
-                                                                            key={idx}
-                                                                            type="button"
-                                                                            onClick={() => setActivePhotoColorIdx(idx)}
-                                                                            className={`px-3 py-1.5 text-xs font-bold border cursor-pointer transition flex items-center gap-1.5 ${
-                                                                                idx === activePhotoColorIdx
-                                                                                    ? 'bg-[#161616] text-white border-[#161616]'
-                                                                                    : 'bg-white text-[#161616] border-[#E2DFD7]'
-                                                                            }`}
-                                                                        >
-                                                                            <span 
-                                                                                className="w-3 h-3 rounded-full border border-black/20" 
-                                                                                style={{ background: getColorPreview(v.color) }}
-                                                                            />
-                                                                            <span>{v.color || `Color ${idx + 1}`}</span>
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {productType === 'product' && (
-                                                    <div className="space-y-4">
-                                                        {hasVariants ? (
-                                                            <div className="bg-white p-5 border border-[#E2DFD7] space-y-4">
-                                                                <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
-                                                                    <div>
-                                                                        <h5 className="font-bold text-xs uppercase tracking-wider text-[#161616]">Tabla de Existencias por Color</h5>
-                                                                        <p className="text-[11px] text-[#6B6862]">Asigna códigos SKU y stock físico para cada variante de color.</p>
-                                                                    </div>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setVariantList([...variantList, { color: '', sku: '', stock: 1, min_stock: 2, image_url: '' }])}
-                                                                        className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[10px] font-bold py-2 px-3 rounded-none flex items-center gap-1 transition uppercase tracking-wider"
-                                                                    >
-                                                                        <span className="material-symbols-outlined text-[14px] text-[#D9381E]">add</span>
-                                                                        + Color
-                                                                    </button>
-                                                                </div>
-
-                                                                <div className="overflow-x-auto">
-                                                                    <table className="w-full text-left text-xs border-collapse">
-                                                                        <thead>
-                                                                            <tr className="border-b border-[#E2DFD7] text-[#6B6862] text-[10px] uppercase font-mono">
-                                                                                <th className="py-2 pr-2">Color / Variante</th>
-                                                                                <th className="py-2 px-2">Código SKU / Barras</th>
-                                                                                <th className="py-2 px-2 text-center">Stock</th>
-                                                                                <th className="py-2 px-2 text-center">Min. Stock</th>
-                                                                                <th className="py-2 pl-2 text-right">Acción</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody className="divide-y divide-[#FAF8F5]">
-                                                                            {variantList.map((v, idx) => (
-                                                                                <tr key={idx}>
-                                                                                    <td className="py-2 pr-2">
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            value={v.color}
-                                                                                            onChange={(e) => {
-                                                                                                const updated = [...variantList];
-                                                                                                updated[idx].color = e.target.value;
-                                                                                                setVariantList(updated);
-                                                                                            }}
-                                                                                            placeholder="Ej: Negro Matte"
-                                                                                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-bold outline-none rounded-none w-full"
-                                                                                        />
-                                                                                    </td>
-                                                                                    <td className="py-2 px-2">
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            value={v.sku || ''}
-                                                                                            onChange={(e) => {
-                                                                                                const updated = [...variantList];
-                                                                                                updated[idx].sku = e.target.value;
-                                                                                                setVariantList(updated);
-                                                                                            }}
-                                                                                            placeholder="SKU-COLOR"
-                                                                                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono outline-none rounded-none w-full uppercase"
-                                                                                        />
-                                                                                    </td>
-                                                                                    <td className="py-2 px-2 text-center">
-                                                                                        <input
-                                                                                            type="number"
-                                                                                            min="0"
-                                                                                            value={v.stock}
-                                                                                            onChange={(e) => {
-                                                                                                const updated = [...variantList];
-                                                                                                updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
-                                                                                                setVariantList(updated);
-                                                                                            }}
-                                                                                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono font-bold text-center outline-none rounded-none w-20"
-                                                                                        />
-                                                                                    </td>
-                                                                                    <td className="py-2 px-2 text-center">
-                                                                                        <input
-                                                                                            type="number"
-                                                                                            min="0"
-                                                                                            value={v.min_stock}
-                                                                                            onChange={(e) => {
-                                                                                                const updated = [...variantList];
-                                                                                                updated[idx].min_stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
-                                                                                                setVariantList(updated);
-                                                                                            }}
-                                                                                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono text-center outline-none rounded-none w-16"
-                                                                                        />
-                                                                                    </td>
-                                                                                    <td className="py-2 pl-2 text-right">
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            disabled={variantList.length === 1}
-                                                                                            onClick={() => setVariantList(variantList.filter((_, i) => i !== idx))}
-                                                                                            className="text-[#6B6862] hover:text-[#D9381E] transition border-0 bg-transparent cursor-pointer disabled:opacity-30"
-                                                                                            title="Eliminar variante"
-                                                                                        >
-                                                                                            <span className="material-symbols-outlined text-[18px]">delete</span>
-                                                                                        </button>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            ))}
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-
-                                                                <div className="pt-3 border-t border-[#E2DFD7] flex justify-between items-center">
-                                                                    <span className="text-[11px] font-bold uppercase tracking-widest text-[#6B6862]">Stock Total Calculado:</span>
-                                                                    <span className="font-mono text-base font-bold text-[#D9381E]">
-                                                                        {variantList.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)} Unidades Físicas
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="bg-white p-5 border border-[#E2DFD7] space-y-4">
-                                                                <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-3">
-                                                                    <div>
-                                                                        <h5 className="font-bold text-xs uppercase tracking-wider text-[#161616]">Control de Stock Único</h5>
-                                                                        <p className="text-[11px] text-[#6B6862]">Producto simple sin variantes de color.</p>
-                                                                    </div>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setHasVariants(true)}
-                                                                        className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[10px] font-bold py-2 px-3 rounded-none flex items-center gap-1 transition uppercase tracking-wider cursor-pointer"
-                                                                    >
-                                                                        <span className="material-symbols-outlined text-[14px] text-[#D9381E]">palette</span>
-                                                                        + Activar Variantes de Color
-                                                                    </button>
-                                                                </div>
-
-                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                                    <div className="flex flex-col gap-1.5">
-                                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Stock Disponible *</label>
-                                                                        <input 
-                                                                            type="number"
-                                                                            min="0"
-                                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-mono font-bold outline-none rounded-none"
-                                                                            value={stock}
-                                                                            onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
-                                                                            placeholder="Ej: 15"
-                                                                            required
-                                                                        />
-                                                                    </div>
-                                                                    <div className="flex flex-col gap-1.5">
-                                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Stock Mínimo de Alerta</label>
-                                                                        <input 
-                                                                            type="number"
-                                                                            min="0"
-                                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-mono outline-none rounded-none"
-                                                                            value={minStock}
-                                                                            onChange={(e) => setMinStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
-                                                                            placeholder="5"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                {/* Navegación Paso 2 */}
-                                                <div className="pt-6 border-t border-[#E2DFD7] flex justify-between items-center">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setProductFormStep(1)}
-                                                        className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5 transition"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-                                                        Atrás
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setProductFormStep(3)}
-                                                        className="bg-[#161616] hover:bg-[#2c2c2c] text-white border-0 px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-2 transition"
-                                                    >
-                                                        Siguiente
-                                                        <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* PASO 3: PRECIOS, IMPUESTOS Y CONFIRMACIÓN */}
-                                        {productFormStep === 3 && (
-                                            <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
-                                                <h4 className="font-serif text-xl text-[#161616] border-b border-[#E2DFD7] pb-2 mb-4 font-normal">
-                                                    3. Precios, Impuestos (DIAN) & Confirmación
-                                                </h4>
-
-                                                <div className="bg-white p-5 border border-[#E2DFD7] space-y-4">
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                                                        {isAdmin && (
-                                                            <div className="flex flex-col gap-1.5">
-                                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Precio Costo ($)</label>
-                                                                <input 
-                                                                    type="number"
-                                                                    className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px]"
-                                                                    value={costPrice}
-                                                                    onFocus={(e) => e.target.select()}
-                                                                    onChange={(e) => setCostPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                                                                    placeholder="Ej: 180000"
-                                                                />
-                                                            </div>
-                                                        )}
-
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Precio Venta ($) *</label>
-                                                            <input 
-                                                                type="number"
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono font-bold focus:border-[#161616] transition rounded-none h-[42px]"
-                                                                value={price}
-                                                                onFocus={(e) => e.target.select()}
-                                                                onChange={(e) => setPrice(e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))}
-                                                                placeholder="Ej: 350000"
-                                                                required
-                                                            />
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Desc. Promo (%)</label>
-                                                            <input 
-                                                                type="number"
-                                                                min={0}
-                                                                max={100}
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none font-mono focus:border-[#161616] transition rounded-none h-[42px]"
-                                                                value={promoDiscount}
-                                                                onFocus={(e) => e.target.select()}
-                                                                onChange={(e) => setPromoDiscount(e.target.value === '' ? '' : Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
-                                                                placeholder="0"
-                                                            />
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Impuesto / IVA</label>
-                                                            <select
-                                                                value={taxRate}
-                                                                onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
-                                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans cursor-pointer h-[42px]"
-                                                            >
-                                                                <option value={0}>0% (Exento / Gafas)</option>
-                                                                <option value={19}>19% (IVA General)</option>
-                                                                <option value={5}>5% (IVA Reducido)</option>
-                                                                <option value={8}>8% (INC Consumo)</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex flex-col gap-1.5 pt-2">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Descripción Comercial</label>
-                                                        <textarea 
-                                                            rows={3}
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans"
-                                                            value={description}
-                                                            onChange={(e) => setDescription(e.target.value)}
-                                                            placeholder="Detalles de garantía, ficha técnica, indicaciones para el cliente..."
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                {/* Live Resumen de Registro Card */}
-                                                <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-5 space-y-2">
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B6862] block">
-                                                        RESUMEN DE REGISTRO
-                                                    </span>
-                                                    <p className="text-base font-bold text-[#161616]">{name || 'Montura / Producto Ejemplo'}</p>
-                                                    {brand && <p className="text-xs text-[#6B6862]">Marca: {brand}</p>}
-                                                    <div className="text-2xl font-serif text-[#D9381E] font-normal pt-1">
-                                                        {price ? formatPrice(price.toString()) : '$ 0 COP'}
-                                                    </div>
-                                                </div>
-
-                                                {/* Navegación Paso 3 (Guardar) */}
-                                                <div className="pt-6 border-t border-[#E2DFD7] flex justify-between items-center pb-4">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setProductFormStep(productType === 'service' ? 1 : 2)}
-                                                        className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer flex items-center gap-1.5 transition"
-                                                    >
-                                                        <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-                                                        Atrás
-                                                    </button>
-                                                    <div className="flex items-center gap-2">
-                                                        <button 
-                                                            type="button"
-                                                            onClick={(e) => handleSubmit(e, false)}
-                                                            className="bg-[#161616] hover:bg-[#333333] text-white border-0 px-6 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm transition"
-                                                        >
-                                                            {editingProduct ? 'Guardar Cambios 💾' : 'Guardar Producto 💾'}
-                                                        </button>
-                                                        <button 
-                                                            type="button"
-                                                            onClick={(e) => handleSubmit(e, true)}
-                                                            className="bg-[#D9381E] hover:bg-[#b82e18] text-white border-0 px-6 py-3 text-xs font-bold uppercase tracking-wider rounded-none cursor-pointer shadow-sm flex items-center gap-1.5 transition"
-                                                        >
-                                                            <span className="material-symbols-outlined text-[16px]">add_circle</span>
-                                                            Guardar y Agregar Otro
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </form>
-                            </div>
-                        </div>,
-                        document.body
-                    )}
 
                     {loading ? (
                         <div className="flex justify-center py-12">

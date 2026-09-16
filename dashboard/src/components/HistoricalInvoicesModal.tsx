@@ -81,7 +81,10 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
     // Cargar clientes CRM al abrir modal
     useEffect(() => {
         if (isOpen && clientId) {
-            fetch(`/api/clients/${clientId}/crm-customers`)
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
+            fetch(`/api/clients/${clientId}/crm-customers`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success && Array.isArray(data.customers)) {
@@ -156,22 +159,31 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                 customer_type: quickCustType
             };
 
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
             const res = await fetch(`/api/clients/${clientId}/crm-customers`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(body)
             });
             const json = await res.json();
 
-            if (json.success && json.data) {
-                const newCustomer = json.data;
+            const targetCustomer = json.customer || json.data;
+
+            if (json.success && targetCustomer) {
+                const newCustomer = targetCustomer;
 
                 // Si hay fórmula óptica, registrar también en tabla de formulas
                 if (hasRx) {
                     try {
                         await fetch(`/api/clients/${clientId}/formulas`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
                             body: JSON.stringify({
                                 customerId: newCustomer.id,
                                 odSphere: odEsf || null,
@@ -191,7 +203,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                     }
                 }
 
-                setCrmCustomers(prev => [newCustomer, ...prev]);
+                setCrmCustomers(prev => [newCustomer, ...prev.filter(c => c.id !== newCustomer.id)]);
                 selectCustomer(newCustomer);
                 setIsQuickCustomerOpen(false);
 
@@ -205,6 +217,22 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                 setOdEsf(''); setOdCil(''); setOdEje(''); setOdAdi(''); setOdPrism(''); setOdAv('');
                 setOiEsf(''); setOiCil(''); setOiEje(''); setOiAdi(''); setOiPrism(''); setOiAv('');
                 setDp('');
+            } else if (json.existingCustomer) {
+                const existing = json.existingCustomer;
+                const useExisting = window.confirm(
+                    `${json.error}\n\n¿Deseas seleccionar a este cliente existente (${existing.name} ${existing.last_name || ''}) para continuar con la factura?`
+                );
+                if (useExisting) {
+                    setCrmCustomers(prev => [existing, ...prev.filter(c => c.id !== existing.id)]);
+                    selectCustomer(existing);
+                    setIsQuickCustomerOpen(false);
+                    setQuickCustName('');
+                    setQuickCustLastName('');
+                    setQuickCustDocNum('');
+                    setQuickCustPhone('');
+                    setQuickCustEmail('');
+                    setQuickCustAddress('');
+                }
             } else {
                 alert(`Error al registrar cliente: ${json.error || 'Error desconocido'}`);
             }
@@ -250,9 +278,13 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                 }]
             };
 
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
             const res = await fetch(`/api/clients/${clientId}/invoices`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(body)
             });
             const json = await res.json();
@@ -310,9 +342,13 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
         setAnalyzingOcr(true);
         setOcrError(null);
         try {
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
             const res = await fetch(`/api/clients/${clientId}/invoices/ocr-scan-batch`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ images: filePreviews })
             });
             const json = await res.json();
@@ -335,9 +371,13 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
 
         setConfirmingBatch(true);
         try {
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
             const res = await fetch(`/api/clients/${clientId}/invoices/batch-confirm`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ invoices: ocrResults })
             });
             const json = await res.json();
