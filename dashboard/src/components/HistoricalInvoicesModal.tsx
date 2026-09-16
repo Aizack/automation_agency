@@ -24,8 +24,8 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
     const [showCustomerDropdown, setShowCustomerDropdown] = useState<boolean>(false);
     const [isQuickCustomerOpen, setIsQuickCustomerOpen] = useState<boolean>(false);
 
-    // Formulario Crear Cliente Rápido
-    const [quickCustType, setQuickCustType] = useState<'persona' | 'empresa'>('persona');
+    // Formulario Registrar Nuevo Cliente (Idéntico a CRM Directorio)
+    const [quickCustType, _setQuickCustType] = useState<'persona' | 'empresa'>('persona');
     const [quickCustName, setQuickCustName] = useState<string>('');
     const [quickCustLastName, setQuickCustLastName] = useState<string>('');
     const [quickCustDocType, setQuickCustDocType] = useState<string>('CC');
@@ -33,7 +33,23 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
     const [quickCustPhone, setQuickCustPhone] = useState<string>('');
     const [quickCustEmail, setQuickCustEmail] = useState<string>('');
     const [quickCustAddress, setQuickCustAddress] = useState<string>('');
-    const [quickCustRx, setQuickCustRx] = useState<string>('');
+    
+    // Campos de Prescripción Óptica (Fórmula Oftálmica)
+    const [odEsf, setOdEsf] = useState('');
+    const [odCil, setOdCil] = useState('');
+    const [odEje, setOdEje] = useState('');
+    const [odAdi, setOdAdi] = useState('');
+    const [odPrism, setOdPrism] = useState('');
+    const [odAv, setOdAv] = useState('');
+
+    const [oiEsf, setOiEsf] = useState('');
+    const [oiCil, setOiCil] = useState('');
+    const [oiEje, setOiEje] = useState('');
+    const [oiAdi, setOiAdi] = useState('');
+    const [oiPrism, setOiPrism] = useState('');
+    const [oiAv, setOiAv] = useState('');
+
+    const [dp, setDp] = useState('');
     const [savingQuickCust, setSavingQuickCust] = useState<boolean>(false);
 
     // --- ESTADO TAB 1: MANUAL SECUENCIAL ---
@@ -109,25 +125,34 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
         setShowCustomerDropdown(false);
     };
 
-    // Crear cliente rápido en el CRM
+    // Crear cliente rápido en el CRM (Homologado con CRM Directorio)
     const handleCreateQuickCustomer = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!quickCustName || !quickCustPhone) {
-            alert('Por favor ingresa al menos el Nombre y el Teléfono del cliente.');
+        if (!quickCustName || !quickCustPhone || !quickCustDocNum) {
+            alert('Por favor completa el Nombre, Número de Identificación y Teléfono.');
             return;
         }
 
         setSavingQuickCust(true);
         try {
+            const rxObject = {
+                od: { esf: odEsf, cil: odCil, eje: odEje, adi: odAdi, prism: odPrism, av: odAv },
+                oi: { esf: oiEsf, cil: oiCil, eje: oiEje, adi: oiAdi, prism: oiPrism, av: oiAv },
+                dp: dp
+            };
+
+            const hasRx = Boolean(odEsf || oiEsf || odCil || oiCil);
+            const prescriptionValue = hasRx ? JSON.stringify(rxObject) : null;
+
             const body = {
                 name: quickCustName.trim(),
                 last_name: quickCustLastName.trim(),
                 document_type: quickCustDocType,
                 document_number: quickCustDocNum.trim(),
                 phone: quickCustPhone.trim(),
-                email: quickCustEmail.trim(),
-                address: quickCustAddress.trim(),
-                lens_prescription: quickCustRx.trim() || null,
+                email: quickCustEmail.trim() || null,
+                address: quickCustAddress.trim() || null,
+                lens_prescription: prescriptionValue,
                 customer_type: quickCustType
             };
 
@@ -140,17 +165,46 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
 
             if (json.success && json.data) {
                 const newCustomer = json.data;
+
+                // Si hay fórmula óptica, registrar también en tabla de formulas
+                if (hasRx) {
+                    try {
+                        await fetch(`/api/clients/${clientId}/formulas`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                customerId: newCustomer.id,
+                                odSphere: odEsf || null,
+                                odCylinder: odCil || null,
+                                odAxis: odEje || null,
+                                odAddition: odAdi || null,
+                                oiSphere: oiEsf || null,
+                                oiCylinder: oiCil || null,
+                                oiAxis: oiEje || null,
+                                oiAddition: oiAdi || null,
+                                dpDistance: dp || null,
+                                notes: 'Registrado desde Facturación / Históricas'
+                            })
+                        });
+                    } catch (rxErr) {
+                        console.warn('[QuickCustomer] Advertencia guardando tabla de formulas:', rxErr);
+                    }
+                }
+
                 setCrmCustomers(prev => [newCustomer, ...prev]);
                 selectCustomer(newCustomer);
                 setIsQuickCustomerOpen(false);
-                // Reset form
+
+                // Reset de todos los campos del formulario
                 setQuickCustName('');
                 setQuickCustLastName('');
                 setQuickCustDocNum('');
                 setQuickCustPhone('');
                 setQuickCustEmail('');
                 setQuickCustAddress('');
-                setQuickCustRx('');
+                setOdEsf(''); setOdCil(''); setOdEje(''); setOdAdi(''); setOdPrism(''); setOdAv('');
+                setOiEsf(''); setOiCil(''); setOiEje(''); setOiAdi(''); setOiPrism(''); setOiAv('');
+                setDp('');
             } else {
                 alert(`Error al registrar cliente: ${json.error || 'Error desconocido'}`);
             }
@@ -328,7 +382,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                     </div>
                     <button 
                         onClick={onClose}
-                        className="text-[#9E9E9E] hover:text-white text-xl font-bold transition p-1"
+                        className="text-[#9E9E9E] hover:text-white text-xl font-bold transition p-1 cursor-pointer"
                     >
                         ✕
                     </button>
@@ -338,7 +392,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                 <div className="flex border-b border-[#E2DFD7] bg-white">
                     <button
                         onClick={() => setActiveTab('manual')}
-                        className={`flex-1 py-3.5 px-5 text-xs font-bold uppercase tracking-wider transition border-b-2 flex items-center justify-center gap-2 ${
+                        className={`flex-1 py-3.5 px-5 text-xs font-bold uppercase tracking-wider transition border-b-2 flex items-center justify-center gap-2 cursor-pointer ${
                             activeTab === 'manual' 
                                 ? 'border-[#161616] text-[#161616] bg-[#FAF8F5]' 
                                 : 'border-transparent text-[#6B6862] hover:text-[#161616]'
@@ -349,7 +403,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                     </button>
                     <button
                         onClick={() => setActiveTab('ocr')}
-                        className={`flex-1 py-3.5 px-5 text-xs font-bold uppercase tracking-wider transition border-b-2 flex items-center justify-center gap-2 ${
+                        className={`flex-1 py-3.5 px-5 text-xs font-bold uppercase tracking-wider transition border-b-2 flex items-center justify-center gap-2 cursor-pointer ${
                             activeTab === 'ocr' 
                                 ? 'border-[#161616] text-[#161616] bg-[#FAF8F5]' 
                                 : 'border-transparent text-[#6B6862] hover:text-[#161616]'
@@ -422,7 +476,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                                         <button
                                             type="button"
                                             onClick={() => setIsQuickCustomerOpen(true)}
-                                            className="text-[11px] font-bold text-[#C8A968] hover:text-[#B39353] bg-[#FAF8F5] border border-[#E2DFD7] px-2.5 py-1 uppercase tracking-wider transition flex items-center gap-1"
+                                            className="text-[11px] font-bold text-[#C8A968] hover:text-[#B39353] bg-[#FAF8F5] border border-[#E2DFD7] px-2.5 py-1 uppercase tracking-wider transition flex items-center gap-1 cursor-pointer"
                                         >
                                             <span className="material-symbols-outlined text-[13px]">person_add</span>
                                             + Crear Cliente CRM
@@ -725,7 +779,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                                                         <td className="p-2 text-center">
                                                             <button
                                                                 onClick={() => removeOcrRow(idx)}
-                                                                className="text-red-600 hover:text-red-800 text-xs font-bold"
+                                                                className="text-red-600 hover:text-red-800 text-xs font-bold cursor-pointer"
                                                             >
                                                                 ✕ Quitar
                                                             </button>
@@ -741,130 +795,214 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                     )}
                 </div>
 
-                {/* MODAL SECUNDARIO: CREACIÓN RÁPIDA DE CLIENTE EN CRM */}
+                {/* MODAL SECUNDARIO: CREACIÓN RÁPIDA DE CLIENTE (IDÉNTICO A CRM DIRECTORIO) */}
                 {isQuickCustomerOpen && (
-                    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-                        <div className="bg-white border border-[#E2DFD7] w-full max-w-lg shadow-2xl p-6 space-y-4 font-sans">
-                            <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-3">
+                    <div className="fixed inset-0 z-[9999] bg-[#161616]/60 backdrop-blur-xs flex items-center justify-center p-4">
+                        <div className="bg-[#F6F4EE] border border-[#161616] max-w-lg w-full rounded-none p-6 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar my-auto">
+                            <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
                                 <div>
-                                    <span className="text-[10px] uppercase font-bold text-[#C8A968] tracking-widest block">Acceso Rápido CRM</span>
-                                    <h3 className="text-lg font-serif font-bold text-[#161616]">👤 Registrar Nuevo Cliente</h3>
+                                    <span className="text-[10px] font-mono uppercase font-bold text-[#D9381E] tracking-widest block">
+                                        NUEVO REGISTRO
+                                    </span>
+                                    <h3 className="font-serif font-bold text-xl text-[#161616]">
+                                        Registrar Nuevo Cliente
+                                    </h3>
                                 </div>
-                                <button
+                                <button 
+                                    type="button"
                                     onClick={() => setIsQuickCustomerOpen(false)}
-                                    className="text-[#9E9E9E] hover:text-black font-bold text-lg"
+                                    className="w-8 h-8 flex items-center justify-center hover:bg-[#E2DFD7] transition border-0 cursor-pointer text-[#161616]"
                                 >
-                                    ✕
+                                    <span className="material-symbols-outlined text-[20px]">close</span>
                                 </button>
                             </div>
 
-                            <form onSubmit={handleCreateQuickCustomer} className="space-y-4">
-                                <div>
-                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Tipo de Cliente</label>
-                                    <select
-                                        value={quickCustType}
-                                        onChange={(e) => setQuickCustType(e.target.value as any)}
-                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs font-semibold outline-none"
-                                    >
-                                        <option value="persona">👤 Persona Natural</option>
-                                        <option value="empresa">🏢 Empresa / Persona Jurídica</option>
-                                    </select>
-                                </div>
-
+                            <form onSubmit={handleCreateQuickCustomer} className="space-y-4 text-xs font-sans">
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Nombre(s) *</label>
-                                        <input
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">
+                                            Nombre *
+                                        </label>
+                                        <input 
                                             type="text"
+                                            required
                                             value={quickCustName}
                                             onChange={(e) => setQuickCustName(e.target.value)}
-                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs font-semibold outline-none focus:border-[#161616]"
-                                            required
+                                            className="w-full bg-white border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-[#161616] outline-none text-xs font-mono"
+                                            placeholder="Ej: Pedro"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Apellido(s)</label>
-                                        <input
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">
+                                            Apellido
+                                        </label>
+                                        <input 
                                             type="text"
                                             value={quickCustLastName}
                                             onChange={(e) => setQuickCustLastName(e.target.value)}
-                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs outline-none"
+                                            className="w-full bg-white border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-[#161616] outline-none text-xs font-mono"
+                                            placeholder="Ej: Martínez"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-3">
-                                    <div>
-                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Tipo Doc.</label>
-                                        <select
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Doc.</label>
+                                        <select 
                                             value={quickCustDocType}
                                             onChange={(e) => setQuickCustDocType(e.target.value)}
-                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs outline-none"
+                                            className="w-full bg-white border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-[#161616] outline-none cursor-pointer text-xs font-mono"
                                         >
                                             <option value="CC">Cédula (CC)</option>
+                                            <option value="CE">Cédula Ext. (CE)</option>
                                             <option value="NIT">NIT</option>
-                                            <option value="CE">Cédula Extr. (CE)</option>
-                                            <option value="PASAPORTE">Pasaporte</option>
+                                            <option value="PAS">Pasaporte (PAS)</option>
                                         </select>
                                     </div>
-                                    <div className="col-span-2">
-                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Número Documento</label>
-                                        <input
+
+                                    <div className="col-span-2 space-y-1">
+                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Número de Identificación *</label>
+                                        <input 
                                             type="text"
+                                            required
                                             value={quickCustDocNum}
                                             onChange={(e) => setQuickCustDocNum(e.target.value)}
-                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs font-mono outline-none"
+                                            className="w-full bg-white border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-[#161616] outline-none font-mono text-xs"
+                                            placeholder="Ej: 1020400800"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Teléfono / Celular *</label>
-                                        <input
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Teléfono / WhatsApp *</label>
+                                        <input 
                                             type="text"
+                                            required
                                             value={quickCustPhone}
                                             onChange={(e) => setQuickCustPhone(e.target.value)}
-                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs outline-none"
-                                            required
+                                            className="w-full bg-white border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-[#161616] outline-none font-mono text-xs"
+                                            placeholder="Ej: 573001112222"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Correo Electrónico</label>
-                                        <input
+
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Correo Electrónico</label>
+                                        <input 
                                             type="email"
                                             value={quickCustEmail}
                                             onChange={(e) => setQuickCustEmail(e.target.value)}
-                                            className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs outline-none"
+                                            className="w-full bg-white border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-[#161616] outline-none text-xs font-mono"
+                                            placeholder="Ej: contacto@correo.com"
                                         />
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold block mb-1">Fórmula Óptica (Opcional)</label>
-                                    <input
+                                <div className="space-y-1">
+                                    <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Dirección Física</label>
+                                    <input 
                                         type="text"
-                                        placeholder="Ej: OD: -1.50 -0.50x90 | OI: -1.75 | ADD: +1.50"
-                                        value={quickCustRx}
-                                        onChange={(e) => setQuickCustRx(e.target.value)}
-                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2 text-xs font-mono outline-none"
+                                        value={quickCustAddress}
+                                        onChange={(e) => setQuickCustAddress(e.target.value)}
+                                        className="w-full bg-white border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-[#161616] outline-none text-xs font-mono"
+                                        placeholder="Ej: Calle 45 # 12 - 34, Local 101"
                                     />
                                 </div>
 
-                                <div className="pt-2 flex justify-end gap-2">
-                                    <button
-                                        type="button"
+                                {/* PRESCRIPCIÓN ÓPTICA / FÓRMULA OFTÁLMICA GRID */}
+                                <div className="space-y-3 border-t border-[#E2DFD7] pt-4">
+                                    <h4 className="font-serif font-bold text-xs text-[#161616] flex items-center gap-1.5 uppercase tracking-wider">
+                                        <span className="material-symbols-outlined text-[16px] text-[#D9381E]">visibility</span>
+                                        Prescripción Óptica (Fórmula Oftálmica)
+                                    </h4>
+                                    
+                                    <div className="overflow-x-auto border border-[#E2DFD7] rounded-none bg-white">
+                                        <table className="w-full text-left text-xs border-collapse min-w-[480px]">
+                                            <thead>
+                                                <tr className="bg-[#FAF8F5] text-[#76746E] font-mono font-bold border-b border-[#E2DFD7] text-center text-[10px] uppercase">
+                                                    <th className="py-2 px-2 text-left pl-3">Ojo</th>
+                                                    <th className="py-2 px-1">Esf</th>
+                                                    <th className="py-2 px-1">Cil</th>
+                                                    <th className="py-2 px-1">Eje</th>
+                                                    <th className="py-2 px-1">Adi</th>
+                                                    <th className="py-2 px-1">Prisma</th>
+                                                    <th className="py-2 px-2 pr-3">AV</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr className="border-b border-[#E2DFD7] text-center">
+                                                    <td className="py-2 px-2 font-mono font-bold text-left pl-3 text-[#161616]">OD (Der)</td>
+                                                    <td className="py-1 px-1">
+                                                        <input type="text" value={odEsf} onChange={(e) => setOdEsf(e.target.value)} className="w-14 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="-1.75" />
+                                                    </td>
+                                                    <td className="py-1 px-1">
+                                                        <input type="text" value={odCil} onChange={(e) => setOdCil(e.target.value)} className="w-14 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="-2.00" />
+                                                    </td>
+                                                    <td className="py-1 px-1">
+                                                        <input type="text" value={odEje} onChange={(e) => setOdEje(e.target.value)} className="w-12 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="45°" />
+                                                    </td>
+                                                    <td className="py-1 px-1">
+                                                        <input type="text" value={odAdi} onChange={(e) => setOdAdi(e.target.value)} className="w-12 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="+2.00" />
+                                                    </td>
+                                                    <td className="py-1 px-1">
+                                                        <input type="text" value={odPrism} onChange={(e) => setOdPrism(e.target.value)} className="w-12 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="--" />
+                                                    </td>
+                                                    <td className="py-1 px-2 pr-3">
+                                                        <input type="text" value={odAv} onChange={(e) => setOdAv(e.target.value)} className="w-14 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="20/20" />
+                                                    </td>
+                                                </tr>
+                                                <tr className="text-center">
+                                                    <td className="py-2 px-2 font-mono font-bold text-left pl-3 text-[#D9381E]">OI (Izq)</td>
+                                                    <td className="py-1 px-1">
+                                                        <input type="text" value={oiEsf} onChange={(e) => setOiEsf(e.target.value)} className="w-14 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="-5.25" />
+                                                    </td>
+                                                    <td className="py-1 px-1">
+                                                        <input type="text" value={oiCil} onChange={(e) => setOiCil(e.target.value)} className="w-14 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="-1.25" />
+                                                    </td>
+                                                    <td className="py-1 px-1">
+                                                        <input type="text" value={oiEje} onChange={(e) => setOiEje(e.target.value)} className="w-12 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="130°" />
+                                                    </td>
+                                                    <td className="py-1 px-1">
+                                                        <input type="text" value={oiAdi} onChange={(e) => setOiAdi(e.target.value)} className="w-12 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="+2.00" />
+                                                    </td>
+                                                    <td className="py-1 px-1">
+                                                        <input type="text" value={oiPrism} onChange={(e) => setOiPrism(e.target.value)} className="w-12 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="--" />
+                                                    </td>
+                                                    <td className="py-1 px-2 pr-3">
+                                                        <input type="text" value={oiAv} onChange={(e) => setOiAv(e.target.value)} className="w-14 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono text-xs text-[#161616] outline-none focus:border-[#161616]" placeholder="20/20" />
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Distancia Pupilar (DP MM)</label>
+                                        <input 
+                                            type="text" 
+                                            value={dp} 
+                                            onChange={(e) => setDp(e.target.value)} 
+                                            className="w-full bg-white border border-[#E2DFD7] p-2 rounded-none text-xs text-[#161616] outline-none focus:border-[#161616] font-mono"
+                                            placeholder="Ej: 64" 
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 justify-end pt-4 border-t border-[#E2DFD7]">
+                                    <button 
+                                        type="button" 
                                         onClick={() => setIsQuickCustomerOpen(false)}
-                                        className="bg-[#E2DFD7] hover:bg-[#D0CCC2] text-[#161616] px-4 py-2 text-xs font-bold uppercase"
+                                        className="px-4 py-2 border border-[#E2DFD7] hover:border-[#161616] text-[#161616] bg-white font-mono font-bold text-xs uppercase tracking-wider cursor-pointer transition shadow-xs"
                                     >
                                         Cancelar
                                     </button>
-                                    <button
+                                    <button 
                                         type="submit"
                                         disabled={savingQuickCust}
-                                        className="bg-[#161616] hover:bg-[#2C2C2C] text-white px-5 py-2 text-xs font-bold uppercase tracking-wider transition shadow"
+                                        className="px-4 py-2 bg-[#161616] hover:bg-[#2b2b2b] text-[#F6F4EE] font-mono font-bold text-xs uppercase tracking-wider cursor-pointer transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
                                     >
-                                        {savingQuickCust ? 'Guardando...' : 'Guaradar Cliente y Seleccionar'}
+                                        {savingQuickCust ? 'Guardando...' : 'Guardar Cliente'}
                                     </button>
                                 </div>
                             </form>
@@ -877,7 +1015,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                     <span>ℹ️ Las facturas registradas en este módulo omiten el descuento automático de inventario y actualizan el CRM.</span>
                     <button
                         onClick={onClose}
-                        className="bg-[#E2DFD7] hover:bg-[#D0CCC2] text-[#161616] px-5 py-2 font-bold uppercase tracking-wider transition"
+                        className="bg-[#E2DFD7] hover:bg-[#D0CCC2] text-[#161616] px-5 py-2 font-bold uppercase tracking-wider transition cursor-pointer"
                     >
                         Cerrar
                     </button>
