@@ -2314,7 +2314,7 @@ app.get('/api/clients/:clientId/purchase-orders', authenticateToken as any, auth
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT po.id, po.order_number, po.status, po.total_amount, po.delivery_method, 
+      `SELECT po.id, po.supplier_id, po.order_number, po.status, po.total_amount, po.delivery_method, 
               po.carrier_name, po.tracking_number, po.shipping_cost, po.notes, po.dispute_notes, po.created_at, po.received_at,
               s.name as supplier_name, s.phone as supplier_phone,
               COALESCE(
@@ -2339,7 +2339,7 @@ app.get('/api/clients/:clientId/purchase-orders', authenticateToken as any, auth
        LEFT JOIN purchase_order_items poi ON po.id = poi.purchase_order_id
        LEFT JOIN products p ON poi.product_id = p.id
        WHERE po.client_id = $1
-       GROUP BY po.id, s.name, s.phone
+       GROUP BY po.id, po.supplier_id, s.name, s.phone
        ORDER BY po.created_at DESC`,
       [clientId]
     );
@@ -2417,6 +2417,110 @@ app.post('/api/clients/:clientId/purchase-orders', authenticateToken as any, aut
 
     await dbClient.query('COMMIT');
     res.json({ success: true, purchaseOrder: newOrder });
+  } catch (err: any) {
+    await dbClient.query('ROLLBACK');
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    dbClient.release();
+  }
+});
+
+// Editar Orden de Compra existente en estado Pendiente
+app.put('/api/clients/:clientId/purchase-orders/:orderId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  const dbClient = await pool.connect();
+  try {
+    await dbClient.query('BEGIN');
+    const { clientId, orderId } = req.params;
+    const { supplier_id, order_number, delivery_method, carrier_name, tracking_number, shipping_cost, notes, items } = req.body;
+
+    const poCheck = await dbClient.query(
+      `SELECT id, status FROM purchase_orders WHERE client_id = $1 AND id = $2 FOR UPDATE`,
+      [clientId, orderId]
+    );
+
+    if (poCheck.rows.length === 0) {
+      await dbClient.query('ROLLBACK');
+      return res.status(404).json({ success: false, error: 'Orden de compra no encontrada.' });
+    }
+
+    const currentPo = poCheck.rows[0];
+    if (currentPo.status === 'recibido' || currentPo.status === 'received') {
+      await dbClient.query('ROLLBACK');
+      return res.status(400).json({ success: false, error: 'No se puede editar una orden de compra que ya ha sido recibida en el inventario.' });
+    }
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      await dbClient.query('ROLLBACK');
+      return res.status(400).json({ success: false, error: 'La orden debe tener al menos un producto.' });
+    }
+
+    let totalAmount = 0;
+    
+    for (const item of items) {
+      if (!item.is_new_product && !item.product_id) {
+        await dbClient.query('ROLLBACK');
+        return res.status(400).json({ success: false, error: 'Cada ítem debe seleccionar un producto existente o definir un producto nuevo.' });
+      }
+      const parsedQty = parseInt(item.quantity);
+      const parsedCost = parseFloat(item.cost_price);
+      if (isNaN(parsedQty) || parsedQty <= 0 || isNaN(parsedCost) || parsedCost < 0) {
+        await dbClient.query('ROLLBACK');
+        return res.status(400).json({ success: false, error: 'Cada ítem debe incluir cantidad > 0 y costo >= 0.' });
+      }
+      totalAmount += parsedQty * parsedCost;
+    }
+
+    const updatePoRes = await dbClient.query(
+      `UPDATE purchase_orders
+       SET supplier_id = $1,
+           order_number = COALESCE($2, order_number),
+           delivery_method = $3,
+           carrier_name = $4,
+           tracking_number = $5,
+           shipping_cost = $6,
+           notes = $7,
+           total_amount = $8
+       WHERE client_id = $9 AND id = $10
+       RETURNING id, order_number, status, total_amount, created_at`,
+      [
+        supplier_id || null,
+        order_number?.trim() || null,
+        delivery_method || 'envio_tienda',
+        carrier_name || null,
+        tracking_number || null,
+        shipping_cost === '' ? 0.00 : (parseFloat(shipping_cost) || 0.00),
+        notes || null,
+        totalAmount,
+        clientId,
+        orderId
+      ]
+    );
+
+    await dbClient.query(
+      `DELETE FROM purchase_order_items WHERE purchase_order_id = $1`,
+      [orderId]
+    );
+
+    for (const item of items) {
+      await dbClient.query(
+        `INSERT INTO purchase_order_items (
+           purchase_order_id, product_id, quantity, cost_price, is_new_product, new_product_data, received_quantity, item_status
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          orderId,
+          item.is_new_product ? null : item.product_id,
+          parseInt(item.quantity) || 1,
+          parseFloat(item.cost_price) || 0.00,
+          Boolean(item.is_new_product),
+          item.is_new_product ? (typeof item.new_product_data === 'string' ? item.new_product_data : JSON.stringify(item.new_product_data)) : null,
+          parseInt(item.quantity) || 1,
+          'pendiente'
+        ]
+      );
+    }
+
+    await dbClient.query('COMMIT');
+    res.json({ success: true, purchaseOrder: updatePoRes.rows[0], message: 'Orden de compra actualizada correctamente.' });
   } catch (err: any) {
     await dbClient.query('ROLLBACK');
     res.status(500).json({ success: false, error: err.message });

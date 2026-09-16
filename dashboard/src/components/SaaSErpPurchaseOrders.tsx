@@ -44,6 +44,7 @@ interface PurchaseOrderItem {
 
 interface PurchaseOrder {
     id: string;
+    supplier_id?: string;
     order_number: string;
     status: 'pendiente' | 'en_revision' | 'reclamo' | 'recibido' | 'pending' | 'received';
     total_amount: string | number;
@@ -77,6 +78,7 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
     const [loading, setLoading] = useState(true);
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
     const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
     // Modal para definir Producto Nuevo (JSON temporal)
@@ -141,6 +143,7 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
     }, [clientId]);
 
     const handleOpenCreateModal = () => {
+        setEditingOrderId(null);
         setSupplierId('');
         setOrderNumber('');
         setDeliveryMethod('envio_tienda');
@@ -149,6 +152,35 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
         setShippingCost('');
         setNotes('');
         setItems([{ product_id: '', quantity: 1, cost_price: 0, is_new_product: false }]);
+        setIsCreateModalOpen(true);
+    };
+
+    const handleOpenEditModal = (po: PurchaseOrder) => {
+        setEditingOrderId(po.id);
+        const matchedSupplierId = po.supplier_id || suppliers.find(s => s.name === po.supplier_name)?.id || '';
+        setSupplierId(matchedSupplierId);
+        setOrderNumber(po.order_number || '');
+        setDeliveryMethod(po.delivery_method || 'envio_tienda');
+        setCarrierName(po.carrier_name || '');
+        setTrackingNumber(po.tracking_number || '');
+        setShippingCost(po.shipping_cost !== null && po.shipping_cost !== undefined ? Number(po.shipping_cost) : '');
+        setNotes(po.notes || '');
+
+        if (po.items && po.items.length > 0) {
+            setItems(po.items.map(it => ({
+                id: it.id,
+                product_id: it.product_id || null,
+                product_name: it.product_name || '',
+                sku: it.sku || '',
+                quantity: Number(it.quantity) || 1,
+                cost_price: Number(it.cost_price) || 0,
+                is_new_product: Boolean(it.is_new_product),
+                new_product_data: it.new_product_data || null
+            })));
+        } else {
+            setItems([{ product_id: '', quantity: 1, cost_price: 0, is_new_product: false }]);
+        }
+
         setIsCreateModalOpen(true);
     };
 
@@ -260,8 +292,13 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
         };
 
         try {
-            const res = await fetch(`/api/clients/${clientId}/purchase-orders`, {
-                method: 'POST',
+            const url = editingOrderId 
+                ? `/api/clients/${clientId}/purchase-orders/${editingOrderId}`
+                : `/api/clients/${clientId}/purchase-orders`;
+            const method = editingOrderId ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -272,6 +309,7 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
             const json = await res.json();
             if (json.success) {
                 setIsCreateModalOpen(false);
+                setEditingOrderId(null);
                 fetchData();
             } else {
                 alert(`Error: ${json.error}`);
@@ -468,16 +506,28 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {isPendingOrClaim && (
-                                                <button 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleOpenReviewModal(po);
-                                                    }}
-                                                    className="bg-[#161616] hover:bg-[#333] text-white font-bold text-xs px-3.5 py-2 rounded-md transition flex items-center gap-1.5 border-0 cursor-pointer shadow-xs"
-                                                >
-                                                    <span className="material-symbols-outlined text-[16px]">fact_check</span>
-                                                    Revisar & Recibir
-                                                </button>
+                                                <>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleOpenEditModal(po);
+                                                        }}
+                                                        className="bg-white hover:bg-[#FAF8F3] border border-[#E2DFD7] text-[#161616] font-bold text-xs px-3.5 py-2 rounded-md transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                                                        Editar
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleOpenReviewModal(po);
+                                                        }}
+                                                        className="bg-[#161616] hover:bg-[#333] text-white font-bold text-xs px-3.5 py-2 rounded-md transition flex items-center gap-1.5 border-0 cursor-pointer shadow-xs"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px]">fact_check</span>
+                                                        Revisar & Recibir
+                                                    </button>
+                                                </>
                                             )}
                                             <span className="material-symbols-outlined text-[#6B6862]">
                                                 {isExpanded ? 'expand_less' : 'expand_more'}
@@ -573,7 +623,9 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 text-left">
                     <form onSubmit={handleSaveOrder} className="bg-white border border-[#E2DFD7] p-6 rounded-2xl max-w-3xl w-full shadow-2xl flex flex-col max-h-[88vh] overflow-y-auto custom-scrollbar my-auto">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0 border-b border-[#E2DFD7] pb-3">
-                            <h3 className="font-serif text-xl font-bold text-[#161616]">Crear Orden de Compra</h3>
+                            <h3 className="font-serif text-xl font-bold text-[#161616]">
+                                {editingOrderId ? `Editar Orden de Compra ${orderNumber ? `#${orderNumber}` : ''}` : 'Crear Orden de Compra'}
+                            </h3>
                             <button 
                                 type="button"
                                 onClick={() => setIsCreateModalOpen(false)}
@@ -780,7 +832,7 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
                                 type="submit"
                                 className="px-5 py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white font-bold text-xs rounded-md shadow-xs transition cursor-pointer"
                             >
-                                Guardar Orden en Pendiente
+                                {editingOrderId ? 'Guardar Cambios' : 'Guardar Orden en Pendiente'}
                             </button>
                         </div>
                     </form>
