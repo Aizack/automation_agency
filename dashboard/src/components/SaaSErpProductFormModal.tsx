@@ -913,18 +913,45 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                         <tbody className="divide-y divide-[#FAF8F5]">
                                                             {variantList.map((v, idx) => (
                                                                 <tr key={idx}>
-                                                                    <td className="py-2 pr-2">
-                                                                        <input
-                                                                            type="text"
-                                                                            value={v.color}
-                                                                            onChange={(e) => {
-                                                                                const updated = [...variantList];
-                                                                                updated[idx].color = e.target.value;
-                                                                                setVariantList(updated);
-                                                                            }}
-                                                                            placeholder="Ej: Negro Matte"
-                                                                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-bold outline-none rounded-none w-full"
-                                                                        />
+                                                                    <td className="py-2 pr-2 min-w-[160px]">
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <select
+                                                                                value={colorOptions.some(opt => opt.value.toLowerCase() === (v.color || '').toLowerCase() || opt.name.toLowerCase() === (v.color || '').toLowerCase()) ? (colorOptions.find(opt => opt.value.toLowerCase() === (v.color || '').toLowerCase() || opt.name.toLowerCase() === (v.color || '').toLowerCase())?.value || '') : (v.color ? 'otro' : '')}
+                                                                                onChange={(e) => {
+                                                                                    const selectedVal = e.target.value;
+                                                                                    const updated = [...variantList];
+                                                                                    if (selectedVal === 'otro') {
+                                                                                        updated[idx].color = '';
+                                                                                    } else {
+                                                                                        updated[idx].color = selectedVal;
+                                                                                    }
+                                                                                    setVariantList(updated);
+                                                                                }}
+                                                                                className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-bold outline-none rounded-none w-full cursor-pointer focus:border-[#161616]"
+                                                                            >
+                                                                                <option value="">-- Seleccionar Color --</option>
+                                                                                {colorOptions.map((opt) => (
+                                                                                    <option key={opt.value} value={opt.value}>
+                                                                                        {opt.name}
+                                                                                    </option>
+                                                                                ))}
+                                                                                <option value="otro">+ Otro Color / Personalizado</option>
+                                                                            </select>
+
+                                                                            {(!colorOptions.some(opt => opt.value.toLowerCase() === (v.color || '').toLowerCase() || opt.name.toLowerCase() === (v.color || '').toLowerCase()) || v.color === '') && (
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={v.color || ''}
+                                                                                    onChange={(e) => {
+                                                                                        const updated = [...variantList];
+                                                                                        updated[idx].color = e.target.value;
+                                                                                        setVariantList(updated);
+                                                                                    }}
+                                                                                    placeholder="Escribe el color (Ej: Verde Esmeralda)..."
+                                                                                    className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none rounded-none w-full font-bold focus:border-[#161616]"
+                                                                                />
+                                                                            )}
+                                                                        </div>
                                                                     </td>
                                                                     <td className="py-2 px-2">
                                                                         <input
