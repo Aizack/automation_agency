@@ -20,19 +20,13 @@ interface NewProductData {
     name: string;
     sku?: string;
     price?: number;
+    cost_price?: number;
+    stock?: number;
     category_id?: string;
     product_type?: string;
-    attributes?: {
-        frame_material?: string;
-        target_gender?: string;
-    };
-    variants?: Array<{
-        variant_name?: string;
-        color?: string;
-        color_hex?: string;
-        sku?: string;
-        quantity?: number;
-    }>;
+    attributes?: Record<string, any>;
+    variants?: any[];
+    [key: string]: any;
 }
 
 interface PurchaseOrderItem {
@@ -170,9 +164,23 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
     const handleItemChange = (index: number, field: keyof PurchaseOrderItem, value: any) => {
         const newItems = [...items];
         if (field === 'quantity') {
-            newItems[index].quantity = parseInt(value) || 0;
+            const val = parseInt(value) || 0;
+            newItems[index].quantity = val;
+            if (newItems[index].is_new_product && newItems[index].new_product_data) {
+                newItems[index].new_product_data = {
+                    ...newItems[index].new_product_data,
+                    stock: val
+                };
+            }
         } else if (field === 'cost_price') {
-            newItems[index].cost_price = parseFloat(value) || 0;
+            const val = parseFloat(value) || 0;
+            newItems[index].cost_price = val;
+            if (newItems[index].is_new_product && newItems[index].new_product_data) {
+                newItems[index].new_product_data = {
+                    ...newItems[index].new_product_data,
+                    cost_price: val
+                };
+            }
         } else if (field === 'product_id') {
             newItems[index].product_id = value;
             newItems[index].is_new_product = false;
@@ -191,18 +199,25 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
     const handleSaveProductDraftFromModal = (draftData: any, keepOpen?: boolean) => {
         if (newProductTargetIndex === null) return;
 
-        const totalQty = draftData.stock > 0 ? draftData.stock : 1;
-        const costUnit = draftData.cost_price || 0;
+        const currentItem = items[newProductTargetIndex];
+        const totalQty = draftData.stock > 0 ? draftData.stock : (currentItem?.quantity || 1);
+        const costUnit = (draftData.cost_price !== undefined && draftData.cost_price !== '' && draftData.cost_price !== null) 
+            ? Number(draftData.cost_price) 
+            : (currentItem?.cost_price || 0);
 
         const updatedItems = [...items];
         updatedItems[newProductTargetIndex] = {
             product_id: null,
-            product_name: `✨ [NUEVO] ${draftData.name}`,
+            product_name: `✨ [NUEVO] ${draftData.name || 'Producto Sin Nombre'}`,
             sku: draftData.sku || `SKU-${Math.floor(100000 + Math.random() * 900000)}`,
             quantity: totalQty,
             cost_price: costUnit,
             is_new_product: true,
-            new_product_data: draftData
+            new_product_data: {
+                ...draftData,
+                stock: totalQty,
+                cost_price: costUnit
+            }
         };
 
         setItems(updatedItems);
@@ -784,6 +799,7 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
                 categories={categories}
                 token={token}
                 isAdmin={true}
+                editingProduct={newProductTargetIndex !== null && items[newProductTargetIndex]?.is_new_product ? items[newProductTargetIndex].new_product_data : null}
                 isDraftMode={true}
                 onSaveDraft={handleSaveProductDraftFromModal}
                 fetchCategories={async () => {
