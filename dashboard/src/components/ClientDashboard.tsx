@@ -2021,43 +2021,45 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
         {activeTab === 'inventario' && (
           <div className="animate-fade-in space-y-6">
-            {/* Pestañas de Navegación de Inventario - Segmented Control Horizontal */}
-            <div className="compact-subsections-bar md:flex md:bg-transparent md:p-0 md:border-none md:gap-2 pb-2 border-b border-[#E2DFD7]">
-              <button 
-                type="button"
-                onClick={() => setInventorySubTab('catalog')}
-                className={`subsection-item px-3 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 rounded-none border ${
-                  inventorySubTab === 'catalog' 
-                    ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
-                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616]'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[16px]">inventory_2</span>
-                <span>Catálogo</span>
-              </button>
-              <button 
-                type="button"
-                onClick={() => {
-                  if (inventorySubTab === 'catalog') {
-                    setInventorySubTab('suppliers');
-                  }
-                }}
-                className={`subsection-item px-3 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 rounded-none border ${
-                  inventorySubTab === 'suppliers' || inventorySubTab === 'purchase-orders'
-                    ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
-                    : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616]'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[16px]">local_shipping</span>
-                <span>Proveedores y Órdenes</span>
-              </button>
-            </div>
+            {/* Pestañas de Navegación de Inventario - Visible solo para Administradores */}
+            {!isEmployeeSession && (
+              <div className="compact-subsections-bar md:flex md:bg-transparent md:p-0 md:border-none md:gap-2 pb-2 border-b border-[#E2DFD7]">
+                <button 
+                  type="button"
+                  onClick={() => setInventorySubTab('catalog')}
+                  className={`subsection-item px-3 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 rounded-none border ${
+                    inventorySubTab === 'catalog' 
+                      ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
+                      : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">inventory_2</span>
+                  <span>Catálogo</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    if (inventorySubTab === 'catalog') {
+                      setInventorySubTab('suppliers');
+                    }
+                  }}
+                  className={`subsection-item px-3 py-2 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 rounded-none border ${
+                    inventorySubTab === 'suppliers' || inventorySubTab === 'purchase-orders'
+                      ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-xs' 
+                      : 'bg-white text-[#6B6862] border-[#E2DFD7] hover:text-[#161616]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">local_shipping</span>
+                  <span>Proveedores y Órdenes</span>
+                </button>
+              </div>
+            )}
 
-            {inventorySubTab === 'catalog' && (
+            {(inventorySubTab === 'catalog' || isEmployeeSession) && (
               <SaaSErpInventory clientId={clientId} category={category} />
             )}
 
-            {(inventorySubTab === 'suppliers' || inventorySubTab === 'purchase-orders') && (
+            {!isEmployeeSession && (inventorySubTab === 'suppliers' || inventorySubTab === 'purchase-orders') && (
               <div className="space-y-4">
                 {/* Sub-selector de Navegación Interna para Proveedores y Órdenes */}
                 <div className="flex items-center gap-2 bg-[#EAE6DF] p-1 rounded-md w-fit border border-[#E2DFD7]">
