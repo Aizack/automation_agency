@@ -180,6 +180,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         return d.toISOString().split('T')[0];
     });
     const [abono, setAbono] = useState('0'); // Abono inicial
+    const [abonoPaymentMethod, setAbonoPaymentMethod] = useState<'efectivo' | 'transferencia' | 'tarjeta_credito' | 'tarjeta_debito'>('efectivo');
     const [dueDate, setDueDate] = useState('');
 
     // Logística de Entrega
@@ -687,6 +688,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             installmentsCount: paymentMethod === 'credito' ? (parseInt(String(installmentsCount)) || 1) : 1,
             installmentFrequency: paymentMethod === 'credito' ? installmentFrequency : null,
             abono: paymentMethod === 'credito' ? parseFloat(abono) || 0 : 0,
+            abonoPaymentMethod: (paymentMethod === 'credito' && (parseFloat(abono) || 0) > 0) ? abonoPaymentMethod : null,
             deliveryMethod,
             deliveryFee: deliveryMethod === 'domicilio' ? parseFloat(deliveryFee) || 0 : 0,
             deliveryAddress: (deliveryMethod === 'domicilio' && differentDeliveryAddress) ? altDeliveryAddress : customerAddress,
@@ -733,6 +735,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         setInstallmentFrequency('mensual');
         setFirstDueDate(getDefaultFirstDueDate('mensual'));
         setAbono('0');
+        setAbonoPaymentMethod('efectivo');
         setDeliveryMethod('local');
         setDeliveryFee('0');
         setDifferentDeliveryAddress(false);
@@ -1947,6 +1950,22 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                 onChange={(e) => setAbono(e.target.value)}
                                                             />
                                                         </div>
+
+                                                        {(parseFloat(abono) || 0) > 0 && (
+                                                            <div className="flex flex-col gap-1.5 animate-fade-in">
+                                                                <label className="text-[11px] uppercase tracking-wider text-[#D9381E] font-bold">Método de Pago del Abono Inicial *</label>
+                                                                <select
+                                                                    className="bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-semibold outline-none cursor-pointer rounded-none"
+                                                                    value={abonoPaymentMethod}
+                                                                    onChange={(e) => setAbonoPaymentMethod(e.target.value as any)}
+                                                                >
+                                                                    <option value="efectivo">💵 Efectivo</option>
+                                                                    <option value="transferencia">🏦 Transferencia Bancaria</option>
+                                                                    <option value="tarjeta_debito">💳 Tarjeta de Débito</option>
+                                                                    <option value="tarjeta_credito">💳 Tarjeta de Crédito</option>
+                                                                </select>
+                                                            </div>
+                                                        )}
 
                                                         <div className="grid grid-cols-2 gap-3">
                                                             <div className="flex flex-col gap-1.5">

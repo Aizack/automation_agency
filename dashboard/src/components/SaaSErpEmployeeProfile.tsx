@@ -173,9 +173,12 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                             setLunchTimerActive(false);
                         }
                     } else {
-                        const shiftDate = new Date(latestShift.clock_in).toDateString();
-                        const todayDate = new Date().toDateString();
-                        if (shiftDate === todayDate) {
+                        const clockOutDate = new Date(latestShift.clock_out || latestShift.clock_in);
+                        const today = new Date();
+                        const isSameDay = clockOutDate.getFullYear() === today.getFullYear() &&
+                                          clockOutDate.getMonth() === today.getMonth() &&
+                                          clockOutDate.getDate() === today.getDate();
+                        if (isSameDay) {
                             setShiftStatus('finished');
                         } else {
                             setShiftStatus('no_started');
@@ -712,10 +715,18 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                                 )}
 
                                 {shiftStatus === 'finished' && (
-                                    <div className="col-span-3 bg-[#FAF8F5] border border-[#E2DFD7] p-4 text-center">
+                                    <div className="col-span-3 bg-[#FAF8F5] border border-[#E2DFD7] p-4 text-center space-y-2">
                                         <span className="material-symbols-outlined text-[#D9381E] text-3xl block mb-1">task_alt</span>
                                         <h4 className="font-serif text-base font-bold text-[#161616]">¡Jornada de Hoy Finalizada!</h4>
                                         <p className="text-xs text-[#6B6862] mt-1">Has registrado la salida de tu turno. Tu historial de horas queda guardado de forma segura.</p>
+                                        <button
+                                            type="button"
+                                            onClick={handleClockIn}
+                                            className="mt-2 px-4 py-2 bg-[#161616] hover:bg-[#2b2b2b] text-[#F6F4EE] text-xs font-mono font-bold uppercase tracking-wider transition cursor-pointer inline-flex items-center gap-1.5 border-0 shadow-xs"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">play_circle</span>
+                                            Iniciar Nueva Jornada
+                                        </button>
                                     </div>
                                 )}
                             </div>

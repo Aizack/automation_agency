@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { authFetch as fetch } from '../utils/api';
 
 export interface ColorOption {
     name: string;

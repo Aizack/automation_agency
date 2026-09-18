@@ -475,3 +475,15 @@ Stack:
 Stack: 
 [2026-09-14T15:56:19.889Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
 Stack: 
+[2026-09-15T22:17:32.332Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 
+[2026-09-16T17:46:47.899Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 
+[2026-09-16T21:42:19.667Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 
+[2026-09-16T22:32:05.562Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 
+[2026-09-17T19:45:43.405Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 
+[2026-09-18T19:35:25.801Z] [ERROR] [ALERT RAISED] Key: whatsapp_session_expired | La sesión de WhatsApp para client_tnqpeqj4 ha expirado o se ha desconectado. | Tenant: client_tnqpeqj4 | Error: Es necesario escanear un nuevo código QR desde la plataforma para restablecer el canal.
+Stack: 

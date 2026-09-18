@@ -3159,10 +3159,11 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
     if (paymentMethod === 'cuotas' || paymentMethod === 'credito') {
       // Registrar abono inicial si aplica (Cuota #0, ya pagada)
       if (initialAbono > 0) {
+        const abonoMethod = req.body.abonoPaymentMethod || req.body.abono_payment_method || req.body.paymentMethod || 'efectivo';
         await dbClient.query(`
-          INSERT INTO invoice_installments (invoice_id, installment_number, due_date, amount, status, paid_amount, paid_at)
-          VALUES ($1, 0, NOW(), $2, 'paid', $2, NOW())
-        `, [invoice.id, initialAbono]);
+          INSERT INTO invoice_installments (invoice_id, installment_number, due_date, amount, status, paid_amount, paid_at, payment_method)
+          VALUES ($1, 0, NOW(), $2, 'paid', $2, NOW(), $3)
+        `, [invoice.id, initialAbono, abonoMethod]);
       }
 
       // Dividir saldo restante en cuotas
@@ -4909,8 +4910,8 @@ app.get('/api/clients/:clientId/invoices/:invoiceId/installments', authenticateT
 app.put('/api/clients/:clientId/invoices/:invoiceId/installments/:installmentId/pay', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   const dbClient = await pool.connect();
   try {
-    const { invoiceId, installmentId } = req.params;
-    const { amount, actionType } = req.body; // actionType: 'pay' | 'refinance' | 'accumulate'
+    const { amount, actionType, paymentMethod } = req.body; // actionType: 'pay' | 'refinance' | 'accumulate'
+    const pMethod = paymentMethod || req.body.payment_method || null;
 
     await dbClient.query('BEGIN');
 
@@ -5008,12 +5009,41 @@ app.put('/api/clients/:clientId/invoices/:invoiceId/installments/:installmentId/
       const totalPaid = currentPaid + payVal;
       const isFullyPaid = totalPaid >= currentAmount;
 
-      await dbClient.query(
-        `UPDATE invoice_installments 
-         SET paid_amount = $1, status = $2, paid_at = $3
-         WHERE id = $4`,
-        [totalPaid, isFullyPaid ? 'paid' : 'pending', isFullyPaid ? new Date() : null, installmentId]
-      );
+      if (isFullyPaid) {
+        await dbClient.query(
+          `UPDATE invoice_installments 
+           SET paid_amount = $1, status = 'paid', paid_at = NOW(), payment_method = $2
+           WHERE id = $3`,
+          [currentAmount, pMethod, installmentId]
+        );
+      } else {
+        // Abono Parcial (ej: abonó $50.000 de $95.000)
+        // 1. Marcar la cuota actual como 'partially_paid' con amount = totalPaid y paid_amount = totalPaid
+        await dbClient.query(
+          `UPDATE invoice_installments 
+           SET amount = $1, paid_amount = $1, status = 'partially_paid', paid_at = NOW(), payment_method = $2
+           WHERE id = $3`,
+          [totalPaid, pMethod, installmentId]
+        );
+
+        // 2. Generar una nueva cuota por el saldo restante ($45.000)
+        const remainingBalance = currentAmount - totalPaid;
+
+        // Reenumerar cuotas posteriores (incrementar installment_number > inst.installment_number en +1)
+        await dbClient.query(
+          `UPDATE invoice_installments 
+           SET installment_number = installment_number + 1 
+           WHERE invoice_id = $1 AND installment_number > $2`,
+          [invoiceId, inst.installment_number]
+        );
+
+        // Insertar la cuota nueva con el saldo pendiente en la posición installment_number + 1
+        await dbClient.query(
+          `INSERT INTO invoice_installments (invoice_id, installment_number, due_date, amount, status, paid_amount)
+           VALUES ($1, $2, $3, $4, 'pending', 0.00)`,
+          [invoiceId, inst.installment_number + 1, inst.due_date, remainingBalance]
+        );
+      }
     }
 
     // Verificar si quedan cuotas pendientes en total

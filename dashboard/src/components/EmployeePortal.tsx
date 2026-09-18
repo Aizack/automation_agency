@@ -583,9 +583,12 @@ export const EmployeePortal: React.FC = () => {
                             }
                         }
                     } else {
-                        const shiftDate = new Date(latestShift.clock_in).toDateString();
-                        const todayDate = new Date().toDateString();
-                        if (shiftDate === todayDate) {
+                        const clockOutDate = new Date(latestShift.clock_out || latestShift.clock_in);
+                        const today = new Date();
+                        const isSameDay = clockOutDate.getFullYear() === today.getFullYear() &&
+                                          clockOutDate.getMonth() === today.getMonth() &&
+                                          clockOutDate.getDate() === today.getDate();
+                        if (isSameDay) {
                             setShiftStatus('finished');
                         } else {
                             setShiftStatus('no_started');
@@ -1688,8 +1691,16 @@ export const EmployeePortal: React.FC = () => {
                                 )}
 
                                 {shiftStatus === 'finished' && (
-                                    <div className="col-span-2 glass-card p-4 text-center text-xs text-primary font-medium border border-primary/20 bg-primary/5">
-                                        ✅ ¡Jornada completada exitosamente! Que tengas un excelente día de descanso.
+                                    <div className="col-span-2 glass-card p-4 text-center text-xs text-primary font-medium border border-primary/20 bg-primary/5 space-y-2">
+                                        <p>✅ ¡Jornada completada exitosamente! Que tengas un excelente día de descanso.</p>
+                                        <button
+                                            type="button"
+                                            onClick={handleShiftStart}
+                                            className="px-3.5 py-1.5 bg-primary text-on-primary hover:bg-primary/90 text-xs font-bold rounded-lg transition cursor-pointer inline-flex items-center gap-1.5 uppercase tracking-wider shadow-sm mt-1"
+                                        >
+                                            <span className="material-symbols-outlined text-[15px]">play_circle</span>
+                                            Iniciar Nueva Jornada
+                                        </button>
                                     </div>
                                 )}
                             </div>

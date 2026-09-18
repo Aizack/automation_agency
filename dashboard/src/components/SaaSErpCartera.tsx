@@ -46,6 +46,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedInstallment, setSelectedInstallment] = useState<Installment | null>(null);
   const [payAmount, setPayAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'transferencia' | 'tarjeta_debito' | 'tarjeta_credito'>('efectivo');
   const [actionType, setActionType] = useState<'pay' | 'refinance' | 'accumulate'>('pay');
   const [transactionSuccess, setTransactionSuccess] = useState(false);
 
@@ -105,6 +106,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
     setSelectedInstallment(inst);
     const pending = parseFloat(inst.amount) - parseFloat(inst.paid_amount);
     setPayAmount(pending.toFixed(2));
+    setPaymentMethod('efectivo');
     setActionType('pay');
     setShowPayModal(true);
   };
@@ -114,12 +116,14 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
     if (!selectedInvoice || !selectedInstallment) return;
 
     try {
+      const numericAmount = parseFloat(payAmount) || 0;
       const res = await fetch(`/api/clients/${clientId}/invoices/${selectedInvoice.id}/installments/${selectedInstallment.id}/pay`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: parseFloat(payAmount) || 0,
-          actionType: actionType
+          amount: numericAmount,
+          actionType: actionType,
+          paymentMethod: (actionType === 'pay' && numericAmount > 0) ? paymentMethod : null
         })
       });
       const json = await res.json();
@@ -382,15 +386,17 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                               <span className={`px-2 py-0.5 rounded-none text-[9px] font-mono font-bold uppercase tracking-wider border ${
                                 inst.status === 'paid' 
                                   ? 'bg-[#E6F4EA] text-[#137333] border-[#137333]/30' 
-                                  : new Date(inst.due_date) < new Date()
-                                    ? 'bg-[#FCE8E6] text-[#C5221F] border-[#C5221F]/30'
-                                    : 'bg-[#FEF7E0] text-[#B06000] border-[#B06000]/30'
+                                  : inst.status === 'partially_paid'
+                                    ? 'bg-[#FEF7E0] text-[#B06000] border-[#B06000]/30'
+                                    : new Date(inst.due_date) < new Date()
+                                      ? 'bg-[#FCE8E6] text-[#C5221F] border-[#C5221F]/30'
+                                      : 'bg-[#FEF7E0] text-[#B06000] border-[#B06000]/30'
                               }`}>
-                                {inst.status === 'paid' ? 'PAGADO' : new Date(inst.due_date) < new Date() ? 'VENCIDO' : 'PENDIENTE'}
+                                {inst.status === 'paid' ? 'PAGADO' : inst.status === 'partially_paid' ? 'ABONADO' : new Date(inst.due_date) < new Date() ? 'VENCIDO' : 'PENDIENTE'}
                               </span>
                             </td>
                             <td className="p-3 text-right">
-                              {inst.status !== 'paid' && (
+                              {inst.status !== 'paid' && inst.status !== 'partially_paid' && (
                                 <button
                                   type="button"
                                   onClick={() => handleOpenPayModal(inst)}
@@ -471,19 +477,39 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                 </div>
 
                 {actionType === 'pay' && (
-                  <div className="space-y-1">
-                    <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
-                      Monto del Abono ($ COP)
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      step="0.01"
-                      value={payAmount}
-                      onChange={(e) => setPayAmount(e.target.value)}
-                      className="w-full bg-white border border-[#E2DFD7] rounded-none px-3 py-2 text-[#161616] focus:border-[#161616] outline-none text-xs font-mono font-bold"
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-1">
+                      <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                        Monto del Abono ($ COP)
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        step="0.01"
+                        value={payAmount}
+                        onChange={(e) => setPayAmount(e.target.value)}
+                        className="w-full bg-white border border-[#E2DFD7] rounded-none px-3 py-2 text-[#161616] focus:border-[#161616] outline-none text-xs font-mono font-bold"
+                      />
+                    </div>
+
+                    {(parseFloat(payAmount) || 0) > 0 && (
+                      <div className="space-y-1 animate-fade-in">
+                        <label className="font-mono font-bold uppercase text-[10px] text-[#D9381E] tracking-wider block">
+                          Método de Pago *
+                        </label>
+                        <select
+                          value={paymentMethod}
+                          onChange={(e) => setPaymentMethod(e.target.value as any)}
+                          className="w-full bg-white border border-[#E2DFD7] rounded-none px-3 py-2 text-[#161616] focus:border-[#161616] outline-none cursor-pointer text-xs font-mono font-bold"
+                        >
+                          <option value="efectivo">💵 Efectivo</option>
+                          <option value="transferencia">🏦 Transferencia Bancaria</option>
+                          <option value="tarjeta_debito">💳 Tarjeta de Débito</option>
+                          <option value="tarjeta_credito">💳 Tarjeta de Crédito</option>
+                        </select>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {actionType === 'accumulate' && (

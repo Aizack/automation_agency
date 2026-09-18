@@ -852,8 +852,11 @@ export const initDatabase = async () => {
                 amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
                 status VARCHAR(20) NOT NULL DEFAULT 'pending',
                 paid_amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
-                paid_at TIMESTAMP
+                paid_at TIMESTAMP,
+                payment_method VARCHAR(50) DEFAULT NULL
             );
+
+            ALTER TABLE invoice_installments ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) DEFAULT NULL;
 
             CREATE TABLE IF NOT EXISTS formulas (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
