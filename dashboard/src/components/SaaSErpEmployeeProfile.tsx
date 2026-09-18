@@ -173,7 +173,13 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                             setLunchTimerActive(false);
                         }
                     } else {
-                        setShiftStatus('finished');
+                        const shiftDate = new Date(latestShift.clock_in).toDateString();
+                        const todayDate = new Date().toDateString();
+                        if (shiftDate === todayDate) {
+                            setShiftStatus('finished');
+                        } else {
+                            setShiftStatus('no_started');
+                        }
                         setTimerActive(false);
                         setLunchTimerActive(false);
                     }

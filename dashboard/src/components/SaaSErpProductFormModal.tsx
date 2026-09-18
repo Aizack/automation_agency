@@ -77,6 +77,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     onClose,
     clientId,
     categories,
+    token,
     isAdmin = true,
     editingProduct = null,
     isDraftMode = false,
@@ -247,9 +248,13 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     const handleCreateCategory = async () => {
         if (!newCategoryName.trim()) return;
         try {
+            const authToken = token || localStorage.getItem('emp_token') || localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
             const res = await fetch(`/api/clients/${clientId}/categories`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
                 body: JSON.stringify({ name: newCategoryName })
             });
             const json = await res.json();
@@ -354,9 +359,13 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                 : `/api/clients/${clientId}/products`;
             const method = editingProduct ? 'PUT' : 'POST';
 
+            const authToken = token || localStorage.getItem('emp_token') || localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
             const res = await fetch(url, {
                 method,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
                 body: JSON.stringify(body)
             });
             const data = await res.json();

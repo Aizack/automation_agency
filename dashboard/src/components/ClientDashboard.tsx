@@ -236,7 +236,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             setShiftStatus('working');
           }
         } else {
-          setShiftStatus('finished');
+          const shiftDate = new Date(latest.clock_in).toDateString();
+          const todayDate = new Date().toDateString();
+          if (shiftDate === todayDate) {
+            setShiftStatus('finished');
+          } else {
+            setShiftStatus('no_started');
+          }
         }
       } else {
         setShiftStatus('no_started');
