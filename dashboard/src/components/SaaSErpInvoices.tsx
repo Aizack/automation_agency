@@ -154,12 +154,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     // Condiciones de Pago
     const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'transferencia' | 'tarjeta_credito' | 'tarjeta_debito' | 'credito'>('efectivo');
     const [transferBank, setTransferBank] = useState('');
-    const [transferBankSelect, _setTransferBankSelect] = useState('');
-    const [customTransferBank, _setCustomTransferBank] = useState('');
+    const [transferBankSelect, setTransferBankSelect] = useState('');
+    const [customTransferBank, setCustomTransferBank] = useState('');
     const [transferDestinationAccount, setTransferDestinationAccount] = useState('');
-    const [_bankAccounts, _setBankAccounts] = useState<any[]>([]);
+    const [bankAccounts, setBankAccounts] = useState<any[]>([]);
     const [notes, setNotes] = useState('');
-    void transferBankSelect; void customTransferBank; void _bankAccounts;
     const getDefaultFirstDueDate = (freq: 'semanal' | 'quincenal' | 'mensual') => {
         const d = new Date();
         if (freq === 'semanal') {
@@ -279,7 +278,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             else if (prodData.error) console.warn('[Productos] Error API:', prodData.error);
             if (crmData.success) setCrmCustomers(crmData.customers || []);
             if (clientData.success) setClientProfile(clientData.data || null);
-            if (bankData.success) _setBankAccounts(bankData.accounts || []);
+            if (bankData.success) setBankAccounts(bankData.accounts || []);
             if (empData.success) setEmployees(empData.employees || []);
             if (tblData.success) setTables(tblData.tables || []);
         } catch (err: any) {
@@ -728,8 +727,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         setCustomerAddress('');
         setPaymentMethod('efectivo');
         setTransferBank('');
-        _setTransferBankSelect('');
-        _setCustomTransferBank('');
+        setTransferBankSelect('');
+        setCustomTransferBank('');
         setTransferDestinationAccount('');
         setInstallmentsCount(1);
         setInstallmentFrequency('mensual');
@@ -1419,6 +1418,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             <option value="CE">CE</option>
                                                             <option value="PP">PP</option>
                                                         </select>
+
+
                                                         <input 
                                                             type="text" 
                                                             className="w-full bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-mono font-semibold" 
@@ -1935,6 +1936,80 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                         <option value="credito">📄 Crédito Directo (Pago a Cuotas)</option>
                                                     </select>
                                                 </div>
+
+                                                {(paymentMethod === 'transferencia' || (paymentMethod === 'credito' && (parseFloat(abono) || 0) > 0 && abonoPaymentMethod === 'transferencia')) && (
+                                                    <div className="bg-[#FAF8F5] p-4 border border-[#E2DFD7] space-y-3 animate-fade-in">
+                                                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#D9381E]">Detalles de la Transferencia Bancaria</p>
+                                                        
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Banco / Entidad de Origen</label>
+                                                            <select
+                                                                className="bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-semibold outline-none cursor-pointer rounded-none"
+                                                                value={transferBankSelect}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setTransferBankSelect(val);
+                                                                    if (val !== 'Otro') {
+                                                                        setTransferBank(val);
+                                                                    } else {
+                                                                        setTransferBank(customTransferBank);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <option value="">-- Seleccionar Banco / App --</option>
+                                                                <option value="Bancolombia">Bancolombia</option>
+                                                                <option value="Nequi">Nequi</option>
+                                                                <option value="Daviplata">Daviplata</option>
+                                                                <option value="Davivienda">Davivienda</option>
+                                                                <option value="Banco de Bogotá">Banco de Bogotá</option>
+                                                                <option value="BBVA">BBVA</option>
+                                                                <option value="Otro">Otro Banco / Entidad</option>
+                                                            </select>
+                                                        </div>
+
+                                                        {transferBankSelect === 'Otro' && (
+                                                            <div className="flex flex-col gap-1.5 animate-fade-in">
+                                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Nombre del Banco / Entidad</label>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Ej: Lulo Bank, Bold, Nu, etc."
+                                                                    className="bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-bold outline-none rounded-none"
+                                                                    value={customTransferBank}
+                                                                    onChange={(e) => {
+                                                                        setCustomTransferBank(e.target.value);
+                                                                        setTransferBank(e.target.value);
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Cuenta Destino de la Empresa</label>
+                                                            {bankAccounts && bankAccounts.length > 0 ? (
+                                                                <select
+                                                                    className="bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-semibold outline-none cursor-pointer rounded-none"
+                                                                    value={transferDestinationAccount}
+                                                                    onChange={(e) => setTransferDestinationAccount(e.target.value)}
+                                                                >
+                                                                    <option value="">-- Seleccionar Cuenta Destino --</option>
+                                                                    {bankAccounts.map((acc: any) => (
+                                                                        <option key={acc.id} value={`${acc.bank_name} - ${acc.account_type} (${acc.account_number})`}>
+                                                                            {acc.bank_name} - {acc.account_type} ({acc.account_number})
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            ) : (
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Ej: Nequi 3001234567 / Convenio Bancolombia"
+                                                                    className="bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-mono font-bold outline-none rounded-none"
+                                                                    value={transferDestinationAccount}
+                                                                    onChange={(e) => setTransferDestinationAccount(e.target.value)}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
 
                                                 {paymentMethod === 'credito' && (
                                                     <div className="bg-[#FAF8F5] p-4 border border-[#E2DFD7] space-y-3">

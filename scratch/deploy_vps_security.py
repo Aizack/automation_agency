@@ -16,7 +16,7 @@ def run_vps_deploy():
     client.connect(VPS_IP, username=VPS_USER, password=VPS_PASS, timeout=15)
 
     commands = [
-        "cd /app/agency-bot && git fetch origin && git checkout backup/pre-vpulse-remediation-2026-09-11 && git pull origin backup/pre-vpulse-remediation-2026-09-11",
+        "cd /app/agency-bot && git checkout -- . && git fetch origin && git checkout backup/pre-vpulse-remediation-2026-09-11 && git pull origin backup/pre-vpulse-remediation-2026-09-11",
         "cd /app/agency-bot && npm install",
         "cd /app/agency-bot/dashboard && npm install && npm run build",
         "pm2 restart all || pm2 restart agency-bot",
