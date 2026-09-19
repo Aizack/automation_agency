@@ -126,8 +126,8 @@ export const FrantErpMobileView: React.FC<FrantErpMobileViewProps> = ({
             F
           </div>
           <div>
-            <h1 className="font-serif text-base font-bold text-[#161616] leading-none tracking-tight">
-              Frant ERP
+            <h1 className="font-serif text-lg font-bold text-[#D9381E] uppercase tracking-wider leading-none" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
+              FRANT ERP
             </h1>
             <span className="text-[10px] text-[#D9381E] font-bold uppercase tracking-wider block mt-0.5">
               {clientData?.branchName || clientData?.branch_name || clientData?.name || 'Sede Principal'}

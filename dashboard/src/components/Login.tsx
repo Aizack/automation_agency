@@ -75,17 +75,26 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           <div style={{
             width: 54, height: 54,
             borderRadius: 'var(--radius-lg)',
-            background: 'rgba(216,162,78,0.12)',
-            border: '1px solid rgba(216,162,78,0.25)',
+            background: 'rgba(217,56,30,0.12)',
+            border: '1px solid rgba(217,56,30,0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <span className="material-symbols-outlined" style={{ color: 'var(--primary-color)', fontSize: 30 }}>
+            <span className="material-symbols-outlined" style={{ color: '#D9381E', fontSize: 30 }}>
               smart_toy
             </span>
           </div>
           <div>
-            <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-color)', margin: 0, letterSpacing: '-0.02em' }}>
-              Diaz Lab Automations
+            <h1 style={{
+              fontFamily: '"Instrument Serif", Georgia, serif',
+              fontSize: '2.2rem',
+              fontWeight: 400,
+              color: '#D9381E',
+              margin: 0,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              lineHeight: 1.1
+            }}>
+              FRANT ERP
             </h1>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
               Plataforma de gestión inteligente
@@ -179,7 +188,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
           <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
-            Diaz Lab Automations © 2026 • Todos los derechos reservados.
+            FRANT ERP © 2026 • Todos los derechos reservados.
           </p>
           <div style={{ display: 'flex', gap: 12, fontSize: '0.68rem', color: 'var(--primary-color)' }}>
             <button

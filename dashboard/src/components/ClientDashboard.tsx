@@ -1594,7 +1594,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 F
               </div>
               <div>
-                <h3 className="font-serif text-base font-bold text-[#161616]">Frant ERP</h3>
+                <h3 className="font-serif text-lg font-bold text-[#D9381E] uppercase tracking-wider" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>FRANT ERP</h3>
                 <span className="text-[10px] text-[#D9381E] font-bold uppercase tracking-wider block">
                   {clientData?.branchName || (clientData as any)?.branch_name || clientData?.name || 'Sede Principal'}
                 </span>
@@ -1738,8 +1738,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               <span className="material-symbols-outlined text-2xl">menu</span>
             </button>
 
-            <div className="top-header-brand-zen font-serif text-2xl md:text-3xl font-normal text-[#161616]" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
-              Frant ERP
+            <div className="top-header-brand-zen font-serif text-2xl md:text-3xl font-bold text-[#D9381E] uppercase tracking-wider" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
+              FRANT ERP
             </div>
           </div>
 
