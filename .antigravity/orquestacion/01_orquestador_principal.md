@@ -1,18 +1,20 @@
 # ORQUESTADOR PRINCIPAL DEL ERP MULTI-TENANT
 
 ## Misión
-Evaluar cualquier solicitud de desarrollo del usuario, seleccionar el Agente Horizontal Técnico adecuado y el Agente Vertical de Negocio correspondiente, aplicando la REGLA ABSOLUTA ZERO-BREAK.
+Evaluar cualquier solicitud de desarrollo del usuario, seleccionar el Agente Horizontal Técnico adecuado (BD, Backend, UI/UX, Seguridad, QA) y el Agente Vertical de Negocio correspondiente (1:1 alineado con el Menú Lateral), aplicando la REGLA ABSOLUTA ZERO-BREAK.
 
 ## Regla Suprema Zero-Break
 - **LOS FORMULARIOS OPERATIVOS Y CÓDIGO ESTABLECIDO NUNCA SE MODIFICAN DE FORMA DESTRUCTIVA.**
 - Toda nueva funcionalidad se agrega como una extensión modular aislada.
 
-## Matriz de Cruce de Agentes
+## Matriz de Cruce 1:1 Alineada con el Menú Lateral
 
-| Tarea del Usuario | Agente Horizontal (Tech) | Agente Vertical (Negocio) |
+| Sección del Menú ERP | Submódulos Incluidos | Agente Vertical Asignado |
 |---|---|---|
-| Nueva tabla de exámenes en optometría | `01_arquitecto_sql_postgresql` | `01_optometria_y_laboratorio` |
-| Ajuste en API de Factura DIAN | `02_desarrollador_backend_nodejs` | `02_facturacion_dian_fiscal` |
-| Nuevo diseño de comandes en pantalla | `03_disenador_ui_ux_react` | `03_restaurantes_food_erp` |
-| Notificaciones automáticas WhatsApp | `02_desarrollador_backend_nodejs` | `04_whatsapp_ia_crm` |
-| Corrección de bug o excepción | `05_qa_tester_build` | Módulo afectado |
+| **1. Datos de la Empresa** | Datos Empresa, Habilitación DIAN, Nueva Sede, Configuración Agente IA | `01_datos_empresa_y_sedes.md` |
+| **2. Logística & Stock** | Inventario de Productos, Trabajos de Laboratorio, Despachos y Domicilios | `02_logistica_inventario_laboratorio.md` |
+| **3. Facturación** | Facturación POS & DIAN, Cotizaciones, Documentos Soporte, Arqueo Caja, Cartera | `03_facturacion_pos_dian_cartera.md` |
+| **4. Finanzas** | Contabilidad, Nómina Electrónica ⚡, Exógena & Form 350, Conciliación, Planeación | `04_finanzas_contabilidad_nomina.md` |
+| **5. Clientes & Difusión** | Directorio Clientes (CRM), Campañas de Campo, Difusión Promocional, Metas Sales | `05_crm_clientes_difusion.md` |
+| **6. Citas & Salud Visual** | Programación de Citas, Optometría (Fórmulas Oftálmicas) | `06_citas_y_salud_visual.md` |
+| **7. Personal & Seguridad** | Administración de Personal, Accesos/Permisos, Auditoría, Estado del Sistema | `07_personal_seguridad_auditoria.md` |
