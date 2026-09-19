@@ -43,3 +43,11 @@ Este archivo sirve como memoria persistente del proyecto para sincronizar rápid
 *   **GitHub Action Secret:** `VPS_PASSWORD` (`Kadabrocol0726++`) en [GitHub Secrets](https://github.com/Aizack/automation_agency/settings/secrets/actions)
 *   **Ramas de Backup:** `backup/v1-stable` y `backup/previous-stable`
 *   **Documentación Completa:** [DESPLIEGUE_VPS_Y_GITHUB_ACTIONS.md](file:///d:/Archivos/proyectos/Agencia%20Automatizaci%C3%B3n/Bot%20multi-tenant/docs/DESPLIEGUE_VPS_Y_GITHUB_ACTIONS.md)
+
+---
+
+## 🤖 Marco de Agentes Antigravity (`.antigravity/`)
+*   **Agentes Horizontales Técnicos:** `01_arquitecto_sql_postgresql`, `02_desarrollador_backend_nodejs`, `03_disenador_ui_ux_react`, `04_auditor_seguridad_jwt`, `05_qa_tester_build`.
+*   **Agentes Verticales de Negocio:** `01_optometria_y_laboratorio`, `02_facturacion_dian_fiscal`, `03_restaurantes_food_erp`, `04_whatsapp_ia_crm`, `05_inventario_multisede`.
+*   **Regla Suprema Zero-Break:** Ninguna tarea destruye ni modifica formularios o componentes estables activos.
+
