@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { LegalDocsModal } from './LegalDocsModal';
 
-type NegocioAccessMode = 'admin' | 'employee_erp';
-
 interface LoginProps {
   onLoginSuccess: (clientId: string, role: string, token: string, extra?: Record<string, any>) => void;
 }
@@ -11,92 +9,42 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState<'terminos' | 'privacidad' | 'ia_transparency'>('terminos');
 
-  // Modo de ingreso (Admin con Usuario/Contraseña vs Empleado con Teléfono/PIN)
-  const [negocioMode, setNegocioMode] = useState<NegocioAccessMode>('admin');
-
-  // Modo Admin
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Modo Empleado / Personal
-  const [phone, setPhone] = useState('');
-  const [pin, setPin] = useState('');
-  const [showPin, setShowPin] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 1. LOGIN AL ERP (Pestaña Negocio)
-  const handleNegocioLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (negocioMode === 'admin') {
-      // Admin / Dueño con Usuario y Contraseña
-      if (!username || !password) {
-        setError('Ingresa tu usuario y contraseña.');
-        return;
-      }
+    if (!username.trim() || !password) {
+      setError('Ingresa tu usuario o teléfono y tu contraseña o PIN.');
+      return;
+    }
 
-      try {
-        setLoading(true);
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: username.trim(), password }),
-        });
-        const json = await res.json();
+    try {
+      setLoading(true);
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+      const json = await res.json();
 
-        if (json.success) {
-          onLoginSuccess(json.data.id, json.data.role, json.data.token, json.data);
-        } else {
-          setError(json.error || 'Credenciales incorrectas.');
-        }
-      } catch {
-        setError('Error de conexión al servidor.');
-      } finally {
-        setLoading(false);
+      if (json.success) {
+        onLoginSuccess(json.data.id, json.data.role, json.data.token, json.data);
+      } else {
+        setError(json.error || 'Credenciales incorrectas.');
       }
-    } else {
-      // Empleado entrando al ERP con Teléfono y PIN (4 dígitos)
-      if (!phone || !pin) {
-        setError('Ingresa tu número de teléfono y PIN de 4 dígitos.');
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const res = await fetch('/api/auth/employee-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: phone.trim(), pin: pin.trim() }),
-        });
-        const json = await res.json();
-
-        if (json.success) {
-          if (!json.data.hasErpAccess) {
-            setError('Tu rol de empleado no tiene permisos para acceder al ERP. Usa la pestaña "Empleado" para entrar a tu perfil personal.');
-            return;
-          }
-          onLoginSuccess(json.data.clientId, 'employee', json.data.token, {
-            employeeRole: json.data.employeeRole,
-            permissions: json.data.permissions,
-            hasErpAccess: true,
-            name: json.data.name,
-            clientName: json.data.clientName,
-          });
-        } else {
-          setError(json.error || 'Teléfono o PIN incorrectos.');
-        }
-      } catch {
-        setError('Error de conexión al servidor.');
-      } finally {
-        setLoading(false);
-      }
+    } catch {
+      setError('Error de conexión al servidor.');
+    } finally {
+      setLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
@@ -145,8 +93,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           </div>
         </div>
 
-        {/* Acceso Unificado KOI ERP */}
-
         {/* Mensaje de Error */}
         {error && (
           <div style={{
@@ -163,153 +109,70 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           </div>
         )}
 
-        {/* Formulario de Login al ERP */}
-        <form onSubmit={handleNegocioLogin} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        {/* Formulario de Login Unificado */}
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           
-          {/* Sub-selector de tipo de ingreso al ERP */}
-          <div className="login-sub-selector">
-            <button
-              type="button"
-              onClick={() => { setNegocioMode('admin'); setError(null); }}
-              className={`login-sub-tab ${negocioMode === 'admin' ? 'active' : ''}`}
-            >
-              <span>👑</span>
-              <span>Dueño / Admin</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => { setNegocioMode('employee_erp'); setError(null); }}
-              className={`login-sub-tab ${negocioMode === 'employee_erp' ? 'active' : ''}`}
-            >
-              <span>💼</span>
-              <span>Personal ERP</span>
-            </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Usuario o Teléfono
+            </label>
+            <input
+              type="text"
+              className="input-field"
+              placeholder="Ingresa tu usuario o teléfono"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              autoComplete="username"
+            />
           </div>
 
-          {/* Campos para Modo Admin (Usuario + Contraseña) */}
-          {negocioMode === 'admin' ? (
-            <>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Usuario Admin
-                </label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="Ingresa tu usuario"
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  autoComplete="username"
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Contraseña
-                </label>
-                <div style={{ position: 'relative', width: '100%' }}>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="input-field"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    style={{ paddingRight: '40px', width: '100%' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '4px',
-                      borderRadius: '4px',
-                    }}
-                    title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-                      {showPassword ? 'visibility_off' : 'visibility'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            /* Campos para Modo Personal ERP (Teléfono + PIN 4 dígitos) */
-            <>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Número de teléfono
-                </label>
-                <input
-                  type="tel"
-                  className="input-field"
-                  placeholder="Ej. 573001234567"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  autoComplete="tel"
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  PIN de acceso (6 dígitos)
-                </label>
-                <div style={{ position: 'relative', width: '100%' }}>
-                  <input
-                    type={showPin ? 'text' : 'password'}
-                    className="input-field"
-                    maxLength={6}
-                    placeholder="● ● ● ● ● ●"
-                    value={pin}
-                    onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    style={{ textAlign: 'center', fontSize: '1.4rem', letterSpacing: '0.4em', fontWeight: 700, paddingRight: '40px', width: '100%' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPin(!showPin)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '4px',
-                      borderRadius: '4px',
-                    }}
-                    title={showPin ? 'Ocultar PIN' : 'Mostrar PIN'}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-                      {showPin ? 'visibility_off' : 'visibility'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Contraseña o PIN
+            </label>
+            <div style={{ position: 'relative', width: '100%' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="input-field"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password"
+                style={{ paddingRight: '40px', width: '100%' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px',
+                  borderRadius: '4px',
+                }}
+                title={showPassword ? 'Ocultar contraseña/PIN' : 'Mostrar contraseña/PIN'}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                  {showPassword ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
+            </div>
+          </div>
 
           <button type="submit" className="btn-primary" disabled={loading}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', marginTop: 6 }}>
             {loading ? (
-              <><span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>sync</span> Entrando al ERP...</>
+              <><span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>sync</span> Iniciando sesión...</>
             ) : (
-              <><span className="material-symbols-outlined" style={{ fontSize: 16 }}>login</span> Acceder al ERP</>
+              <><span className="material-symbols-outlined" style={{ fontSize: 16 }}>login</span> Iniciar Sesión</>
             )}
           </button>
         </form>
@@ -358,3 +221,4 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     </div>
   );
 };
+
