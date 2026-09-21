@@ -838,6 +838,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                 <option value="Madera / Bamboo">Madera / Bamboo</option>
                                                 <option value="Inyectado / Ultem">Inyectado / Ultem</option>
                                                 <option value="Silicona / Flexible">Silicona / Flexible (Infantil)</option>
+                                                <option value="Seguridad">Seguridad</option>
                                             </select>
                                         </div>
 
