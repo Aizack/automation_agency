@@ -34,6 +34,7 @@ import { SaaSErpAiAgentModule } from './SaaSErpAiAgentModule';
 import { SaaSErpEmployeeProfile } from './SaaSErpEmployeeProfile';
 import { NotificationBell } from './NotificationBell';
 import { FrantErpMobileView } from './FrantErpMobileView';
+import { SaaSErpECommerceWizard } from './SaaSErpECommerceWizard';
 
 interface Client {
   id: string;
@@ -93,6 +94,18 @@ interface ClientDashboardProps {
   clientId: string;
   onBack: () => void;
 }
+
+const isRestaurantCategory = (cat?: string) => {
+  if (!cat) return false;
+  const lower = cat.toLowerCase().trim();
+  return lower === 'restaurante' || lower.includes('restauran') || lower.includes('gastrono') || lower.includes('bar') || lower.includes('cafeteria');
+};
+
+const isOpticaCategory = (cat?: string) => {
+  if (!cat) return false;
+  const lower = cat.toLowerCase().trim();
+  return lower === 'optica' || lower.includes('optic') || lower.includes('salud');
+};
 
 export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawClientId, onBack }) => {
   const clientId = (rawClientId && rawClientId !== 'undefined')
@@ -1125,6 +1138,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     Datos de la Empresa
                   </button>
                 </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('tienda_web' as any)} 
+                    className={activeTab === ('tienda_web' as any) ? 'active-link font-bold text-blue-600' : 'text-blue-600 font-bold'}
+                  >
+                    E-Commerce
+                  </button>
+                </li>
                 {hasPermission('billing') && (
                   <li>
                     <button 
@@ -1181,7 +1202,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 </span>
               </button>
               <ul className={`sub-menu ${openSubMenus.logistica ? 'open' : ''}`}>
-                {hasPermission('inventory') && clientData?.enabledModules?.inventory !== false && clientData?.category !== 'restaurante' && (
+                {hasPermission('inventory') && clientData?.enabledModules?.inventory !== false && !isRestaurantCategory(clientData?.category || category) && (
                   <li>
                     <button 
                       onClick={() => setActiveTab('inventario')} 
@@ -1191,7 +1212,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     </button>
                   </li>
                 )}
-                {hasPermission('lab') && clientData?.category === 'optica' && (
+                {hasPermission('lab') && isOpticaCategory(clientData?.category || category) && (
                   <li>
                     <button 
                       onClick={() => setActiveTab('lab_jobs')} 
@@ -1374,7 +1395,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     </button>
                   </li>
                 )}
-                {hasPermission('campaigns') && clientData?.enabledModules?.field_visits !== false && clientData?.category === 'optica' && (
+                {hasPermission('campaigns') && clientData?.enabledModules?.field_visits !== false && isOpticaCategory(clientData?.category || category) && (
                   <li>
                     <button 
                       onClick={() => setActiveTab('campanias')} 
@@ -1418,8 +1439,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 4a8 8 0 100 16 8 8 0 000-16zM12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
                 <span className="nav-text">
                   <span>
-                    {clientData?.category === 'restaurante' ? 'Reservas' :
-                     clientData?.category === 'optica' ? 'Citas & Salud Visual' : 'Agenda'}
+                    {isRestaurantCategory(clientData?.category || category) ? 'Reservas' :
+                     isOpticaCategory(clientData?.category || category) ? 'Citas & Salud Visual' : 'Agenda'}
                   </span> 
                   <span className={`caret-arrow ${openSubMenus.citas ? 'open' : ''}`}>▾</span>
                 </span>
@@ -1431,12 +1452,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                       onClick={() => setActiveTab('agenda')} 
                       className={activeTab === 'agenda' ? 'active-link' : ''}
                     >
-                      {clientData?.category === 'restaurante' ? 'Reservas de Mesa' :
-                       clientData?.category === 'optica' ? 'Programación de Citas' : 'Agenda Citas'}
+                      {isRestaurantCategory(clientData?.category || category) ? 'Reservas de Mesa' :
+                       isOpticaCategory(clientData?.category || category) ? 'Programación de Citas' : 'Agenda Citas'}
                     </button>
                   </li>
                 )}
-                {hasPermission('formulas') && clientData?.category === 'optica' && (
+                {hasPermission('formulas') && isOpticaCategory(clientData?.category || category) && (
                   <li>
                     <button 
                       onClick={() => setActiveTab('formulas')} 
@@ -1509,7 +1530,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           )}
 
           {/* Gastronomía & Mesas (si es categoría restaurante) */}
-          {clientData?.category === 'restaurante' && (
+          {isRestaurantCategory(clientData?.category || category) && (
             <div className="nav-item">
               <button 
                 className={`nav-item-btn ${['restaurante_menu', 'inventario_insumos', 'restaurante_mesas', 'restaurante_kds'].includes(activeTab) ? 'active' : ''}`} 
@@ -2120,6 +2141,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         {activeTab === 'dian_habilitacion' && (
           <div className="glass-card p-6 rounded-2xl border border-outline/10">
             <SaaSErpHabilitacionDian clientId={clientId} />
+          </div>
+        )}
+
+        {activeTab === ('tienda_web' as any) && (
+          <div className="animate-fade-in">
+            <SaaSErpECommerceWizard clientId={clientId} />
           </div>
         )}
 

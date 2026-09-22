@@ -978,6 +978,19 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     </button>
                     <button
                         type="button"
+                        onClick={() => {
+                            const catalogUrl = `https://diazlab.online/c/${clientId}`;
+                            navigator.clipboard.writeText(catalogUrl);
+                            alert(`¡Enlace de Catálogo Web copiado al portapapeles!\n\n${catalogUrl}`);
+                        }}
+                        className="p-2.5 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition text-[11px] font-bold shrink-0 uppercase tracking-wider flex items-center gap-1.5 border-0 shadow-sm"
+                        title="Copiar enlace del Catálogo Web para clientes"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">storefront</span>
+                        Catálogo Web
+                    </button>
+                    <button
+                        type="button"
                         onClick={openAuditModalGeneral}
                         className="p-2.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] cursor-pointer transition text-[11px] font-bold shrink-0 uppercase tracking-wider flex items-center gap-1.5"
                         title="Ver Bitácora de Cambios de Inventario"

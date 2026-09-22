@@ -7,14 +7,20 @@ import { EmployeePortal } from './components/EmployeePortal';
 import { ActivateAccount } from './components/ActivateAccount';
 import { LandingPage } from './components/LandingPage';
 import { PublicRestaurantMenu } from './components/PublicRestaurantMenu';
+import { PublicCatalog } from './components/public/PublicCatalog';
 import { clearAllSessionData, getStoredToken } from './utils/api';
 
 function App() {
-  const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing' | 'menu'>(() => {
+  const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing' | 'menu' | 'catalog'>(() => {
     const path = window.location.pathname.toLowerCase();
     const params = new URLSearchParams(window.location.search);
     const urlView = params.get('view');
     const host = window.location.hostname.toLowerCase();
+
+    // Catálogo Digital Público (/c/:slug, /catalogo/:slug, /tienda/:slug)
+    if (path.startsWith('/c/') || path.startsWith('/catalogo') || path.startsWith('/tienda/') || params.has('c') || params.has('catalog')) {
+      return 'catalog';
+    }
 
     // Carta Digital Pública para Clientes (/menu/:clientId o /m/:clientId)
     if (path.startsWith('/menu') || path.startsWith('/m/')) {
@@ -70,6 +76,13 @@ function App() {
       const urlToken = params.get('token');
       const path = window.location.pathname.toLowerCase();
       const host = window.location.hostname.toLowerCase();
+
+      // Caso Catálogo Digital Público para Clientes
+      if (path.startsWith('/c/') || path.startsWith('/catalogo') || path.startsWith('/tienda/') || params.has('c') || params.has('catalog')) {
+        setView('catalog');
+        setLoading(false);
+        return;
+      }
 
       // Caso Carta Digital Pública para Clientes
       if (path.startsWith('/menu') || path.startsWith('/m/')) {
@@ -321,6 +334,10 @@ function App() {
 
   if (view === 'menu') {
     return <PublicRestaurantMenu />;
+  }
+
+  if (view === 'catalog') {
+    return <PublicCatalog />;
   }
 
   if (view === 'client') {

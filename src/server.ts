@@ -70,6 +70,7 @@ import { initDatabase } from './database/initDb';
 import { validateEnv } from './utils/envValidator';
 import { verifyPassword, hashPassword, isHashedPassword } from './utils/passwordUtils';
 import { runAutoFixAgent } from './agents/autoFixAgent';
+import { getPublicCatalog, createCatalogOrder } from './services/catalogService';
 
 // Validar variables de entorno antes de cualquier otra cosa
 validateEnv();
@@ -790,6 +791,30 @@ app.get('/api/health', async (_req: Request, res: Response) => {
 
   const httpStatus = health.status === 'ok' ? 200 : health.status === 'degraded' ? 200 : 503;
   res.status(httpStatus).json(health);
+});
+
+// --- ENDPOINTS PÚBLICOS DE CATÁLOGO DIGITAL Y E-SHOP ---
+app.get('/api/public/catalog/:slug', async (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    const catalog = await getPublicCatalog(slug);
+    if (!catalog) {
+      return res.status(404).json({ success: false, message: 'Catálogo no encontrado o deshabilitado.' });
+    }
+    res.json({ success: true, data: catalog });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/public/catalog/:slug/orders', async (req: Request, res: Response) => {
+  try {
+    const slug = req.params.slug as string;
+    const result = await createCatalogOrder(slug, req.body);
+    res.status(201).json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(400).json({ success: false, error: error.message });
+  }
 });
 
 app.post('/api/login', async (req: Request, res: Response) => {
@@ -2144,10 +2169,33 @@ app.get('/api/clients/:clientId/categories', authenticateToken as any, authorize
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT id, name, created_at FROM product_categories WHERE client_id = $1 ORDER BY name ASC`,
+      `SELECT id, name, COALESCE(is_visible_web, true) as is_visible_web, created_at 
+       FROM product_categories 
+       WHERE client_id = $1 OR client_id = (SELECT id FROM clients WHERE slug = $1 OR username = $1 LIMIT 1) 
+       ORDER BY name ASC`,
       [clientId]
     );
     res.json({ success: true, categories: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put('/api/clients/:clientId/categories/visibility', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { categories } = req.body;
+    if (Array.isArray(categories)) {
+      for (const cat of categories) {
+        if (cat.id) {
+          const isVisible = cat.is_visible_web === true || cat.is_visible_web === 'true' || cat.is_visible_web === 1;
+          await pool.query(
+            `UPDATE product_categories SET is_visible_web = $1 WHERE id = $2`,
+            [isVisible, cat.id]
+          );
+        }
+      }
+    }
+    res.json({ success: true, message: 'Visibilidad de categorías actualizada con éxito.' });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -2161,7 +2209,7 @@ app.post('/api/clients/:clientId/categories', authenticateToken as any, authoriz
       return res.status(400).json({ success: false, error: 'El nombre de la categoría es requerido.' });
     }
     const result = await pool.query(
-      `INSERT INTO product_categories (client_id, name) VALUES ($1, $2) RETURNING id, name, created_at`,
+      `INSERT INTO product_categories (client_id, name, is_visible_web) VALUES ($1, $2, true) RETURNING id, name, is_visible_web, created_at`,
       [clientId, name.trim()]
     );
     res.json({ success: true, category: result.rows[0] });
@@ -4910,6 +4958,7 @@ app.get('/api/clients/:clientId/invoices/:invoiceId/installments', authenticateT
 app.put('/api/clients/:clientId/invoices/:invoiceId/installments/:installmentId/pay', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   const dbClient = await pool.connect();
   try {
+    const { invoiceId, installmentId } = req.params;
     const { amount, actionType, paymentMethod } = req.body; // actionType: 'pay' | 'refinance' | 'accumulate'
     const pMethod = paymentMethod || req.body.payment_method || null;
 

@@ -6,15 +6,15 @@
     "semantic_hash": ""
   },
   "dashboard/package.json": {
-    "mtime": 1789096444.5201838,
-    "seen": 1789096556.101342,
-    "ast_hash": "6e5ba4b125efb63bd77699e91461e5db",
+    "mtime": 1790044965.6048398,
+    "seen": 1790045035.8138428,
+    "ast_hash": "c9888e453b1705ed16bc773d21ad5fb8",
     "semantic_hash": ""
   },
   "dashboard/src/App.tsx": {
-    "mtime": 1788924265.1259384,
-    "seen": 1789095416.2478187,
-    "ast_hash": "661b85381fdaf856ac4613bd2883d1d5",
+    "mtime": 1790032306.6012816,
+    "seen": 1790032400.0467446,
+    "ast_hash": "fa2f5b722e054cd46a60b107f1b7ed11",
     "semantic_hash": ""
   },
   "dashboard/src/components/ActivateAccount.tsx": {
@@ -36,15 +36,15 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1788987679.415191,
-    "seen": 1789095416.2478313,
-    "ast_hash": "5ccc6d9dc9afce2accf357cfedc0991c",
+    "mtime": 1790050020.0593688,
+    "seen": 1790050042.8322694,
+    "ast_hash": "33bf18f64130e8e32aaf392145076979",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
-    "mtime": 1788494605.616321,
-    "seen": 1788747134.5368402,
-    "ast_hash": "45a8057e593809c98159bf6b8ce3603e",
+    "mtime": 1789766941.0944474,
+    "seen": 1790032400.0467608,
+    "ast_hash": "c69bc315de0e3f916051d06344dfa268",
     "semantic_hash": ""
   },
   "dashboard/src/components/EnterprisePlanningModule.tsx": {
@@ -60,15 +60,15 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/LegalDocsModal.tsx": {
-    "mtime": 1788494605.618323,
-    "seen": 1788747134.5368507,
-    "ast_hash": "9338fb8d4f4f3e438065659571d1952b",
+    "mtime": 1789848116.264336,
+    "seen": 1790032400.0467725,
+    "ast_hash": "ac54b8978ad40d598b73f6842dac189d",
     "semantic_hash": ""
   },
   "dashboard/src/components/Login.tsx": {
-    "mtime": 1788977312.3783722,
-    "seen": 1789095416.24784,
-    "ast_hash": "5a046dc32ea157972b341788beacee30",
+    "mtime": 1789849434.5477388,
+    "seen": 1790032400.0467744,
+    "ast_hash": "2e64851eb36f43d2abade99c136205da",
     "semantic_hash": ""
   },
   "dashboard/src/components/PublicRestaurantMenu.tsx": {
@@ -132,15 +132,15 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpCartera.tsx": {
-    "mtime": 1788847826.1452973,
-    "seen": 1789095416.2478623,
-    "ast_hash": "30a99c95af3c0c2bd2ec69a8828474cf",
+    "mtime": 1789767453.7622502,
+    "seen": 1790032400.046803,
+    "ast_hash": "616c85cd97367dc605c17e0e466b5c94",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpDomicilios.tsx": {
-    "mtime": 1788844063.1082888,
-    "seen": 1789095416.247866,
-    "ast_hash": "d58d8ae9de76ffc342ef08c552a4c17d",
+    "mtime": 1789274817.381676,
+    "seen": 1790032400.046807,
+    "ast_hash": "ab18cc1a7ff37a15a122121cb595c33a",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpEmployees.tsx": {
@@ -156,15 +156,15 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
-    "mtime": 1789090406.05352,
-    "seen": 1789095416.2478733,
-    "ast_hash": "58727af3abf11fa9eab487ce1379409d",
+    "mtime": 1790032328.0497234,
+    "seen": 1790032400.0468173,
+    "ast_hash": "413141a0fd1d2b4366dc9f0e14a726cf",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
-    "mtime": 1789020874.516512,
-    "seen": 1789095416.2478745,
-    "ast_hash": "f0476b3c8b784634b9cbeca8b7396b7b",
+    "mtime": 1789769630.6448152,
+    "seen": 1790032400.0468197,
+    "ast_hash": "7f650a21699e33a94c027fca8afd9de3",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpMarketing.tsx": {
@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpPurchaseOrders.tsx": {
-    "mtime": 1788494605.6395972,
-    "seen": 1788747134.536932,
-    "ast_hash": "7e547a1ea61cf3aaab3e1e9e1474cfaa",
+    "mtime": 1789597912.5941117,
+    "seen": 1790032400.046829,
+    "ast_hash": "63de8d912546be25ebdaf47fabacda0d",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpStoreSettings.tsx": {
@@ -204,9 +204,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/main.tsx": {
-    "mtime": 1788494605.643597,
-    "seen": 1788747134.5369627,
-    "ast_hash": "df3369963799e47ef5a77cdca932abf0",
+    "mtime": 1789406059.3152807,
+    "seen": 1790032400.0468485,
+    "ast_hash": "3485fc8bad2089eb3e18239d4dfc4386",
     "semantic_hash": ""
   },
   "dashboard/src/utils/api.ts": {
@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "src/database/initDb.ts": {
-    "mtime": 1788988839.965096,
-    "seen": 1789095416.247998,
-    "ast_hash": "25e3c3edced43fa2194402f4bd7767a1",
+    "mtime": 1790052838.5227222,
+    "seen": 1790052938.3530245,
+    "ast_hash": "842fd903fe55d35c03539a1f00570091",
     "semantic_hash": ""
   },
   "src/database/postgres.ts": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1789096405.3778062,
-    "seen": 1789096556.1015508,
-    "ast_hash": "a286cdbdf2a49cf7213af470ebace076",
+    "mtime": 1790059387.600577,
+    "seen": 1790059585.1560571,
+    "ast_hash": "2dcac83b97fe31c8217f0ca2af5d60ce",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices2.tsx": {
-    "mtime": 1788989866.6118343,
-    "seen": 1789095416.2478762,
-    "ast_hash": "2c7f5740640a97c68d7f31d9bdedd614",
+    "mtime": 1789401640.1505585,
+    "seen": 1790032400.046821,
+    "ast_hash": "6745f62e1f827163ea9791b6692e22b5",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSalesTargets.tsx": {
@@ -774,9 +774,9 @@
     "semantic_hash": ""
   },
   "context.md": {
-    "mtime": 1788494605.5838704,
-    "seen": 1788747134.5372362,
-    "ast_hash": "93ffed77e39159f8f78951581a3e8236",
+    "mtime": 1789854728.2655911,
+    "seen": 1790032400.0472097,
+    "ast_hash": "0bcd0e9a38d26ff8459b3b668fb6e259",
     "semantic_hash": ""
   },
   "dashboard-designs/stitch_unified_admin_platform dark mode/DESIGN.md": {
@@ -2046,9 +2046,441 @@
     "semantic_hash": ""
   },
   "scratch/deploy_vps_security.py": {
-    "mtime": 1789099153.1326756,
-    "seen": 1789099307.7785797,
-    "ast_hash": "0f6188145be4301accbb367ee7658f70",
+    "mtime": 1789767694.4463909,
+    "seen": 1790032400.0468843,
+    "ast_hash": "fbe96b4f0040e36dc4408b734a0ee631",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/FrantErpMobileView.tsx": {
+    "mtime": 1789849473.8425004,
+    "seen": 1790032400.046765,
+    "ast_hash": "9f43401fe4bac99d07faffbdc264a4d1",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/HistoricalInvoicesModal.tsx": {
+    "mtime": 1789582187.3359356,
+    "seen": 1790032400.046767,
+    "ast_hash": "c42f16f3493ca4d98916ab1422ee1478",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/SaaSErpEmployeeProfile.tsx": {
+    "mtime": 1789766978.728805,
+    "seen": 1790032400.0468094,
+    "ast_hash": "f3a33e8cebe2fdaea197e540db6423ad",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/SaaSErpProductFormModal.tsx": {
+    "mtime": 1790030255.0433483,
+    "seen": 1790032400.046827,
+    "ast_hash": "4ec32eda166481d300dfe6254edfc655",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/public/PublicCatalog.tsx": {
+    "mtime": 1790051932.5473332,
+    "seen": 1790051992.968551,
+    "ast_hash": "3a4ee5eefabf1f422a2ff871e6b5b84e",
+    "semantic_hash": ""
+  },
+  "scratch/build_pdf.py": {
+    "mtime": 1789683153.7368672,
+    "seen": 1790032400.0468705,
+    "ast_hash": "8ebb530fa90c4759c08e726fcda62ebd",
+    "semantic_hash": ""
+  },
+  "scratch/build_pdf_v2.py": {
+    "mtime": 1789699728.3383944,
+    "seen": 1790032400.0468726,
+    "ast_hash": "3a1166b96bf01aa83e3e0139584cc273",
+    "semantic_hash": ""
+  },
+  "scratch/create_antigravity_erp_framework.py": {
+    "mtime": 1789854714.6256776,
+    "seen": 1790032400.0468826,
+    "ast_hash": "a55b600dd99a3c9f4981ef36248d41cb",
+    "semantic_hash": ""
+  },
+  "scratch/generate_universal_framework.py": {
+    "mtime": 1789683182.155689,
+    "seen": 1790032400.046898,
+    "ast_hash": "7123352c4f0c590b4c1e54a11dbac636",
+    "semantic_hash": ""
+  },
+  "scratch/update_agent_prompts.py": {
+    "mtime": 1789699830.2300308,
+    "seen": 1790032400.0469346,
+    "ast_hash": "760b5ff251311bd5a7845f945c1c52ed",
+    "semantic_hash": ""
+  },
+  "scratch/update_menu_aligned_agents.py": {
+    "mtime": 1789854962.5514858,
+    "seen": 1790032400.046936,
+    "ast_hash": "115c68e428d8d5c3a0ddf6db2c86c2e9",
+    "semantic_hash": ""
+  },
+  "src/services/catalogService.ts": {
+    "mtime": 1790051839.9658418,
+    "seen": 1790051992.9688046,
+    "ast_hash": "1a248d0323cd1a862fa705aa537eda3c",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/horizontales_tecnicos/01_arquitecto_sql_postgresql.md": {
+    "mtime": 1789854719.216834,
+    "seen": 1790032400.0471692,
+    "ast_hash": "b13ad4bba3ec5203e0f848f6e73cb22b",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/horizontales_tecnicos/02_desarrollador_backend_nodejs.md": {
+    "mtime": 1789854719.216834,
+    "seen": 1790032400.047171,
+    "ast_hash": "18a620873d10535911993773384d0a27",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/horizontales_tecnicos/03_disenador_ui_ux_react.md": {
+    "mtime": 1789854719.2178407,
+    "seen": 1790032400.0471723,
+    "ast_hash": "aa8442194161a49aaca018682944ffa5",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/horizontales_tecnicos/04_auditor_seguridad_jwt.md": {
+    "mtime": 1789854719.2178407,
+    "seen": 1790032400.0471737,
+    "ast_hash": "85f28d49bd5aa43e78b49914cee0771f",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/horizontales_tecnicos/05_qa_tester_build.md": {
+    "mtime": 1789854719.2191744,
+    "seen": 1790032400.047175,
+    "ast_hash": "7151c1a254276d1a180609800418313c",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/verticales_negocio/01_datos_empresa_y_sedes.md": {
+    "mtime": 1789854966.5515168,
+    "seen": 1790032400.0471764,
+    "ast_hash": "f19069cb8f9463c31f32c16f0cafae7d",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/verticales_negocio/02_logistica_inventario_laboratorio.md": {
+    "mtime": 1789854966.5515168,
+    "seen": 1790032400.0471778,
+    "ast_hash": "3d9a3cca309478bfc51f6d8d2dbf4f81",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/verticales_negocio/03_facturacion_pos_dian_cartera.md": {
+    "mtime": 1789854966.5515168,
+    "seen": 1790032400.047179,
+    "ast_hash": "24ccd55a21458d25057411723cad8dbf",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/verticales_negocio/04_finanzas_contabilidad_nomina.md": {
+    "mtime": 1789854966.5525312,
+    "seen": 1790032400.0471802,
+    "ast_hash": "6bce1a0da0a0d8f988889b88855a1b5e",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/verticales_negocio/05_crm_clientes_difusion.md": {
+    "mtime": 1789854966.5525312,
+    "seen": 1790032400.0471814,
+    "ast_hash": "b836c60225873a93a0dcac0f79e66956",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/verticales_negocio/06_citas_y_salud_visual.md": {
+    "mtime": 1789854966.5525312,
+    "seen": 1790032400.0471826,
+    "ast_hash": "4d74ad04987e798d61b5c268ef817296",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/verticales_negocio/07_personal_seguridad_auditoria.md": {
+    "mtime": 1789854966.5525312,
+    "seen": 1790032400.0471835,
+    "ast_hash": "54c72c05c23d7306d0a9e78af86d8a5d",
+    "semantic_hash": ""
+  },
+  ".antigravity/agentes/verticales_negocio/08_catalogo_web_y_eshop.md": {
+    "mtime": 1790032225.5856998,
+    "seen": 1790032400.047185,
+    "ast_hash": "4fbfa8da3928f38c4fc7eb7ac8a58f34",
+    "semantic_hash": ""
+  },
+  ".antigravity/clasificaciones/taxonomia_tareas.md": {
+    "mtime": 1789854719.2236817,
+    "seen": 1790032400.0471861,
+    "ast_hash": "8f29541519204c9d55948fb68a293ae7",
+    "semantic_hash": ""
+  },
+  ".antigravity/especificaciones/01_protocolo_desarrollo_paso_a_paso.md": {
+    "mtime": 1789854719.2236817,
+    "seen": 1790032400.0471876,
+    "ast_hash": "768844d79cbb45c2cdcb8e3fade13fcc",
+    "semantic_hash": ""
+  },
+  ".antigravity/orquestacion/01_orquestador_principal.md": {
+    "mtime": 1789854971.186089,
+    "seen": 1790032400.0471888,
+    "ast_hash": "08c9e5ad93cdc20c94a966e3513164f9",
+    "semantic_hash": ""
+  },
+  ".antigravity/orquestacion/02_flujos_trabajo_inter_agentes.md": {
+    "mtime": 1789854719.2221746,
+    "seen": 1790032400.04719,
+    "ast_hash": "0f4ae102295c21311a8e97a49037e3d5",
+    "semantic_hash": ""
+  },
+  ".antigravity/roles/jerarquia_y_responsabilidades.md": {
+    "mtime": 1789854719.2246883,
+    "seen": 1790032400.0471914,
+    "ast_hash": "e7a2dee40168ccf4b12271ab299faaa6",
+    "semantic_hash": ""
+  },
+  "MANUAL_UNIVERSAL_DESARROLLO_IA.html": {
+    "mtime": 1789699780.7344496,
+    "seen": 1790032400.0472014,
+    "ast_hash": "2dfe7166098bc44e05734f5f3ddb8aa4",
+    "semantic_hash": ""
+  },
+  "MANUAL_UNIVERSAL_DESARROLLO_IA.md": {
+    "mtime": 1789699663.6991155,
+    "seen": 1790032400.0472023,
+    "ast_hash": "353fc8092967ca8ef3fdd9a0317d71d9",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/agentes/01_arquitecto_software.md": {
+    "mtime": 1789699882.523077,
+    "seen": 1790032400.047292,
+    "ast_hash": "a5369cf13682a06ce491e8292833b9fb",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/agentes/02_experto_dominio.md": {
+    "mtime": 1789699882.523077,
+    "seen": 1790032400.0472934,
+    "ast_hash": "50d7d990c30b19c6a333bd9b1ec06176",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/agentes/03_desarrollador_fullstack.md": {
+    "mtime": 1789699882.523077,
+    "seen": 1790032400.047295,
+    "ast_hash": "5735873d8f19a4c3ab6449544195873b",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/agentes/04_disenador_uiux.md": {
+    "mtime": 1789699882.523077,
+    "seen": 1790032400.047296,
+    "ast_hash": "2accee6d173ce5105cb18ba99807768c",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/agentes/05_auditor_seguridad.md": {
+    "mtime": 1789699882.523077,
+    "seen": 1790032400.0472975,
+    "ast_hash": "45e4617ea17252fa6fb1de006d7ac665",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/agentes/06_monitor_errores_eventos.md": {
+    "mtime": 1789699882.524075,
+    "seen": 1790032400.047299,
+    "ast_hash": "040ab1c69164b124d4237e4d66a920c9",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/agentes/07_qa_tester.md": {
+    "mtime": 1789699882.524075,
+    "seen": 1790032400.0473,
+    "ast_hash": "479575a5be8d3a0467a34ebcd5fb0971",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/clasificaciones/taxonomia_tareas.md": {
+    "mtime": 1789683193.2053075,
+    "seen": 1790032400.0473013,
+    "ast_hash": "12c217e1b12c699df51ba8804182abff",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/contexto/01_negocio_y_objetivos.md": {
+    "mtime": 1789683193.200679,
+    "seen": 1790032400.047303,
+    "ast_hash": "32de119eab5de4996cb1cdad34bd8c13",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/contexto/02_reglas_y_constraints_dominio.md": {
+    "mtime": 1789683193.200679,
+    "seen": 1790032400.0473042,
+    "ast_hash": "bc2edd8f24b4840cdb009d6a1261c710",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/contexto/03_modelo_datos_general.md": {
+    "mtime": 1789683193.20168,
+    "seen": 1790032400.0473056,
+    "ast_hash": "fccc832cca9266da1fb431242a8e912d",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/contexto/04_stack_tecnologico.md": {
+    "mtime": 1789683193.2022693,
+    "seen": 1790032400.0473068,
+    "ast_hash": "52cce484f7f449cde06b89e8ba841cfd",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/especificaciones/01_protocolo_desarrollo_paso_a_paso.md": {
+    "mtime": 1789683193.2037964,
+    "seen": 1790032400.047308,
+    "ast_hash": "a7ea9b8c02761759a2c252ea0d44dc3c",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/orquestacion/01_orquestador_principal.md": {
+    "mtime": 1789683193.2027872,
+    "seen": 1790032400.0473094,
+    "ast_hash": "5c355c0b1ddb07dbe52225b2b96d11e6",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/orquestacion/02_flujos_trabajo_inter_agentes.md": {
+    "mtime": 1789683193.2027872,
+    "seen": 1790032400.0473106,
+    "ast_hash": "cd1298e5c1200973b63408b495f29e55",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/.antigravity/roles/jerarquia_y_responsabilidades.md": {
+    "mtime": 1789683193.2037964,
+    "seen": 1790032400.0473118,
+    "ast_hash": "15d16fff27ef59b47ba81d80d4cddc74",
+    "semantic_hash": ""
+  },
+  "scratch/antigravity-universal-framework/context.md": {
+    "mtime": 1789683193.2053075,
+    "seen": 1790032400.0473132,
+    "ast_hash": "a7fabfcc49e2bb23e7f739f2ef9f152b",
+    "semantic_hash": ""
+  },
+  "scratch/mobile_prototype.html": {
+    "mtime": 1789148891.5281286,
+    "seen": 1790032400.0473144,
+    "ast_hash": "7993bd30e4a4d5bf379c4114026a4c28",
+    "semantic_hash": ""
+  },
+  "scratch/mobile_stepper_prototype.html": {
+    "mtime": 1789153278.386209,
+    "seen": 1790032400.0473156,
+    "ast_hash": "77f83c0e264674098a96ddee9dd0bce3",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/agentes/01_arquitecto_software.md": {
+    "mtime": 1789682868.7586317,
+    "seen": 1790032400.047317,
+    "ast_hash": "46171e4ed7fb51d632d2c1be02dff751",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/agentes/02_experto_dominio_nutricion.md": {
+    "mtime": 1789682881.416819,
+    "seen": 1790032400.047318,
+    "ast_hash": "7ed64ccea32e12ba05bae5c4885995dc",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/agentes/03_desarrollador_fullstack.md": {
+    "mtime": 1789682893.79267,
+    "seen": 1790032400.0473194,
+    "ast_hash": "7ef76897db89db0bf3016bf68afd457a",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/agentes/04_disenador_uiux_salud.md": {
+    "mtime": 1789682906.981976,
+    "seen": 1790032400.0473206,
+    "ast_hash": "d5058669248a914a3736e9dfa6ad0c27",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/agentes/05_auditor_seguridad_hipaa.md": {
+    "mtime": 1789682919.7191603,
+    "seen": 1790032400.0473218,
+    "ast_hash": "807a58dbdcbdd241b87e373de0f9ca62",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/agentes/06_monitor_errores_eventos.md": {
+    "mtime": 1789682932.97395,
+    "seen": 1790032400.047323,
+    "ast_hash": "b176a6141df52f81e6855aa014233a50",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/agentes/07_qa_tester.md": {
+    "mtime": 1789682944.8314924,
+    "seen": 1790032400.0473242,
+    "ast_hash": "570eb5aa3c766b682b6dbbc1d1a5d0a3",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/contexto/01_negocio_y_objetivos.md": {
+    "mtime": 1789682956.9976585,
+    "seen": 1790032400.0473251,
+    "ast_hash": "e712a635fcf15581f958520668b6d297",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/contexto/02_formulas_antropometricas.md": {
+    "mtime": 1789682969.567367,
+    "seen": 1790032400.0473266,
+    "ast_hash": "faea2061dfde1a6c2e4835c93925bb4b",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/contexto/03_reglas_y_constraints_salud.md": {
+    "mtime": 1789682983.2037423,
+    "seen": 1790032400.0473278,
+    "ast_hash": "663f4e1b29418e9223578b5b4c069d6e",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/contexto/04_modelo_datos_pacientes.md": {
+    "mtime": 1789682995.6666205,
+    "seen": 1790032400.047329,
+    "ast_hash": "3c7ef3a0be76586cfede6839c4376b17",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/especificaciones/01_protocolo_desarrollo_paso_a_paso.md": {
+    "mtime": 1789683039.827755,
+    "seen": 1790032400.0473301,
+    "ast_hash": "7b6cbe3c6925e734694efa1b4959bd20",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/especificaciones/02_modulo_gestion_pacientes.md": {
+    "mtime": 1789683051.7723851,
+    "seen": 1790032400.0473313,
+    "ast_hash": "270f9291ac62bd8aa876c3a9ac57019a",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/especificaciones/03_modulo_antropometria_y_formulas.md": {
+    "mtime": 1789683064.0867634,
+    "seen": 1790032400.0473325,
+    "ast_hash": "f94d63c5b8140eb10145bc44019285d3",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/orquestacion/01_orquestador_principal.md": {
+    "mtime": 1789683008.7114322,
+    "seen": 1790032400.0473337,
+    "ast_hash": "c168e31a0b942bc452e7edfd1e7a1042",
+    "semantic_hash": ""
+  },
+  "scratch/nutriapp-opencode/.opencode/orquestacion/02_flujos_trabajo_inter_agentes.md": {
+    "mtime": 1789683021.9777045,
+    "seen": 1790032400.047335,
+    "ast_hash": "e7b344893f78122f226982a83d9c3d94",
+    "semantic_hash": ""
+  },
+  "MANUAL_UNIVERSAL_DESARROLLO_IA.pdf": {
+    "mtime": 1789699782.9638097,
+    "seen": 1790032400.0473652,
+    "ast_hash": "d091ea3f9c4e693b4e415e62b17766da",
+    "semantic_hash": ""
+  },
+  "dashboard/src/utils/uiUxProMaxCatalog.ts": {
+    "mtime": 1790051311.039359,
+    "seen": 1790051418.351847,
+    "ast_hash": "713f2ccd1357331ce8c93c90767977d3",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/SaaSErpECommerceWizard.tsx": {
+    "mtime": 1790104141.9398675,
+    "seen": 1790104195.7704225,
+    "ast_hash": "30f3ced1554738f26669adf87055a02c",
+    "semantic_hash": ""
+  },
+  "scratch/link_product_categories.ts": {
+    "mtime": 1790052811.763852,
+    "seen": 1790052938.352983,
+    "ast_hash": "3708aa6ad963c52039f626f5e41f4c0e",
+    "semantic_hash": ""
+  },
+  "scratch/update_optica_categories.ts": {
+    "mtime": 1790052864.3879707,
+    "seen": 1790052938.3530095,
+    "ast_hash": "c22b0f3afb7c9cf7527802bf55162895",
     "semantic_hash": ""
   }
 }

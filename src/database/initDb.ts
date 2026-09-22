@@ -770,8 +770,20 @@ export const initDatabase = async () => {
             `ALTER TABLE clients ADD COLUMN IF NOT EXISTS phone VARCHAR(50);`,
             `ALTER TABLE clients ALTER COLUMN phone_number DROP NOT NULL;`,
             `ALTER TABLE clients ALTER COLUMN system_prompt DROP NOT NULL;`,
-            `ALTER TABLE employees ADD COLUMN IF NOT EXISTS allowed_branches JSONB DEFAULT '[]'::jsonb;`,
-            `ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;`
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS allowed_branches JSONB DEFAULT '[]'::jsonb;`,
+            `ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS slug VARCHAR(100);`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS web_catalog_enabled BOOLEAN DEFAULT true;`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS primary_color VARCHAR(20) DEFAULT '#2563eb';`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS banner_url TEXT;`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS catalog_description TEXT;`,
+            `ALTER TABLE products ADD COLUMN IF NOT EXISTS is_visible_web BOOLEAN DEFAULT true;`,
+            `ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS is_visible_web BOOLEAN DEFAULT true;`,
+            `ALTER TABLE products ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT false;`,
+            `ALTER TABLE products ADD COLUMN IF NOT EXISTS gallery_images JSONB DEFAULT '[]'::jsonb;`,
+            `ALTER TABLE products ADD COLUMN IF NOT EXISTS slug VARCHAR(150);`,
+            `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS order_source VARCHAR(30) DEFAULT 'dashboard';`,
+            `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS branch_id VARCHAR(50);`
         ];
 
         for (const q of safeAlterQueries) {
@@ -779,6 +791,23 @@ export const initDatabase = async () => {
                 await pool.query(q);
             } catch (err: any) {}
         }
+
+        try {
+            await pool.query(`
+                UPDATE products p
+                SET category_id = pc.id
+                FROM product_categories pc
+                WHERE p.client_id = pc.client_id
+                  AND p.category_id IS NULL
+                  AND (
+                    LOWER(p.name) LIKE CONCAT('%', LOWER(pc.name), '%')
+                    OR (LOWER(pc.name) LIKE '%montura%' AND LOWER(p.name) LIKE '%montura%')
+                    OR (LOWER(pc.name) LIKE '%lente%' AND LOWER(p.name) LIKE '%lente%')
+                    OR (LOWER(pc.name) LIKE '%estuche%' AND LOWER(p.name) LIKE '%estuche%')
+                    OR (LOWER(pc.name) LIKE '%examen%' AND LOWER(p.name) LIKE '%examen%')
+                  )
+            `);
+        } catch (err: any) {}
 
         await pool.query(`
 
