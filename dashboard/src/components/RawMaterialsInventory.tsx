@@ -180,19 +180,19 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
 
     return (
         <div className="space-y-6">
-            {/* Encabezado */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container/40 p-5 rounded-3xl border border-outline/10 backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 text-primary">
-                        <span className="material-symbols-outlined text-[28px]">inventory</span>
+            {/* Encabezado Editorial Wabi-Sabi */}
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-[#FAF8F5] p-5 rounded-2xl border border-[#E5E0D8] shadow-sm">
+                <div className="flex items-center gap-3.5">
+                    <div className="p-3 bg-[#FDF2F0] rounded-xl border border-[#F5C2BC] text-[#D9381E]">
+                        <span className="material-symbols-outlined text-[26px]">inventory</span>
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-on-surface">Inventario de Insumos & Materias Primas</h2>
-                        <p className="text-xs text-on-surface-variant">Bodega interna de cocina: Harinas, carnes frías, salchichas, vencimientos y compras de caja menor</p>
+                        <h2 className="text-xl font-serif font-bold text-[#1C1B1A]">Inventario de Insumos & Materias Primas</h2>
+                        <p className="text-xs text-[#5E5A54]">Bodega interna de cocina: Harinas, carnes frías, vencimientos y compras de caja menor</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                     <button
                         type="button"
                         onClick={() => {
@@ -200,7 +200,7 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                             setSupplierName('Caja Menor / Compra Ocasional');
                             setIsModalOpen(true);
                         }}
-                        className="px-3.5 py-2.5 bg-amber-500/20 text-amber-300 font-bold text-xs rounded-2xl border border-amber-500/40 hover:bg-amber-500/30 transition cursor-pointer flex items-center gap-1.5"
+                        className="px-3.5 py-2.5 bg-[#FDF3E7] text-[#9E5D14] border border-[#F4D6B5] font-bold text-xs rounded-xl hover:bg-[#FBE8D3] transition cursor-pointer flex items-center gap-1.5 shadow-sm"
                     >
                         <span className="material-symbols-outlined text-[18px]">bolt</span>
                         + Compra Ocasional / Caja Menor
@@ -213,7 +213,7 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                             setSupplierName('');
                             setIsModalOpen(true);
                         }}
-                        className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-2xl hover:opacity-90 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-primary/20"
+                        className="px-4 py-2.5 bg-[#D9381E] text-white font-bold text-xs rounded-xl hover:bg-[#B82E17] transition cursor-pointer flex items-center gap-2 shadow-sm"
                     >
                         <span className="material-symbols-outlined text-[18px]">add_box</span>
                         Registrar Insumo Regular
@@ -221,23 +221,23 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                 </div>
             </div>
 
-            {/* Banner Informativo sobre Rotación PEPS / FIFO */}
-            <div className="bg-surface-container/30 border border-outline/10 p-4 rounded-3xl text-xs space-y-1 text-on-surface-variant flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-[28px]">published_with_changes</span>
+            {/* Banner Informativo sobre Rotación PEPS / FIFO Wabi-Sabi */}
+            <div className="bg-[#FAF5E8] border border-[#E8DAB8] p-4 rounded-xl text-xs space-y-1 text-[#7A5C1E] flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#D9381E] text-[26px]">published_with_changes</span>
                 <div>
-                    <strong className="text-on-surface block font-bold">Rotación de Inventario FIFO / PEPS (Primeras en Entrar, Primeras en Salir):</strong>
-                    <span>Las materias primas con fechas de vencimiento más próximas deben usarse primero en cocina para evitar mermas térmicas o pérdidas de insumos.</span>
+                    <strong className="text-[#1C1B1A] font-serif block font-bold">Rotación de Inventario FIFO / PEPS (Primeras en Entrar, Primeras en Salir):</strong>
+                    <span className="text-[#5E5A54]">Las materias primas con fechas de vencimiento más próximas deben usarse primero en cocina para evitar mermas térmicas o pérdidas de insumos.</span>
                 </div>
             </div>
 
-            {/* Grilla de Insumos */}
+            {/* Grilla de Insumos Wabi-Sabi */}
             {materials.length === 0 ? (
-                <div className="text-center py-12 bg-surface-container/20 border border-dashed border-outline/20 rounded-3xl space-y-3">
-                    <p className="text-on-surface-variant text-sm">No hay insumos o materias primas registradas en bodega.</p>
+                <div className="text-center py-12 bg-[#FAF8F5] border border-dashed border-[#DCD6CD] rounded-2xl space-y-3">
+                    <p className="text-[#5E5A54] text-sm">No hay insumos o materias primas registradas en bodega.</p>
                     <button
                         type="button"
                         onClick={() => setIsModalOpen(true)}
-                        className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl hover:opacity-90 transition cursor-pointer"
+                        className="px-4 py-2 bg-[#D9381E] text-white font-bold text-xs rounded-xl hover:bg-[#B82E17] transition cursor-pointer"
                     >
                         + Registrar Primer Insumo
                     </button>
@@ -254,48 +254,48 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                         const expStatus = getExpirationStatus(mat.expiration_date);
 
                         return (
-                            <div key={mat.id} className="bg-surface-container/30 border border-outline/10 p-5 rounded-3xl space-y-3 shadow-md hover:border-primary/30 transition flex flex-col justify-between">
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between border-b border-outline/10 pb-2">
+                            <div key={mat.id} className="bg-[#FAF8F5] border border-[#E5E0D8] p-5 rounded-2xl space-y-3 shadow-sm hover:border-[#D9381E]/40 transition flex flex-col justify-between">
+                                <div className="space-y-2.5">
+                                    <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-2">
                                         <div>
                                             <div className="flex items-center gap-1.5">
-                                                <h3 className="font-extrabold text-on-surface text-sm">{mat.name}</h3>
+                                                <h3 className="font-serif font-bold text-[#1C1B1A] text-base">{mat.name}</h3>
                                                 {mat.is_casual_purchase && (
-                                                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30" title="Compra Ocasional / Caja Menor">
+                                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#FDF3E7] text-[#9E5D14] border border-[#F4D6B5]" title="Compra Ocasional / Caja Menor">
                                                         ⚡ Caja Menor
                                                     </span>
                                                 )}
                                             </div>
-                                            <span className="text-[11px] text-on-surface-variant">{mat.category}</span>
+                                            <span className="text-[11px] text-[#7A7570]">{mat.category}</span>
                                         </div>
-                                        <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${isLowStock ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
+                                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${isLowStock ? 'bg-[#FDF2F0] text-[#D9381E] border border-[#F5C2BC]' : 'bg-[#E8F0E6] text-[#2D5A27] border border-[#C4DDC1]'}`}>
                                             {isLowStock ? '⚠️ Stock Bajo' : '🟢 Stock OK'}
                                         </span>
                                     </div>
 
                                     {/* Alerta de Vencimiento */}
                                     {expStatus && (
-                                        <div className={`text-[11px] font-bold px-3 py-1 rounded-xl border flex items-center justify-between ${expStatus.color}`}>
+                                        <div className={`text-[11px] font-medium px-3 py-1 rounded-lg border flex items-center justify-between ${expStatus.color}`}>
                                             <span>{expStatus.label}</span>
                                             {mat.batch_number && <span className="text-[9px] opacity-80">Lote: {mat.batch_number}</span>}
                                         </div>
                                     )}
 
-                                    <div className="grid grid-cols-2 gap-2 text-xs bg-surface/40 p-2.5 rounded-2xl border border-outline/5">
+                                    <div className="grid grid-cols-2 gap-2 text-xs bg-[#F5F2EB] p-3 rounded-xl border border-[#E5E0D8]">
                                         <div>
-                                            <span className="text-on-surface-variant block text-[10px]">Costo Compra:</span>
-                                            <strong className="text-on-surface">${unitCost.toLocaleString()} COP</strong>
-                                            <span className="text-[10px] opacity-75 block">({mat.purchase_unit})</span>
+                                            <span className="text-[#7A7570] block text-[10px] uppercase font-medium">Costo Compra:</span>
+                                            <strong className="text-[#1C1B1A]">${unitCost.toLocaleString()} COP</strong>
+                                            <span className="text-[10px] text-[#7A7570] block">({mat.purchase_unit})</span>
                                         </div>
                                         <div>
-                                            <span className="text-on-surface-variant block text-[10px]">Costo por {mat.consumption_unit}:</span>
-                                            <strong className="text-primary font-bold">${costPerGram.toFixed(2)} COP/{mat.consumption_unit}</strong>
+                                            <span className="text-[#7A7570] block text-[10px] uppercase font-medium">Costo por {mat.consumption_unit}:</span>
+                                            <strong className="text-[#D9381E] font-bold">${costPerGram.toFixed(2)} COP/{mat.consumption_unit}</strong>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center justify-between text-xs pt-1">
-                                        <span className="text-on-surface-variant">Stock Disponible:</span>
-                                        <strong className="text-on-surface font-mono font-bold text-sm">
+                                        <span className="text-[#5E5A54]">Stock Disponible:</span>
+                                        <strong className="text-[#1C1B1A] font-mono font-bold text-sm">
                                             {stockNum >= 1000 && mat.consumption_unit === 'g'
                                                 ? `${(stockNum / 1000).toFixed(2)} kg (${stockNum.toLocaleString()} g)`
                                                 : `${stockNum.toLocaleString()} ${mat.consumption_unit}`}
@@ -303,14 +303,14 @@ export const RawMaterialsInventory: React.FC<RawMaterialsInventoryProps> = ({ cl
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between border-t border-outline/10 pt-3 text-xs">
-                                    <span className="text-on-surface-variant text-[11px] italic">
+                                <div className="flex items-center justify-between border-t border-[#E5E0D8] pt-3 text-xs">
+                                    <span className="text-[#7A7570] text-[11px] italic">
                                         {mat.supplier_name ? `Proveedor: ${mat.supplier_name}` : 'Sin proveedor asignado'}
                                     </span>
                                     <button
                                         type="button"
                                         onClick={() => handleDeleteMaterial(mat.id)}
-                                        className="text-rose-400 hover:text-rose-300 transition p-1"
+                                        className="text-[#D9381E] hover:text-[#B82E17] transition p-1"
                                     >
                                         <span className="material-symbols-outlined text-[18px]">delete</span>
                                     </button>

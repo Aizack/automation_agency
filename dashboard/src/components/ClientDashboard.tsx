@@ -1188,6 +1188,62 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           )}
 
+          {/* Gastronomía & Mesas (si es categoría restaurante) */}
+          {isRestaurantCategory(clientData?.category || category) && (
+            <div className="nav-item">
+              <button 
+                className={`nav-item-btn ${['restaurante_menu', 'inventario_insumos', 'restaurante_mesas', 'restaurante_kds'].includes(activeTab) ? 'active' : ''}`} 
+                onClick={() => toggleSubMenu('gastronomia')}
+              >
+                <svg className="nav-icon" viewBox="0 0 24 24">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                  <line x1="6" y1="1" x2="6" y2="4"></line>
+                  <line x1="10" y1="1" x2="10" y2="4"></line>
+                  <line x1="14" y1="1" x2="14" y2="4"></line>
+                </svg>
+                <span className="nav-text">
+                  <span>Gastronomía & Mesas</span> 
+                  <span className={`caret-arrow ${openSubMenus.gastronomia ? 'open' : ''}`}>▾</span>
+                </span>
+              </button>
+              <ul className={`sub-menu ${openSubMenus.gastronomia ? 'open' : ''}`}>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('restaurante_menu')} 
+                    className={activeTab === 'restaurante_menu' ? 'active-link' : ''}
+                  >
+                    Crear Menú & Recetario
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('inventario_insumos')} 
+                    className={activeTab === 'inventario_insumos' ? 'active-link' : ''}
+                  >
+                    Inventario de Insumos
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('restaurante_mesas')} 
+                    className={activeTab === 'restaurante_mesas' ? 'active-link' : ''}
+                  >
+                    Comandero & Mesas
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('restaurante_kds')} 
+                    className={activeTab === 'restaurante_kds' ? 'active-link' : ''}
+                  >
+                    Pantalla KDS (Cocina/Barra)
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
+
           {/* 3. Logística & Stock */}
           {(hasPermission('inventory') || hasPermission('lab') || hasPermission('domicilios')) && (
             <div className="nav-item">
@@ -1525,62 +1581,6 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     </button>
                   </li>
                 )}
-              </ul>
-            </div>
-          )}
-
-          {/* Gastronomía & Mesas (si es categoría restaurante) */}
-          {isRestaurantCategory(clientData?.category || category) && (
-            <div className="nav-item">
-              <button 
-                className={`nav-item-btn ${['restaurante_menu', 'inventario_insumos', 'restaurante_mesas', 'restaurante_kds'].includes(activeTab) ? 'active' : ''}`} 
-                onClick={() => toggleSubMenu('gastronomia')}
-              >
-                <svg className="nav-icon" viewBox="0 0 24 24">
-                  <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-                  <line x1="6" y1="1" x2="6" y2="4"></line>
-                  <line x1="10" y1="1" x2="10" y2="4"></line>
-                  <line x1="14" y1="1" x2="14" y2="4"></line>
-                </svg>
-                <span className="nav-text">
-                  <span>Gastronomía & Mesas</span> 
-                  <span className={`caret-arrow ${openSubMenus.gastronomia ? 'open' : ''}`}>▾</span>
-                </span>
-              </button>
-              <ul className={`sub-menu ${openSubMenus.gastronomia ? 'open' : ''}`}>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('restaurante_menu')} 
-                    className={activeTab === 'restaurante_menu' ? 'active-link' : ''}
-                  >
-                    Crear Menú & Recetario
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('inventario_insumos')} 
-                    className={activeTab === 'inventario_insumos' ? 'active-link' : ''}
-                  >
-                    Inventario de Insumos
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('restaurante_mesas')} 
-                    className={activeTab === 'restaurante_mesas' ? 'active-link' : ''}
-                  >
-                    Comandero & Mesas
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => setActiveTab('restaurante_kds')} 
-                    className={activeTab === 'restaurante_kds' ? 'active-link' : ''}
-                  >
-                    Pantalla KDS (Cocina/Barra)
-                  </button>
-                </li>
               </ul>
             </div>
           )}

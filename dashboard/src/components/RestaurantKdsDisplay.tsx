@@ -142,44 +142,44 @@ export const RestaurantKdsDisplay: React.FC<RestaurantKdsDisplayProps> = ({ clie
 
     return (
         <div className="space-y-6">
-            {/* Header del KDS */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container/40 p-4 rounded-3xl border border-outline/10 backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 text-primary">
-                        <span className="material-symbols-outlined text-[28px]">restaurant_menu</span>
+            {/* Encabezado Editorial Wabi-Sabi */}
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-[#FAF8F5] p-5 rounded-2xl border border-[#E5E0D8] shadow-sm">
+                <div className="flex items-center gap-3.5">
+                    <div className="p-3 bg-[#FDF2F0] rounded-xl border border-[#F5C2BC] text-[#D9381E]">
+                        <span className="material-symbols-outlined text-[26px]">restaurant_menu</span>
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-on-surface flex items-center gap-2">
+                        <h2 className="text-xl font-serif font-bold text-[#1C1B1A] flex items-center gap-2">
                             Pantalla KDS (Cocina & Barra)
-                            <span className="bg-primary/20 text-primary text-xs font-semibold px-2.5 py-0.5 rounded-full border border-primary/30">
+                            <span className="bg-[#FDF2F0] text-[#D9381E] text-xs font-bold px-2.5 py-0.5 rounded-full border border-[#F5C2BC]">
                                 {orders.length} comandas activas
                             </span>
                         </h2>
-                        <p className="text-xs text-on-surface-variant">Monitoreo de tiempos de preparación y estandarización de recetas</p>
+                        <p className="text-xs text-[#5E5A54]">Monitoreo de tiempos de preparación y estandarización de recetas SOP</p>
                     </div>
                 </div>
 
-                {/* Filtro de Estación & Actualización */}
+                {/* Filtro de Estación & Actualización Wabi-Sabi */}
                 <div className="flex items-center gap-2">
-                    <div className="bg-surface-container border border-outline/20 rounded-2xl p-1 flex items-center gap-1">
+                    <div className="bg-[#F5F2EB] border border-[#DCD6CD] rounded-xl p-1 flex items-center gap-1">
                         <button
                             type="button"
                             onClick={() => setStationFilter('all')}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${stationFilter === 'all' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${stationFilter === 'all' ? 'bg-[#D9381E] text-white shadow-sm' : 'text-[#5E5A54] hover:text-[#1C1B1A]'}`}
                         >
                             Todas
                         </button>
                         <button
                             type="button"
                             onClick={() => setStationFilter('kitchen')}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${stationFilter === 'kitchen' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${stationFilter === 'kitchen' ? 'bg-[#D9381E] text-white shadow-sm' : 'text-[#5E5A54] hover:text-[#1C1B1A]'}`}
                         >
                             <span>👨‍🍳</span> Cocina
                         </button>
                         <button
                             type="button"
                             onClick={() => setStationFilter('bar')}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${stationFilter === 'bar' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${stationFilter === 'bar' ? 'bg-[#D9381E] text-white shadow-sm' : 'text-[#5E5A54] hover:text-[#1C1B1A]'}`}
                         >
                             <span>🍹</span> Barra
                         </button>
@@ -188,7 +188,7 @@ export const RestaurantKdsDisplay: React.FC<RestaurantKdsDisplayProps> = ({ clie
                     <button
                         type="button"
                         onClick={fetchOrders}
-                        className="p-2.5 bg-surface-container border border-outline/20 hover:border-primary/50 text-on-surface rounded-2xl transition cursor-pointer flex items-center justify-center"
+                        className="p-2.5 bg-[#FAF8F5] border border-[#E5E0D8] hover:border-[#D9381E] text-[#1C1B1A] rounded-xl transition cursor-pointer flex items-center justify-center shadow-sm"
                         title="Refrescar Comandas"
                     >
                         <span className={`material-symbols-outlined text-[20px] ${loading ? 'animate-spin' : ''}`}>refresh</span>

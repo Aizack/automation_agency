@@ -310,31 +310,31 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
 
     return (
         <div className="space-y-6">
-            {/* Encabezado */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container/40 p-5 rounded-3xl border border-outline/10 backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 text-primary">
-                        <span className="material-symbols-outlined text-[28px]">menu_book</span>
+            {/* Encabezado Editorial Wabi-Sabi */}
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-[#FAF8F5] p-5 rounded-2xl border border-[#E5E0D8] shadow-sm">
+                <div className="flex items-center gap-3.5">
+                    <div className="p-3 bg-[#FDF2F0] rounded-xl border border-[#F5C2BC] text-[#D9381E]">
+                        <span className="material-symbols-outlined text-[26px]">menu_book</span>
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-on-surface">Crear Menú & Recetario (Escandallo Financiero)</h2>
-                        <p className="text-xs text-on-surface-variant">Configura platos, gramaje en crudo, merma primaria e instructivo secreto SOP</p>
+                        <h2 className="text-xl font-serif font-bold text-[#1C1B1A]">Crear Menú & Recetario — Escandallo Financiero</h2>
+                        <p className="text-xs text-[#5E5A54]">Configura platos, gramaje en crudo, merma primaria e instructivo secreto SOP de cocina</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                     <button
                         type="button"
                         onClick={() => setIsAiModalOpen(true)}
-                        className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold text-xs rounded-2xl hover:opacity-95 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-purple-500/20 border border-purple-400/30"
+                        className="px-4 py-2.5 bg-[#FAF0E6] text-[#9E3B1B] border border-[#EAC9BD] font-bold text-xs rounded-xl hover:bg-[#F5E2D5] transition cursor-pointer flex items-center gap-2 shadow-sm"
                     >
                         <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-                        ✨ Importar Menú con IA (PDF / Foto / Texto)
+                        ✨ Importar Menú con IA
                     </button>
                     <button
                         type="button"
                         onClick={() => setIsModalOpen(true)}
-                        className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-2xl hover:opacity-90 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-primary/20"
+                        className="px-4 py-2.5 bg-[#D9381E] text-white font-bold text-xs rounded-xl hover:bg-[#B82E17] transition cursor-pointer flex items-center gap-2 shadow-sm"
                     >
                         <span className="material-symbols-outlined text-[18px]">add</span>
                         Crear Nuevo Plato
@@ -342,19 +342,19 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                 </div>
             </div>
 
-            {/* Guía Explicativa del Gramaje & Escandallo */}
-            <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-3xl text-xs space-y-1 text-amber-300">
-                <h4 className="font-extrabold flex items-center gap-1.5 text-amber-200">
+            {/* Guía Explicativa Wabi-Sabi del Gramaje & Escandallo */}
+            <div className="bg-[#FAF5E8] border border-[#E8DAB8] p-4 rounded-xl text-xs space-y-1 text-[#7A5C1E]">
+                <h4 className="font-bold font-serif flex items-center gap-1.5 text-[#5A410C]">
                     <span className="material-symbols-outlined text-[16px]">lightbulb</span>
                     💡 Reglas Gastronómicas de Porcionado & Escandallo:
                 </h4>
-                <p className="opacity-90">
+                <p className="opacity-90 leading-relaxed text-[#5E5A54]">
                     <strong>1. Peso en Carta:</strong> Corresponde al peso en <em>crudo limpio</em> tras la merma primaria. No se compensa físicamente en cocina.<br/>
                     <strong>2. Escandallo Financiero:</strong> La merma primaria (limpieza/hueso) se absorbe en el costo del insumo dentro de la ficha técnica para proteger el margen del restaurante.
                 </p>
             </div>
 
-            {/* Catálogo Actual de Platos */}
+            {/* Catálogo Actual de Platos Wabi-Sabi */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {dishes.map((dish) => {
                     const costNum = parseFloat(dish.cost_price || '0');
@@ -362,28 +362,28 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                     const margin = priceNum > 0 ? ((priceNum - costNum) / priceNum) * 100 : 0;
                     const mods = dish.available_modifiers || [];
                     return (
-                        <div key={dish.id} className="bg-surface-container/30 border border-outline/10 p-5 rounded-3xl space-y-3 shadow-md hover:border-primary/30 transition flex flex-col justify-between">
+                        <div key={dish.id} className="bg-[#FAF8F5] border border-[#E5E0D8] p-5 rounded-2xl space-y-3 shadow-sm hover:border-[#D9381E]/40 transition flex flex-col justify-between">
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+                                <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
                                     <div>
-                                        <h3 className="font-extrabold text-on-surface text-sm">{dish.name}</h3>
-                                        <span className="text-[11px] text-on-surface-variant">Menú Comercial</span>
+                                        <h3 className="font-serif font-bold text-[#1C1B1A] text-base">{dish.name}</h3>
+                                        <span className="text-[11px] text-[#7A7570]">Menú Comercial</span>
                                     </div>
-                                    <span className="font-black text-primary text-sm">${priceNum.toLocaleString()} COP</span>
+                                    <span className="font-serif font-extrabold text-[#D9381E] text-base">${priceNum.toLocaleString()} COP</span>
                                 </div>
 
                                 {dish.description && (
-                                    <p className="text-xs text-on-surface-variant line-clamp-2">{dish.description}</p>
+                                    <p className="text-xs text-[#5E5A54] line-clamp-2">{dish.description}</p>
                                 )}
 
-                                <div className="grid grid-cols-2 gap-2 text-xs bg-surface/40 p-2.5 rounded-2xl border border-outline/5">
+                                <div className="grid grid-cols-2 gap-2 text-xs bg-[#F5F2EB] p-3 rounded-xl border border-[#E5E0D8]">
                                     <div>
-                                        <span className="text-on-surface-variant block text-[10px]">Costo Escandallo:</span>
-                                        <strong className="text-on-surface">${costNum.toLocaleString()}</strong>
+                                        <span className="text-[#7A7570] block text-[10px] uppercase tracking-wider font-medium">Costo Escandallo:</span>
+                                        <strong className="text-[#1C1B1A] font-semibold">${costNum.toLocaleString()}</strong>
                                     </div>
                                     <div>
-                                        <span className="text-on-surface-variant block text-[10px]">Margen Estimado:</span>
-                                        <strong className={margin >= 40 ? 'text-emerald-400 font-extrabold' : 'text-amber-400 font-extrabold'}>
+                                        <span className="text-[#7A7570] block text-[10px] uppercase tracking-wider font-medium">Margen Estimado:</span>
+                                        <strong className={margin >= 40 ? 'text-[#2D5A27] font-bold' : 'text-[#9E5D14] font-bold'}>
                                             {margin.toFixed(1)}%
                                         </strong>
                                     </div>
@@ -391,10 +391,10 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
 
                                 {mods.length > 0 && (
                                     <div className="space-y-1">
-                                        <span className="text-[10px] font-bold text-on-surface-variant uppercase">Adicionales Configurados ({mods.length}):</span>
+                                        <span className="text-[10px] font-bold text-[#7A7570] uppercase">Adicionales Configurados ({mods.length}):</span>
                                         <div className="flex flex-wrap gap-1">
                                             {mods.map((m, i) => (
-                                                <span key={i} className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-lg">
+                                                <span key={i} className="text-[10px] bg-[#E8F0E6] text-[#2D5A27] border border-[#C4DDC1] px-2 py-0.5 rounded-md font-medium">
                                                     +{m.name} (${m.price.toLocaleString()})
                                                 </span>
                                             ))}
@@ -403,7 +403,7 @@ export const RestaurantMenuBuilder: React.FC<RestaurantMenuBuilderProps> = ({ cl
                                 )}
                             </div>
 
-                            {dish.sku && <p className="text-[11px] text-on-surface-variant/70 italic pt-1">SKU/Código: {dish.sku}</p>}
+                            {dish.sku && <p className="text-[11px] text-[#7A7570] italic pt-1">SKU/Código: {dish.sku}</p>}
                         </div>
                     );
                 })}

@@ -336,15 +336,15 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
 
     return (
         <div className="space-y-6">
-            {/* Header Comandero & Gestión de Mesas */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container/40 p-4 rounded-3xl border border-outline/10 backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 text-primary">
-                        <span className="material-symbols-outlined text-[28px]">room_service</span>
+            {/* Encabezado Editorial Wabi-Sabi */}
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-[#FAF8F5] p-5 rounded-2xl border border-[#E5E0D8] shadow-sm">
+                <div className="flex items-center gap-3.5">
+                    <div className="p-3 bg-[#FDF2F0] rounded-xl border border-[#F5C2BC] text-[#D9381E]">
+                        <span className="material-symbols-outlined text-[26px]">room_service</span>
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-on-surface">Comandero Móvil & Mapa de Mesas</h2>
-                        <p className="text-xs text-on-surface-variant">
+                        <h2 className="text-xl font-serif font-bold text-[#1C1B1A]">Comandero Móvil & Mapa de Mesas</h2>
+                        <p className="text-xs text-[#5E5A54]">
                             {waiterName ? `Atendiendo como: ${waiterName}` : 'Selección de mesas, asignación de meseros y comanda'}
                         </p>
                     </div>
@@ -354,27 +354,27 @@ export const RestaurantWaiterPortal: React.FC<RestaurantWaiterPortalProps> = ({ 
                     <button
                         type="button"
                         onClick={() => setIsTableModalOpen(true)}
-                        className="px-4 py-2.5 bg-primary text-on-primary font-bold text-xs rounded-2xl hover:opacity-90 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-primary/20"
+                        className="px-4 py-2.5 bg-[#D9381E] text-white font-bold text-xs rounded-xl hover:bg-[#B82E17] transition cursor-pointer flex items-center gap-2 shadow-sm"
                     >
                         <span className="material-symbols-outlined text-[18px]">add_location</span>
                         + Crear / Configurar Mesa
                     </button>
 
-                    <div className="hidden sm:flex items-center gap-2 text-xs">
-                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Libre</span>
-                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Ocupada</span>
-                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> En Cocina</span>
-                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Pidiendo Cuenta</span>
+                    <div className="hidden sm:flex items-center gap-2.5 text-xs text-[#5E5A54] font-medium">
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#2D5A27]"></span> Libre</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#D9381E]"></span> Ocupada</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#9E5D14]"></span> En Cocina</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#1D5288]"></span> Pidiendo Cuenta</span>
                     </div>
                 </div>
             </div>
 
-            {/* Mapa de Mesas por Zonas */}
+            {/* Mapa de Mesas por Zonas Wabi-Sabi */}
             {!selectedTable ? (
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-base font-bold text-on-surface flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary">table_restaurant</span>
+                        <h3 className="text-lg font-serif font-bold text-[#1C1B1A] flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[#D9381E]">table_restaurant</span>
                             Mapa de Mesas & Meseros Asignados
                         </h3>
                     </div>
