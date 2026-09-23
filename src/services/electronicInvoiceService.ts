@@ -166,6 +166,8 @@ export const processElectronicInvoice = async (
     let externalPdfUrl = '';
     let electronicStatus = 'accepted';
 
+    const feCustomerEmail = (inv.customer_email && String(inv.customer_email).trim()) ? String(inv.customer_email).trim() : (inv.business_email || 'consumidorfinal@cliente.com');
+
     // 3. Despacho según Proveedor Seleccionado
     if (feProvider === 'alegra' && feCredentials.email && feCredentials.token) {
       const alegraRes = await emitAlegraInvoice(feCredentials, feSettings, {
@@ -175,8 +177,8 @@ export const processElectronicInvoice = async (
         customer: {
           name: inv.customer_name || 'Consumidor Final',
           document: customerDoc,
-          email: inv.customer_email,
-          phone: inv.customer_phone,
+          email: feCustomerEmail,
+          phone: inv.customer_phone || '3000000000',
         },
         items: invoiceItems,
         totalAmount: totalAmt,
@@ -200,8 +202,8 @@ export const processElectronicInvoice = async (
         customer: {
           name: inv.customer_name || 'Consumidor Final',
           document: customerDoc,
-          email: inv.customer_email,
-          phone: inv.customer_phone,
+          email: feCustomerEmail,
+          phone: inv.customer_phone || '3000000000',
           docType: inv.customer_document_type,
         },
         items: invoiceItems,
@@ -251,7 +253,7 @@ export const processElectronicInvoice = async (
               company: inv.customer_name || 'Consumidor Final',
               trade_name: inv.customer_name || 'Consumidor Final',
               names: inv.customer_name || 'Consumidor Final',
-              email: inv.customer_email || 'factura@cliente.com',
+              email: feCustomerEmail,
               phone: inv.customer_phone || '3000000000',
               legal_organization_id: '2', // Persona Natural
               tribute_id: '21', // No responsable de IVA

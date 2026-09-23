@@ -414,7 +414,7 @@ export const SaaSErpSuppliers: React.FC<SuppliersProps> = ({ clientId }) => {
                                 />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <label className="text-xs text-on-surface-variant font-medium">Correo Electrónico</label>
+                                <label className="text-xs text-on-surface-variant font-medium">Correo Electrónico (Opcional)</label>
                                 <input 
                                     type="email" 
                                     value={supplierEmail}

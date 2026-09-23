@@ -625,7 +625,7 @@ export const SaaSErpQuotes: React.FC<SaaSErpQuotesProps> = ({ clientId: rawClien
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[11px] text-[#76746E] font-medium font-mono uppercase">Correo Electrónico</label>
+                                    <label className="text-[11px] text-[#76746E] font-medium font-mono uppercase">Correo Electrónico (Opcional)</label>
                                     <input
                                         type="email"
                                         value={customerEmail}

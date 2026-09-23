@@ -644,7 +644,7 @@ export const SaaSErpInvoices2: React.FC<SaaSErpInvoices2Props> = ({ clientId }) 
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[11px] font-bold text-on-surface-variant block mb-1">Teléfono WhatsApp</label>
+                                    <label className="text-[11px] font-bold text-on-surface-variant block mb-1">Teléfono WhatsApp (Opcional)</label>
                                     <input
                                         type="text"
                                         value={customerPhone}

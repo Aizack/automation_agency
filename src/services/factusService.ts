@@ -146,7 +146,7 @@ export async function emitFactusInvoice(clientId: string, invoiceData: any): Pro
       customer: {
         identification: invoiceData.customer_nit || '222222222222',
         company: invoiceData.customer_name || 'Consumidor Final',
-        email: invoiceData.customer_email || 'factura@cliente.com',
+        email: invoiceData.customer_email || 'consumidorfinal@cliente.com',
       },
       items: invoiceData.items || [],
     };

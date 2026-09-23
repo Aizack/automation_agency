@@ -954,10 +954,10 @@ app.post('/api/login', async (req: Request, res: Response) => {
 
     // 3. Consultar colaboradores/empleados creados en el Módulo de Empleados (employees)
     const employeeUserResult = await pool.query(
-      `SELECT e.id AS employee_id, e.name, e.last_name, e.phone, e.pin, e.role AS employee_role, e.client_id, e.is_active,
+      `SELECT e.id AS employee_id, e.client_id, e.name, e.last_name, e.pin, e.role AS employee_role, e.is_active,
               COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules,
               COALESCE(e.allowed_branches, '[]'::jsonb) AS allowed_branches,
-              c.name AS client_name, c.is_activated
+              c.name AS client_name, COALESCE(c.is_activated, TRUE) AS is_activated
        FROM employees e
        INNER JOIN clients c ON e.client_id = c.id
        WHERE (LOWER(REPLACE(e.phone, '+', '')) = $1 
@@ -985,7 +985,7 @@ app.post('/api/login', async (req: Request, res: Response) => {
           }
         }
 
-        if (!empUser.is_activated) {
+        if (empUser.is_activated === false) {
           return res.status(403).json({ success: false, error: 'La tienda vinculada no está activa.' });
         }
 
@@ -2892,7 +2892,7 @@ app.post('/api/clients/:clientId/quotes/:quoteId/convert-to-invoice', authentica
        RETURNING *`,
       [
         clientId, invoiceNumber, quote.customer_name, quote.customer_phone || '0000000', 'CC',
-        quote.customer_document || '222222222222', quote.customer_email || 'cliente@optica.com',
+        quote.customer_document || '222222222222', quote.customer_email || 'consumidorfinal@cliente.com',
         quote.total_amount, payment_method || 'efectivo', quote.seller_name || 'Vendedor'
       ]
     );
@@ -3033,8 +3033,15 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
         finalSellerName = createdByUserName;
       }
 
-    if (!invoiceNumber || !customerName || !customerPhone || !customerDocumentNumber || !customerEmail || !dueDate || totalAmount === undefined) {
-      return res.status(400).json({ success: false, error: 'Campos obligatorios incompletos.' });
+    const cleanCustomerName = (customerName && String(customerName).trim()) ? String(customerName).trim() : 'Consumidor Final';
+    const cleanCustomerPhone = (customerPhone && String(customerPhone).trim()) ? String(customerPhone).trim() : null;
+    const cleanCustomerDocType = customerDocumentType || 'CC';
+    const cleanCustomerDocNum = (customerDocumentNumber && String(customerDocumentNumber).trim()) ? String(customerDocumentNumber).trim() : '222222222222';
+    const cleanCustomerEmail = (customerEmail && String(customerEmail).trim()) ? String(customerEmail).trim() : null;
+    const cleanDueDate = dueDate || issueDate || new Date().toISOString().split('T')[0];
+
+    if (!invoiceNumber || totalAmount === undefined) {
+      return res.status(400).json({ success: false, error: 'Campos obligatorios incompletos. Se requiere número de factura y monto total.' });
     }
 
     // Log para depuración de despachos
@@ -3058,13 +3065,13 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
 
     // 0. Registrar/Asegurar cliente en el CRM si no existe por documento
     let resolvedCustomerId = isUUID(rawCustomerId) ? rawCustomerId : null;
-    if (customerDocumentNumber) {
+    if (cleanCustomerDocNum) {
       const crmCheck = await dbClient.query(`
         SELECT id FROM crm_customers WHERE client_id = $1 AND document_number = $2
-      `, [clientId, customerDocumentNumber]);
+      `, [clientId, cleanCustomerDocNum]);
 
       if (crmCheck.rows.length === 0) {
-        const nameParts = customerName.trim().split(' ');
+        const nameParts = cleanCustomerName.trim().split(' ');
         const firstName = nameParts[0];
         const lastName = nameParts.slice(1).join(' ') || '';
 
@@ -3076,25 +3083,25 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
           clientId,
           firstName,
           lastName,
-          customerDocumentType || 'CC',
-          customerDocumentNumber,
-          customerPhone,
-          customerEmail || null,
+          cleanCustomerDocType,
+          cleanCustomerDocNum,
+          cleanCustomerPhone,
+          cleanCustomerEmail,
           customerAddress || null
         ]);
         resolvedCustomerId = newCustRes.rows[0]?.id || null;
-        console.log(`[CRM Auto-Enroll] ✅ Cliente ${customerName} registrado en CRM automáticamente (ID: ${resolvedCustomerId}).`);
+        console.log(`[CRM Auto-Enroll] ✅ Cliente ${cleanCustomerName} registrado en CRM automáticamente (ID: ${resolvedCustomerId}).`);
       } else {
         resolvedCustomerId = crmCheck.rows[0].id;
       }
     }
 
-    if (!resolvedCustomerId && customerName) {
+    if (!resolvedCustomerId && cleanCustomerName) {
       const nameCheck = await dbClient.query(`
         SELECT id FROM crm_customers 
         WHERE client_id = $1 AND (LOWER(CONCAT(name, ' ', last_name)) LIKE LOWER(CONCAT('%', $2, '%')) OR LOWER(name) LIKE LOWER(CONCAT('%', $2, '%')))
         ORDER BY created_at DESC LIMIT 1
-      `, [clientId, customerName.trim()]);
+      `, [clientId, cleanCustomerName.trim()]);
       resolvedCustomerId = nameCheck.rows[0]?.id || null;
     }
 
@@ -3131,15 +3138,32 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       validCustomerId,
       validCustomerId,
       invoiceNumber, 
-      customerName, 
-      customerPhone, 
-      customerDocumentType || 'CC', 
-      customerDocumentNumber, 
-      customerEmail, 
+      cleanCustomerName, 
+      cleanCustomerPhone, 
+      cleanCustomerDocType, 
+      cleanCustomerDocNum, 
+      cleanCustomerEmail, 
       customerAddress || null, 
       cleanTotal, 
       initialStatus, 
-      dueDate,
+      cleanDueDate,
+      paymentMethod || 'efectivo',
+      cleanInstallmentsCount,
+      installmentFrequency || null,
+      finalDeliveryMethod,
+      cleanDeliveryFee,
+      deliveryAddress || customerAddress || null,
+      deliveryDate || null,
+      finalDeliveryMethod === 'domicilio' ? 'pending' : 'entregado',
+      transferBank || null,
+      transferDestinationAccount || null,
+      finalSellerEmpId,
+      finalSellerEmpId,
+      finalSellerName,
+      validCreatedByUserId,
+      createdByUserName,
+      validCreatedAt
+    ]);
       paymentMethod || 'efectivo',
       cleanInstallmentsCount,
       installmentFrequency || null,
@@ -6024,7 +6048,14 @@ app.get('/api/clients/:clientId/departments', authenticateToken as any, authoriz
     );
     
     if (result.rows.length === 0) {
-      const defaultDepts = ['RRHH', 'Contabilidad', 'Recepción', 'Ventas', 'Logística', 'Optometría'];
+      const clientRes = await pool.query(`SELECT category FROM clients WHERE id = $1`, [clientId]);
+      const category = (clientRes.rows[0]?.category || '').toLowerCase();
+      const isRestaurant = category.includes('restauran') || category.includes('gastro');
+
+      const defaultDepts = isRestaurant 
+        ? ['Cocina & KDS', 'Salón / Servicio (Meseros)', 'Bar & Bebidas', 'Caja & Administración', 'Logística & Domicilios']
+        : ['RRHH', 'Contabilidad', 'Recepción', 'Ventas', 'Logística'];
+
       for (const dept of defaultDepts) {
         await pool.query(
           `INSERT INTO business_departments (client_id, name) VALUES ($1, $2)`,

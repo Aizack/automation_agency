@@ -1069,8 +1069,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
     const handleSaveQuickCustomer = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!quickCustName.trim() || !quickCustDocNum.trim() || !quickCustPhone.trim()) {
-            setQuickCustError('Nombre, número de documento y teléfono son requeridos.');
+        if (!quickCustName.trim()) {
+            setQuickCustError('El nombre del cliente es requerido.');
             return;
         }
 
@@ -1089,8 +1089,8 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                     name: quickCustName.trim(),
                     last_name: quickCustType === 'empresa' ? '' : quickCustLastName.trim(),
                     document_type: quickCustType === 'empresa' ? 'NIT' : quickCustDocType,
-                    document_number: quickCustDocNum.trim(),
-                    phone: quickCustPhone.trim(),
+                    document_number: quickCustDocNum.trim() || '222222222222',
+                    phone: quickCustPhone.trim() || '3000000000',
                     email: quickCustEmail.trim() || null,
                     address: quickCustAddress.trim() || null,
                     customer_type: quickCustType
@@ -1406,7 +1406,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                     {activeDropdownField === 'name' && renderSuggestions(customerName, customerName, () => openQuickCustomerModal(customerName))}
                                                 </div>
                                                 <div className="flex flex-col gap-1.5 relative">
-                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Documento de Identidad *</label>
+                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Documento de Identidad (Opcional)</label>
                                                     <div className="flex gap-1.5">
                                                         <select 
                                                             className="bg-white border border-[#E2DFD7] px-2.5 text-xs focus:border-[#161616] outline-none text-[#161616] font-bold rounded-none cursor-pointer" 
@@ -1419,7 +1419,6 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             <option value="PP">PP</option>
                                                         </select>
 
-
                                                         <input 
                                                             type="text" 
                                                             className="w-full bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-mono font-semibold" 
@@ -1430,13 +1429,12 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             }} 
                                                             onFocus={() => setActiveDropdownField('document')}
                                                             placeholder="Número..."
-                                                            required 
                                                         />
                                                     </div>
                                                     {activeDropdownField === 'document' && renderSuggestions(customerDocumentNumber, customerDocumentNumber, () => openQuickCustomerModal(customerDocumentNumber))}
                                                 </div>
                                                 <div className="flex flex-col gap-1.5 relative">
-                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">WhatsApp *</label>
+                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">WhatsApp / Teléfono (Opcional)</label>
                                                     <input 
                                                         type="text" 
                                                         className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-mono w-full" 
@@ -1447,19 +1445,17 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                         }} 
                                                         onFocus={() => setActiveDropdownField('phone')}
                                                         placeholder="57300..."
-                                                        required 
                                                     />
                                                     {activeDropdownField === 'phone' && renderSuggestions(customerPhone, customerPhone, () => openQuickCustomerModal(customerPhone))}
                                                 </div>
                                                 <div className="flex flex-col gap-1.5">
-                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Correo Electrónico *</label>
+                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Correo Electrónico (Opcional)</label>
                                                     <input 
                                                         type="email" 
                                                         className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans" 
                                                         value={customerEmail} 
                                                         onChange={(e) => setCustomerEmail(e.target.value)} 
                                                         placeholder="cliente@correo.com"
-                                                        required 
                                                     />
                                                 </div>
                                                 <div className="flex flex-col gap-1.5">
@@ -3075,31 +3071,29 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">Número Documento *</label>
+                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">Número Documento (Opcional)</label>
                                     <input 
                                         type="text"
                                         value={quickCustDocNum}
                                         onChange={(e) => setQuickCustDocNum(e.target.value)}
                                         placeholder="Ej: 1020304050"
                                         className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono font-bold rounded-none"
-                                        required
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">WhatsApp / Teléfono *</label>
+                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">WhatsApp / Teléfono (Opcional)</label>
                                     <input 
                                         type="text"
                                         value={quickCustPhone}
                                         onChange={(e) => setQuickCustPhone(e.target.value)}
                                         placeholder="Ej: 573001234567"
                                         className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono rounded-none"
-                                        required
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">Correo Electrónico</label>
+                                    <label className="block text-[10px] font-mono font-bold text-[#76746E] uppercase mb-1">Correo Electrónico (Opcional)</label>
                                     <input 
                                         type="email"
                                         value={quickCustEmail}

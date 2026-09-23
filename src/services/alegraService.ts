@@ -79,7 +79,7 @@ async function getOrCreateAlegraClient(credentials: AlegraCredentials, customer:
       body: JSON.stringify({
         name: customer.name || 'Consumidor Final',
         identification: customer.document || '222222222222',
-        email: customer.email || 'factura@cliente.com',
+        email: customer.email || 'consumidorfinal@cliente.com',
         phonePrimary: customer.phone || '3000000000',
         type: ['client'],
       }),

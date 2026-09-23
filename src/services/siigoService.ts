@@ -155,7 +155,7 @@ export async function emitSiigoInvoice(
           {
             first_name: firstName,
             last_name: lastName,
-            email: invoiceData.customer.email || 'factura@cliente.com',
+            email: invoiceData.customer.email || 'consumidorfinal@cliente.com',
             phone: { number: invoiceData.customer.phone || '3000000000' },
           }
         ],

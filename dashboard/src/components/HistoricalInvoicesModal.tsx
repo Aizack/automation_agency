@@ -916,10 +916,9 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Teléfono / WhatsApp *</label>
+                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Teléfono / WhatsApp (Opcional)</label>
                                         <input 
                                             type="text"
-                                            required
                                             value={quickCustPhone}
                                             onChange={(e) => setQuickCustPhone(e.target.value)}
                                             className="w-full bg-white border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-[#161616] outline-none font-mono text-xs"
@@ -928,7 +927,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Correo Electrónico</label>
+                                        <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Correo Electrónico (Opcional)</label>
                                         <input 
                                             type="email"
                                             value={quickCustEmail}
