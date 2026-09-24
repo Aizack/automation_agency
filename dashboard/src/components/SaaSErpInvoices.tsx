@@ -106,6 +106,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
     const [sellerFilter, setSellerFilter] = useState('all');
+    const [sortBy, setSortBy] = useState<'number_desc' | 'number_asc' | 'date_desc' | 'date_asc' | 'due_date_asc'>('number_desc');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
     const [minAmount, setMinAmount] = useState('');
@@ -842,12 +843,36 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         if (maxAmount && total > parseFloat(maxAmount)) return false;
 
         return true;
+    }).sort((a, b) => {
+        if (sortBy === 'number_desc') {
+            const numA = parseInt(a.invoice_number?.replace(/\D/g, '') || '0', 10);
+            const numB = parseInt(b.invoice_number?.replace(/\D/g, '') || '0', 10);
+            if (numA !== numB) return numB - numA;
+            return new Date(b.created_at || b.due_date).getTime() - new Date(a.created_at || a.due_date).getTime();
+        }
+        if (sortBy === 'number_asc') {
+            const numA = parseInt(a.invoice_number?.replace(/\D/g, '') || '0', 10);
+            const numB = parseInt(b.invoice_number?.replace(/\D/g, '') || '0', 10);
+            if (numA !== numB) return numA - numB;
+            return new Date(a.created_at || a.due_date).getTime() - new Date(b.created_at || b.due_date).getTime();
+        }
+        if (sortBy === 'date_desc') {
+            return new Date(b.created_at || b.due_date).getTime() - new Date(a.created_at || a.due_date).getTime();
+        }
+        if (sortBy === 'date_asc') {
+            return new Date(a.created_at || a.due_date).getTime() - new Date(b.created_at || b.due_date).getTime();
+        }
+        if (sortBy === 'due_date_asc') {
+            return new Date(a.due_date || a.created_at).getTime() - new Date(b.due_date || b.created_at).getTime();
+        }
+        return 0;
     });
 
     const resetFilters = () => {
         setSearchTerm('');
         setStatusFilter('all');
         setSellerFilter('all');
+        setSortBy('number_desc');
         setDateFrom('');
         setDateTo('');
         setMinAmount('');
@@ -2349,6 +2374,21 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">ORDENAR:</span>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                            className="bg-white border border-[#E2DFD7] py-1.5 px-2.5 text-xs text-[#161616] font-semibold outline-none cursor-pointer rounded-none font-sans"
+                        >
+                            <option value="number_desc">🔢 Consecutivo (Mayor ➔ Menor)</option>
+                            <option value="number_asc">🔢 Consecutivo (Menor ➔ Mayor)</option>
+                            <option value="date_desc">📅 Emisión (Más recientes)</option>
+                            <option value="date_asc">📅 Emisión (Más antiguas)</option>
+                            <option value="due_date_asc">⏳ Fecha Vencimiento</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
                         <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">VENDEDOR:</span>
                         <select
                             value={sellerFilter}
@@ -2467,6 +2507,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                         <thead>
                             <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[11px] text-[#6B6862] uppercase tracking-wider font-semibold">
                                 <th className="p-4">Factura / Cliente</th>
+                                <th className="p-4">Emisión</th>
                                 <th className="p-4">WhatsApp</th>
                                 <th className="p-4">Monto Total</th>
                                 <th className="p-4">Despacho</th>
@@ -2500,6 +2541,16 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             </div>
                                         </div>
                                     </td>
+                                    <td className="p-4 text-xs font-mono font-medium text-[#161616]">
+                                        <div>
+                                            <p className="font-bold text-[#161616]">
+                                                {inv.created_at ? new Date(inv.created_at).toLocaleDateString('es-CO') : 'N/A'}
+                                            </p>
+                                            <p className="text-[10px] text-[#6B6862] font-mono">
+                                                {inv.created_at ? new Date(inv.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
+                                            </p>
+                                        </div>
+                                    </td>
                                     <td className="p-4 font-mono text-xs text-[#6B6862]">+{inv.customer_phone}</td>
                                     <td className="p-4 font-bold text-[#161616] text-xs font-mono">
                                         {formatPrice(parseFloat(inv.total_amount) + parseFloat(inv.delivery_fee || '0'))}
@@ -2513,7 +2564,14 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                         </div>
                                     </td>
                                     <td className="p-4 text-xs font-medium text-[#6B6862]">
-                                        {new Date(inv.due_date).toLocaleDateString('es-CO')}
+                                        <div className="font-mono">
+                                            <p className="font-semibold text-[#161616]">{inv.due_date ? new Date(inv.due_date).toLocaleDateString('es-CO') : 'N/A'}</p>
+                                            {inv.payment_method === 'credito' && (
+                                                <span className="text-[9px] bg-[#FEF7E0] text-[#7A5A00] px-1 py-0.5 font-bold uppercase tracking-wider block w-max mt-0.5 border border-[#FEEFC3]">
+                                                    Límite Crédito
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="p-4 space-y-1">
                                         <div className="flex items-center gap-1.5 flex-wrap">

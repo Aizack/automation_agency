@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1790203377.7497597,
-    "seen": 1790203589.5569777,
-    "ast_hash": "f94d35acf590d46100b496c29d950206",
+    "mtime": 1790269988.3396082,
+    "seen": 1790270122.8015482,
+    "ast_hash": "d2644222840f2403157d9b99a20766e3",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -2511,6 +2511,12 @@
     "mtime": 1790140097.8394082,
     "seen": 1790140218.4363623,
     "ast_hash": "00fc6fd82b539c6e0d7733eb23873f33",
+    "semantic_hash": ""
+  },
+  "shutdown_state.json": {
+    "mtime": 1790228942.581154,
+    "seen": 1790270122.8014772,
+    "ast_hash": "3134e66af0d3fc7658bb8a8a46679019",
     "semantic_hash": ""
   }
 }
