@@ -468,10 +468,18 @@ export const EmployeePortal: React.FC = () => {
             setEmployeeToken(storedToken);
             setEmployeeId(storedEmpId || 'emp_session');
             setEmployeeName(storedName || 'Empleado');
-            setEmployeeRole(storedRole || 'employee');
-            setClientCategory(storedCategory || '');
+            const roleVal = storedRole || 'employee';
+            setEmployeeRole(roleVal);
+            const catVal = storedCategory || '';
+            setClientCategory(catVal);
             setClientId(storedClientId);
             setIsAuthenticated(true);
+
+            const rLower = roleVal.toLowerCase().trim();
+            const cLower = catVal.toLowerCase().trim();
+            if (rLower === 'mesero' || rLower === 'waiter' || rLower === 'capitan_meseros' || cLower.includes('restauran') || cLower.includes('gastro')) {
+                setActiveTab('mesas');
+            }
 
             if (storedShiftStart) {
                 setShiftStartTimestamp(parseInt(storedShiftStart));

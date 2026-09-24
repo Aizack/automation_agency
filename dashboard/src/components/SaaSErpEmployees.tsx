@@ -300,7 +300,9 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         ? rawClientId
         : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
 
-    const isRestaurant = (category || '').toLowerCase().includes('restauran') || (category || '').toLowerCase().includes('gastro');
+    const [clientCategory, setClientCategory] = useState<string>(category || '');
+    const activeCategory = clientCategory || category || '';
+    const isRestaurant = activeCategory.toLowerCase().includes('restauran') || activeCategory.toLowerCase().includes('gastro') || activeCategory.toLowerCase().includes('food');
     const restaurantRolesList = ['mesero', 'cocinero', 'bartender', 'capitan_meseros'];
 
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -523,17 +525,23 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             setLoading(true);
             const headers = { 'Authorization': `Bearer ${token}` };
             
-            const [empRes, deptRes, rolesRes, branchesRes] = await Promise.all([
+            const [empRes, deptRes, rolesRes, branchesRes, clientRes] = await Promise.all([
                 fetch(`/api/clients/${clientId}/employees`, { headers }),
                 fetch(`/api/clients/${clientId}/departments`, { headers }),
                 fetch(`/api/clients/${clientId}/employee-roles`, { headers }),
-                fetch(`/api/clients/${clientId}/branches`, { headers })
+                fetch(`/api/clients/${clientId}/branches`, { headers }),
+                fetch(`/api/clients/${clientId}`, { headers })
             ]);
 
             const empJson = await empRes.json();
             const deptJson = await deptRes.json();
             const rolesJson = await rolesRes.json();
             const branchesJson = await branchesRes.json();
+            const clientJson = await clientRes.json();
+
+            if (clientJson.success && clientJson.data?.category) {
+                setClientCategory(clientJson.data.category);
+            }
 
             if (empJson.success) setEmployees(empJson.employees || []);
             if (deptJson.success) setDepartments(deptJson.departments || []);
@@ -1037,15 +1045,22 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         }
     };
 
-    const DEFAULT_MODULE_KEYS = ['inventory', 'billing', 'cartera', 'crm', 'appointments', 'formulas', 'lab', 'domicilios', 'employees', 'campaigns', 'marketing'];
+    const DEFAULT_MODULE_KEYS = isRestaurant ? [
+        'inventory', 'billing', 'gastronomy', 'kds', 'bar_kds', 'waiter_portal', 
+        'restaurant_menu', 'arqueo_caja', 'contabilidad', 'cartera', 'crm', 
+        'domicilios', 'employees', 'trazabilidad', 'campaigns', 'marketing'
+    ] : [
+        'inventory', 'billing', 'cartera', 'crm', 'appointments', 'formulas', 
+        'lab', 'domicilios', 'employees', 'campaigns', 'marketing'
+    ];
 
     const openCreateEmpModal = () => {
         setSelectedEmp(null);
         setEmpName('');
         setEmpLastName('');
         setEmpPhone('');
-        setEmpRole('agent');
-        setEmpDeptId('');
+        setEmpRole(isRestaurant ? 'cocinero' : 'agent');
+        setEmpDeptId(isRestaurant ? 'dept_cocina' : '');
         setEmpPin('');
         setEmpCode(generateEmployeeCode());
         setEmployeeAccessPermissions(DEFAULT_MODULE_KEYS);
@@ -1074,6 +1089,10 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                     if (Array.isArray(parsed) && parsed.length > 0) loadedModules = parsed;
                 } catch (e) {}
             }
+        }
+        if (isRestaurant) {
+            const optometryKeys = ['formulas', 'lab', 'appointments'];
+            loadedModules = loadedModules.filter(key => !optometryKeys.includes(key));
         }
         setEmployeeAccessPermissions(loadedModules);
 
@@ -2686,7 +2705,25 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 <div className="space-y-2">
                                     <label className="block text-xs font-bold text-[#76746E]">Módulos permitidos en el ERP</label>
                                     <div className="grid grid-cols-2 gap-2">
-                                        {MODULES.map((module) => {
+                                        {(isRestaurant ? [
+                                            { key: 'inventory', label: '📦 Inventario & Materias Primas' },
+                                            { key: 'billing', label: '💵 Facturación & POS' },
+                                            { key: 'gastronomy', label: '🪑 Gastronomía & Mesas / Comandas' },
+                                            { key: 'kds', label: '👨‍🍳 Cocina (Pantalla KDS)' },
+                                            { key: 'bar_kds', label: '🍹 Bar (Pantalla KDS)' },
+                                            { key: 'waiter_portal', label: '⏰ Turnos & Portal Meseros' },
+                                            { key: 'restaurant_menu', label: '📜 Creador de Menú & Carta QR' },
+                                            { key: 'arqueo_caja', label: '📟 Arqueo de Caja' },
+                                            { key: 'contabilidad', label: '📈 Contabilidad' },
+                                            { key: 'cartera', label: '📊 Cartera y Cobros' },
+                                            { key: 'crm', label: '👥 Directorio de Clientes' },
+                                            { key: 'domicilios', label: '🚴 Despachos y Domicilios' },
+                                            { key: 'employees', label: '👥 Administración Personal' },
+                                            { key: 'trazabilidad', label: '🛡️ Trazabilidad & Bitácora' },
+                                            { key: 'campaigns', label: '🗺️ Campañas' },
+                                            { key: 'marketing', label: '📢 Difusión Promocional' },
+                                            { key: 'system_status', label: '🔧 Estado del Sistema' },
+                                        ] : MODULES).map((module) => {
                                             const active = employeeAccessPermissions.includes(module.key);
                                             return (
                                                 <button
@@ -2778,7 +2815,13 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                     className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none cursor-pointer"
                                 >
                                     <option value="">Ninguno / Sin Asignar</option>
-                                    {departments.map(d => (
+                                    {(departments.length > 0 ? departments : (isRestaurant ? [
+                                        { id: 'dept_cocina', name: 'Cocina & KDS' },
+                                        { id: 'dept_salon', name: 'Salón / Servicio (Meseros)' },
+                                        { id: 'dept_bar', name: 'Bar & Bebidas' },
+                                        { id: 'dept_caja', name: 'Caja & Administración' },
+                                        { id: 'dept_logistica', name: 'Logística & Domicilios' }
+                                    ] : [])).map(d => (
                                         <option key={d.id} value={d.id}>{d.name}</option>
                                     ))}
                                 </select>
@@ -2813,16 +2856,18 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="block text-xs font-bold text-[#76746E]">Registro / Tarjeta Profesional (T.P. Optómetra / Salud)</label>
-                                <input 
-                                    type="text"
-                                    value={empProfLicense}
-                                    onChange={(e) => setEmpProfLicense(e.target.value)}
-                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none font-mono text-xs"
-                                    placeholder="Ej: TP-1098234-OPT (Opcional)"
-                                />
-                            </div>
+                            {!isRestaurant && (
+                                <div className="space-y-1">
+                                    <label className="block text-xs font-bold text-[#76746E]">Registro / Tarjeta Profesional (T.P. Optómetra / Salud)</label>
+                                    <input 
+                                        type="text"
+                                        value={empProfLicense}
+                                        onChange={(e) => setEmpProfLicense(e.target.value)}
+                                        className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-primary outline-none font-mono text-xs"
+                                        placeholder="Ej: TP-1098234-OPT (Opcional)"
+                                    />
+                                </div>
+                            )}
 
                             <div className="flex gap-3 justify-end pt-4 border-t border-[#E2DFD7]">
                                 <button 

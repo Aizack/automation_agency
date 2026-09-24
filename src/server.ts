@@ -3164,23 +3164,6 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       createdByUserName,
       validCreatedAt
     ]);
-      paymentMethod || 'efectivo',
-      cleanInstallmentsCount,
-      installmentFrequency || null,
-      finalDeliveryMethod,
-      cleanDeliveryFee,
-      deliveryAddress || customerAddress || null,
-      deliveryDate || null,
-      finalDeliveryMethod === 'domicilio' ? 'pending' : 'entregado',
-      transferBank || null,
-      transferDestinationAccount || null,
-      finalSellerEmpId,
-      finalSellerEmpId,
-      finalSellerName,
-      validCreatedByUserId,
-      createdByUserName,
-      validCreatedAt
-    ]);
 
     const invoice = invoiceResult.rows[0];
     console.log(`[Invoice Create] Factura creada con delivery_method: "${invoice.delivery_method}" | delivery_status: "${invoice.delivery_status}"`);

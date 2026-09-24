@@ -56,7 +56,9 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
         } catch (e) {
             console.error("Error decoding secure menu token:", e);
         }
-    } else if (lastPathSegment && lastPathSegment !== 'menu' && !lastPathSegment.startsWith('mesa-')) {
+    } else if (lastPathSegment.startsWith('mesa-')) {
+        activeTableNumber = lastPathSegment.replace('mesa-', '');
+    } else if (lastPathSegment && lastPathSegment !== 'menu-digital' && lastPathSegment !== 'menu') {
         activeClientId = lastPathSegment;
     }
 
@@ -84,6 +86,7 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
     // Datos del Cliente y Tipo de Orden
     const [orderType, setOrderType] = useState<'mesa' | 'domicilio'>('mesa');
     const [tableNumber, setTableNumber] = useState(activeTableNumber);
+    const [isTableLocked, setIsTableLocked] = useState(false);
     const [customerName, setCustomerName] = useState('');
     const [customerDni, setCustomerDni] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
@@ -111,17 +114,22 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
     useEffect(() => {
         fetchMenu();
 
-        // Extraer número de mesa si viene por query param tradicional
+        // Extraer número de mesa si viene por query param tradicional (?table=2 o ?mesa=2)
         const params = new URLSearchParams(window.location.search);
         const mesaParam = params.get('table') || params.get('mesa') || activeTableNumber;
         if (mesaParam) {
             setTableNumber(mesaParam);
+            setIsTableLocked(true);
             setOrderType('mesa');
         }
 
-        // Ocultar / Enmascarar la URL en la barra del navegador por seguridad
-        const maskedTable = mesaParam || activeTableNumber;
-        const cleanPath = maskedTable ? `/m/mesa-${maskedTable}` : `/m/menu-digital`;
+        // Mantener la identidad del restaurante y la mesa en la barra de navegación al compartir/recargar
+        const currentPath = window.location.pathname;
+        let cleanPath = currentPath;
+        if (currentPath === '/m/' || currentPath === '/m' || currentPath === '/menu' || currentPath === '/menu/') {
+            cleanPath = activeClientId !== 'CLIENT-RESTAURANTE-TEST' ? `/m/${activeClientId}` : '/m/menu-digital';
+        }
+
         if (window.location.pathname !== cleanPath) {
             window.history.replaceState({}, '', cleanPath);
         }
@@ -147,8 +155,6 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
         setAdditionPrice('');
         setItemNotes('');
     };
-
-
 
     const handleAddCustomAddition = () => {
         if (!additionName.trim()) return;
@@ -224,7 +230,7 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                     customer_address: customerAddress,
                     is_individual: isIndividualAccount,
                     items: cart,
-                    notes: `Pedido desde Carta Digital Web`
+                    notes: `Pedido desde Carta Digital Web Wabi-Sabi`
                 })
             });
 
@@ -253,65 +259,74 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#0a0a0c] text-white flex flex-col items-center justify-center p-6 space-y-4">
-                <div className="w-12 h-12 border-4 border-amber-500/30 border-t-amber-400 rounded-full animate-spin"></div>
-                <p className="text-xs font-bold text-amber-300 tracking-wider uppercase animate-pulse">Cargando carta gastronómica...</p>
+            <div className="min-h-screen bg-[#FAF8F5] text-[#2C2825] flex flex-col items-center justify-center p-6 space-y-4">
+                <div className="w-12 h-12 border-4 border-[#D9381E]/30 border-t-[#D9381E] rounded-full animate-spin"></div>
+                <p className="text-xs font-serif font-bold text-[#6C655F] tracking-widest uppercase animate-pulse">Cargando carta gastronómica...</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0c] text-on-surface font-sans pb-32">
-            {/* Header Hero Banner del Restaurante */}
-            <header className="relative border-b border-outline/10 backdrop-blur-xl sticky top-0 z-40 bg-[#0a0a0c]">
+        <div className="min-h-screen bg-[#FAF8F5] text-[#2C2825] font-sans pb-32">
+            {/* Header Hero Banner del Restaurante con Estética Wabi-Sabi Paper */}
+            <header className="relative border-b border-[#E5E0D8] backdrop-blur-md sticky top-0 z-40 bg-[#FAF8F5]/95 shadow-sm">
                 {/* Banner de Portada / Hero Background */}
-                <div className="relative h-36 sm:h-48 w-full overflow-hidden bg-gradient-to-r from-amber-950 via-slate-900 to-black">
+                <div className="relative h-36 sm:h-44 w-full overflow-hidden bg-[#EBE6DD]">
                     {restaurant?.banner_url ? (
                         <img
                             src={restaurant.banner_url}
                             alt="Banner Restaurante"
-                            className="w-full h-full object-cover opacity-60"
+                            className="w-full h-full object-cover opacity-85"
                         />
                     ) : (
-                        <div className="w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/40 via-black to-black opacity-80" />
+                        <div className="w-full h-full bg-gradient-to-r from-[#F0EDE6] via-[#EAE5DD] to-[#E2DDD3] flex items-center justify-center">
+                            <span className="text-4xl opacity-20">🍃</span>
+                        </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-[#0a0a0c]/50 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#FAF8F5] via-[#FAF8F5]/40 to-transparent" />
                 </div>
 
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-12 relative z-10 space-y-4 pb-4">
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-surface border-2 border-amber-500/50 text-amber-400 flex items-center justify-center text-3xl shadow-2xl overflow-hidden shrink-0">
+                        <div className="flex items-center gap-3.5">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#FAF7F2] border-2 border-[#D9381E]/30 text-[#D9381E] flex items-center justify-center text-3xl shadow-md overflow-hidden shrink-0">
                                 {restaurant?.logo_url ? (
                                     <img src={restaurant.logo_url} alt="Logo" className="w-full h-full object-cover" />
                                 ) : (
-                                    '🍽️'
+                                    '⛩️'
                                 )}
                             </div>
                             <div>
-                                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">{restaurant?.name || 'Restaurante Exclusivo'}</h1>
-                                <span className="text-[11px] text-amber-400 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-wide">
-                                    {restaurant?.category || 'Menú Digital Gourmet'}
-                                </span>
+                                <h1 className="text-xl sm:text-2xl font-serif font-black text-[#2C2825] tracking-tight drop-shadow-sm">{restaurant?.name || 'Restaurante Gastronómico'}</h1>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[11px] font-bold text-[#D9381E] bg-[#D9381E]/10 px-2.5 py-0.5 rounded-md border border-[#D9381E]/20 uppercase tracking-wider">
+                                        {restaurant?.category || 'Menú Digital Gourmet'}
+                                    </span>
+                                    {tableNumber && (
+                                        <span className="text-[11px] font-bold text-[#2E593C] bg-[#EAF2ED] px-2.5 py-0.5 rounded-md border border-[#3B6E4C]/30 flex items-center gap-1">
+                                            🪑 Mesa #{tableNumber} {isTableLocked && '🔒'}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
                         {/* Selector de Modalidad */}
-                        <div className="bg-surface/90 p-1 rounded-2xl border border-outline/20 flex gap-1 shadow-lg self-start sm:self-auto">
+                        <div className="bg-[#EAE6DF] p-1 rounded-xl border border-[#D8D2C7] flex gap-1 shadow-inner self-start sm:self-auto">
                             <button
                                 type="button"
                                 onClick={() => setOrderType('mesa')}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                                    orderType === 'mesa' ? 'bg-amber-500 text-black shadow-md' : 'text-on-surface-variant hover:text-white'
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                                    orderType === 'mesa' ? 'bg-[#D9381E] text-white shadow-sm' : 'text-[#6C655F] hover:text-[#2C2825]'
                                 }`}
                             >
-                                🪑 En Mesa
+                                🪑 En Mesa {tableNumber ? `(#${tableNumber})` : ''}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setOrderType('domicilio')}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                                    orderType === 'domicilio' ? 'bg-emerald-500 text-black shadow-md' : 'text-on-surface-variant hover:text-white'
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                                    orderType === 'domicilio' ? 'bg-[#2E593C] text-white shadow-sm' : 'text-[#6C655F] hover:text-[#2C2825]'
                                 }`}
                             >
                                 🛵 Domicilio
@@ -319,15 +334,15 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                         </div>
                     </div>
 
-                    {/* Buscador */}
+                    {/* Buscador Wabi-Sabi */}
                     <div className="relative">
-                        <span className="material-symbols-outlined absolute left-3.5 top-2.5 text-on-surface-variant text-sm">search</span>
+                        <span className="material-symbols-outlined absolute left-3.5 top-2.5 text-[#8C857B] text-sm">search</span>
                         <input
                             type="text"
-                            placeholder="Buscar salchipapas, entradas, bebidas..."
+                            placeholder="Buscar platos, entradas, bebidas..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-surface/90 border border-outline/20 rounded-2xl py-2.5 pl-10 pr-4 text-xs text-white placeholder:text-on-surface-variant/60 outline-none focus:border-amber-400 transition"
+                            className="w-full bg-[#FAF7F2] border border-[#E5E0D8] rounded-xl py-2.5 pl-10 pr-4 text-xs text-[#2C2825] placeholder:text-[#8C857B] outline-none focus:border-[#D9381E] transition shadow-inner"
                         />
                     </div>
 
@@ -340,8 +355,8 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                                 onClick={() => setSelectedCategory(cat)}
                                 className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                                     selectedCategory === cat
-                                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/20'
-                                        : 'bg-surface/60 border border-outline/10 text-on-surface-variant hover:text-white'
+                                        ? 'bg-[#D9381E] text-white shadow-sm'
+                                        : 'bg-[#FAF7F2] border border-[#E5E0D8] text-[#6C655F] hover:text-[#2C2825]'
                                 }`}
                             >
                                 {cat}
@@ -351,12 +366,12 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                 </div>
             </header>
 
-            {/* Grid de Platos */}
+            {/* Grid de Platos Wabi-Sabi Paper */}
             <main className="max-w-4xl mx-auto p-4 md:p-6">
                 {filteredItems.length === 0 ? (
-                    <div className="text-center py-16 space-y-3 bg-surface/20 border border-outline/10 rounded-3xl p-6">
-                        <span className="material-symbols-outlined text-4xl text-on-surface-variant/50">restaurant_menu</span>
-                        <p className="text-xs font-bold text-on-surface-variant">No encontramos platos en esta categoría.</p>
+                    <div className="text-center py-16 space-y-3 bg-[#FAF7F2] border border-[#E5E0D8] rounded-3xl p-6">
+                        <span className="material-symbols-outlined text-4xl text-[#8C857B]">restaurant_menu</span>
+                        <p className="text-xs font-serif font-bold text-[#6C655F]">No encontramos platos disponibles en esta sección.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -364,10 +379,10 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                             const priceNum = parseFloat(item.price) || 0;
                             const mods = typeof item.available_modifiers === 'string' ? JSON.parse(item.available_modifiers || '[]') : (item.available_modifiers || []);
                             return (
-                                <div key={item.id} className="bg-surface/50 border border-outline/10 rounded-3xl overflow-hidden hover:border-amber-500/40 transition flex flex-col justify-between shadow-2xl backdrop-blur-md group">
-                                    <div className="space-y-3 p-5">
+                                <div key={item.id} className="bg-[#FAF7F2] border border-[#E5E0D8] rounded-2xl overflow-hidden hover:border-[#D9381E]/40 transition flex flex-col justify-between shadow-sm group">
+                                    <div className="space-y-3 p-4 sm:p-5">
                                         {/* Foto del Plato */}
-                                        <div className="relative h-44 w-full rounded-2xl overflow-hidden bg-black/40 border border-outline/10 group-hover:border-amber-500/20 transition">
+                                        <div className="relative h-44 w-full rounded-xl overflow-hidden bg-[#EBE6DD] border border-[#E5E0D8]">
                                             {item.image_url ? (
                                                 <img
                                                     src={item.image_url}
@@ -375,41 +390,43 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                                                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-950/30 via-slate-900 to-black text-amber-500/40 space-y-1">
+                                                <div className="w-full h-full flex flex-col items-center justify-center text-[#8C857B] space-y-1">
                                                     <span className="material-symbols-outlined text-4xl">restaurant</span>
-                                                    <span className="text-[10px] font-bold text-amber-500/30 uppercase tracking-widest">Plato Gourmet</span>
+                                                    <span className="text-[10px] font-serif font-bold uppercase tracking-widest text-[#8C857B]">Plato Wabi-Sabi</span>
                                                 </div>
                                             )}
-                                            <span className="absolute top-3 right-3 font-black text-amber-400 text-xs bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-amber-500/30 shadow-lg">
+                                            <span className="absolute top-3 right-3 font-serif font-bold text-[#2C2825] text-xs bg-[#FAF7F2]/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#E5E0D8] shadow-sm">
                                                 ${priceNum.toLocaleString()} COP
                                             </span>
                                         </div>
 
                                         <div className="space-y-1.5">
-                                            <h3 className="font-extrabold text-white text-base leading-tight">{item.name}</h3>
+                                            <h3 className="font-serif font-bold text-[#2C2825] text-base leading-tight">{item.name}</h3>
 
                                             {item.description && (
-                                                <p className="text-xs text-on-surface-variant/80 line-clamp-3 leading-relaxed">{item.description}</p>
+                                                <p className="text-xs text-[#6C655F] line-clamp-3 leading-relaxed">{item.description}</p>
                                             )}
 
                                             {mods.length > 0 && (
                                                 <div className="flex flex-wrap gap-1 pt-1">
-                                                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                                                        ✨ {mods.length} adicionales disponibles
+                                                    <span className="text-[10px] text-[#2E593C] font-bold bg-[#EAF2ED] px-2 py-0.5 rounded-md border border-[#3B6E4C]/20">
+                                                        ✨ {mods.length} opcionales disponibles
                                                     </span>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => openCustomizationModal(item)}
-                                        className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-2xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/20"
-                                    >
-                                        <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
-                                        Ordenar
-                                    </button>
+                                    <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+                                        <button
+                                            type="button"
+                                            onClick={() => openCustomizationModal(item)}
+                                            className="w-full py-2.5 bg-[#D9381E] hover:bg-[#C22E15] text-white font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                                        >
+                                            <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
+                                            Seleccionar y Personalizar
+                                        </button>
+                                    </div>
                                 </div>
                             );
                         })}
@@ -419,34 +436,34 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
 
             {/* Modal de Personalización de Plato para Cliente */}
             {selectedItem && (
-                <div className="fixed inset-0 z-[9999] backdrop-blur-md bg-black/85 flex items-center justify-center p-4">
-                    <div className="bg-[#121216] border border-outline/20 w-full max-w-md rounded-3xl p-6 space-y-5 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
+                <div className="fixed inset-0 z-[9999] backdrop-blur-sm bg-black/60 flex items-center justify-center p-4">
+                    <div className="bg-[#FAF8F5] border border-[#E5E0D8] w-full max-w-md rounded-2xl p-6 space-y-5 shadow-2xl my-auto max-h-[90vh] overflow-y-auto text-[#2C2825]">
+                        <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
                             <div>
-                                <h3 className="font-extrabold text-white text-base">{selectedItem.name}</h3>
-                                <span className="text-xs font-black text-amber-400">${(parseFloat(selectedItem.price) || 0).toLocaleString()} COP</span>
+                                <h3 className="font-serif font-bold text-[#2C2825] text-lg">{selectedItem.name}</h3>
+                                <span className="text-xs font-serif font-bold text-[#D9381E]">${(parseFloat(selectedItem.price) || 0).toLocaleString()} COP</span>
                             </div>
-                            <button type="button" onClick={() => setSelectedItem(null)} className="text-on-surface-variant hover:text-white">
+                            <button type="button" onClick={() => setSelectedItem(null)} className="text-[#8C857B] hover:text-[#2C2825]">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
 
                         {/* Cantidad */}
-                        <div className="flex items-center justify-between bg-surface/50 p-3 rounded-2xl border border-outline/10">
-                            <span className="text-xs font-bold text-white">Cantidad de Porciones:</span>
+                        <div className="flex items-center justify-between bg-[#FAF7F2] p-3 rounded-xl border border-[#E5E0D8]">
+                            <span className="text-xs font-bold text-[#2C2825]">Cantidad de Porciones:</span>
                             <div className="flex items-center gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setItemQty(q => Math.max(1, q - 1))}
-                                    className="w-8 h-8 rounded-xl bg-surface border border-outline/20 text-white font-bold text-sm flex items-center justify-center"
+                                    className="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#D8D2C7] text-[#2C2825] font-bold text-sm flex items-center justify-center hover:bg-[#EAE6DF]"
                                 >
                                     -
                                 </button>
-                                <span className="font-extrabold text-amber-400 text-sm">{itemQty}</span>
+                                <span className="font-bold text-[#D9381E] text-sm">{itemQty}</span>
                                 <button
                                     type="button"
                                     onClick={() => setItemQty(q => q + 1)}
-                                    className="w-8 h-8 rounded-xl bg-surface border border-outline/20 text-white font-bold text-sm flex items-center justify-center"
+                                    className="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#D8D2C7] text-[#2C2825] font-bold text-sm flex items-center justify-center hover:bg-[#EAE6DF]"
                                 >
                                     +
                                 </button>
@@ -460,8 +477,8 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                                 : (selectedItem.available_modifiers || []);
                             if (!Array.isArray(parsedMods) || parsedMods.length === 0) return null;
                             return (
-                                <div className="space-y-2 bg-surface/50 p-3 rounded-2xl border border-outline/10">
-                                    <label className="text-xs font-extrabold text-emerald-400 uppercase">💡 Adicionales Sugeridos (1-Clic):</label>
+                                <div className="space-y-2 bg-[#FAF7F2] p-3.5 rounded-xl border border-[#E5E0D8]">
+                                    <label className="text-xs font-bold text-[#2E593C] uppercase tracking-wider block">💡 Adicionales Sugeridos (1-Clic):</label>
                                     <div className="flex flex-wrap gap-1.5">
                                         {parsedMods.map((mod: any, idx: number) => {
                                             const isSelected = additionsList.some(a => a.name === mod.name);
@@ -476,10 +493,10 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                                                             setAdditionsList(prev => [...prev, { name: mod.name, price: parseFloat(mod.price) || 0 }]);
                                                         }
                                                     }}
-                                                    className={`text-xs px-3 py-1.5 rounded-xl border font-extrabold transition cursor-pointer flex items-center gap-1 ${
+                                                    className={`text-xs px-3 py-1.5 rounded-lg border font-bold transition cursor-pointer flex items-center gap-1 ${
                                                         isSelected
-                                                            ? 'bg-emerald-500 text-black border-emerald-400 shadow-md scale-105'
-                                                            : 'bg-surface border-outline/20 text-emerald-300 hover:bg-emerald-500/20'
+                                                            ? 'bg-[#2E593C] text-white border-[#2E593C] shadow-sm'
+                                                            : 'bg-[#FAF8F5] border-[#D8D2C7] text-[#2C2825] hover:bg-[#EAF2ED]'
                                                     }`}
                                                 >
                                                     {isSelected ? '✓' : '+'} {mod.name} (+${(parseFloat(mod.price) || 0).toLocaleString()} COP)
@@ -493,30 +510,30 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
 
                         {/* Adicionales Personalizados */}
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-on-surface-variant">Otro Adicional Personalizado:</label>
+                            <label className="text-xs font-bold text-[#6C655F]">Otro Adicional Personalizado:</label>
                             <div className="grid grid-cols-3 gap-2">
                                 <input
                                     type="text"
                                     placeholder="Ej: Extra queso"
                                     value={additionName}
                                     onChange={(e) => setAdditionName(e.target.value)}
-                                    className="col-span-2 bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-400"
+                                    className="col-span-2 bg-[#FAF7F2] border border-[#E5E0D8] rounded-xl p-2.5 text-xs text-[#2C2825] outline-none focus:border-[#D9381E]"
                                 />
                                 <input
                                     type="number"
                                     placeholder="Precio ($)"
                                     value={additionPrice}
                                     onChange={(e) => setAdditionPrice(e.target.value)}
-                                    className="bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-400"
+                                    className="bg-[#FAF7F2] border border-[#E5E0D8] rounded-xl p-2.5 text-xs text-[#2C2825] outline-none focus:border-[#D9381E]"
                                 />
                             </div>
-                            <button type="button" onClick={handleAddCustomAddition} className="w-full py-2 bg-emerald-500/20 text-emerald-300 font-bold text-xs rounded-xl border border-emerald-500/30">
+                            <button type="button" onClick={handleAddCustomAddition} className="w-full py-2 bg-[#EAF2ED] text-[#2E593C] font-bold text-xs rounded-xl border border-[#3B6E4C]/30 hover:bg-[#DCEAE0] transition">
                                 + Agregar Adicional Extra
                             </button>
                             {additionsList.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 pt-1">
                                     {additionsList.map((a, i) => (
-                                        <span key={i} className="bg-emerald-500/20 text-emerald-300 text-[11px] px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
+                                        <span key={i} className="bg-[#EAF2ED] text-[#2E593C] text-[11px] px-2.5 py-0.5 rounded-lg border border-[#3B6E4C]/30 font-medium">
                                             ➕ {a.name} (+${a.price.toLocaleString()} COP)
                                         </span>
                                     ))}
@@ -526,20 +543,20 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
 
                         {/* Nota especial */}
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-on-surface-variant">Instrucciones Especiales para Cocina:</label>
+                            <label className="text-xs font-bold text-[#6C655F]">Instrucciones Especiales para Cocina:</label>
                             <input
                                 type="text"
                                 placeholder="Ej: Salsa aparte, bien tostado..."
                                 value={itemNotes}
                                 onChange={(e) => setItemNotes(e.target.value)}
-                                className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-400"
+                                className="w-full bg-[#FAF7F2] border border-[#E5E0D8] rounded-xl p-2.5 text-xs text-[#2C2825] outline-none focus:border-[#D9381E]"
                             />
                         </div>
 
                         <button
                             type="button"
                             onClick={handleAddToCart}
-                            className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-xs rounded-2xl hover:opacity-90 shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
+                            className="w-full py-3.5 bg-[#D9381E] hover:bg-[#C22E15] text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-2"
                         >
                             <span className="material-symbols-outlined text-[18px]">shopping_basket</span>
                             Agregar al Carrito de la Orden
@@ -548,24 +565,24 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                 </div>
             )}
 
-            {/* Barra Flotante / Carrito de Compras */}
+            {/* Barra Flotante / Carrito de Compras Wabi-Sabi */}
             {cart.length > 0 && (
-                <div className="fixed bottom-0 inset-x-0 z-50 p-4 bg-gradient-to-t from-black via-black/90 to-transparent backdrop-blur-xl border-t border-outline/10">
-                    <div className="max-w-4xl mx-auto flex items-center justify-between bg-surface/90 border border-amber-500/40 p-4 rounded-3xl shadow-2xl shadow-amber-500/10">
+                <div className="fixed bottom-0 inset-x-0 z-50 p-4 bg-gradient-to-t from-[#FAF8F5] via-[#FAF8F5]/90 to-transparent backdrop-blur-md">
+                    <div className="max-w-4xl mx-auto flex items-center justify-between bg-[#FAF7F2] border border-[#D9381E]/30 p-4 rounded-2xl shadow-xl">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-black font-black flex items-center justify-center text-sm shadow-md">
+                            <div className="w-10 h-10 rounded-xl bg-[#D9381E] text-white font-bold flex items-center justify-center text-sm shadow-sm">
                                 {cart.reduce((s, i) => s + i.quantity, 0)}
                             </div>
                             <div>
-                                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">Total de tu Pedido:</span>
-                                <strong className="text-base font-black text-white">${cartTotal.toLocaleString()} COP</strong>
+                                <span className="text-[10px] text-[#8C857B] font-bold uppercase tracking-wider block">Total de tu Pedido:</span>
+                                <strong className="text-base font-serif font-bold text-[#2C2825]">${cartTotal.toLocaleString()} COP</strong>
                             </div>
                         </div>
 
                         <button
                             type="button"
                             onClick={() => setIsCartOpen(true)}
-                            className="px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-xs rounded-2xl hover:opacity-90 transition cursor-pointer flex items-center gap-2 shadow-lg shadow-amber-500/20"
+                            className="px-5 py-3 bg-[#D9381E] hover:bg-[#C22E15] text-white font-bold text-xs rounded-xl transition cursor-pointer flex items-center gap-2 shadow-sm"
                         >
                             <span>Ver Pedido</span>
                             <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -574,28 +591,28 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                 </div>
             )}
 
-            {/* Modal Drawer de Confirmación de Pedido */}
+            {/* Modal Drawer de Confirmación de Pedido Wabi-Sabi */}
             {isCartOpen && (
-                <div className="fixed inset-0 z-[9999] backdrop-blur-md bg-black/90 flex items-end sm:items-center justify-center p-0 sm:p-4">
-                    <div className="bg-[#121216] border border-outline/20 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between border-b border-outline/10 pb-3">
-                            <h3 className="font-extrabold text-white text-base flex items-center gap-2">
+                <div className="fixed inset-0 z-[9999] backdrop-blur-sm bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
+                    <div className="bg-[#FAF8F5] border border-[#E5E0D8] w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-6 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto text-[#2C2825]">
+                        <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
+                            <h3 className="font-serif font-bold text-[#2C2825] text-lg flex items-center gap-2">
                                 🛒 Resumen de tu Pedido
                             </h3>
-                            <button type="button" onClick={() => setIsCartOpen(false)} className="text-on-surface-variant hover:text-white">
+                            <button type="button" onClick={() => setIsCartOpen(false)} className="text-[#8C857B] hover:text-[#2C2825]">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
 
                         {/* Modalidad Selector */}
-                        <div className="space-y-2 bg-surface/50 p-3 rounded-2xl border border-outline/10">
-                            <label className="text-xs font-bold text-amber-400">Modalidad de Atención:</label>
+                        <div className="space-y-2 bg-[#FAF7F2] p-3.5 rounded-xl border border-[#E5E0D8]">
+                            <label className="text-xs font-bold text-[#D9381E] uppercase tracking-wider block">Modalidad de Atención:</label>
                             <div className="grid grid-cols-2 gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setOrderType('mesa')}
-                                    className={`py-2 rounded-xl text-xs font-extrabold transition cursor-pointer ${
-                                        orderType === 'mesa' ? 'bg-amber-500 text-black shadow-md' : 'bg-surface border border-outline/20 text-on-surface-variant'
+                                    className={`py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                                        orderType === 'mesa' ? 'bg-[#D9381E] text-white shadow-sm' : 'bg-[#FAF8F5] border border-[#E5E0D8] text-[#6C655F]'
                                     }`}
                                 >
                                     🪑 Consumo en Mesa
@@ -603,8 +620,8 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                                 <button
                                     type="button"
                                     onClick={() => setOrderType('domicilio')}
-                                    className={`py-2 rounded-xl text-xs font-extrabold transition cursor-pointer ${
-                                        orderType === 'domicilio' ? 'bg-emerald-500 text-black shadow-md' : 'bg-surface border border-outline/20 text-on-surface-variant'
+                                    className={`py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                                        orderType === 'domicilio' ? 'bg-[#2E593C] text-white shadow-sm' : 'bg-[#FAF8F5] border border-[#E5E0D8] text-[#6C655F]'
                                     }`}
                                 >
                                     🛵 Domicilio a Casa
@@ -614,68 +631,80 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
 
                         {/* Formulario según modalidad */}
                         {orderType === 'mesa' ? (
-                            <div className="space-y-3 bg-surface/50 p-3.5 rounded-2xl border border-outline/10">
+                            <div className="space-y-3 bg-[#FAF7F2] p-4 rounded-xl border border-[#E5E0D8]">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-white">Número de Mesa *</label>
+                                    <label className="text-xs font-bold text-[#2C2825] flex items-center justify-between">
+                                        <span>Número de Mesa *</span>
+                                        {isTableLocked && (
+                                            <span className="text-[10px] text-[#2E593C] bg-[#EAF2ED] px-2 py-0.5 rounded border border-[#3B6E4C]/30 font-bold">
+                                                🔒 Sujetada por QR de Mesa
+                                            </span>
+                                        )}
+                                    </label>
                                     <input
                                         type="text"
                                         placeholder="Ej: Mesa 4, Terraza 2"
                                         value={tableNumber}
+                                        readOnly={isTableLocked}
                                         onChange={(e) => setTableNumber(e.target.value)}
-                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-400 font-bold"
+                                        className={`w-full border rounded-xl p-2.5 text-xs text-[#2C2825] outline-none font-bold ${
+                                            isTableLocked 
+                                                ? 'bg-[#EAE6DF] border-[#D8D2C7] cursor-not-allowed text-[#2C2825]' 
+                                                : 'bg-[#FAF8F5] border-[#E5E0D8] focus:border-[#D9381E]'
+                                        }`}
                                         required
                                     />
                                 </div>
 
                                 {/* Modalidad de Cuenta: Individual por Comensal vs Cuenta Conjunta */}
-                                <div className="space-y-2 pt-1 border-t border-outline/10">
-                                    <label className="text-[11px] font-extrabold text-amber-400 uppercase tracking-wide">💳 Modalidad de Cobro para la Mesa:</label>
+                                <div className="space-y-2 pt-2 border-t border-[#E5E0D8]">
+                                    <label className="text-[11px] font-bold text-[#D9381E] uppercase tracking-wide block">💳 Modalidad de Cobro para la Mesa:</label>
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             type="button"
                                             onClick={() => setIsIndividualAccount(false)}
-                                            className={`py-2 rounded-xl text-[11px] font-extrabold transition cursor-pointer border ${
-                                                !isIndividualAccount ? 'bg-amber-500 text-black border-amber-400 shadow-md' : 'bg-surface border-outline/20 text-on-surface-variant'
+                                            className={`py-2 rounded-lg text-[11px] font-bold transition cursor-pointer border ${
+                                                !isIndividualAccount ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-sm' : 'bg-[#FAF8F5] border-[#E5E0D8] text-[#6C655F]'
                                             }`}
                                         >
-                                            🪑 Cuenta Conjunta de Mesa
+                                            🪑 Cuenta Conjunta
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setIsIndividualAccount(true)}
-                                            className={`py-2 rounded-xl text-[11px] font-extrabold transition cursor-pointer border ${
-                                                isIndividualAccount ? 'bg-amber-500 text-black border-amber-400 shadow-md' : 'bg-surface border-outline/20 text-on-surface-variant'
+                                            className={`py-2 rounded-lg text-[11px] font-bold transition cursor-pointer border ${
+                                                isIndividualAccount ? 'bg-[#D9381E] text-white border-[#D9381E] shadow-sm' : 'bg-[#FAF8F5] border-[#E5E0D8] text-[#6C655F]'
                                             }`}
                                         >
-                                            👤 Cuenta Individual por Persona
+                                            👤 Cuenta Individual
                                         </button>
                                     </div>
 
                                     {isIndividualAccount && (
                                         <div className="space-y-2 pt-2">
-                                            <p className="text-[11px] text-amber-300 font-medium leading-relaxed">
+                                            <p className="text-[11px] text-[#6C655F] font-medium leading-relaxed bg-[#FAF8F5] p-2.5 rounded-lg border border-[#E5E0D8]">
                                                 💡 Tu pedido quedará separado a tu nombre para que al pagar solo canceles tu consumo individual.
                                             </p>
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div className="space-y-1">
-                                                    <label className="text-[11px] font-bold text-white">Nombre y Apellido *</label>
+                                                    <label className="text-[11px] font-bold text-[#2C2825]">Nombre y Apellido *</label>
                                                     <input
                                                         type="text"
                                                         placeholder="Ej: Laura Restrepo"
                                                         value={customerName}
                                                         onChange={(e) => setCustomerName(e.target.value)}
-                                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-white outline-none focus:border-amber-400 font-semibold"
+                                                        className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl p-2 text-xs text-[#2C2825] outline-none focus:border-[#D9381E] font-semibold"
                                                         required={isIndividualAccount}
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <label className="text-[11px] font-bold text-white">Cédula / NIT *</label>
+                                                    <label className="text-[11px] font-bold text-[#2C2825]">Cédula / NIT *</label>
                                                     <input
                                                         type="text"
                                                         placeholder="Ej: 1020304050"
                                                         value={customerDni}
                                                         onChange={(e) => setCustomerDni(e.target.value)}
-                                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2 text-xs text-white outline-none focus:border-amber-400 font-mono"
+                                                        className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl p-2 text-xs text-[#2C2825] outline-none focus:border-[#D9381E] font-mono"
                                                         required={isIndividualAccount}
                                                     />
                                                 </div>
@@ -685,38 +714,38 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                                 </div>
                             </div>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-3 bg-[#FAF7F2] p-4 rounded-xl border border-[#E5E0D8]">
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-white">Nombre Completo *</label>
+                                    <label className="text-xs font-bold text-[#2C2825]">Nombre Completo *</label>
                                     <input
                                         type="text"
                                         placeholder="Ej: María Gómez"
                                         value={customerName}
                                         onChange={(e) => setCustomerName(e.target.value)}
-                                        className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-white outline-none focus:border-emerald-400"
+                                        className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl p-2.5 text-xs text-[#2C2825] outline-none focus:border-[#2E593C]"
                                         required
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-white">Teléfono Celular *</label>
+                                        <label className="text-xs font-bold text-[#2C2825]">Teléfono Celular *</label>
                                         <input
                                             type="tel"
                                             placeholder="3001234567"
                                             value={customerPhone}
                                             onChange={(e) => setCustomerPhone(e.target.value)}
-                                            className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-white outline-none focus:border-emerald-400"
+                                            className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl p-2.5 text-xs text-[#2C2825] outline-none focus:border-[#2E593C]"
                                             required
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-white">Dirección de Entrega *</label>
+                                        <label className="text-xs font-bold text-[#2C2825]">Dirección de Entrega *</label>
                                         <input
                                             type="text"
                                             placeholder="Calle 45 #12-34 Apt 301"
                                             value={customerAddress}
                                             onChange={(e) => setCustomerAddress(e.target.value)}
-                                            className="w-full bg-surface border border-outline/20 rounded-xl p-2.5 text-xs text-white outline-none focus:border-emerald-400"
+                                            className="w-full bg-[#FAF8F5] border border-[#E5E0D8] rounded-xl p-2.5 text-xs text-[#2C2825] outline-none focus:border-[#2E593C]"
                                             required
                                         />
                                     </div>
@@ -727,16 +756,16 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                         {/* Lista de Ítems */}
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                             {cart.map((item, idx) => (
-                                <div key={idx} className="flex items-start justify-between bg-surface/60 p-3 rounded-2xl border border-outline/10 text-xs">
+                                <div key={idx} className="flex items-start justify-between bg-[#FAF7F2] p-3 rounded-xl border border-[#E5E0D8] text-xs">
                                     <div className="space-y-0.5">
-                                        <strong className="text-white text-xs">{item.quantity}x {item.name}</strong>
-                                        {item.removals.length > 0 && <p className="text-[10px] text-rose-300">Sin: {item.removals.join(', ')}</p>}
-                                        {item.additions.length > 0 && <p className="text-[10px] text-emerald-300">Con: {item.additions.map(a => a.name).join(', ')}</p>}
-                                        {item.notes && <p className="text-[10px] text-on-surface-variant italic">Nota: {item.notes}</p>}
+                                        <strong className="text-[#2C2825] text-xs">{item.quantity}x {item.name}</strong>
+                                        {item.removals.length > 0 && <p className="text-[10px] text-[#D9381E]">Sin: {item.removals.join(', ')}</p>}
+                                        {item.additions.length > 0 && <p className="text-[10px] text-[#2E593C]">Con: {item.additions.map(a => a.name).join(', ')}</p>}
+                                        {item.notes && <p className="text-[10px] text-[#6C655F] italic">Nota: {item.notes}</p>}
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <strong className="text-amber-400">${(item.price * item.quantity).toLocaleString()}</strong>
-                                        <button type="button" onClick={() => removeFromCart(idx)} className="text-rose-400 hover:text-rose-300">
+                                        <strong className="text-[#D9381E]">${(item.price * item.quantity).toLocaleString()}</strong>
+                                        <button type="button" onClick={() => removeFromCart(idx)} className="text-[#8C857B] hover:text-[#D9381E]">
                                             <span className="material-symbols-outlined text-[16px]">delete</span>
                                         </button>
                                     </div>
@@ -745,24 +774,24 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                         </div>
 
                         {/* Totales */}
-                        <div className="space-y-1 bg-surface-container/60 p-4 rounded-2xl border border-outline/10 text-xs">
-                            <div className="flex justify-between text-on-surface-variant">
+                        <div className="space-y-1.5 bg-[#FAF7F2] p-4 rounded-xl border border-[#E5E0D8] text-xs">
+                            <div className="flex justify-between text-[#6C655F]">
                                 <span>Subtotal:</span>
                                 <span>${cartSubtotal.toLocaleString()} COP</span>
                             </div>
-                            <div className="flex justify-between text-on-surface-variant">
+                            <div className="flex justify-between text-[#6C655F]">
                                 <span>Impoconsumo (8%):</span>
                                 <span>${impoconsumo.toLocaleString()} COP</span>
                             </div>
                             {orderType === 'domicilio' && (
-                                <div className="flex justify-between text-emerald-400 font-bold">
+                                <div className="flex justify-between text-[#2E593C] font-bold">
                                     <span>Flete de Domicilio:</span>
                                     <span>${deliveryFee.toLocaleString()} COP</span>
                                 </div>
                             )}
-                            <div className="flex justify-between text-white font-black text-sm pt-2 border-t border-outline/10">
+                            <div className="flex justify-between text-[#2C2825] font-serif font-bold text-sm pt-2 border-t border-[#E5E0D8]">
                                 <span>Total a Pagar:</span>
-                                <span className="text-amber-400 text-base">${cartTotal.toLocaleString()} COP</span>
+                                <span className="text-[#D9381E] text-base">${cartTotal.toLocaleString()} COP</span>
                             </div>
                         </div>
 
@@ -770,7 +799,7 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                             type="button"
                             disabled={submitting}
                             onClick={handleSubmitOrder}
-                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-xs rounded-2xl hover:opacity-90 shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-[#D9381E] hover:bg-[#C22E15] text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-2"
                         >
                             <span className="material-symbols-outlined text-[20px]">send</span>
                             {submitting ? 'Enviando Pedido a Cocina...' : '🚀 Confirmar & Enviar Pedido a Cocina'}
@@ -779,22 +808,22 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                 </div>
             )}
 
-            {/* Modal de Éxito de Pedido */}
+            {/* Modal de Éxito de Pedido Wabi-Sabi */}
             {orderSuccess && (
-                <div className="fixed inset-0 z-[9999] backdrop-blur-md bg-black/90 flex items-center justify-center p-4">
-                    <div className="bg-[#121216] border border-amber-500/40 w-full max-w-md rounded-3xl p-6 text-center space-y-5 shadow-2xl">
+                <div className="fixed inset-0 z-[9999] backdrop-blur-sm bg-black/60 flex items-center justify-center p-4">
+                    <div className="bg-[#FAF8F5] border border-[#E5E0D8] w-full max-w-md rounded-2xl p-6 text-center space-y-5 shadow-2xl text-[#2C2825]">
                         <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto text-3xl border ${
                             orderType === 'domicilio' 
-                                ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' 
-                                : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                ? 'bg-[#EAF2ED] text-[#2E593C] border-[#3B6E4C]/30' 
+                                : 'bg-[#D9381E]/10 text-[#D9381E] border-[#D9381E]/30'
                         }`}>
                             {orderType === 'domicilio' ? '⏳' : '✓'}
                         </div>
                         <div>
-                            <h3 className="font-extrabold text-white text-xl">
+                            <h3 className="font-serif font-bold text-[#2C2825] text-xl">
                                 {orderType === 'domicilio' ? '🟡 Pedido Registrado (Pago Pendiente)' : '¡Pedido Recibido en Cocina!'}
                             </h3>
-                            <p className="text-xs text-on-surface-variant mt-1.5 leading-relaxed">
+                            <p className="text-xs text-[#6C655F] mt-1.5 leading-relaxed">
                                 {orderType === 'domicilio' ? (
                                     <>
                                         Tu orden <strong>#{orderSuccess.order_number}</strong> está registrada. Para envíos a domicilio, <strong>envía tu comprobante de pago por WhatsApp</strong> para que la caja valide e inicie la preparación en cocina.
@@ -807,9 +836,9 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                             </p>
                         </div>
 
-                        <div className="bg-surface/50 p-4 rounded-2xl border border-outline/10 text-xs space-y-1">
-                            <span className="text-on-surface-variant block">Total de la Orden:</span>
-                            <strong className="text-amber-400 text-lg font-black">${orderSuccess.total_amount?.toLocaleString()} COP</strong>
+                        <div className="bg-[#FAF7F2] p-4 rounded-xl border border-[#E5E0D8] text-xs space-y-1">
+                            <span className="text-[#6C655F] block">Total de la Orden:</span>
+                            <strong className="text-[#D9381E] text-lg font-serif font-bold">${orderSuccess.total_amount?.toLocaleString()} COP</strong>
                         </div>
 
                         <div className="space-y-2">
@@ -817,13 +846,13 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                                 <button
                                     type="button"
                                     onClick={sendWhatsAppConfirmation}
-                                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+                                    className="w-full py-3.5 bg-[#2E593C] hover:bg-[#244730] text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-2"
                                 >
                                     <span className="material-symbols-outlined text-[18px]">chat</span>
                                     💬 Adjuntar Comprobante de Pago por WhatsApp
                                 </button>
                             ) : (
-                                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-xs text-emerald-300 font-bold flex items-center justify-center gap-2">
+                                <div className="p-3 bg-[#EAF2ED] border border-[#3B6E4C]/30 rounded-xl text-xs text-[#2E593C] font-bold flex items-center justify-center gap-2">
                                     <span className="material-symbols-outlined text-[18px]">check_circle</span>
                                     ¡Comanda enviada 100% digital a la pantalla de cocina!
                                 </div>
@@ -832,7 +861,7 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
                             <button
                                 type="button"
                                 onClick={() => setOrderSuccess(null)}
-                                className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-xs rounded-xl hover:opacity-90 transition cursor-pointer"
+                                className="w-full py-3 bg-[#D9381E] hover:bg-[#C22E15] text-white font-bold text-xs rounded-xl transition cursor-pointer"
                             >
                                 {orderType === 'mesa' ? '🍽️ Pedir Algo Más para la Mesa' : 'Volver a la Carta'}
                             </button>
@@ -843,3 +872,4 @@ export const PublicRestaurantMenu: React.FC<PublicRestaurantMenuProps> = ({ clie
         </div>
     );
 };
+

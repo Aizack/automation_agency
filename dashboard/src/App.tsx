@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AdminDashboard } from './components/AdminDashboard';
-import { ClientDashboard } from './components/ClientDashboard';
+import { VerticalRouter } from './verticals/VerticalRouter';
 import { Login } from './components/Login';
 import { AuthFast } from './components/AuthFast';
 import { EmployeePortal } from './components/EmployeePortal';
@@ -341,7 +341,7 @@ function App() {
   }
 
   if (view === 'client') {
-    return <ClientDashboard clientId={clientId} onBack={handleClientDashboardBack} />;
+    return <VerticalRouter clientId={clientId} onBack={handleClientDashboardBack} />;
   }
 
   if (view === 'admin') {

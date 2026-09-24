@@ -36,15 +36,15 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1790050020.0593688,
-    "seen": 1790050042.8322694,
-    "ast_hash": "33bf18f64130e8e32aaf392145076979",
+    "mtime": 1790130617.20953,
+    "seen": 1790130651.9456117,
+    "ast_hash": "a2f4541439d1d99bb911f64eae6464d0",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
-    "mtime": 1789766941.0944474,
-    "seen": 1790032400.0467608,
-    "ast_hash": "c69bc315de0e3f916051d06344dfa268",
+    "mtime": 1790129561.2189994,
+    "seen": 1790129596.0229306,
+    "ast_hash": "a192cff12d83e4936cc5cc6f9e21cdae",
     "semantic_hash": ""
   },
   "dashboard/src/components/EnterprisePlanningModule.tsx": {
@@ -72,33 +72,33 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/PublicRestaurantMenu.tsx": {
-    "mtime": 1788494605.6213508,
-    "seen": 1788747134.536857,
-    "ast_hash": "5e6ceb001b5630353dd1a4825142b282",
+    "mtime": 1790126672.7494864,
+    "seen": 1790126726.7203147,
+    "ast_hash": "2eaed9d69babfe1d5d9a65027c770f4f",
     "semantic_hash": ""
   },
   "dashboard/src/components/RawMaterialsInventory.tsx": {
-    "mtime": 1788494605.6223612,
-    "seen": 1788747134.53686,
-    "ast_hash": "6d311e80ba546000d7f7b88ca8394969",
+    "mtime": 1790106355.3332572,
+    "seen": 1790123575.645483,
+    "ast_hash": "c8cf8e8e1191c9871090f9eff8d54ae4",
     "semantic_hash": ""
   },
   "dashboard/src/components/RestaurantKdsDisplay.tsx": {
-    "mtime": 1788494605.6223612,
-    "seen": 1788747134.5368633,
-    "ast_hash": "1b0d22960a4a795ae7b2403a43dba707",
+    "mtime": 1790106400.364066,
+    "seen": 1790123575.6454847,
+    "ast_hash": "e69154910ed1a59740cd1a5149595cf2",
     "semantic_hash": ""
   },
   "dashboard/src/components/RestaurantMenuBuilder.tsx": {
-    "mtime": 1788494605.6243572,
-    "seen": 1788747134.536867,
-    "ast_hash": "43ee9a243410d5929e41534d785cd073",
+    "mtime": 1790106332.2169094,
+    "seen": 1790123575.6454866,
+    "ast_hash": "8baaa790d538ec64cf97cc8bdc3554fd",
     "semantic_hash": ""
   },
   "dashboard/src/components/RestaurantWaiterPortal.tsx": {
-    "mtime": 1788494605.625361,
-    "seen": 1788747134.5368705,
-    "ast_hash": "44648b9b302e5bf96461549fa82d61dd",
+    "mtime": 1790106375.9185133,
+    "seen": 1790123575.645488,
+    "ast_hash": "60a74a595c6c47f0fe252fdbd18c2802",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpAccounting.tsx": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpEmployees.tsx": {
-    "mtime": 1788975079.7389262,
-    "seen": 1789095416.2478678,
-    "ast_hash": "1e629f3142122dc12176dd77898f2222",
+    "mtime": 1790130479.9799473,
+    "seen": 1790130651.9457006,
+    "ast_hash": "848ae47b43a938b5f8e94d4e21932ab4",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpFormulas.tsx": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1790051824.041,
-    "seen": 1790051992.968797,
-    "ast_hash": "7b724f8ab60b87b642323fd76e00afa9",
+    "mtime": 1790128617.8349345,
+    "seen": 1790128825.4020643,
+    "ast_hash": "445381ed1144880aab2a1ad6688f6947",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -2466,9 +2466,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpECommerceWizard.tsx": {
-    "mtime": 1790051911.8138185,
-    "seen": 1790051992.968487,
-    "ast_hash": "ba5716eec3e07b1a1296fee9f81d87c5",
+    "mtime": 1790104141.9398675,
+    "seen": 1790104195.7704225,
+    "ast_hash": "30f3ced1554738f26669adf87055a02c",
     "semantic_hash": ""
   },
   "scratch/link_product_categories.ts": {
@@ -2481,6 +2481,12 @@
     "mtime": 1790052864.3879707,
     "seen": 1790052938.3530095,
     "ast_hash": "c22b0f3afb7c9cf7527802bf55162895",
+    "semantic_hash": ""
+  },
+  "src/scratch/activate-all-clients.ts": {
+    "mtime": 1790129714.6900806,
+    "seen": 1790130651.946084,
+    "ast_hash": "708db8415c07e6e35cc06ca1123618e1",
     "semantic_hash": ""
   }
 }

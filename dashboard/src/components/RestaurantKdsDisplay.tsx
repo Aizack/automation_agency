@@ -339,9 +339,19 @@ export const RestaurantKdsDisplay: React.FC<RestaurantKdsDisplayProps> = ({ clie
                                     )}
 
                                     {ord.status === 'ready' && (
-                                        <div className="bg-emerald-500/20 border border-emerald-500/40 p-2 rounded-xl text-center text-xs font-bold text-emerald-400 flex items-center justify-center gap-1">
-                                            <span className="material-symbols-outlined text-[18px]">notifications_active</span>
-                                            ¡Listo! Esperando Recogida por Mesero
+                                        <div className="bg-emerald-500/20 border border-emerald-500/40 p-2.5 rounded-xl text-center text-xs font-bold text-emerald-400 flex flex-col items-center justify-center gap-2">
+                                            <div className="flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+                                                ¡Listo! Esperando Recogida por Mesero
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleUpdateStatus(ord.id, 'delivered')}
+                                                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 border-0 shadow-sm"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">done_all</span>
+                                                Marcar Entregado a Mesa (Archivar)
+                                            </button>
                                         </div>
                                     )}
                                 </div>

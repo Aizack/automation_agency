@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { SaaSErpDomicilios } from './SaaSErpDomicilios';
+import { RestaurantKdsDisplay } from './RestaurantKdsDisplay';
+import { RestaurantWaiterPortal } from './RestaurantWaiterPortal';
+import { RawMaterialsInventory } from './RawMaterialsInventory';
 
 interface Task {
     id: string;
@@ -42,7 +45,21 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
     const employeeRole = propEmpRole || localStorage.getItem('emp_role') || localStorage.getItem('employee_role') || 'employee';
     const employeeToken = localStorage.getItem('emp_token') || localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
 
-    const [activeTab, setActiveTab] = useState<'jornada' | 'tareas' | 'solicitudes' | 'chat' | 'nomina' | 'envios'>('jornada');
+    const [activeTab, setActiveTab] = useState<'jornada' | 'tareas' | 'solicitudes' | 'chat' | 'nomina' | 'envios' | 'kds' | 'mesas' | 'insumos' | 'propinas'>('jornada');
+    const [clientCategory, setClientCategory] = useState<string>(localStorage.getItem('emp_client_category') || '');
+
+    useEffect(() => {
+        if (clientId) {
+            fetch(`/api/clients/${clientId}`, { headers: { 'Authorization': `Bearer ${employeeToken}` } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.data?.category) {
+                        setClientCategory(data.data.category);
+                    }
+                })
+                .catch(() => {});
+        }
+    }, [clientId, employeeToken]);
 
     // Deliveries State for Delivery Workers
     const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
@@ -505,7 +522,11 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
     };
 
     const roleLower = (employeeRole || '').toLowerCase().trim();
+    const catLower = (clientCategory || '').toLowerCase().trim();
     const isDeliveryWorker = ['delivery', 'domiciliario', 'mensajero', 'driver', 'repartidor', 'admin'].includes(roleLower) || myDeliveries.length > 0;
+    const isRestaurant = catLower.includes('restauran') || catLower.includes('gastro') || catLower.includes('food');
+    const isKitchenStaff = isRestaurant && ['cocinero', 'kitchen', 'bartender', 'bar_kds', 'chef', 'admin'].includes(roleLower);
+    const isWaiterStaff = isRestaurant && ['mesero', 'waiter', 'capitan_meseros', 'admin'].includes(roleLower);
 
     return (
         <div className="flex flex-col gap-4 md:gap-6 p-3 md:p-6 min-h-screen bg-[#FAF8F5] text-[#161616] font-sans w-full max-w-full overflow-x-hidden">
@@ -544,6 +565,49 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                         <span className="material-symbols-outlined text-base">schedule</span>
                         Mi Jornada
                     </button>
+
+                    {isKitchenStaff && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('kds')}
+                                className={`px-3 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${activeTab === 'kds' ? 'bg-[#D9381E] text-white shadow-sm' : 'text-[#D9381E] hover:text-[#161616] bg-transparent'}`}
+                            >
+                                <span className="material-symbols-outlined text-base">countertops</span>
+                                👨‍🍳 Pantalla KDS
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('insumos')}
+                                className={`px-3 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${activeTab === 'insumos' ? 'bg-[#161616] text-white shadow-sm' : 'text-[#6B6862] hover:text-[#161616] bg-transparent'}`}
+                            >
+                                <span className="material-symbols-outlined text-base">inventory_2</span>
+                                📦 Insumos & Requisición
+                            </button>
+                        </>
+                    )}
+
+                    {isWaiterStaff && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('mesas')}
+                                className={`px-3 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${activeTab === 'mesas' ? 'bg-[#D9381E] text-white shadow-sm' : 'text-[#D9381E] hover:text-[#161616] bg-transparent'}`}
+                            >
+                                <span className="material-symbols-outlined text-base">table_restaurant</span>
+                                🪑 Mesas & Comandero
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('propinas')}
+                                className={`px-3 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${activeTab === 'propinas' ? 'bg-[#161616] text-white shadow-sm' : 'text-[#6B6862] hover:text-[#161616] bg-transparent'}`}
+                            >
+                                <span className="material-symbols-outlined text-base">payments</span>
+                                💰 Mis Propinas
+                            </button>
+                        </>
+                    )}
+
                     {isDeliveryWorker && (
                         <button
                             type="button"
@@ -578,14 +642,16 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                         <span className="material-symbols-outlined text-base">payments</span>
                         Mi Nómina
                     </button>
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('chat')}
-                        className={`px-3 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${activeTab === 'chat' ? 'bg-[#161616] text-white shadow-sm' : 'text-[#6B6862] hover:text-[#161616] bg-transparent'}`}
-                    >
-                        <span className="material-symbols-outlined text-base">smart_toy</span>
-                        Asistente IA
-                    </button>
+                    {!isRestaurant && (
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('chat')}
+                            className={`px-3 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${activeTab === 'chat' ? 'bg-[#161616] text-[#FAF8F5] shadow-sm' : 'text-[#6B6862] hover:text-[#161616] bg-transparent'}`}
+                        >
+                            <span className="material-symbols-outlined text-base">smart_toy</span>
+                            Asistente IA
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -1042,6 +1108,46 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
             {activeTab === 'envios' && (
                 <div className="bg-white border border-[#E2DFD7] p-4 md:p-6 shadow-sm animate-fade-in">
                     <SaaSErpDomicilios clientId={clientId} defaultDeliveryGuyId={employeeId} />
+                </div>
+            )}
+
+            {/* TAB OPERATIVA 1: PANTALLA KDS DE COCINA / BARRA */}
+            {activeTab === 'kds' && (
+                <div className="bg-white border border-[#E2DFD7] p-4 md:p-6 shadow-sm animate-fade-in">
+                    <RestaurantKdsDisplay clientId={clientId} />
+                </div>
+            )}
+
+            {/* TAB OPERATIVA 2: INSUMOS DE COCINA & REQUISICIÓN */}
+            {activeTab === 'insumos' && (
+                <div className="bg-white border border-[#E2DFD7] p-4 md:p-6 shadow-sm animate-fade-in">
+                    <RawMaterialsInventory clientId={clientId} />
+                </div>
+            )}
+
+            {/* TAB OPERATIVA 3: MAPA DE MESAS & COMANDERO MÓVIL */}
+            {activeTab === 'mesas' && (
+                <div className="bg-white border border-[#E2DFD7] p-4 md:p-6 shadow-sm animate-fade-in">
+                    <RestaurantWaiterPortal clientId={clientId} />
+                </div>
+            )}
+
+            {/* TAB OPERATIVA 4: MIS PROPINAS DE MESERO */}
+            {activeTab === 'propinas' && (
+                <div className="bg-white border border-[#E2DFD7] p-6 shadow-sm space-y-4 animate-fade-in">
+                    <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-4">
+                        <div>
+                            <h3 className="font-serif text-xl font-semibold text-[#161616]">Resumen de Propinas del Turno</h3>
+                            <p className="text-xs text-[#6B6862]">Control en vivo de las propinas voluntarias (10%) acumuladas en tus mesas atendidas.</p>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[10px] uppercase tracking-widest text-[#6B6862] font-bold block">Propina Estimada del Día</span>
+                            <span className="font-mono text-2xl font-bold text-emerald-600">$0 COP</span>
+                        </div>
+                    </div>
+                    <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-4 text-xs text-[#6B6862]">
+                        Las propinas se atribuyen automáticamente a tu turno a medida que las comandas cerradas en caja registran la sugerencia del 10%.
+                    </div>
                 </div>
             )}
         </div>

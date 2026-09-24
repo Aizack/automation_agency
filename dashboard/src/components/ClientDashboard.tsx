@@ -93,6 +93,7 @@ interface AudioContact {
 interface ClientDashboardProps {
   clientId: string;
   onBack: () => void;
+  category?: string;
 }
 
 const isRestaurantCategory = (cat?: string) => {
@@ -139,7 +140,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
   // Calcular la pestaña por defecto si es colaborador
   const getDefaultTab = () => {
-    if (isEmployeeSession) return 'employee_profile';
+    const rawRoleLower = (localStorage.getItem('session_role') || localStorage.getItem('emp_role') || localStorage.getItem('employee_role') || '').toLowerCase().trim();
+    if (isEmployeeSession) {
+      if (['cocinero', 'kitchen', 'bartender', 'bar_kds', 'chef'].includes(rawRoleLower)) {
+        return 'restaurante_kds';
+      }
+      if (['mesero', 'waiter', 'capitan_meseros'].includes(rawRoleLower)) {
+        return 'restaurante_mesas';
+      }
+      return 'employee_profile';
+    }
     if (!isEmployeeSession) return 'configuracion';
     if (employeePermissions.includes('settings')) return 'configuracion';
     if (employeePermissions.includes('billing')) return 'facturacion';
@@ -1038,7 +1048,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     cleanPhone(whatsappStatus.phone) === cleanPhone(clientData?.phoneNumber || '');
 
   const activeUserName = localStorage.getItem('session_name') || localStorage.getItem('emp_name') || localStorage.getItem('user_name') || clientData?.name || 'Usuario Activo';
-  const rawRole = localStorage.getItem('session_role') || localStorage.getItem('emp_role') || 'client';
+  const rawRole = (localStorage.getItem('session_role') || localStorage.getItem('emp_role') || localStorage.getItem('employee_role') || 'client').toLowerCase().trim();
+  const isOperationalStaff = isEmployeeSession && ['mesero', 'waiter', 'cocinero', 'kitchen', 'bartender', 'bar_kds', 'chef', 'capitan_meseros'].includes(rawRole);
   const activeUserRole = rawRole === 'admin' ? 'Super Admin' : rawRole === 'employee' ? (localStorage.getItem('employee_role') || 'Colaborador') : 'Administrador de Tienda';
 
   if (isMobile) {
@@ -1062,8 +1073,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
   return (
     <div className="flex min-h-screen bg-[#F6F4EE] text-[#161616] font-sans">
-      {/* Sidebar Expandable Wabi-Sabi (64px cerrado -> 290px hover) */}
-      <aside className="sidebar-expandable" id="sidebarExpandable">
+      {/* Sidebar Expandable Wabi-Sabi (Oculto para personal operativo de cocina y meseros) */}
+      {!isOperationalStaff && (
+        <aside className="sidebar-expandable" id="sidebarExpandable">
         <div className="sidebar-brand cursor-pointer" onClick={triggerSidebarLogoUpload} title="Haz clic para cambiar el logotipo">
           <input 
             type="file" 
@@ -1602,6 +1614,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           )}
         </div>
       </aside>
+      )}
 
       {/* Mobile Drawer Backdrop & Slide Panel (Visible solo en Celulares/Tablets < 1024px) */}
       <div 
@@ -1744,8 +1757,8 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         </div>
       </div>
 
-      {/* Main Content Area Wabi-Sabi (64px margin-left on Desktop, 0px on Mobile) */}
-      <div className="content-area main-content-wrapper ml-[64px] flex-1 flex flex-col min-h-screen bg-[#F6F4EE]">
+      {/* Main Content Area Wabi-Sabi (64px margin-left on Desktop for Admins, 0px for Operational Staff) */}
+      <div className={`content-area main-content-wrapper ${isOperationalStaff ? 'ml-0' : 'ml-[64px]'} flex-1 flex flex-col min-h-screen bg-[#F6F4EE]`}>
         {/* Top Header Zen */}
         <header className="top-header-zen sticky top-0 z-40 bg-[#F6F4EE] border-b border-[#E2DFD7] px-4 md:px-8 py-3.5 flex items-center justify-between">
           <div className="top-header-left-zen flex items-center gap-3 md:gap-8">
