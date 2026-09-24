@@ -722,6 +722,96 @@ app.put('/api/clients/:clientId/profile-settings', authenticateToken as any, aut
   }
 });
 
+// Opciones por defecto para dropdowns dinámicos
+const DEFAULT_DROPDOWN_OPTIONS: Record<string, string[]> = {
+  lens_materials: ['CR-39', 'Policarbonato', 'Trivex', 'Hi-Index 1.67', 'Titanio Flexible'],
+  lens_treatments: ['Blanco / Transparente', 'Anti-Reflejo Verde', 'Blue Block / Filtro Azul', 'Fotocromático / Transition'],
+  lens_designs: ['Monofocal', 'Bifocal Invisible (Flat-Top)', 'Progresivo Digital Premium', 'Ocupacional / Lectura'],
+  frame_materials: ['Acetato Italiano', 'Metal Inoxidable', 'TR90 Ultraliviano', 'Titanio Flexible', 'Combinado / Madera'],
+  frame_styles: ['Completo (Full-Rim)', 'Ranurado (Semi-Rimless)', 'Al Aire (Drill / Rimless)'],
+  brands: ['Ray-Ban', 'Oakley', 'Gucci', 'Vogue', 'Carolina Herrera', 'Genérica / Sin Marca']
+};
+
+// GET Opciones Personalizadas de Dropdowns por Inquilino
+app.get('/api/clients/:clientId/custom-options', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const clientRes = await pool.query('SELECT custom_dropdown_options FROM clients WHERE id = $1', [clientId]);
+    const storedOptions = clientRes.rows[0]?.custom_dropdown_options || {};
+
+    const mergedOptions: Record<string, string[]> = {};
+    const allKeys = Array.from(new Set([...Object.keys(DEFAULT_DROPDOWN_OPTIONS), ...Object.keys(storedOptions)]));
+
+    for (const key of allKeys) {
+      const defaults = DEFAULT_DROPDOWN_OPTIONS[key] || [];
+      const customs = Array.isArray(storedOptions[key]) ? storedOptions[key] : [];
+      mergedOptions[key] = Array.from(new Set([...defaults, ...customs]));
+    }
+
+    res.json({ success: true, options: mergedOptions });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST Agregar Nueva Opción a un Dropdown Dinámico
+app.post('/api/clients/:clientId/custom-options', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { categoryKey, optionValue } = req.body;
+
+    if (!categoryKey || !optionValue || typeof optionValue !== 'string' || !optionValue.trim()) {
+      return res.status(400).json({ success: false, error: 'Se requiere una categoría y un valor de opción válido.' });
+    }
+
+    const cleanVal = optionValue.trim();
+    const clientRes = await pool.query('SELECT custom_dropdown_options FROM clients WHERE id = $1', [clientId]);
+    const storedOptions = clientRes.rows[0]?.custom_dropdown_options || {};
+    const currentList: string[] = Array.isArray(storedOptions[categoryKey]) ? storedOptions[categoryKey] : [];
+
+    if (!currentList.includes(cleanVal)) {
+      currentList.push(cleanVal);
+    }
+    storedOptions[categoryKey] = currentList;
+
+    await pool.query('UPDATE clients SET custom_dropdown_options = $1 WHERE id = $2', [JSON.stringify(storedOptions), clientId]);
+
+    const defaults = DEFAULT_DROPDOWN_OPTIONS[categoryKey] || [];
+    const fullList = Array.from(new Set([...defaults, ...currentList]));
+
+    res.json({ success: true, message: 'Opción agregada exitosamente.', categoryKey, options: fullList, addedValue: cleanVal });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE Eliminar Opción Personalizada de un Dropdown
+app.delete('/api/clients/:clientId/custom-options', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { categoryKey, optionValue } = req.body;
+
+    if (!categoryKey || !optionValue) {
+      return res.status(400).json({ success: false, error: 'Se requiere una categoría y la opción a eliminar.' });
+    }
+
+    const clientRes = await pool.query('SELECT custom_dropdown_options FROM clients WHERE id = $1', [clientId]);
+    const storedOptions = clientRes.rows[0]?.custom_dropdown_options || {};
+    const currentList: string[] = Array.isArray(storedOptions[categoryKey]) ? storedOptions[categoryKey] : [];
+
+    storedOptions[categoryKey] = currentList.filter(item => item !== optionValue);
+
+    await pool.query('UPDATE clients SET custom_dropdown_options = $1 WHERE id = $2', [JSON.stringify(storedOptions), clientId]);
+
+    const defaults = DEFAULT_DROPDOWN_OPTIONS[categoryKey] || [];
+    const fullList = Array.from(new Set([...defaults, ...storedOptions[categoryKey]]));
+
+    res.json({ success: true, message: 'Opción eliminada con éxito.', categoryKey, options: fullList });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Consultar estado de Habilitación DIAN del cliente
 app.get('/api/clients/:clientId/dian-status', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {

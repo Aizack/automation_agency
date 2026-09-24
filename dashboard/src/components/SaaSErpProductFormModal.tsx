@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
+import { DynamicSelect } from './DynamicSelect';
 
 export interface ColorOption {
     name: string;
@@ -736,56 +737,39 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="flex flex-col gap-1.5">
-                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tipo de Uso</label>
-                                                <select
+                                                <DynamicSelect
+                                                    clientId={clientId}
+                                                    categoryKey="lens_designs"
+                                                    categoryTitle="Diseño / Tipo de Uso de Lente"
+                                                    label="Tipo de Uso"
                                                     value={lensDesign}
-                                                    onChange={(e) => setLensDesign(e.target.value)}
-                                                    className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                >
-                                                    <option value="">– Seleccione Tipo de Uso –</option>
-                                                    <option value="Monofocal">Monofocal</option>
-                                                    <option value="Bifocal">Bifocal</option>
-                                                    <option value="Progresivo">Progresivo / Multifocal</option>
-                                                    <option value="Ocupacional">Ocupacional</option>
-                                                    <option value="Anti-fatiga">Anti-fatiga</option>
-                                                    <option value="Lente de Contacto">Lente de Contacto</option>
-                                                </select>
+                                                    onChange={(val) => setLensDesign(val)}
+                                                    placeholder="– Seleccione Tipo de Uso –"
+                                                />
                                             </div>
 
                                             <div className="flex flex-col gap-1.5">
-                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Material del Cristal</label>
-                                                <select
+                                                <DynamicSelect
+                                                    clientId={clientId}
+                                                    categoryKey="lens_materials"
+                                                    categoryTitle="Material del Cristal / Lente"
+                                                    label="Material del Cristal"
                                                     value={lensMaterial}
-                                                    onChange={(e) => setLensMaterial(e.target.value)}
-                                                    className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                >
-                                                    <option value="">– Seleccione Material –</option>
-                                                    <option value="CR-39 / Orgánico">CR-39 / Orgánico (1.56)</option>
-                                                    <option value="Policarbonato">Policarbonato (1.59)</option>
-                                                    <option value="Alto Índice 1.67">Alto Índice 1.67</option>
-                                                    <option value="Alto Índice 1.74">Alto Índice 1.74</option>
-                                                    <option value="Trivex / Polilite">Trivex / Polilite</option>
-                                                    <option value="Cristal / Vidrio">Cristal / Vidrio</option>
-                                                    <option value="Hidrogel de Silicona">Hidrogel de Silicona</option>
-                                                </select>
+                                                    onChange={(val) => setLensMaterial(val)}
+                                                    placeholder="– Seleccione Material –"
+                                                />
                                             </div>
 
                                             <div className="flex flex-col gap-1.5 sm:col-span-2">
-                                                <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Tratamiento / Filtro</label>
-                                                <select
+                                                <DynamicSelect
+                                                    clientId={clientId}
+                                                    categoryKey="lens_treatments"
+                                                    categoryTitle="Tratamiento / Filtro de Lente"
+                                                    label="Tratamiento / Filtro"
                                                     value={lensTreatment}
-                                                    onChange={(e) => setLensTreatment(e.target.value)}
-                                                    className="w-full bg-white border border-[#E2DFD7] text-[#161616] p-3 text-xs font-semibold outline-none focus:border-[#161616] transition rounded-none"
-                                                >
-                                                    <option value="">– Seleccione Tratamiento –</option>
-                                                    <option value="Sencillo / Blanco">Sencillo / Blanco (Sin Filtro)</option>
-                                                    <option value="Antirreflejo (AR)">Antirreflejo (AR)</option>
-                                                    <option value="AR-Blue (Filtro Azul)">AR-Blue (Filtro Azul / AR Blue)</option>
-                                                    <option value="Fotocromático (Transitions)">Fotocromático (Transitions)</option>
-                                                    <option value="Fotocromático AR-Blue">Fotocromático AR-Blue (Transitions + AR Blue)</option>
-                                                    <option value="Polarizado">Polarizado</option>
-                                                    <option value="Espejado">Espejado</option>
-                                                </select>
+                                                    onChange={(val) => setLensTreatment(val)}
+                                                    placeholder="– Seleccione Tratamiento –"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -795,13 +779,14 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
                                     {productType === 'product' && (
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Marca / Fabricante *</label>
-                                            <input 
-                                                type="text"
-                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans"
+                                            <DynamicSelect
+                                                clientId={clientId}
+                                                categoryKey="brands"
+                                                categoryTitle="Marcas / Fabricantes"
+                                                label="Marca / Fabricante"
                                                 value={brand}
-                                                onChange={(e) => setBrand(e.target.value)}
-                                                placeholder="Ej: Ray-Ban, Gucci, Oakley, Bausch + Lomb"
+                                                onChange={(val) => setBrand(val)}
+                                                placeholder="– Seleccionar / Escribir Marca –"
                                             />
                                         </div>
                                     )}
@@ -823,39 +808,27 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                 {productType === 'product' && Boolean(categoryId && (categories.find((c: any) => String(c.id) === String(categoryId))?.name || '').toLowerCase().includes('montura')) && (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Material de Montura / Marco</label>
-                                            <select
+                                            <DynamicSelect
+                                                clientId={clientId}
+                                                categoryKey="frame_materials"
+                                                categoryTitle="Materiales de Montura / Marco"
+                                                label="Material de Montura / Marco"
                                                 value={material}
-                                                onChange={(e) => setMaterial(e.target.value)}
-                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans font-semibold"
-                                            >
-                                                <option value="">– Seleccionar Material –</option>
-                                                <option value="Acetato">Acetato</option>
-                                                <option value="Metal / Aleación">Metal / Aleación</option>
-                                                <option value="TR-90 / Grilamid">TR-90 / Grilamid</option>
-                                                <option value="Titanio / Beta-Titanio">Titanio / Beta-Titanio</option>
-                                                <option value="Combinado (Acetato + Metal)">Combinado (Acetato + Metal)</option>
-                                                <option value="Madera / Bamboo">Madera / Bamboo</option>
-                                                <option value="Inyectado / Ultem">Inyectado / Ultem</option>
-                                                <option value="Silicona / Flexible">Silicona / Flexible (Infantil)</option>
-                                                <option value="Seguridad">Seguridad</option>
-                                            </select>
+                                                onChange={(val) => setMaterial(val)}
+                                                placeholder="– Seleccionar Material –"
+                                            />
                                         </div>
 
                                         <div className="flex flex-col gap-1.5">
-                                            <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Género / Público Objetivo</label>
-                                            <select
+                                            <DynamicSelect
+                                                clientId={clientId}
+                                                categoryKey="frame_styles"
+                                                categoryTitle="Estilo / Género de Montura"
+                                                label="Género / Público Objetivo"
                                                 value={style}
-                                                onChange={(e) => setStyle(e.target.value)}
-                                                className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition rounded-none font-sans font-semibold"
-                                            >
-                                                <option value="">– Seleccionar Género –</option>
-                                                <option value="Unisex">Unisex</option>
-                                                <option value="Hombre">Hombre</option>
-                                                <option value="Mujer">Mujer</option>
-                                                <option value="Niño">Niño</option>
-                                                <option value="Niña">Niña</option>
-                                            </select>
+                                                onChange={(val) => setStyle(val)}
+                                                placeholder="– Seleccionar Género –"
+                                            />
                                         </div>
                                     </div>
                                 )}

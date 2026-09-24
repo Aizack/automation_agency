@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpCRM.tsx": {
-    "mtime": 1790203273.408823,
-    "seen": 1790203589.5567832,
-    "ast_hash": "c48e1ed0a2ccd51e4d73b479346632b8",
+    "mtime": 1788989133.9640324,
+    "seen": 1789095416.2478588,
+    "ast_hash": "386895d4c863d644e7d63218fd887b4e",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpCampaigns.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
-    "mtime": 1790271518.0066457,
-    "seen": 1790271595.9956465,
-    "ast_hash": "bdcfffc4d900b342b9269076dfb297fa",
+    "mtime": 1789769630.6448152,
+    "seen": 1790032400.0468197,
+    "ast_hash": "7f650a21699e33a94c027fca8afd9de3",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpMarketing.tsx": {
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSuppliers.tsx": {
-    "mtime": 1790203333.4787257,
-    "seen": 1790203589.5568182,
-    "ast_hash": "0d5a6d744d3a79c866bde010929c2315",
+    "mtime": 1788494605.6415982,
+    "seen": 1788747134.5369453,
+    "ast_hash": "1de840aae4d1e6d08c6a24de71c8c533",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpUsers.tsx": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1790269988.3396082,
-    "seen": 1790270122.8015482,
-    "ast_hash": "d2644222840f2403157d9b99a20766e3",
+    "mtime": 1790128617.8349345,
+    "seen": 1790128825.4020643,
+    "ast_hash": "445381ed1144880aab2a1ad6688f6947",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -492,9 +492,9 @@
     "semantic_hash": ""
   },
   "src/services/electronicInvoiceService.ts": {
-    "mtime": 1790203404.64999,
-    "seen": 1790203589.5569854,
-    "ast_hash": "f72b67652e583abc37a8e0f68d75b327",
+    "mtime": 1788978920.0655916,
+    "seen": 1789095416.2480512,
+    "ast_hash": "3104624de23a05b0355fdf9216f2362c",
     "semantic_hash": ""
   },
   "src/services/escalation.ts": {
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices2.tsx": {
-    "mtime": 1790203252.6783085,
-    "seen": 1790203589.5568035,
-    "ast_hash": "d424d13c1b2ba7e7643a940446eff576",
+    "mtime": 1789401640.1505585,
+    "seen": 1790032400.046821,
+    "ast_hash": "6745f62e1f827163ea9791b6692e22b5",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSalesTargets.tsx": {
@@ -1116,9 +1116,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpQuotes.tsx": {
-    "mtime": 1790203312.8386033,
-    "seen": 1790203589.5568135,
-    "ast_hash": "526f21b9f33e366354ca5745a8c1178c",
+    "mtime": 1788992773.4416656,
+    "seen": 1789095416.2478867,
+    "ast_hash": "e384ed8434e5f2def9d768884264708c",
     "semantic_hash": ""
   },
   "docs/GIT_WORKFLOW_RULES.md": {
@@ -1158,9 +1158,9 @@
     "semantic_hash": ""
   },
   "src/services/factusService.ts": {
-    "mtime": 1790203466.9860804,
-    "seen": 1790203589.556988,
-    "ast_hash": "83fba45b78199ca8564dc1c6053491df",
+    "mtime": 1788759857.1381352,
+    "seen": 1788760235.789866,
+    "ast_hash": "b0856a5960b2281ccc71e143cd39471d",
     "semantic_hash": ""
   },
   "REDISENO_WABI_SABI_GUIA.md": {
@@ -1422,15 +1422,15 @@
     "semantic_hash": ""
   },
   "src/services/alegraService.ts": {
-    "mtime": 1790203424.9477673,
-    "seen": 1790203589.556979,
-    "ast_hash": "06bdd1e4df011b8f6896fbf24862d500",
+    "mtime": 1788978947.8937323,
+    "seen": 1789095416.248047,
+    "ast_hash": "8bc30f21e80afecfe360d97a5d9df7d5",
     "semantic_hash": ""
   },
   "src/services/siigoService.ts": {
-    "mtime": 1790203446.4548523,
-    "seen": 1790203589.5569968,
-    "ast_hash": "e9bd890324835313857bb88330052764",
+    "mtime": 1788978950.0034099,
+    "seen": 1789095416.248063,
+    "ast_hash": "362ec2f11003ed50a2aec7a20dc5e695",
     "semantic_hash": ""
   },
   "vpulse/pyproject.toml": {
@@ -2058,9 +2058,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/HistoricalInvoicesModal.tsx": {
-    "mtime": 1790203293.431428,
-    "seen": 1790203589.5567575,
-    "ast_hash": "0ced9ac5adfc8195cb0b973884596e22",
+    "mtime": 1789582187.3359356,
+    "seen": 1790032400.046767,
+    "ast_hash": "c42f16f3493ca4d98916ab1422ee1478",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpEmployeeProfile.tsx": {
@@ -2511,12 +2511,6 @@
     "mtime": 1790140097.8394082,
     "seen": 1790140218.4363623,
     "ast_hash": "00fc6fd82b539c6e0d7733eb23873f33",
-    "semantic_hash": ""
-  },
-  "shutdown_state.json": {
-    "mtime": 1790228942.581154,
-    "seen": 1790270122.8014772,
-    "ast_hash": "3134e66af0d3fc7658bb8a8a46679019",
     "semantic_hash": ""
   }
 }

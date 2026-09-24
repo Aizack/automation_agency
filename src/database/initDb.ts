@@ -445,9 +445,10 @@ export const initDatabase = async () => {
         // FASE 3: Modificaciones incrementales y nuevas tablas
         console.log("[DB Init] 🔄 Inicializando tablas de la Fase 3...");
 
-        // 1. Alterar tabla clients (enabled_modules JSONB)
+        // 1. Alterar tabla clients (enabled_modules & custom_dropdown_options JSONB)
         await pool.query(`
             ALTER TABLE clients ADD COLUMN IF NOT EXISTS enabled_modules JSONB DEFAULT '{"inventory": true, "billing": true, "crm": true, "calendar": true, "employees": true, "hr": true, "deliveries": true, "whatsapp_bot": true}'::jsonb;
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS custom_dropdown_options JSONB DEFAULT '{}'::jsonb;
         `);
 
         // 2. Alterar tabla employees (salarial, supervisor, foto, funciones, etc.)

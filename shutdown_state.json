@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-09-24T05:49:02.576Z",
+  "whatsapp": {
+    "status": "DISCONNECTED",
+    "phone": "",
+    "hasClientInstance": false
+  },
+  "activeUploadSessions": [],
+  "activeTakeovers": [],
+  "process": {
+    "pid": 31032,
+    "uptime": 45203.3572984
+  }
+}
