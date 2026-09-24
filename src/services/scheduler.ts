@@ -1,4 +1,4 @@
-import { pool } from '../database/postgres';
+import { pool, isDbConnectionError } from '../database/postgres';
 import { client, whatsappState } from './whatsapp';
 
 /**
@@ -141,7 +141,11 @@ export const checkAndSendReminders = async (): Promise<void> => {
         console.log("[Scheduler] 🎉 Procesamiento de cola completado.");
 
     } catch (error) {
-        console.error("[Scheduler] ❌ Error ejecutando consultas de cobro de cartera:", error);
+        if (isDbConnectionError(error)) {
+            console.warn("[Scheduler] ⚠️ Esperando reconexión con PostgreSQL...");
+        } else {
+            console.error("[Scheduler] ❌ Error ejecutando consultas de cobro de cartera:", error);
+        }
     }
 };
 

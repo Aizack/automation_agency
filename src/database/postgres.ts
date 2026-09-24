@@ -21,5 +21,41 @@ pool.on('connect', () => {
 });
 
 pool.on('error', (err) => {
-    console.error('[Postgres] ❌ Error inesperado en el cliente inactivo:', err);
+    if (isDbConnectionError(err)) {
+        console.warn('[Postgres] ⚠️ Error de conexión en el cliente inactivo (PostgreSQL no disponible).');
+    } else {
+        console.error('[Postgres] ❌ Error inesperado en el cliente inactivo:', err);
+    }
 });
+
+/**
+ * Determina si un error es provocado por una desconexión o indisponibilidad temporal de PostgreSQL.
+ * Previene volcados masivos de AggregateError o ECONNREFUSED en consola.
+ */
+export function isDbConnectionError(error: any): boolean {
+    if (!error) return false;
+
+    const code = error.code;
+    const msg = String(error.message || error);
+
+    if (
+        code === 'ECONNREFUSED' ||
+        code === 'ECONNRESET' ||
+        code === 'ETIMEDOUT' ||
+        code === 'ENOTFOUND' ||
+        code === '57P03' ||
+        msg.includes('ECONNREFUSED') ||
+        msg.includes('Connection terminated') ||
+        msg.includes('connect ECONNREFUSED') ||
+        msg.includes('connection refused')
+    ) {
+        return true;
+    }
+
+    if (error.name === 'AggregateError' || Array.isArray(error.errors)) {
+        return error.errors?.some((err: any) => isDbConnectionError(err)) ?? false;
+    }
+
+    return false;
+}
+

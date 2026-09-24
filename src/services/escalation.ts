@@ -1,4 +1,4 @@
-import { pool } from '../database/postgres';
+import { pool, isDbConnectionError } from '../database/postgres';
 
 let pollerInterval: NodeJS.Timeout | null = null;
 
@@ -105,7 +105,11 @@ export const startEscalationService = (
                 }
             }
         } catch (error) {
-            console.error("[Escalation Service] Error en ciclo de escalamiento:", error);
+            if (isDbConnectionError(error)) {
+                console.warn("[Escalation Service] ⚠️ Esperando reconexión con PostgreSQL...");
+            } else {
+                console.error("[Escalation Service] Error en ciclo de escalamiento:", error);
+            }
         }
     }, 15000); // Ejecutar cada 15 segundos
 };
