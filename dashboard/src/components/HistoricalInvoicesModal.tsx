@@ -895,6 +895,7 @@ export const HistoricalInvoicesModal: React.FC<HistoricalInvoicesModalProps> = (
                                             className="w-full bg-white border border-[#E2DFD7] p-2.5 rounded-none text-[#161616] focus:border-[#161616] outline-none cursor-pointer text-xs font-mono"
                                         >
                                             <option value="CC">Cédula (CC)</option>
+                                            <option value="TI">Tarjeta id. (T.I.)</option>
                                             <option value="CE">Cédula Ext. (CE)</option>
                                             <option value="NIT">NIT</option>
                                             <option value="PAS">Pasaporte (PAS)</option>

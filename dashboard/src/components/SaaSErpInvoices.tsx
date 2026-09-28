@@ -1439,6 +1439,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                             onChange={(e) => setCustomerDocumentType(e.target.value)}
                                                         >
                                                             <option value="CC">CC</option>
+                                                            <option value="TI">TI</option>
                                                             <option value="NIT">NIT</option>
                                                             <option value="CE">CE</option>
                                                             <option value="PP">PP</option>
@@ -3122,6 +3123,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                         className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono font-bold rounded-none cursor-pointer"
                                     >
                                         <option value="CC">Cédula (CC)</option>
+                                        <option value="TI">Tarjeta id. (T.I.)</option>
                                         <option value="NIT">NIT (Empresa)</option>
                                         <option value="CE">Cédula Extranjería (CE)</option>
                                         <option value="PP">Pasaporte (PP)</option>

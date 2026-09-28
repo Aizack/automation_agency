@@ -864,7 +864,7 @@ export const SaaSErpCRM: React.FC<SaaSErpCRMProps> = ({ clientId: rawClientId, c
                                             >
                                                 <option value="CC">Cédula (CC)</option>
                                                 <option value="CE">Cédula Ext. (CE)</option>
-                                                <option value="TI">Tarjeta Id. (TI)</option>
+                                                <option value="TI">Tarjeta id. (T.I.)</option>
                                                 <option value="PAS">Pasaporte (PAS)</option>
                                             </select>
                                         </div>
