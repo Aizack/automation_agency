@@ -257,7 +257,7 @@ export const processElectronicInvoice = async (
               phone: inv.customer_phone || '3000000000',
               legal_organization_id: '2', // Persona Natural
               tribute_id: '21', // No responsable de IVA
-              identification_document_id: inv.customer_document_type === 'NIT' ? '6' : (inv.customer_document_type === 'TI' ? '2' : '3'), // 2=TI, 3=CC, 6=NIT
+              identification_document_id: inv.customer_document_type === 'NIT' ? '6' : '3', // 3=CC, 6=NIT
               municipality_id: '980', // Barranquilla por defecto
             },
             items: factusItems.length > 0 ? factusItems : [
