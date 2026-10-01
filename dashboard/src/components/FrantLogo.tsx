@@ -26,10 +26,12 @@ export const FrantLogo: React.FC<FrantLogoProps> = ({
   let strokeWidth = 0;
 
   if (variant === 'light') {
-    bgFill = '#F8F6F0';
+    bgFill = '#FFFFFF';
     fFill = '#1C1D1C';
+    strokeColor = '#E2DFD7';
+    strokeWidth = 10;
   } else if (variant === 'floating') {
-    bgFill = '#FAF8F5'; // Cream tone container matching UI background
+    bgFill = '#FFFFFF'; // Pure crisp white tile for maximum contrast
     fFill = '#1C1D1C';   // Dark 'F' logo
     strokeColor = '#E2DFD7';
     strokeWidth = 10;
@@ -47,60 +49,58 @@ export const FrantLogo: React.FC<FrantLogoProps> = ({
   }
 
   const isMark = variant === 'mark' || variant === 'mark-light';
-  const isFloating = variant === 'floating';
+  const isFloating = variant === 'floating' || variant === 'light';
 
   const renderSvg = () => (
-    <svg
-      width={numSize}
-      height={numSize}
-      viewBox={isFloating ? "-30 -30 572 572" : "0 0 512 512"}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="flex-shrink-0 select-none"
-      style={{ display: 'block' }}
+    <div 
+      className="inline-flex items-center justify-center shrink-0" 
+      style={isFloating ? {
+        filter: 'drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.16))'
+      } : undefined}
     >
-      <defs>
-        {isFloating && (
-          <filter id="floatingShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="16" dy="20" stdDeviation="16" floodColor="#161616" floodOpacity="0.14" />
-          </filter>
+      <svg
+        width={numSize}
+        height={numSize}
+        viewBox="0 0 512 512"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="flex-shrink-0 select-none"
+        style={{ display: 'block' }}
+      >
+        {/* Outer rounded container for framed variants */}
+        {!isMark && (
+          <rect
+            x="6"
+            y="6"
+            width="500"
+            height="500"
+            rx="125"
+            fill={bgFill}
+            stroke={strokeColor !== 'none' ? strokeColor : 'none'}
+            strokeWidth={strokeWidth}
+          />
         )}
-      </defs>
 
-      {/* Outer rounded container for framed variants */}
-      {!isMark && (
-        <rect
-          x="0"
-          y="0"
-          width="512"
-          height="512"
-          rx="120"
-          fill={bgFill}
-          stroke={variant === 'light' || isFloating ? '#E2DFD7' : 'none'}
-          strokeWidth={variant === 'light' || isFloating ? 10 : 0}
-          filter={isFloating ? "url(#floatingShadow)" : undefined}
-        />
-      )}
-
-      {/* Official Frant Logo Vector Paths */}
-      <g transform={isMark ? 'translate(0,0) scale(1)' : 'translate(48, 48) scale(0.81)'}>
-        {variant === 'outline' ? (
-          <g stroke={strokeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
-            <path d="M134.81,8.47v496.69H23.57c-7.25,0-19.51-16.56-17.64-24.96l1-353.41c2.33-5.54,4.24-12.47,8.12-17.02C23.69,99.67,113.68,14.49,120.22,11.4c4.83-2.27,9.16-3.67,14.59-2.94Z" />
-            <path d="M162.14,131.68V8.47h333.73c13.09,0,4.31,64.85-2.44,78.45-7.77,15.64-38.94,44.76-56.11,44.76H162.14Z" />
-            <path d="M287.04,216.39v105.88c0,.41-5.44,5.78-5.85,5.78h-119.05v-111.66h124.91Z" />
-            <rect x="304.35" y="216.39" width="102.9" height="111.66" rx="15" ry="15" fill={redAccent} stroke="none" />
-          </g>
-        ) : (
-          <g fill={fFill}>
-            <path d="M134.81,8.47v496.69H23.57c-7.25,0-19.51-16.56-17.64-24.96l1-353.41c2.33-5.54,4.24-12.47,8.12-17.02C23.69,99.67,113.68,14.49,120.22,11.4c4.83-2.27,9.16-3.67,14.59-2.94Z" />
-            <path d="M162.14,131.68V8.47h333.73c13.09,0,4.31,64.85-2.44,78.45-7.77,15.64-38.94,44.76-56.11,44.76H162.14Z" />
-            <path d="M287.04,216.39v105.88c0,.41-5.44,5.78-5.85,5.78h-119.05v-111.66h124.91Z" />
-            <rect fill={redAccent} x="304.35" y="216.39" width="102.9" height="111.66" rx="15" ry="15" />
-          </g>
-        )}
-      </g>
-    </svg>
+        {/* Official Frant Logo Vector Paths */}
+        <g transform={isMark ? 'translate(0,0) scale(1)' : 'translate(56, 56) scale(0.78)'}>
+          {variant === 'outline' ? (
+            <g stroke={strokeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
+              <path d="M134.81,8.47v496.69H23.57c-7.25,0-19.51-16.56-17.64-24.96l1-353.41c2.33-5.54,4.24-12.47,8.12-17.02C23.69,99.67,113.68,14.49,120.22,11.4c4.83-2.27,9.16-3.67,14.59-2.94Z" />
+              <path d="M162.14,131.68V8.47h333.73c13.09,0,4.31,64.85-2.44,78.45-7.77,15.64-38.94,44.76-56.11,44.76H162.14Z" />
+              <path d="M287.04,216.39v105.88c0,.41-5.44,5.78-5.85,5.78h-119.05v-111.66h124.91Z" />
+              <rect x="304.35" y="216.39" width="102.9" height="111.66" rx="15" ry="15" fill={redAccent} stroke="none" />
+            </g>
+          ) : (
+            <g fill={fFill}>
+              <path d="M134.81,8.47v496.69H23.57c-7.25,0-19.51-16.56-17.64-24.96l1-353.41c2.33-5.54,4.24-12.47,8.12-17.02C23.69,99.67,113.68,14.49,120.22,11.4c4.83-2.27,9.16-3.67,14.59-2.94Z" />
+              <path d="M162.14,131.68V8.47h333.73c13.09,0,4.31,64.85-2.44,78.45-7.77,15.64-38.94,44.76-56.11,44.76H162.14Z" />
+              <path d="M287.04,216.39v105.88c0,.41-5.44,5.78-5.85,5.78h-119.05v-111.66h124.91Z" />
+              <rect fill={redAccent} x="304.35" y="216.39" width="102.9" height="111.66" rx="15" ry="15" />
+            </g>
+          )}
+        </g>
+      </svg>
+    </div>
   );
 
   if (!showText) {
