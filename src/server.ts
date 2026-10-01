@@ -741,7 +741,31 @@ app.get('/api/clients/:clientId/custom-options', authenticateToken as any, autho
   try {
     const { clientId } = req.params;
     const clientRes = await pool.query('SELECT custom_dropdown_options FROM clients WHERE id = $1', [clientId]);
-    const storedOptions = clientRes.rows[0]?.custom_dropdown_options || {};
+    let storedOptions = clientRes.rows[0]?.custom_dropdown_options || {};
+
+    // Auto-Sanitización: Mover opciones de género agregadas por error a 'frame_styles' hacia 'target_genders'
+    const genderWords = ['MUJER', 'HOMBRE', 'UNISEX', 'INFANTIL', 'NIÑOS', 'NIÑAS', 'MASCULINO', 'FEMENINO', 'KIDS', 'BOYS', 'GIRLS'];
+    if (Array.isArray(storedOptions.frame_styles) && storedOptions.frame_styles.length > 0) {
+      const misplacedGenders = storedOptions.frame_styles.filter((opt: string) => 
+        genderWords.includes(opt.trim().toUpperCase())
+      );
+
+      if (misplacedGenders.length > 0) {
+        storedOptions.frame_styles = storedOptions.frame_styles.filter((opt: string) => 
+          !genderWords.includes(opt.trim().toUpperCase())
+        );
+
+        const currentTargetGenders: string[] = Array.isArray(storedOptions.target_genders) ? storedOptions.target_genders : [];
+        for (const g of misplacedGenders) {
+          if (!currentTargetGenders.includes(g)) {
+            currentTargetGenders.push(g);
+          }
+        }
+        storedOptions.target_genders = currentTargetGenders;
+
+        await pool.query('UPDATE clients SET custom_dropdown_options = $1 WHERE id = $2', [JSON.stringify(storedOptions), clientId]);
+      }
+    }
 
     const mergedOptions: Record<string, string[]> = {};
     const allKeys = Array.from(new Set([...Object.keys(DEFAULT_DROPDOWN_OPTIONS), ...Object.keys(storedOptions)]));
