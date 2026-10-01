@@ -1,6 +1,13 @@
 <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="2" width="96" height="96" rx="24" fill="#161616"/>
-  <path d="M 27 76 V 40 C 27 30 33 24 43 24 H 63 C 69 24 73 28 73 34 C 73 40 69 44 63 44 H 43 V 76 H 27 Z" fill="#FAF8F3"/>
-  <rect x="43" y="52" width="15" height="14" rx="2" fill="#FAF8F3"/>
-  <rect x="62" y="52" width="14" height="14" rx="3" fill="#D9381E"/>
+  <rect x="2" y="2" width="96" height="96" rx="26" fill="#141414"/>
+  <g fill="#F8F6F0">
+    <!-- Vertical Stem with 45-degree origami fold -->
+    <path d="M 28 77 V 37 L 44 21 V 77 H 28 Z"/>
+    <!-- Top Bar (Longer with rounded right end) -->
+    <path d="M 44 21 H 66 C 73.5 21 77.5 25.5 77.5 33.5 C 77.5 41.5 73.5 46 66 46 H 44 V 21 Z"/>
+    <!-- Middle Bar (Shorter) -->
+    <rect x="44" y="54" width="16" height="15"/>
+    <!-- Signature Red Accent Square -->
+    <rect x="64" y="54" width="15" height="15" rx="2" fill="#E03E25"/>
+  </g>
 </svg>
