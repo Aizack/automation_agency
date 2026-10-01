@@ -123,7 +123,7 @@ export const FrantErpMobileView: React.FC<FrantErpMobileViewProps> = ({
       {/* 1. Header Móvil Exclusivo (Wabi-Sabi Recto) */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5] border-b border-[#E2DFD7] px-4 py-3 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
-          <FrantLogo variant="dark" size={36} />
+          <FrantLogo variant="floating" size={38} />
           <div>
             <h1 className="font-serif text-lg font-bold text-[#D9381E] uppercase tracking-wider leading-none" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
               FRANT ERP

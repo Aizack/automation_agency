@@ -209,7 +209,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <FrantLogo variant="mark" size={36} />
+            <FrantLogo variant="floating" size={40} />
             <div>
               <h1 className="font-serif text-2xl font-bold text-[#161616] leading-none" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
                 FRANT ERP

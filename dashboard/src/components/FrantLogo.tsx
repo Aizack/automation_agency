@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface FrantLogoProps {
-  variant?: 'dark' | 'light' | 'outline' | 'mark' | 'mark-light';
+  variant?: 'dark' | 'light' | 'outline' | 'mark' | 'mark-light' | 'floating';
   size?: number | string;
   className?: string;
   showText?: boolean;
@@ -28,6 +28,11 @@ export const FrantLogo: React.FC<FrantLogoProps> = ({
   if (variant === 'light') {
     bgFill = '#F8F6F0';
     fFill = '#1C1D1C';
+  } else if (variant === 'floating') {
+    bgFill = '#FAF8F5'; // Cream tone container matching UI background
+    fFill = '#1C1D1C';   // Dark 'F' logo
+    strokeColor = '#E2DFD7';
+    strokeWidth = 10;
   } else if (variant === 'outline') {
     bgFill = '#141414';
     fFill = 'none';
@@ -42,17 +47,26 @@ export const FrantLogo: React.FC<FrantLogoProps> = ({
   }
 
   const isMark = variant === 'mark' || variant === 'mark-light';
+  const isFloating = variant === 'floating';
 
   const renderSvg = () => (
     <svg
       width={numSize}
       height={numSize}
-      viewBox="0 0 512 512"
+      viewBox={isFloating ? "-30 -30 572 572" : "0 0 512 512"}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className="flex-shrink-0 select-none"
       style={{ display: 'block' }}
     >
+      <defs>
+        {isFloating && (
+          <filter id="floatingShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="16" dy="20" stdDeviation="16" floodColor="#161616" floodOpacity="0.14" />
+          </filter>
+        )}
+      </defs>
+
       {/* Outer rounded container for framed variants */}
       {!isMark && (
         <rect
@@ -60,10 +74,11 @@ export const FrantLogo: React.FC<FrantLogoProps> = ({
           y="0"
           width="512"
           height="512"
-          rx="130"
+          rx="120"
           fill={bgFill}
-          stroke={variant === 'light' ? '#E2DFD7' : 'none'}
-          strokeWidth={variant === 'light' ? 12 : 0}
+          stroke={variant === 'light' || isFloating ? '#E2DFD7' : 'none'}
+          strokeWidth={variant === 'light' || isFloating ? 10 : 0}
+          filter={isFloating ? "url(#floatingShadow)" : undefined}
         />
       )}
 
