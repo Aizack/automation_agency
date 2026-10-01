@@ -108,6 +108,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     // Atributos de Marcos / Items
     const [material, setMaterial] = useState('');
     const [style, setStyle] = useState('');
+    const [gender, setGender] = useState('');
     const [color, setColor] = useState('');
 
     // Variantes & Stock
@@ -186,6 +187,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
             setLensTreatment(attrs.lens_treatment || '');
             setMaterial(editingProduct.material || '');
             setStyle(editingProduct.style || '');
+            setGender(attrs.gender || (editingProduct as any).gender || '');
             setColor(editingProduct.color || '');
 
             setHasVariants(editingProduct.has_variants ?? true);
@@ -228,6 +230,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
         setLensTreatment('');
         setMaterial('');
         setStyle('');
+        setGender('');
         setColor('');
         setHasVariants(true);
         setStock('');
@@ -338,7 +341,8 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                 is_lens: isLensType,
                 lens_design: lensDesign,
                 lens_material: lensMaterial,
-                lens_treatment: lensTreatment
+                lens_treatment: lensTreatment,
+                gender: gender || null
             }
         };
 
@@ -806,7 +810,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
 
                                 {/* Material de Montura / Ítem & Género */}
                                 {productType === 'product' && Boolean(categoryId && (categories.find((c: any) => String(c.id) === String(categoryId))?.name || '').toLowerCase().includes('montura')) && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-4">
                                         <div className="flex flex-col gap-1.5">
                                             <DynamicSelect
                                                 clientId={clientId}
@@ -822,12 +826,24 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                         <div className="flex flex-col gap-1.5">
                                             <DynamicSelect
                                                 clientId={clientId}
-                                                categoryKey="frame_styles"
-                                                categoryTitle="Estilo / Género de Montura"
+                                                categoryKey="target_genders"
+                                                categoryTitle="Género / Público Objetivo"
                                                 label="Género / Público Objetivo"
+                                                value={gender}
+                                                onChange={(val) => setGender(val)}
+                                                placeholder="– Seleccionar Género –"
+                                            />
+                                        </div>
+
+                                        <div className="flex flex-col gap-1.5">
+                                            <DynamicSelect
+                                                clientId={clientId}
+                                                categoryKey="frame_styles"
+                                                categoryTitle="Estructura / Tipo de Montura"
+                                                label="Tipo de Montura / Aro"
                                                 value={style}
                                                 onChange={(val) => setStyle(val)}
-                                                placeholder="– Seleccionar Género –"
+                                                placeholder="– Seleccionar Estructura –"
                                             />
                                         </div>
                                     </div>

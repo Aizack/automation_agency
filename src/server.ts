@@ -731,6 +731,8 @@ const DEFAULT_DROPDOWN_OPTIONS: Record<string, string[]> = {
   lens_designs: ['Monofocal', 'Bifocal Invisible (Flat-Top)', 'Progresivo Digital Premium', 'Ocupacional / Lectura'],
   frame_materials: ['Acetato Italiano', 'Metal Inoxidable', 'TR90 Ultraliviano', 'Titanio Flexible', 'Combinado / Madera'],
   frame_styles: ['Completo (Full-Rim)', 'Ranurado (Semi-Rimless)', 'Al Aire (Drill / Rimless)'],
+  target_genders: ['UNISEX', 'MUJER', 'HOMBRE', 'INFANTIL / NIÑOS'],
+  genders: ['UNISEX', 'MUJER', 'HOMBRE', 'INFANTIL / NIÑOS'],
   brands: ['Ray-Ban', 'Oakley', 'Gucci', 'Vogue', 'Carolina Herrera', 'Genérica / Sin Marca']
 };
 
