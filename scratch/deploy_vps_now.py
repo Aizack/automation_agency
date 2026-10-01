@@ -25,8 +25,8 @@ def deploy():
             print("STDERR:\n", err)
         return out, err
 
-    # 1. Pull latest code on current branch
-    run("cd /app/agency-bot && git reset --hard && git checkout feature/antigravity-framework-setup && git pull origin feature/antigravity-framework-setup", "Pulling Latest Branch")
+    # 1. Pull latest code on feature/ia-separada
+    run("cd /app/agency-bot && git fetch origin && git reset --hard && git checkout feature/ia-separada && git pull origin feature/ia-separada", "Pulling Latest Branch feature/ia-separada")
 
     # 2. Install dashboard dependencies & build
     run("cd /app/agency-bot/dashboard && npm install && npm run build", "Installing dependencies and building Dashboard")

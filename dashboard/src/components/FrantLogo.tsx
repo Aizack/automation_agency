@@ -68,7 +68,7 @@ export const FrantLogo: React.FC<FrantLogoProps> = ({
       )}
 
       {/* Official Frant Logo Vector Paths */}
-      <g transform={isMark ? 'translate(0,0) scale(1)' : 'translate(64, 64) scale(0.75)'}>
+      <g transform={isMark ? 'translate(0,0) scale(1)' : 'translate(48, 48) scale(0.81)'}>
         {variant === 'outline' ? (
           <g stroke={strokeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
             <path d="M134.81,8.47v496.69H23.57c-7.25,0-19.51-16.56-17.64-24.96l1-353.41c2.33-5.54,4.24-12.47,8.12-17.02C23.69,99.67,113.68,14.49,120.22,11.4c4.83-2.27,9.16-3.67,14.59-2.94Z" />
