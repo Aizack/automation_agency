@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LegalDocsModal } from './LegalDocsModal';
+import { FrantLogo } from './FrantLogo';
 
 interface LoginProps {
   onLoginSuccess: (clientId: string, role: string, token: string, extra?: Record<string, any>) => void;
@@ -72,17 +73,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
         {/* Header / Logo */}
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <div style={{
-            width: 54, height: 54,
-            borderRadius: 'var(--radius-lg)',
-            background: 'rgba(217,56,30,0.12)',
-            border: '1px solid rgba(217,56,30,0.25)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span className="material-symbols-outlined" style={{ color: '#D9381E', fontSize: 30 }}>
-              smart_toy
-            </span>
-          </div>
+          <FrantLogo variant="dark" size={54} />
           <div>
             <h1 style={{
               fontFamily: '"Instrument Serif", Georgia, serif',

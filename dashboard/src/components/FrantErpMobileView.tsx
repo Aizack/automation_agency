@@ -8,6 +8,7 @@ import { SaaSErpCashShifts } from './SaaSErpCashShifts';
 import { SaaSErpCRM } from './SaaSErpCRM';
 import { SaaSErpStoreSettings } from './SaaSErpStoreSettings';
 import { NotificationBell } from './NotificationBell';
+import { FrantLogo } from './FrantLogo';
 
 interface FrantErpMobileViewProps {
   clientId: string;
@@ -122,9 +123,7 @@ export const FrantErpMobileView: React.FC<FrantErpMobileViewProps> = ({
       {/* 1. Header Móvil Exclusivo (Wabi-Sabi Recto) */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5] border-b border-[#E2DFD7] px-4 py-3 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-none bg-[#161616] text-[#FAF8F5] font-serif font-bold text-base flex items-center justify-center border border-[#161616]">
-            F
-          </div>
+          <FrantLogo variant="dark" size={36} />
           <div>
             <h1 className="font-serif text-lg font-bold text-[#D9381E] uppercase tracking-wider leading-none" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
               FRANT ERP

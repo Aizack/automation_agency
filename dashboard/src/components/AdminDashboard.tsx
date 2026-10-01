@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { authFetch } from '../utils/api';
 import { SystemAlertsPanel } from './SystemAlertsPanel';
+import { FrantLogo } from './FrantLogo';
 
 interface Client {
   id: string;
@@ -202,15 +203,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
       {/* Sidebar Wabi-Sabi */}
       <aside className="h-screen w-64 fixed left-0 top-0 bg-[#FAF8F3] border-r border-[#E2DFD7] flex flex-col py-6 px-6 z-50">
         <div className="px-2 py-4 mb-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-3">
             <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold uppercase tracking-wider bg-[#D9381E]/10 text-[#D9381E] border border-[#D9381E]/20 font-mono">
               Consola Admin
             </span>
           </div>
-          <h1 className="font-serif text-3xl font-normal text-[#161616] mt-1 flex items-center gap-2">
-            KOI ERP
-          </h1>
-          <p className="text-xs text-[#6B6862] mt-0.5">Orquestación Multi-Tenant</p>
+          <div className="flex items-center gap-3">
+            <FrantLogo variant="dark" size={38} />
+            <div>
+              <h1 className="font-serif text-2xl font-bold text-[#161616] leading-none" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
+                FRANT ERP
+              </h1>
+              <p className="text-[11px] text-[#6B6862] mt-0.5">Orquestación Multi-Tenant</p>
+            </div>
+          </div>
         </div>
 
         <nav className="flex-grow space-y-2 overflow-y-auto custom-scrollbar">

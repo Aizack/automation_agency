@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FrantLogo } from './FrantLogo';
 import { authFetch as fetch, clearAllSessionData } from '../utils/api';
 import { SaaSErpInventory } from './SaaSErpInventory';
 import { SaaSErpInvoices } from './SaaSErpInvoices';
@@ -1624,9 +1625,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         <div className="mobile-drawer-panel" onClick={(e) => e.stopPropagation()}>
           <div className="p-4 border-b border-[#E2DFD7] flex justify-between items-center bg-[#FAF8F5]">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-[#161616] text-white flex items-center justify-center font-serif font-bold text-sm">
-                F
-              </div>
+              <FrantLogo variant="dark" size={36} />
               <div>
                 <h3 className="font-serif text-lg font-bold text-[#D9381E] uppercase tracking-wider" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>FRANT ERP</h3>
                 <span className="text-[10px] text-[#D9381E] font-bold uppercase tracking-wider block">
@@ -1772,8 +1771,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               <span className="material-symbols-outlined text-2xl">menu</span>
             </button>
 
-            <div className="top-header-brand-zen font-serif text-2xl md:text-3xl font-bold text-[#D9381E] uppercase tracking-wider" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
-              FRANT ERP
+            <div className="top-header-brand-zen font-serif text-2xl md:text-3xl font-bold text-[#D9381E] uppercase tracking-wider flex items-center gap-2.5" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
+              <FrantLogo variant="dark" size={32} />
+              <span>FRANT ERP</span>
             </div>
           </div>
 
