@@ -209,12 +209,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <FrantLogo variant="floating" size={40} />
+            <FrantLogo variant="floating" size={46} />
             <div>
-              <h1 className="font-serif text-2xl font-bold text-[#161616] leading-none" style={{ fontFamily: '"Instrument Serif", Georgia, serif' }}>
-                FRANT ERP
-              </h1>
-              <p className="text-[11px] text-[#6B6862] mt-0.5">Orquestación Multi-Tenant</p>
+              <p className="text-[11px] text-[#6B6862] font-mono mt-0.5">Consola Multi-Tenant</p>
             </div>
           </div>
         </div>
