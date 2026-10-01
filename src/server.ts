@@ -71,6 +71,8 @@ import { validateEnv } from './utils/envValidator';
 import { verifyPassword, hashPassword, isHashedPassword } from './utils/passwordUtils';
 import { runAutoFixAgent } from './agents/autoFixAgent';
 import { getPublicCatalog, createCatalogOrder } from './services/catalogService';
+import { getPrivacyPolicyHTML } from './services/privacyPolicy';
+import { MetaWhatsAppService } from './services/metaWhatsAppService';
 
 // Validar variables de entorno antes de cualquier otra cosa
 validateEnv();
@@ -11385,6 +11387,56 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         message: `Estado del domicilio para factura ${invoiceNumber} actualizado a '${status}' exitosamente.`,
         delivery: upsertRes.rows[0]
       });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- RUTA PÚBLICA DE POLÍTICA DE PRIVACIDAD (CUMPLIMIENTO META REVIEW) ---
+  app.get('/privacy', (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(getPrivacyPolicyHTML());
+  });
+
+  // --- ENDPOINTS META WHATSAPP CLOUD API & WEBHOOK ---
+  
+  // 1. Verificación del Webhook de Meta (GET /api/v1/meta/webhook)
+  app.get('/api/v1/meta/webhook', (req: Request, res: Response) => {
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+
+    const expectedToken = process.env.META_WEBHOOK_VERIFY_TOKEN || 'frant_verify_token';
+
+    if (mode === 'subscribe' && token === expectedToken) {
+      console.log('[Meta Webhook Challenge] ✅ Webhook verificado exitosamente por Meta.');
+      return res.status(200).send(challenge);
+    }
+
+    console.warn('[Meta Webhook Challenge] ❌ Fallo de verificación de token.');
+    return res.sendStatus(403);
+  });
+
+  // 2. Recepción de Eventos y Mensajes de Meta (POST /api/v1/meta/webhook)
+  app.post('/api/v1/meta/webhook', async (req: Request, res: Response) => {
+    res.sendStatus(200);
+    await MetaWhatsAppService.processIncomingMetaWebhook(req.body);
+  });
+
+  // 3. Callback de Embedded Signup OAuth (POST /api/v1/meta/oauth/callback)
+  app.post('/api/v1/meta/oauth/callback', authenticateToken as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, code } = req.body;
+      if (!clientId || !code) {
+        return res.status(400).json({ success: false, error: 'clientId y code son requeridos.' });
+      }
+
+      const result = await MetaWhatsAppService.exchangeEmbeddedSignupCode(clientId, code);
+      if (!result.success) {
+        return res.status(400).json({ success: false, error: result.error });
+      }
+
+      res.json({ success: true, message: 'Cuenta de Meta del cliente configurada exitosamente.', data: result.data });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
