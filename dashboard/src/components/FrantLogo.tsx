@@ -18,78 +18,73 @@ export const FrantLogo: React.FC<FrantLogoProps> = ({
   subtext
 }) => {
   const numSize = typeof size === 'number' ? size : parseInt(size as string, 10) || 40;
-  const redAccent = '#E03E25'; // Authentic Brand Red Accent
+  const redAccent = '#E95835'; // Official Brand Red/Orange Accent
 
   let bgFill = '#141414'; // Dark rounded container background
-  let fFill = '#F8F6F0';  // Off-white logo color
+  let fFill = '#F8F6F0';  // Off-white logo fill color
   let strokeColor = 'none';
   let strokeWidth = 0;
 
   if (variant === 'light') {
     bgFill = '#F8F6F0';
-    fFill = '#141414';
+    fFill = '#1C1D1C';
   } else if (variant === 'outline') {
     bgFill = '#141414';
     fFill = 'none';
     strokeColor = '#F8F6F0';
-    strokeWidth = 3.2;
+    strokeWidth = 14;
   } else if (variant === 'mark') {
     bgFill = 'transparent';
-    fFill = '#141414';
+    fFill = '#1C1D1C';
   } else if (variant === 'mark-light') {
     bgFill = 'transparent';
     fFill = '#F8F6F0';
   }
 
+  const isMark = variant === 'mark' || variant === 'mark-light';
+
   const renderSvg = () => (
     <svg
       width={numSize}
       height={numSize}
-      viewBox="0 0 100 100"
+      viewBox="0 0 512 512"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className="flex-shrink-0 select-none"
       style={{ display: 'block' }}
     >
-      {/* Outer rounded square container */}
-      {variant !== 'mark' && variant !== 'mark-light' && (
+      {/* Outer rounded container for framed variants */}
+      {!isMark && (
         <rect
-          x="2"
-          y="2"
-          width="96"
-          height="96"
-          rx="26"
+          x="0"
+          y="0"
+          width="512"
+          height="512"
+          rx="130"
           fill={bgFill}
           stroke={variant === 'light' ? '#E2DFD7' : 'none'}
-          strokeWidth={variant === 'light' ? 1.5 : 0}
+          strokeWidth={variant === 'light' ? 12 : 0}
         />
       )}
 
-      {variant === 'outline' ? (
-        <g stroke={strokeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
-          {/* Vertical Stem with 45-degree diagonal fold */}
-          <path d="M 28 77 V 37 L 44 21 V 77 Z" />
-          {/* Seam line */}
-          <line x1="28" y1="37" x2="44" y2="21" />
-          {/* Top Bar (Longer) */}
-          <path d="M 44 21 H 66 C 73.5 21 77.5 25.5 77.5 33.5 C 77.5 41.5 73.5 46 66 46 H 44 Z" />
-          {/* Middle Bar (Shorter) */}
-          <rect x="44" y="54" width="16" height="15" />
-          {/* Red Accent Square */}
-          <rect x="64" y="54" width="15" height="15" rx="2" fill={redAccent} stroke="none" />
-        </g>
-      ) : (
-        <g fill={fFill}>
-          {/* Vertical Stem with 45-degree origami fold */}
-          <path d="M 28 77 V 37 L 44 21 V 77 H 28 Z" />
-          {/* Top Bar (Longer with rounded right end) */}
-          <path d="M 44 21 H 66 C 73.5 21 77.5 25.5 77.5 33.5 C 77.5 41.5 73.5 46 66 46 H 44 V 21 Z" />
-          {/* Middle Bar (Shorter) */}
-          <rect x="44" y="54" width="16" height="15" />
-          {/* Signature Red Accent Square */}
-          <rect x="64" y="54" width="15" height="15" rx="2" fill={redAccent} />
-        </g>
-      )}
+      {/* Official Frant Logo Vector Paths */}
+      <g transform={isMark ? 'translate(0,0) scale(1)' : 'translate(64, 64) scale(0.75)'}>
+        {variant === 'outline' ? (
+          <g stroke={strokeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill="none">
+            <path d="M134.81,8.47v496.69H23.57c-7.25,0-19.51-16.56-17.64-24.96l1-353.41c2.33-5.54,4.24-12.47,8.12-17.02C23.69,99.67,113.68,14.49,120.22,11.4c4.83-2.27,9.16-3.67,14.59-2.94Z" />
+            <path d="M162.14,131.68V8.47h333.73c13.09,0,4.31,64.85-2.44,78.45-7.77,15.64-38.94,44.76-56.11,44.76H162.14Z" />
+            <path d="M287.04,216.39v105.88c0,.41-5.44,5.78-5.85,5.78h-119.05v-111.66h124.91Z" />
+            <rect x="304.35" y="216.39" width="102.9" height="111.66" rx="15" ry="15" fill={redAccent} stroke="none" />
+          </g>
+        ) : (
+          <g fill={fFill}>
+            <path d="M134.81,8.47v496.69H23.57c-7.25,0-19.51-16.56-17.64-24.96l1-353.41c2.33-5.54,4.24-12.47,8.12-17.02C23.69,99.67,113.68,14.49,120.22,11.4c4.83-2.27,9.16-3.67,14.59-2.94Z" />
+            <path d="M162.14,131.68V8.47h333.73c13.09,0,4.31,64.85-2.44,78.45-7.77,15.64-38.94,44.76-56.11,44.76H162.14Z" />
+            <path d="M287.04,216.39v105.88c0,.41-5.44,5.78-5.85,5.78h-119.05v-111.66h124.91Z" />
+            <rect fill={redAccent} x="304.35" y="216.39" width="102.9" height="111.66" rx="15" ry="15" />
+          </g>
+        )}
+      </g>
     </svg>
   );
 

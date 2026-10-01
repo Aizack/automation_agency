@@ -1,13 +1,9 @@
-<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="2" width="96" height="96" rx="26" fill="#141414"/>
-  <g fill="#F8F6F0">
-    <!-- Vertical Stem with 45-degree origami fold -->
-    <path d="M 28 77 V 37 L 44 21 V 77 H 28 Z"/>
-    <!-- Top Bar (Longer with rounded right end) -->
-    <path d="M 44 21 H 66 C 73.5 21 77.5 25.5 77.5 33.5 C 77.5 41.5 73.5 46 66 46 H 44 V 21 Z"/>
-    <!-- Middle Bar (Shorter) -->
-    <rect x="44" y="54" width="16" height="15"/>
-    <!-- Signature Red Accent Square -->
-    <rect x="64" y="54" width="15" height="15" rx="2" fill="#E03E25"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="120" fill="#141414"/>
+  <g transform="translate(64, 64) scale(0.75)">
+    <path fill="#F8F6F0" d="M134.81,8.47v496.69H23.57c-7.25,0-19.51-16.56-17.64-24.96l1-353.41c2.33-5.54,4.24-12.47,8.12-17.02C23.69,99.67,113.68,14.49,120.22,11.4c4.83-2.27,9.16-3.67,14.59-2.94Z"/>
+    <path fill="#F8F6F0" d="M162.14,131.68V8.47h333.73c13.09,0,4.31,64.85-2.44,78.45-7.77,15.64-38.94,44.76-56.11,44.76H162.14Z"/>
+    <path fill="#F8F6F0" d="M287.04,216.39v105.88c0,.41-5.44,5.78-5.85,5.78h-119.05v-111.66h124.91Z"/>
+    <rect fill="#E95835" x="304.35" y="216.39" width="102.9" height="111.66" rx="15" ry="15"/>
   </g>
 </svg>
