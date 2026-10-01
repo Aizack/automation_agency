@@ -147,7 +147,7 @@ export const SaaSErpECommerceWizard: React.FC<SaaSErpECommerceWizardProps> = ({ 
   };
 
   const publicUrl = `http://localhost:3001/c/${slug || clientId}`;
-  const productionUrl = `https://diazlab.online/c/${slug || clientId}`;
+  const productionUrl = `${window.location.origin}/c/${slug || clientId}`;
 
   if (loading) {
     return (

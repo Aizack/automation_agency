@@ -979,7 +979,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     <button
                         type="button"
                         onClick={() => {
-                            const catalogUrl = `https://diazlab.online/c/${clientId}`;
+                            const catalogUrl = `${window.location.origin}/c/${clientId}`;
                             navigator.clipboard.writeText(catalogUrl);
                             alert(`¡Enlace de Catálogo Web copiado al portapapeles!\n\n${catalogUrl}`);
                         }}
