@@ -44,17 +44,19 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
+  const [selectedUser, setSelectedUser] = useState<string>('all');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null);
 
   const fetchLogs = async () => {
     if (!clientId) return;
     setLoading(true);
     try {
-      let url = `/api/clients/${clientId}/audit-logs?limit=50`;
+      let url = `/api/clients/${clientId}/audit-logs?limit=200`;
       if (module) url += `&module=${encodeURIComponent(module)}`;
       if (entityType) url += `&entity_type=${encodeURIComponent(entityType)}`;
       if (entityId) url += `&entity_id=${encodeURIComponent(entityId)}`;
-      if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
 
       const res = await fetch(url);
       const data = await res.json();
@@ -74,17 +76,51 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({
     } else {
       setSelectedLog(null);
       setSearch('');
+      setSelectedUser('all');
+      setStartDate('');
+      setEndDate('');
     }
   }, [isOpen, clientId, entityType, entityId, module]);
 
   if (!isOpen) return null;
+
+  const uniqueUsers = Array.from(
+    new Set(logs.map(l => l.user_name).filter(Boolean))
+  ).sort();
+
+  const filteredLogs = logs.filter(log => {
+    const rawSearch = search.trim().toLowerCase();
+    const matchesSearch = !rawSearch || 
+      `${log.user_name || ''} ${log.action || ''} ${log.description || ''} ${log.user_role || ''} ${JSON.stringify(log.details || {})}`
+        .toLowerCase()
+        .includes(rawSearch);
+
+    const matchesUser = selectedUser === 'all' || (log.user_name && log.user_name.toLowerCase() === selectedUser.toLowerCase());
+
+    const logDateStr = log.created_at;
+    let matchesStartDate = true;
+    if (startDate && logDateStr) {
+      const sDate = new Date(startDate + 'T00:00:00');
+      const lDate = new Date(logDateStr);
+      matchesStartDate = lDate >= sDate;
+    }
+
+    let matchesEndDate = true;
+    if (endDate && logDateStr) {
+      const eDate = new Date(endDate + 'T23:59:59');
+      const lDate = new Date(logDateStr);
+      matchesEndDate = lDate <= eDate;
+    }
+
+    return matchesSearch && matchesUser && matchesStartDate && matchesEndDate;
+  });
 
   const getActionBadge = (action: string) => {
     const act = action.toUpperCase();
     if (act.includes('CREATE') || act.includes('CREAR') || act.includes('EMISION')) {
       return { label: 'Creación / Emisión', color: 'bg-[#161616] text-white border-[#161616]' };
     }
-    if (act.includes('UPDATE') || act.includes('EDIT')) {
+    if (act.includes('UPDATE') || act.includes('EDIT') || act.includes('MODIFICAR')) {
       return { label: 'Modificación', color: 'bg-[#FAF8F5] text-[#161616] border-[#E2DFD7]' };
     }
     if (act.includes('PAGO') || act.includes('PAYMENT')) {
@@ -113,7 +149,7 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-[#161616]/60 backdrop-blur-md p-4 animate-fade-in font-sans">
-      <div className="relative w-full max-w-3xl max-h-[85vh] bg-[#F6F4EE] border border-[#161616] rounded-none shadow-2xl flex flex-col overflow-hidden text-[#161616]">
+      <div className="relative w-full max-w-4xl max-h-[88vh] bg-[#F6F4EE] border border-[#161616] rounded-none shadow-2xl flex flex-col overflow-hidden text-[#161616]">
         
         {/* Header Wabi-Sabi */}
         <div className="px-6 py-5 border-b border-[#E2DFD7] flex items-center justify-between bg-white">
@@ -138,9 +174,9 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({
           </button>
         </div>
 
-        {/* Bar de Búsqueda Wabi-Sabi */}
-        <div className="px-6 py-3 border-b border-[#E2DFD7] bg-[#FAF8F5] flex items-center gap-3">
-          <div className="relative flex-1">
+        {/* Bar de Búsqueda & Filtros Wabi-Sabi */}
+        <div className="px-6 py-3 border-b border-[#E2DFD7] bg-[#FAF8F5] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs">
+          <div className="relative flex-1 min-w-[200px]">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6B6862] text-sm">
               search
             </span>
@@ -148,17 +184,71 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar evento o acción..."
+              placeholder="Buscar evento, acción o descripción..."
               className="w-full bg-white border border-[#E2DFD7] text-xs text-[#161616] pl-9 pr-4 py-2 rounded-none focus:outline-none focus:border-[#161616] font-sans"
             />
           </div>
-          <button
-            onClick={fetchLogs}
-            className="px-3.5 py-2 bg-white hover:bg-[#161616] hover:text-white text-[#161616] border border-[#E2DFD7] text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 rounded-none shadow-xs"
-          >
-            <span className="material-symbols-outlined text-xs">refresh</span>
-            Actualizar
-          </button>
+
+          {/* Filtro por Usuario y Fechas */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">USUARIO:</span>
+              <select
+                value={selectedUser}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none rounded-none font-sans cursor-pointer"
+              >
+                <option value="all">Todos los usuarios ({uniqueUsers.length})</option>
+                {uniqueUsers.map(u => (
+                  <option key={u} value={u}>{u}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">DESDE:</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="bg-white border border-[#E2DFD7] p-1.5 text-xs text-[#161616] outline-none font-sans rounded-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-[#6B6862] font-bold uppercase tracking-wider">HASTA:</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="bg-white border border-[#E2DFD7] p-1.5 text-xs text-[#161616] outline-none font-sans rounded-none"
+              />
+            </div>
+
+            {(selectedUser !== 'all' || startDate !== '' || endDate !== '' || search !== '') && (
+              <button
+                onClick={() => {
+                  setSelectedUser('all');
+                  setStartDate('');
+                  setEndDate('');
+                  setSearch('');
+                }}
+                className="px-2 py-1.5 bg-[#D9381E] text-white text-[10px] font-bold uppercase tracking-wider cursor-pointer border-0 rounded-none"
+                title="Limpiar Filtros"
+              >
+                Limpiar
+              </button>
+            )}
+
+            <button
+              onClick={fetchLogs}
+              className="px-3 py-2 bg-white hover:bg-[#161616] hover:text-white text-[#161616] border border-[#E2DFD7] text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1 rounded-none shadow-xs"
+              title="Refrescar datos"
+            >
+              <span className="material-symbols-outlined text-xs">refresh</span>
+              Actualizar
+            </button>
+          </div>
         </div>
 
         {/* Timeline Content */}
@@ -168,15 +258,15 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({
               <div className="w-8 h-8 border-2 border-[#D9381E] border-t-transparent rounded-full animate-spin"></div>
               <p className="text-xs font-mono">Cargando bitácora de auditoría...</p>
             </div>
-          ) : logs.length === 0 ? (
+          ) : filteredLogs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-[#6B6862] space-y-2">
               <span className="material-symbols-outlined text-4xl text-[#6B6862]">history_toggle_off</span>
               <p className="text-sm font-serif font-bold text-[#161616]">No se encontraron eventos registrados</p>
-              <p className="text-xs text-[#6B6862]">Las acciones de creación, actualización y cobro sobre este registro quedarán registradas aquí.</p>
+              <p className="text-xs text-[#6B6862]">No hay acciones que coincidan con la búsqueda o rango de fechas seleccionado.</p>
             </div>
           ) : (
             <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#E2DFD7]">
-              {logs.map((log) => {
+              {filteredLogs.map((log) => {
                 const badge = getActionBadge(log.action);
                 return (
                   <div key={log.id} className="relative group">
@@ -196,7 +286,7 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({
                             {log.user_role || 'admin'}
                           </span>
                         </div>
-                        <span className="text-[11px] text-[#6B6862] font-mono">
+                        <span className="text-[11px] text-[#6B6862] font-mono font-medium">
                           📅 {formatDate(log.created_at)}
                         </span>
                       </div>
@@ -234,7 +324,7 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({
 
         {/* Footer Wabi-Sabi */}
         <div className="px-6 py-4 border-t border-[#E2DFD7] bg-white flex items-center justify-between text-xs text-[#6B6862]">
-          <span className="font-mono text-[11px]">Total de eventos: <strong className="text-[#161616]">{logs.length}</strong></span>
+          <span className="font-mono text-[11px]">Mostrando <strong className="text-[#161616]">{filteredLogs.length}</strong> de <strong className="text-[#161616]">{logs.length}</strong> eventos</span>
           <button
             onClick={onClose}
             className="px-5 py-2 bg-[#161616] hover:bg-[#D9381E] text-white text-xs font-bold uppercase tracking-wider rounded-none transition cursor-pointer border-0 shadow-xs"

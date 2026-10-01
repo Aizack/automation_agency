@@ -2033,6 +2033,26 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
       }
     }
 
+    // Registrar evento en la bitácora de auditoría
+    try {
+      const authUser = (req as any).user;
+      const userName = authUser?.name || authUser?.username || 'Administrador ERP';
+      await pool.query(`
+        INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details)
+        VALUES ($1, $2, $3, $4, 'CREAR_PRODUCTO', 'Inventario', 'product', $5, $6, $7)
+      `, [
+        targetClientId,
+        authUser?.userId || authUser?.id || null,
+        userName,
+        authUser?.role || 'admin',
+        insertedProduct.id,
+        `Creación de producto '${name}' (SKU: ${insertedProduct.sku || 'Sin SKU'}) con stock de ${finalStock} Uds a $${parseFloat(price || 0).toLocaleString('es-CO')} COP.`,
+        JSON.stringify({ name, sku: insertedProduct.sku, price, stock: finalStock, brand, material, style })
+      ]);
+    } catch (auditErr) {
+      console.error('[Audit Log] Error registrando auditoría de producto:', auditErr);
+    }
+
     res.json({ success: true, product: insertedProduct });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -2139,6 +2159,26 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
         `ID: ${productId} | Stock actual: ${updatedProd.stock} | Mínimo: ${updatedProd.min_stock}`,
         targetClientId as string
       );
+    }
+
+    // Registrar evento en la bitácora de auditoría
+    try {
+      const authUser = (req as any).user;
+      const userName = authUser?.name || authUser?.username || 'Administrador ERP';
+      await pool.query(`
+        INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details)
+        VALUES ($1, $2, $3, $4, 'MODIFICAR_PRODUCTO', 'Inventario', 'product', $5, $6, $7)
+      `, [
+        targetClientId,
+        authUser?.userId || authUser?.id || null,
+        userName,
+        authUser?.role || 'admin',
+        productId,
+        `Actualización de datos del producto '${updatedProd.name}' (Stock: ${updatedProd.stock}, Precio: $${parseFloat(updatedProd.price || 0).toLocaleString('es-CO')} COP).`,
+        JSON.stringify({ name: updatedProd.name, sku: updatedProd.sku, price: updatedProd.price, stock: updatedProd.stock, promo_discount: updatedProd.promo_discount })
+      ]);
+    } catch (auditErr) {
+      console.error('[Audit Log] Error registrando auditoría de edición de producto:', auditErr);
     }
 
     res.json({ success: true, product: updatedProd });
@@ -2267,6 +2307,10 @@ app.post('/api/clients/:clientId/products/import', authenticateToken as any, aut
 app.delete('/api/clients/:clientId/products/:productId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, productId } = req.params;
+    const prodBefore = await pool.query(`SELECT name, sku FROM products WHERE client_id = $1 AND id = $2`, [clientId, productId]);
+    const pName = prodBefore.rows[0]?.name || 'Producto';
+    const pSku = prodBefore.rows[0]?.sku || '';
+
     const result = await pool.query(
       `DELETE FROM products WHERE client_id = $1 AND id = $2 RETURNING id`,
       [clientId, productId]
@@ -2274,6 +2318,25 @@ app.delete('/api/clients/:clientId/products/:productId', authenticateToken as an
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Producto no encontrado.' });
+    }
+
+    try {
+      const authUser = (req as any).user;
+      const userName = authUser?.name || authUser?.username || 'Administrador ERP';
+      await pool.query(`
+        INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details)
+        VALUES ($1, $2, $3, $4, 'ELIMINAR_PRODUCTO', 'Inventario', 'product', $5, $6, $7)
+      `, [
+        clientId,
+        authUser?.userId || authUser?.id || null,
+        userName,
+        authUser?.role || 'admin',
+        productId,
+        `Eliminación del producto '${pName}' (SKU: ${pSku || 'Sin SKU'}).`,
+        JSON.stringify({ name: pName, sku: pSku })
+      ]);
+    } catch (auditErr) {
+      console.error('[Audit Log] Error registrando eliminación de producto:', auditErr);
     }
 
     res.json({ success: true, message: 'Producto eliminado exitosamente.' });
@@ -4412,6 +4475,69 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
         }
       } catch (genErr) {
         console.error('[Audit API ⚠️] Error al sintetizar historial para factura:', genErr);
+      }
+    }
+
+    // Si se consulta un historial de producto específico y no hay registros aún en system_audit_logs, generamos la bitácora automáticamente
+    if (result.rows.length === 0 && entity_type === 'product' && entity_id && typeof entity_id === 'string') {
+      try {
+        const prodCheck = await pool.query(
+          `SELECT p.*, pc.name as category_name
+           FROM products p
+           LEFT JOIN product_categories pc ON p.category_id = pc.id
+           WHERE p.client_id = $1 AND (p.id::text = $2 OR p.sku = $2)`,
+          [clientId, entity_id]
+        );
+
+        if (prodCheck.rows.length > 0) {
+          const prod = prodCheck.rows[0];
+          const prodPrice = parseFloat(prod.price || 0);
+
+          // 1. Log de creación inicial
+          await pool.query(`
+            INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details, created_at)
+            VALUES ($1, NULL, 'Administrador ERP', 'admin', 'CREACION_PRODUCTO', 'Inventario', 'product', $2, $3, $4, $5)
+          `, [
+            clientId,
+            prod.id,
+            `Registro inicial de producto '${prod.name}' (SKU: ${prod.sku || 'Sin SKU'}) con stock de ${prod.stock} Uds a $${prodPrice.toLocaleString('es-CO')} COP.`,
+            JSON.stringify({ name: prod.name, sku: prod.sku, price: prodPrice, stock: prod.stock, brand: prod.brand, material: prod.material, style: prod.style, category: prod.category_name }),
+            prod.created_at || new Date()
+          ]);
+
+          // 2. Buscar ventas/salidas de este producto en facturas
+          const salesRes = await pool.query(`
+            SELECT ii.quantity, ii.price as sale_price, i.invoice_number, i.created_at as sale_date, i.created_by_user_name, i.seller_name, i.customer_name
+            FROM invoice_items ii
+            JOIN invoices i ON ii.invoice_id = i.id
+            WHERE i.client_id = $1 AND (ii.product_id = $2 OR ii.product_id::text = $2)
+            ORDER BY i.created_at DESC
+          `, [clientId, prod.id]);
+
+          for (const s of salesRes.rows) {
+            const seller = s.created_by_user_name || s.seller_name || 'Vendedor';
+            await pool.query(`
+              INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details, created_at)
+              VALUES ($1, NULL, $2, 'vendedor', 'VENTA_PRODUCTO', 'Inventario', 'product', $3, $4, $5, $6)
+            `, [
+              clientId,
+              seller,
+              prod.id,
+              `Venta/Salida de ${s.quantity} Uds en Factura #${s.invoice_number} a $${Number(s.sale_price).toLocaleString('es-CO')} COP para el cliente ${s.customer_name || 'Cliente'}.`,
+              JSON.stringify({ invoice_number: s.invoice_number, quantity: s.quantity, sale_price: s.sale_price }),
+              s.sale_date || new Date()
+            ]);
+          }
+
+          const reFetch = await pool.query(query, params);
+          return res.json({
+            success: true,
+            logs: reFetch.rows,
+            total: reFetch.rows.length
+          });
+        }
+      } catch (genErr) {
+        console.error('[Audit API ⚠️] Error al sintetizar historial para producto:', genErr);
       }
     }
 

@@ -381,8 +381,45 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     };
 
     const [filterBrand, setFilterBrand] = useState<string>('all');
+    const [filterCategory, setFilterCategory] = useState<string>('all');
+    const [sortBy, setSortBy] = useState<string>('recent');
     const [filterStock, setFilterStock] = useState<string>('all');
     const [filterMinPrice, setFilterMinPrice] = useState<string>('');
+    const [filterMaxPrice, setFilterMaxPrice] = useState<string>('');
+
+    const ALL_COLUMNS = [
+        { id: 'brand', label: 'MARCA' },
+        { id: 'name', label: 'REFERENCIA / NOMBRE' },
+        { id: 'category', label: 'CATEGORÍA' },
+        { id: 'variants', label: 'VARIANTES' },
+        { id: 'stock', label: 'UNIDADES' },
+        { id: 'price', label: 'PRECIO' },
+        { id: 'totalValue', label: 'VALOR TOTAL' },
+        { id: 'discount', label: 'DCTO' },
+        { id: 'taxes', label: 'IMPUESTOS' },
+        { id: 'created_at', label: 'FECHA REGISTRO' }
+    ];
+
+    const [visibleCols, setVisibleCols] = useState<string[]>(() => {
+        try {
+            const saved = localStorage.getItem(`inventory_cols_${clientId}`);
+            if (saved) return JSON.parse(saved);
+        } catch (e) {}
+        return ['brand', 'name', 'category', 'variants', 'stock', 'price', 'totalValue', 'discount', 'taxes'];
+    });
+    const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
+    const columnSelectorRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (columnSelectorRef.current && !columnSelectorRef.current.contains(event.target as Node)) {
+                setIsColumnSelectorOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     // Estado para Modal de Auditoría / Historial Contextual
     const [auditModalOpen, setAuditModalOpen] = useState(false);
     const [auditModalTitle, setAuditModalTitle] = useState('');
@@ -405,7 +442,6 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         setAuditEntityId(undefined);
         setAuditModalOpen(true);
     };
-    const [filterMaxPrice, setFilterMaxPrice] = useState<string>('');
 
     // Silence unused warnings for compatibility
     if (false as boolean) { console.log(setActiveTab, setFilterStock, setFilterMinPrice, setFilterMaxPrice); }
@@ -892,11 +928,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         const variantsStr = Array.isArray(prod.variants)
             ? prod.variants.map((v: any) => `${v.name || ''} ${v.sku || ''} ${v.options || ''}`).join(' ')
             : '';
-        const fullSearchable = `${prod.name || ''} ${prod.sku || ''} ${prod.brand || ''} ${prod.model || ''} ${prod.color || ''} ${prod.material || ''} ${prod.style || ''} ${prod.description || ''} ${variantsStr}`.toLowerCase();
+        const categoryObj = categories.find(c => c.id === prod.category_id);
+        const categoryName = categoryObj?.name || '';
+        const fullSearchable = `${prod.name || ''} ${prod.sku || ''} ${prod.brand || ''} ${prod.model || ''} ${prod.color || ''} ${prod.material || ''} ${prod.style || ''} ${prod.description || ''} ${categoryName} ${variantsStr}`.toLowerCase();
 
         const matchesSearch = terms.length === 0 || terms.every(term => fullSearchable.includes(term));
-
         const matchesBrand = filterBrand === 'all' || (prod.brand && prod.brand.toLowerCase() === filterBrand.toLowerCase());
+        const matchesCategory = filterCategory === 'all' || prod.category_id === filterCategory;
 
         const itemStock = prod.stock || 0;
         const itemMinStock = prod.min_stock || 2;
@@ -913,7 +951,30 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         if (minP !== null && !isNaN(minP)) matchesPrice = matchesPrice && itemPrice >= minP;
         if (maxP !== null && !isNaN(maxP)) matchesPrice = matchesPrice && itemPrice <= maxP;
 
-        return matchesSearch && matchesBrand && matchesStock && matchesPrice;
+        return matchesSearch && matchesBrand && matchesCategory && matchesStock && matchesPrice;
+    }).sort((a, b) => {
+        if (sortBy === 'price_asc') {
+            return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0);
+        }
+        if (sortBy === 'price_desc') {
+            return (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0);
+        }
+        if (sortBy === 'oldest') {
+            return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        }
+        if (sortBy === 'recent') {
+            return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        }
+        if (sortBy === 'name_asc') {
+            return (a.name || '').localeCompare(b.name || '');
+        }
+        if (sortBy === 'stock_asc') {
+            return (a.stock || 0) - (b.stock || 0);
+        }
+        if (sortBy === 'stock_desc') {
+            return (b.stock || 0) - (a.stock || 0);
+        }
+        return 0;
     });
 
     return (
@@ -1083,8 +1144,22 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     />
                 </div>
 
-                {/* Filtros Integrados (Marca, Nivel de Stock, Rango de Precios) en Estética Papel Wabi-Sabi */}
+                {/* Filtros Integrados (Categoría, Marca, Ordenar, Stock, Rango de Precios) en Estética Papel Wabi-Sabi */}
                 <div className="flex items-center gap-3 flex-wrap text-xs text-[#161616]">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">CATEGORÍA:</span>
+                        <select
+                            value={filterCategory}
+                            onChange={(e) => setFilterCategory(e.target.value)}
+                            className="bg-white border border-[#E2DFD7] py-1.5 px-2.5 text-xs text-[#161616] outline-none cursor-pointer rounded-none font-sans max-w-[150px] truncate"
+                        >
+                            <option value="all">Todas ({categories.length})</option>
+                            {categories.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     <div className="flex items-center gap-1.5">
                         <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">MARCA:</span>
                         <select
@@ -1096,6 +1171,23 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             {uniqueBrands.map(b => (
                                 <option key={b} value={b}>{b}</option>
                             ))}
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">ORDENAR:</span>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="bg-white border border-[#E2DFD7] py-1.5 px-2.5 text-xs text-[#161616] outline-none cursor-pointer rounded-none font-sans font-medium"
+                        >
+                            <option value="recent">Más recientes primero</option>
+                            <option value="oldest">Más antiguos primero</option>
+                            <option value="price_asc">Precio: Menor a Mayor</option>
+                            <option value="price_desc">Precio: Mayor a Menor</option>
+                            <option value="name_asc">Nombre: A - Z</option>
+                            <option value="stock_asc">Stock: Menor a Mayor</option>
+                            <option value="stock_desc">Stock: Mayor a Menor</option>
                         </select>
                     </div>
 
@@ -1132,11 +1224,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         />
                     </div>
 
-                    {(filterBrand !== 'all' || filterStock !== 'all' || filterMinPrice !== '' || filterMaxPrice !== '') && (
+                    {(filterBrand !== 'all' || filterCategory !== 'all' || sortBy !== 'recent' || filterStock !== 'all' || filterMinPrice !== '' || filterMaxPrice !== '') && (
                         <button
                             type="button"
                             onClick={() => {
                                 setFilterBrand('all');
+                                setFilterCategory('all');
+                                setSortBy('recent');
                                 setFilterStock('all');
                                 setFilterMinPrice('');
                                 setFilterMaxPrice('');
@@ -1206,14 +1300,158 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                 title="Seleccionar Todos"
                                             />
                                         </th>
-                                        <th style={{ width: '12%' }}>MARCA</th>
-                                        <th style={{ width: '19%' }}>REFERENCIA</th>
-                                        <th style={{ width: '15%' }}>VARIANTES</th>
-                                        <th style={{ width: '9%' }}>UNIDADES</th>
-                                        <th style={{ width: '12%' }}>PRECIO</th>
-                                        <th style={{ width: '14%' }}>VALOR TOTAL</th>
-                                        <th style={{ width: '6%' }}>DCTO</th>
-                                        <th style={{ width: '9%' }}>IMPUESTOS</th>
+                                        {visibleCols.includes('brand') && <th>MARCA</th>}
+                                        {visibleCols.includes('name') && <th>REFERENCIA / NOMBRE</th>}
+                                        {visibleCols.includes('category') && <th>CATEGORÍA</th>}
+                                        {visibleCols.includes('variants') && <th>VARIANTES</th>}
+                                        {visibleCols.includes('stock') && <th>UNIDADES</th>}
+                                        {visibleCols.includes('price') && <th>PRECIO</th>}
+                                        {visibleCols.includes('totalValue') && <th>VALOR TOTAL</th>}
+                                        {visibleCols.includes('discount') && <th>DCTO</th>}
+                                        {visibleCols.includes('taxes') && (
+                                            <th>
+                                                <div className="flex items-center justify-between gap-1">
+                                                    <span>IMPUESTOS</span>
+                                                    <div className="relative inline-block">
+                                                        <button 
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setIsColumnSelectorOpen(!isColumnSelectorOpen);
+                                                            }}
+                                                            className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer rounded transition flex items-center border-0 bg-transparent"
+                                                            title="Filtrar / Configurar campos visibles de productos"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[16px] text-[#D9381E]">tune</span>
+                                                        </button>
+
+                                                        {isColumnSelectorOpen && (
+                                                            <div 
+                                                                ref={columnSelectorRef}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="absolute right-0 top-full mt-2 w-64 bg-white border border-[#161616] shadow-2xl p-3 z-50 rounded-none text-left font-sans font-normal normal-case"
+                                                            >
+                                                                <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2 mb-2">
+                                                                    <span className="text-[11px] font-bold text-[#161616] uppercase tracking-wider">Campos Visibles</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const all = ALL_COLUMNS.map(c => c.id);
+                                                                            setVisibleCols(all);
+                                                                            localStorage.setItem(`inventory_cols_${clientId}`, JSON.stringify(all));
+                                                                        }}
+                                                                        className="text-[10px] text-[#D9381E] hover:underline font-bold cursor-pointer border-0 bg-transparent"
+                                                                    >
+                                                                        Seleccionar Todos
+                                                                    </button>
+                                                                </div>
+                                                                <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                                                                    {ALL_COLUMNS.map(col => {
+                                                                        const isChecked = visibleCols.includes(col.id);
+                                                                        return (
+                                                                            <label key={col.id} className="flex items-center gap-2 text-xs text-[#161616] cursor-pointer hover:bg-[#FAF8F5] p-1.5 rounded transition">
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    checked={isChecked}
+                                                                                    onChange={() => {
+                                                                                        if (isChecked) {
+                                                                                            if (visibleCols.length <= 1) {
+                                                                                                alert("Debe mantener al menos 1 columna visible.");
+                                                                                                return;
+                                                                                            }
+                                                                                            const next = visibleCols.filter(id => id !== col.id);
+                                                                                            setVisibleCols(next);
+                                                                                            localStorage.setItem(`inventory_cols_${clientId}`, JSON.stringify(next));
+                                                                                        } else {
+                                                                                            const next = [...visibleCols, col.id];
+                                                                                            setVisibleCols(next);
+                                                                                            localStorage.setItem(`inventory_cols_${clientId}`, JSON.stringify(next));
+                                                                                        }
+                                                                                    }}
+                                                                                    className="cursor-pointer text-[#D9381E]"
+                                                                                />
+                                                                                <span className="font-medium">{col.label}</span>
+                                                                            </label>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </th>
+                                        )}
+                                        {visibleCols.includes('created_at') && <th>FECHA REGISTRO</th>}
+                                        {!visibleCols.includes('taxes') && (
+                                            <th style={{ width: '4%' }} className="text-right">
+                                                <div className="relative inline-block">
+                                                    <button 
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setIsColumnSelectorOpen(!isColumnSelectorOpen);
+                                                        }}
+                                                        className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer rounded transition flex items-center border-0 bg-transparent"
+                                                        title="Filtrar / Configurar campos visibles de productos"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[16px] text-[#D9381E]">tune</span>
+                                                    </button>
+
+                                                    {isColumnSelectorOpen && (
+                                                        <div 
+                                                            ref={columnSelectorRef}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="absolute right-0 top-full mt-2 w-64 bg-white border border-[#161616] shadow-2xl p-3 z-50 rounded-none text-left font-sans font-normal normal-case"
+                                                        >
+                                                            <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-2 mb-2">
+                                                                <span className="text-[11px] font-bold text-[#161616] uppercase tracking-wider">Campos Visibles</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const all = ALL_COLUMNS.map(c => c.id);
+                                                                        setVisibleCols(all);
+                                                                        localStorage.setItem(`inventory_cols_${clientId}`, JSON.stringify(all));
+                                                                    }}
+                                                                    className="text-[10px] text-[#D9381E] hover:underline font-bold cursor-pointer border-0 bg-transparent"
+                                                                >
+                                                                    Seleccionar Todos
+                                                                </button>
+                                                            </div>
+                                                            <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                                                                {ALL_COLUMNS.map(col => {
+                                                                    const isChecked = visibleCols.includes(col.id);
+                                                                    return (
+                                                                        <label key={col.id} className="flex items-center gap-2 text-xs text-[#161616] cursor-pointer hover:bg-[#FAF8F5] p-1.5 rounded transition">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={isChecked}
+                                                                                onChange={() => {
+                                                                                    if (isChecked) {
+                                                                                        if (visibleCols.length <= 1) {
+                                                                                            alert("Debe mantener al menos 1 columna visible.");
+                                                                                            return;
+                                                                                        }
+                                                                                        const next = visibleCols.filter(id => id !== col.id);
+                                                                                        setVisibleCols(next);
+                                                                                        localStorage.setItem(`inventory_cols_${clientId}`, JSON.stringify(next));
+                                                                                    } else {
+                                                                                        const next = [...visibleCols, col.id];
+                                                                                        setVisibleCols(next);
+                                                                                        localStorage.setItem(`inventory_cols_${clientId}`, JSON.stringify(next));
+                                                                                    }
+                                                                                }}
+                                                                                className="cursor-pointer text-[#D9381E]"
+                                                                            />
+                                                                            <span className="font-medium">{col.label}</span>
+                                                                        </label>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </th>
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1225,6 +1463,55 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         const variantCount = prod.variants?.length || 0;
                                         const hasDiscount = (parseFloat(prod.promo_discount?.toString() || '0') || 0) > 0;
                                         const isSelected = selectedProductIds.includes(prod.id);
+                                        const categoryObj = categories.find(c => c.id === prod.category_id);
+
+                                        const renderActionButtons = () => (
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 shrink-0">
+                                                <button 
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); openAuditModalForProduct(prod); }}
+                                                    className="p-1 hover:bg-[#E2DFD7] text-amber-600 cursor-pointer"
+                                                    title="Ver Historial de Cambios / Bitácora"
+                                                >
+                                                    <span className="material-symbols-outlined text-[15px]">history</span>
+                                                </button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); handleOpenCrossStock(prod); }}
+                                                    className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
+                                                    title="Consultar Stock Inter-Sedes"
+                                                >
+                                                    <span className="material-symbols-outlined text-[15px]">domain</span>
+                                                </button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); openRefillModal(prod); }}
+                                                    className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
+                                                    title="Refill / Rellenar Stock"
+                                                >
+                                                    <span className="material-symbols-outlined text-[15px]">add_box</span>
+                                                </button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); openPrintModal(prod); }}
+                                                    className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
+                                                    title="Imprimir Etiquetas de Código de Barras"
+                                                >
+                                                    <span className="material-symbols-outlined text-[15px]">print</span>
+                                                </button>
+                                                {isAdmin && (
+                                                    <button 
+                                                        type="button"
+                                                        onClick={(e) => { e.stopPropagation(); handleDelete(prod.id); }}
+                                                        className="p-1 hover:bg-red-500/20 text-red-500 cursor-pointer"
+                                                        title="Eliminar"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[15px]">delete</span>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+
                                         return (
                                             <tr key={prod.id} className={`hover:bg-white/80 transition-colors group cursor-pointer ${isSelected ? 'bg-[#FAF8F5]' : ''}`} onClick={() => openEdit(prod)}>
                                                 {/* Checkbox de selección múltiple */}
@@ -1243,179 +1530,175 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     />
                                                 </td>
 
-                                                {/* 1. MARCA */}
-                                                <td>
-                                                    <span className="font-semibold text-xs text-[#161616] tracking-wide">
-                                                        {prod.brand || '—'}
-                                                    </span>
-                                                </td>
-
-                                                {/* 2. REFERENCIA */}
-                                                <td>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-sm text-[#161616] group-hover:text-[#D9381E] transition-colors">
-                                                            {prod.name}
+                                                {/* MARCA */}
+                                                {visibleCols.includes('brand') && (
+                                                    <td>
+                                                        <span className="font-semibold text-xs text-[#161616] tracking-wide">
+                                                            {prod.brand || '—'}
                                                         </span>
-                                                        {prod.sku && (
-                                                            <span className="font-mono text-[10px] text-[#6B6862]">
-                                                                SKU: {prod.sku}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
+                                                    </td>
+                                                )}
 
-                                                {/* 3. VARIANTES */}
-                                                <td>
-                                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                                        {variantCount > 0 ? (
-                                                            <>
-                                                                <span className="text-xs font-semibold text-[#161616]">
-                                                                    {variantCount} Variantes
+                                                {/* REFERENCIA */}
+                                                {visibleCols.includes('name') && (
+                                                    <td>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-sm text-[#161616] group-hover:text-[#D9381E] transition-colors">
+                                                                {prod.name}
+                                                            </span>
+                                                            {prod.sku && (
+                                                                <span className="font-mono text-[10px] text-[#6B6862]">
+                                                                    SKU: {prod.sku}
                                                                 </span>
-                                                                <div className="flex items-center gap-1">
-                                                                    {prod.variants?.slice(0, 4).map((v, i) => (
-                                                                        <span 
-                                                                            key={i} 
-                                                                            className="color-swatch-box" 
-                                                                            style={{ background: getColorPreview(v.variant_name || v.color) }}
-                                                                            title={v.variant_name || v.color || 'Variante'}
-                                                                        />
-                                                                    ))}
-                                                                    {variantCount > 4 && (
-                                                                        <span className="text-[10px] text-[#6B6862] font-mono">+{variantCount - 4}</span>
-                                                                    )}
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                )}
+
+                                                {/* CATEGORÍA */}
+                                                {visibleCols.includes('category') && (
+                                                    <td>
+                                                        <span className="text-xs font-medium text-[#161616]">
+                                                            {categoryObj?.name || '—'}
+                                                        </span>
+                                                    </td>
+                                                )}
+
+                                                {/* VARIANTES */}
+                                                {visibleCols.includes('variants') && (
+                                                    <td>
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                            {variantCount > 0 ? (
+                                                                <>
+                                                                    <span className="text-xs font-semibold text-[#161616]">
+                                                                        {variantCount} Variantes
+                                                                    </span>
+                                                                    <div className="flex items-center gap-1">
+                                                                        {prod.variants?.slice(0, 4).map((v, i) => (
+                                                                            <span 
+                                                                                key={i} 
+                                                                                className="color-swatch-box" 
+                                                                                style={{ background: getColorPreview(v.variant_name || v.color) }}
+                                                                                title={v.variant_name || v.color || 'Variante'}
+                                                                            />
+                                                                        ))}
+                                                                        {variantCount > 4 && (
+                                                                            <span className="text-[10px] text-[#6B6862] font-mono">+{variantCount - 4}</span>
+                                                                        )}
+                                                                    </div>
+                                                                </>
+                                                            ) : prod.color ? (
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="color-swatch-box" style={{ background: getColorPreview(prod.color) }} title={prod.color} />
+                                                                    <span className="text-xs text-[#6B6862]">{prod.color}</span>
                                                                 </div>
-                                                            </>
-                                                        ) : prod.color ? (
+                                                            ) : (
+                                                                <span className="text-xs text-[#6B6862]">Simple</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                )}
+
+                                                {/* UNIDADES */}
+                                                {visibleCols.includes('stock') && (
+                                                    <td>
+                                                        {prod.product_type === 'service' || stockUnits >= 999999 ? (
                                                             <div className="flex items-center gap-1.5">
-                                                                <span className="color-swatch-box" style={{ background: getColorPreview(prod.color) }} title={prod.color} />
-                                                                <span className="text-xs text-[#6B6862]">{prod.color}</span>
+                                                                <span className="text-xs font-semibold text-[#6B6862] font-mono">—</span>
+                                                                <span className="text-[9px] bg-[#FAF8F5] text-[#6B6862] border border-[#E2DFD7] px-1.5 py-0.5 font-mono uppercase tracking-wider">
+                                                                    Servicio
+                                                                </span>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-xs text-[#6B6862]">Simple</span>
-                                                        )}
-                                                    </div>
-                                                </td>
-
-                                                {/* 4. UNIDADES (al lado de Variantes) */}
-                                                <td>
-                                                    {prod.product_type === 'service' || stockUnits >= 999999 ? (
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="text-xs font-semibold text-[#6B6862] font-mono">—</span>
-                                                            <span className="text-[9px] bg-[#FAF8F5] text-[#6B6862] border border-[#E2DFD7] px-1.5 py-0.5 font-mono uppercase tracking-wider">
-                                                                Servicio
-                                                            </span>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className={`text-xs font-bold font-mono ${isLowStock ? 'text-[#D9381E]' : 'text-[#161616]'}`}>
-                                                                {stockUnits} Uds
-                                                            </span>
-                                                            {isLowStock && (
-                                                                <span className="text-[8px] font-mono font-bold bg-[#D9381E]/10 text-[#D9381E] px-1 py-0.2 border border-[#D9381E]/20" title="Bajo stock">
-                                                                    Bajo
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className={`text-xs font-bold font-mono ${isLowStock ? 'text-[#D9381E]' : 'text-[#161616]'}`}>
+                                                                    {stockUnits} Uds
                                                                 </span>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </td>
+                                                                {isLowStock && (
+                                                                    <span className="text-[8px] font-mono font-bold bg-[#D9381E]/10 text-[#D9381E] px-1 py-0.2 border border-[#D9381E]/20" title="Bajo stock">
+                                                                        Bajo
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                )}
 
-                                                {/* 5. PRECIO UNITARIO */}
-                                                <td className="font-mono font-bold text-xs text-[#161616]">
-                                                    {formatPrice(prod.price)} <span className="text-[9px] text-[#6B6862] font-normal font-sans">COP</span>
-                                                </td>
+                                                {/* PRECIO */}
+                                                {visibleCols.includes('price') && (
+                                                    <td className="font-mono font-bold text-xs text-[#161616]">
+                                                        {formatPrice(prod.price)} <span className="text-[9px] text-[#6B6862] font-normal font-sans">COP</span>
+                                                    </td>
+                                                )}
 
-                                                {/* 6. VALOR TOTAL EN STOCK */}
-                                                <td className="font-mono font-bold text-xs text-[#161616]">
-                                                    {prod.product_type === 'service' || stockUnits >= 999999 ? (
-                                                        <span className="text-xs text-[#6B6862] font-mono">—</span>
-                                                    ) : (
-                                                        <div className="flex flex-col">
-                                                            <span className="font-bold text-[#161616]">
-                                                                {formatPrice(totalValue)} <span className="text-[9px] text-[#6B6862] font-normal font-sans">COP</span>
+                                                {/* VALOR TOTAL */}
+                                                {visibleCols.includes('totalValue') && (
+                                                    <td className="font-mono font-bold text-xs text-[#161616]">
+                                                        {prod.product_type === 'service' || stockUnits >= 999999 ? (
+                                                            <span className="text-xs text-[#6B6862] font-mono">—</span>
+                                                        ) : (
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold text-[#161616]">
+                                                                    {formatPrice(totalValue)} <span className="text-[9px] text-[#6B6862] font-normal font-sans">COP</span>
+                                                                </span>
+                                                                <span className="text-[9px] text-[#76746E] font-mono font-normal">
+                                                                    ({stockUnits} × {formatPrice(prod.price)})
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                )}
+
+                                                {/* DCTO */}
+                                                {visibleCols.includes('discount') && (
+                                                    <td>
+                                                        {hasDiscount ? (
+                                                            <span className="bg-[#D9381E]/10 text-[#D9381E] font-bold text-xs px-1.5 py-0.5 border border-[#D9381E]/20 font-mono">
+                                                                -{prod.promo_discount}%
                                                             </span>
-                                                            <span className="text-[9px] text-[#76746E] font-mono font-normal">
-                                                                ({stockUnits} × {formatPrice(prod.price)})
+                                                        ) : (
+                                                            <span className="text-xs text-[#6B6862]">—</span>
+                                                        )}
+                                                    </td>
+                                                )}
+
+                                                {/* IMPUESTOS */}
+                                                {visibleCols.includes('taxes') && (
+                                                    <td>
+                                                        <div className="flex items-center justify-between gap-1">
+                                                            <span className="text-xs font-medium whitespace-nowrap">
+                                                                {(() => {
+                                                                    const rawTax = (prod as any).tax_rate !== undefined && (prod as any).tax_rate !== null 
+                                                                        ? (prod as any).tax_rate 
+                                                                        : ((prod as any).attributes?.tax_rate !== undefined ? (prod as any).attributes.tax_rate : 0);
+                                                                    const rate = parseFloat(rawTax.toString()) || 0;
+                                                                    if (rate === 0) return <span className="text-xs font-medium text-[#6B6862]">0% Exento</span>;
+                                                                    if (rate === 19) return <span className="text-xs font-bold text-[#161616]">19% IVA</span>;
+                                                                    if (rate === 5) return <span className="text-xs font-bold text-[#161616]">5% IVA</span>;
+                                                                    if (rate === 8) return <span className="text-xs font-bold text-[#161616]">8% INC</span>;
+                                                                    return <span className="text-xs font-bold text-[#161616]">{rate}% Imp.</span>;
+                                                                })()}
                                                             </span>
+                                                            {renderActionButtons()}
                                                         </div>
-                                                    )}
-                                                </td>
+                                                    </td>
+                                                )}
 
-                                                {/* 7. DESCUENTO (si aplica) */}
-                                                <td>
-                                                    {hasDiscount ? (
-                                                        <span className="bg-[#D9381E]/10 text-[#D9381E] font-bold text-xs px-1.5 py-0.5 border border-[#D9381E]/20 font-mono">
-                                                            -{prod.promo_discount}%
+                                                {/* FECHA REGISTRO */}
+                                                {visibleCols.includes('created_at') && (
+                                                    <td>
+                                                        <span className="text-xs font-mono text-[#6B6862]">
+                                                            {prod.created_at ? new Date(prod.created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
                                                         </span>
-                                                    ) : (
-                                                        <span className="text-xs text-[#6B6862]">—</span>
-                                                    )}
-                                                </td>
+                                                    </td>
+                                                )}
 
-                                                {/* 8. IMPUESTOS & ACCIONES */}
-                                                <td>
-                                                    <div className="flex items-center justify-between gap-1">
-                                                        <span className="text-xs font-medium whitespace-nowrap">
-                                                            {(() => {
-                                                                const rawTax = (prod as any).tax_rate !== undefined && (prod as any).tax_rate !== null 
-                                                                    ? (prod as any).tax_rate 
-                                                                    : ((prod as any).attributes?.tax_rate !== undefined ? (prod as any).attributes.tax_rate : 0);
-                                                                const rate = parseFloat(rawTax.toString()) || 0;
-                                                                if (rate === 0) return <span className="text-xs font-medium text-[#6B6862]">0% Exento</span>;
-                                                                if (rate === 19) return <span className="text-xs font-bold text-[#161616]">19% IVA</span>;
-                                                                if (rate === 5) return <span className="text-xs font-bold text-[#161616]">5% IVA</span>;
-                                                                if (rate === 8) return <span className="text-xs font-bold text-[#161616]">8% INC</span>;
-                                                                return <span className="text-xs font-bold text-[#161616]">{rate}% Imp.</span>;
-                                                            })()}
-                                                        </span>
-
-                                                        {/* Acciones Rápidas ERP al Hover */}
-                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 shrink-0">
-                                                            <button 
-                                                                type="button"
-                                                                onClick={(e) => { e.stopPropagation(); openAuditModalForProduct(prod); }}
-                                                                className="p-1 hover:bg-[#E2DFD7] text-amber-600 cursor-pointer"
-                                                                title="Ver Historial de Cambios / Bitácora"
-                                                            >
-                                                                <span className="material-symbols-outlined text-[15px]">history</span>
-                                                            </button>
-                                                            <button 
-                                                                type="button"
-                                                                onClick={(e) => { e.stopPropagation(); handleOpenCrossStock(prod); }}
-                                                                className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
-                                                                title="Consultar Stock Inter-Sedes"
-                                                            >
-                                                                <span className="material-symbols-outlined text-[15px]">domain</span>
-                                                            </button>
-                                                            <button 
-                                                                type="button"
-                                                                onClick={(e) => { e.stopPropagation(); openRefillModal(prod); }}
-                                                                className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
-                                                                title="Refill / Rellenar Stock"
-                                                            >
-                                                                <span className="material-symbols-outlined text-[15px]">add_box</span>
-                                                            </button>
-                                                            <button 
-                                                                type="button"
-                                                                onClick={(e) => { e.stopPropagation(); openPrintModal(prod); }}
-                                                                className="p-1 hover:bg-[#E2DFD7] text-[#161616] cursor-pointer"
-                                                                title="Imprimir Etiquetas de Código de Barras"
-                                                            >
-                                                                <span className="material-symbols-outlined text-[15px]">print</span>
-                                                            </button>
-                                                            {isAdmin && (
-                                                                <button 
-                                                                    type="button"
-                                                                    onClick={(e) => { e.stopPropagation(); handleDelete(prod.id); }}
-                                                                    className="p-1 hover:bg-red-500/20 text-red-500 cursor-pointer"
-                                                                    title="Eliminar"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-[15px]">delete</span>
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </td>
+                                                {/* Si impuestos está oculto, mostrar acciones en celda independiente al final */}
+                                                {!visibleCols.includes('taxes') && (
+                                                    <td className="text-right">
+                                                        {renderActionButtons()}
+                                                    </td>
+                                                )}
                                             </tr>
                                         );
                                     })}
