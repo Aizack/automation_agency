@@ -1,5 +1,5 @@
 import { ClientConfig } from '../core/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 import path from 'path';
 
@@ -14,9 +14,7 @@ import { consultarInventarioTool } from '../tools/consultarInventario';
 import { consultarEstadoCuentaTool } from '../tools/consultarEstadoCuenta';
 import { reportarPagoTool } from '../tools/reportarPago';
 import { asignarTareaTool } from '../tools/asignarTarea';
-
-// Inicializamos el SDK de Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "API_KEY_MISSING");
+import { consultarDomicilioTool } from '../tools/consultarDomicilio';
 
 export class AIAgent {
   private config: ClientConfig;
@@ -25,12 +23,20 @@ export class AIAgent {
     this.config = config;
   }
 
+  private getAIClient(): GoogleGenAI {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "API_KEY_MISSING") {
+      throw new Error("GEMINI_API_KEY no configurada. Por favor, añádela a tu archivo .env.");
+    }
+    return new GoogleGenAI({ apiKey });
+  }
+
   async processMessage(
     userMessage: string, 
     senderPhone: string,
     sendVoiceFn?: (to: string, filePath: string) => Promise<any>
   ): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
-    console.log(`[Agente AI] 🤖 Procesando Gemini para cliente: ${this.config.name} (ID: ${this.config.id})`);
+    console.log(`[Agente AI] 🤖 Procesando Gemini (3.7 Flash) para cliente: ${this.config.name} (ID: ${this.config.id})`);
 
     // 1. Retrieval-Augmented Generation (RAG)
     const contextFromDrive = await VectorDatabase.searchRelevantContext(this.config.id, userMessage);
@@ -80,7 +86,7 @@ export class AIAgent {
 
       INSTRUCCIONES IMPORTANTES:
       - Responde siempre de forma corta, directa y conversacional, ideal para WhatsApp. Escribe como si fueras un humano amable.
-      - Si el usuario te proporciona datos para registrar su negocio, agendar una cita o hacer un pedido, llama a la herramienta correspondiente de inmediato.
+      - Si el usuario te proporciona datos para registrar su negocio, agendar una cita, hacer un pedido o consultar un envío/domicilio, llama a la herramienta correspondiente de inmediato.
       ${availableAudios.length > 0 ? `- Tienes la capacidad de reproducir notas de voz del dueño del negocio. Si el usuario te saluda, o te pide un audio explicativo o de bienvenida, o consideras oportuno enviar un audio de los disponibles, utiliza la herramienta 'reproducir_audio' con la etiqueta correspondiente.` : ''}
 
       🛡️ REGLAS CRÍTICAS DE SEGURIDAD Y COMPORTAMIENTO:
@@ -92,7 +98,6 @@ export class AIAgent {
     // 3. Declaración de Herramientas (Function Declarations para Gemini)
     const declarations: any[] = [];
 
-    // Herramienta de agendar cita
     if (this.config.activeTools.includes("agendarCita")) {
       declarations.push({
         name: "agendar_cita",
@@ -100,25 +105,15 @@ export class AIAgent {
         parameters: {
           type: "OBJECT",
           properties: {
-            fecha: { 
-              type: "STRING", 
-              description: "La fecha de la cita en formato YYYY-MM-DD (ej. 2026-07-15)" 
-            },
-            hora: { 
-              type: "STRING", 
-              description: "La hora de la cita en formato HH:MM (ej. 14:30)" 
-            },
-            nombre: { 
-              type: "STRING", 
-              description: "El nombre completo del cliente que está agendando la cita" 
-            }
+            fecha: { type: "STRING", description: "La fecha de la cita en formato YYYY-MM-DD (ej. 2026-07-15)" },
+            hora: { type: "STRING", description: "La hora de la cita en formato HH:MM (ej. 14:30)" },
+            nombre: { type: "STRING", description: "El nombre completo del cliente que está agendando la cita" }
           },
           required: ["fecha", "hora", "nombre"]
         }
       });
     }
 
-    // Herramienta de crear pedido
     if (this.config.activeTools.includes("crearPedido")) {
       declarations.push({
         name: "crear_pedido",
@@ -126,21 +121,14 @@ export class AIAgent {
         parameters: {
           type: "OBJECT",
           properties: {
-            producto: { 
-              type: "STRING", 
-              description: "El nombre del producto solicitado" 
-            },
-            cantidad: { 
-              type: "NUMBER", 
-              description: "La cantidad solicitada" 
-            }
+            producto: { type: "STRING", description: "El nombre del producto solicitado" },
+            cantidad: { type: "NUMBER", description: "La cantidad solicitada" }
           },
           required: ["producto", "cantidad"]
         }
       });
     }
 
-    // Inyección de la herramienta reproducir_audio si el cliente tiene audios disponibles
     if (availableAudios.length > 0) {
       declarations.push({
         name: "reproducir_audio",
@@ -151,7 +139,7 @@ export class AIAgent {
             etiqueta: { 
               type: "STRING", 
               description: "La etiqueta del audio a reproducir.",
-              enum: availableAudios // Solo permite llamar audios existentes en disco
+              enum: availableAudios
             }
           },
           required: ["etiqueta"]
@@ -159,16 +147,15 @@ export class AIAgent {
       });
     }
 
-    // Inyección de herramientas SaaS ERP si están activas
     if (this.config.activeTools.includes("consultarInventario")) {
       declarations.push({
         name: "consultar_inventario",
-        description: "Permite a los administradores buscar productos y consultar existencias y precios en el inventario de la óptica.",
+        description: "Permite buscar productos y consultar existencias y precios en el inventario del negocio.",
         parameters: {
           type: "OBJECT",
           properties: {
             sku: { type: "STRING", description: "El SKU específico del producto a buscar" },
-            busqueda: { type: "STRING", description: "Término de búsqueda para filtrar por nombre o descripción (ej: 'Transitions', 'Oakley')" }
+            busqueda: { type: "STRING", description: "Término de búsqueda para filtrar por nombre o descripción" }
           }
         }
       });
@@ -177,12 +164,12 @@ export class AIAgent {
     if (this.config.activeTools.includes("consultarEstadoCuenta")) {
       declarations.push({
         name: "consultar_estado_cuenta",
-        description: "Permite a los administradores consultar las facturas vencidas, pendientes, montos y cartera general de clientes.",
+        description: "Permite consultar las facturas vencidas, pendientes, montos y cartera general de clientes.",
         parameters: {
           type: "OBJECT",
           properties: {
             clienteName: { type: "STRING", description: "Nombre del paciente/cliente a consultar" },
-            documentNumber: { type: "STRING", description: "Número de identificación/documento del cliente (Cédula/NIT)" }
+            documentNumber: { type: "STRING", description: "Número de identificación/documento del cliente" }
           }
         }
       });
@@ -191,7 +178,7 @@ export class AIAgent {
     if (this.config.activeTools.includes("reportarPago")) {
       declarations.push({
         name: "reportar_pago",
-        description: "Permite a los administradores registrar que un cliente ha pagado una factura, marcando su estado como pagado ('paid').",
+        description: "Permite registrar que un cliente ha pagado una factura, marcando su estado como pagado ('paid').",
         parameters: {
           type: "OBJECT",
           properties: {
@@ -203,7 +190,17 @@ export class AIAgent {
       });
     }
 
-    // Herramienta de asignar tarea del personal
+    declarations.push({
+      name: "consultar_domicilio",
+      description: "Permite consultar el estado de envío y rastreo de un pedido o domicilio vinculado a una factura.",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          invoiceNumber: { type: "STRING", description: "Número de la factura o pedido (ej: F-102)" }
+        }
+      }
+    });
+
     if (this.config.activeTools.includes("asignarTarea") || this.config.id !== "admin") {
       declarations.push({
         name: "asignar_tarea",
@@ -211,41 +208,28 @@ export class AIAgent {
         parameters: {
           type: "OBJECT",
           properties: {
-            titulo: { type: "STRING", description: "Título breve de la tarea (ej. 'Inventario de monturas', 'Contactar proveedor')" },
+            titulo: { type: "STRING", description: "Título breve de la tarea" },
             descripcion: { type: "STRING", description: "Descripción detallada de la tarea a realizar" },
-            nombreEmpleado: { type: "STRING", description: "Nombre del empleado al que se le asigna la tarea (ej. 'Juan', 'Carlos'). Omitir si se asigna por rol." },
-            rolEmpleado: { type: "STRING", description: "Rol o departamento al que se le asigna la tarea (ej. 'ventas', 'puerta_a_puerta'). Omitir si se asigna a alguien específico." },
-            diasPlazo: { type: "NUMBER", description: "Número de días de plazo para entregar la tarea (ej: 1, 3). Por defecto es 1." }
+            nombreEmpleado: { type: "STRING", description: "Nombre del empleado al que se le asigna la tarea" },
+            rolEmpleado: { type: "STRING", description: "Rol o departamento al que se le asigna la tarea" },
+            diasPlazo: { type: "NUMBER", description: "Número de días de plazo para entregar la tarea" }
           },
           required: ["titulo"]
         }
       });
     }
 
-    // Inyección especial de onboarding automático para el admin de la agencia
     if (this.config.id === "admin") {
       declarations.push({
         name: "registrar_cliente",
-        description: "Registra un nuevo negocio o cliente en el sistema multi-tenant, creando su base de conocimientos en Drive y sus credenciales de acceso.",
+        description: "Registra un nuevo negocio o cliente en el sistema multi-tenant.",
         parameters: {
           type: "OBJECT",
           properties: {
-            nombreEmpresa: { 
-              type: "STRING", 
-              description: "El nombre oficial del negocio o empresa (ej. Dental Studio, Pizzería Bella)" 
-            },
-            telefonoCliente: { 
-              type: "STRING", 
-              description: "El número de WhatsApp completo del cliente/dueño del negocio, con código de país (ej. 573001112222)" 
-            },
-            nombreContacto: { 
-              type: "STRING", 
-              description: "El nombre de la persona representante del negocio" 
-            },
-            emailContacto: { 
-              type: "STRING", 
-              description: "El correo electrónico del contacto principal" 
-            }
+            nombreEmpresa: { type: "STRING", description: "El nombre oficial del negocio o empresa" },
+            telefonoCliente: { type: "STRING", description: "El número de WhatsApp completo del cliente con código de país" },
+            nombreContacto: { type: "STRING", description: "El nombre de la persona representante del negocio" },
+            emailContacto: { type: "STRING", description: "El correo electrónico del contacto principal" }
           },
           required: ["nombreEmpresa", "telefonoCliente", "nombreContacto"]
         }
@@ -253,18 +237,12 @@ export class AIAgent {
 
       declarations.push({
         name: "guardar_perfil_negocio",
-        description: "Guarda el resumen estructurado de las respuestas del onboarding (productos, horarios, FAQs, etc.) en un archivo de Drive y lo indexa para el bot de ese cliente.",
+        description: "Guarda el resumen estructurado de las respuestas del onboarding.",
         parameters: {
           type: "OBJECT",
           properties: {
-            clientId: { 
-              type: "STRING", 
-              description: "El ID único del cliente/negocio generado durante el registro (ej. client_clinica_dental_plus_1234)" 
-            },
-            perfilTexto: { 
-              type: "STRING", 
-              description: "El resumen estructurado de las respuestas del onboarding (servicios/productos, horarios, ubicación, FAQs y respuestas)" 
-            }
+            clientId: { type: "STRING", description: "El ID único del cliente/negocio generado" },
+            perfilTexto: { type: "STRING", description: "El resumen estructurado de las respuestas del onboarding" }
           },
           required: ["clientId", "perfilTexto"]
         }
@@ -272,20 +250,11 @@ export class AIAgent {
     }
 
     try {
-      if (process.env.GEMINI_API_KEY) {
-        // Inicializar Modelo Gemini con herramientas si están configuradas
-        const modelConfig: any = {
-          model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
-          systemInstruction: fullSystemPrompt
-        };
+      if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "API_KEY_MISSING") {
+        const ai = this.getAIClient();
+        const selectedModel = process.env.GEMINI_MODEL || "gemini-3.7-flash";
 
-        if (declarations.length > 0) {
-          modelConfig.tools = [{ functionDeclarations: declarations }];
-        }
-
-        const model = genAI.getGenerativeModel(modelConfig);
-
-        // Cargar historial de conversación para darle memoria al bot
+        // Recuperar historial de conversación
         const pastTurns: any[] = [];
         try {
           const historyRes = await pool.query(
@@ -296,62 +265,61 @@ export class AIAgent {
             [this.config.id, senderPhone]
           );
           
-          // Reversar para orden cronológico (más antiguo primero)
           const rows = historyRes.rows.reverse();
           for (const row of rows) {
-            pastTurns.push({
-              role: 'user',
-              parts: [{ text: row.message_text }]
-            });
-            pastTurns.push({
-              role: 'model',
-              parts: [{ text: row.response_text }]
-            });
+            pastTurns.push({ role: 'user', parts: [{ text: row.message_text }] });
+            pastTurns.push({ role: 'model', parts: [{ text: row.response_text }] });
           }
         } catch (histError) {
           console.error("[Agente AI] Error al recuperar historial de conversación:", histError);
         }
 
-        // Agregar el mensaje actual
-        pastTurns.push({
-          role: 'user',
-          parts: [{ text: userMessage }]
-        });
+        pastTurns.push({ role: 'user', parts: [{ text: userMessage }] });
 
         let contents: any[] = pastTurns;
         let responseText = "";
         let accumulatedInputTokens = 0;
         let accumulatedOutputTokens = 0;
 
-        // Loop de turnos para permitir la ejecución encadenada de herramientas
         for (let turn = 0; turn < 5; turn++) {
-          const result = await model.generateContent({ contents });
-          const response = result.response;
-          
-          // Registrar consumo de tokens de este turno
-          const usage = response.usageMetadata;
+          const configObj: any = {
+            systemInstruction: fullSystemPrompt
+          };
+
+          if (declarations.length > 0) {
+            configObj.tools = [{ functionDeclarations: declarations }];
+          }
+
+          const result: any = await ai.models.generateContent({
+            model: selectedModel,
+            contents: contents,
+            config: configObj
+          });
+
+          const usage = result.usageMetadata;
           if (usage) {
             accumulatedInputTokens += usage.promptTokenCount || 0;
             accumulatedOutputTokens += usage.candidatesTokenCount || 0;
           }
 
-          const functionCalls = response.functionCalls();
+          const candidate = result.candidates?.[0];
+          const parts = candidate?.content?.parts || [];
+          
+          // Detectar llamadas a funciones
+          const functionCalls = parts.filter((p: any) => p.functionCall).map((p: any) => p.functionCall);
 
-          // Si no hay llamadas a funciones de Gemini, terminamos el flujo con el texto generado
           if (!functionCalls || functionCalls.length === 0) {
-            responseText = response.text();
+            responseText = result.text || candidate?.content?.parts?.map((p: any) => p.text).join('') || "";
             break;
           }
 
-          // Guardamos la decisión del modelo en el historial de la conversación
           contents.push({
             role: 'model',
-            parts: response.candidates?.[0]?.content?.parts || []
+            parts: parts
           });
 
           const functionResponseParts: any[] = [];
 
-          // Ejecutar las llamadas de herramientas solicitadas por el modelo
           for (const call of functionCalls) {
             console.log(`[Agente AI] 🛠️ Ejecutando herramienta local: '${call.name}'`);
             let toolResultStr = "";
@@ -373,6 +341,8 @@ export class AIAgent {
                 toolResultStr = await consultarEstadoCuentaTool.execute(call.args as any, this.config.id);
               } else if (call.name === "reportar_pago") {
                 toolResultStr = await reportarPagoTool.execute(call.args as any, this.config.id);
+              } else if (call.name === "consultar_domicilio") {
+                toolResultStr = await consultarDomicilioTool.execute(call.args as any, this.config.id);
               } else if (call.name === "asignar_tarea") {
                 toolResultStr = await asignarTareaTool.execute(call.args as any, this.config.id);
               } else {
@@ -391,7 +361,6 @@ export class AIAgent {
             });
           }
 
-          // Alimentar los resultados de vuelta a Gemini como rol 'user'
           contents.push({
             role: 'user',
             parts: functionResponseParts
@@ -405,7 +374,6 @@ export class AIAgent {
         };
 
       } else {
-        // Fallback local sin API KEY para emulación
         console.warn("[Agente AI] GEMINI_API_KEY no encontrada. Usando modo simulación local.");
         let toolResponse = "";
         

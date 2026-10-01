@@ -1,4 +1,4 @@
-import { pool } from '../database/postgres';
+import { ERPBridgeService } from '../services/erpBridgeService';
 
 interface ReportarPagoArgs {
     invoiceNumber: string;
@@ -7,31 +7,17 @@ interface ReportarPagoArgs {
 
 export const reportarPagoTool = {
     execute: async (args: ReportarPagoArgs, clientId: string): Promise<string> => {
-        const { invoiceNumber, montoPagado } = args;
         try {
-            // 1. Buscar la factura
-            const res = await pool.query(
-                `SELECT id, customer_name, total_amount, status FROM invoices WHERE client_id = $1 AND invoice_number = $2 LIMIT 1`,
-                [clientId, invoiceNumber]
-            );
-
-            if (res.rows.length === 0) {
-                return `Error: No se encontró la factura '${invoiceNumber}' para este negocio.`;
+            const result = await ERPBridgeService.reportarPago(clientId, args);
+            if (!result.success) {
+                return `Error: ${result.error}`;
             }
-
-            const invoice = res.rows[0];
-
-            // 2. Registrar el pago (actualizando estado a 'paid')
-            await pool.query(
-                `UPDATE invoices SET status = 'paid', updated_at = NOW() WHERE id = $1`,
-                [invoice.id]
-            );
 
             const formattedAmount = new Intl.NumberFormat('es-CO', {
                 style: 'currency', currency: 'COP', minimumFractionDigits: 0
-            }).format(montoPagado);
+            }).format(result.montoAbonado || 0);
 
-            return `✅ Pago de ${formattedAmount} registrado exitosamente para la factura ${invoiceNumber} del cliente ${invoice.customer_name}. Estado de la factura actualizado a 'paid' (Pagado).`;
+            return `✅ Pago de ${formattedAmount} registrado exitosamente para la factura ${result.invoiceNumber}. Estado actualizado a '${result.nuevoEstado}'.`;
         } catch (err: any) {
             console.error("[Tool ReportarPago] Error:", err);
             return `Error registrando el pago: ${err.message}`;

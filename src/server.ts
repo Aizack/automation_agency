@@ -62,7 +62,7 @@ import { testSiigoConnection } from './services/siigoService';
 import { getInvoicePrintData, generatePOSThermalTicketHTML } from './services/pdfGeneratorService';
 import { AIAgent } from './agents/base';
 import { getClientConfigById } from './core/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { correlationIdMiddleware } from './middlewares/correlationIdMiddleware';
 import { errorHandler, asyncHandler } from './middlewares/errorHandler';
 import { StructuredLogger } from './utils/structuredLogger';
@@ -3834,12 +3834,8 @@ app.post('/api/clients/:clientId/invoices/ocr-scan-batch', authenticateToken as 
       return res.status(500).json({ success: false, error: 'Clave API de Gemini no configurada en el servidor.' });
     }
 
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
-      generationConfig: { responseMimeType: "application/json" }
-    });
+    const { GoogleGenAI } = await import('@google/genai');
+    const ai = new GoogleGenAI({ apiKey });
 
     const parsedInvoices: any[] = [];
 
@@ -3900,8 +3896,18 @@ Si algún dato no es legible o no está presente en la factura, usa valores vac�
           }
         };
 
-        const result = await model.generateContent([prompt, imagePart]);
-        const textResult = result.response.text().trim();
+        const result: any = await ai.models.generateContent({
+          model: "gemini-3.7-flash",
+          contents: [
+            {
+              parts: [
+                { text: prompt },
+                imagePart
+              ]
+            }
+          ]
+        });
+        const textResult = (result.text || "").trim();
         const jsonParsed = JSON.parse(textResult);
 
         parsedInvoices.push({
@@ -7362,9 +7368,8 @@ app.post('/api/clients/:clientId/ai-agent/chat', authenticateToken as any, autho
       return res.status(500).json({ success: false, error: 'La API Key de Gemini no está configurada.' });
     }
 
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const { GoogleGenAI } = await import('@google/genai');
+    const ai = new GoogleGenAI({ apiKey });
 
     // Consultar información básica de la sede / negocio
     const clientRes = await pool.query(`SELECT name, system_type, address, phone FROM clients WHERE id = $1`, [clientId]);
@@ -7374,12 +7379,19 @@ app.post('/api/clients/:clientId/ai-agent/chat', authenticateToken as any, autho
 Tu objetivo es ayudar al usuario (administrador o empleado) a gestionar el inventario, ventas, clientes, facturación y operaciones diarias.
 Responde de forma clara, amable, concisa y en español. Si el usuario te saluda o pregunta qué puedes hacer, preséntate brevemente como Frant IA.`;
 
-    const aiResult = await model.generateContent([
-      { text: systemPrompt },
-      { text: `Consulta del usuario: ${prompt}` }
-    ]);
+    const aiResult: any = await ai.models.generateContent({
+      model: "gemini-3.7-flash",
+      contents: [
+        {
+          parts: [
+            { text: systemPrompt },
+            { text: `Consulta del usuario: ${prompt}` }
+          ]
+        }
+      ]
+    });
 
-    const responseText = aiResult.response.text().trim();
+    const responseText = (aiResult.text || "").trim();
     res.json({ success: true, response: responseText, answer: responseText });
   } catch (err: any) {
     console.error("[AI Agent Chat API] Error:", err);
@@ -7578,8 +7590,7 @@ async function startMarketingCampaignWorker(clientId: string, campaignId: string
 
     // Instanciar Gemini
     const apiKey = process.env.GEMINI_API_KEY || "API_KEY_MISSING";
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const ai = new GoogleGenAI({ apiKey });
 
     for (const log of pendingLogs) {
       // Validar si el WhatsApp está listo antes de cada envío
@@ -7613,8 +7624,11 @@ async function startMarketingCampaignWorker(clientId: string, campaignId: string
         
         Devuelve exclusivamente el mensaje reescrito final, listo para enviar. Sin introducciones, explicaciones, ni comillas.`;
 
-        const aiResult = await model.generateContent(prompt);
-        const rewrittenMessage = aiResult.response.text().trim();
+        const aiResult: any = await ai.models.generateContent({
+          model: "gemini-3.7-flash",
+          contents: prompt
+        });
+        const rewrittenMessage = (aiResult.text || "").trim();
 
         // 4. Enviar el mensaje por WhatsApp
         const cleanPhone = log.customer_phone.replace(/\D/g, '');
@@ -9490,26 +9504,30 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 `;
 
       if (apiKey && apiKey !== "API_KEY_MISSING") {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const ai = new GoogleGenAI({ apiKey });
 
         let result;
         if (fileBase64 && mimeType) {
           const cleanBase64 = fileBase64.includes('base64,') ? fileBase64.split('base64,')[1] : fileBase64;
-          result = await model.generateContent([
-            promptText,
-            {
-              inlineData: {
-                data: cleanBase64,
-                mimeType: mimeType || 'image/jpeg'
+          result = await ai.models.generateContent({
+            model: "gemini-3.7-flash",
+            contents: [
+              {
+                parts: [
+                  { text: promptText },
+                  { inlineData: { data: cleanBase64, mimeType: mimeType || 'image/jpeg' } }
+                ]
               }
-            }
-          ]);
+            ]
+          });
         } else {
-          result = await model.generateContent([promptText, `Texto de la carta:\n${textContent}`]);
+          result = await ai.models.generateContent({
+            model: "gemini-3.7-flash",
+            contents: [promptText, `Texto de la carta:\n${textContent}`]
+          });
         }
 
-        const responseText = result.response.text();
+        const responseText = result.text || "";
         const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
         const parsed = JSON.parse(cleanJson);
         parsedDishes = parsed.dishes || [];
@@ -11329,6 +11347,43 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       res.json({
         success: true,
         message: `Traslado masivo #${bulkTransferCode} completado exitosamente para ${transferredCount} producto(s).`
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- ENDPOINT DE SIMULACIÓN Y PRUEBAS DE DOMICILIOS ---
+  app.post('/api/v1/test/deliveries/simulate-status', async (req: Request, res: Response) => {
+    try {
+      const { clientId, invoiceNumber, status, driverName, driverPhone, address, trackingUrl } = req.body;
+      if (!clientId || !invoiceNumber || !status) {
+        return res.status(400).json({ success: false, error: 'clientId, invoiceNumber y status son requeridos.' });
+      }
+
+      const validStatuses = ['pending', 'assigned', 'in_transit', 'delivered', 'failed'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ success: false, error: `Estado inválido. Válidos: ${validStatuses.join(', ')}` });
+      }
+
+      const upsertRes = await pool.query(
+        `INSERT INTO deliveries (client_id, invoice_number, status, driver_name, driver_phone, address, tracking_url, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+         ON CONFLICT (client_id, invoice_number) DO UPDATE SET
+           status = EXCLUDED.status,
+           driver_name = COALESCE(EXCLUDED.driver_name, deliveries.driver_name),
+           driver_phone = COALESCE(EXCLUDED.driver_phone, deliveries.driver_phone),
+           address = COALESCE(EXCLUDED.address, deliveries.address),
+           tracking_url = COALESCE(EXCLUDED.tracking_url, deliveries.tracking_url),
+           updated_at = NOW()
+         RETURNING *`,
+        [clientId, invoiceNumber, status, driverName || null, driverPhone || null, address || null, trackingUrl || null]
+      );
+
+      res.json({
+        success: true,
+        message: `Estado del domicilio para factura ${invoiceNumber} actualizado a '${status}' exitosamente.`,
+        delivery: upsertRes.rows[0]
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });

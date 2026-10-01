@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpCRM.tsx": {
-    "mtime": 1790616409.01474,
-    "seen": 1790616994.5917664,
-    "ast_hash": "64afad68cbede02363ae9a260efeb9f3",
+    "mtime": 1790203273.408823,
+    "seen": 1790203589.5567832,
+    "ast_hash": "c48e1ed0a2ccd51e4d73b479346632b8",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpCampaigns.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
-    "mtime": 1790616026.209653,
-    "seen": 1790616994.591792,
-    "ast_hash": "44ba54fee0b90855f8ec9c8ea10ad217",
+    "mtime": 1790271518.0066457,
+    "seen": 1790271595.9956465,
+    "ast_hash": "bdcfffc4d900b342b9269076dfb297fa",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpMarketing.tsx": {
@@ -492,9 +492,9 @@
     "semantic_hash": ""
   },
   "src/services/electronicInvoiceService.ts": {
-    "mtime": 1790616540.5402894,
-    "seen": 1790616994.5920174,
-    "ast_hash": "8befa8e635f08d2ef7204178524a677b",
+    "mtime": 1790203404.64999,
+    "seen": 1790203589.5569854,
+    "ast_hash": "f72b67652e583abc37a8e0f68d75b327",
     "semantic_hash": ""
   },
   "src/services/escalation.ts": {
@@ -2058,9 +2058,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/HistoricalInvoicesModal.tsx": {
-    "mtime": 1790616409.0157466,
-    "seen": 1790616994.5916903,
-    "ast_hash": "69ecdacd6774071d818af0fcc3fc7e77",
+    "mtime": 1790203293.431428,
+    "seen": 1790203589.5567575,
+    "ast_hash": "0ced9ac5adfc8195cb0b973884596e22",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpEmployeeProfile.tsx": {
@@ -2514,21 +2514,15 @@
     "semantic_hash": ""
   },
   "shutdown_state.json": {
-    "mtime": 1790403884.6007142,
-    "seen": 1790616994.5919392,
-    "ast_hash": "848c28c0bb8b63aa162c2107708c3685",
+    "mtime": 1790291387.2060409,
+    "seen": 1790291661.470634,
+    "ast_hash": "91370dbeaf777807306ce71ea3cbf812",
     "semantic_hash": ""
   },
   "dashboard/src/components/DynamicSelect.tsx": {
     "mtime": 1790272359.4488108,
     "seen": 1790291661.4704456,
     "ast_hash": "a6634ae9ead8ced0639aaa11ecf86857",
-    "semantic_hash": ""
-  },
-  "scratch/update_ti.py": {
-    "mtime": 1790616385.1756737,
-    "seen": 1790616994.5919335,
-    "ast_hash": "1b9ceb382a006595b29b9f6eb1ea69c5",
     "semantic_hash": ""
   }
 }

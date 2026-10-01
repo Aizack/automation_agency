@@ -1,24 +1,33 @@
 import { pool } from './postgres';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-// Inicializar el SDK de Gemini usando la variable de entorno
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "API_KEY_MISSING");
+import { GoogleGenAI } from '@google/genai';
 
 export class VectorDatabase {
+
+    private static getAIClient(): GoogleGenAI {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey || apiKey === "API_KEY_MISSING") {
+            throw new Error("GEMINI_API_KEY no configurada. Por favor, añádela a tu archivo .env.");
+        }
+        return new GoogleGenAI({ apiKey });
+    }
 
     /**
      * Genera el vector numérico (embedding) para un bloque de texto dado.
      * Utiliza el modelo 'text-embedding-004' que produce vectores de 768 dimensiones.
      */
     static async getEmbedding(text: string): Promise<number[]> {
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "API_KEY_MISSING") {
-            throw new Error("GEMINI_API_KEY no configurada. Por favor, añádela a tu archivo .env.");
-        }
-        
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
-            const result = await model.embedContent(text);
-            return result.embedding.values;
+            const ai = this.getAIClient();
+            const result: any = await ai.models.embedContent({
+                model: "text-embedding-004",
+                contents: text
+            });
+
+            const values = result.embedding?.values || result.embeddings?.[0]?.values;
+            if (!values) {
+                throw new Error("No se obtuvieron valores de embedding en la respuesta de Gemini.");
+            }
+            return values;
         } catch (error) {
             console.error("[Vector DB] Error al generar embedding con Gemini:", error);
             throw error;

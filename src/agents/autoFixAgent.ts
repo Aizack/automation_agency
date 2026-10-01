@@ -1,4 +1,5 @@
 import { pool } from '../database/postgres';
+import { GoogleGenAI } from '@google/genai';
 
 export interface TicketFixResult {
   success: boolean;
@@ -8,14 +9,14 @@ export interface TicketFixResult {
 }
 
 /**
- * Agente de Diagnóstico y Auto-Fix Seguro (AI Self-Healing)
- * 
- * Reglas Incalculables de Seguridad:
- * 1. CERO DELETE: NUNCA se ejecutan borrados físicos en la base de datos.
- * 2. NO Inventar Parámetros: No se mutan esquemas ni se agregan columnas o campos inventados.
- * 3. Sin Ingeniería Inversa: Si el problema requiere cambios en código fuente o infraestructura,
- *    se escala a ingenieros humanos con el reporte técnico masticado.
- */
+  * Agente de Diagnóstico y Auto-Fix Seguro (AI Self-Healing)
+  * 
+  * Reglas Incalculables de Seguridad:
+  * 1. CERO DELETE: NUNCA se ejecutan borrados físicos en la base de datos.
+  * 2. NO Inventar Parámetros: No se mutan esquemas ni se agregan columnas o campos inventados.
+  * 3. Sin Ingeniería Inversa: Si el problema requiere cambios en código fuente o infraestructura,
+  *    se escala a ingenieros humanos con el reporte técnico masticado.
+  */
 export async function runAutoFixAgent(clientId: string, ticketId: string): Promise<TicketFixResult> {
   try {
     // 1. Obtener ticket de la base de datos
@@ -64,7 +65,7 @@ export async function runAutoFixAgent(clientId: string, ticketId: string): Promi
           [shiftRes.rows[0].id]
         );
 
-        const diagnosis = `IA detectó un turno de caja (#${shiftRes.rows[0].id}) bloqueado en estado 'pending_confirmation'.`;
+        const diagnosis = `IA (AutoFix) detectó un turno de caja (#${shiftRes.rows[0].id}) bloqueado en estado 'pending_confirmation'.`;
         const actionTaken = `Se actualizó de forma segura el estado del turno de caja a 'confirmed'. No se eliminó ningún dato.`;
 
         await pool.query(
@@ -91,7 +92,7 @@ export async function runAutoFixAgent(clientId: string, ticketId: string): Promi
           [invRes.rows[0].id]
         );
 
-        const diagnosis = `Factura #${invRes.rows[0].invoice_number} tenía estado de emisión fallida con la DIAN.`;
+        const diagnosis = `IA (AutoFix) detectó factura #${invRes.rows[0].invoice_number} con estado de emisión fallida con la DIAN.`;
         const actionTaken = `Se restableció el estado de emisión a 'draft' para permitir el reintento limpio desde la interfaz.`;
 
         await pool.query(
@@ -105,8 +106,38 @@ export async function runAutoFixAgent(clientId: string, ticketId: string): Promi
       }
     }
 
-    // CASO 3: Fallo de código / infraestructura -> Escalamiento a Ingeniero Humano
-    const diagnosis = `IA analizó la traza de error y los últimos ${recentAuditLogs.length} logs de auditoría. El problema requiere revisión de código o infraestructura y no puede repararse únicamente con cambios de estado de datos.`;
+    // CASO 3: Diagnóstico Avanzado con Gemini 3.8 Flash para tickets complejos
+    let aiReasoningDiagnosis = "";
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "API_KEY_MISSING") {
+      try {
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const reasoningPrompt = `
+          Eres un Agente Ingeniero de Soporte Técnico Autónomo de Nivel 3.
+          Analiza este ticket de soporte técnico y los logs del sistema para emitir un diagnóstico preciso y accionable para los ingenieros humanos.
+
+          TICKET:
+          Título: ${ticket.title}
+          Descripción: ${ticket.description}
+          Stack Trace: ${ticket.stack_trace || 'N/A'}
+
+          LOGS RECIENTES:
+          ${JSON.stringify(recentAuditLogs, null, 2)}
+
+          Responde en un párrafo técnico conciso especificando la causa raíz probable y la acción requerida.
+        `;
+
+        const result: any = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: reasoningPrompt
+        });
+
+        aiReasoningDiagnosis = result.text ? `\n\n🔍 Diagnóstico Agéntico (Gemini 3.8 Flash):\n${result.text.trim()}` : "";
+      } catch (llmErr) {
+        console.warn("[AutoFix Agent] No se pudo obtener diagnóstico LLM 3.8:", llmErr);
+      }
+    }
+
+    const diagnosis = `IA analizó la traza de error y los últimos ${recentAuditLogs.length} logs de auditoría. El problema requiere revisión de código o infraestructura y no puede repararse únicamente con cambios de estado de datos.${aiReasoningDiagnosis}`;
     const actionTaken = `Ticket escalado automáticamente al equipo de ingenieros de soporte humano. Se adjuntó la traza técnica del error.`;
 
     await pool.query(
