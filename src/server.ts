@@ -10503,6 +10503,61 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
+  // Editar Gasto Operativo (Fijo u Ocasional)
+  app.put('/api/clients/:clientId/fixed-expenses/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, id } = req.params;
+      const { concept, category, expense_type, notes, amount, expense_date } = req.body;
+
+      const reqUser = (req as any).user;
+      const userRole = (reqUser?.role || reqUser?.employeeRole || '').toLowerCase();
+      const isEmployee = (reqUser?.isEmployee || reqUser?.employeeId) && userRole !== 'admin' && userRole !== 'superadmin';
+      const isAdmin = !isEmployee;
+
+      const existingRes = await pool.query(
+        `SELECT * FROM monthly_fixed_expenses WHERE id = $1 AND client_id = $2`,
+        [id, clientId]
+      );
+      if (existingRes.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Registro de gasto no encontrado.' });
+      }
+      const existing = existingRes.rows[0];
+
+      // Todos los usuarios con acceso pueden editar: concepto, categoría, tipo y notas
+      const updatedConcept = concept !== undefined ? concept : existing.concept;
+      const updatedCategory = category !== undefined ? category : existing.category;
+      const updatedExpenseType = expense_type !== undefined ? expense_type : existing.expense_type;
+      const updatedNotes = notes !== undefined ? notes : existing.notes;
+
+      // Solo administradores pueden modificar monto y fecha
+      let updatedAmount = existing.amount;
+      let updatedExpenseDate = existing.expense_date;
+
+      if (isAdmin) {
+        if (amount !== undefined && amount !== null && amount !== '') {
+          updatedAmount = parseFloat(amount);
+        }
+        if (expense_date) {
+          updatedExpenseDate = expense_date;
+        }
+      }
+
+      const periodMY = updatedExpenseDate ? String(updatedExpenseDate).substring(0, 7) : existing.period_month_year;
+
+      const result = await pool.query(
+        `UPDATE monthly_fixed_expenses
+         SET concept = $1, category = $2, expense_type = $3, notes = $4, amount = $5, expense_date = $6, period_month_year = $7
+         WHERE id = $8 AND client_id = $9
+         RETURNING *, COALESCE(expense_date, created_at::date) as effective_date`,
+        [updatedConcept, updatedCategory, updatedExpenseType, updatedNotes, updatedAmount, updatedExpenseDate, periodMY, id, clientId]
+      );
+
+      res.json({ success: true, expense: result.rows[0], message: 'Gasto actualizado exitosamente.' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // ==========================================
   // ENDPOINTS DE PLANEACIÓN EMPRESARIAL DE ÉLITE (FINANZAS Y DEUDA)
   // ==========================================

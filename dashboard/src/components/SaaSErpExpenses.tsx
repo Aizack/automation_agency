@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 
 interface SaaSErpExpensesProps {
@@ -21,7 +22,12 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados del Formulario de Registro de Gasto
+  // Determinar rol del usuario actual
+  const sessionRole = (localStorage.getItem('session_role') || localStorage.getItem('emp_role') || localStorage.getItem('employee_role') || 'client').toLowerCase().trim();
+  const isEmployeeSession = localStorage.getItem('is_employee_session') === 'true';
+  const isAdminUser = sessionRole === 'admin' || sessionRole === 'superadmin' || sessionRole === 'client' || !isEmployeeSession;
+
+  // Estados del Formulario de Registro de Nuevo Gasto
   const [expenseConcept, setExpenseConcept] = useState('');
   const [expenseCategory, setExpenseCategory] = useState('operativo');
   const [expenseType, setExpenseType] = useState<'fijo' | 'ocasional'>('fijo');
@@ -30,6 +36,16 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
   const [expenseNotes, setExpenseNotes] = useState('');
   const [savingExpense, setSavingExpense] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Estados de Edición de Gasto
+  const [editingExpense, setEditingExpense] = useState<FixedExpense | null>(null);
+  const [editConcept, setEditConcept] = useState('');
+  const [editCategory, setEditCategory] = useState('operativo');
+  const [editType, setEditType] = useState<'fijo' | 'ocasional'>('fijo');
+  const [editDate, setEditDate] = useState('');
+  const [editAmount, setEditAmount] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Filtro del historial
   const [filterType, setFilterType] = useState<'todos' | 'fijo' | 'ocasional'>('todos');
@@ -93,6 +109,57 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
       alert('Error de conexión con el servidor.');
     } finally {
       setSavingExpense(false);
+    }
+  };
+
+  const handleOpenEditModal = (item: FixedExpense) => {
+    setEditingExpense(item);
+    setEditConcept(item.concept || '');
+    setEditCategory(item.category || 'operativo');
+    setEditType(item.expense_type || 'fijo');
+    const d = item.effective_date || item.expense_date || item.created_at;
+    setEditDate(d ? d.substring(0, 10) : new Date().toISOString().split('T')[0]);
+    setEditAmount(item.amount || '0');
+    setEditNotes(item.notes || '');
+  };
+
+  const handleSaveEditExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingExpense || !editConcept) return;
+
+    try {
+      setSavingEdit(true);
+      const body: any = {
+        concept: editConcept,
+        category: editCategory,
+        expense_type: editType,
+        notes: editNotes,
+      };
+
+      if (isAdminUser) {
+        body.amount = parseFloat(editAmount);
+        body.expense_date = editDate;
+      }
+
+      const res = await fetch(`/api/clients/${clientId}/fixed-expenses/${editingExpense.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setEditingExpense(null);
+        setSuccessMessage('¡Gasto actualizado correctamente!');
+        setTimeout(() => setSuccessMessage(null), 4000);
+        fetchExpenses();
+      } else {
+        alert(json.error || 'Error al actualizar el gasto.');
+      }
+    } catch (err) {
+      alert('Error de conexión con el servidor.');
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -162,7 +229,7 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
         </div>
       </div>
 
-      {/* Alerta de éxito al guardar */}
+      {/* Alerta de éxito al guardar o actualizar */}
       {successMessage && (
         <div className="bg-[#FAF8F5] border-l-4 border-emerald-600 p-3.5 border-y border-r border-[#E2DFD7] text-emerald-800 text-xs font-mono flex items-center justify-between animate-fade-in shadow-xs">
           <div className="flex items-center gap-2">
@@ -178,7 +245,7 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
       {/* Layout de 2 columnas: Formulario Inline & Historial de Gastos */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Columna Izquierda: Formulario de Registro de Gasto (Inline) */}
+        {/* Columna Izquierda: Formulario de Registro de Nuevo Gasto (Inline) */}
         <div className="lg:col-span-5 bg-white border border-[#E2DFD7] p-6 shadow-xs space-y-5">
           <div className="border-b border-[#E2DFD7] pb-3">
             <span className="text-[10px] font-mono tracking-widest text-[#D9381E] uppercase block font-bold">NUEVO REGISTRO DE EGRESO</span>
@@ -416,14 +483,24 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
                       {item.notes && <p className="text-[11px] text-[#76746E] italic bg-white p-2 border border-[#E2DFD7] mt-1">{item.notes}</p>}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteExpense(item.id)}
-                      className="text-[#76746E] hover:text-[#D9381E] p-1.5 rounded-none hover:bg-white border border-transparent hover:border-[#E2DFD7] transition cursor-pointer"
-                      title="Eliminar gasto"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">delete</span>
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditModal(item)}
+                        className="text-[#76746E] hover:text-[#161616] p-1.5 rounded-none hover:bg-white border border-transparent hover:border-[#E2DFD7] transition cursor-pointer"
+                        title="Editar registro de gasto"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteExpense(item.id)}
+                        className="text-[#76746E] hover:text-[#D9381E] p-1.5 rounded-none hover:bg-white border border-transparent hover:border-[#E2DFD7] transition cursor-pointer"
+                        title="Eliminar gasto"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -432,6 +509,192 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
         </div>
 
       </div>
+
+      {/* Modal de Edición de Gasto */}
+      {editingExpense && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-[99999] animate-fade-in" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#F6F4EE] border border-[#161616] rounded-none p-6 max-w-md w-full space-y-4 shadow-2xl relative z-[100000] text-left" onClick={(e) => e.stopPropagation()}>
+            
+            {/* Header del Modal */}
+            <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+              <div>
+                <span className="text-[10px] font-mono tracking-widest text-[#D9381E] uppercase block font-bold">EDITAR GASTO OPERATIVO</span>
+                <h4 className="font-serif text-lg font-bold text-[#161616] flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#D9381E] text-[20px]">edit_note</span>
+                  Modificar Registro
+                </h4>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setEditingExpense(null)} 
+                className="text-[#76746E] hover:text-[#161616] cursor-pointer bg-transparent border-0 flex items-center justify-center p-1"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditExpense} className="space-y-3.5 text-xs">
+              {/* Selector de Tipo de Gasto */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Tipo de Gasto *</label>
+                <div className="grid grid-cols-2 gap-2 p-1 bg-white border border-[#E2DFD7] rounded-none">
+                  <button
+                    type="button"
+                    onClick={() => setEditType('fijo')}
+                    className={`py-1.5 px-3 text-xs font-mono font-bold rounded-none transition border-0 cursor-pointer uppercase tracking-wider ${
+                      editType === 'fijo' 
+                        ? 'bg-[#161616] text-[#F6F4EE]' 
+                        : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+                    }`}
+                  >
+                    <span>📌 Fijo Recurrente</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditType('ocasional')}
+                    className={`py-1.5 px-3 text-xs font-mono font-bold rounded-none transition border-0 cursor-pointer uppercase tracking-wider ${
+                      editType === 'ocasional' 
+                        ? 'bg-[#161616] text-[#F6F4EE]' 
+                        : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+                    }`}
+                  >
+                    <span>⚡ Ocasional</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Nombre / Concepto del Gasto */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Concepto / Nombre del Gasto *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. Arriendo de Local, Servicios Públicos"
+                  value={editConcept}
+                  onChange={(e) => setEditConcept(e.target.value)}
+                  className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Categoría */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Categoría *</label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none cursor-pointer focus:border-[#161616] font-mono"
+                  >
+                    <option value="operativo">Arriendo / Local</option>
+                    <option value="servicios">Servicios Públicos</option>
+                    <option value="tecnologia">Internet / Software</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="insumos">Insumos / Materiales</option>
+                    <option value="transporte">Transporte / Fletes</option>
+                    <option value="otros">Otros Gastos</option>
+                  </select>
+                </div>
+
+                {/* Monto ($ COP) - Restringido solo a Admin */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E] flex items-center justify-between">
+                    <span>Monto ($ COP) *</span>
+                    {!isAdminUser && (
+                      <span className="text-[9px] text-[#D9381E] font-bold flex items-center gap-0.5" title="Solo administradores pueden editar el monto">
+                        <span className="material-symbols-outlined text-[11px]">lock</span>
+                        Admin
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    disabled={!isAdminUser}
+                    placeholder="2000000"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    className={`w-full border rounded-none p-2.5 text-xs font-mono font-bold outline-none ${
+                      isAdminUser 
+                        ? 'bg-white border-[#E2DFD7] text-[#D9381E] focus:border-[#161616]' 
+                        : 'bg-[#EAE6DF] border-[#E2DFD7] text-[#76746E] cursor-not-allowed'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Fecha del Gasto - Restringido solo a Admin */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E] flex items-center justify-between">
+                  <span>Fecha del Gasto *</span>
+                  {!isAdminUser ? (
+                    <span className="text-[9px] text-[#D9381E] font-bold flex items-center gap-0.5" title="Solo administradores pueden editar la fecha">
+                      <span className="material-symbols-outlined text-[11px]">lock</span>
+                      Solo Admin
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-[#D9381E] font-bold flex items-center gap-1 font-mono">
+                      <span className="material-symbols-outlined text-[13px]">history</span>
+                      Imputación Histórica
+                    </span>
+                  )}
+                </label>
+                <input
+                  type="date"
+                  required
+                  disabled={!isAdminUser}
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className={`w-full border rounded-none p-2.5 text-xs font-mono outline-none ${
+                    isAdminUser 
+                      ? 'bg-white border-[#E2DFD7] text-[#161616] focus:border-[#161616]' 
+                      : 'bg-[#EAE6DF] border-[#E2DFD7] text-[#76746E] cursor-not-allowed'
+                  }`}
+                />
+              </div>
+
+              {/* Notas Adicionales / Detalles */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E]">Detalles / Notas Adicionales</label>
+                <textarea
+                  placeholder="Detalles del gasto, número de factura o justificación..."
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none resize-none h-16 focus:border-[#161616]"
+                />
+              </div>
+
+              {!isAdminUser && (
+                <p className="text-[10px] text-[#76746E] font-mono italic bg-[#FAF8F5] p-2 border border-[#E2DFD7]">
+                  ℹ️ Puedes editar el tipo (fijo/ocasional), concepto, categoría y detalles. Para modificar la fecha o el valor, contacta a un usuario Administrador.
+                </p>
+              )}
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-[#E2DFD7]">
+                <button
+                  type="button"
+                  onClick={() => setEditingExpense(null)}
+                  className="px-4 py-2 border border-[#E2DFD7] bg-white text-[#161616] font-mono font-bold text-xs rounded-none hover:bg-[#FAF8F5] cursor-pointer uppercase tracking-wider"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="px-5 py-2 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold text-xs rounded-none cursor-pointer shadow-xs transition-colors flex items-center gap-1.5 border-0 uppercase tracking-wider"
+                >
+                  {savingEdit ? (
+                    <><span className="material-symbols-outlined text-[16px] animate-spin">sync</span> Guardando...</>
+                  ) : (
+                    <><span className="material-symbols-outlined text-[16px]">save</span> Guardar Cambios</>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
