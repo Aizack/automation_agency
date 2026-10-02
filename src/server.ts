@@ -1047,7 +1047,7 @@ app.post('/api/login', async (req: Request, res: Response) => {
         await registerActiveSession('user', tenantUser.user_id, tenantUser.client_id, sessionId, req);
 
         const token = jwt.sign(
-          { id: tenantUser.client_id, userId: tenantUser.user_id, username: tenantUser.username, role: sessionRole, clientId: tenantUser.client_id, permissions, sessionId },
+          { id: tenantUser.client_id, userId: tenantUser.user_id, name: tenantUser.full_name || tenantUser.username, username: tenantUser.username, role: sessionRole, clientId: tenantUser.client_id, permissions, sessionId },
           JWT_SECRET,
           { expiresIn: '4h' }
         );
@@ -1979,6 +1979,48 @@ app.get('/api/clients/:clientId/products/low-stock', authenticateToken as any, a
   }
 });
 
+const resolveAuditUserName = async (req: Request, clientId: string): Promise<string> => {
+  const authUser = (req as any).user;
+  if (authUser) {
+    if (authUser.name && authUser.name !== 'Administrador ERP' && authUser.name !== 'admin') {
+      return authUser.name;
+    }
+    if (authUser.full_name && authUser.full_name !== 'Administrador ERP') {
+      return authUser.full_name;
+    }
+    if (authUser.employeeId) {
+      try {
+        const empRes = await pool.query(`SELECT name, last_name FROM employees WHERE id = $1`, [authUser.employeeId]);
+        if (empRes.rows.length > 0) {
+          const full = `${empRes.rows[0].name} ${empRes.rows[0].last_name || ''}`.trim();
+          if (full) return full;
+        }
+      } catch (e) {}
+    }
+    if (authUser.userId) {
+      try {
+        const usrRes = await pool.query(`SELECT full_name, username FROM users WHERE id = $1`, [authUser.userId]);
+        if (usrRes.rows.length > 0 && usrRes.rows[0].full_name) {
+          return usrRes.rows[0].full_name;
+        }
+      } catch (e) {}
+    }
+    if (authUser.username && authUser.username !== 'admin') {
+      return authUser.username;
+    }
+  }
+
+  if (clientId) {
+    try {
+      const cliRes = await pool.query(`SELECT name, contact_name FROM clients WHERE id = $1`, [clientId]);
+      if (cliRes.rows.length > 0) {
+        return cliRes.rows[0].contact_name || cliRes.rows[0].name;
+      }
+    } catch (e) {}
+  }
+  return 'Administrador de Sede';
+};
+
 // Crear nuevo producto en inventario (soporta modo simple y modo con variantes de color)
 app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
@@ -2036,13 +2078,13 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
     // Registrar evento en la bitácora de auditoría
     try {
       const authUser = (req as any).user;
-      const userName = authUser?.name || authUser?.username || 'Administrador ERP';
+      const userName = await resolveAuditUserName(req, targetClientId);
       await pool.query(`
         INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details)
         VALUES ($1, $2, $3, $4, 'CREAR_PRODUCTO', 'Inventario', 'product', $5, $6, $7)
       `, [
         targetClientId,
-        authUser?.userId || authUser?.id || null,
+        authUser?.userId || authUser?.employeeId || authUser?.id || null,
         userName,
         authUser?.role || 'admin',
         insertedProduct.id,
@@ -2164,13 +2206,13 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
     // Registrar evento en la bitácora de auditoría
     try {
       const authUser = (req as any).user;
-      const userName = authUser?.name || authUser?.username || 'Administrador ERP';
+      const userName = await resolveAuditUserName(req, targetClientId);
       await pool.query(`
         INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details)
         VALUES ($1, $2, $3, $4, 'MODIFICAR_PRODUCTO', 'Inventario', 'product', $5, $6, $7)
       `, [
         targetClientId,
-        authUser?.userId || authUser?.id || null,
+        authUser?.userId || authUser?.employeeId || authUser?.id || null,
         userName,
         authUser?.role || 'admin',
         productId,
@@ -2322,13 +2364,13 @@ app.delete('/api/clients/:clientId/products/:productId', authenticateToken as an
 
     try {
       const authUser = (req as any).user;
-      const userName = authUser?.name || authUser?.username || 'Administrador ERP';
+      const userName = await resolveAuditUserName(req, clientId);
       await pool.query(`
         INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details)
         VALUES ($1, $2, $3, $4, 'ELIMINAR_PRODUCTO', 'Inventario', 'product', $5, $6, $7)
       `, [
         clientId,
-        authUser?.userId || authUser?.id || null,
+        authUser?.userId || authUser?.employeeId || authUser?.id || null,
         userName,
         authUser?.role || 'admin',
         productId,
@@ -4347,6 +4389,18 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
     const { clientId } = req.params;
     const { module, userId, entity_type, entity_id, action, search, limit = '50', offset = '0' } = req.query;
 
+    let clientOwnerName = 'Administrador de Sede';
+    try {
+      const cliMetaRes = await pool.query(`SELECT name, contact_name FROM clients WHERE id = $1`, [clientId]);
+      if (cliMetaRes.rows.length > 0) {
+        clientOwnerName = cliMetaRes.rows[0].contact_name || cliMetaRes.rows[0].name || 'Administrador de Sede';
+      }
+      await pool.query(
+        `UPDATE system_audit_logs SET user_name = $1 WHERE client_id = $2 AND (user_name = 'Administrador ERP' OR user_name IS NULL)`,
+        [clientOwnerName, clientId]
+      );
+    } catch (e) {}
+
     let query = `
       SELECT id, client_id, user_id, user_name, user_email, user_role, action, module, entity_type, entity_id, description, details, ip_address, user_agent, created_at
       FROM system_audit_logs
@@ -4410,7 +4464,7 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
         if (invCheck.rows.length > 0) {
           const inv = invCheck.rows[0];
           const cName = `${inv.cust_name || inv.customer_name || 'Cliente'} ${inv.cust_last_name || inv.customer_last_name || ''}`.trim();
-          const createdUser = inv.created_by_user_name || inv.seller_name || 'Isac';
+          const createdUser = inv.created_by_user_name || inv.seller_name || clientOwnerName;
           const totVal = parseFloat(inv.total_amount || inv.total || 0);
 
           // 1. Log de emisión de factura
@@ -4496,9 +4550,10 @@ app.get('/api/clients/:clientId/audit-logs', authenticateToken as any, authorize
           // 1. Log de creación inicial
           await pool.query(`
             INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details, created_at)
-            VALUES ($1, NULL, 'Administrador ERP', 'admin', 'CREACION_PRODUCTO', 'Inventario', 'product', $2, $3, $4, $5)
+            VALUES ($1, NULL, $2, 'admin', 'CREACION_PRODUCTO', 'Inventario', 'product', $3, $4, $5, $6)
           `, [
             clientId,
+            clientOwnerName,
             prod.id,
             `Registro inicial de producto '${prod.name}' (SKU: ${prod.sku || 'Sin SKU'}) con stock de ${prod.stock} Uds a $${prodPrice.toLocaleString('es-CO')} COP.`,
             JSON.stringify({ name: prod.name, sku: prod.sku, price: prodPrice, stock: prod.stock, brand: prod.brand, material: prod.material, style: prod.style, category: prod.category_name }),
