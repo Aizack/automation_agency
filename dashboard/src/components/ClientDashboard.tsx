@@ -19,6 +19,7 @@ import { SaaSErpMarketing } from './SaaSErpMarketing';
 import { SystemAlertsPanel } from './SystemAlertsPanel';
 import { SaaSErpUsers } from './SaaSErpUsers';
 import { SaaSErpAccounting } from './SaaSErpAccounting';
+import { SaaSErpExpenses } from './SaaSErpExpenses';
 import { SaaSErpAuditLogs } from './SaaSErpAuditLogs';
 import { RestaurantKdsDisplay } from './RestaurantKdsDisplay';
 import { RestaurantWaiterPortal } from './RestaurantWaiterPortal';
@@ -155,6 +156,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     if (employeePermissions.includes('settings')) return 'configuracion';
     if (employeePermissions.includes('billing')) return 'facturacion';
     if (employeePermissions.includes('contabilidad')) return 'contabilidad';
+    if (employeePermissions.includes('registro_gastos')) return 'registro_gastos';
     if (employeePermissions.includes('cartera')) return 'cartera';
     if (employeePermissions.includes('inventory')) return 'inventario';
     if (employeePermissions.includes('crm')) return 'clientes';
@@ -166,7 +168,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     return 'configuracion';
   };
 
-  const [activeTab, setActiveTab] = useState<'employee_profile' | 'resumen' | 'inventario' | 'facturacion' | 'dian_habilitacion' | 'nueva_sede' | 'cotizaciones' | 'facturacion2' | 'contabilidad' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(() => {
+  const [activeTab, setActiveTab] = useState<'employee_profile' | 'resumen' | 'inventario' | 'facturacion' | 'dian_habilitacion' | 'nueva_sede' | 'cotizaciones' | 'facturacion2' | 'contabilidad' | 'registro_gastos' | 'cartera' | 'documentos_soporte' | 'arqueo_caja' | 'domicilios' | 'formulas' | 'lab_jobs' | 'agenda' | 'empleados' | 'usuarios' | 'clientes' | 'campanias' | 'marketing' | 'metas_ventas' | 'logs' | 'configuracion' | 'trazabilidad' | 'restaurante_mesas' | 'restaurante_kds' | 'restaurante_menu' | 'planeacion_empresarial' | 'inventario_insumos'>(() => {
     const saved = localStorage.getItem('client_active_tab');
     if (saved) return saved as any;
     return getDefaultTab();
@@ -202,7 +204,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
       setOpenSubMenus(prev => ({ ...prev, agente_ia: true }));
     } else if (['facturacion', 'facturacion2', 'cotizaciones', 'documentos_soporte', 'arqueo_caja', 'cartera'].includes(activeTab)) {
       setOpenSubMenus(prev => ({ ...prev, facturacion: true }));
-    } else if (['contabilidad', 'planeacion_empresarial'].includes(activeTab)) {
+    } else if (['contabilidad', 'registro_gastos', 'planeacion_empresarial'].includes(activeTab)) {
       setOpenSubMenus(prev => ({ ...prev, finanzas: true }));
     } else if (['inventario', 'lab_jobs', 'domicilios'].includes(activeTab)) {
       setOpenSubMenus(prev => ({ ...prev, logistica: true }));
@@ -1384,10 +1386,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
           )}
 
           {/* 5. Finanzas */}
-          {(hasPermission('contabilidad') || hasPermission('settings')) && (
+          {(hasPermission('contabilidad') || hasPermission('registro_gastos') || hasPermission('settings')) && (
             <div className="nav-item">
               <button 
-                className={`nav-item-btn ${['contabilidad', 'planeacion_empresarial'].includes(activeTab) ? 'active' : ''}`} 
+                className={`nav-item-btn ${['contabilidad', 'registro_gastos', 'planeacion_empresarial'].includes(activeTab) ? 'active' : ''}`} 
                 onClick={() => toggleSubMenu('finanzas')}
               >
                 <svg className="nav-icon" viewBox="0 0 24 24">
@@ -1408,6 +1410,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                       className={activeTab === 'contabilidad' ? 'active-link' : ''}
                     >
                       Contabilidad
+                    </button>
+                  </li>
+                )}
+                {hasPermission('registro_gastos') && (
+                  <li>
+                    <button 
+                      onClick={() => setActiveTab('registro_gastos')} 
+                      className={activeTab === 'registro_gastos' ? 'active-link font-bold text-[#D9381E]' : ''}
+                    >
+                      Registro de Gastos
                     </button>
                   </li>
                 )}
@@ -1722,6 +1734,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               >
                 <span className="material-symbols-outlined text-lg">account_balance_wallet</span>
                 <span>Cartera & Creditos</span>
+              </button>
+            )}
+
+            {hasPermission('registro_gastos') && (
+              <button 
+                type="button"
+                onClick={() => { setActiveTab('registro_gastos'); setIsMobileMenuOpen(false); }}
+                className={`w-full text-left p-3 rounded-none text-xs font-bold uppercase tracking-wider flex items-center gap-3 cursor-pointer ${activeTab === 'registro_gastos' ? 'bg-[#161616] text-white' : 'text-[#161616] hover:bg-[#EAE6DF]'}`}
+              >
+                <span className="material-symbols-outlined text-lg text-[#D9381E]">receipt_long</span>
+                <span>Registro de Gastos</span>
               </button>
             )}
 
@@ -2514,7 +2537,13 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
         {activeTab === 'contabilidad' && (
           <div className="animate-fade-in">
-            <SaaSErpAccounting clientId={clientId} />
+            <SaaSErpAccounting clientId={clientId} onNavigateTab={(tab) => setActiveTab(tab as any)} />
+          </div>
+        )}
+
+        {activeTab === 'registro_gastos' && (
+          <div className="animate-fade-in">
+            <SaaSErpExpenses clientId={clientId} />
           </div>
         )}
 

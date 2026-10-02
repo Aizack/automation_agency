@@ -431,6 +431,17 @@ export const FrantErpMobileView: React.FC<FrantErpMobileViewProps> = ({
                 <span>Clientes CRM</span>
               </button>
 
+              {hasPermission('registro_gastos') && (
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('registro_gastos'); setIsMoreMenuOpen(false); }}
+                  className="p-3 bg-white border border-[#E2DFD7] text-left text-xs font-bold uppercase flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[#D9381E]">receipt_long</span>
+                  <span>Registro de Gastos</span>
+                </button>
+              )}
+
               {hasPermission('settings') && (
                 <button
                   type="button"

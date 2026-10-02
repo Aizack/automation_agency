@@ -1185,18 +1185,18 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
 
       const emp = employeeResult.rows[0];
       const ROLE_PERMISSIONS: Record<string, string[]> = {
-        admin:        ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad'],
-        vendedor:     ['crm', 'billing', 'inventory', 'cartera'],
+        admin:        ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad', 'registro_gastos'],
+        vendedor:     ['crm', 'billing', 'inventory', 'cartera', 'registro_gastos'],
         optometra:    ['appointments', 'formulas', 'crm'],
         laboratorio:  ['lab'],
-        recepcion:    ['appointments', 'crm'],
-        contabilidad: ['billing', 'cartera', 'inventory', 'contabilidad'],
+        recepcion:    ['appointments', 'crm', 'registro_gastos'],
+        contabilidad: ['billing', 'cartera', 'inventory', 'contabilidad', 'registro_gastos'],
         domicilios:   ['domicilios', 'cartera'],
         agent:        ['crm'],
       };
 
       const employeeRoleLower = (emp.role || '').toLowerCase().trim();
-      const defaultPerms = ROLE_PERMISSIONS[employeeRoleLower] ?? ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad'];
+      const defaultPerms = ROLE_PERMISSIONS[employeeRoleLower] ?? ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad', 'registro_gastos'];
       const empModules = Array.isArray(emp.allowed_modules) 
         ? emp.allowed_modules 
         : (typeof emp.allowed_modules === 'string' ? JSON.parse(emp.allowed_modules || '[]') : []);
@@ -7261,7 +7261,7 @@ app.post('/api/auth/employee-login', async (req: Request, res: Response) => {
       }
     }
 
-    const ALL_FULL_MODULES = ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad'];
+    const ALL_FULL_MODULES = ['inventory', 'crm', 'billing', 'employees', 'appointments', 'formulas', 'lab', 'campaigns', 'suppliers', 'purchase_orders', 'cartera', 'domicilios', 'marketing', 'settings', 'contabilidad', 'registro_gastos'];
 
     // Determinar módulos a los que tiene acceso el empleado directamente desde allowed_modules configurados en su ficha
     let permissions: string[] = [];

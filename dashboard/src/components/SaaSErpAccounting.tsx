@@ -4,6 +4,7 @@ import { authFetch as fetch } from '../utils/api';
 
 interface SaaSErpAccountingProps {
   clientId: string;
+  onNavigateTab?: (tab: string) => void;
 }
 
 interface AccountingSummary {
@@ -43,7 +44,7 @@ interface FixedExpense {
   created_at: string;
 }
 
-export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }) => {
+export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, onNavigateTab }) => {
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year'>('month');
   const [summary, setSummary] = useState<AccountingSummary | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
@@ -181,7 +182,7 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId }
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
-            onClick={() => setIsExpenseModalOpen(true)}
+            onClick={() => onNavigateTab ? onNavigateTab('registro_gastos') : (localStorage.setItem('client_active_tab', 'registro_gastos'), window.location.reload())}
             className="h-9 px-4 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold text-xs rounded-none flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs border-0 uppercase tracking-wider"
           >
             <span className="material-symbols-outlined text-[16px]">add_circle</span>
