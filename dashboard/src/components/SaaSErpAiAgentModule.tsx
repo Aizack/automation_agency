@@ -934,14 +934,38 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
                           </button>
                         </div>
                       ) : (
-                        <button
-                          type="button"
-                          onClick={handleConnectWhatsApp}
-                          className="w-full py-2.5 bg-[#C84B31] hover:bg-[#A83B25] text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
-                          <span>Generar Código QR</span>
-                        </button>
+                        <div className="space-y-2">
+                          <button
+                            type="button"
+                            onClick={handleConnectWhatsApp}
+                            className="w-full py-2.5 bg-[#C84B31] hover:bg-[#A83B25] text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
+                            <span>Vincular por Código QR (Modo Rápido)</span>
+                          </button>
+
+                          <div className="flex items-center my-2 text-[#94a3b8] text-[10px] uppercase font-bold tracking-wider">
+                            <div className="flex-1 border-t border-[#E2DFD7]"></div>
+                            <span className="px-2">ó Canal Oficial</span>
+                            <div className="flex-1 border-t border-[#E2DFD7]"></div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const metaAppId = '1534078441779001';
+                              const redirectUri = encodeURIComponent('https://frant.app/api/v1/meta/oauth/callback');
+                              const metaUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${metaAppId}&redirect_uri=${redirectUri}&scope=whatsapp_business_messaging,whatsapp_business_management&response_type=code`;
+                              window.open(metaUrl, '_blank', 'width=600,height=700');
+                            }}
+                            className="w-full py-2.5 bg-[#0866FF] hover:bg-[#0052cc] text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                          >
+                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            <span>Conectar con Facebook (WhatsApp Cloud API)</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
