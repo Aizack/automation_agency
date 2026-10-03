@@ -4,7 +4,7 @@ export function getPrivacyPolicyHTML(): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Política de Privacidad | Frant Bot - Automatización IA</title>
+  <title>Política de Privacidad | Frant - Plataforma ERP y Automatización IA</title>
   <style>
     :root {
       --primary: #0866ff;
@@ -67,47 +67,47 @@ export function getPrivacyPolicyHTML(): string {
 <body>
   <div class="header">
     <h1>Política de Privacidad</h1>
-    <p>Frant Bot - Plataforma de Automatización de IA y Mensajería Multi-Tenant</p>
+    <p>Frant - Sistema ERP de Gestión Empresarial y Automatización IA (by Diaz Lab)</p>
   </div>
   <div class="container">
-    <p>Última actualización: <strong>30 de septiembre de 2026</strong></p>
+    <p>Última actualización: <strong>1 de octubre de 2026</strong></p>
     
     <h2>1. Introducción</h2>
-    <p>En <strong>Frant Bot</strong> nos tomamos muy en serio la privacidad y la protección de los datos de nuestros usuarios e inquilinos (comercios). Esta Política de Privacidad describe cómo recopilamos, utilizamos, almacenamos y protegemos la información procesada a través de nuestra plataforma de automatización de inteligencia artificial vinculada a servicios de mensajería como la API Oficial de Meta (WhatsApp Business Cloud API).</p>
+    <p>En <strong>Frant</strong> (desarrollado por <strong>Diaz Lab</strong>), nos tomamos muy en serio la privacidad y la protección de datos de nuestras empresas e inquilinos. <strong>Frant</strong> es una plataforma de software de gestión empresarial (ERP) integrada con módulos de inteligencia artificial para la automatización de atención al cliente y mensajería a través de la API Oficial de Meta (WhatsApp Business Cloud API).</p>
 
     <h2>2. Información que Recopilamos</h2>
-    <p>Para prestar nuestros servicios de automatización de atención al cliente e IA, recopilamos la siguiente información:</p>
+    <p>Para prestar nuestros servicios de gestión ERP y automatización de atención al cliente e IA, recopilamos la siguiente información:</p>
     <ul>
-      <li><strong>Información de la Cuenta de Comercio</strong>: Nombre comercial, teléfono corporativo, correo electrónico y credenciales de acceso al Dashboard.</li>
+      <li><strong>Información de la Cuenta de la Empresa</strong>: Nombre comercial, teléfono corporativo, correo electrónico y credenciales de acceso al Dashboard de Frant.</li>
       <li><strong>Datos de Integración de Meta (WhatsApp Cloud API)</strong>: Identificador de cuenta de WhatsApp Business (WABA ID), ID de número de teléfono y tokens de acceso otorgados mediante el flujo de autorización de Meta.</li>
-      <li><strong>Datos de Mensajería y Conversación</strong>: Contenido de mensajes de texto y estados de envío procesados por el Agente de IA para responder a consultas de inventario, cartera y servicios.</li>
+      <li><strong>Datos Operativos del ERP y Mensajería</strong>: Inventarios, facturación, consultas de cartera y conversaciones procesadas por el Agente de IA para responder a solicitudes de clientes.</li>
     </ul>
 
     <h2>3. Uso de la Información</h2>
     <p>La información recopilada se utiliza exclusivamente para:</p>
     <ul>
-      <li>Procesar y responder automáticamente consultas de clientes finales mediante modelos de Inteligencia Artificial.</li>
-      <li>Gestionar inventarios, facturas, agendamiento de citas y consultas de estado de envíos del comercio.</li>
-      <li>Enviar notificaciones operativas autorizadas por el usuario.</li>
+      <li>Operar las funciones del sistema ERP (control de inventario, ventas, cartera, pedidos y domicilio).</li>
+      <li>Procesar y responder automáticamente consultas de clientes finales mediante agentes de Inteligencia Artificial.</li>
+      <li>Enviar notificaciones operativas autorizadas por la empresa usuaria.</li>
       <li>Garantizar la seguridad, auditoría y aislamiento multi-tenant de la plataforma.</li>
     </ul>
 
     <h2>4. Protección de Datos y Seguridad</h2>
-    <p>Implementamos estándares estrictos de seguridad de la información, incluyendo encriptación de credenciales, tokens de acceso autenticados mediante JWT, control de acceso basado en roles y aislamiento riguroso entre bases de datos de inquilinos. NUNCA vendemos ni compartimos datos personales o conversaciones con terceros no autorizados.</p>
+    <p>Implementamos estándares estrictos de seguridad de la información, incluyendo encriptación de credenciales, tokens de acceso autenticados mediante JWT, control de acceso basado en roles y aislamiento riguroso entre bases de datos de inquilinos. NUNCA vendemos ni compartimos datos personales o corporativos con terceros no autorizados.</p>
 
     <h2>5. Cumplimiento con las Políticas de Meta</h2>
-    <p>Frant Bot cumple rigurosamente con las Políticas de la Plataforma de Meta for Developers y la Política de WhatsApp Business Solution Providers. Los datos obtenidos a través de la Graph API de Meta se utilizan únicamente para ejecutar la integración solicitada por el usuario.</p>
+    <p><strong>Frant</strong> cumple rigurosamente con las Políticas de la Plataforma de Meta for Developers y la Política de WhatsApp Business Solution Providers. Los datos obtenidos a través de la Graph API de Meta se utilizan únicamente para ejecutar la integración solicitada por el usuario.</p>
 
     <h2>6. Eliminación de Datos (Data Deletion)</h2>
-    <p>Cualquier usuario o comercio puede solicitar la eliminación completa de su cuenta y de sus datos asociados enviando un correo a <code>contactanos@diazlab.online</code> o desvinculando la aplicación directamente desde su cuenta de Meta Business Manager.</p>
+    <p>Cualquier empresa usuaria puede solicitar la eliminación completa de su cuenta y de sus datos asociados enviando un correo a <code>contactanos@diazlab.online</code> o desvinculando la aplicación directamente desde su cuenta de Meta Business Manager.</p>
 
     <h2>7. Contacto</h2>
-    <p>Si tienes preguntas sobre esta Política de Privacidad, puedes contactarnos en:</p>
+    <p>Si tienes preguntas sobre esta Política de Privacidad o la plataforma Frant, puedes contactarnos en:</p>
     <p><strong>Correo electrónico:</strong> contactanos@diazlab.online<br>
-    <strong>Dirección:</strong> Diaz Lab Software, Colombia</p>
+    <strong>Desarrollador:</strong> Diaz Lab Software, Colombia</p>
   </div>
   <div class="footer">
-    &copy; 2026 Frant Bot / Diaz Lab. Todos los derechos reservados.
+    &copy; 2026 Frant ERP | Diaz Lab. Todos los derechos reservados.
   </div>
 </body>
 </html>`;
