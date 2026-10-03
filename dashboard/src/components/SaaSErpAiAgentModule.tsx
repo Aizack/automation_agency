@@ -145,6 +145,12 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
   // Paso dentro de la Configuración Wizard (1 a 5)
   const [configStep, setConfigStep] = useState<number>(1);
 
+  // Modo de Canal de WhatsApp: 'meta' (Oficial Cloud API Tech Provider) vs 'qr' (Puppeteer / QR)
+  const [channelMode, setChannelMode] = useState<'meta' | 'qr'>('meta');
+  const [metaPhoneNumberId, setMetaPhoneNumberId] = useState<string>(clientData?.metaPhoneNumberId || '');
+  const [metaWabaId, setMetaWabaId] = useState<string>(clientData?.metaWabaId || '');
+  const [metaToken, setMetaToken] = useState<string>(clientData?.metaWaToken || '');
+
   // Filtro de búsqueda en historial de interacciones
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -815,162 +821,226 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
           {configStep === 5 && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               <div className="lg:col-span-7 bg-white border border-[#E2DFD7] rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-                <div className="border-b border-[#E2DFD7]/60 pb-4">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#C84B31] font-bold">Paso 05 / 05</span>
-                  <h3 className="text-2xl font-display font-normal text-[#1C1B1A] mt-1">Vinculación de Canal WhatsApp</h3>
-                  <p className="text-xs text-[#6E6B65] mt-1">Escanea el código QR desde tu aplicación móvil de WhatsApp para conectar la Inteligencia Artificial.</p>
+                
+                {/* Cabecera del Paso 5 con Selector de Modo (Tabs) */}
+                <div className="border-b border-[#E2DFD7]/60 pb-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-[#C84B31] font-bold">Paso 05 / 05</span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0866FF]/10 text-[#0866FF] border border-[#0866FF]/30">
+                      Arquitectura Híbrida Dual
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-2xl font-display font-normal text-[#1C1B1A]">Vinculación de Canal WhatsApp</h3>
+                  
+                  {/* Pestañas de Selección de Modo */}
+                  <div className="grid grid-cols-2 gap-2 p-1.5 bg-[#FAF8F3] border border-[#E2DFD7] rounded-2xl">
+                    <button
+                      type="button"
+                      onClick={() => setChannelMode('meta')}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        channelMode === 'meta'
+                          ? 'bg-[#0866FF] text-white shadow-sm'
+                          : 'text-[#6E6B65] hover:text-[#1C1B1A]'
+                      }`}
+                    >
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                      <span>1. API Oficial de Meta</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setChannelMode('qr')}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        channelMode === 'qr'
+                          ? 'bg-[#C84B31] text-white shadow-sm'
+                          : 'text-[#6E6B65] hover:text-[#1C1B1A]'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
+                      <span>2. Modo Código QR</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-6 items-center p-6 bg-[#FAF8F3] rounded-2xl border border-[#E2DFD7]">
-                  <div className="w-48 h-48 bg-white border border-[#E2DFD7] rounded-2xl flex items-center justify-center p-3 overflow-hidden shadow-sm shrink-0">
-                    {isWaConnected ? (
-                      <div className="text-center text-xs text-[#15803d]">
-                        <span className="material-symbols-outlined text-[48px] text-[#15803d]">verified</span>
-                        <p className="font-bold mt-1">DISPOSITIVO VINCULADO</p>
+                {/* VISTA 1: META CLOUD API (TECH PROVIDER / EMBEDDED SIGNUP) */}
+                {channelMode === 'meta' && (
+                  <div className="space-y-5">
+                    <div className="p-5 bg-[#0866FF]/5 border border-[#0866FF]/20 rounded-2xl space-y-4">
+                      <div className="flex items-center gap-2 text-[#0866FF]">
+                        <span className="material-symbols-outlined text-[22px]">verified_user</span>
+                        <h4 className="font-bold text-sm">Conexión Oficial Meta Cloud API (Embedded Signup)</h4>
                       </div>
-                    ) : whatsappStatus.status === 'QR' ? (
-                      <img
-                        alt="Código QR de WhatsApp"
-                        className="w-full h-full object-cover"
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(whatsappStatus.qr)}`}
-                      />
-                    ) : (
-                      <div className="text-center text-xs text-[#6E6B65]">
-                        <button
-                          type="button"
-                          onClick={handleConnectWhatsApp}
-                          className="px-4 py-2 bg-[#C84B31] text-white text-xs font-bold rounded-xl cursor-pointer"
-                        >
-                          Generar Código QR
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                      <p className="text-xs text-[#475569] leading-relaxed">
+                        Conecta tu número corporativo de WhatsApp Business directamente mediante la plataforma oficial de Meta. No requiere tener teléfono celular encendido ni escanear códigos QR.
+                      </p>
 
-                  <div className="space-y-3.5 text-xs flex-1">
-                    <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-2">
-                      <span className="text-[#6E6B65]">Estado del Canal:</span>
-                      <span className={`font-bold font-mono ${isWaConnected ? 'text-[#15803d]' : 'text-[#C84B31]'}`}>
-                        {isWaConnected ? '● CONECTADO' : whatsappStatus.status === 'QR' ? '○ ESPERANDO ESCANEO (QR)' : whatsappStatus.status === 'INITIALIZING' ? '⏳ INICIALIZANDO...' : '○ DESCONECTADO'}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const metaAppId = '1534078441779001';
+                          const redirectUri = encodeURIComponent('https://frant.app/api/v1/meta/oauth/callback');
+                          const metaUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${metaAppId}&redirect_uri=${redirectUri}&scope=whatsapp_business_messaging,whatsapp_business_management&response_type=code`;
+                          window.open(metaUrl, '_blank', 'width=600,height=700');
+                        }}
+                        className="w-full py-3.5 bg-[#0866FF] hover:bg-[#0052cc] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2.5 transition cursor-pointer shadow-md"
+                      >
+                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        <span>Conectar con Facebook (Inicio de Sesión Meta)</span>
+                      </button>
                     </div>
 
-                    {/* Edición directa del número de teléfono asignado */}
-                    <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-2">
-                      <span className="text-[#6E6B65]">Línea Asignada:</span>
-                      {!isEditingPhone ? (
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold font-mono text-[#1C1B1A]">
-                            {clientData?.phoneNumber ? `+${clientData.phoneNumber}` : 'Sin asignar'}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setTempPhone(clientData?.phoneNumber || '');
-                              setIsEditingPhone(true);
-                            }}
-                            className="px-2 py-0.5 text-[10px] font-bold text-[#C84B31] border border-[#C84B31]/30 hover:bg-[#C84B31] hover:text-white rounded transition cursor-pointer"
-                            title="Editar número de teléfono asignado a esta línea"
-                          >
-                            ✏️ Editar
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
+                    {/* Formulario de Configuración Manual de Credenciales de Meta */}
+                    <div className="p-5 bg-[#FAF8F3] border border-[#E2DFD7] rounded-2xl space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#1C1B1A]">Credenciales Directas de Meta Cloud API</span>
+                        <span className="text-[10px] font-mono text-[#6E6B65]">Graph API v20.0</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label className="text-[11px] font-bold text-[#475569] block mb-1">Phone Number ID de Meta</label>
                           <input
                             type="text"
-                            value={tempPhone}
-                            onChange={(e) => setTempPhone(e.target.value)}
-                            placeholder="Ej. 573046247664"
-                            className="w-32 bg-white border border-[#E2DFD7] rounded px-2 py-1 text-xs font-mono text-[#1C1B1A] outline-none focus:border-[#C84B31]"
+                            value={metaPhoneNumberId}
+                            onChange={(e) => setMetaPhoneNumberId(e.target.value)}
+                            placeholder="Ej. 102938475612345"
+                            className="w-full bg-white border border-[#E2DFD7] rounded-xl px-3 py-2 text-[#1C1B1A] font-mono outline-none"
                           />
-                          <button
-                            type="button"
-                            onClick={handleSavePhoneNumber}
-                            className="px-2.5 py-1 bg-[#15803d] text-white text-[10px] font-bold rounded cursor-pointer hover:bg-[#116330] transition"
-                          >
-                            Guardar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setIsEditingPhone(false)}
-                            className="px-2 py-1 bg-[#E2DFD7] text-[#1C1B1A] text-[10px] font-bold rounded cursor-pointer hover:bg-[#d5d2ca] transition"
-                          >
-                            Cancelar
-                          </button>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Botones de acción de vinculación / desvinculación a voluntad */}
-                    <div className="pt-1 space-y-2">
-                      {isWaConnected ? (
-                        <button
-                          type="button"
-                          onClick={handleDisconnectWhatsApp}
-                          className="w-full py-2.5 border border-[#C84B31] text-[#C84B31] hover:bg-[#C84B31] hover:text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">link_off</span>
-                          <span>Desvincular WhatsApp</span>
-                        </button>
-                      ) : whatsappStatus.status === 'QR' || whatsappStatus.status === 'INITIALIZING' ? (
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <button
-                            type="button"
-                            onClick={handleConnectWhatsApp}
-                            className="flex-1 py-2 bg-[#C84B31] hover:bg-[#A83B25] text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">sync</span>
-                            <span>Generar Nuevo QR</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleDisconnectWhatsApp}
-                            className="py-2 px-3 border border-[#E2DFD7] hover:bg-[#E2DFD7] text-[#1C1B1A] rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1"
-                            title="Cancelar proceso de vinculación"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">cancel</span>
-                            <span>Cancelar</span>
-                          </button>
+                        <div>
+                          <label className="text-[11px] font-bold text-[#475569] block mb-1">WABA ID (WhatsApp Business Account)</label>
+                          <input
+                            type="text"
+                            value={metaWabaId}
+                            onChange={(e) => setMetaWabaId(e.target.value)}
+                            placeholder="Ej. 109876543210987"
+                            className="w-full bg-white border border-[#E2DFD7] rounded-xl px-3 py-2 text-[#1C1B1A] font-mono outline-none"
+                          />
                         </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <button
-                            type="button"
-                            onClick={handleConnectWhatsApp}
-                            className="w-full py-2.5 bg-[#C84B31] hover:bg-[#A83B25] text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
-                            <span>Vincular por Código QR (Modo Rápido)</span>
-                          </button>
+                      </div>
 
-                          <div className="flex items-center my-2 text-[#94a3b8] text-[10px] uppercase font-bold tracking-wider">
-                            <div className="flex-1 border-t border-[#E2DFD7]"></div>
-                            <span className="px-2">ó Canal Oficial</span>
-                            <div className="flex-1 border-t border-[#E2DFD7]"></div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const metaAppId = '1534078441779001';
-                              const redirectUri = encodeURIComponent('https://frant.app/api/v1/meta/oauth/callback');
-                              const metaUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${metaAppId}&redirect_uri=${redirectUri}&scope=whatsapp_business_messaging,whatsapp_business_management&response_type=code`;
-                              window.open(metaUrl, '_blank', 'width=600,height=700');
-                            }}
-                            className="w-full py-2.5 bg-[#0866FF] hover:bg-[#0052cc] text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-2"
-                          >
-                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                            </svg>
-                            <span>Conectar con Facebook (WhatsApp Cloud API)</span>
-                          </button>
-                        </div>
-                      )}
+                      <div>
+                        <label className="text-[11px] font-bold text-[#475569] block mb-1">Token de Acceso Permanente (EAAG...)</label>
+                        <input
+                          type="password"
+                          value={metaToken}
+                          onChange={(e) => setMetaToken(e.target.value)}
+                          placeholder="EAAG..."
+                          className="w-full bg-white border border-[#E2DFD7] rounded-xl px-3 py-2 text-[#1C1B1A] font-mono outline-none"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
+                {/* VISTA 2: MODO CÓDIGO QR (PUPPETEER / LOCALAUTH) */}
+                {channelMode === 'qr' && (
+                  <div className="space-y-5">
+                    <div className="flex flex-col sm:flex-row gap-6 items-center p-6 bg-[#FAF8F3] rounded-2xl border border-[#E2DFD7]">
+                      <div className="w-48 h-48 bg-white border border-[#E2DFD7] rounded-2xl flex items-center justify-center p-3 overflow-hidden shadow-sm shrink-0">
+                        {isWaConnected ? (
+                          <div className="text-center text-xs text-[#15803d]">
+                            <span className="material-symbols-outlined text-[48px] text-[#15803d]">verified</span>
+                            <p className="font-bold mt-1">DISPOSITIVO VINCULADO</p>
+                          </div>
+                        ) : whatsappStatus.status === 'QR' ? (
+                          <img
+                            alt="Código QR de WhatsApp"
+                            className="w-full h-full object-cover"
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(whatsappStatus.qr)}`}
+                          />
+                        ) : (
+                          <div className="text-center text-xs text-[#6E6B65]">
+                            <button
+                              type="button"
+                              onClick={handleConnectWhatsApp}
+                              className="px-4 py-2 bg-[#C84B31] text-white text-xs font-bold rounded-xl cursor-pointer"
+                            >
+                              Generar Código QR
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-3.5 text-xs flex-1">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-2">
+                          <span className="text-[#6E6B65]">Estado del Canal:</span>
+                          <span className={`font-bold font-mono ${isWaConnected ? 'text-[#15803d]' : 'text-[#C84B31]'}`}>
+                            {isWaConnected ? '● CONECTADO' : whatsappStatus.status === 'QR' ? '○ ESPERANDO ESCANEO (QR)' : whatsappStatus.status === 'INITIALIZING' ? '⏳ INICIALIZANDO...' : '○ DESCONECTADO'}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-2">
+                          <span className="text-[#6E6B65]">Línea Asignada:</span>
+                          {!isEditingPhone ? (
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold font-mono text-[#1C1B1A]">
+                                {clientData?.phoneNumber ? `+${clientData.phoneNumber}` : 'Sin asignar'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTempPhone(clientData?.phoneNumber || '');
+                                  setIsEditingPhone(true);
+                                }}
+                                className="px-2 py-0.5 text-[10px] font-bold text-[#C84B31] border border-[#C84B31]/30 hover:bg-[#C84B31] hover:text-white rounded transition cursor-pointer"
+                              >
+                                ✏️ Editar
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                type="text"
+                                value={tempPhone}
+                                onChange={(e) => setTempPhone(e.target.value)}
+                                placeholder="Ej. 573046247664"
+                                className="w-32 bg-white border border-[#E2DFD7] rounded px-2 py-1 text-xs font-mono text-[#1C1B1A] outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleSavePhoneNumber}
+                                className="px-2.5 py-1 bg-[#15803d] text-white text-[10px] font-bold rounded cursor-pointer"
+                              >
+                                Guardar
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="pt-1">
+                          {isWaConnected ? (
+                            <button
+                              type="button"
+                              onClick={handleDisconnectWhatsApp}
+                              className="w-full py-2.5 border border-[#C84B31] text-[#C84B31] hover:bg-[#C84B31] hover:text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">link_off</span>
+                              <span>Desvincular WhatsApp</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleConnectWhatsApp}
+                              className="w-full py-2.5 bg-[#C84B31] hover:bg-[#A83B25] text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
+                              <span>Generar Código QR</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Botones de Navegación del Wizard */}
                 <div className="flex justify-between items-center pt-4 border-t border-[#E2DFD7]/60">
                   <button
                     type="button"
@@ -990,15 +1060,34 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
                 </div>
               </div>
 
+              {/* Panel Lateral de Estado & Webhook de Meta */}
               <div className="lg:col-span-5 bg-white border border-[#E2DFD7] rounded-3xl p-6 sm:p-7 space-y-5 shadow-sm">
-                <div className="flex items-center gap-2 text-[#C84B31]">
-                  <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
-                  <h4 className="font-display text-lg text-[#1C1B1A]">Instrucciones de Vinculación</h4>
+                <div className="flex items-center gap-2 text-[#0866FF]">
+                  <span className="material-symbols-outlined text-[20px]">hub</span>
+                  <h4 className="font-display text-lg text-[#1C1B1A]">Estado del Webhook de Meta</h4>
                 </div>
-                <div className="space-y-3 text-xs text-[#6E6B65]">
-                  <p>1. Abre WhatsApp en tu dispositivo móvil.</p>
-                  <p>2. Ve a <strong>Ajustes &gt; Dispositivos vinculados</strong>.</p>
-                  <p>3. Presiona <strong>Vincular un dispositivo</strong> y apunta la cámara al código QR.</p>
+                
+                <div className="space-y-3 text-xs">
+                  <div className="p-3 bg-[#FAF8F3] border border-[#E2DFD7] rounded-xl space-y-1">
+                    <span className="text-[10px] font-bold font-mono text-[#0866FF] uppercase block">Callback URL (Pública VPS)</span>
+                    <code className="text-[#1C1B1A] font-mono text-[11px] block break-all">
+                      https://frant.app/api/v1/meta/webhook
+                    </code>
+                  </div>
+
+                  <div className="p-3 bg-[#FAF8F3] border border-[#E2DFD7] rounded-xl space-y-1">
+                    <span className="text-[10px] font-bold font-mono text-[#15803d] uppercase block">Verify Token (Seguridad)</span>
+                    <code className="text-[#1C1B1A] font-mono text-[11px] block">
+                      frant_verify_token_2026
+                    </code>
+                  </div>
+
+                  <div className="p-3 bg-[#FAF8F3] border border-[#E2DFD7] rounded-xl space-y-1">
+                    <span className="text-[10px] font-bold font-mono text-[#6E6B65] uppercase block">Respuesta de IA</span>
+                    <p className="text-[#1C1B1A]">
+                      Agente <strong>Gemini 3.7 Flash</strong> activo respondiendo automáticamente.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
