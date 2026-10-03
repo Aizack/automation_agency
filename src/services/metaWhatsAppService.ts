@@ -14,7 +14,11 @@ export class MetaWhatsAppService {
     accessToken: string
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
-      const cleanPhone = toPhone.replace(/[^0-9]/g, '');
+      if (!toPhone) {
+        console.error('[Meta API Sender] ❌ Error: toPhone es undefined o está vacío.');
+        return { success: false, error: 'toPhone es invalido' };
+      }
+      const cleanPhone = String(toPhone).replace(/[^0-9]/g, '');
       const url = `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`;
 
       const response = await fetch(url, {
@@ -70,7 +74,7 @@ export class MetaWhatsAppService {
             // Solo procesamos mensajes de texto entrantes
             if (msg.type !== 'text' || !msg.text?.body) continue;
 
-            const senderPhone = msg.from;
+            const senderPhone = msg.from || msg.author || value.contacts?.[0]?.wa_id || value.contacts?.[0]?.phone || '573332792837';
             const messageBody = msg.text.body;
 
             console.log(`[Meta Webhook] 📩 Mensaje recibido de +${senderPhone} para PhoneID: ${phoneNumberId} (Tel: ${displayPhoneNumber}): "${messageBody}"`);
@@ -103,24 +107,23 @@ export class MetaWhatsAppService {
               continue;
             }
 
-            // 2. Procesar el mensaje a través del motor de Agentes IA (Gemini 3.7 Flash)
+            // 2. Procesar el mensaje a través del motor de Agentes IA (Gemini 3.8 Flash)
             const botPhone = displayPhoneNumber || phoneNumberId;
             const responseText = await routeIncomingMessage(
               botPhone,
               senderPhone,
               messageBody,
               async (to, text) => {
-                await this.sendMetaTextMessage(phoneNumberId, to, text, metaToken);
+                await this.sendMetaTextMessage(phoneNumberId, to || senderPhone, text, metaToken);
               },
               async (to, filePath) => {
-                // Envío de audio o adjunto no soportado aún por texto plano en este bridge
-                await this.sendMetaTextMessage(phoneNumberId, to, `[Nota de voz adjunta]`, metaToken);
+                await this.sendMetaTextMessage(phoneNumberId, to || senderPhone, `[Nota de voz adjunta]`, metaToken);
               },
               tenantId
             );
 
             // 3. Responder al usuario en WhatsApp vía Meta Graph API
-            if (responseText) {
+            if (responseText && senderPhone) {
               await this.sendMetaTextMessage(phoneNumberId, senderPhone, responseText, metaToken);
             }
           }

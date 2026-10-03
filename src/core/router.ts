@@ -562,7 +562,7 @@ export const routeIncomingMessage = async (
     await pool.query(`
       INSERT INTO interactions (client_id, sender_phone, message_text, response_text, tokens_input, tokens_output, api_cost)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, [clientId, senderPhone, messageText, responseText, inputTokens, outputTokens, estimatedCost]);
+    `, [clientId, senderPhone || 'desconocido', messageText, responseText, inputTokens, outputTokens, estimatedCost]);
 
   } catch (dbError) {
     console.error('[Router] Error al registrar métricas de interacción:', dbError);
