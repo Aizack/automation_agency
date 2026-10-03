@@ -11721,6 +11721,28 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
+  // 5. Endpoint para Registrar Número de Teléfono en Meta Graph API (POST /api/v1/meta/register-number)
+  app.post('/api/v1/meta/register-number', async (req: Request, res: Response) => {
+    try {
+      const { phoneNumberId, token, pin } = req.body;
+      const targetPhoneId = phoneNumberId || process.env.META_PHONE_NUMBER_ID;
+      const targetToken = token || process.env.META_WA_TOKEN;
+
+      if (!targetPhoneId || !targetToken) {
+        return res.status(400).json({ success: false, error: 'phoneNumberId y token de Meta son requeridos.' });
+      }
+
+      const result = await MetaWhatsAppService.registerPhoneNumber(targetPhoneId, targetToken, pin || '123456');
+      if (!result.success) {
+        return res.status(400).json({ success: false, error: result.error });
+      }
+
+      return res.json({ success: true, message: 'Número de teléfono registrado y activado exitosamente en Meta Cloud API.', data: result.data });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
   app.get(/.*/, (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith('/api')) {

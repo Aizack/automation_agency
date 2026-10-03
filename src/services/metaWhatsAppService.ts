@@ -159,4 +159,40 @@ export class MetaWhatsAppService {
       return { success: false, error: err.message };
     }
   }
+
+  /**
+   * Registra oficialmente un número de teléfono en Meta Cloud API (Paso final para pasar de Pendiente a Conectado).
+   * Referencia oficial Meta: POST /{PHONE_NUMBER_ID}/register
+   */
+  static async registerPhoneNumber(
+    phoneNumberId: string,
+    accessToken: string,
+    pin: string = '123456'
+  ): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const url = `https://graph.facebook.com/v20.0/${phoneNumberId}/register`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          pin: pin
+        })
+      });
+
+      const resData: any = await response.json();
+      if (!response.ok) {
+        return { success: false, error: resData.error?.message || 'Error registrando número en Meta Graph API' };
+      }
+
+      console.log(`[Meta API Register] ✅ Número ${phoneNumberId} registrado exitosamente en Meta Cloud API!`);
+      return { success: true, data: resData };
+    } catch (error: any) {
+      console.error('[Meta API Register] Excepción:', error);
+      return { success: false, error: error.message };
+    }
+  }
 }
