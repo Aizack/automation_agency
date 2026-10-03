@@ -36,7 +36,7 @@ export class AIAgent {
     senderPhone: string,
     sendVoiceFn?: (to: string, filePath: string) => Promise<any>
   ): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
-    console.log(`[Agente AI] 🤖 Procesando Gemini (3.7 Flash) para cliente: ${this.config.name} (ID: ${this.config.id})`);
+    console.log(`[Agente AI] 🤖 Procesando Gemini (3.8 Flash) para cliente: ${this.config.name} (ID: ${this.config.id})`);
 
     // 1. Retrieval-Augmented Generation (RAG)
     const contextFromDrive = await VectorDatabase.searchRelevantContext(this.config.id, userMessage);
@@ -252,7 +252,7 @@ export class AIAgent {
     try {
       if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== "API_KEY_MISSING") {
         const ai = this.getAIClient();
-        const selectedModel = process.env.GEMINI_MODEL || "gemini-3.7-flash";
+        const selectedModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
         // Recuperar historial de conversación
         const pastTurns: any[] = [];
