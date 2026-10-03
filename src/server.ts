@@ -2364,7 +2364,7 @@ app.delete('/api/clients/:clientId/products/:productId', authenticateToken as an
 
     try {
       const authUser = (req as any).user;
-      const userName = await resolveAuditUserName(req, clientId);
+      const userName = await resolveAuditUserName(req, clientId as string);
       await pool.query(`
         INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details)
         VALUES ($1, $2, $3, $4, 'ELIMINAR_PRODUCTO', 'Inventario', 'product', $5, $6, $7)

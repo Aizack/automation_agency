@@ -99,11 +99,11 @@ export function getPrivacyPolicyHTML(): string {
     <p>Frant Bot cumple rigurosamente con las Políticas de la Plataforma de Meta for Developers y la Política de WhatsApp Business Solution Providers. Los datos obtenidos a través de la Graph API de Meta se utilizan únicamente para ejecutar la integración solicitada por el usuario.</p>
 
     <h2>6. Eliminación de Datos (Data Deletion)</h2>
-    <p>Cualquier usuario o comercio puede solicitar la eliminación completa de su cuenta y de sus datos asociados enviando un correo a <code>soporte@diazlab.com</code> o desvinculando la aplicación directamente desde su cuenta de Meta Business Manager.</p>
+    <p>Cualquier usuario o comercio puede solicitar la eliminación completa de su cuenta y de sus datos asociados enviando un correo a <code>contactanos@diazlab.online</code> o desvinculando la aplicación directamente desde su cuenta de Meta Business Manager.</p>
 
     <h2>7. Contacto</h2>
     <p>Si tienes preguntas sobre esta Política de Privacidad, puedes contactarnos en:</p>
-    <p><strong>Correo electrónico:</strong> soporte@diazlab.com<br>
+    <p><strong>Correo electrónico:</strong> contactanos@diazlab.online<br>
     <strong>Dirección:</strong> Diaz Lab Software, Colombia</p>
   </div>
   <div class="footer">
