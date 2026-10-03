@@ -90,7 +90,8 @@ export const registrarClienteTool = {
             expiresAt: Date.now() + 10 * 60 * 1000
         });
 
-        const activationLink = `http://localhost:3000/?view=activate-account&clientId=${clientId}&token=${password}`;
+        const baseUrl = (process.env.APP_URL || 'https://frant.app').replace(/\/$/, '');
+        const activationLink = `${baseUrl}/?view=activate-account&clientId=${clientId}&token=${password}`;
 
         console.log(`[Tool Registrar Cliente] ✅ Registro exitoso. Cliente: ${clientId}. WhatsApp Session iniciada para +${cleanPhone}`);
 
