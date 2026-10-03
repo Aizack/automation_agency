@@ -11704,6 +11704,23 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
+  // 4. Webhook Autónomo de Eliminación de Datos de Meta (POST /api/v1/meta/data-deletion)
+  app.post('/api/v1/meta/data-deletion', async (req: Request, res: Response) => {
+    try {
+      const confirmationCode = `DEL_FRANT_${Date.now()}`;
+      console.log(`[Meta Data Deletion] Solicitud recibida de Meta. Código de confirmación: ${confirmationCode}`);
+      
+      // Responder según especificación oficial de Meta for Developers
+      return res.json({
+        url: `https://frant.app/privacy?confirmation_code=${confirmationCode}`,
+        confirmation_code: confirmationCode
+      });
+    } catch (err: any) {
+      console.error('[Meta Data Deletion Error]:', err);
+      return res.status(500).json({ error: 'Error procesando eliminación de datos.' });
+    }
+  });
+
   // Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
   app.get(/.*/, (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith('/api')) {

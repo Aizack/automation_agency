@@ -62,6 +62,13 @@ export function getPrivacyPolicyHTML(): string {
       color: #64748b;
       font-size: 0.9rem;
     }
+    .highlight-box {
+      background-color: #f1f5f9;
+      border-left: 4px solid var(--primary);
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -98,8 +105,23 @@ export function getPrivacyPolicyHTML(): string {
     <h2>5. Cumplimiento con las Políticas de Meta</h2>
     <p><strong>Frant</strong> cumple rigurosamente con las Políticas de la Plataforma de Meta for Developers y la Política de WhatsApp Business Solution Providers. Los datos obtenidos a través de la Graph API de Meta se utilizan únicamente para ejecutar la integración solicitada por el usuario.</p>
 
-    <h2>6. Eliminación de Datos (Data Deletion)</h2>
-    <p>Cualquier empresa usuaria puede solicitar la eliminación completa de su cuenta y de sus datos asociados enviando un correo a <code>contactanos@diazlab.online</code> o desvinculando la aplicación directamente desde su cuenta de Meta Business Manager.</p>
+    <h2>6. Mecanismos Autónomos de Eliminación de Datos (Data Deletion)</h2>
+    <p>Garantizamos el control total e inmediato sobre la eliminación de datos. Cualquier empresa usuaria puede eliminar sus datos de manera autónoma a través de los siguientes métodos:</p>
+    
+    <div class="highlight-box">
+      <strong>1. Desde el Dashboard de Frant (En Tiempo Real):</strong><br>
+      Ingresa a la sección <em>Configuración ➔ Integraciones ➔ Meta WhatsApp</em> y haz clic en <strong>"Desconectar y Eliminar Datos"</strong>. Esto revocará los tokens de acceso e inactivará inmediatamente los registros almacenados.
+    </div>
+
+    <div class="highlight-box">
+      <strong>2. Eliminación Automatizada vía Webhook de Meta (Data Deletion Callback):</strong><br>
+      Si desvinculas la aplicación <strong>Frant</strong> directamente desde tu cuenta de Meta Business Manager (en <em>Configuración del Negocio ➔ Integraciones ➔ Aplicaciones</em>), Meta enviará una solicitud automática a nuestro endpoint de eliminación <code>https://frant.app/api/v1/meta/data-deletion</code>, procesando la baja de forma inmediata.
+    </div>
+
+    <div class="highlight-box">
+      <strong>3. Solicitud por Correo Electrónico:</strong><br>
+      Si prefieres soporte directo, puedes escribir a <code>contactanos@diazlab.online</code> indicando el nombre de tu empresa. El equipo de Diaz Lab Automation procesará la eliminación en menos de 24 horas.
+    </div>
 
     <h2>7. Contacto</h2>
     <p>Si tienes preguntas sobre esta Política de Privacidad o la plataforma Frant, puedes contactarnos en:</p>
