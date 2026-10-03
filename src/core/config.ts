@@ -23,6 +23,9 @@ export interface ClientConfig {
   nit?: string;
   address?: string;
   invoiceFooter?: string;
+  metaPhoneNumberId?: string;
+  metaWabaId?: string;
+  metaWaToken?: string;
 }
 
 /**
@@ -50,9 +53,14 @@ export const getClientConfigByPhone = async (phone: string): Promise<ClientConfi
         logo_url,
         nit,
         address,
-        invoice_footer AS "invoiceFooter"
+        invoice_footer AS "invoiceFooter",
+        meta_phone_number_id AS "metaPhoneNumberId",
+        meta_waba_id AS "metaWabaId",
+        meta_wa_token AS "metaWaToken"
        FROM clients 
-       WHERE RIGHT(phone_number, 10) = RIGHT($1, 10) LIMIT 1`,
+       WHERE RIGHT(REGEXP_REPLACE(COALESCE(phone_number, ''), '\\D', 'g'), 10) = RIGHT(REGEXP_REPLACE(COALESCE($1, ''), '\\D', 'g'), 10)
+          OR meta_phone_number_id = $1
+       LIMIT 1`,
       [phone]
     );
 
@@ -91,7 +99,10 @@ export const getClientConfigById = async (id: string): Promise<ClientConfig | nu
         logo_url,
         nit,
         address,
-        invoice_footer AS "invoiceFooter"
+        invoice_footer AS "invoiceFooter",
+        meta_phone_number_id AS "metaPhoneNumberId",
+        meta_waba_id AS "metaWabaId",
+        meta_wa_token AS "metaWaToken"
        FROM clients 
        WHERE id = $1 LIMIT 1`,
       [id]

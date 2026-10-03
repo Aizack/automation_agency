@@ -85,7 +85,10 @@ export const getClientById = async (id: string): Promise<ClientConfig | null> =>
         phone,
         has_custom_tax_id AS "hasCustomTaxId",
         legal_name AS "legalName",
-        custom_tax_id AS "customTaxId"
+        custom_tax_id AS "customTaxId",
+        meta_phone_number_id AS "metaPhoneNumberId",
+        meta_waba_id AS "metaWabaId",
+        meta_wa_token AS "metaWaToken"
        FROM clients 
        WHERE id = $1 LIMIT 1`,
       [id]
@@ -131,6 +134,9 @@ export const updateClient = async (
     owner_phone: string;
     first_message_notified: boolean;
     is_activated: boolean;
+    meta_phone_number_id: string;
+    meta_waba_id: string;
+    meta_wa_token: string;
   }>
 ): Promise<void> => {
   try {
@@ -207,7 +213,10 @@ export const listClients = async (): Promise<ClientConfig[]> => {
         is_activated AS "isActivated",
         category,
         enabled_modules AS "enabledModules",
-        logo_url
+        logo_url,
+        meta_phone_number_id AS "metaPhoneNumberId",
+        meta_waba_id AS "metaWabaId",
+        meta_wa_token AS "metaWaToken"
        FROM clients 
        ORDER BY created_at DESC`
     );

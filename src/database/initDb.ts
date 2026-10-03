@@ -784,7 +784,11 @@ export const initDatabase = async () => {
             `ALTER TABLE products ADD COLUMN IF NOT EXISTS gallery_images JSONB DEFAULT '[]'::jsonb;`,
             `ALTER TABLE products ADD COLUMN IF NOT EXISTS slug VARCHAR(150);`,
             `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS order_source VARCHAR(30) DEFAULT 'dashboard';`,
-            `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS branch_id VARCHAR(50);`
+            `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS branch_id VARCHAR(50);`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS meta_phone_number_id VARCHAR(100);`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS meta_waba_id VARCHAR(100);`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS meta_wa_token TEXT;`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS meta_app_id VARCHAR(100);`
         ];
 
         for (const q of safeAlterQueries) {
@@ -792,6 +796,19 @@ export const initDatabase = async () => {
                 await pool.query(q);
             } catch (err: any) {}
         }
+
+        // Sincronizar credenciales de Meta Cloud API para la tienda principal (admin / Diaz Lab)
+        try {
+            await pool.query(`
+                UPDATE clients
+                SET meta_phone_number_id = COALESCE(meta_phone_number_id, '1325606987308762'),
+                    meta_waba_id = COALESCE(meta_waba_id, '1415552803364935'),
+                    meta_wa_token = COALESCE(meta_wa_token, 'EAAVzPHiUbzkBSo16d1EoBBta7HHnw8gO5ZAlv25tzhZAhdf7gydQM5EUHruHotZCZB9D8ae8V7Le2RE9ZCSmZCDYlKrpl2F7R79ZCSoZCn0SKqBOWo0mKgUZAYR4lA9XHwgGy3s2J1QGGpUZCtDTs59lBghYqbmlYpAFZBEHZBl4bWZC3NAMGS61PoSIR2Q9h1jj8rscYa7XryvKVPrOaRoPcxnqQJZBZCO71AXYHm4RxPsXgYeCS2LmrPwQm3hLZCINsAzLWkHnnjiLCQIGFdkemoWwZAoZBdXEonPUutGFBXusEZD'),
+                    phone_number = COALESCE(phone_number, '573332792837'),
+                    phone = COALESCE(phone, '573332792837')
+                WHERE id = 'admin';
+            `);
+        } catch (err: any) {}
 
         try {
             await pool.query(`

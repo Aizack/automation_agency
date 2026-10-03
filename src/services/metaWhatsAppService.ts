@@ -77,19 +77,25 @@ export class MetaWhatsAppService {
 
             // 1. Buscar qué tenant / cliente posee este phoneNumberId o displayPhoneNumber
             let tenantId = 'admin';
-            let metaToken = process.env.META_WA_TOKEN || '';
+            let metaToken = process.env.META_WA_TOKEN || 'EAAVzPHiUbzkBSo16d1EoBBta7HHnw8gO5ZAlv25tzhZAhdf7gydQM5EUHruHotZCZB9D8ae8V7Le2RE9ZCSmZCDYlKrpl2F7R79ZCSoZCn0SKqBOWo0mKgUZAYR4lA9XHwgGy3s2J1QGGpUZCtDTs59lBghYqbmlYpAFZBEHZBl4bWZC3NAMGS61PoSIR2Q9h1jj8rscYa7XryvKVPrOaRoPcxnqQJZBZCO71AXYHm4RxPsXgYeCS2LmrPwQm3hLZCINsAzLWkHnnjiLCQIGFdkemoWwZAoZBdXEonPUutGFBXusEZD';
 
-            const tenantRes = await pool.query(
-              `SELECT id, meta_wa_token 
-               FROM clients 
-               WHERE meta_phone_number_id = $1 OR phone_number = $2 OR phone = $2 
-               LIMIT 1`,
-              [phoneNumberId, displayPhoneNumber]
-            );
+            try {
+              const tenantRes = await pool.query(
+                `SELECT id, meta_wa_token 
+                 FROM clients 
+                 WHERE meta_phone_number_id = $1 
+                    OR ( $2 != '' AND RIGHT(REGEXP_REPLACE(COALESCE(phone_number, ''), '\\D', 'g'), 10) = RIGHT(REGEXP_REPLACE($2, '\\D', 'g'), 10) )
+                    OR ( $2 != '' AND RIGHT(REGEXP_REPLACE(COALESCE(phone, ''), '\\D', 'g'), 10) = RIGHT(REGEXP_REPLACE($2, '\\D', 'g'), 10) )
+                 LIMIT 1`,
+                [phoneNumberId, displayPhoneNumber || '']
+              );
 
-            if (tenantRes.rows.length > 0) {
-              tenantId = tenantRes.rows[0].id;
-              metaToken = tenantRes.rows[0].meta_wa_token || metaToken;
+              if (tenantRes.rows.length > 0) {
+                tenantId = tenantRes.rows[0].id;
+                metaToken = tenantRes.rows[0].meta_wa_token || metaToken;
+              }
+            } catch (dbErr: any) {
+              console.warn('[Meta Webhook] Error buscando tenant por ID:', dbErr.message);
             }
 
             if (!metaToken) {

@@ -91,6 +91,7 @@ interface SaaSErpAiAgentModuleProps {
 
 export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props) => {
   const {
+    clientId,
     clientData,
     systemPrompt,
     setSystemPrompt,
@@ -147,9 +148,9 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
 
   // Modo de Canal de WhatsApp: 'meta' (Oficial Cloud API Tech Provider) vs 'qr' (Puppeteer / QR)
   const [channelMode, setChannelMode] = useState<'meta' | 'qr'>('meta');
-  const [metaPhoneNumberId, setMetaPhoneNumberId] = useState<string>(clientData?.metaPhoneNumberId || '');
-  const [metaWabaId, setMetaWabaId] = useState<string>(clientData?.metaWabaId || '');
-  const [metaToken, setMetaToken] = useState<string>(clientData?.metaWaToken || '');
+  const [metaPhoneNumberId, setMetaPhoneNumberId] = useState<string>(clientData?.metaPhoneNumberId || clientData?.meta_phone_number_id || '1325606987308762');
+  const [metaWabaId, setMetaWabaId] = useState<string>(clientData?.metaWabaId || clientData?.meta_waba_id || '1415552803364935');
+  const [metaToken, setMetaToken] = useState<string>(clientData?.metaWaToken || clientData?.meta_wa_token || '');
 
   // Filtro de búsqueda en historial de interacciones
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -934,6 +935,67 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
                           placeholder="EAAG..."
                           className="w-full bg-white border border-[#E2DFD7] rounded-xl px-3 py-2 text-[#1C1B1A] font-mono outline-none"
                         />
+                      </div>
+
+                      {/* Botones de Guardar & Activar Registro */}
+                      <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-[#E2DFD7]/60">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const res = await fetch(`/api/clients/${clientId}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  meta_phone_number_id: metaPhoneNumberId,
+                                  meta_waba_id: metaWabaId,
+                                  meta_wa_token: metaToken
+                                })
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                alert('✅ Credenciales de Meta Cloud API guardadas y vinculadas exitosamente.');
+                              } else {
+                                alert(`❌ Error: ${data.message || data.error}`);
+                              }
+                            } catch (err: any) {
+                              alert(`❌ Error: ${err.message}`);
+                            }
+                          }}
+                          className="flex-1 py-2.5 bg-[#1C1B1A] hover:bg-black text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">save</span>
+                          <span>Guardar Credenciales de Meta</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const res = await fetch('/api/v1/meta/register-number', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  phoneNumberId: metaPhoneNumberId,
+                                  token: metaToken,
+                                  pin: '123456'
+                                })
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                alert('🟢 ¡Número de teléfono registrado y ACTIVADO exitosamente en Meta Cloud API!');
+                              } else {
+                                alert(`❌ Error: ${data.error}`);
+                              }
+                            } catch (err: any) {
+                              alert(`❌ Error: ${err.message}`);
+                            }
+                          }}
+                          className="flex-1 py-2.5 bg-[#0866FF] hover:bg-[#0052cc] text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">verified</span>
+                          <span>Registrar Número en Meta API</span>
+                        </button>
                       </div>
                     </div>
                   </div>
