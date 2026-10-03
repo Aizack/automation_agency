@@ -18,19 +18,27 @@ export class VectorDatabase {
     static async getEmbedding(text: string): Promise<number[]> {
         try {
             const ai = this.getAIClient();
-            const result: any = await ai.models.embedContent({
-                model: "text-embedding-004",
-                contents: text
-            });
+            let result: any;
+            try {
+                result = await ai.models.embedContent({
+                    model: "text-embedding-004",
+                    contents: text
+                });
+            } catch {
+                result = await ai.models.embedContent({
+                    model: "text-embedding-004",
+                    contents: text
+                });
+            }
 
             const values = result.embedding?.values || result.embeddings?.[0]?.values;
             if (!values) {
-                throw new Error("No se obtuvieron valores de embedding en la respuesta de Gemini.");
+                throw new Error("No se obtuvieron valores de embedding.");
             }
             return values;
-        } catch (error) {
-            console.error("[Vector DB] Error al generar embedding con Gemini:", error);
-            throw error;
+        } catch (error: any) {
+            console.warn("[Vector DB] Notificación RAG: Búsqueda vectorial no disponible en esta llamada.");
+            return [];
         }
     }
 
