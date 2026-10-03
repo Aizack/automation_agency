@@ -4,7 +4,7 @@ export function getPrivacyPolicyHTML(): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Política de Privacidad | Frant - Plataforma ERP y Automatización IA</title>
+  <title>Política de Privacidad | Frant (Friendly Automation) by Diaz Lab Automation</title>
   <style>
     :root {
       --primary: #0866ff;
@@ -67,13 +67,13 @@ export function getPrivacyPolicyHTML(): string {
 <body>
   <div class="header">
     <h1>Política de Privacidad</h1>
-    <p>Frant - Sistema ERP de Gestión Empresarial y Automatización IA (by Diaz Lab)</p>
+    <p>Frant (Friendly Automation) - Plataforma ERP y Automatización IA desarrollada por Diaz Lab Automation</p>
   </div>
   <div class="container">
     <p>Última actualización: <strong>1 de octubre de 2026</strong></p>
     
     <h2>1. Introducción</h2>
-    <p>En <strong>Frant</strong> (desarrollado por <strong>Diaz Lab</strong>), nos tomamos muy en serio la privacidad y la protección de datos de nuestras empresas e inquilinos. <strong>Frant</strong> es una plataforma de software de gestión empresarial (ERP) integrada con módulos de inteligencia artificial para la automatización de atención al cliente y mensajería a través de la API Oficial de Meta (WhatsApp Business Cloud API).</p>
+    <p>En <strong>Frant</strong> (derivado de <em>Friendly Automation</em>), desarrollado por <strong>Diaz Lab Automation</strong>, nos tomamos muy en serio la privacidad y la protección de datos de nuestras empresas e inquilinos. <strong>Frant</strong> es una plataforma de software de gestión empresarial (ERP) integrada con inteligencia artificial para la automatización de atención al cliente y mensajería a través de la API Oficial de Meta (WhatsApp Business Cloud API).</p>
 
     <h2>2. Información que Recopilamos</h2>
     <p>Para prestar nuestros servicios de gestión ERP y automatización de atención al cliente e IA, recopilamos la siguiente información:</p>
@@ -104,10 +104,10 @@ export function getPrivacyPolicyHTML(): string {
     <h2>7. Contacto</h2>
     <p>Si tienes preguntas sobre esta Política de Privacidad o la plataforma Frant, puedes contactarnos en:</p>
     <p><strong>Correo electrónico:</strong> contactanos@diazlab.online<br>
-    <strong>Desarrollador:</strong> Diaz Lab Software, Colombia</p>
+    <strong>Empresa Desarrolladora:</strong> Diaz Lab Automation, Colombia</p>
   </div>
   <div class="footer">
-    &copy; 2026 Frant ERP | Diaz Lab. Todos los derechos reservados.
+    &copy; 2026 Frant (Friendly Automation) | Diaz Lab Automation. Todos los derechos reservados.
   </div>
 </body>
 </html>`;
