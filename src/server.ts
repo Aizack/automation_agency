@@ -3818,7 +3818,6 @@ app.put('/api/clients/:clientId/invoices/:invoiceId/pay', authenticateToken as a
       userName = user?.username || 'Usuario Cajero';
     }
 
-    const isUuid = (str: any) => typeof str === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(str);
     const rawUserId = user?.employeeId || user?.userId || user?.id;
     const paidByUserId = isUuid(rawUserId) ? rawUserId : null;
 

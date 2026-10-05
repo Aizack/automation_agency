@@ -729,8 +729,8 @@ export const initDatabase = async () => {
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_address TEXT;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_date TIMESTAMP;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS delivery_status VARCHAR(20) DEFAULT 'pending';
-            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL;
-            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS employee_id UUID REFERENCES employees(id) ON DELETE SET NULL;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_employee_id UUID;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS employee_id UUID;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_name VARCHAR(150);
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_id UUID;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_name VARCHAR(150);
@@ -738,6 +738,11 @@ export const initDatabase = async () => {
             ALTER TABLE invoices ALTER COLUMN customer_email DROP NOT NULL;
             ALTER TABLE invoices ALTER COLUMN customer_phone DROP NOT NULL;
             ALTER TABLE invoices ALTER COLUMN customer_document_number DROP NOT NULL;
+
+            ALTER TABLE invoices DROP CONSTRAINT IF EXISTS invoices_created_by_user_id_fkey;
+            ALTER TABLE invoices DROP CONSTRAINT IF EXISTS invoices_paid_by_user_id_fkey;
+            ALTER TABLE invoices DROP CONSTRAINT IF EXISTS invoices_seller_employee_id_fkey;
+            ALTER TABLE invoices DROP CONSTRAINT IF EXISTS invoices_employee_id_fkey;
 
             CREATE TABLE IF NOT EXISTS employee_targets (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1110,11 +1115,11 @@ export const initDatabase = async () => {
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS transfer_bank VARCHAR(100);
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS transfer_destination_account VARCHAR(200);
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS payment_receipt_url TEXT;
-            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_id UUID;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_name VARCHAR(100);
-            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_by_user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_by_user_id UUID;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS paid_by_user_name VARCHAR(100);
-            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL;
+            ALTER TABLE invoices ADD COLUMN IF NOT EXISTS seller_employee_id UUID;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS cufe VARCHAR(100);
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS qr_code_url TEXT;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS electronic_status VARCHAR(30) DEFAULT 'draft';
