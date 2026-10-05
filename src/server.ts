@@ -1119,9 +1119,10 @@ app.post('/api/login', async (req: Request, res: Response) => {
 
         const token = jwt.sign(
           {
-            id: empUser.client_id,
+            id: empUser.employee_id,
             employeeId: empUser.employee_id,
             userId: empUser.employee_id,
+            name: `${empUser.name} ${empUser.last_name || ''}`.trim(),
             username: empUser.name,
             role: sessionRole,
             clientId: empUser.client_id,
@@ -1170,13 +1171,20 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
     }
 
     if (authReq.user.role === 'employee') {
+      const isUuid = (str: any) => typeof str === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(str);
+      const empLookupId = authReq.user.employeeId || authReq.user.userId || (isUuid(authReq.user.id) ? authReq.user.id : null);
+
+      if (!empLookupId) {
+        return res.status(404).json({ success: false, error: 'Empleado no encontrado.' });
+      }
+
       const employeeResult = await pool.query(
         `SELECT e.id, e.client_id, e.name, e.phone, e.role, e.is_active,
                 COALESCE(e.allowed_modules, '[]'::jsonb) AS allowed_modules,
                 COALESCE(e.allowed_branches, '[]'::jsonb) AS allowed_branches
          FROM employees e
          WHERE e.id = $1 AND e.is_active = TRUE LIMIT 1`,
-        [authReq.user.id]
+        [empLookupId]
       );
 
       if (employeeResult.rows.length === 0) {
@@ -3257,10 +3265,10 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
       }
 
     const cleanCustomerName = (customerName && String(customerName).trim()) ? String(customerName).trim() : 'Consumidor Final';
-    const cleanCustomerPhone = (customerPhone && String(customerPhone).trim()) ? String(customerPhone).trim() : null;
+    const cleanCustomerPhone = (customerPhone && String(customerPhone).trim()) ? String(customerPhone).trim() : '3000000000';
     const cleanCustomerDocType = customerDocumentType || 'CC';
     const cleanCustomerDocNum = (customerDocumentNumber && String(customerDocumentNumber).trim()) ? String(customerDocumentNumber).trim() : '222222222222';
-    const cleanCustomerEmail = (customerEmail && String(customerEmail).trim()) ? String(customerEmail).trim() : null;
+    const cleanCustomerEmail = (customerEmail && String(customerEmail).trim()) ? String(customerEmail).trim() : 'consumidorfinal@cliente.com';
     const cleanDueDate = dueDate || issueDate || new Date().toISOString().split('T')[0];
 
     if (!invoiceNumber || totalAmount === undefined) {
@@ -3784,15 +3792,42 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/trigger-collection', authen
 app.put('/api/clients/:clientId/invoices/:invoiceId/pay', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, invoiceId } = req.params;
+    const { paid_by_name } = req.body || {};
     const user = (req as any).user;
-    const userName = user?.name || user?.username || user?.email || 'Usuario Cajero';
+
+    let userName = paid_by_name || user?.name || user?.username;
+
+    const isUuid = (str: any) => typeof str === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(str);
+
+    // Si userName es indeterminado o id de sede, consultar la tabla de empleados o usuarios
+    if (!userName || userName === 'Usuario Cajero' || userName.startsWith('branch_')) {
+      if (user?.employeeId && isUuid(user.employeeId)) {
+        const empRes = await pool.query(`SELECT name, last_name FROM employees WHERE id = $1`, [user.employeeId]);
+        if (empRes.rows.length > 0) {
+          userName = `${empRes.rows[0].name} ${empRes.rows[0].last_name || ''}`.trim();
+        }
+      } else if (user?.userId && isUuid(user.userId)) {
+        const userRes = await pool.query(`SELECT full_name, username FROM users WHERE id = $1`, [user.userId]);
+        if (userRes.rows.length > 0) {
+          userName = userRes.rows[0].full_name || userRes.rows[0].username;
+        }
+      }
+    }
+
+    if (!userName || userName.startsWith('branch_')) {
+      userName = user?.username || 'Usuario Cajero';
+    }
+
+    const isUuid = (str: any) => typeof str === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(str);
+    const rawUserId = user?.employeeId || user?.userId || user?.id;
+    const paidByUserId = isUuid(rawUserId) ? rawUserId : null;
 
     const result = await pool.query(
       `UPDATE invoices 
        SET status = 'paid', paid_by_user_id = $3, paid_by_user_name = $4, updated_at = NOW() 
        WHERE client_id = $1 AND id = $2 
        RETURNING id, invoice_number, customer_name, customer_phone, total_amount`,
-      [clientId, invoiceId, user?.id || null, userName]
+      [clientId, invoiceId, paidByUserId, userName]
     );
 
     if (result.rows.length === 0) {
@@ -3839,6 +3874,19 @@ app.put('/api/clients/:clientId/invoices/:invoiceId/pay', authenticateToken as a
 app.get('/api/clients/:clientId/employees/:employeeId/invoices', authenticateToken as any, async (req: Request, res: Response) => {
   try {
     const { clientId, employeeId } = req.params;
+    const isUuid = (str: any) => typeof str === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(str);
+
+    if (!isUuid(employeeId)) {
+      return res.json({
+        success: true,
+        invoices: [],
+        summary: {
+          total_count: 0,
+          total_sales_amount: 0
+        }
+      });
+    }
+
     const result = await pool.query(
       `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.total_amount, i.status, i.payment_method, i.created_at, COALESCE(i.seller_name, 'Sin asignar') as seller_name
        FROM invoices i
@@ -4861,6 +4909,11 @@ app.get('/api/clients/:clientId/deliveries', authenticateToken as any, authorize
 app.get('/api/clients/:clientId/employees/:employeeId/deliveries', async (req: Request, res: Response) => {
   try {
     const { clientId, employeeId } = req.params;
+    const isUuid = (str: any) => typeof str === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(str);
+
+    if (!isUuid(employeeId)) {
+      return res.json({ success: true, deliveries: [] });
+    }
 
     const result = await pool.query(
       `SELECT
@@ -10457,7 +10510,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     try {
       const { clientId } = req.params;
       const result = await pool.query(
-        `SELECT *, COALESCE(expense_date, created_at::date) as effective_date FROM monthly_fixed_expenses WHERE client_id = $1 ORDER BY COALESCE(expense_date, created_at::date) DESC, created_at DESC`,
+        `SELECT *, TO_CHAR(COALESCE(expense_date, created_at::date), 'YYYY-MM-DD') as effective_date, TO_CHAR(expense_date, 'YYYY-MM-DD') as expense_date_str FROM monthly_fixed_expenses WHERE client_id = $1 ORDER BY COALESCE(expense_date, created_at::date) DESC, created_at DESC`,
         [clientId]
       );
       res.json({ success: true, expenses: result.rows });
@@ -10481,8 +10534,8 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 
       const result = await pool.query(
         `INSERT INTO monthly_fixed_expenses (client_id, concept, category, expense_type, expense_date, amount, notes, period_month_year)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         RETURNING *, COALESCE(expense_date, created_at::date) as effective_date`,
+         VALUES ($1, $2, $3, $4, $5::date, $6, $7, $8)
+         RETURNING *, TO_CHAR(COALESCE(expense_date, created_at::date), 'YYYY-MM-DD') as effective_date, TO_CHAR(expense_date, 'YYYY-MM-DD') as expense_date_str`,
         [clientId, concept, category || 'operativo', expense_type || 'fijo', effDate, parseFloat(amount), notes || null, periodMY]
       );
 
@@ -10515,7 +10568,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const isAdmin = !isEmployee;
 
       const existingRes = await pool.query(
-        `SELECT * FROM monthly_fixed_expenses WHERE id = $1 AND client_id = $2`,
+        `SELECT *, TO_CHAR(COALESCE(expense_date, created_at::date), 'YYYY-MM-DD') as effective_date FROM monthly_fixed_expenses WHERE id = $1 AND client_id = $2`,
         [id, clientId]
       );
       if (existingRes.rows.length === 0) {
@@ -10531,7 +10584,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 
       // Solo administradores pueden modificar monto y fecha
       let updatedAmount = existing.amount;
-      let updatedExpenseDate = existing.expense_date;
+      let updatedExpenseDate = existing.effective_date;
 
       if (isAdmin) {
         if (amount !== undefined && amount !== null && amount !== '') {
@@ -10546,9 +10599,9 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 
       const result = await pool.query(
         `UPDATE monthly_fixed_expenses
-         SET concept = $1, category = $2, expense_type = $3, notes = $4, amount = $5, expense_date = $6, period_month_year = $7
+         SET concept = $1, category = $2, expense_type = $3, notes = $4, amount = $5, expense_date = $6::date, period_month_year = $7
          WHERE id = $8 AND client_id = $9
-         RETURNING *, COALESCE(expense_date, created_at::date) as effective_date`,
+         RETURNING *, TO_CHAR(COALESCE(expense_date, created_at::date), 'YYYY-MM-DD') as effective_date, TO_CHAR(expense_date, 'YYYY-MM-DD') as expense_date_str`,
         [updatedConcept, updatedCategory, updatedExpenseType, updatedNotes, updatedAmount, updatedExpenseDate, periodMY, id, clientId]
       );
 

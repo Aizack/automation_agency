@@ -84,7 +84,8 @@ export const EmployeePortal: React.FC = () => {
         const storedToken = localStorage.getItem('emp_token') || employeeToken;
         const storedClientId = localStorage.getItem('emp_client_id') || clientId;
         const storedEmpId = localStorage.getItem('emp_id') || employeeId;
-        if (!storedClientId || !storedEmpId) return;
+        const isUuid = (str: any) => typeof str === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(str);
+        if (!storedClientId || !storedEmpId || !isUuid(storedEmpId)) return;
 
         try {
             setDeliveriesLoading(true);
@@ -111,7 +112,8 @@ export const EmployeePortal: React.FC = () => {
         const storedToken = localStorage.getItem('emp_token') || employeeToken;
         const storedClientId = localStorage.getItem('emp_client_id') || clientId;
         const storedEmpId = localStorage.getItem('emp_id') || employeeId;
-        if (!storedClientId || !storedEmpId) return;
+        const isUuid = (str: any) => typeof str === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(str);
+        if (!storedClientId || !storedEmpId || !isUuid(storedEmpId)) return;
 
         try {
             setInvoicesLoading(true);

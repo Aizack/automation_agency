@@ -335,7 +335,12 @@ export const SaaSErpInvoices2: React.FC<SaaSErpInvoices2Props> = ({ clientId }) 
         if (!confirm('¿Confirmas que esta factura ha sido pagada en su totalidad?')) return;
         try {
             setActionLoadingId(invoiceId);
-            const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceId}/pay`, { method: 'PUT' });
+            const activeUserName = localStorage.getItem('emp_name') || localStorage.getItem('session_name') || '';
+            const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceId}/pay`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paid_by_name: activeUserName })
+            });
             const json = await res.json();
             if (json.success) {
                 fetchData();

@@ -735,6 +735,10 @@ export const initDatabase = async () => {
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_id UUID;
             ALTER TABLE invoices ADD COLUMN IF NOT EXISTS created_by_user_name VARCHAR(150);
 
+            ALTER TABLE invoices ALTER COLUMN customer_email DROP NOT NULL;
+            ALTER TABLE invoices ALTER COLUMN customer_phone DROP NOT NULL;
+            ALTER TABLE invoices ALTER COLUMN customer_document_number DROP NOT NULL;
+
             CREATE TABLE IF NOT EXISTS employee_targets (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 client_id VARCHAR(50) NOT NULL,

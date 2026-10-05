@@ -1028,8 +1028,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         if (!confirm('¿Deseas registrar el pago total de esta factura y pasar su estado a Pagado?')) return;
         try {
             setActionLoadingId(invoiceId);
+            const activeUserName = localStorage.getItem('emp_name') || localStorage.getItem('session_name') || '';
             const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceId}/pay`, {
-                method: 'PUT'
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paid_by_name: activeUserName })
             });
             const data = await res.json();
 

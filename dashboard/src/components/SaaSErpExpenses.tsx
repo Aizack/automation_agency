@@ -118,7 +118,8 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
     setEditCategory(item.category || 'operativo');
     setEditType(item.expense_type || 'fijo');
     const d = item.effective_date || item.expense_date || item.created_at;
-    setEditDate(d ? d.substring(0, 10) : new Date().toISOString().split('T')[0]);
+    const cleanDate = d ? String(d).split('T')[0].substring(0, 10) : new Date().toISOString().split('T')[0];
+    setEditDate(cleanDate);
     setEditAmount(item.amount || '0');
     setEditNotes(item.notes || '');
   };
