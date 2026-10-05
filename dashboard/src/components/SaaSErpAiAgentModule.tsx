@@ -147,7 +147,7 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
   const [configStep, setConfigStep] = useState<number>(1);
 
   // Modo de Canal de WhatsApp: 'meta' (Oficial Cloud API Tech Provider) vs 'qr' (Puppeteer / QR)
-  const [channelMode, setChannelMode] = useState<'meta' | 'qr'>('meta');
+  const [channelMode] = useState<'meta' | 'qr'>('meta');
   const [metaPhoneNumberId, setMetaPhoneNumberId] = useState<string>(clientData?.metaPhoneNumberId || clientData?.meta_phone_number_id || '1325606987308762');
   const [metaWabaId, setMetaWabaId] = useState<string>(clientData?.metaWabaId || clientData?.meta_waba_id || '1415552803364935');
   const [metaToken, setMetaToken] = useState<string>(clientData?.metaWaToken || clientData?.meta_wa_token || '');
@@ -166,7 +166,7 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
     { num: 2, title: 'Entrenamiento RAG', desc: 'Documentos y Drive' },
     { num: 3, title: 'Asesores Humanos', desc: 'Traspaso y cascada' },
     { num: 4, title: 'Notas de Voz', desc: 'Audios pregrabados' },
-    { num: 5, title: 'Canal WhatsApp', desc: 'Vincular código QR' },
+    { num: 5, title: 'Canal WhatsApp', desc: 'Meta Cloud API' },
   ];
 
   return (
@@ -823,47 +823,19 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               <div className="lg:col-span-7 bg-white border border-[#E2DFD7] rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
                 
-                {/* Cabecera del Paso 5 con Selector de Modo (Tabs) */}
+                {/* Cabecera del Paso 5 */}
                 <div className="border-b border-[#E2DFD7]/60 pb-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-mono uppercase tracking-widest text-[#C84B31] font-bold">Paso 05 / 05</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0866FF]/10 text-[#0866FF] border border-[#0866FF]/30">
-                      Arquitectura Híbrida Dual
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0866FF]/10 text-[#0866FF] border border-[#0866FF]/30 flex items-center gap-1">
+                      <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                      API Oficial de Meta
                     </span>
                   </div>
                   
                   <h3 className="text-2xl font-display font-normal text-[#1C1B1A]">Vinculación de Canal WhatsApp</h3>
-                  
-                  {/* Pestañas de Selección de Modo */}
-                  <div className="grid grid-cols-2 gap-2 p-1.5 bg-[#FAF8F3] border border-[#E2DFD7] rounded-2xl">
-                    <button
-                      type="button"
-                      onClick={() => setChannelMode('meta')}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                        channelMode === 'meta'
-                          ? 'bg-[#0866FF] text-white shadow-sm'
-                          : 'text-[#6E6B65] hover:text-[#1C1B1A]'
-                      }`}
-                    >
-                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                      </svg>
-                      <span>1. API Oficial de Meta</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setChannelMode('qr')}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                        channelMode === 'qr'
-                          ? 'bg-[#C84B31] text-white shadow-sm'
-                          : 'text-[#6E6B65] hover:text-[#1C1B1A]'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
-                      <span>2. Modo Código QR</span>
-                    </button>
-                  </div>
                 </div>
 
                 {/* VISTA 1: META CLOUD API (TECH PROVIDER / EMBEDDED SIGNUP) */}
