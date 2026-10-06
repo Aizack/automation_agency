@@ -172,15 +172,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             <span className="text-2xl">👓</span>
             <h3 className="font-bold text-white text-sm">Ópticas & Salud Visual</h3>
             <p className="text-[11px] text-[#94a3b8] font-['Inter',sans-serif] leading-relaxed">
-              Fórmulas refractivas (Esfera, Cilindro, Eje, ADD), laboratorio de lentes y control de armazones.
-            </p>
-          </div>
-
-          <div className="bg-[#0e0e11] border border-white/10 p-5 rounded-2xl space-y-2.5 hover:border-[#d89e41]/60 transition group">
-            <span className="text-2xl">🦷</span>
-            <h3 className="font-bold text-white text-sm">Odontología & Clínicas</h3>
-            <p className="text-[11px] text-[#94a3b8] font-['Inter',sans-serif] leading-relaxed">
-              Odontograma digital, agenda médica de citas, presupuestos y registro de evolución de pacientes.
+              Fórmulas refractivas completas, taller de lentes, laboratorio y control de armazones.
             </p>
           </div>
 
@@ -193,6 +185,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           </div>
 
           <div className="bg-[#0e0e11] border border-white/10 p-5 rounded-2xl space-y-2.5 hover:border-[#d89e41]/60 transition group">
+            <span className="text-2xl">👟</span>
+            <h3 className="font-bold text-white text-sm">Moda, Calzado & Ropa</h3>
+            <p className="text-[11px] text-[#94a3b8] font-['Inter',sans-serif] leading-relaxed">
+              Variantes por talla y color, control de inventarios, tiquete POS y catálogo digital.
+            </p>
+          </div>
+
+          <div className="bg-[#0e0e11] border border-white/10 p-5 rounded-2xl space-y-2.5 hover:border-[#d89e41]/60 transition group">
             <span className="text-2xl">🍽️</span>
             <h3 className="font-bold text-white text-sm">Restaurantes & Gastronomía</h3>
             <p className="text-[11px] text-[#94a3b8] font-['Inter',sans-serif] leading-relaxed">
@@ -201,10 +201,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           </div>
 
           <div className="bg-[#0e0e11] border border-white/10 p-5 rounded-2xl space-y-2.5 hover:border-[#d89e41]/60 transition group">
-            <span className="text-2xl">🛠️</span>
-            <h3 className="font-bold text-white text-sm">Servicios & Asesorías</h3>
+            <span className="text-2xl">🏢</span>
+            <h3 className="font-bold text-white text-sm">Almacén & Distribuidora</h3>
             <p className="text-[11px] text-[#94a3b8] font-['Inter',sans-serif] leading-relaxed">
-              Programación de citas, cotizaciones PDF personalizadas y seguimiento automático de cartera.
+              Ventas al por mayor y detal, control de crédito/cartera y agendamiento de entregas.
             </p>
           </div>
         </div>

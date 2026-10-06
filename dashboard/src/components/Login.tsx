@@ -521,12 +521,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   style={{ width: '100%', padding: '0.65rem 0.8rem', border: '1px solid #E2DFD7', borderRadius: '3px', fontSize: '0.85rem', color: '#161616', background: '#FFFFFF', outline: 'none', cursor: 'pointer', fontWeight: 500 }}
                 >
                   <option value="optica">👓 Óptica & Salud Visual</option>
-                  <option value="odontologia">🦷 Odontología & Clínica Dental</option>
                   <option value="pos">🛍️ Tienda POS & Comercio General</option>
+                  <option value="moda">👟 Moda, Calzado & Accesorios</option>
                   <option value="restaurante">🍽️ Restaurante / Bar / Gastronomía</option>
-                  <option value="servicios">🛠️ Servicios Profesionales / Asesoría</option>
-                  <option value="agencia">🏢 Agencia & Software</option>
-                  <option value="general">📦 Otro Tipo de Negocio</option>
+                  <option value="general">🏢 Almacén, Distribuidora & Negocio General</option>
                 </select>
               </div>
 
