@@ -944,14 +944,23 @@ app.post('/api/login', async (req: Request, res: Response) => {
 
     const rawUser = String(username).trim().toLowerCase();
     const cleanUser = rawUser.replace(/^@/, '');
+    const isNumericOnly = /^\+?[0-9\s-]+$/.test(rawUser);
+    const digitsOnly = rawUser.replace(/\D/g, '');
 
-    // 1. Consultar el cliente por usuario en PostgreSQL (Inquilino principal)
+    // 1. Consultar el cliente por usuario, email o número de teléfono en PostgreSQL
     const result = await pool.query(
       `SELECT id, name, username, password, contact_name, is_activated 
        FROM clients 
-       WHERE LOWER(REPLACE(username, '@', '')) = $1 OR LOWER(username) = $2
+       WHERE LOWER(REPLACE(username, '@', '')) = $1 
+          OR LOWER(username) = $2
+          OR ( $3 = true AND LENGTH($4) >= 7 AND (
+               RIGHT(REGEXP_REPLACE(COALESCE(owner_phone, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
+            OR RIGHT(REGEXP_REPLACE(COALESCE(phone_number, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
+            OR RIGHT(REGEXP_REPLACE(COALESCE(phone, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
+            OR RIGHT(REGEXP_REPLACE(COALESCE(agent_phone, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
+          ))
        LIMIT 1`,
-      [cleanUser, rawUser]
+      [cleanUser, rawUser, isNumericOnly, digitsOnly]
     );
 
     if (result.rows.length > 0) {

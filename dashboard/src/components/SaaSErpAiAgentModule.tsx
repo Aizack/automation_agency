@@ -152,14 +152,136 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
   const [metaWabaId, setMetaWabaId] = useState<string>(clientData?.metaWabaId || clientData?.meta_waba_id || '1415552803364935');
   const [metaToken, setMetaToken] = useState<string>(clientData?.metaWaToken || clientData?.meta_wa_token || '');
 
-  // Filtro de búsqueda en historial de interacciones
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  // Directorio de Clientes Registrados en el CRM
+  const [crmCustomers, setCrmCustomers] = useState<Array<{ id?: string; name: string; last_name?: string; phone?: string; email?: string }>>([]);
 
-  const filteredInteractions = interactions.filter(i => 
-    i.sender_phone.includes(searchTerm) || 
-    i.message_text.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    i.response_text.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  React.useEffect(() => {
+    if (!clientId) return;
+    fetch(`/api/clients/${clientId}/crm-customers`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.customers)) {
+          setCrmCustomers(data.customers);
+        } else if (Array.isArray(data)) {
+          setCrmCustomers(data);
+        }
+      })
+      .catch(err => console.error('[CRM Directory] Error cargando directorio de clientes:', err));
+  }, [clientId]);
+
+  // Función para obtener el Nombre del Cliente si el número está registrado en el CRM
+  const getCustomerDisplayName = React.useCallback((phoneStr: string) => {
+    if (!phoneStr) return { isRegistered: false, name: 'Cliente' };
+    const cleanPhone = phoneStr.replace(/\D/g, '');
+    if (!cleanPhone) return { isRegistered: false, name: 'Cliente' };
+
+    const match = crmCustomers.find(c => {
+      if (!c.phone) return false;
+      const cleanC = c.phone.replace(/\D/g, '');
+      if (!cleanC) return false;
+      return cleanC.slice(-10) === cleanPhone.slice(-10);
+    });
+
+    if (match) {
+      const fullName = `${match.name || ''} ${match.last_name || ''}`.trim();
+      return { isRegistered: true, name: fullName || match.name || `Cliente (+${cleanPhone})` };
+    }
+
+    return { isRegistered: false, name: `Cliente (+${cleanPhone})` };
+  }, [crmCustomers]);
+
+  // Filtros e Hilos de Conversaciones agrupadas por teléfono
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | '7days' | '30days'>('all');
+  const [specificDate, setSpecificDate] = useState<string>('');
+  const [selectedThreadPhone, setSelectedThreadPhone] = useState<string | null>(null);
+
+  // Filtros internos dentro del Modal de Conversación individual
+  const [modalDateFilter, setModalDateFilter] = useState<string>('');
+  const [modalSearchTerm, setModalSearchTerm] = useState<string>('');
+
+  const groupedThreads = React.useMemo(() => {
+    const map = new Map<string, Interaction[]>();
+    
+    (interactions || []).forEach(item => {
+      const phone = item.sender_phone || 'Desconocido';
+      if (!map.has(phone)) {
+        map.set(phone, []);
+      }
+      map.get(phone)!.push(item);
+    });
+
+    const threads: Array<{
+      phone: string;
+      messages: Interaction[];
+      lastTimestamp: string;
+      totalCost: number;
+      lastMessageText: string;
+      lastResponseText: string;
+    }> = [];
+
+    map.forEach((items, phone) => {
+      const sorted = [...items].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      const lastItem = sorted[sorted.length - 1];
+      const totalCost = sorted.reduce((sum, i) => sum + (parseFloat(i.api_cost) || 0), 0);
+
+      threads.push({
+        phone,
+        messages: sorted,
+        lastTimestamp: lastItem.timestamp,
+        totalCost,
+        lastMessageText: lastItem.message_text,
+        lastResponseText: lastItem.response_text
+      });
+    });
+
+    return threads;
+  }, [interactions]);
+
+  const filteredThreads = React.useMemo(() => {
+    const now = Date.now();
+
+    return groupedThreads.filter(thread => {
+      const clientInfo = getCustomerDisplayName(thread.phone);
+      const matchesSearch = !searchTerm || 
+        thread.phone.includes(searchTerm) ||
+        clientInfo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        thread.messages.some(m => 
+          m.message_text.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          m.response_text.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+      if (!matchesSearch) return false;
+
+      // Filtro por fecha específica del calendario (YYYY-MM-DD)
+      if (specificDate) {
+        const hasDateMatch = thread.messages.some(m => {
+          const mDate = new Date(m.timestamp);
+          if (isNaN(mDate.getTime())) return false;
+          const yyyymmdd = mDate.toISOString().split('T')[0];
+          return yyyymmdd === specificDate;
+        });
+        if (!hasDateMatch) return false;
+      }
+
+      if (dateFilter === 'all') return true;
+
+      const threadTime = new Date(thread.lastTimestamp).getTime();
+      if (isNaN(threadTime)) return true;
+      const diffHours = (now - threadTime) / (1000 * 60 * 60);
+
+      if (dateFilter === 'today') return diffHours <= 24;
+      if (dateFilter === '7days') return diffHours <= 24 * 7;
+      if (dateFilter === '30days') return diffHours <= 24 * 30;
+
+      return true;
+    }).sort((a, b) => new Date(b.lastTimestamp).getTime() - new Date(a.lastTimestamp).getTime());
+  }, [groupedThreads, searchTerm, dateFilter, specificDate]);
+
+  const activeThread = React.useMemo(() => {
+    if (!selectedThreadPhone) return null;
+    return groupedThreads.find(t => t.phone === selectedThreadPhone) || null;
+  }, [groupedThreads, selectedThreadPhone]);
 
   const wizardSteps = [
     { num: 1, title: 'Identidad & Prompt', desc: 'Rol y tono del bot' },
@@ -268,81 +390,342 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
           </div>
 
           <div className="bg-white border border-[#E2DFD7] rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#E2DFD7]/60 pb-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#E2DFD7]/60 pb-4">
               <div>
-                <h3 className="text-2xl font-display text-[#1C1B1A] font-normal">Historial de Conversaciones en Tiempo Real</h3>
-                <p className="text-xs text-[#6E6B65]">Registro completo de preguntas recibidas por WhatsApp y respuestas generadas por la IA.</p>
+                <h3 className="text-2xl font-display text-[#1C1B1A] font-normal">Historial de Conversaciones por Cliente</h3>
+                <p className="text-xs text-[#6E6B65]">Agrupado por número telefónico. Haz clic en un cliente para abrir su hilo de chat completo.</p>
               </div>
 
-              <div className="relative w-full sm:w-72">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar por teléfono o mensaje..."
-                  className="w-full bg-[#FAF8F3] border border-[#E2DFD7] rounded-xl px-4 py-2 text-xs text-[#1C1B1A] outline-none focus:border-[#C84B31] transition-all"
-                />
+              {/* Filtros de Búsqueda y Fecha */}
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto">
+                <div className="relative w-full sm:w-56">
+                  <span className="material-symbols-outlined absolute left-3 top-2.5 text-[18px] text-[#6E6B65]">search</span>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Buscar teléfono o mensaje..."
+                    className="w-full bg-[#FAF8F3] border border-[#E2DFD7] rounded-xl pl-9 pr-3 py-2 text-xs text-[#1C1B1A] outline-none focus:border-[#C84B31] transition-all"
+                  />
+                </div>
+
+                {/* Filtro por Fecha Calendario */}
+                <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                  <input
+                    type="date"
+                    value={specificDate}
+                    onChange={(e) => setSpecificDate(e.target.value)}
+                    className="bg-[#FAF8F3] border border-[#E2DFD7] rounded-xl px-3 py-2 text-xs text-[#1C1B1A] outline-none focus:border-[#C84B31] font-mono cursor-pointer"
+                    title="Filtrar por fecha exacta"
+                  />
+                  {specificDate && (
+                    <button
+                      type="button"
+                      onClick={() => setSpecificDate('')}
+                      className="px-2 py-1 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg text-xs font-bold transition cursor-pointer"
+                      title="Limpiar fecha"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <select
+                  value={dateFilter}
+                  onChange={(e: any) => setDateFilter(e.target.value)}
+                  className="w-full sm:w-auto bg-[#FAF8F3] border border-[#E2DFD7] rounded-xl px-3 py-2 text-xs text-[#1C1B1A] outline-none focus:border-[#C84B31] font-medium cursor-pointer"
+                >
+                  <option value="all">📅 Todas las fechas</option>
+                  <option value="today">⚡ Últimas 24 horas</option>
+                  <option value="7days">🗓️ Últimos 7 días</option>
+                  <option value="30days">📆 Últimos 30 días</option>
+                </select>
               </div>
             </div>
 
+            {/* Tabla Agrupada por Número Telefónico */}
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="border-b border-[#E2DFD7] text-[#6E6B65] font-mono text-[11px] uppercase tracking-wider">
                     <th className="py-3 px-3">Cliente / Teléfono</th>
-                    <th className="py-3 px-3">Mensaje Recibido</th>
-                    <th className="py-3 px-3">Respuesta de la IA</th>
-                    <th className="py-3 px-3">Origen</th>
-                    <th className="py-3 px-3 text-right">Costo / Hora</th>
+                    <th className="py-3 px-3">Último Mensaje Recibido</th>
+                    <th className="py-3 px-3">Última Respuesta IA</th>
+                    <th className="py-3 px-3 text-center">Interacciones</th>
+                    <th className="py-3 px-3 text-right">Costo Acumulado / Hora</th>
+                    <th className="py-3 px-3 text-center">Acción</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E2DFD7]">
-                  {filteredInteractions.length === 0 ? (
+                  {filteredThreads.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-10 text-[#6E6B65] italic">
-                        {searchTerm ? 'No se encontraron conversaciones que coincidan con la búsqueda.' : 'No hay interacciones registradas aún en el sistema.'}
+                      <td colSpan={6} className="text-center py-10 text-[#6E6B65] italic">
+                        {searchTerm || dateFilter !== 'all' 
+                          ? 'No se encontraron conversaciones que coincidan con los filtros.' 
+                          : 'No hay interacciones registradas aún en el sistema.'}
                       </td>
                     </tr>
                   ) : (
-                    filteredInteractions.map((log, index) => (
-                      <tr key={index} className="hover:bg-[#FAF8F3] transition-colors">
-                        <td className="py-3.5 px-3">
-                          <div className="flex items-center gap-2.5">
-                            <span className="w-7 h-7 bg-[#1C1B1A] text-white rounded-lg flex items-center justify-center font-mono font-bold text-[11px]">
-                              {log.sender_phone.substring(0, 2)}
-                            </span>
-                            <div>
-                              <p className="font-bold text-[#1C1B1A]">Cliente</p>
-                              <p className="text-[10px] text-[#6E6B65] font-mono">+{log.sender_phone}</p>
+                    filteredThreads.map((thread) => {
+                      const clientInfo = getCustomerDisplayName(thread.phone);
+                      return (
+                        <tr 
+                          key={thread.phone} 
+                          onClick={() => setSelectedThreadPhone(thread.phone)}
+                          className="hover:bg-[#FAF8F3] transition-colors cursor-pointer group"
+                        >
+                          <td className="py-3.5 px-3">
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-8 h-8 bg-[#1C1B1A] text-white rounded-xl flex items-center justify-center font-mono font-bold text-[11px] group-hover:bg-[#C84B31] transition-colors">
+                                {clientInfo.isRegistered ? clientInfo.name.substring(0, 2).toUpperCase() : thread.phone.substring(0, 2)}
+                              </span>
+                              <div>
+                                <p className="font-bold text-[#1C1B1A] flex items-center gap-1.5">
+                                  {clientInfo.name}
+                                  {clientInfo.isRegistered ? (
+                                    <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded-md border border-emerald-300">
+                                      ✓ CRM
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-mono font-normal text-[#0866FF] bg-[#0866FF]/10 px-1.5 py-0.2 rounded-md">
+                                      +{thread.phone}
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-[10px] text-[#6E6B65] font-mono">
+                                  {clientInfo.isRegistered ? `+${thread.phone} • ` : ''}
+                                  {new Date(thread.lastTimestamp).toLocaleDateString()} • {new Date(thread.lastTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
+
                         <td className="py-3.5 px-3 max-w-xs text-[#1C1B1A]">
-                          <p className="line-clamp-2">{log.message_text}</p>
+                          <p className="line-clamp-2">{thread.lastMessageText}</p>
                         </td>
-                        <td className="py-3.5 px-3 max-w-sm text-[#6E6B65]">
-                          <p className="line-clamp-2 italic">{log.response_text}</p>
+
+                        <td className="py-3.5 px-3 max-w-xs text-[#6E6B65]">
+                          <p className="line-clamp-2 italic">{thread.lastResponseText}</p>
                         </td>
-                        <td className="py-3.5 px-3">
-                          <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md border ${
-                            parseFloat(log.api_cost) > 0 
-                              ? 'bg-emerald-500/10 text-emerald-800 border-emerald-500/30' 
-                              : 'bg-stone-500/10 text-stone-700 border-stone-500/30'
-                          }`}>
-                            {parseFloat(log.api_cost) > 0 ? 'RESPUESTA IA' : 'HUMANO'}
+
+                        <td className="py-3.5 px-3 text-center">
+                          <span className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#FAF8F3] border border-[#E2DFD7] text-[#1C1B1A]">
+                            💬 {thread.messages.length} {thread.messages.length === 1 ? 'mensaje' : 'mensajes'}
                           </span>
                         </td>
-                        <td className="py-3.5 px-3 text-right">
-                          <p className="font-bold font-mono text-[#1C1B1A]">${parseFloat(log.api_cost).toFixed(6)}</p>
-                          <p className="text-[10px] text-[#6E6B65] font-mono">{new Date(log.timestamp).toLocaleTimeString()}</p>
+
+                        <td className="py-3.5 px-3 text-right font-mono">
+                          <p className="font-bold text-[#1C1B1A]">${thread.totalCost.toFixed(6)} USD</p>
+                          <p className="text-[10px] text-[#6E6B65]">Acumulado</p>
+                        </td>
+
+                        <td className="py-3.5 px-3 text-center">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedThreadPhone(thread.phone);
+                            }}
+                            className="px-3 py-1.5 bg-[#1C1B1A] group-hover:bg-[#C84B31] text-white rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 mx-auto cursor-pointer shadow-sm"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">chat</span>
+                            <span>Ver Hilo</span>
+                          </button>
                         </td>
                       </tr>
-                    ))
-                  )}
+                    );
+                  })
+                )}
                 </tbody>
               </table>
             </div>
           </div>
+
+          {/* Modal / Drawer de Hilo de Conversación Completo por Cliente */}
+          {activeThread && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+              <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-[#E2DFD7] overflow-hidden">
+                
+                {/* Header del Chat con Filtros Internos */}
+                <div className="p-5 border-b border-[#E2DFD7] bg-[#FAF8F3] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {(() => {
+                        const activeClientInfo = getCustomerDisplayName(activeThread.phone);
+                        return (
+                          <>
+                            <span className="w-10 h-10 bg-[#C84B31] text-white rounded-2xl flex items-center justify-center font-mono font-bold text-sm shadow-sm">
+                              {activeClientInfo.isRegistered ? activeClientInfo.name.substring(0, 2).toUpperCase() : activeThread.phone.substring(0, 2)}
+                            </span>
+                            <div>
+                              <h4 className="font-bold text-base text-[#1C1B1A] flex items-center gap-2">
+                                <span>Historial de Conversación:</span>
+                                <span className="text-[#C84B31]">{activeClientInfo.name}</span>
+                                {activeClientInfo.isRegistered && (
+                                  <span className="text-[11px] font-mono text-[#6E6B65] font-normal">
+                                    (+{activeThread.phone})
+                                  </span>
+                                )}
+                              </h4>
+                              <p className="text-xs text-[#6E6B65] font-mono flex items-center gap-2">
+                                <span>💬 {activeThread.messages.length} mensajes en total</span>
+                                <span>•</span>
+                                <span className="text-[#0866FF] font-bold">Costo total: ${activeThread.totalCost.toFixed(6)} USD</span>
+                              </p>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedThreadPhone(null);
+                        setModalDateFilter('');
+                        setModalSearchTerm('');
+                      }}
+                      className="w-8 h-8 rounded-full bg-white border border-[#E2DFD7] hover:bg-[#C84B31] hover:text-white transition flex items-center justify-center text-[#1C1B1A] font-bold text-sm cursor-pointer shadow-sm"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Barra de Filtros Internos por Fecha y Texto en la Ventana Modal */}
+                  <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2 border-t border-[#E2DFD7]/60">
+                    <div className="relative flex-1 w-full">
+                      <span className="material-symbols-outlined absolute left-2.5 top-2 text-[16px] text-[#6E6B65]">search</span>
+                      <input
+                        type="text"
+                        value={modalSearchTerm}
+                        onChange={(e) => setModalSearchTerm(e.target.value)}
+                        placeholder="Buscar palabra clave en esta conversación..."
+                        className="w-full bg-white border border-[#E2DFD7] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#1C1B1A] outline-none focus:border-[#C84B31] transition-all"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                      <span className="text-[11px] font-bold text-[#6E6B65] whitespace-nowrap">Filtrar Fecha:</span>
+                      <input
+                        type="date"
+                        value={modalDateFilter}
+                        onChange={(e) => setModalDateFilter(e.target.value)}
+                        className="bg-white border border-[#E2DFD7] rounded-xl px-2.5 py-1.5 text-xs text-[#1C1B1A] outline-none focus:border-[#C84B31] font-mono cursor-pointer"
+                        title="Filtrar mensajes por fecha"
+                      />
+                      {(modalDateFilter || modalSearchTerm) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setModalDateFilter('');
+                            setModalSearchTerm('');
+                          }}
+                          className="px-2.5 py-1 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg text-xs font-bold transition cursor-pointer"
+                        >
+                          Limpiar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cuerpo de la Conversación (Bubbles Estilo Chat Filtrados por Fecha) */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#FAF8F3]/50 custom-scrollbar">
+                  {(() => {
+                    const filteredModalMessages = activeThread.messages.filter(msg => {
+                      const matchesSearch = !modalSearchTerm || 
+                        msg.message_text.toLowerCase().includes(modalSearchTerm.toLowerCase()) || 
+                        msg.response_text.toLowerCase().includes(modalSearchTerm.toLowerCase());
+
+                      if (!matchesSearch) return false;
+
+                      if (modalDateFilter) {
+                        const mDate = new Date(msg.timestamp);
+                        if (isNaN(mDate.getTime())) return false;
+                        const yyyymmdd = mDate.toISOString().split('T')[0];
+                        return yyyymmdd === modalDateFilter;
+                      }
+
+                      return true;
+                    });
+
+                    if (filteredModalMessages.length === 0) {
+                      return (
+                        <div className="text-center py-12 space-y-3">
+                          <span className="material-symbols-outlined text-[42px] text-[#6E6B65]">event_busy</span>
+                          <p className="text-xs text-[#6E6B65] font-medium">
+                            No se encontraron mensajes para la fecha o palabra seleccionada en este hilo.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => { setModalDateFilter(''); setModalSearchTerm(''); }}
+                            className="px-3 py-1.5 bg-[#1C1B1A] text-white text-xs font-bold rounded-xl cursor-pointer"
+                          >
+                            Mostrar Todos los Mensajes
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    return filteredModalMessages.map((msg, idx) => (
+                      <div key={idx} className="space-y-3">
+                        
+                        {/* Burbuja del Cliente (Mensaje Entrante) */}
+                        <div className="flex items-start gap-2.5 max-w-[85%]">
+                          <div className="w-7 h-7 bg-[#1C1B1A] text-white rounded-lg flex items-center justify-center font-mono font-bold text-[10px] shrink-0 mt-1">
+                            {activeThread.phone.substring(0, 2)}
+                          </div>
+                          <div className="bg-white border border-[#E2DFD7] rounded-2xl rounded-tl-none p-4 shadow-sm text-xs space-y-1">
+                            <div className="flex items-center justify-between gap-4 text-[10px] text-[#6E6B65] border-b border-[#E2DFD7]/40 pb-1 mb-1 font-mono">
+                              <span className="font-bold text-[#1C1B1A]">
+                                {getCustomerDisplayName(activeThread.phone).name} {getCustomerDisplayName(activeThread.phone).isRegistered ? `(+${activeThread.phone})` : ''}
+                              </span>
+                              <span>{new Date(msg.timestamp).toLocaleString()}</span>
+                            </div>
+                            <p className="text-[#1C1B1A] leading-relaxed whitespace-pre-wrap">{msg.message_text}</p>
+                          </div>
+                        </div>
+
+                        {/* Burbuja de la IA (Respuesta Generada) */}
+                        <div className="flex items-start gap-2.5 max-w-[85%] ml-auto flex-row-reverse">
+                          <div className="w-7 h-7 bg-[#0866FF] text-white rounded-lg flex items-center justify-center font-mono font-bold text-[10px] shrink-0 mt-1 shadow-sm">
+                            IA
+                          </div>
+                          <div className="bg-[#0866FF]/5 border border-[#0866FF]/20 rounded-2xl rounded-tr-none p-4 shadow-sm text-xs space-y-1">
+                            <div className="flex items-center justify-between gap-4 text-[10px] text-[#0866FF] border-b border-[#0866FF]/20 pb-1 mb-1 font-mono">
+                              <span className="font-bold flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-[#0866FF]"></span>
+                                Agente IA Frant
+                              </span>
+                              <span>Costo: ${parseFloat(msg.api_cost || '0').toFixed(6)} USD</span>
+                            </div>
+                            <p className="text-[#1C1B1A] leading-relaxed whitespace-pre-wrap font-sans">{msg.response_text}</p>
+                          </div>
+                        </div>
+
+                      </div>
+                    ));
+                  })()}
+                </div>
+
+                {/* Footer del Modal */}
+                <div className="p-4 border-t border-[#E2DFD7] bg-white flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedThreadPhone(null);
+                      setModalDateFilter('');
+                      setModalSearchTerm('');
+                    }}
+                    className="px-5 py-2 bg-[#1C1B1A] hover:bg-black text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                  >
+                    Cerrar Conversación
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
         </div>
       )}
 

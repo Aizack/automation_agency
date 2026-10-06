@@ -1,10 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { LegalDocsModal } from './LegalDocsModal';
 import { FrantLogo } from './FrantLogo';
 
 interface LoginProps {
   onLoginSuccess: (clientId: string, role: string, token: string, extra?: Record<string, any>) => void;
 }
+
+const COUNTRY_CODES = [
+  { code: '57', flag: '🇨🇴', name: 'Colombia (+57)' },
+  { code: '52', flag: '🇲🇽', name: 'México (+52)' },
+  { code: '1', flag: '🇺🇸', name: 'EE.UU. / Canadá (+1)' },
+  { code: '34', flag: '🇪🇸', name: 'España (+34)' },
+  { code: '54', flag: '🇦🇷', name: 'Argentina (+54)' },
+  { code: '56', flag: '🇨🇱', name: 'Chile (+56)' },
+  { code: '51', flag: '🇵🇪', name: 'Perú (+51)' },
+  { code: '593', flag: '🇪🇨', name: 'Ecuador (+593)' },
+  { code: '58', flag: '🇻🇪', name: 'Venezuela (+58)' },
+  { code: '591', flag: '🇧🇴', name: 'Bolivia (+591)' },
+  { code: '502', flag: '🇬🇹', name: 'Guatemala (+502)' },
+  { code: '506', flag: '🇨🇷', name: 'Costa Rica (+506)' },
+  { code: '507', flag: '🇵🇦', name: 'Panamá (+507)' },
+  { code: '598', flag: '🇺🇾', name: 'Uruguay (+598)' },
+  { code: '595', flag: '🇵🇾', name: 'Paraguay (+595)' },
+  { code: '55', flag: '🇧🇷', name: 'Brasil (+55)' },
+];
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
@@ -13,9 +32,32 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState('57');
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Intentar autodetectar país por IP (con posibilidad de cambio voluntario por VPN)
+  useEffect(() => {
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.country_calling_code) {
+          const cleanCode = data.country_calling_code.replace('+', '');
+          if (COUNTRY_CODES.some(c => c.code === cleanCode)) {
+            setSelectedCountry(cleanCode);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Determinar si el valor ingresado es numérico (Teléfono) o alfanumérico (Usuario / Email)
+  const isNumericPhone = useMemo(() => {
+    const trimmed = username.trim();
+    if (!trimmed) return false;
+    return /^[0-9+\s-]+$/.test(trimmed);
+  }, [username]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,12 +68,22 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       return;
     }
 
+    let finalLoginIdentifier = username.trim();
+    if (isNumericPhone) {
+      const cleanDigits = finalLoginIdentifier.replace(/\D/g, '');
+      if (cleanDigits.length === 10) {
+        finalLoginIdentifier = `${selectedCountry}${cleanDigits}`;
+      } else {
+        finalLoginIdentifier = cleanDigits;
+      }
+    }
+
     try {
       setLoading(true);
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password }),
+        body: JSON.stringify({ username: finalLoginIdentifier, password }),
       });
       const json = await res.json();
 
@@ -113,17 +165,57 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Usuario o Teléfono
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Usuario o Teléfono
+              </label>
+
+              {/* Selector voluntario de país (VPN override) */}
+              <select
+                value={selectedCountry}
+                onChange={e => setSelectedCountry(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--outline-color)',
+                  borderRadius: '6px',
+                  color: 'var(--text-color)',
+                  fontSize: '0.72rem',
+                  padding: '2px 6px',
+                  cursor: 'pointer'
+                }}
+                title="Cambiar país voluntariamente (útil si estás usando VPN)"
+              >
+                {COUNTRY_CODES.map(c => (
+                  <option key={c.code} value={c.code} style={{ background: '#1c1b1a', color: '#fff' }}>
+                    {c.flag} +{c.code}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <input
               type="text"
               className="input-field"
-              placeholder="Ingresa tu usuario o teléfono"
+              placeholder="Ej. Josefo_Rendon_461 o 3116718652"
               value={username}
               onChange={e => setUsername(e.target.value)}
               autoComplete="username"
             />
+
+            {/* Badge indicador de detector inteligente */}
+            {username.trim() && (
+              <div style={{ fontSize: '0.68rem', fontFamily: 'monospace', marginTop: '2px' }}>
+                {isNumericPhone ? (
+                  <span style={{ color: '#0866FF' }}>
+                    📱 Detección: <strong>Teléfono (+{selectedCountry})</strong> • {username.trim().replace(/\D/g, '').length === 10 ? `+${selectedCountry}${username.trim().replace(/\D/g, '')}` : username.trim()}
+                  </span>
+                ) : (
+                  <span style={{ color: '#10b981' }}>
+                    👤 Detección: <strong>Usuario Alfanumérico</strong> (Sin indicativo de país)
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
