@@ -954,7 +954,8 @@ app.post('/api/login', async (req: Request, res: Response) => {
        WHERE LOWER(REPLACE(username, '@', '')) = $1 
           OR LOWER(username) = $2
           OR ( $3 = true AND LENGTH($4) >= 7 AND (
-               RIGHT(REGEXP_REPLACE(COALESCE(owner_phone, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
+               RIGHT(REGEXP_REPLACE(COALESCE(username, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
+            OR RIGHT(REGEXP_REPLACE(COALESCE(owner_phone, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
             OR RIGHT(REGEXP_REPLACE(COALESCE(phone_number, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
             OR RIGHT(REGEXP_REPLACE(COALESCE(phone, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
             OR RIGHT(REGEXP_REPLACE(COALESCE(agent_phone, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
@@ -1017,9 +1018,11 @@ app.post('/api/login', async (req: Request, res: Response) => {
        FROM users u
        INNER JOIN user_client_roles r ON u.id = r.user_id
        INNER JOIN clients c ON r.client_id = c.id
-       WHERE LOWER(REPLACE(u.username, '@', '')) = $1 OR LOWER(u.username) = $2
+       WHERE LOWER(REPLACE(u.username, '@', '')) = $1 
+          OR LOWER(u.username) = $2
+          OR ( $3 = true AND LENGTH($4) >= 7 AND RIGHT(REGEXP_REPLACE(COALESCE(u.username, ''), '\\D', 'g'), 10) = RIGHT($4, 10) )
        LIMIT 1`,
-      [cleanUser, rawUser]
+      [cleanUser, rawUser, isNumericOnly, digitsOnly]
     );
 
     if (tenantUserResult.rows.length > 0) {
