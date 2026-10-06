@@ -37,7 +37,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Intentar autodetectar país por IP (con posibilidad de cambio voluntario por VPN)
+  // Auto-detectar país por IP (para seleccionar indicativo predeterminado)
   useEffect(() => {
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
@@ -68,22 +68,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    let finalLoginIdentifier = username.trim();
-    if (isNumericPhone) {
-      const cleanDigits = finalLoginIdentifier.replace(/\D/g, '');
-      if (cleanDigits.length === 10) {
-        finalLoginIdentifier = `${selectedCountry}${cleanDigits}`;
-      } else {
-        finalLoginIdentifier = cleanDigits;
-      }
-    }
-
     try {
       setLoading(true);
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: finalLoginIdentifier, password }),
+        body: JSON.stringify({ username: username.trim(), password }),
       });
       const json = await res.json();
 
@@ -100,200 +90,295 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-         style={{ background: 'var(--bg-color)', fontFamily: 'var(--font-family-sans)' }}>
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{ background: '#F6F4EE', fontFamily: 'var(--font-sans, "Plus Jakarta Sans", sans-serif)' }}
+    >
+      {/* Fondo sutil Wabi-Sabi Paper */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-15%',
+          left: '-10%',
+          width: '50%',
+          height: '50%',
+          background: 'radial-gradient(circle, rgba(217,56,30,0.04) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
 
-      {/* Luces y degradados de fondo */}
-      <div style={{
-        position: 'absolute', top: '-20%', left: '-10%',
-        width: '60%', height: '60%',
-        background: 'radial-gradient(circle, rgba(216,162,78,0.08) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-
-      <div className="glass-card relative z-10 w-full" style={{
-        maxWidth: '440px',
-        padding: 'var(--space-8)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--space-6)',
-        borderRadius: 'var(--radius-xl)',
-        border: '1px solid var(--outline-color)',
-        background: 'var(--surface-val)',
-        boxShadow: 'var(--shadow-lg)'
-      }}>
-
+      <div
+        className="relative z-10 w-full"
+        style={{
+          maxWidth: '420px',
+          padding: '2.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.8rem',
+          borderRadius: '4px',
+          border: '1px solid #E2DFD7',
+          background: '#FFFFFF',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.06)',
+        }}
+      >
         {/* Header / Logo */}
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <FrantLogo variant="dark" size={54} />
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem' }}>
+          <FrantLogo variant="dark" size={52} />
           <div>
-            <h1 style={{
-              fontFamily: '"Instrument Serif", Georgia, serif',
-              fontSize: '2.2rem',
-              fontWeight: 400,
-              color: '#D9381E',
-              margin: 0,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              lineHeight: 1.1
-            }}>
+            <h1
+              style={{
+                fontFamily: 'var(--font-serif, "Instrument Serif", Georgia, serif)',
+                fontSize: '2.2rem',
+                fontWeight: 400,
+                color: '#D9381E',
+                margin: 0,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+                lineHeight: 1.1,
+              }}
+            >
               FRANT ERP
             </h1>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+            <p style={{ fontSize: '0.78rem', color: '#6B6862', margin: '4px 0 0' }}>
               Plataforma de gestión inteligente
             </p>
           </div>
         </div>
 
-        {/* Mensaje de Error */}
+        {/* Mensaje de Error estilo Wabi-Sabi Warning */}
         {error && (
-          <div style={{
-            padding: 'var(--space-3) var(--space-4)',
-            background: 'rgba(248,113,113,0.08)',
-            border: '1px solid rgba(248,113,113,0.25)',
-            borderRadius: 'var(--radius-md)',
-            color: '#f87171',
-            fontSize: '0.8rem',
-            fontWeight: 500,
-            textAlign: 'center',
-          }}>
+          <div
+            style={{
+              padding: '0.75rem 1rem',
+              background: '#FAF8F3',
+              border: '1px solid #D9381E',
+              borderLeft: '4px solid #D9381E',
+              borderRadius: '2px',
+              color: '#D9381E',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              textAlign: 'center',
+            }}
+          >
             {error}
           </div>
         )}
 
-        {/* Formulario de Login Unificado */}
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                Usuario o Teléfono
-              </label>
+        {/* Formulario de Login Wabi-Sabi */}
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#6B6862', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              Usuario o Teléfono
+            </label>
 
-              {/* Selector voluntario de país (VPN override) */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                border: '1px solid #E2DFD7',
+                borderRadius: '3px',
+                background: '#FFFFFF',
+                overflow: 'hidden',
+              }}
+            >
               <select
                 value={selectedCountry}
                 onChange={e => setSelectedCountry(e.target.value)}
                 style={{
-                  background: 'transparent',
-                  border: '1px solid var(--outline-color)',
-                  borderRadius: '6px',
-                  color: 'var(--text-color)',
-                  fontSize: '0.72rem',
-                  padding: '2px 6px',
-                  cursor: 'pointer'
+                  background: '#FAF8F3',
+                  border: 'none',
+                  borderRight: '1px solid #E2DFD7',
+                  color: '#161616',
+                  fontSize: '0.8rem',
+                  padding: '0.75rem 0.6rem',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  fontWeight: 600,
+                  fontFamily: 'inherit',
                 }}
-                title="Cambiar país voluntariamente (útil si estás usando VPN)"
+                title="Cambiar indicativo de país (VPN)"
               >
                 {COUNTRY_CODES.map(c => (
-                  <option key={c.code} value={c.code} style={{ background: '#1c1b1a', color: '#fff' }}>
+                  <option key={c.code} value={c.code}>
                     {c.flag} +{c.code}
                   </option>
                 ))}
               </select>
+
+              <input
+                type="text"
+                placeholder="Ej. Josefo_Rendon_461 o 3116718652"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                autoComplete="username"
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  outline: 'none',
+                  padding: '0.75rem 0.9rem',
+                  fontSize: '0.88rem',
+                  color: '#161616',
+                  background: 'transparent',
+                  fontFamily: 'inherit',
+                }}
+              />
             </div>
 
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Ej. Josefo_Rendon_461 o 3116718652"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              autoComplete="username"
-            />
-
-            {/* Badge indicador de detector inteligente */}
+            {/* Detección Wabi-Sabi Paper Hint */}
             {username.trim() && (
-              <div style={{ fontSize: '0.68rem', fontFamily: 'monospace', marginTop: '2px' }}>
+              <div
+                style={{
+                  fontSize: '0.7rem',
+                  color: '#6B6862',
+                  marginTop: '2px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 8px',
+                  background: '#FAF8F3',
+                  border: '1px solid #E2DFD7',
+                  borderRadius: '2px',
+                }}
+              >
                 {isNumericPhone ? (
-                  <span style={{ color: '#0866FF' }}>
-                    📱 Detección: <strong>Teléfono (+{selectedCountry})</strong> • {username.trim().replace(/\D/g, '').length === 10 ? `+${selectedCountry}${username.trim().replace(/\D/g, '')}` : username.trim()}
-                  </span>
+                  <>
+                    <span className="material-symbols-outlined" style={{ fontSize: 14, color: '#D9381E' }}>smartphone</span>
+                    <span>Modo Teléfono • Búsqueda inteligente por 10 dígitos</span>
+                  </>
                 ) : (
-                  <span style={{ color: '#10b981' }}>
-                    👤 Detección: <strong>Usuario Alfanumérico</strong> (Sin indicativo de país)
-                  </span>
+                  <>
+                    <span className="material-symbols-outlined" style={{ fontSize: 14, color: '#161616' }}>person</span>
+                    <span>Modo Usuario Alfanumérico</span>
+                  </>
                 )}
               </div>
             )}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            <label style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#6B6862', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               Contraseña o PIN
             </label>
             <div style={{ position: 'relative', width: '100%' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
-                className="input-field"
                 placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 autoComplete="current-password"
-                style={{ paddingRight: '40px', width: '100%' }}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 2.5rem 0.75rem 0.9rem',
+                  border: '1px solid #E2DFD7',
+                  borderRadius: '3px',
+                  background: '#FFFFFF',
+                  fontSize: '0.88rem',
+                  color: '#161616',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
                   position: 'absolute',
-                  right: '12px',
+                  right: '10px',
                   top: '50%',
                   transform: 'translateY(-50%)',
                   background: 'none',
                   border: 'none',
-                  color: 'var(--text-muted)',
+                  color: '#6B6862',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '4px',
-                  borderRadius: '4px',
+                  padding: '2px',
                 }}
-                title={showPassword ? 'Ocultar contraseña/PIN' : 'Mostrar contraseña/PIN'}
+                title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
                   {showPassword ? 'visibility_off' : 'visibility'}
                 </span>
               </button>
             </div>
           </div>
 
-          <button type="submit" className="btn-primary" disabled={loading}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px', marginTop: 6 }}>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              backgroundColor: '#161616',
+              color: '#FFFFFF',
+              border: '1px solid #161616',
+              padding: '0.85rem 1.5rem',
+              fontFamily: 'inherit',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              borderRadius: '3px',
+              marginTop: '6px',
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.backgroundColor = '#D9381E';
+                e.currentTarget.style.borderColor = '#D9381E';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.currentTarget.style.backgroundColor = '#161616';
+                e.currentTarget.style.borderColor = '#161616';
+              }
+            }}
+          >
             {loading ? (
-              <><span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>sync</span> Iniciando sesión...</>
+              <>
+                <span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }}>sync</span>
+                Verificando...
+              </>
             ) : (
-              <><span className="material-symbols-outlined" style={{ fontSize: 16 }}>login</span> Iniciar Sesión</>
+              <>
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>login</span>
+                Iniciar Sesión
+              </>
             )}
           </button>
         </form>
 
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
-          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
+          <p style={{ fontSize: '0.7rem', color: '#6B6862', margin: 0 }}>
             FRANT ERP © 2026 • Todos los derechos reservados.
           </p>
-          <div style={{ display: 'flex', gap: 12, fontSize: '0.68rem', color: 'var(--primary-color)' }}>
+          <div style={{ display: 'flex', gap: 12, fontSize: '0.68rem' }}>
             <button
               type="button"
               onClick={() => { setLegalModalTab('terminos'); setIsLegalModalOpen(true); }}
-              style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.68rem', padding: 0 }}
+              style={{ background: 'none', border: 'none', color: '#D9381E', cursor: 'pointer', fontSize: '0.68rem', padding: 0 }}
             >
               Términos
             </button>
-            <span style={{ color: 'var(--text-muted)' }}>•</span>
+            <span style={{ color: '#E2DFD7' }}>•</span>
             <button
               type="button"
               onClick={() => { setLegalModalTab('privacidad'); setIsLegalModalOpen(true); }}
-              style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.68rem', padding: 0 }}
+              style={{ background: 'none', border: 'none', color: '#D9381E', cursor: 'pointer', fontSize: '0.68rem', padding: 0 }}
             >
               Privacidad (Habeas Data)
             </button>
-            <span style={{ color: 'var(--text-muted)' }}>•</span>
+            <span style={{ color: '#E2DFD7' }}>•</span>
             <button
               type="button"
               onClick={() => { setLegalModalTab('ia_transparency'); setIsLegalModalOpen(true); }}
-              style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.68rem', fontWeight: 'bold', padding: 0 }}
+              style={{ background: 'none', border: 'none', color: '#D9381E', cursor: 'pointer', fontSize: '0.68rem', fontWeight: 600, padding: 0 }}
             >
               🤖 Transparencia IA
             </button>
@@ -309,8 +394,14 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0px 1000px #FFFFFF inset !important;
+          -webkit-text-fill-color: #161616 !important;
+          transition: background-color 5000s ease-in-out 0s;
+        }
       `}</style>
     </div>
   );
 };
-

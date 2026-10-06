@@ -946,6 +946,7 @@ app.post('/api/login', async (req: Request, res: Response) => {
     const cleanUser = rawUser.replace(/^@/, '');
     const isNumericOnly = /^\+?[0-9\s-]+$/.test(rawUser);
     const digitsOnly = rawUser.replace(/\D/g, '');
+    const last10 = digitsOnly.length >= 7 ? digitsOnly.slice(-10) : digitsOnly;
 
     // 1. Consultar el cliente por usuario, email o número de teléfono en PostgreSQL
     const result = await pool.query(
@@ -954,14 +955,14 @@ app.post('/api/login', async (req: Request, res: Response) => {
        WHERE LOWER(REPLACE(username, '@', '')) = $1 
           OR LOWER(username) = $2
           OR ( $3 = true AND LENGTH($4) >= 7 AND (
-               RIGHT(REGEXP_REPLACE(COALESCE(username, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
-            OR RIGHT(REGEXP_REPLACE(COALESCE(owner_phone, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
-            OR RIGHT(REGEXP_REPLACE(COALESCE(phone_number, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
-            OR RIGHT(REGEXP_REPLACE(COALESCE(phone, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
-            OR RIGHT(REGEXP_REPLACE(COALESCE(agent_phone, ''), '\\D', 'g'), 10) = RIGHT($4, 10)
+               RIGHT(REGEXP_REPLACE(COALESCE(username, ''), '[^0-9]', '', 'g'), 10) = $5
+            OR RIGHT(REGEXP_REPLACE(COALESCE(owner_phone, ''), '[^0-9]', '', 'g'), 10) = $5
+            OR RIGHT(REGEXP_REPLACE(COALESCE(phone_number, ''), '[^0-9]', '', 'g'), 10) = $5
+            OR RIGHT(REGEXP_REPLACE(COALESCE(phone, ''), '[^0-9]', '', 'g'), 10) = $5
+            OR RIGHT(REGEXP_REPLACE(COALESCE(agent_phone, ''), '[^0-9]', '', 'g'), 10) = $5
           ))
        LIMIT 1`,
-      [cleanUser, rawUser, isNumericOnly, digitsOnly]
+      [cleanUser, rawUser, isNumericOnly, digitsOnly, last10]
     );
 
     if (result.rows.length > 0) {
@@ -1020,9 +1021,9 @@ app.post('/api/login', async (req: Request, res: Response) => {
        INNER JOIN clients c ON r.client_id = c.id
        WHERE LOWER(REPLACE(u.username, '@', '')) = $1 
           OR LOWER(u.username) = $2
-          OR ( $3 = true AND LENGTH($4) >= 7 AND RIGHT(REGEXP_REPLACE(COALESCE(u.username, ''), '\\D', 'g'), 10) = RIGHT($4, 10) )
+          OR ( $3 = true AND LENGTH($4) >= 7 AND RIGHT(REGEXP_REPLACE(COALESCE(u.username, ''), '[^0-9]', '', 'g'), 10) = $5 )
        LIMIT 1`,
-      [cleanUser, rawUser, isNumericOnly, digitsOnly]
+      [cleanUser, rawUser, isNumericOnly, digitsOnly, last10]
     );
 
     if (tenantUserResult.rows.length > 0) {
@@ -1095,10 +1096,11 @@ app.post('/api/login', async (req: Request, res: Response) => {
           OR LOWER(REPLACE(e.name, ' ', '')) = $1 
           OR LOWER(e.name) = $2 
           OR LOWER(CONCAT(e.name, ' ', e.last_name)) = $1
-          OR LOWER(REPLACE(CONCAT(e.name, e.last_name), ' ', '')) = $1)
+          OR LOWER(REPLACE(CONCAT(e.name, e.last_name), ' ', '')) = $1
+          OR ( $3 = true AND LENGTH($4) >= 7 AND RIGHT(REGEXP_REPLACE(COALESCE(e.phone, ''), '[^0-9]', '', 'g'), 10) = $5 ))
          AND e.is_active = TRUE
        LIMIT 1`,
-      [cleanUser, rawUser]
+      [cleanUser, rawUser, isNumericOnly, digitsOnly, last10]
     );
 
     if (employeeUserResult.rows.length > 0) {
