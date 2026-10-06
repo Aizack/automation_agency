@@ -40,6 +40,8 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
   // Estados de Registro
   const [regContactName, setRegContactName] = useState('');
+  const [regBusinessName, setRegBusinessName] = useState('');
+  const [regCategory, setRegCategory] = useState('optica');
   const [regUsername, setRegUsername] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regEmail, setRegEmail] = useState('');
@@ -105,7 +107,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     setRegError(null);
     setRegSuccess(null);
 
-    if (!regContactName.trim() || !regUsername.trim() || !regPhone.trim() || !regPassword) {
+    if (!regContactName.trim() || !regBusinessName.trim() || !regUsername.trim() || !regPhone.trim() || !regPassword) {
       setRegError('Por favor completa todos los campos requeridos (*).');
       return;
     }
@@ -120,6 +122,8 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contact_name: regContactName.trim(),
+          business_name: regBusinessName.trim(),
+          category: regCategory,
           username: regUsername.trim(),
           phone_number: fullPhone,
           email: regEmail.trim() || undefined,
@@ -483,7 +487,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                 <label style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6B6862', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Nombre Completo / Contacto *
+                  Nombre Completo / Asesor *
                 </label>
                 <input
                   type="text"
@@ -492,6 +496,38 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   onChange={e => setRegContactName(e.target.value)}
                   style={{ width: '100%', padding: '0.65rem 0.8rem', border: '1px solid #E2DFD7', borderRadius: '3px', fontSize: '0.85rem', color: '#161616', outline: 'none' }}
                 />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                <label style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6B6862', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Nombre de la Empresa / Negocio *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Óptica Visión Clara o Tienda Central"
+                  value={regBusinessName}
+                  onChange={e => setRegBusinessName(e.target.value)}
+                  style={{ width: '100%', padding: '0.65rem 0.8rem', border: '1px solid #E2DFD7', borderRadius: '3px', fontSize: '0.85rem', color: '#161616', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                <label style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6B6862', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Tipo de Negocio / Sector *
+                </label>
+                <select
+                  value={regCategory}
+                  onChange={e => setRegCategory(e.target.value)}
+                  style={{ width: '100%', padding: '0.65rem 0.8rem', border: '1px solid #E2DFD7', borderRadius: '3px', fontSize: '0.85rem', color: '#161616', background: '#FFFFFF', outline: 'none', cursor: 'pointer', fontWeight: 500 }}
+                >
+                  <option value="optica">👓 Óptica & Salud Visual</option>
+                  <option value="odontologia">🦷 Odontología & Clínica Dental</option>
+                  <option value="pos">🛍️ Tienda POS & Comercio General</option>
+                  <option value="restaurante">🍽️ Restaurante / Bar / Gastronomía</option>
+                  <option value="servicios">🛠️ Servicios Profesionales / Asesoría</option>
+                  <option value="agencia">🏢 Agencia & Software</option>
+                  <option value="general">📦 Otro Tipo de Negocio</option>
+                </select>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>

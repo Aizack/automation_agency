@@ -608,13 +608,16 @@ app.post('/api/clients/:id/sync-drive', authenticateToken as any, authorizeClien
 // Registro público de inquilinos (tiendas)
 app.post('/api/auth/register-client', async (req: Request, res: Response) => {
   try {
-    const { contact_name, username, password, phone_number, email } = req.body;
+    const { contact_name, username, password, phone_number, email, business_name, name, category } = req.body;
 
     if (!contact_name || !username || !password || !phone_number) {
       return res.status(400).json({ success: false, error: 'Faltan campos obligatorios para el registro.' });
     }
 
     const cleanPhone = phone_number.replace(/\D/g, '');
+    const finalBusinessName = (business_name || name || '').trim() || 'Mi Negocio';
+    const finalCategory = (category || 'optica').trim().toLowerCase();
+    const systemPrompt = `Eres un asistente de IA amable y servicial para la empresa ${finalBusinessName}.`;
 
     // Verificar si el usuario ya existe
     const userCheck = await pool.query("SELECT id FROM clients WHERE username = $1 LIMIT 1", [username]);
@@ -630,27 +633,33 @@ app.post('/api/auth/register-client', async (req: Request, res: Response) => {
 
     const clientId = 'client_' + Math.random().toString(36).substring(2, 10);
     
-    // Crear el inquilino en estado 'pending' (onboarding incompleto)
+    // Crear la carpeta de Google Drive si es posible
+    let driveFolderId = null;
+    try {
+      driveFolderId = await createClientFolder(finalBusinessName);
+    } catch (dErr) {}
+
     await pool.query(`
       INSERT INTO clients (
         id, name, phone_number, system_prompt, status, 
-        username, password, email, contact_name, is_activated, category
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        username, password, email, contact_name, is_activated, category, drive_folder_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     `, [
       clientId,
-      'pending', // Se configurará en el onboarding
+      finalBusinessName,
       cleanPhone,
-      'Eres un asistente de IA.',
+      systemPrompt,
       'active',
       username,
       password,
       email || null,
       contact_name,
-      true, // Auto-activado
-      'optica' // Categoría por defecto
+      true,
+      finalCategory,
+      driveFolderId
     ]);
 
-    res.json({ success: true, message: 'Registro exitoso. Inicia sesión para registrar tu negocio.', data: { clientId } });
+    res.json({ success: true, message: 'Registro exitoso.', data: { clientId } });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

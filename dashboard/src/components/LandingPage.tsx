@@ -155,6 +155,61 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
         </div>
       </section>
 
+      {/* 2.5 SECTORES Y ESPECIALIZACIONES DE NEGOCIO */}
+      <section id="sectores" className="py-16 px-6 sm:px-12 max-w-7xl mx-auto border-t border-white/10 z-10 relative">
+        <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+          <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#d89e41] font-mono">SECTORES ESPECIALIZADOS</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight uppercase">
+            Diseñado para la realidad de tu industria
+          </h2>
+          <p className="text-xs sm:text-sm text-[#94a3b8] font-['Inter',sans-serif]">
+            Un solo ERP adaptable con módulos verticales configurables según tu tipo de negocio.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 text-left">
+          <div className="bg-[#0e0e11] border border-white/10 p-5 rounded-2xl space-y-2.5 hover:border-[#d89e41]/60 transition group">
+            <span className="text-2xl">👓</span>
+            <h3 className="font-bold text-white text-sm">Ópticas & Salud Visual</h3>
+            <p className="text-[11px] text-[#94a3b8] font-['Inter',sans-serif] leading-relaxed">
+              Fórmulas refractivas (Esfera, Cilindro, Eje, ADD), laboratorio de lentes y control de armazones.
+            </p>
+          </div>
+
+          <div className="bg-[#0e0e11] border border-white/10 p-5 rounded-2xl space-y-2.5 hover:border-[#d89e41]/60 transition group">
+            <span className="text-2xl">🦷</span>
+            <h3 className="font-bold text-white text-sm">Odontología & Clínicas</h3>
+            <p className="text-[11px] text-[#94a3b8] font-['Inter',sans-serif] leading-relaxed">
+              Odontograma digital, agenda médica de citas, presupuestos y registro de evolución de pacientes.
+            </p>
+          </div>
+
+          <div className="bg-[#0e0e11] border border-white/10 p-5 rounded-2xl space-y-2.5 hover:border-[#d89e41]/60 transition group">
+            <span className="text-2xl">🛍️</span>
+            <h3 className="font-bold text-white text-sm">Tiendas & Comercio POS</h3>
+            <p className="text-[11px] text-[#94a3b8] font-['Inter',sans-serif] leading-relaxed">
+              Venta rápida por código de barras, Factura Electrónica DIAN y catálogo público para WhatsApp.
+            </p>
+          </div>
+
+          <div className="bg-[#0e0e11] border border-white/10 p-5 rounded-2xl space-y-2.5 hover:border-[#d89e41]/60 transition group">
+            <span className="text-2xl">🍽️</span>
+            <h3 className="font-bold text-white text-sm">Restaurantes & Gastronomía</h3>
+            <p className="text-[11px] text-[#94a3b8] font-['Inter',sans-serif] leading-relaxed">
+              Carta digital QR, comandas de cocina instantáneas, gestión de mesas y domicilios con mapa.
+            </p>
+          </div>
+
+          <div className="bg-[#0e0e11] border border-white/10 p-5 rounded-2xl space-y-2.5 hover:border-[#d89e41]/60 transition group">
+            <span className="text-2xl">🛠️</span>
+            <h3 className="font-bold text-white text-sm">Servicios & Asesorías</h3>
+            <p className="text-[11px] text-[#94a3b8] font-['Inter',sans-serif] leading-relaxed">
+              Programación de citas, cotizaciones PDF personalizadas y seguimiento automático de cartera.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* 3. PRODUCTO DESTACADO — PLATAFORMA SAAS ERP LISTA PARA USAR */}
       <section id="erp-saas" className="py-24 px-6 sm:px-12 max-w-7xl mx-auto border-t border-white/10 z-10 relative">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
@@ -221,7 +276,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             Planes de Suscripción ERP
           </h2>
           <p className="text-xs sm:text-sm text-[#94a3b8] font-['Inter',sans-serif]">
-            Acceso inmediato a la plataforma con soporte directo.
+            Acceso inmediato a la plataforma con soporte directo. Elige tu plan y crea tu cuenta en segundos.
           </p>
         </div>
 
@@ -254,14 +309,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
               </div>
             </div>
 
-            <a
-              href={whatsappSalesUrl('Plan Básico Micro')}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={handleLoginRedirection}
               className="mt-8 w-full py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs text-center transition cursor-pointer block"
             >
-              Suscribirse a Plan Básico
-            </a>
+              Crear Cuenta • Plan Básico
+            </button>
           </div>
 
           {/* PLAN PRO CRECIMIENTO */}
@@ -295,14 +348,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
               </div>
             </div>
 
-            <a
-              href={whatsappSalesUrl('Plan Pro Crecimiento')}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={handleLoginRedirection}
               className="mt-8 w-full py-4 rounded-2xl bg-gradient-to-r from-[#d89e41] via-[#e2b75f] to-[#ba9249] hover:brightness-110 text-black font-black text-xs text-center transition cursor-pointer block"
             >
-              Adquirir Plan Pro
-            </a>
+              Crear Cuenta • Plan Pro
+            </button>
           </div>
 
           {/* PLAN ENTERPRISE & AGENCIA */}
@@ -332,14 +383,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
               </div>
             </div>
 
-            <a
-              href={whatsappSalesUrl('Plan Enterprise & Agencia')}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={handleLoginRedirection}
               className="mt-8 w-full py-4 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs text-center transition cursor-pointer block"
             >
-              Contactar por Paquete Enterprise
-            </a>
+              Crear Cuenta • Plan Enterprise
+            </button>
           </div>
 
         </div>
