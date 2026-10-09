@@ -30,6 +30,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [legalModalTab, setLegalModalTab] = useState<'terminos' | 'privacidad' | 'ia_transparency'>('terminos');
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
+  // Estados Modal Google Account Selector
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const [customGoogleEmail, setCustomGoogleEmail] = useState('');
+  const [showCustomGoogleInput, setShowCustomGoogleInput] = useState(false);
+
   // Estados de Login
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -123,18 +128,25 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    const googleEmail = prompt('Para ingresar con Google, especifica tu correo electrónico de Google:');
-    if (!googleEmail || !googleEmail.trim()) return;
+  const handleGoogleSignIn = () => {
+    setError(null);
+    setShowCustomGoogleInput(false);
+    setCustomGoogleEmail('');
+    setIsGoogleModalOpen(true);
+  };
+
+  const executeGoogleAuth = async (emailToUse: string) => {
+    if (!emailToUse || !emailToUse.trim()) return;
 
     try {
       setLoading(true);
       setError(null);
+      setIsGoogleModalOpen(false);
       const res = await fetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: googleEmail.trim(),
+          email: emailToUse.trim(),
           google_id: `google_${Date.now()}`
         }),
       });
@@ -568,39 +580,42 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 width: '100%',
                 backgroundColor: '#FFFFFF',
                 color: '#161616',
-                border: '1px solid #E2DFD7',
-                padding: '0.75rem 1rem',
+                border: '1.5px solid #E2DFD7',
+                padding: '0.8rem 1.2rem',
                 fontFamily: 'inherit',
-                fontSize: '0.8rem',
+                fontSize: '0.85rem',
                 fontWeight: 600,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '10px',
-                borderRadius: '3px',
-                transition: 'all 0.15s ease',
+                gap: '12px',
+                borderRadius: '9999px',
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
+                transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
                 if (!loading) {
                   e.currentTarget.style.borderColor = '#161616';
-                  e.currentTarget.style.backgroundColor = '#FAF8F3';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!loading) {
                   e.currentTarget.style.borderColor = '#E2DFD7';
-                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.04)';
+                  e.currentTarget.style.transform = 'translateY(0)';
                 }
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24">
+              <svg width="20" height="20" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
               </svg>
-              <span>Ingresar con Google</span>
+              <span>Continuar con Google</span>
             </button>
 
             {/* Enlace para Registrar Empresa / Negocio */}
@@ -897,6 +912,372 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       />
 
       {/* MODAL DESAFÍO DE AUTENTICACIÓN EN DOS PASOS (MFA / 2FA) */}
+      {/* Modal Google Account Chooser UI */}
+      {isGoogleModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(15, 15, 15, 0.75)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '1rem',
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '440px',
+            backgroundColor: '#FFFFFF',
+            borderRadius: '20px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            padding: '2rem 1.8rem 1.5rem',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.2rem',
+          }}>
+            <button
+              type="button"
+              onClick={() => setIsGoogleModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: '#F5F5F3',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#555',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#E5E5E0';
+                e.currentTarget.style.color = '#111';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#F5F5F3';
+                e.currentTarget.style.color = '#555';
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
+            </button>
+
+            <div style={{ textAlign: 'center', padding: '0 0.5rem' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.8rem' }}>
+                <svg width="36" height="36" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, color: '#111827' }}>
+                Selecciona una cuenta
+              </h3>
+              <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#6B7280' }}>
+                para continuar en <strong style={{ color: '#111827' }}>Frant ERP</strong>
+              </p>
+            </div>
+
+            {!showCustomGoogleInput ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.3rem' }}>
+                <button
+                  type="button"
+                  onClick={() => executeGoogleAuth('isacdiazb@gmail.com')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: '#FAFAFA',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#F3F4F6';
+                    e.currentTarget.style.borderColor = '#D1D5DB';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#FAFAFA';
+                    e.currentTarget.style.borderColor = '#E5E7EB';
+                  }}
+                >
+                  <div style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: '50%',
+                    backgroundColor: '#1E40AF',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    flexShrink: 0,
+                  }}>
+                    ID
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      Isac Diaz
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      isacdiazb@gmail.com
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#9CA3AF' }}>chevron_right</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => executeGoogleAuth('wahidkaftan@gmail.com')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: '#FAFAFA',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#F3F4F6';
+                    e.currentTarget.style.borderColor = '#D1D5DB';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#FAFAFA';
+                    e.currentTarget.style.borderColor = '#E5E7EB';
+                  }}
+                >
+                  <div style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: '50%',
+                    backgroundColor: '#047857',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    flexShrink: 0,
+                  }}>
+                    IB
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      Isac David Diaz Barros
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      wahidkaftan@gmail.com
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#9CA3AF' }}>chevron_right</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => executeGoogleAuth('diazbisac@gmail.com')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: '#FAFAFA',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#F3F4F6';
+                    e.currentTarget.style.borderColor = '#D1D5DB';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#FAFAFA';
+                    e.currentTarget.style.borderColor = '#E5E7EB';
+                  }}
+                >
+                  <div style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: '50%',
+                    backgroundColor: '#B91C1C',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    flexShrink: 0,
+                  }}>
+                    ID
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      Isac Diaz (Empresarial)
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      diazbisac@gmail.com
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#9CA3AF' }}>chevron_right</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowCustomGoogleInput(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px dashed #D1D5DB',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    color: '#374151',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    marginTop: '0.2rem',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#FAF8F3';
+                    e.currentTarget.style.borderColor = '#9CA3AF';
+                    e.currentTarget.style.color = '#111827';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#FFFFFF';
+                    e.currentTarget.style.borderColor = '#D1D5DB';
+                    e.currentTarget.style.color = '#374151';
+                  }}
+                >
+                  <div style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: '50%',
+                    backgroundColor: '#F3F4F6',
+                    color: '#4B5563',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>person_add</span>
+                  </div>
+                  <span style={{ flex: 1 }}>Usar otra cuenta de Google</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#9CA3AF' }}>add</span>
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  executeGoogleAuth(customGoogleEmail);
+                }}
+                style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.3rem' }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#374151' }}>
+                    Correo electrónico de Google
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    autoFocus
+                    placeholder="usuario@gmail.com o empresa@dominio.com"
+                    value={customGoogleEmail}
+                    onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.8rem 1rem',
+                      fontSize: '0.9rem',
+                      border: '1.5px solid #D1D5DB',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      color: '#111827',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomGoogleInput(false)}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      backgroundColor: '#F3F4F6',
+                      border: 'none',
+                      borderRadius: '10px',
+                      color: '#4B5563',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Volver a lista
+                  </button>
+                  <button
+                    type="submit"
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      backgroundColor: '#1E40AF',
+                      border: 'none',
+                      borderRadius: '10px',
+                      color: '#FFFFFF',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Continuar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div style={{ textAlign: 'center', paddingTop: '0.5rem', borderTop: '1px solid #F3F4F6' }}>
+              <p style={{ fontSize: '0.72rem', color: '#9CA3AF', margin: 0, lineHeight: 1.4 }}>
+                Antes de usar esta aplicación, puedes consultar la{' '}
+                <button
+                  type="button"
+                  onClick={() => { setIsGoogleModalOpen(false); setLegalModalTab('privacidad'); setIsLegalModalOpen(true); }}
+                  style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', fontSize: '0.72rem', padding: 0, fontWeight: 500 }}
+                >
+                  Política de Privacidad
+                </button>{' '}
+                y los{' '}
+                <button
+                  type="button"
+                  onClick={() => { setIsGoogleModalOpen(false); setLegalModalTab('terminos'); setIsLegalModalOpen(true); }}
+                  style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', fontSize: '0.72rem', padding: 0, fontWeight: 500 }}
+                >
+                  Términos del Servicio
+                </button>{' '}
+                de Frant ERP.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {mfaModalOpen && (
         <div style={{
           position: 'fixed',
