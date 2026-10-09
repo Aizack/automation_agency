@@ -148,9 +148,16 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
 
   // Modo de Canal de WhatsApp: 'meta' (Oficial Cloud API Tech Provider) vs 'qr' (Puppeteer / QR)
   const [channelMode] = useState<'meta' | 'qr'>('meta');
-  const [metaPhoneNumberId, setMetaPhoneNumberId] = useState<string>(clientData?.metaPhoneNumberId || clientData?.meta_phone_number_id || '1325606987308762');
-  const [metaWabaId, setMetaWabaId] = useState<string>(clientData?.metaWabaId || clientData?.meta_waba_id || '1415552803364935');
+  const [metaPhoneNumberId, setMetaPhoneNumberId] = useState<string>(clientData?.metaPhoneNumberId || clientData?.meta_phone_number_id || '');
+  const [metaWabaId, setMetaWabaId] = useState<string>(clientData?.metaWabaId || clientData?.meta_waba_id || '');
   const [metaToken, setMetaToken] = useState<string>(clientData?.metaWaToken || clientData?.meta_wa_token || '');
+
+  // Sincronizar estado cuando cambie el cliente o sus datos
+  React.useEffect(() => {
+    setMetaPhoneNumberId(clientData?.metaPhoneNumberId || clientData?.meta_phone_number_id || '');
+    setMetaWabaId(clientData?.metaWabaId || clientData?.meta_waba_id || '');
+    setMetaToken(clientData?.metaWaToken || clientData?.meta_wa_token || '');
+  }, [clientData, clientId]);
 
   // Directorio de Clientes Registrados en el CRM
   const [crmCustomers, setCrmCustomers] = useState<Array<{ id?: string; name: string; last_name?: string; phone?: string; email?: string }>>([]);
