@@ -38,6 +38,17 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Estados de Desafío MFA (2FA)
+  const [mfaModalOpen, setMfaModalOpen] = useState(false);
+  const [mfaTempToken, setMfaTempToken] = useState('');
+  const [mfaAvailableMethods, setMfaAvailableMethods] = useState<string[]>([]);
+  const [mfaSelectedMethod, setMfaSelectedMethod] = useState<'whatsapp' | 'totp' | 'email' | 'backup'>('whatsapp');
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaTrustedDevice, setMfaTrustedDevice] = useState(true);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaError, setMfaError] = useState<string | null>(null);
+  const [mfaSuccessMsg, setMfaSuccessMsg] = useState<string | null>(null);
+
   // Estados de Registro
   const [regContactName, setRegContactName] = useState('');
   const [regBusinessName, setRegBusinessName] = useState('');
@@ -90,6 +101,16 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       });
       const json = await res.json();
 
+      if (json.mfaRequired) {
+        setMfaTempToken(json.tempToken);
+        setMfaAvailableMethods(json.availableMethods || ['whatsapp']);
+        if (json.availableMethods && json.availableMethods.length > 0) {
+          setMfaSelectedMethod(json.availableMethods[0] as any);
+        }
+        setMfaModalOpen(true);
+        return;
+      }
+
       if (json.success) {
         onLoginSuccess(json.data.id, json.data.role, json.data.token, json.data);
       } else {
@@ -99,6 +120,106 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       setError('Error de conexión al servidor.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    const googleEmail = prompt('Para ingresar con Google, especifica tu correo electrónico de Google:');
+    if (!googleEmail || !googleEmail.trim()) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: googleEmail.trim(),
+          google_id: `google_${Date.now()}`
+        }),
+      });
+      const json = await res.json();
+
+      if (json.mfaRequired) {
+        setMfaTempToken(json.tempToken);
+        setMfaAvailableMethods(json.availableMethods || ['whatsapp']);
+        if (json.availableMethods && json.availableMethods.length > 0) {
+          setMfaSelectedMethod(json.availableMethods[0] as any);
+        }
+        setMfaModalOpen(true);
+        return;
+      }
+
+      if (json.success) {
+        onLoginSuccess(json.data.id, json.data.role, json.data.token, json.data);
+      } else {
+        setError(json.error || 'No se encontró una empresa asociada a esta cuenta de Google.');
+      }
+    } catch {
+      setError('Error de comunicación con el servicio de Google OAuth.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyMfaChallenge = async () => {
+    if (!mfaCode.trim()) {
+      setMfaError('Por favor ingresa el código de verificación.');
+      return;
+    }
+
+    try {
+      setMfaLoading(true);
+      setMfaError(null);
+      const res = await fetch('/api/auth/mfa/verify-challenge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tempToken: mfaTempToken,
+          method: mfaSelectedMethod,
+          code: mfaCode.trim(),
+          trustedDevice: mfaTrustedDevice,
+        }),
+      });
+      const json = await res.json();
+
+      if (json.success) {
+        setMfaModalOpen(false);
+        onLoginSuccess(json.data.id, json.data.role, json.data.token, json.data);
+      } else {
+        setMfaError(json.error || 'Código de verificación incorrecto o expirado.');
+      }
+    } catch {
+      setMfaError('Error de red al verificar el código MFA.');
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const handleSendMfaOtp = async () => {
+    try {
+      setMfaLoading(true);
+      setMfaError(null);
+      setMfaSuccessMsg(null);
+      const res = await fetch('/api/auth/mfa/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tempToken: mfaTempToken,
+          method: mfaSelectedMethod,
+        }),
+      });
+      const json = await res.json();
+
+      if (json.success) {
+        setMfaSuccessMsg(json.message || 'Código enviado exitosamente.');
+      } else {
+        setMfaError(json.error || 'No se pudo enviar el código OTP.');
+      }
+    } catch {
+      setMfaError('Error de conexión al solicitar el código.');
+    } finally {
+      setMfaLoading(false);
     }
   };
 
@@ -431,6 +552,57 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </button>
             </form>
 
+            {/* Separador Ó */}
+            <div style={{ display: 'flex', alignItems: 'center', margin: '0.4rem 0', gap: '10px' }}>
+              <div style={{ flex: 1, height: '1px', background: '#E2DFD7' }} />
+              <span style={{ fontSize: '0.68rem', color: '#6B6862', fontWeight: 600 }}>Ó</span>
+              <div style={{ flex: 1, height: '1px', background: '#E2DFD7' }} />
+            </div>
+
+            {/* Botón Ingresar / Vincular con Google */}
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              style={{
+                width: '100%',
+                backgroundColor: '#FFFFFF',
+                color: '#161616',
+                border: '1px solid #E2DFD7',
+                padding: '0.75rem 1rem',
+                fontFamily: 'inherit',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                borderRadius: '3px',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.borderColor = '#161616';
+                  e.currentTarget.style.backgroundColor = '#FAF8F3';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.borderColor = '#E2DFD7';
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                }
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Ingresar con Google</span>
+            </button>
+
             {/* Enlace para Registrar Empresa / Negocio */}
             <div style={{ textAlign: 'center', paddingTop: '0.2rem' }}>
               <p style={{ fontSize: '0.78rem', color: '#6B6862', margin: 0 }}>
@@ -723,6 +895,237 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         onClose={() => setIsLegalModalOpen(false)}
         initialTab={legalModalTab}
       />
+
+      {/* MODAL DESAFÍO DE AUTENTICACIÓN EN DOS PASOS (MFA / 2FA) */}
+      {mfaModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(22, 22, 22, 0.65)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '1rem',
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '420px',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #161616',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+            padding: '1.8rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.2rem',
+            borderRadius: '4px',
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                backgroundColor: '#FAF8F3',
+                border: '1px solid #E2DFD7',
+                color: '#D9381E',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '0.6rem',
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 24 }}>verified_user</span>
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 600, color: '#161616', fontFamily: 'var(--font-serif, serif)' }}>
+                Verificación en Dos Pasos (MFA)
+              </h3>
+              <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#6B6862' }}>
+                Tu cuenta requiere un segundo factor de autenticación para ingresar.
+              </p>
+            </div>
+
+            {mfaError && (
+              <div style={{ padding: '0.6rem 0.8rem', backgroundColor: '#FCE8E6', borderLeft: '4px solid #C5221F', color: '#C5221F', fontSize: '0.78rem', fontWeight: 600 }}>
+                {mfaError}
+              </div>
+            )}
+
+            {mfaSuccessMsg && (
+              <div style={{ padding: '0.6rem 0.8rem', backgroundColor: '#E6F4EA', borderLeft: '4px solid #15803d', color: '#15803d', fontSize: '0.78rem', fontWeight: 600 }}>
+                {mfaSuccessMsg}
+              </div>
+            )}
+
+            {/* Selector de Método MFA */}
+            <div style={{ display: 'flex', gap: '4px', backgroundColor: '#FAF8F3', padding: '3px', border: '1px solid #E2DFD7' }}>
+              {(mfaAvailableMethods.includes('whatsapp') || mfaAvailableMethods.length === 0) && (
+                <button
+                  type="button"
+                  onClick={() => { setMfaSelectedMethod('whatsapp'); setMfaError(null); setMfaSuccessMsg(null); }}
+                  style={{
+                    flex: 1,
+                    padding: '6px 2px',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    border: mfaSelectedMethod === 'whatsapp' ? '1px solid #161616' : 'none',
+                    backgroundColor: mfaSelectedMethod === 'whatsapp' ? '#FFFFFF' : 'transparent',
+                    color: mfaSelectedMethod === 'whatsapp' ? '#161616' : '#6B6862',
+                    cursor: 'pointer',
+                  }}
+                >
+                  📱 WhatsApp
+                </button>
+              )}
+              {mfaAvailableMethods.includes('totp') && (
+                <button
+                  type="button"
+                  onClick={() => { setMfaSelectedMethod('totp'); setMfaError(null); setMfaSuccessMsg(null); }}
+                  style={{
+                    flex: 1,
+                    padding: '6px 2px',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    border: mfaSelectedMethod === 'totp' ? '1px solid #161616' : 'none',
+                    backgroundColor: mfaSelectedMethod === 'totp' ? '#FFFFFF' : 'transparent',
+                    color: mfaSelectedMethod === 'totp' ? '#161616' : '#6B6862',
+                    cursor: 'pointer',
+                  }}
+                >
+                  🔑 App Auth
+                </button>
+              )}
+              {mfaAvailableMethods.includes('email') && (
+                <button
+                  type="button"
+                  onClick={() => { setMfaSelectedMethod('email'); setMfaError(null); setMfaSuccessMsg(null); }}
+                  style={{
+                    flex: 1,
+                    padding: '6px 2px',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    border: mfaSelectedMethod === 'email' ? '1px solid #161616' : 'none',
+                    backgroundColor: mfaSelectedMethod === 'email' ? '#FFFFFF' : 'transparent',
+                    color: mfaSelectedMethod === 'email' ? '#161616' : '#6B6862',
+                    cursor: 'pointer',
+                  }}
+                >
+                  📧 Correo
+                </button>
+              )}
+              {mfaAvailableMethods.includes('backup') && (
+                <button
+                  type="button"
+                  onClick={() => { setMfaSelectedMethod('backup'); setMfaError(null); setMfaSuccessMsg(null); }}
+                  style={{
+                    flex: 1,
+                    padding: '6px 2px',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    border: mfaSelectedMethod === 'backup' ? '1px solid #161616' : 'none',
+                    backgroundColor: mfaSelectedMethod === 'backup' ? '#FFFFFF' : 'transparent',
+                    color: mfaSelectedMethod === 'backup' ? '#161616' : '#6B6862',
+                    cursor: 'pointer',
+                  }}
+                >
+                  🛡️ Respaldo
+                </button>
+              )}
+            </div>
+
+            {/* Acción de Envío si es WhatsApp o Correo */}
+            {(mfaSelectedMethod === 'whatsapp' || mfaSelectedMethod === 'email') && (
+              <button
+                type="button"
+                onClick={handleSendMfaOtp}
+                disabled={mfaLoading}
+                style={{
+                  padding: '0.5rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  backgroundColor: '#FAF8F3',
+                  border: '1px solid #E2DFD7',
+                  color: '#161616',
+                  cursor: 'pointer',
+                }}
+              >
+                {mfaLoading ? 'Enviando...' : `📩 Solicitar / Enviar Código por ${mfaSelectedMethod === 'whatsapp' ? 'WhatsApp' : 'Correo'}`}
+              </button>
+            )}
+
+            {/* Campo de Código */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              <label style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6B6862', textTransform: 'uppercase' }}>
+                {mfaSelectedMethod === 'backup' ? 'Código de Respaldo de 8 Caracteres' : 'Código de 6 Dígitos'}
+              </label>
+              <input
+                type="text"
+                maxLength={mfaSelectedMethod === 'backup' ? 12 : 6}
+                placeholder={mfaSelectedMethod === 'backup' ? 'Ej. A1B2C3D4' : '123456'}
+                value={mfaCode}
+                onChange={e => setMfaCode(e.target.value)}
+                style={{
+                  padding: '0.75rem',
+                  fontSize: '1.2rem',
+                  textAlign: 'center',
+                  letterSpacing: '0.25em',
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  border: '1px solid #E2DFD7',
+                  color: '#161616',
+                  outline: 'none',
+                }}
+              />
+            </div>
+
+            {/* Opción Dispositivo de Confianza */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: '#6B6862', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={mfaTrustedDevice}
+                onChange={e => setMfaTrustedDevice(e.target.checked)}
+              />
+              <span>Confiar en este equipo por 30 días</span>
+            </label>
+
+            {/* Botones del Modal */}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setMfaModalOpen(false)}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #E2DFD7',
+                  color: '#6B6862',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleVerifyMfaChallenge}
+                disabled={mfaLoading}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  backgroundColor: '#D9381E',
+                  border: '1px solid #D9381E',
+                  color: '#FFFFFF',
+                  cursor: 'pointer',
+                }}
+              >
+                {mfaLoading ? 'Verificando...' : 'Verificar y Entrar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

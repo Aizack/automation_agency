@@ -123,6 +123,60 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     // Lightbox modal para ver foto del comprobante grande
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
+    // Estado para Modal de Anulación Formal de Factura
+    const [annulModalOpen, setAnnulModalOpen] = useState(false);
+    const [invoiceToAnnul, setInvoiceToAnnul] = useState<Invoice | null>(null);
+    const [annulReason, setAnnulReason] = useState('');
+    const [annulLoading, setAnnulLoading] = useState(false);
+    const [annulError, setAnnulError] = useState<string | null>(null);
+
+    const openAnnulModal = (inv: Invoice) => {
+        setInvoiceToAnnul(inv);
+        setAnnulReason('');
+        setAnnulError(null);
+        setAnnulModalOpen(true);
+    };
+
+    const handleAnnulInvoice = async () => {
+        if (!invoiceToAnnul || !annulReason.trim()) {
+            setAnnulError('Por favor ingresa el motivo de la anulación.');
+            return;
+        }
+
+        try {
+            setAnnulLoading(true);
+            setAnnulError(null);
+            const empId = localStorage.getItem('emp_id') || localStorage.getItem('user_id') || 'ADMIN';
+            const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceToAnnul.id}/annul`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    reason: annulReason.trim(),
+                    annulled_by: empId,
+                }),
+            });
+            const json = await res.json();
+
+            if (json.success) {
+                setAnnulModalOpen(false);
+                setInvoiceToAnnul(null);
+                setAnnulReason('');
+                fetchData();
+                if (selectedInvoice && selectedInvoice.id === invoiceToAnnul.id) {
+                    setSelectedInvoice(null);
+                    setInvoiceDetail(null);
+                }
+                alert('¡Factura anulada exitosamente! Los productos fueron devueltos al inventario.');
+            } else {
+                setAnnulError(json.error || 'Error al anular la factura.');
+            }
+        } catch {
+            setAnnulError('Error de conexión al intentar anular la factura.');
+        } finally {
+            setAnnulLoading(false);
+        }
+    };
+
     // Estado del Plan SaaS y Modal de Upgrade (Feature Gating)
     const [planStatus, setPlanStatus] = useState<any>(null);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -2584,7 +2638,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                 inv.status === 'overdue' ? 'bg-[#FCE8E6] text-[#C5221F] border border-[#F5C6CB]' :
                                                 'bg-[#FEF7E0] text-[#7A5A00] border border-[#FEEFC3]'
                                             }`}>
-                                                {inv.status === 'paid' ? 'Pagado' : inv.status === 'overdue' ? 'Mora' : 'Pendiente'}
+                                                {inv.status === ('annulled' as any) || inv.status === ('anulada' as any) ? '🚫 ANULADA' : inv.status === 'paid' ? 'Pagado' : inv.status === 'overdue' ? 'Mora' : 'Pendiente'}
                                             </span>
                                             {inv.payment_receipt_url && (
                                                 <span 
@@ -2644,6 +2698,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                             >
                                                 <span className="material-symbols-outlined text-[16px]">history</span>
                                             </button>
+                                             {inv.status !== ('annulled' as any) && inv.status !== ('anulada' as any) && (
+                                                 <button 
+                                                     onClick={() => openAnnulModal(inv)}
+                                                     className="p-1.5 bg-white hover:bg-red-50 text-[#D9381E] border border-[#E2DFD7] hover:border-[#D9381E] rounded-none transition cursor-pointer flex items-center justify-center font-bold"
+                                                     title="Anular Factura (Restablece inventario y registra auditoría)"
+                                                 >
+                                                     <span className="material-symbols-outlined text-[16px]">block</span>
+                                                 </button>
+                                             )}
                                         </div>
                                     </td>
                                 </tr>
@@ -2668,7 +2731,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                         selectedInvoice.status === 'overdue' ? 'bg-[#FCE8E6] text-[#C5221F] border border-[#F5C6CB]' :
                                         'bg-[#FEF7E0] text-[#7A5A00] border border-[#FEEFC3]'
                                     }`}>
-                                        {selectedInvoice.status === 'paid' ? 'PAGADO' : selectedInvoice.status === 'overdue' ? 'VENCIDO' : 'PENDIENTE'}
+                                        {selectedInvoice.status === ('annulled' as any) || selectedInvoice.status === ('anulada' as any) ? '🚫 ANULADA' : selectedInvoice.status === 'paid' ? 'PAGADO' : selectedInvoice.status === 'overdue' ? 'VENCIDO' : 'PENDIENTE'}
                                     </span>
                                 </div>
                                 <h2 className="text-2xl sm:text-3xl font-serif font-normal text-[#161616] mt-1">
@@ -2896,6 +2959,18 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     <span className="material-symbols-outlined text-[14px] shrink-0">print</span>
                                     <span className="truncate">Imprimir (80mm)</span>
                                 </button>
+
+                                 {selectedInvoice.status !== ('annulled' as any) && selectedInvoice.status !== ('anulada' as any) && (
+                                     <button
+                                         type="button"
+                                         onClick={() => openAnnulModal(selectedInvoice)}
+                                         className="bg-white hover:bg-red-50 border border-[#E2DFD7] hover:border-[#D9381E] text-[#D9381E] font-semibold text-[11px] py-2 px-2.5 rounded-none transition cursor-pointer flex items-center justify-center gap-1 truncate uppercase tracking-wider"
+                                         title="Anular Factura"
+                                     >
+                                         <span className="material-symbols-outlined text-[14px] shrink-0">block</span>
+                                         <span className="truncate">Anular</span>
+                                     </button>
+                                 )}
 
                                 {!selectedInvoice.cufe ? (
                                     <button
@@ -3220,6 +3295,68 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                 entityId={auditEntityId}
                 module="Facturación"
             />
+            {/* MODAL DE CONFIRMACIÓN DE ANULACIÓN DE FACTURA */}
+            {annulModalOpen && invoiceToAnnul && createPortal(
+                <div className="fixed inset-0 bg-[#161616]/65 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left font-sans">
+                    <div className="bg-[#F6F4EE] border border-[#161616] p-6 max-w-md w-full space-y-4 shadow-2xl rounded-none">
+                        <div className="flex items-center gap-2.5 text-[#D9381E] border-b border-[#E2DFD7] pb-3">
+                            <span className="material-symbols-outlined text-2xl">block</span>
+                            <div>
+                                <h4 className="font-serif text-2xl text-[#161616] leading-none">Anular Factura #{invoiceToAnnul.invoice_number}</h4>
+                                <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider">Cliente: {invoiceToAnnul.customer_name}</span>
+                            </div>
+                        </div>
+
+                        <div className="bg-[#FAF8F3] border border-[#E2DFD7] p-3 text-xs space-y-1.5 text-[#6B6862]">
+                            <p className="font-bold text-[#161616]">⚠️ ¿Estás seguro de anular esta factura?</p>
+                            <ul className="list-disc list-inside space-y-1 text-[11px]">
+                                <li>Los productos comprados se devolverán automáticamente al inventario.</li>
+                                <li>Se registrará una Nota Crédito / registro de auditoría inalterable.</li>
+                                <li>La factura cambiará su estado permanentemente a <strong>ANULADA</strong>.</li>
+                            </ul>
+                        </div>
+
+                        {annulError && (
+                            <div className="p-2.5 bg-[#FCE8E6] border-l-4 border-[#C5221F] text-[#C5221F] text-xs font-bold">
+                                {annulError}
+                            </div>
+                        )}
+
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                                Motivo Obligatorio de Anulación *
+                            </label>
+                            <textarea
+                                rows={3}
+                                value={annulReason}
+                                onChange={e => setAnnulReason(e.target.value)}
+                                placeholder="Ej. Error en los datos del cliente, devolución de mercancía o factura duplicada..."
+                                className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none font-sans"
+                            />
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setAnnulModalOpen(false)}
+                                className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider bg-white border border-[#E2DFD7] text-[#6B6862] hover:bg-[#FAF8F3]"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleAnnulInvoice}
+                                disabled={annulLoading}
+                                className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#D9381E] border border-[#D9381E] text-white hover:bg-[#b82b14]"
+                            >
+                                {annulLoading ? 'Anulando...' : 'Confirmar Anulación'}
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
             {/* Modal de Importación de Facturas Antiguas (Secuencial + Escáner IA) */}
             <HistoricalInvoicesModal
                 isOpen={isHistoricalModalOpen}

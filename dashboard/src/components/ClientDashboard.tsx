@@ -61,6 +61,8 @@ interface Client {
   customTaxId?: string;
   phone?: string;
   address?: string;
+  mfa_enabled?: boolean;
+  mfa_methods?: string[];
 }
 
 interface Interaction {
@@ -1155,6 +1157,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 </li>
                 <li>
                   <button 
+                    onClick={() => setActiveTab('configuracion')} 
+                    className={activeTab === 'configuracion' ? 'active-link font-bold text-[#D9381E]' : 'text-[#D9381E] font-bold'}
+                  >
+                    🛡️ Seguridad & MFA
+                  </button>
+                </li>
+                <li>
+                  <button 
                     onClick={() => setActiveTab('tienda_web' as any)} 
                     className={activeTab === ('tienda_web' as any) ? 'active-link font-bold text-blue-600' : 'text-blue-600 font-bold'}
                   >
@@ -1912,6 +1922,26 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </div>
           </div>
         </header>
+
+        {/* Banner de Advertencia de Autenticación en Dos Pasos (MFA / 2FA) */}
+        {(!clientData?.mfa_enabled && !(clientData as any)?.mfa_methods?.length) && (
+          <div className="bg-[#FFFBEB] border-b border-[#FCD34D] px-4 md:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#92400E] shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="material-symbols-outlined text-[20px] text-[#D97706] shrink-0">verified_user</span>
+              <span>
+                <strong>Seguridad Recomendada: Tu cuenta no tiene la Autenticación en Dos Pasos (MFA) activada.</strong> Te recomendamos activar al menos un método de verificación (WhatsApp, App Autenticadora o Correo) para blindar tu empresa. (Periodo de gracia: 14 días).
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('configuracion')}
+              className="bg-[#D97706] hover:bg-[#B45309] text-white text-[10px] font-bold uppercase tracking-wider px-3.5 py-2 rounded-sm shrink-0 transition cursor-pointer border-0 shadow-xs flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-[14px]">lock</span>
+              Configurar Seguridad (MFA)
+            </button>
+          </div>
+        )}
 
         {/* Content Container */}
         <main className="flex-grow p-8">

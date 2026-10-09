@@ -19,9 +19,28 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   const [logos, setLogos] = useState<Array<{ fileName: string, url: string }>>([]);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoBuster, setLogoBuster] = useState(Date.now());
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'security'>('profile');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Estados de Configuración MFA (2FA)
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [mfaMethods, setMfaMethods] = useState<string[]>([]);
+  const [mfaSaving, setMfaSaving] = useState(false);
+
+  // Modal TOTP (App Autenticadora)
+  const [totpModalOpen, setTotpModalOpen] = useState(false);
+  const [totpSecret, setTotpSecret] = useState('');
+  const [totpQrUrl, setTotpQrUrl] = useState('');
+  const [totpConfirmCode, setTotpConfirmCode] = useState('');
+  const [totpLoading, setTotpLoading] = useState(false);
+  const [totpError, setTotpError] = useState<string | null>(null);
+
+  // Modal Códigos de Respaldo
+  const [backupModalOpen, setBackupModalOpen] = useState(false);
+  const [backupCodesList, setBackupCodesList] = useState<string[]>([]);
+  const [backupLoading, setBackupLoading] = useState(false);
 
   const fetchLogos = async () => {
     try {
@@ -48,6 +67,17 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
           setCategory(json.data.category || 'optica');
           setPersonType(json.data.personType || json.data.person_type || 'persona_juridica');
           setLogoUrl(json.data.logo_url || null);
+
+          // Cargar datos MFA
+          setMfaEnabled(!!json.data.mfa_enabled);
+          const rawMethods = json.data.mfa_methods;
+          if (Array.isArray(rawMethods)) {
+            setMfaMethods(rawMethods);
+          } else if (typeof rawMethods === 'string') {
+            try { setMfaMethods(JSON.parse(rawMethods)); } catch { setMfaMethods([]); }
+          } else {
+            setMfaMethods([]);
+          }
         }
       })
       .catch(err => {
@@ -57,6 +87,120 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
 
     fetchLogos();
   }, [clientId]);
+
+  const handleToggleMfaMethod = async (method: string) => {
+    const nextMethods = mfaMethods.includes(method)
+      ? mfaMethods.filter(m => m !== method)
+      : [...mfaMethods, method];
+
+    const nextEnabled = nextMethods.length > 0;
+
+    try {
+      setMfaSaving(true);
+      const res = await fetch('/api/auth/mfa/update-methods', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId,
+          enabled: nextEnabled,
+          methods: nextMethods,
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setMfaMethods(nextMethods);
+        setMfaEnabled(nextEnabled);
+        onProfileUpdated();
+      } else {
+        alert(json.error || 'No se pudo actualizar la configuración MFA.');
+      }
+    } catch {
+      alert('Error de conexión al guardar MFA.');
+    } finally {
+      setMfaSaving(false);
+    }
+  };
+
+  const handleStartTotpSetup = async () => {
+    try {
+      setTotpLoading(true);
+      setTotpError(null);
+      const res = await fetch('/api/auth/mfa/setup-totp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, email: email || storeName })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setTotpSecret(json.secret);
+        // QR URL vía servicio universal Google Chart QR
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(json.otpauthUrl)}`;
+        setTotpQrUrl(qrUrl);
+        setTotpModalOpen(true);
+      } else {
+        alert(json.error || 'Error al iniciar TOTP.');
+      }
+    } catch {
+      alert('Error al iniciar TOTP.');
+    } finally {
+      setTotpLoading(false);
+    }
+  };
+
+  const handleConfirmTotp = async () => {
+    if (!totpConfirmCode.trim()) {
+      setTotpError('Ingresa el código de 6 dígitos de tu app.');
+      return;
+    }
+    try {
+      setTotpLoading(true);
+      setTotpError(null);
+      const res = await fetch('/api/auth/mfa/confirm-totp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, secret: totpSecret, code: totpConfirmCode.trim() })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setTotpModalOpen(false);
+        setTotpConfirmCode('');
+        if (!mfaMethods.includes('totp')) {
+          setMfaMethods([...mfaMethods, 'totp']);
+          setMfaEnabled(true);
+        }
+        onProfileUpdated();
+        alert('¡App Autenticadora configurada y activada exitosamente!');
+      } else {
+        setTotpError(json.error || 'Código incorrecto.');
+      }
+    } catch {
+      setTotpError('Error de red al confirmar TOTP.');
+    } finally {
+      setTotpLoading(false);
+    }
+  };
+
+  const handleGenerateBackupCodes = async () => {
+    try {
+      setBackupLoading(true);
+      const res = await fetch('/api/auth/mfa/backup-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setBackupCodesList(json.backupCodes || []);
+        setBackupModalOpen(true);
+      } else {
+        alert(json.error || 'Error generando códigos de respaldo.');
+      }
+    } catch {
+      alert('Error conectando con el servidor.');
+    } finally {
+      setBackupLoading(false);
+    }
+  };
 
   const handleLogoUpload = async (file: File) => {
     if (!file) return;
@@ -162,15 +306,52 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
       <div className="border-b border-[#E2DFD7] pb-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <span className="text-[11px] font-bold text-[#D9381E] uppercase tracking-[0.2em] block mb-1">
-            Información Empresa & Legal
+            Información Empresa, Legal & Seguridad
           </span>
           <h3 className="font-serif font-normal text-3xl md:text-4xl text-[#161616] leading-none">
-            Configuración de Perfil Comercial
+            Configuración & Seguridad de la Empresa
           </h3>
           <p className="text-xs text-[#6B6862] mt-2 max-w-2xl leading-relaxed">
-            Define la razón social, identificación tributaria y datos de contacto que aparecerán impresos en tus facturas electrónicas DIAN y tirillas POS térmicas.
+            Administra los datos comerciales, logotipos, facturación DIAN y autenticación en dos pasos (MFA) para proteger la plataforma ERP.
           </p>
         </div>
+      </div>
+
+      {/* Pestañas de Sub-Navegación Wabi-Sabi */}
+      <div className="flex border-b border-[#E2DFD7] gap-8 text-xs font-bold uppercase tracking-wider">
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('profile')}
+          className={`pb-3 border-b-2 transition cursor-pointer flex items-center gap-2 ${
+            activeSubTab === 'profile'
+              ? 'border-[#D9381E] text-[#D9381E]'
+              : 'border-transparent text-[#6B6862] hover:text-[#161616]'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">storefront</span>
+          <span>Perfil Comercial & Razón Social</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('security')}
+          className={`pb-3 border-b-2 transition cursor-pointer flex items-center gap-2 ${
+            activeSubTab === 'security'
+              ? 'border-[#D9381E] text-[#D9381E]'
+              : 'border-transparent text-[#6B6862] hover:text-[#161616]'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">shield</span>
+          <span>Seguridad & Autenticación (MFA)</span>
+          {mfaMethods.length > 0 ? (
+            <span className="bg-[#E6F4EA] text-[#1E4620] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#A8DADC] font-mono">
+              ACTIVO ({mfaMethods.length})
+            </span>
+          ) : (
+            <span className="bg-[#FEF7E0] text-[#7A5A00] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#FEEFC3] font-mono">
+              INACTIVO (0/3)
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Alertas Nativas Wabi-Sabi */}
@@ -193,8 +374,249 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
         </div>
       )}
 
-      {/* Layout Widescreen Editorial (7 Cols Formulario / 5 Cols Live Preview) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* RENDER PESTAÑA 2: SEGURIDAD & AUTENTICACIÓN MFA */}
+      {activeSubTab === 'security' && (
+        <div className="space-y-6">
+          {/* Tarjeta de Estado MFA */}
+          <div className="bg-[#FFFFFF] border border-[#E2DFD7] p-6 space-y-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2DFD7] pb-4">
+              <div>
+                <span className="text-[10px] font-bold text-[#D9381E] uppercase tracking-widest block">
+                  Capa 8 & Autenticación Multi-Factor
+                </span>
+                <h4 className="font-serif text-2xl text-[#161616] mt-0.5">
+                  Estado de Protección MFA: {mfaEnabled ? '🔒 Activado' : '⚠️ Inactivo (En Periodo de Gracia)'}
+                </h4>
+                <p className="text-xs text-[#6B6862] mt-1">
+                  Puedes activar de forma independiente uno o más métodos de verificación en dos pasos.
+                </p>
+              </div>
+
+              <div className="shrink-0">
+                <button
+                  type="button"
+                  onClick={handleGenerateBackupCodes}
+                  disabled={backupLoading}
+                  className="bg-[#161616] hover:bg-[#D9381E] text-white text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-sm transition cursor-pointer border-0 flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[16px]">key</span>
+                  Generar Códigos de Respaldo
+                </button>
+              </div>
+            </div>
+
+            {/* Cuadrícula de Métodos MFA de 3 Pasos Independientes */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+              
+              {/* Opción 1: WhatsApp OTP */}
+              <div className={`p-5 border rounded-sm space-y-3 transition ${mfaMethods.includes('whatsapp') ? 'bg-[#FAF8F3] border-[#161616]' : 'bg-[#FFFFFF] border-[#E2DFD7]'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl">📱</span>
+                  <input
+                    type="checkbox"
+                    checked={mfaMethods.includes('whatsapp')}
+                    onChange={() => handleToggleMfaMethod('whatsapp')}
+                    disabled={mfaSaving}
+                    className="w-5 h-5 accent-[#D9381E] cursor-pointer"
+                  />
+                </div>
+                <h5 className="font-bold text-sm text-[#161616]">WhatsApp Verification (OTP)</h5>
+                <p className="text-xs text-[#6B6862] leading-relaxed">
+                  Envía un token de 6 dígitos automáticamente al número de WhatsApp del administrador al iniciar sesión.
+                </p>
+                <div className="pt-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm font-mono ${mfaMethods.includes('whatsapp') ? 'bg-[#E6F4EA] text-[#1E4620]' : 'bg-[#F6F4EE] text-[#6B6862]'}`}>
+                    {mfaMethods.includes('whatsapp') ? '✓ Habilitado' : '○ Desactivado'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Opción 2: App Autenticadora (TOTP) */}
+              <div className={`p-5 border rounded-sm space-y-3 transition ${mfaMethods.includes('totp') ? 'bg-[#FAF8F3] border-[#161616]' : 'bg-[#FFFFFF] border-[#E2DFD7]'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl">🔑</span>
+                  <input
+                    type="checkbox"
+                    checked={mfaMethods.includes('totp')}
+                    onChange={() => {
+                      if (!mfaMethods.includes('totp')) {
+                        handleStartTotpSetup();
+                      } else {
+                        handleToggleMfaMethod('totp');
+                      }
+                    }}
+                    disabled={mfaSaving}
+                    className="w-5 h-5 accent-[#D9381E] cursor-pointer"
+                  />
+                </div>
+                <h5 className="font-bold text-sm text-[#161616]">App Autenticadora (TOTP)</h5>
+                <p className="text-xs text-[#6B6862] leading-relaxed">
+                  Compatible con Google Authenticator, Authy, Microsoft Authenticator o 1Password.
+                </p>
+                <div className="pt-2 flex items-center justify-between">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm font-mono ${mfaMethods.includes('totp') ? 'bg-[#E6F4EA] text-[#1E4620]' : 'bg-[#F6F4EE] text-[#6B6862]'}`}>
+                    {mfaMethods.includes('totp') ? '✓ Habilitado' : '○ Desactivado'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleStartTotpSetup}
+                    className="text-[10px] text-[#D9381E] hover:underline font-bold border-0 bg-transparent cursor-pointer"
+                  >
+                    {mfaMethods.includes('totp') ? 'Re-configurar QR' : 'Configurar QR'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Opción 3: Email OTP */}
+              <div className={`p-5 border rounded-sm space-y-3 transition ${mfaMethods.includes('email') ? 'bg-[#FAF8F3] border-[#161616]' : 'bg-[#FFFFFF] border-[#E2DFD7]'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl">📧</span>
+                  <input
+                    type="checkbox"
+                    checked={mfaMethods.includes('email')}
+                    onChange={() => handleToggleMfaMethod('email')}
+                    disabled={mfaSaving}
+                    className="w-5 h-5 accent-[#D9381E] cursor-pointer"
+                  />
+                </div>
+                <h5 className="font-bold text-sm text-[#161616]">Código vía Correo Electrónico</h5>
+                <p className="text-xs text-[#6B6862] leading-relaxed">
+                  Envía un código de 6 dígitos al correo corporativo registrado ({email || 'email@empresa.com'}).
+                </p>
+                <div className="pt-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm font-mono ${mfaMethods.includes('email') ? 'bg-[#E6F4EA] text-[#1E4620]' : 'bg-[#F6F4EE] text-[#6B6862]'}`}>
+                    {mfaMethods.includes('email') ? '✓ Habilitado' : '○ Desactivado'}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Cláusula Legal Términos & Condiciones (Falla de Capa 8 / Usuario) */}
+          <div className="bg-[#FAF8F3] border border-[#E2DFD7] p-6 space-y-3 rounded-sm">
+            <h5 className="font-serif text-lg text-[#161616] font-normal flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#D9381E] text-xl">gavel</span>
+              Términos & Términos Legales de Responsabilidad (Seguridad Capa 8)
+            </h5>
+            <p className="text-xs text-[#6B6862] leading-relaxed">
+              El cliente acepta que la plataforma Frant ERP proporciona las herramientas de Autenticación Multi-Factor (MFA / 2FA) de nivel bancario. Si el administrador del negocio decide desactivar todos los métodos de verificación en dos pasos o compartir sus credenciales con terceros, la plataforma no se hace responsable por accesos no autorizados, suplantación de identidad o fallas originadas por negligencia en el manejo de credenciales (Falla de Capa 8 / Nivel Usuario).
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONFIGURACIÓN TOTP CON CÓDIGO QR */}
+      {totpModalOpen && (
+        <div className="fixed inset-0 bg-[#161616]/65 backdrop-blur-xs flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white border border-[#161616] p-6 max-w-md w-full space-y-5 rounded-sm shadow-2xl">
+            <div className="text-center space-y-2">
+              <h4 className="font-serif text-2xl text-[#161616]">Escanea el Código QR</h4>
+              <p className="text-xs text-[#6B6862]">
+                Abre tu app (Google Authenticator, Authy) y escanea la imagen o ingresa la clave manual.
+              </p>
+            </div>
+
+            {totpQrUrl && (
+              <div className="flex justify-center p-3 bg-[#FAF8F3] border border-[#E2DFD7] rounded-sm">
+                <img src={totpQrUrl} alt="QR Code MFA" className="w-44 h-44 object-contain" />
+              </div>
+            )}
+
+            <div className="bg-[#F6F4EE] p-3 border border-[#E2DFD7] text-center space-y-1">
+              <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider block">Clave Secreta Manual:</span>
+              <span className="font-mono text-xs font-bold text-[#161616] select-all tracking-widest">{totpSecret}</span>
+            </div>
+
+            {totpError && (
+              <div className="p-2.5 bg-[#FCE8E6] border-l-4 border-[#C5221F] text-[#C5221F] text-xs font-bold">
+                {totpError}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                Ingresa el Código de 6 Dígitos que genera tu App:
+              </label>
+              <input
+                type="text"
+                maxLength={6}
+                value={totpConfirmCode}
+                onChange={e => setTotpConfirmCode(e.target.value)}
+                placeholder="123456"
+                className="w-full text-center font-mono font-bold text-xl p-3 border border-[#E2DFD7] outline-none tracking-widest text-[#161616]"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setTotpModalOpen(false)}
+                className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider bg-white border border-[#E2DFD7] text-[#6B6862] hover:bg-[#FAF8F3]"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmTotp}
+                disabled={totpLoading}
+                className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#D9381E] border border-[#D9381E] text-white hover:bg-[#b82b14]"
+              >
+                {totpLoading ? 'Confirmando...' : 'Confirmar & Activar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CÓDIGOS DE RESPALDO DE EMERGENCIA */}
+      {backupModalOpen && (
+        <div className="fixed inset-0 bg-[#161616]/65 backdrop-blur-xs flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white border border-[#161616] p-6 max-w-md w-full space-y-5 rounded-sm shadow-2xl">
+            <div className="text-center space-y-2">
+              <span className="material-symbols-outlined text-3xl text-[#D9381E]">key</span>
+              <h4 className="font-serif text-2xl text-[#161616]">Códigos de Respaldo de Emergencia</h4>
+              <p className="text-xs text-[#6B6862]">
+                Guarda estos 10 códigos en un lugar seguro. Cada código se puede usar 1 sola vez en caso de perder acceso a tu teléfono.
+              </p>
+            </div>
+
+            <div className="bg-[#FAF8F3] border border-[#E2DFD7] p-4 grid grid-cols-2 gap-3 font-mono text-xs font-bold text-[#161616] text-center">
+              {backupCodesList.map((code, idx) => (
+                <div key={idx} className="p-2 bg-white border border-[#E2DFD7] tracking-widest select-all">
+                  {code}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(backupCodesList.join('\n'));
+                  alert('¡Códigos de respaldo copiados al portapapeles!');
+                }}
+                className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#FAF8F3] border border-[#E2DFD7] text-[#161616] hover:bg-[#E2DFD7]"
+              >
+                📋 Copiar Códigos
+              </button>
+              <button
+                type="button"
+                onClick={() => setBackupModalOpen(false)}
+                className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#161616] text-white hover:bg-[#D9381E]"
+              >
+                Cerrar & Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RENDER PESTAÑA 1: PERFIL COMERCIAL Y RAZÓN SOCIAL */}
+      {activeSubTab === 'profile' && (
+        <>
+          {/* Layout Widescreen Editorial (7 Cols Formulario / 5 Cols Live Preview) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* Formulario Comercial Principal (7 Columnas) */}
         <form onSubmit={handleSubmit} className="lg:col-span-7 bg-[#FFFFFF] border border-[#E2DFD7] p-7 space-y-6 shadow-sm">
@@ -511,6 +933,8 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
 
       {/* Sección Cuentas Bancarias del Negocio */}
       <BankAccountsManager clientId={clientId} />
+        </>
+      )}
     </div>
   );
 };
