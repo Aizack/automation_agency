@@ -431,10 +431,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </button>
             </form>
 
-            {/* Enlace para Crear Cuenta / Registro */}
+            {/* Enlace para Registrar Empresa / Negocio */}
             <div style={{ textAlign: 'center', paddingTop: '0.2rem' }}>
               <p style={{ fontSize: '0.78rem', color: '#6B6862', margin: 0 }}>
-                ¿No tienes una cuenta aún?{' '}
+                ¿Aún no has registrado tu empresa o negocio?{' '}
                 <button
                   type="button"
                   onClick={() => { setError(null); setIsRegisterOpen(true); }}
@@ -450,7 +450,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     textUnderlineOffset: '3px',
                   }}
                 >
-                  Regístrate aquí
+                  Regístrala aquí
                 </button>
               </p>
             </div>

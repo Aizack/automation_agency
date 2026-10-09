@@ -797,7 +797,50 @@ export const initDatabase = async () => {
             `ALTER TABLE clients ADD COLUMN IF NOT EXISTS meta_phone_number_id VARCHAR(100);`,
             `ALTER TABLE clients ADD COLUMN IF NOT EXISTS meta_waba_id VARCHAR(100);`,
             `ALTER TABLE clients ADD COLUMN IF NOT EXISTS meta_wa_token TEXT;`,
-            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS meta_app_id VARCHAR(100);`
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS meta_app_id VARCHAR(100);`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN DEFAULT FALSE;`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS mfa_methods JSONB DEFAULT '[]'::jsonb;`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS mfa_totp_secret VARCHAR(255);`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS mfa_grace_period_until TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL '14 days');`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS backup_codes JSONB DEFAULT '[]'::jsonb;`,
+            `ALTER TABLE clients ADD COLUMN IF NOT EXISTS google_id VARCHAR(100);`,
+
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN DEFAULT FALSE;`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_methods JSONB DEFAULT '[]'::jsonb;`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_totp_secret VARCHAR(255);`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS backup_codes JSONB DEFAULT '[]'::jsonb;`,
+            `ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(100);`,
+
+            `ALTER TABLE employees ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);`,
+            `ALTER TABLE employees ADD COLUMN IF NOT EXISTS allowed_modules JSONB DEFAULT '[]'::jsonb;`,
+            `ALTER TABLE employees ADD COLUMN IF NOT EXISTS department VARCHAR(100);`,
+            `ALTER TABLE employees ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN DEFAULT FALSE;`,
+            `ALTER TABLE employees ADD COLUMN IF NOT EXISTS mfa_methods JSONB DEFAULT '[]'::jsonb;`,
+            `ALTER TABLE employees ADD COLUMN IF NOT EXISTS mfa_totp_secret VARCHAR(255);`,
+            `ALTER TABLE employees ADD COLUMN IF NOT EXISTS backup_codes JSONB DEFAULT '[]'::jsonb;`,
+
+            `CREATE TABLE IF NOT EXISTS trusted_devices (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL,
+                user_id VARCHAR(100) NOT NULL,
+                device_token VARCHAR(255) NOT NULL UNIQUE,
+                user_agent TEXT,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );`,
+            `CREATE INDEX IF NOT EXISTS idx_trusted_devices_token ON trusted_devices(device_token);`,
+
+            `CREATE TABLE IF NOT EXISTS invoice_annulments (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(50) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+                annulled_by_user_id VARCHAR(100),
+                annulled_by_name VARCHAR(150),
+                reason TEXT NOT NULL,
+                restocked_inventory BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );`,
+            `CREATE INDEX IF NOT EXISTS idx_invoice_annulments_client ON invoice_annulments(client_id);`
         ];
 
         for (const q of safeAlterQueries) {

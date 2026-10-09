@@ -378,6 +378,71 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     
     // Approval process states
     const [processingAdv, setProcessingAdv] = useState<any | null>(null);
+
+    // AI CV Batch Onboarding States
+    const [isAiCvModalOpen, setIsAiCvModalOpen] = useState(false);
+    const [cvFiles, setCvFiles] = useState<File[]>([]);
+    const [parsingCv, setParsingCv] = useState(false);
+    const [candidatesList, setCandidatesList] = useState<any[]>([]);
+    const [savingCvCandidates, setSavingCvCandidates] = useState(false);
+    const [cvError, setCvError] = useState<string | null>(null);
+
+    const handleCvFilesUpload = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!cvFiles || cvFiles.length === 0) return;
+        try {
+            setParsingCv(true);
+            setCvError(null);
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+            const formData = new FormData();
+            cvFiles.forEach(f => formData.append('cv_files', f));
+
+            const res = await fetch(`/api/clients/${clientId}/employees/parse-cv-batch`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            const json = await res.json();
+            if (json.success) {
+                setCandidatesList(json.candidates || []);
+            } else {
+                setCvError(json.error || 'Error procesando Hojas de Vida con IA.');
+            }
+        } catch (err: any) {
+            setCvError('Error de conexión al cargar Hojas de Vida.');
+        } finally {
+            setParsingCv(false);
+        }
+    };
+
+    const handleConfirmCvCandidates = async () => {
+        try {
+            setSavingCvCandidates(true);
+            setCvError(null);
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+            const res = await fetch(`/api/clients/${clientId}/employees/confirm-cv-batch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ employees: candidatesList })
+            });
+            const json = await res.json();
+            if (json.success) {
+                setIsAiCvModalOpen(false);
+                setCandidatesList([]);
+                setCvFiles([]);
+                fetchData();
+            } else {
+                setCvError(json.error || 'Error al guardar los perfiles de empleados.');
+            }
+        } catch (err: any) {
+            setCvError('Error al crear los perfiles de empleados.');
+        } finally {
+            setSavingCvCandidates(false);
+        }
+    };
     const [adminNotes, setAdminNotes] = useState('');
     const [advActionType, setAdvActionType] = useState<'approve' | 'deliver' | 'reject'>('approve');
     const [deliveryMethod, setDeliveryMethod] = useState<'cash' | 'transfer'>('cash');
@@ -2199,6 +2264,14 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 <span className="material-symbols-outlined text-[16px]">refresh</span>
                             </button>
                             <button 
+                                onClick={() => { setCvFiles([]); setCandidatesList([]); setCvError(null); setIsAiCvModalOpen(true); }}
+                                className="px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#F0EDE6] border border-[#E2DFD7] text-[#161616] text-xs font-mono font-bold uppercase tracking-wider rounded-none flex items-center gap-1.5 cursor-pointer transition"
+                                title="Procesar Hojas de Vida con IA"
+                            >
+                                <span className="material-symbols-outlined text-[16px] text-[#D9381E]">smart_toy</span>
+                                Cargar CVs con IA
+                            </button>
+                            <button 
                                 onClick={openCreateEmpModal}
                                 className="px-4 py-2 bg-[#161616] hover:bg-[#D9381E] border border-[#161616] hover:border-[#D9381E] text-[#F6F4EE] text-xs font-mono font-bold uppercase tracking-wider rounded-none flex items-center gap-1.5 cursor-pointer transition"
                             >
@@ -3852,6 +3925,194 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* AI CV BATCH ONBOARDING MODAL */}
+            {isAiCvModalOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
+                    <div className="bg-white border border-[#E2DFD7] shadow-2xl max-w-3xl w-full p-6 space-y-5 my-auto max-h-[90vh] overflow-y-auto custom-scrollbar">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                            <h3 className="font-bold text-lg text-[#161616] flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#D9381E]">smart_toy</span>
+                                Carga Inteligente de Hojas de Vida (IA Batch)
+                            </h3>
+                            <button 
+                                onClick={() => setIsAiCvModalOpen(false)}
+                                className="w-8 h-8 flex items-center justify-center hover:bg-[#FAF8F5] cursor-pointer text-[#161616] border-0"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        {cvError && (
+                            <div className="bg-red-500/10 border border-red-500/20 text-red-600 text-xs p-3 font-bold">
+                                ⚠️ {cvError}
+                            </div>
+                        )}
+
+                        {candidatesList.length === 0 ? (
+                            <form onSubmit={handleCvFilesUpload} className="space-y-4">
+                                <div className="border-2 border-dashed border-[#E2DFD7] bg-[#FAF8F5] p-8 text-center space-y-3 cursor-pointer hover:border-[#161616] transition-colors">
+                                    <span className="material-symbols-outlined text-4xl text-[#D9381E]">upload_file</span>
+                                    <div>
+                                        <p className="font-bold text-sm text-[#161616]">Arrastra o selecciona hasta 10 Hojas de Vida</p>
+                                        <p className="text-xs text-[#76746E]">Soporta archivos en formato PDF, Word (DOCX) o Imágenes.</p>
+                                    </div>
+                                    <input 
+                                        type="file" 
+                                        multiple 
+                                        accept=".pdf,.docx,.doc,.png,.jpg,.jpeg"
+                                        onChange={(e) => setCvFiles(Array.from(e.target.files || []))}
+                                        className="hidden"
+                                        id="cv-file-input"
+                                    />
+                                    <label htmlFor="cv-file-input" className="inline-block px-4 py-2 bg-[#161616] text-white text-xs font-mono font-bold uppercase cursor-pointer hover:bg-[#D9381E] transition">
+                                        Seleccionar Archivos ({cvFiles.length} seleccionados)
+                                    </label>
+                                </div>
+
+                                {cvFiles.length > 0 && (
+                                    <div className="space-y-2">
+                                        <p className="text-xs font-bold text-[#161616]">Archivos seleccionados:</p>
+                                        <ul className="text-xs text-[#76746E] space-y-1 bg-[#FAF8F5] p-3 border border-[#E2DFD7]">
+                                            {cvFiles.map((f, i) => (
+                                                <li key={i} className="flex justify-between items-center">
+                                                    <span>📄 {f.name}</span>
+                                                    <span className="font-mono text-[10px]">{(f.size / 1024).toFixed(1)} KB</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-2 pt-2 border-t border-[#E2DFD7]">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAiCvModalOpen(false)}
+                                        className="px-4 py-2 bg-[#FAF8F5] border border-[#E2DFD7] text-xs font-bold text-[#161616]"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={parsingCv || cvFiles.length === 0}
+                                        className="px-5 py-2 bg-[#161616] hover:bg-[#D9381E] text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                                    >
+                                        {parsingCv ? (
+                                            <>
+                                                <span className="material-symbols-outlined animate-spin text-sm">sync</span>
+                                                El Agente IA está extrayendo los datos...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="material-symbols-outlined text-sm">psychology</span>
+                                                Procesar con IA
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="space-y-4">
+                                <p className="text-xs text-[#76746E]">
+                                    La IA extrajo la información de los candidatos. Asigna la sede, departamento y rol antes de confirmar su ingreso:
+                                </p>
+
+                                <div className="overflow-x-auto max-h-[350px]">
+                                    <table className="w-full text-xs text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] font-mono text-[11px] text-[#76746E]">
+                                                <th className="p-2">Candidato</th>
+                                                <th className="p-2">Teléfono / WhatsApp</th>
+                                                <th className="p-2">Departamento</th>
+                                                <th className="p-2">Cargo / Rol</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {candidatesList.map((cand, idx) => (
+                                                <tr key={idx} className="border-b border-[#E2DFD7] hover:bg-[#FAF8F5]">
+                                                    <td className="p-2">
+                                                        <input 
+                                                            type="text" 
+                                                            value={`${cand.name} ${cand.last_name || ''}`}
+                                                            onChange={(e) => {
+                                                                const updated = [...candidatesList];
+                                                                updated[idx].name = e.target.value;
+                                                                setCandidatesList(updated);
+                                                            }}
+                                                            className="bg-white border border-[#E2DFD7] p-1 text-xs w-full font-bold text-[#161616]"
+                                                        />
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <input 
+                                                            type="text" 
+                                                            value={cand.phone}
+                                                            onChange={(e) => {
+                                                                const updated = [...candidatesList];
+                                                                updated[idx].phone = e.target.value;
+                                                                setCandidatesList(updated);
+                                                            }}
+                                                            className="bg-white border border-[#E2DFD7] p-1 text-xs w-full font-mono"
+                                                        />
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <select
+                                                            value={cand.department || 'Ventas'}
+                                                            onChange={(e) => {
+                                                                const updated = [...candidatesList];
+                                                                updated[idx].department = e.target.value;
+                                                                setCandidatesList(updated);
+                                                            }}
+                                                            className="bg-white border border-[#E2DFD7] p-1 text-xs w-full"
+                                                        >
+                                                            <option value="Ventas">Ventas</option>
+                                                            <option value="Caja">Caja</option>
+                                                            <option value="Recepcion">Recepción</option>
+                                                            <option value="Laboratorio">Laboratorio</option>
+                                                            <option value="Cocina">Cocina</option>
+                                                            <option value="Administracion">Administración</option>
+                                                        </select>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <input 
+                                                            type="text" 
+                                                            value={cand.role || 'Cajero'}
+                                                            onChange={(e) => {
+                                                                const updated = [...candidatesList];
+                                                                updated[idx].role = e.target.value;
+                                                                setCandidatesList(updated);
+                                                            }}
+                                                            className="bg-white border border-[#E2DFD7] p-1 text-xs w-full"
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div className="flex justify-between items-center pt-3 border-t border-[#E2DFD7]">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCandidatesList([])}
+                                        className="px-4 py-2 bg-[#FAF8F5] border border-[#E2DFD7] text-xs font-bold text-[#76746E] cursor-pointer"
+                                    >
+                                        ← Volver a subir
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={savingCvCandidates}
+                                        onClick={handleConfirmCvCandidates}
+                                        className="px-6 py-2.5 bg-[#161616] hover:bg-[#D9381E] text-white text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer"
+                                    >
+                                        {savingCvCandidates ? 'Creando Perfiles y Enviando Accesos...' : '✅ Confirmar y Crear Perfiles'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>,
                 document.body

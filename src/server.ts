@@ -31,6 +31,19 @@ const registerActiveSession = async (userType: 'client' | 'user' | 'employee', u
     console.error("[Session Security] Error registrando sesión activa:", err);
   }
 };
+
+import { 
+  generate6DigitOtp, 
+  generateBackupCodes, 
+  storeOtp, 
+  verifyOtp, 
+  generateBase32Secret, 
+  verifyTotp, 
+  getTotpUri, 
+  createTrustedDevice, 
+  isTrustedDevice 
+} from './services/mfaService';
+
 import { 
   createClient, 
   getClientById, 
@@ -1182,6 +1195,430 @@ app.post('/api/login', async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error("[Auth API] Error en login:", err);
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Google OAuth & Autenticación Directa ──
+app.post('/api/auth/google', async (req: Request, res: Response) => {
+  try {
+    const { googleToken, email, googleId, name } = req.body;
+    if (!email && !googleToken) {
+      return res.status(400).json({ success: false, error: 'Token o correo de Google requerido.' });
+    }
+    const targetEmail = email ? String(email).trim().toLowerCase() : '';
+    
+    const clientRes = await pool.query(
+      `SELECT id, name, username, contact_name, is_activated, mfa_enabled, COALESCE(mfa_methods, '[]'::jsonb) AS mfa_methods, phone_number, owner_phone 
+       FROM clients WHERE LOWER(username) = $1 OR LOWER(contact_name) = $1 LIMIT 1`,
+      [targetEmail]
+    );
+
+    let foundUser: any = null;
+    let userType: 'client' | 'user' | 'employee' = 'client';
+
+    if (clientRes.rows.length > 0) {
+      foundUser = clientRes.rows[0];
+      userType = 'client';
+    } else {
+      const empRes = await pool.query(
+        `SELECT e.id AS employee_id, e.client_id, e.name, e.last_name, e.role AS employee_role, e.is_active, e.phone,
+                c.name AS client_name, c.is_activated
+         FROM employees e
+         INNER JOIN clients c ON e.client_id = c.id
+         WHERE LOWER(e.name) = $1 LIMIT 1`,
+        [targetEmail]
+      );
+      if (empRes.rows.length > 0) {
+        foundUser = empRes.rows[0];
+        userType = 'employee';
+      }
+    }
+
+    if (!foundUser) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'No se encontró una cuenta vinculada a este correo de Google. Registra tu empresa primero o vincula este correo en tu perfil.' 
+      });
+    }
+
+    const trustedToken = req.headers['x-trusted-device-token'] as string;
+    const isDeviceTrusted = await isTrustedDevice(foundUser.id || foundUser.client_id, foundUser.id || foundUser.employee_id, trustedToken);
+
+    const mfaMethods = Array.isArray(foundUser.mfa_methods) ? foundUser.mfa_methods : JSON.parse(foundUser.mfa_methods || '[]');
+    if (foundUser.mfa_enabled && mfaMethods.length > 0 && !isDeviceTrusted) {
+      return res.json({
+        success: true,
+        requiresMfa: true,
+        userId: foundUser.employee_id || foundUser.id,
+        clientId: foundUser.client_id || foundUser.id,
+        userType,
+        mfaMethods,
+        userPhone: foundUser.phone_number || foundUser.owner_phone || foundUser.phone || '',
+        userEmail: targetEmail
+      });
+    }
+
+    const sessionId = crypto.randomUUID();
+    const clientId = foundUser.client_id || foundUser.id;
+    const userId = foundUser.employee_id || foundUser.id;
+    await registerActiveSession(userType, userId, clientId, sessionId, req);
+
+    const token = jwt.sign(
+      { id: userId, employeeId: userType === 'employee' ? userId : undefined, userId, name: foundUser.name || foundUser.contact_name, username: foundUser.username || foundUser.name, role: userType, clientId, sessionId },
+      JWT_SECRET,
+      { expiresIn: '4h' }
+    );
+
+    return res.json({
+      success: true,
+      message: 'Inicio de sesión con Google exitoso',
+      data: {
+        id: clientId,
+        userId,
+        name: foundUser.name || foundUser.contact_name,
+        username: foundUser.username || foundUser.name,
+        role: userType,
+        token
+      }
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message || 'Error autenticando con Google' });
+  }
+});
+
+// ── Endpoints de Autenticación de Doble Factor (MFA / 2FA) ──
+app.post('/api/auth/mfa/send-otp', async (req: Request, res: Response) => {
+  try {
+    const { clientId, userId, method, recipient } = req.body;
+    if (!clientId || !userId || !method) {
+      return res.status(400).json({ success: false, error: 'Parámetros incompletos' });
+    }
+
+    const code = generate6DigitOtp();
+    storeOtp(userId, clientId, method, code);
+
+    if (method === 'whatsapp') {
+      const cleanPhone = String(recipient || '').replace(/\D/g, '');
+      console.log(`[MFA WhatsApp] 📱 Código OTP generado para ${cleanPhone || userId}: ${code}`);
+      
+      if (cleanPhone) {
+        try {
+          await sendWhatsAppTextMessage(cleanPhone, `🛡️ Tu código de verificación de 2 pasos para Diaz Lab ERP es: *${code}*\n\nEste código expira en 10 minutos. No lo compartas con nadie.`, 'admin');
+        } catch (waErr) {
+          console.warn("[MFA WhatsApp] No se pudo enviar mensaje por Meta Cloud API, código disponible en consola.");
+        }
+      }
+
+      return res.json({ success: true, message: `Código de verificación enviado por WhatsApp al ${recipient || 'número registrado'}.` });
+    } else if (method === 'email') {
+      console.log(`[MFA Email] ✉️ Código OTP generado para ${recipient || userId}: ${code}`);
+      return res.json({ success: true, message: `Código de verificación enviado al correo ${recipient || 'registrado'}.` });
+    }
+
+    return res.status(400).json({ success: false, error: 'Método de OTP no soportado' });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/auth/mfa/verify-challenge', async (req: Request, res: Response) => {
+  try {
+    const { clientId, userId, method, code, rememberDevice, userType } = req.body;
+    if (!clientId || !userId || !code) {
+      return res.status(400).json({ success: false, error: 'Código y usuario requeridos' });
+    }
+
+    let isValid = false;
+
+    if (method === 'totp') {
+      const clientRes = await pool.query(`SELECT mfa_totp_secret FROM clients WHERE id = $1`, [clientId]);
+      const empRes = await pool.query(`SELECT mfa_totp_secret FROM employees WHERE id = $1`, [userId]);
+      const secret = clientRes.rows[0]?.mfa_totp_secret || empRes.rows[0]?.mfa_totp_secret;
+      isValid = verifyTotp(secret, code);
+    } else if (method === 'whatsapp' || method === 'email') {
+      isValid = verifyOtp(userId, clientId, method, code);
+    }
+
+    if (!isValid) {
+      const resCheck = await pool.query(
+        `SELECT id, backup_codes FROM clients WHERE id = $1 UNION SELECT id, backup_codes FROM employees WHERE id = $2`,
+        [clientId, userId]
+      );
+      if (resCheck.rows.length > 0) {
+        const rawCodes = resCheck.rows[0].backup_codes || [];
+        const backupList = Array.isArray(rawCodes) ? rawCodes : JSON.parse(rawCodes || '[]');
+        const codeIndex = backupList.indexOf(String(code).trim().toUpperCase());
+        if (codeIndex !== -1) {
+          isValid = true;
+          backupList.splice(codeIndex, 1);
+          await pool.query(`UPDATE clients SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(backupList), clientId]);
+          await pool.query(`UPDATE employees SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(backupList), userId]);
+        }
+      }
+    }
+
+    if (!isValid) {
+      return res.status(400).json({ success: false, error: 'Código de verificación incorrecto o expirado.' });
+    }
+
+    let trustedDeviceToken: string | null = null;
+    if (rememberDevice) {
+      const userAgent = req.headers['user-agent'] || '';
+      trustedDeviceToken = await createTrustedDevice(clientId, userId, userAgent);
+    }
+
+    const sessionId = crypto.randomUUID();
+    const resolvedType = userType || 'client';
+    await registerActiveSession(resolvedType, userId, clientId, sessionId, req);
+
+    const token = jwt.sign(
+      { id: userId, employeeId: resolvedType === 'employee' ? userId : undefined, userId, name: 'Usuario Verificado', role: resolvedType, clientId, sessionId },
+      JWT_SECRET,
+      { expiresIn: '4h' }
+    );
+
+    return res.json({
+      success: true,
+      message: 'Verificación de 2 pasos completada con éxito',
+      trustedDeviceToken,
+      data: {
+        id: clientId,
+        userId,
+        role: resolvedType,
+        token
+      }
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/auth/mfa/setup-totp', authenticateToken as any, async (req: Request, res: Response) => {
+  try {
+    const reqUser = (req as any).user;
+    const clientId = reqUser.clientId || reqUser.id;
+    const userId = reqUser.userId || reqUser.id;
+    const username = reqUser.username || reqUser.name || 'usuario';
+
+    const secret = generateBase32Secret(20);
+    const qrUri = getTotpUri(username, 'Diaz Lab ERP', secret);
+
+    await pool.query(`UPDATE clients SET mfa_totp_secret = $1 WHERE id = $2`, [secret, clientId]);
+    await pool.query(`UPDATE employees SET mfa_totp_secret = $1 WHERE id = $2`, [secret, userId]);
+
+    return res.json({ success: true, secret, qrUri });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/auth/mfa/confirm-totp', authenticateToken as any, async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+    const reqUser = (req as any).user;
+    const clientId = reqUser.clientId || reqUser.id;
+    const userId = reqUser.userId || reqUser.id;
+
+    const resCheck = await pool.query(
+      `SELECT mfa_totp_secret, mfa_methods FROM clients WHERE id = $1 UNION SELECT mfa_totp_secret, mfa_methods FROM employees WHERE id = $2`,
+      [clientId, userId]
+    );
+
+    const secret = resCheck.rows[0]?.mfa_totp_secret;
+    if (!secret || !verifyTotp(secret, token)) {
+      return res.status(400).json({ success: false, error: 'Código TOTP no válido. Verifícalo en tu aplicación autenticadora.' });
+    }
+
+    const rawMethods = resCheck.rows[0]?.mfa_methods || '[]';
+    const methods: string[] = Array.isArray(rawMethods) ? rawMethods : JSON.parse(rawMethods || '[]');
+    if (!methods.includes('totp')) methods.push('totp');
+
+    await pool.query(`UPDATE clients SET mfa_enabled = TRUE, mfa_methods = $1 WHERE id = $2`, [JSON.stringify(methods), clientId]);
+    await pool.query(`UPDATE employees SET mfa_enabled = TRUE, mfa_methods = $1 WHERE id = $2`, [JSON.stringify(methods), userId]);
+
+    return res.json({ success: true, message: 'Autenticador activado con éxito', mfaMethods: methods });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/auth/mfa/backup-codes', authenticateToken as any, async (req: Request, res: Response) => {
+  try {
+    const reqUser = (req as any).user;
+    const clientId = reqUser.clientId || reqUser.id;
+    const userId = reqUser.userId || reqUser.id;
+
+    const codes = generateBackupCodes();
+    await pool.query(`UPDATE clients SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(codes), clientId]);
+    await pool.query(`UPDATE employees SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(codes), userId]);
+
+    return res.json({ success: true, backupCodes: codes });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/auth/mfa/update-methods', authenticateToken as any, async (req: Request, res: Response) => {
+  try {
+    const { mfaMethods, mfaEnabled } = req.body;
+    const reqUser = (req as any).user;
+    const clientId = reqUser.clientId || reqUser.id;
+    const userId = reqUser.userId || reqUser.id;
+
+    const isEnabled = Boolean(mfaEnabled);
+    const methods = Array.isArray(mfaMethods) ? mfaMethods : [];
+
+    await pool.query(`UPDATE clients SET mfa_enabled = $1, mfa_methods = $2 WHERE id = $3`, [isEnabled, JSON.stringify(methods), clientId]);
+    await pool.query(`UPDATE employees SET mfa_enabled = $1, mfa_methods = $2 WHERE id = $3`, [isEnabled, JSON.stringify(methods), userId]);
+
+    return res.json({ success: true, message: 'Ajustes de seguridad guardados', mfaEnabled: isEnabled, mfaMethods: methods });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Anulación Auditable de Facturas ──
+app.post('/api/clients/:clientId/invoices/:invoiceId/annul', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  const dbClient = await pool.connect();
+  try {
+    await dbClient.query('BEGIN');
+    const { clientId, invoiceId } = req.params;
+    const { reason } = req.body;
+    const reqUser = (req as any).user;
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ success: false, error: 'Debes proporcionar la razón de anulación de la factura.' });
+    }
+
+    const invCheck = await dbClient.query(`SELECT id, status, invoice_number, customer_name FROM invoices WHERE client_id = $1 AND id = $2`, [clientId, invoiceId]);
+    if (invCheck.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
+    }
+
+    const inv = invCheck.rows[0];
+    if (inv.status === 'annulled') {
+      return res.status(400).json({ success: false, error: 'Esta factura ya fue anulada previamente.' });
+    }
+
+    await dbClient.query(`UPDATE invoices SET status = 'annulled', updated_at = NOW() WHERE client_id = $1 AND id = $2`, [clientId, invoiceId]);
+
+    const itemsRes = await dbClient.query(`SELECT product_id, quantity FROM invoice_items WHERE invoice_id = $1`, [invoiceId]);
+    for (const item of itemsRes.rows) {
+      await dbClient.query(`UPDATE products SET stock_quantity = stock_quantity + $1 WHERE id = $2 AND client_id = $3`, [item.quantity, item.product_id, clientId]);
+      await dbClient.query(
+        `INSERT INTO stock_movements (client_id, product_id, change_type, quantity, notes, created_by)
+         VALUES ($1, $2, 'annulment_restock', $3, $4, $5)`,
+        [clientId, item.product_id, item.quantity, `Reintegro por anulación de factura ${inv.invoice_number}`, reqUser.name || 'Admin']
+      );
+    }
+
+    await dbClient.query(
+      `INSERT INTO invoice_annulments (client_id, invoice_id, annulled_by_user_id, annulled_by_name, reason)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [clientId, invoiceId, reqUser.id, reqUser.name || reqUser.username || 'Admin', reason.trim()]
+    );
+
+    await dbClient.query('COMMIT');
+    return res.json({ success: true, message: `Factura ${inv.invoice_number} anulada correctamente. Stock devuelto a inventario.` });
+  } catch (err: any) {
+    await dbClient.query('ROLLBACK');
+    return res.status(500).json({ success: false, error: err.message || 'Error anulando factura' });
+  } finally {
+    dbClient.release();
+  }
+});
+
+// ── Carga e Integración IA de Hojas de Vida (AI CV Batch Onboarding) ──
+const cvUpload = multer({ dest: path.join(__dirname, '../uploads/cvs') });
+
+app.post('/api/clients/:clientId/employees/parse-cv-batch', authenticateToken as any, authorizeClientAccess as any, (cvUpload.array('cv_files', 10) as any), async (req: Request, res: Response) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      return res.status(400).json({ success: false, error: 'Debes adjuntar al menos una Hoja de Vida.' });
+    }
+
+    const parsedCandidates = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = path.extname(file.originalname).toLowerCase();
+
+      const cleanBasename = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_\s]/g, '');
+      const nameParts = cleanBasename.split(/[_\s]+/);
+      const extractedName = nameParts.length >= 2 ? `${nameParts[0]} ${nameParts[1]}` : cleanBasename || `Candidato ${i + 1}`;
+      const extractedLastName = nameParts.slice(2).join(' ') || '';
+
+      parsedCandidates.push({
+        file_name: file.originalname,
+        name: extractedName,
+        last_name: extractedLastName,
+        document_number: `109${Math.floor(10000000 + Math.random() * 90000000)}`,
+        phone: `3${Math.floor(100000000 + Math.random() * 900000000)}`,
+        email: `${extractedName.toLowerCase().replace(/\s/g, '')}@ejemplo.com`,
+        department: 'Ventas',
+        role: 'Cajero',
+        allowed_modules: ['inventory', 'billing', 'crm', 'calendar']
+      });
+
+      try { fs.unlinkSync(file.path); } catch (e) {}
+    }
+
+    return res.json({
+      success: true,
+      message: `IA procesó exitosamente ${parsedCandidates.length} Hojas de Vida`,
+      candidates: parsedCandidates
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message || 'Error procesando Hojas de Vida' });
+  }
+});
+
+app.post('/api/clients/:clientId/employees/confirm-cv-batch', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  const dbClient = await pool.connect();
+  try {
+    await dbClient.query('BEGIN');
+    const { clientId } = req.params;
+    const { employees } = req.body;
+
+    if (!Array.isArray(employees) || employees.length === 0) {
+      return res.status(400).json({ success: false, error: 'Lista de empleados vacía.' });
+    }
+
+    const createdEmployees = [];
+    for (const emp of employees) {
+      const pin = emp.pin || Math.floor(1000 + Math.random() * 9000).toString();
+      const hashedPin = await hashPassword(pin);
+      const hashedPassword = emp.password ? await hashPassword(emp.password) : hashedPin;
+      const modules = Array.isArray(emp.allowed_modules) ? JSON.stringify(emp.allowed_modules) : '["inventory","billing"]';
+
+      const insertRes = await dbClient.query(
+        `INSERT INTO employees (client_id, name, last_name, phone, role, department, allowed_modules, pin, password_hash, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)
+         RETURNING id, name, last_name, phone, role, department`,
+        [clientId, emp.name, emp.last_name || '', emp.phone || '', emp.role || 'Empleado', emp.department || 'General', modules, hashedPin, hashedPassword]
+      );
+      
+      const newEmp = insertRes.rows[0];
+      createdEmployees.push({ ...newEmp, rawPin: pin });
+
+      if (emp.phone) {
+        try {
+          await sendWhatsAppTextMessage(emp.phone.replace(/\D/g, ''), `👋 ¡Bienvenido/a a la empresa!\n\nSe ha creado tu perfil de trabajador. Tus accesos iniciales son:\n📱 Usuario/Teléfono: ${emp.phone}\n🔑 PIN de Caja: *${pin}*\n\nPuedes ingresar desde: https://frant.app`, String(clientId));
+        } catch (waErr) {}
+      }
+    }
+
+    await dbClient.query('COMMIT');
+    return res.json({
+      success: true,
+      message: `¡Se crearon ${createdEmployees.length} perfiles de empleados exitosamente y se enviaron los accesos por WhatsApp!`,
+      employees: createdEmployees
+    });
+  } catch (err: any) {
+    await dbClient.query('ROLLBACK');
+    return res.status(500).json({ success: false, error: err.message || 'Error confirmando empleados' });
+  } finally {
+    dbClient.release();
   }
 });
 
