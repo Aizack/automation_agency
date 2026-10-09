@@ -1460,18 +1460,22 @@ app.post('/api/auth/mfa/backup-codes', authenticateToken as any, async (req: Req
 
 app.post('/api/auth/mfa/update-methods', authenticateToken as any, async (req: Request, res: Response) => {
   try {
-    const { mfaMethods, mfaEnabled } = req.body;
-    const reqUser = (req as any).user;
-    const clientId = reqUser.clientId || reqUser.id;
-    const userId = reqUser.userId || reqUser.id;
+    const { clientId, mfaMethods, mfaEnabled, methods, enabled } = req.body;
+    const reqUser = (req as any).user || {};
+    const targetClientId = clientId || reqUser.clientId || reqUser.id;
+    const targetUserId = reqUser.userId || reqUser.id || targetClientId;
 
-    const isEnabled = Boolean(mfaEnabled);
-    const methods = Array.isArray(mfaMethods) ? mfaMethods : [];
+    const resolvedMethods = Array.isArray(mfaMethods) ? mfaMethods : (Array.isArray(methods) ? methods : []);
+    const resolvedEnabled = mfaEnabled !== undefined ? Boolean(mfaEnabled) : (enabled !== undefined ? Boolean(enabled) : resolvedMethods.length > 0);
 
-    await pool.query(`UPDATE clients SET mfa_enabled = $1, mfa_methods = $2 WHERE id = $3`, [isEnabled, JSON.stringify(methods), clientId]);
-    await pool.query(`UPDATE employees SET mfa_enabled = $1, mfa_methods = $2 WHERE id = $3`, [isEnabled, JSON.stringify(methods), userId]);
+    if (targetClientId) {
+      await pool.query(`UPDATE clients SET mfa_enabled = $1, mfa_methods = $2 WHERE id = $3`, [resolvedEnabled, JSON.stringify(resolvedMethods), targetClientId]);
+    }
+    if (targetUserId) {
+      await pool.query(`UPDATE employees SET mfa_enabled = $1, mfa_methods = $2 WHERE id = $3`, [resolvedEnabled, JSON.stringify(resolvedMethods), targetUserId]);
+    }
 
-    return res.json({ success: true, message: 'Ajustes de seguridad guardados', mfaEnabled: isEnabled, mfaMethods: methods });
+    return res.json({ success: true, message: 'Ajustes de seguridad guardados', mfaEnabled: resolvedEnabled, mfaMethods: resolvedMethods });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }

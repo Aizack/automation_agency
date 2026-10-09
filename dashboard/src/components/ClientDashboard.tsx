@@ -222,6 +222,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   }, [activeTab]);
 
   const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
+  const [storeSettingsSubTab, setStoreSettingsSubTab] = useState<'profile' | 'security'>('profile');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -1149,16 +1150,16 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               <ul className={`sub-menu ${openSubMenus.empresa ? 'open' : ''}`}>
                 <li>
                   <button 
-                    onClick={() => setActiveTab('configuracion')} 
-                    className={activeTab === 'configuracion' ? 'active-link' : ''}
+                    onClick={() => { setStoreSettingsSubTab('profile'); setActiveTab('configuracion'); }} 
+                    className={activeTab === 'configuracion' && storeSettingsSubTab === 'profile' ? 'active-link' : ''}
                   >
                     Datos de la Empresa
                   </button>
                 </li>
                 <li>
                   <button 
-                    onClick={() => setActiveTab('configuracion')} 
-                    className={activeTab === 'configuracion' ? 'active-link font-bold text-[#D9381E]' : 'text-[#D9381E] font-bold'}
+                    onClick={() => { setStoreSettingsSubTab('security'); setActiveTab('configuracion'); }} 
+                    className={activeTab === 'configuracion' && storeSettingsSubTab === 'security' ? 'active-link font-bold text-[#D9381E]' : 'text-[#D9381E] font-bold'}
                   >
                     🛡️ Seguridad & MFA
                   </button>
@@ -1924,20 +1925,65 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         </header>
 
         {/* Banner de Advertencia de Autenticación en Dos Pasos (MFA / 2FA) */}
-        {(!clientData?.mfa_enabled && !(clientData as any)?.mfa_methods?.length) && (
-          <div className="bg-[#FFFBEB] border-b border-[#FCD34D] px-4 md:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#92400E] shadow-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="material-symbols-outlined text-[20px] text-[#D97706] shrink-0">verified_user</span>
+        {(!clientData?.mfa_enabled && (!clientData?.mfa_methods || (Array.isArray(clientData.mfa_methods) && clientData.mfa_methods.length === 0))) && (
+          <div style={{
+            backgroundColor: '#FAF8F3',
+            borderBottom: '1px solid #E2DFD7',
+            padding: '0.85rem 2rem',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            fontSize: '0.78rem',
+            color: '#161616',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                backgroundColor: '#FCE8E6',
+                color: '#D9381E',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>verified_user</span>
+              </div>
               <span>
-                <strong>Seguridad Recomendada: Tu cuenta no tiene la Autenticación en Dos Pasos (MFA) activada.</strong> Te recomendamos activar al menos un método de verificación (WhatsApp, App Autenticadora o Correo) para blindar tu empresa. (Periodo de gracia: 14 días).
+                <strong style={{ color: '#D9381E', fontWeight: 700 }}>Seguridad Recomendada: Tu cuenta no tiene la Autenticación en Dos Pasos (MFA) activada.</strong>{' '}
+                <span style={{ color: '#6B6862' }}>Te recomendamos activar al menos un método de verificación (WhatsApp, App Autenticadora o Correo) para blindar tu empresa. (Periodo de gracia: 14 días).</span>
               </span>
             </div>
             <button
               type="button"
-              onClick={() => setActiveTab('configuracion')}
-              className="bg-[#D97706] hover:bg-[#B45309] text-white text-[10px] font-bold uppercase tracking-wider px-3.5 py-2 rounded-sm shrink-0 transition cursor-pointer border-0 shadow-xs flex items-center gap-1.5"
+              onClick={() => {
+                setStoreSettingsSubTab('security');
+                setActiveTab('configuracion');
+              }}
+              style={{
+                backgroundColor: '#D9381E',
+                color: '#FFFFFF',
+                border: '1px solid #D9381E',
+                padding: '0.5rem 1rem',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                cursor: 'pointer',
+                borderRadius: '3px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                flexShrink: 0,
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#161616'; e.currentTarget.style.borderColor = '#161616'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#D9381E'; e.currentTarget.style.borderColor = '#D9381E'; }}
             >
-              <span className="material-symbols-outlined text-[14px]">lock</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>lock</span>
               Configurar Seguridad (MFA)
             </button>
           </div>
@@ -2645,7 +2691,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
         {activeTab === 'configuracion' && (
           <div className="animate-fade-in">
-            <SaaSErpStoreSettings clientId={clientId} onProfileUpdated={() => {
+            <SaaSErpStoreSettings clientId={clientId} initialSubTab={storeSettingsSubTab} onProfileUpdated={() => {
               // Recargar datos
               fetch(`/api/clients/${clientId}`)
                 .then(res => res.json())

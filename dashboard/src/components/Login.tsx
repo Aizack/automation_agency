@@ -917,8 +917,8 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(15, 15, 15, 0.75)',
-          backdropFilter: 'blur(6px)',
+          backgroundColor: 'rgba(22, 22, 22, 0.65)',
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -928,9 +928,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           <div style={{
             width: '100%',
             maxWidth: '440px',
-            backgroundColor: '#FFFFFF',
-            borderRadius: '20px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            backgroundColor: '#FAF8F3',
+            border: '1px solid #E2DFD7',
+            borderRadius: '4px',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
             padding: '2rem 1.8rem 1.5rem',
             position: 'relative',
             display: 'flex',
@@ -944,8 +945,8 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 position: 'absolute',
                 top: '16px',
                 right: '16px',
-                background: '#F5F5F3',
-                border: 'none',
+                background: '#FFFFFF',
+                border: '1px solid #E2DFD7',
                 borderRadius: '50%',
                 width: '32px',
                 height: '32px',
@@ -953,16 +954,16 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: '#555',
+                color: '#6B6862',
                 transition: 'all 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#E5E5E0';
-                e.currentTarget.style.color = '#111';
+                e.currentTarget.style.backgroundColor = '#161616';
+                e.currentTarget.style.color = '#FFFFFF';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#F5F5F3';
-                e.currentTarget.style.color = '#555';
+                e.currentTarget.style.backgroundColor = '#FFFFFF';
+                e.currentTarget.style.color = '#6B6862';
               }}
             >
               <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
@@ -977,11 +978,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                 </svg>
               </div>
-              <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, color: '#111827' }}>
+              <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 600, color: '#161616', fontFamily: 'var(--font-serif, serif)' }}>
                 Selecciona una cuenta
               </h3>
-              <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#6B7280' }}>
-                para continuar en <strong style={{ color: '#111827' }}>Frant ERP</strong>
+              <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#6B6862' }}>
+                para continuar en <strong style={{ color: '#161616' }}>Frant ERP</strong>
               </p>
             </div>
 
@@ -995,46 +996,46 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     alignItems: 'center',
                     gap: '12px',
                     padding: '0.85rem 1rem',
-                    backgroundColor: '#FAFAFA',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '12px',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E2DFD7',
+                    borderRadius: '3px',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.15s ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#F3F4F6';
-                    e.currentTarget.style.borderColor = '#D1D5DB';
+                    e.currentTarget.style.backgroundColor = '#FAF8F5';
+                    e.currentTarget.style.borderColor = '#161616';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FAFAFA';
-                    e.currentTarget.style.borderColor = '#E5E7EB';
+                    e.currentTarget.style.backgroundColor = '#FFFFFF';
+                    e.currentTarget.style.borderColor = '#E2DFD7';
                   }}
                 >
                   <div style={{
-                    width: 38,
-                    height: 38,
+                    width: 36,
+                    height: 36,
                     borderRadius: '50%',
-                    backgroundColor: '#1E40AF',
+                    backgroundColor: '#161616',
                     color: '#FFFFFF',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 700,
-                    fontSize: '0.9rem',
+                    fontSize: '0.85rem',
                     flexShrink: 0,
                   }}>
                     ID
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#161616', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       Isac Diaz
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#6B6862', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       isacdiazb@gmail.com
                     </div>
                   </div>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#9CA3AF' }}>chevron_right</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#6B6862' }}>chevron_right</span>
                 </button>
 
                 <button
@@ -1045,46 +1046,46 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     alignItems: 'center',
                     gap: '12px',
                     padding: '0.85rem 1rem',
-                    backgroundColor: '#FAFAFA',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '12px',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E2DFD7',
+                    borderRadius: '3px',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.15s ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#F3F4F6';
-                    e.currentTarget.style.borderColor = '#D1D5DB';
+                    e.currentTarget.style.backgroundColor = '#FAF8F5';
+                    e.currentTarget.style.borderColor = '#161616';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FAFAFA';
-                    e.currentTarget.style.borderColor = '#E5E7EB';
+                    e.currentTarget.style.backgroundColor = '#FFFFFF';
+                    e.currentTarget.style.borderColor = '#E2DFD7';
                   }}
                 >
                   <div style={{
-                    width: 38,
-                    height: 38,
+                    width: 36,
+                    height: 36,
                     borderRadius: '50%',
-                    backgroundColor: '#047857',
+                    backgroundColor: '#161616',
                     color: '#FFFFFF',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 700,
-                    fontSize: '0.9rem',
+                    fontSize: '0.85rem',
                     flexShrink: 0,
                   }}>
                     IB
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#161616', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       Isac David Diaz Barros
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#6B6862', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       wahidkaftan@gmail.com
                     </div>
                   </div>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#9CA3AF' }}>chevron_right</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#6B6862' }}>chevron_right</span>
                 </button>
 
                 <button
@@ -1095,46 +1096,46 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     alignItems: 'center',
                     gap: '12px',
                     padding: '0.85rem 1rem',
-                    backgroundColor: '#FAFAFA',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '12px',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E2DFD7',
+                    borderRadius: '3px',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.15s ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#F3F4F6';
-                    e.currentTarget.style.borderColor = '#D1D5DB';
+                    e.currentTarget.style.backgroundColor = '#FAF8F5';
+                    e.currentTarget.style.borderColor = '#161616';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FAFAFA';
-                    e.currentTarget.style.borderColor = '#E5E7EB';
+                    e.currentTarget.style.backgroundColor = '#FFFFFF';
+                    e.currentTarget.style.borderColor = '#E2DFD7';
                   }}
                 >
                   <div style={{
-                    width: 38,
-                    height: 38,
+                    width: 36,
+                    height: 36,
                     borderRadius: '50%',
-                    backgroundColor: '#B91C1C',
+                    backgroundColor: '#D9381E',
                     color: '#FFFFFF',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 700,
-                    fontSize: '0.9rem',
+                    fontSize: '0.85rem',
                     flexShrink: 0,
                   }}>
                     ID
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#161616', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       Isac Diaz (Empresarial)
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#6B6862', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       diazbisac@gmail.com
                     </div>
                   </div>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#9CA3AF' }}>chevron_right</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#6B6862' }}>chevron_right</span>
                 </button>
 
                 <button
@@ -1145,43 +1146,42 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     alignItems: 'center',
                     gap: '12px',
                     padding: '0.85rem 1rem',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px dashed #D1D5DB',
-                    borderRadius: '12px',
+                    backgroundColor: '#FAF8F3',
+                    border: '1px dashed #E2DFD7',
+                    borderRadius: '3px',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    color: '#374151',
+                    color: '#161616',
                     fontWeight: 600,
-                    fontSize: '0.85rem',
+                    fontSize: '0.82rem',
                     marginTop: '0.2rem',
                     transition: 'all 0.15s ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FAF8F3';
-                    e.currentTarget.style.borderColor = '#9CA3AF';
-                    e.currentTarget.style.color = '#111827';
+                    e.currentTarget.style.backgroundColor = '#FFFFFF';
+                    e.currentTarget.style.borderColor = '#161616';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FFFFFF';
-                    e.currentTarget.style.borderColor = '#D1D5DB';
-                    e.currentTarget.style.color = '#374151';
+                    e.currentTarget.style.backgroundColor = '#FAF8F3';
+                    e.currentTarget.style.borderColor = '#E2DFD7';
                   }}
                 >
                   <div style={{
-                    width: 38,
-                    height: 38,
+                    width: 36,
+                    height: 36,
                     borderRadius: '50%',
-                    backgroundColor: '#F3F4F6',
-                    color: '#4B5563',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E2DFD7',
+                    color: '#161616',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
                   }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 20 }}>person_add</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person_add</span>
                   </div>
                   <span style={{ flex: 1 }}>Usar otra cuenta de Google</span>
-                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#9CA3AF' }}>add</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#6B6862' }}>add</span>
                 </button>
               </div>
             ) : (
@@ -1193,7 +1193,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.3rem' }}
               >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#374151' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6B6862', textTransform: 'uppercase' }}>
                     Correo electrónico de Google
                   </label>
                   <input
@@ -1206,11 +1206,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     style={{
                       width: '100%',
                       padding: '0.8rem 1rem',
-                      fontSize: '0.9rem',
-                      border: '1.5px solid #D1D5DB',
-                      borderRadius: '10px',
+                      fontSize: '0.88rem',
+                      border: '1px solid #E2DFD7',
+                      borderRadius: '3px',
                       outline: 'none',
-                      color: '#111827',
+                      color: '#161616',
+                      backgroundColor: '#FFFFFF',
                     }}
                   />
                 </div>
@@ -1222,12 +1223,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     style={{
                       flex: 1,
                       padding: '0.75rem',
-                      fontSize: '0.82rem',
+                      fontSize: '0.78rem',
                       fontWeight: 600,
-                      backgroundColor: '#F3F4F6',
-                      border: 'none',
-                      borderRadius: '10px',
-                      color: '#4B5563',
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid #E2DFD7',
+                      borderRadius: '3px',
+                      color: '#6B6862',
                       cursor: 'pointer',
                     }}
                   >
@@ -1238,14 +1239,16 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     style={{
                       flex: 1,
                       padding: '0.75rem',
-                      fontSize: '0.82rem',
+                      fontSize: '0.78rem',
                       fontWeight: 600,
-                      backgroundColor: '#1E40AF',
-                      border: 'none',
-                      borderRadius: '10px',
+                      backgroundColor: '#161616',
+                      border: '1px solid #161616',
+                      borderRadius: '3px',
                       color: '#FFFFFF',
                       cursor: 'pointer',
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#D9381E'; e.currentTarget.style.borderColor = '#D9381E'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#161616'; e.currentTarget.style.borderColor = '#161616'; }}
                   >
                     Continuar
                   </button>
@@ -1253,13 +1256,13 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </form>
             )}
 
-            <div style={{ textAlign: 'center', paddingTop: '0.5rem', borderTop: '1px solid #F3F4F6' }}>
-              <p style={{ fontSize: '0.72rem', color: '#9CA3AF', margin: 0, lineHeight: 1.4 }}>
+            <div style={{ textAlign: 'center', paddingTop: '0.5rem', borderTop: '1px solid #E2DFD7' }}>
+              <p style={{ fontSize: '0.72rem', color: '#6B6862', margin: 0, lineHeight: 1.4 }}>
                 Antes de usar esta aplicación, puedes consultar la{' '}
                 <button
                   type="button"
                   onClick={() => { setIsGoogleModalOpen(false); setLegalModalTab('privacidad'); setIsLegalModalOpen(true); }}
-                  style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', fontSize: '0.72rem', padding: 0, fontWeight: 500 }}
+                  style={{ background: 'none', border: 'none', color: '#D9381E', cursor: 'pointer', fontSize: '0.72rem', padding: 0, fontWeight: 600 }}
                 >
                   Política de Privacidad
                 </button>{' '}
@@ -1267,7 +1270,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 <button
                   type="button"
                   onClick={() => { setIsGoogleModalOpen(false); setLegalModalTab('terminos'); setIsLegalModalOpen(true); }}
-                  style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', fontSize: '0.72rem', padding: 0, fontWeight: 500 }}
+                  style={{ background: 'none', border: 'none', color: '#D9381E', cursor: 'pointer', fontSize: '0.72rem', padding: 0, fontWeight: 600 }}
                 >
                   Términos del Servicio
                 </button>{' '}

@@ -4,9 +4,10 @@ import { authFetch as fetch } from '../utils/api';
 interface StoreSettingsProps {
   clientId: string;
   onProfileUpdated: () => void;
+  initialSubTab?: 'profile' | 'security';
 }
 
-export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, onProfileUpdated }) => {
+export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, onProfileUpdated, initialSubTab }) => {
   const [storeName, setStoreName] = useState('');
   const [nit, setNit] = useState('');
   const [address, setAddress] = useState('');
@@ -19,7 +20,13 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   const [logos, setLogos] = useState<Array<{ fileName: string, url: string }>>([]);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoBuster, setLogoBuster] = useState(Date.now());
-  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'security'>('profile');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'security'>(initialSubTab || 'profile');
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,6 +109,8 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clientId,
+          mfaEnabled: nextEnabled,
+          mfaMethods: nextMethods,
           enabled: nextEnabled,
           methods: nextMethods,
         })

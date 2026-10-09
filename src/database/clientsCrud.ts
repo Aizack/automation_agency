@@ -88,7 +88,10 @@ export const getClientById = async (id: string): Promise<ClientConfig | null> =>
         custom_tax_id AS "customTaxId",
         meta_phone_number_id AS "metaPhoneNumberId",
         meta_waba_id AS "metaWabaId",
-        meta_wa_token AS "metaWaToken"
+        meta_wa_token AS "metaWaToken",
+        mfa_enabled,
+        COALESCE(mfa_methods, '[]'::jsonb) AS mfa_methods,
+        COALESCE(backup_codes, '[]'::jsonb) AS backup_codes
        FROM clients 
        WHERE id = $1 LIMIT 1`,
       [id]
