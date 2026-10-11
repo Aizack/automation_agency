@@ -189,13 +189,24 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
           {/* Lista de Alertas */}
           <div className="max-h-96 overflow-y-auto divide-y divide-[#E2DFD7]">
-            {alerts.length === 0 ? (
-              <div className="p-6 text-center text-xs text-[#161616]/60">
-                <span className="material-symbols-outlined text-3xl mb-1 text-[#161616]/30 block">check_circle</span>
-                No tienes notificaciones pendientes. Todo funciona correctamente.
-              </div>
-            ) : (
-              alerts.map((alert) => {
+            {(() => {
+              const activeAlerts = alerts.filter(alert => {
+                const msg = (alert.message || '').toLowerCase();
+                const details = (alert.details || '').toLowerCase();
+                const key = (alert.alert_key || '').toLowerCase();
+                return !msg.includes('puppeteer') && !details.includes('puppeteer') && !key.includes('whatsapp_initialization_error');
+              });
+
+              if (activeAlerts.length === 0) {
+                return (
+                  <div className="p-6 text-center text-xs text-[#161616]/60">
+                    <span className="material-symbols-outlined text-3xl mb-1 text-[#161616]/30 block">check_circle</span>
+                    No tienes notificaciones pendientes. Todo funciona correctamente.
+                  </div>
+                );
+              }
+
+              return activeAlerts.map((alert) => {
                 const isWa = alert.alert_key.includes('whatsapp') || alert.message.toLowerCase().includes('whatsapp');
                 return (
                   <div key={alert.id} className="p-4 hover:bg-[#FAF8F3] transition-colors flex flex-col gap-2 relative group">
@@ -246,15 +257,15 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                           onClick={() => handleActionClick(alert)}
                           className="px-3 py-1 bg-[#D9381E] hover:bg-[#b82d16] text-white text-[11px] font-bold rounded-[4px] transition flex items-center gap-1 shadow-sm cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-[14px]">qr_code_2</span>
-                          <span>Generar Código QR</span>
+                          <span className="material-symbols-outlined text-[14px]">smart_toy</span>
+                          <span>Ver Configuración Meta</span>
                         </button>
                       )}
                     </div>
                   </div>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
         </div>
       )}

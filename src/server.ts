@@ -308,12 +308,15 @@ app.post('/api/clients', authenticateToken as any, requireRole(['superadmin', 'a
 
         if (userUpsert.rows.length > 0) {
           const uId = userUpsert.rows[0].id;
+          const existingRole = await pool.query(
+            `SELECT id FROM user_client_roles WHERE user_id = $1 AND client_id = $2 LIMIT 1`,
+            [uId, clientId]
+          );
           const allModules = ["inventory","billing","cartera","crm","employees","appointments","formulas","lab","domicilios","campaigns","marketing","suppliers","purchase_orders","settings"];
           await pool.query(
             `INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
              VALUES ($1, $2, 'admin_tenant', $3::jsonb)
-             ON CONFLICT (user_id, client_id, role) DO UPDATE SET
-               permissions_json = $3::jsonb`,
+             ON CONFLICT (user_id, client_id, role) DO NOTHING`,
             [uId, clientId, JSON.stringify({ modules: allModules })]
           );
         }
@@ -1008,6 +1011,34 @@ app.post('/api/login', async (req: Request, res: Response) => {
         }
 
         const sessionRole = isSuperAdmin ? 'superadmin' : 'client';
+
+        // ── Verificación MFA en /api/login ──
+        const clientResMfa = await pool.query(
+          `SELECT mfa_enabled, COALESCE(mfa_methods, '[]'::jsonb) AS mfa_methods, phone, owner_phone, phone_number, email 
+           FROM clients WHERE id = $1 LIMIT 1`,
+          [client.id]
+        );
+        const mfaRow = clientResMfa.rows[0];
+        const rawMfa = mfaRow?.mfa_methods;
+        const clientMfaMethods = Array.isArray(rawMfa) ? rawMfa : (typeof rawMfa === 'string' ? JSON.parse(rawMfa || '[]') : []);
+        const trustedToken = req.headers['x-trusted-device-token'] as string;
+        const isDeviceTrusted = await isTrustedDevice(client.id, client.id, trustedToken);
+
+        if (mfaRow?.mfa_enabled && clientMfaMethods.length > 0 && !isDeviceTrusted) {
+          const tempToken = jwt.sign(
+            { id: client.id, clientId: client.id, role: sessionRole, stage: 'mfa_pending', userPhone: mfaRow.phone || mfaRow.owner_phone || mfaRow.phone_number, userEmail: mfaRow.email },
+            JWT_SECRET,
+            { expiresIn: '10m' }
+          );
+          return res.json({
+            success: true,
+            mfaRequired: true,
+            tempToken,
+            availableMethods: clientMfaMethods,
+            userPhone: mfaRow.phone || mfaRow.owner_phone || mfaRow.phone_number || '',
+            userEmail: mfaRow.email || '',
+          });
+        }
         const sessionId = crypto.randomUUID();
 
         await registerActiveSession('client', client.id, client.id, sessionId, req);
@@ -1208,8 +1239,9 @@ app.post('/api/auth/google', async (req: Request, res: Response) => {
     const targetEmail = email ? String(email).trim().toLowerCase() : '';
     
     const clientRes = await pool.query(
-      `SELECT id, name, username, contact_name, is_activated, mfa_enabled, COALESCE(mfa_methods, '[]'::jsonb) AS mfa_methods, phone_number, owner_phone 
-       FROM clients WHERE LOWER(username) = $1 OR LOWER(contact_name) = $1 LIMIT 1`,
+      `SELECT id, name, username, contact_name, email, is_activated, mfa_enabled, COALESCE(mfa_methods, '[]'::jsonb) AS mfa_methods, phone_number, owner_phone 
+       FROM clients 
+       WHERE LOWER(email) = $1 OR LOWER(username) = $1 OR LOWER(contact_name) = $1 LIMIT 1`,
       [targetEmail]
     );
 
@@ -1220,7 +1252,20 @@ app.post('/api/auth/google', async (req: Request, res: Response) => {
       foundUser = clientRes.rows[0];
       userType = 'client';
     } else {
-      const empRes = await pool.query(
+      const userRes = await pool.query(
+        `SELECT u.id, u.username, u.email, u.full_name AS name, u.mfa_enabled, COALESCE(u.mfa_methods, '[]'::jsonb) AS mfa_methods,
+                ucr.client_id, c.name AS client_name, c.is_activated
+         FROM users u
+         LEFT JOIN user_client_roles ucr ON u.id = ucr.user_id
+         LEFT JOIN clients c ON ucr.client_id = c.id
+         WHERE LOWER(u.email) = $1 OR LOWER(u.username) = $1 LIMIT 1`,
+        [targetEmail]
+      );
+      if (userRes.rows.length > 0) {
+        foundUser = userRes.rows[0];
+        userType = 'user';
+      } else {
+        const empRes = await pool.query(
         `SELECT e.id AS employee_id, e.client_id, e.name, e.last_name, e.role AS employee_role, e.is_active, e.phone,
                 c.name AS client_name, c.is_activated
          FROM employees e
@@ -1231,6 +1276,7 @@ app.post('/api/auth/google', async (req: Request, res: Response) => {
       if (empRes.rows.length > 0) {
         foundUser = empRes.rows[0];
         userType = 'employee';
+      }
       }
     }
 
@@ -1289,30 +1335,64 @@ app.post('/api/auth/google', async (req: Request, res: Response) => {
 // ── Endpoints de Autenticación de Doble Factor (MFA / 2FA) ──
 app.post('/api/auth/mfa/send-otp', async (req: Request, res: Response) => {
   try {
-    const { clientId, userId, method, recipient } = req.body;
-    if (!clientId || !userId || !method) {
-      return res.status(400).json({ success: false, error: 'Parámetros incompletos' });
+    const { tempToken, clientId, userId, method, recipient } = req.body;
+    if (!method) {
+      return res.status(400).json({ success: false, error: 'Método MFA requerido' });
     }
 
+    let targetClientId = clientId;
+    let targetUserId = userId;
+    let targetRecipient = recipient;
+
+    if (tempToken) {
+      try {
+        const decoded: any = jwt.verify(tempToken, JWT_SECRET);
+        targetClientId = targetClientId || decoded.clientId || decoded.id;
+        targetUserId = targetUserId || decoded.userId || decoded.id;
+        targetRecipient = targetRecipient || (method === 'whatsapp' ? decoded.userPhone : decoded.userEmail);
+      } catch (e) {}
+    }
+
+    if (!targetRecipient && targetClientId) {
+      const cRes = await pool.query(
+        `SELECT phone, owner_phone, phone_number, email FROM clients WHERE id = $1`,
+        [targetClientId]
+      );
+      if (cRes.rows.length > 0) {
+        const row = cRes.rows[0];
+        targetRecipient = method === 'whatsapp'
+          ? (row.phone || row.owner_phone || row.phone_number)
+          : row.email;
+      }
+    }
+
+    const resolvedUserId = targetUserId || targetClientId || 'admin';
+    const resolvedClientId = targetClientId || 'admin';
+
     const code = generate6DigitOtp();
-    storeOtp(userId, clientId, method, code);
+    storeOtp(resolvedUserId, resolvedClientId, method, code);
 
     if (method === 'whatsapp') {
-      const cleanPhone = String(recipient || '').replace(/\D/g, '');
-      console.log(`[MFA WhatsApp] 📱 Código OTP generado para ${cleanPhone || userId}: ${code}`);
+      const cleanPhone = String(targetRecipient || '').replace(/\D/g, '');
+      console.log(`[MFA WhatsApp] 📱 Código OTP generado para ${cleanPhone || resolvedUserId}: ${code}`);
       
-      if (cleanPhone) {
-        try {
-          await sendWhatsAppTextMessage(cleanPhone, `🛡️ Tu código de verificación de 2 pasos para Diaz Lab ERP es: *${code}*\n\nEste código expira en 10 minutos. No lo compartas con nadie.`, 'admin');
-        } catch (waErr) {
-          console.warn("[MFA WhatsApp] No se pudo enviar mensaje por Meta Cloud API, código disponible en consola.");
-        }
+      if (!cleanPhone) {
+        return res.status(400).json({
+          success: false,
+          error: 'No hay un número de teléfono celular registrado para este usuario. Configura tu número en el perfil para recibir el código por WhatsApp.'
+        });
       }
 
-      return res.json({ success: true, message: `Código de verificación enviado por WhatsApp al ${recipient || 'número registrado'}.` });
+      try {
+        await sendWhatsAppTextMessage(cleanPhone, `🛡️ Tu código de verificación de 2 pasos para Frant ERP es: *${code}*\n\nEste código expira en 10 minutos. No lo compartas con nadie.`, 'admin');
+      } catch (waErr) {
+        console.warn("[MFA WhatsApp] No se pudo enviar mensaje por Meta Cloud API, código disponible en consola.");
+      }
+
+      return res.json({ success: true, message: `Código de verificación enviado por WhatsApp al número registrado.` });
     } else if (method === 'email') {
-      console.log(`[MFA Email] ✉️ Código OTP generado para ${recipient || userId}: ${code}`);
-      return res.json({ success: true, message: `Código de verificación enviado al correo ${recipient || 'registrado'}.` });
+      console.log(`[MFA Email] ✉️ Código OTP generado para ${targetRecipient || resolvedUserId}: ${code}`);
+      return res.json({ success: true, message: `Código de verificación enviado al correo ${targetRecipient || 'registrado'}.` });
     }
 
     return res.status(400).json({ success: false, error: 'Método de OTP no soportado' });
@@ -1323,10 +1403,27 @@ app.post('/api/auth/mfa/send-otp', async (req: Request, res: Response) => {
 
 app.post('/api/auth/mfa/verify-challenge', async (req: Request, res: Response) => {
   try {
-    const { clientId, userId, method, code, rememberDevice, userType } = req.body;
-    if (!clientId || !userId || !code) {
-      return res.status(400).json({ success: false, error: 'Código y usuario requeridos' });
+    const { tempToken, clientId, userId, method, code, rememberDevice, trustedDevice, userType } = req.body;
+    if (!code) {
+      return res.status(400).json({ success: false, error: 'Código requerido' });
     }
+
+    let targetClientId = clientId;
+    let targetUserId = userId;
+    let targetUserType = userType || 'client';
+
+    if (tempToken) {
+      try {
+        const decoded: any = jwt.verify(tempToken, JWT_SECRET);
+        targetClientId = targetClientId || decoded.clientId || decoded.id;
+        targetUserId = targetUserId || decoded.userId || decoded.id;
+        targetUserType = targetUserType || decoded.role || 'client';
+      } catch (e) {}
+    }
+
+    const resolvedClientId = targetClientId || 'admin';
+    const resolvedUserId = targetUserId || resolvedClientId;
+    const shouldRemember = rememberDevice !== undefined ? rememberDevice : trustedDevice;
 
     let isValid = false;
 
@@ -1468,11 +1565,14 @@ app.post('/api/auth/mfa/update-methods', authenticateToken as any, async (req: R
     const resolvedMethods = Array.isArray(mfaMethods) ? mfaMethods : (Array.isArray(methods) ? methods : []);
     const resolvedEnabled = mfaEnabled !== undefined ? Boolean(mfaEnabled) : (enabled !== undefined ? Boolean(enabled) : resolvedMethods.length > 0);
 
+    const isUuid = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
     if (targetClientId) {
       await pool.query(`UPDATE clients SET mfa_enabled = $1, mfa_methods = $2 WHERE id = $3`, [resolvedEnabled, JSON.stringify(resolvedMethods), targetClientId]);
     }
-    if (targetUserId) {
+    if (targetUserId && isUuid(targetUserId)) {
       await pool.query(`UPDATE employees SET mfa_enabled = $1, mfa_methods = $2 WHERE id = $3`, [resolvedEnabled, JSON.stringify(resolvedMethods), targetUserId]);
+      await pool.query(`UPDATE users SET mfa_enabled = $1, mfa_methods = $2 WHERE id = $3`, [resolvedEnabled, JSON.stringify(resolvedMethods), targetUserId]);
     }
 
     return res.json({ success: true, message: 'Ajustes de seguridad guardados', mfaEnabled: resolvedEnabled, mfaMethods: resolvedMethods });
@@ -6795,7 +6895,7 @@ app.put('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any,
     }
 
     await pool.query(
-      `DELETE FROM user_client_roles WHERE user_id = $1 AND client_id = $2 AND role <> $3`,
+      `DELETE FROM user_client_roles WHERE user_id = $1 AND client_id = $2`,
       [userId, clientId, cleanRole]
     );
 

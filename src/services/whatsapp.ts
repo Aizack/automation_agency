@@ -11,6 +11,9 @@ import { logger } from './logger';
 import { uploadTenantFile } from './storageService';
 import { broadcastSseEvent } from './sse';
 
+// Bandera de características para activar/desactivar Puppeteer & QR (por defecto false para Meta App Review)
+export const ENABLE_PUPPETEER_QR = process.env.ENABLE_PUPPETEER_QR === 'true';
+
 // Helper para emitir cambios de estado por SSE en tiempo real
 export const notifyStatusChange = (key: string) => {
     const state = getWhatsAppState(key);
@@ -82,6 +85,14 @@ export const initializeWhatsAppClient = (tenantId: string = 'admin', options: { 
     const key = tenantId || 'admin';
     const isAutoRestore = options.isAutoRestore ?? false;
     
+    if (!ENABLE_PUPPETEER_QR) {
+        console.log(`[WhatsApp Multi-Tenant] ⏸️ Modo Puppeteer/QR pausado (ENABLE_PUPPETEER_QR=false). Canal activo: Meta Cloud API.`);
+        const state = getWhatsAppState(key);
+        state.status = 'DISCONNECTED';
+        state.qr = '';
+        return null as any;
+    }
+
     // Si ya existe una instancia para esta tienda, la devolvemos
     let existingClient = whatsappClientsMap.get(key);
     if (existingClient) {
@@ -515,6 +526,10 @@ let autoRestoreExecuted = false;
 
 // Autorestaurar sesiones de WhatsApp previamente vinculadas y guardadas en disco (Sin pedir QR nuevo)
 export const autoRestoreSavedWhatsAppSessions = async () => {
+    if (!ENABLE_PUPPETEER_QR) {
+        console.log(`[WhatsApp Multi-Tenant] ⏸️ Autorestauración de sesiones Puppeteer en pausa (ENABLE_PUPPETEER_QR=false).`);
+        return;
+    }
     if (autoRestoreExecuted) return;
     autoRestoreExecuted = true;
 
