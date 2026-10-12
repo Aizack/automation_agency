@@ -8,6 +8,7 @@ interface TenantUser {
   username: string;
   full_name: string;
   email: string;
+  phone?: string;
   role: string;
   permissions: string[];
   created_at: string;
@@ -62,6 +63,7 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
   const [formUsername, setFormUsername] = useState('');
   const [formFullName, setFormFullName] = useState('');
   const [formEmail, setFormEmail] = useState('');
+  const [formPhone, setFormPhone] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [formRole, setFormRole] = useState('vendedor');
   const [formPermissions, setFormPermissions] = useState<string[]>([]);
@@ -87,6 +89,7 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
     setFormUsername('');
     setFormFullName('');
     setFormEmail('');
+    setFormPhone('');
     setFormPassword('');
     setFormRole('vendedor');
     setFormPermissions(['billing', 'crm', 'inventory']);
@@ -99,6 +102,7 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
     setFormUsername(user.username);
     setFormFullName(user.full_name);
     setFormEmail(user.email || '');
+    setFormPhone(user.phone || '');
     setFormPassword('');
     setFormRole(user.role);
     setFormPermissions(user.permissions || []);
@@ -129,6 +133,7 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
         username: formUsername.trim(),
         full_name: formFullName.trim(),
         email: formEmail.trim() || null,
+        phone: formPhone.trim() || null,
         role: formRole,
         permissions: formPermissions,
       };
@@ -320,12 +325,24 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
                     </div>
 
                     <div className="text-xs text-[#76746E] font-mono flex flex-wrap items-center gap-2">
-                      <span className="text-[#161616]">@{user.username}</span>
+                      <span className="text-[#161616] font-bold">@{user.username}</span>
                       {user.email && (
                         <>
                           <span>·</span>
                           <span>{user.email}</span>
                         </>
+                      )}
+                      <span>·</span>
+                      {user.phone ? (
+                        <span className="inline-flex items-center gap-1 text-[#1E4620] bg-[#E6F4EA] px-1.5 py-0.5 border border-[#B7E1CD] text-[11px]" title="Celular personal registrado para 2FA por WhatsApp">
+                          <span className="material-symbols-outlined text-[13px] text-emerald-600">smartphone</span>
+                          <span>{user.phone}</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[#D9381E] bg-[#FCE8E6] px-1.5 py-0.5 border border-[#F5C2C7] text-[10px]" title="Sin celular registrado para 2FA">
+                          <span className="material-symbols-outlined text-[13px]">phone_disabled</span>
+                          <span>Sin celular 2FA</span>
+                        </span>
                       )}
                       <span>·</span>
                       <span className="text-[11px]">
@@ -455,6 +472,20 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
                     value={formEmail}
                     onChange={e => setFormEmail(e.target.value)}
                     placeholder="usuario@empresa.com"
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2.5 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] uppercase tracking-wider text-[#76746E] font-bold font-mono flex items-center justify-between">
+                    <span>Celular Personal (MFA / 2FA)</span>
+                    <span className="text-[#1E4620] bg-[#E6F4EA] px-1 text-[9px] font-bold">whatsapp otp</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={formPhone}
+                    onChange={e => setFormPhone(e.target.value)}
+                    placeholder="Ej. +57 300 1234567"
                     className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2.5 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
                   />
                 </div>

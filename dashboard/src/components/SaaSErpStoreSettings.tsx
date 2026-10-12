@@ -431,14 +431,12 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
                 </div>
                 <h5 className="font-bold text-sm text-[#161616]">WhatsApp Verification (OTP)</h5>
                 <p className="text-xs text-[#6B6862] leading-relaxed">
-                  Envía un token de 6 dígitos automáticamente al WhatsApp registrado {phone ? <strong className="text-[#161616]">({phone})</strong> : <span className="text-[#D9381E] font-bold">(No registrado)</span>} al iniciar sesión.
+                  Envía un token de 6 dígitos automáticamente al número de WhatsApp <strong>personal</strong> configurado en el perfil de cada usuario o colaborador al iniciar sesión.
                 </p>
-                {!phone && (
-                  <div className="p-2 bg-[#FCE8E6] border border-[#D9381E] text-[10px] text-[#D9381E] font-semibold flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[13px]">warning</span>
-                    <span>No tienes un teléfono registrado en "Perfil Comercial". Debes agregarlo para recibir códigos por WhatsApp.</span>
-                  </div>
-                )}
+                <div className="p-2 bg-[#FAF8F3] border border-[#E2DFD7] text-[10px] text-[#76746E] flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[13px] text-[#161616]">manage_accounts</span>
+                  <span>Los números celulares personales se administran individualmente en <strong>Accesos & Permisos</strong>.</span>
+                </div>
                 <div className="pt-2">
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm font-mono ${mfaMethods.includes('whatsapp') ? 'bg-[#E6F4EA] text-[#1E4620]' : 'bg-[#F6F4EE] text-[#6B6862]'}`}>
                     {mfaMethods.includes('whatsapp') ? '✓ Habilitado' : '○ Desactivado'}

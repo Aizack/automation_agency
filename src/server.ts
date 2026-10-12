@@ -1014,7 +1014,7 @@ app.post('/api/login', async (req: Request, res: Response) => {
 
         // ── Verificación MFA en /api/login ──
         const clientResMfa = await pool.query(
-          `SELECT mfa_enabled, COALESCE(mfa_methods, '[]'::jsonb) AS mfa_methods, phone, owner_phone, phone_number, email 
+          `SELECT mfa_enabled, COALESCE(mfa_methods, '[]'::jsonb) AS mfa_methods, email 
            FROM clients WHERE id = $1 LIMIT 1`,
           [client.id]
         );
@@ -1024,9 +1024,18 @@ app.post('/api/login', async (req: Request, res: Response) => {
         const trustedToken = req.headers['x-trusted-device-token'] as string;
         const isDeviceTrusted = await isTrustedDevice(client.id, client.id, trustedToken);
 
+        // Buscar el usuario en la tabla users para obtener su celular PERSONAL
+        const userRow = await pool.query(
+          `SELECT id, phone, email FROM users WHERE LOWER(username) = LOWER($1) OR id::text = $2 LIMIT 1`,
+          [client.username, client.id]
+        );
+        const personalPhone = userRow.rows[0]?.phone || '';
+        const personalEmail = userRow.rows[0]?.email || mfaRow?.email || '';
+        const resolvedUserId = userRow.rows[0]?.id || client.id;
+
         if (mfaRow?.mfa_enabled && clientMfaMethods.length > 0 && !isDeviceTrusted) {
           const tempToken = jwt.sign(
-            { id: client.id, clientId: client.id, role: sessionRole, stage: 'mfa_pending', userPhone: mfaRow.phone || mfaRow.owner_phone || mfaRow.phone_number, userEmail: mfaRow.email },
+            { id: resolvedUserId, userId: resolvedUserId, clientId: client.id, role: sessionRole, stage: 'mfa_pending', userPhone: personalPhone, userEmail: personalEmail },
             JWT_SECRET,
             { expiresIn: '10m' }
           );
@@ -1035,8 +1044,8 @@ app.post('/api/login', async (req: Request, res: Response) => {
             mfaRequired: true,
             tempToken,
             availableMethods: clientMfaMethods,
-            userPhone: mfaRow.phone || mfaRow.owner_phone || mfaRow.phone_number || '',
-            userEmail: mfaRow.email || '',
+            userPhone: personalPhone,
+            userEmail: personalEmail,
           });
         }
         const sessionId = crypto.randomUUID();
@@ -1353,16 +1362,41 @@ app.post('/api/auth/mfa/send-otp', async (req: Request, res: Response) => {
       } catch (e) {}
     }
 
-    if (!targetRecipient && targetClientId) {
-      const cRes = await pool.query(
-        `SELECT phone, owner_phone, phone_number, email FROM clients WHERE id = $1`,
-        [targetClientId]
-      );
-      if (cRes.rows.length > 0) {
-        const row = cRes.rows[0];
-        targetRecipient = method === 'whatsapp'
-          ? (row.phone || row.owner_phone || row.phone_number)
-          : row.email;
+    if (!targetRecipient) {
+      // 1. Consultar teléfono personal del usuario en users
+      if (targetUserId) {
+        const uRes = await pool.query(
+          `SELECT phone, email FROM users WHERE id::text = $1 OR LOWER(username) = LOWER($1) LIMIT 1`,
+          [String(targetUserId)]
+        );
+        if (uRes.rows.length > 0) {
+          targetRecipient = method === 'whatsapp' ? uRes.rows[0].phone : uRes.rows[0].email;
+        }
+      }
+
+      // 2. Si no se encontró y es colaborador/empleado, consultar employees
+      if (!targetRecipient && targetUserId) {
+        const empRes = await pool.query(
+          `SELECT phone FROM employees WHERE id::text = $1 OR user_id::text = $1 LIMIT 1`,
+          [String(targetUserId)]
+        );
+        if (empRes.rows.length > 0) {
+          targetRecipient = empRes.rows[0].phone;
+        }
+      }
+
+      // 3. Si targetClientId está presente, buscar el usuario del dueño en users
+      if (!targetRecipient && targetClientId) {
+        const cRes = await pool.query(`SELECT username, email FROM clients WHERE id = $1 LIMIT 1`, [targetClientId]);
+        if (cRes.rows.length > 0 && cRes.rows[0].username) {
+          const uOwnerRes = await pool.query(
+            `SELECT phone, email FROM users WHERE LOWER(username) = LOWER($1) LIMIT 1`,
+            [cRes.rows[0].username]
+          );
+          if (uOwnerRes.rows.length > 0) {
+            targetRecipient = method === 'whatsapp' ? uOwnerRes.rows[0].phone : uOwnerRes.rows[0].email;
+          }
+        }
       }
     }
 
@@ -1379,7 +1413,7 @@ app.post('/api/auth/mfa/send-otp', async (req: Request, res: Response) => {
       if (!cleanPhone) {
         return res.status(400).json({
           success: false,
-          error: 'No hay un número de teléfono celular registrado para este usuario. Configura tu número en el perfil para recibir el código por WhatsApp.'
+          error: 'No tienes un número de celular personal registrado en tu cuenta de usuario. Configura tu celular en la sección de Usuarios (o en tu perfil de empleado) para recibir el código por WhatsApp.'
         });
       }
 
@@ -6762,7 +6796,7 @@ app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authori
     }
 
     const result = await pool.query(
-      `SELECT u.id AS id, u.username, u.full_name, u.email, u.created_at,
+      `SELECT u.id AS id, u.username, u.full_name, u.email, u.phone, u.created_at,
               r.id AS role_id, r.role,
               COALESCE(r.permissions_json, '{}'::jsonb) AS permissions_json
        FROM user_client_roles r
@@ -6777,6 +6811,7 @@ app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authori
       username: row.username,
       full_name: row.full_name,
       email: row.email,
+      phone: row.phone || '',
       role: row.role,
       permissions: Array.isArray(row.permissions_json?.modules) ? row.permissions_json.modules : [],
       created_at: row.created_at
@@ -6791,7 +6826,7 @@ app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authori
 app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { username, password, full_name, email, role, permissions = [] } = req.body;
+    const { username, password, full_name, email, phone, role, permissions = [] } = req.body;
 
     if (!username || !String(username).trim()) {
       return res.status(400).json({ success: false, error: 'El usuario del negocio es requerido.' });
@@ -6800,6 +6835,7 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
     const cleanUsername = String(username).trim().toLowerCase();
     const cleanFullName = String(full_name || '').trim() || cleanUsername;
     const cleanEmail = String(email || '').trim();
+    const cleanPhone = String(phone || '').trim();
     const cleanRole = String(role || 'admin_tenant').trim();
     const cleanPermissions = Array.isArray(permissions)
       ? permissions.map((item: any) => String(item).trim()).filter(Boolean)
@@ -6811,14 +6847,15 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
     }
 
     const userResult = await pool.query(
-      `INSERT INTO users (username, password_hash, full_name, email)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO users (username, password_hash, full_name, email, phone)
+       VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (username) DO UPDATE SET
          password_hash = COALESCE(EXCLUDED.password_hash, users.password_hash),
          full_name = EXCLUDED.full_name,
-         email = EXCLUDED.email
-       RETURNING id, username, full_name, email`,
-      [cleanUsername, passwordHash, cleanFullName, cleanEmail || null]
+         email = EXCLUDED.email,
+         phone = COALESCE(EXCLUDED.phone, users.phone)
+       RETURNING id, username, full_name, email, phone`,
+      [cleanUsername, passwordHash, cleanFullName, cleanEmail || null, cleanPhone || null]
     );
 
     const user = userResult.rows[0];
@@ -6839,6 +6876,7 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
         username: user.username,
         full_name: user.full_name,
         email: user.email,
+        phone: user.phone || cleanPhone,
         role: roleResult.rows[0]?.role || cleanRole,
         permissions: cleanPermissions,
         created_at: new Date().toISOString()
@@ -6852,11 +6890,12 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
 app.put('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, userId } = req.params;
-    const { username, password, full_name, email, role, permissions = [] } = req.body;
+    const { username, password, full_name, email, phone, role, permissions = [] } = req.body;
 
     const cleanUsername = String(username || '').trim().toLowerCase();
     const cleanFullName = String(full_name || '').trim();
     const cleanEmail = String(email || '').trim();
+    const cleanPhone = String(phone || '').trim();
     const cleanRole = String(role || 'admin_tenant').trim();
     const cleanPermissions = Array.isArray(permissions)
       ? permissions.map((item: any) => String(item).trim()).filter(Boolean)
@@ -6875,18 +6914,18 @@ app.put('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any,
     if (passwordHash) {
       userUpdate = await pool.query(
         `UPDATE users
-         SET username = $1, password_hash = $2, full_name = $3, email = $4
-         WHERE id = $5
-         RETURNING id, username, full_name, email`,
-        [cleanUsername, passwordHash, cleanFullName || cleanUsername, cleanEmail || null, userId]
+         SET username = $1, password_hash = $2, full_name = $3, email = $4, phone = $5
+         WHERE id = $6
+         RETURNING id, username, full_name, email, phone`,
+        [cleanUsername, passwordHash, cleanFullName || cleanUsername, cleanEmail || null, cleanPhone || null, userId]
       );
     } else {
       userUpdate = await pool.query(
         `UPDATE users
-         SET username = $1, full_name = $2, email = $3
-         WHERE id = $4
-         RETURNING id, username, full_name, email`,
-        [cleanUsername, cleanFullName || cleanUsername, cleanEmail || null, userId]
+         SET username = $1, full_name = $2, email = $3, phone = $4
+         WHERE id = $5
+         RETURNING id, username, full_name, email, phone`,
+        [cleanUsername, cleanFullName || cleanUsername, cleanEmail || null, cleanPhone || null, userId]
       );
     }
 
@@ -6894,9 +6933,16 @@ app.put('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any,
       return res.status(404).json({ success: false, error: 'Usuario del negocio no encontrado.' });
     }
 
+    // Sincronizar teléfono con empleado vinculado si existe
+    if (cleanPhone) {
+      try {
+        await pool.query(`UPDATE employees SET phone = $1 WHERE user_id = $2`, [cleanPhone, userId]);
+      } catch (empSyncErr) {}
+    }
+
     await pool.query(
       `DELETE FROM user_client_roles WHERE user_id = $1 AND client_id = $2`,
-      [userId, clientId, cleanRole]
+      [userId, clientId]
     );
 
     const result = await pool.query(
@@ -6915,6 +6961,7 @@ app.put('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any,
         username: userUpdate.rows[0].username,
         full_name: userUpdate.rows[0].full_name,
         email: userUpdate.rows[0].email,
+        phone: userUpdate.rows[0].phone || cleanPhone,
         role: result.rows[0]?.role || cleanRole,
         permissions: cleanPermissions
       }
