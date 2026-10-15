@@ -126,30 +126,42 @@ export const getClientById = async (id: string): Promise<ClientConfig | null> =>
   }
 };
 
+const ALLOWED_CLIENT_COLUMNS = new Set([
+  'name',
+  'phone_number',
+  'system_prompt',
+  'active_tools',
+  'status',
+  'agent_phone',
+  'drive_folder_id',
+  'username',
+  'password',
+  'email',
+  'contact_name',
+  'owner_phone',
+  'first_message_notified',
+  'is_activated',
+  'meta_phone_number_id',
+  'meta_waba_id',
+  'meta_wa_token',
+  'logo_url',
+  'parent_client_id',
+  'category',
+  'person_type',
+  'country',
+  'country_code',
+  'timezone',
+  'mfa_enabled',
+  'mfa_methods',
+  'mfa_totp_secret'
+]);
+
 /**
- * Actualiza los campos específicos de un cliente.
+ * Actualiza los campos específicos de un cliente con protección estricta contra SQL Injection.
  */
 export const updateClient = async (
   id: string,
-  updates: Partial<{
-    name: string;
-    phone_number: string;
-    system_prompt: string;
-    active_tools: string[];
-    status: string;
-    agent_phone: string;
-    drive_folder_id: string;
-    username: string;
-    password: string;
-    email: string;
-    contact_name: string;
-    owner_phone: string;
-    first_message_notified: boolean;
-    is_activated: boolean;
-    meta_phone_number_id: string;
-    meta_waba_id: string;
-    meta_wa_token: string;
-  }>
+  updates: Record<string, any>
 ): Promise<void> => {
   try {
     const setQuery: string[] = [];
@@ -157,7 +169,11 @@ export const updateClient = async (
     let paramIndex = 1;
 
     Object.entries(updates).forEach(([key, value]) => {
-      setQuery.push(`${key} = $${paramIndex}`);
+      if (!ALLOWED_CLIENT_COLUMNS.has(key)) {
+        console.warn(`[CRUD] ⚠️ Campo no permitido ignorado en updateClient: ${key}`);
+        return;
+      }
+      setQuery.push(`"${key}" = $${paramIndex}`);
       values.push(value);
       paramIndex++;
     });

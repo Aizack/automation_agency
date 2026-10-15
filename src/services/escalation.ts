@@ -20,6 +20,26 @@ export const startEscalationService = (
                   AND assigned_at < NOW() - INTERVAL '1 minute'
             `);
 
+            if (sessionsRes.rows.length === 0) return;
+
+            // Optimización de rendimiento: consultar todos los agentes en línea en una sola consulta por lote
+            const clientIds = Array.from(new Set(sessionsRes.rows.map((s: any) => s.client_id)));
+            const allAgentsRes = await pool.query(`
+                SELECT client_id, department, name, phone, priority 
+                FROM agent_contacts
+                WHERE client_id = ANY($1::text[]) AND status = 'online'
+                ORDER BY priority ASC
+            `, [clientIds]);
+
+            const agentsMap = new Map<string, any[]>();
+            for (const ag of allAgentsRes.rows) {
+                const key = `${ag.client_id}:${ag.department || 'recepcion'}`;
+                if (!agentsMap.has(key)) {
+                    agentsMap.set(key, []);
+                }
+                agentsMap.get(key)!.push(ag);
+            }
+
             for (const session of sessionsRes.rows) {
                 const clientId = session.client_id;
                 const customerPhone = session.customer_phone;
@@ -27,15 +47,7 @@ export const startEscalationService = (
                 const currentAgentPhone = session.current_agent_phone;
                 const dept = session.department || 'recepcion';
 
-                // Obtener todos los asesores en línea del cliente de ese departamento ordenados por prioridad
-                const agentsRes = await pool.query(`
-                    SELECT name, phone, priority 
-                    FROM agent_contacts
-                    WHERE client_id = $1 AND status = 'online' AND department = $2
-                    ORDER BY priority ASC
-                `, [clientId, dept]);
-
-                const onlineAgents = agentsRes.rows;
+                const onlineAgents = agentsMap.get(`${clientId}:${dept}`) || [];
 
                 if (onlineAgents.length === 0) {
                     // Si no hay asesores en línea, ir a fallback inmediatamente

@@ -57,20 +57,46 @@ export class VectorDatabase {
             await client.query('DELETE FROM vector_store WHERE client_id = $1', [clientId]);
             console.log(`[Vector DB] Registros vectoriales previos limpiados para ${clientId}.`);
 
-            // 2. Generar vectores e insertar cada fragmento
-            for (const doc of documents) {
-                const embedding = await this.getEmbedding(doc);
-                // Convertir el array numérico en el formato string que pgvector espera: [val1, val2, val3, ...]
-                const vectorStr = `[${embedding.join(',')}]`;
+            // 2. Generar vectores concurrentemente por lotes controlados (lotes de 5 para respetar límites de API)
+            const BATCH_SIZE = 5;
+            const items: { doc: string; vectorStr: string }[] = [];
 
-                await client.query(
-                    `INSERT INTO vector_store (client_id, content, embedding) VALUES ($1, $2, $3::vector)`,
-                    [clientId, doc, vectorStr]
-                );
+            for (let i = 0; i < documents.length; i += BATCH_SIZE) {
+                const batch = documents.slice(i, i + BATCH_SIZE);
+                const embeddings = await Promise.all(batch.map(doc => this.getEmbedding(doc)));
+                batch.forEach((doc, idx) => {
+                    const emb = embeddings[idx];
+                    if (emb && emb.length > 0) {
+                        items.push({
+                            doc,
+                            vectorStr: `[${emb.join(',')}]`
+                        });
+                    }
+                });
+            }
+
+            // 3. Inserción masiva en PostgreSQL en lugar de consultas individuales
+            if (items.length > 0) {
+                const CHUNK_INSERT_SIZE = 50;
+                for (let i = 0; i < items.length; i += CHUNK_INSERT_SIZE) {
+                    const chunk = items.slice(i, i + CHUNK_INSERT_SIZE);
+                    const values: any[] = [];
+                    const rowParams: string[] = [];
+                    let pIdx = 1;
+
+                    chunk.forEach(item => {
+                        rowParams.push(`($${pIdx}, $${pIdx + 1}, $${pIdx + 2}::vector)`);
+                        values.push(clientId, item.doc, item.vectorStr);
+                        pIdx += 3;
+                    });
+
+                    const insertSql = `INSERT INTO vector_store (client_id, content, embedding) VALUES ${rowParams.join(', ')}`;
+                    await client.query(insertSql, values);
+                }
             }
 
             await client.query('COMMIT');
-            console.log(`[Vector DB] ✅ Sincronización finalizada con éxito. ${documents.length} chunks almacenados.`);
+            console.log(`[Vector DB] ✅ Sincronización finalizada con éxito. ${items.length} chunks almacenados en lote.`);
         } catch (error) {
             await client.query('ROLLBACK');
             console.error(`[Vector DB] ❌ Error en la transacción de guardado de vectores:`, error);

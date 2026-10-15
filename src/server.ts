@@ -597,14 +597,14 @@ app.post('/api/clients/:clientId/audios', authenticateToken as any, authorizeCli
     const filePath = path.join(clientMediaDir, fileName);
 
     // Evitar duplicados eliminando archivos con la misma etiqueta pero diferente extensión
-    const existingFiles = fs.readdirSync(clientMediaDir);
+    const existingFiles = await fs.promises.readdir(clientMediaDir);
     for (const f of existingFiles) {
       if (f.startsWith(`${cleanTag}.`)) {
-        fs.unlinkSync(path.join(clientMediaDir, f));
+        await fs.promises.unlink(path.join(clientMediaDir, f)).catch(() => {});
       }
     }
 
-    fs.writeFileSync(filePath, file.buffer);
+    await fs.promises.writeFile(filePath, file.buffer);
     console.log(`[Media Upload] 🎙️ Audio guardado para cliente ${clientId}: ${fileName}`);
 
     res.json({ success: true, message: 'Audio subido correctamente.' });
@@ -621,7 +621,7 @@ app.delete('/api/clients/:clientId/audios/:fileName', authenticateToken as any, 
     const filePath = path.join(process.cwd(), 'media', 'clients', clientId, 'audios', fileName);
 
     if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+      await fs.promises.unlink(filePath);
       res.json({ success: true, message: 'Audio eliminado con éxito.' });
     } else {
       res.status(404).json({ success: false, error: 'Archivo no encontrado.' });
@@ -1925,7 +1925,7 @@ app.post('/api/clients/:clientId/employees/parse-cv-batch', authenticateToken as
         allowed_modules: ['inventory', 'billing', 'crm', 'calendar']
       });
 
-      try { fs.unlinkSync(file.path); } catch (e) {}
+      try { await fs.promises.unlink(file.path); } catch (e) {}
     }
 
     return res.json({
@@ -3076,7 +3076,7 @@ app.post('/api/clients/:clientId/products/import', authenticateToken as any, aut
 
     // Eliminar archivo temporal
     try {
-      fs.unlinkSync(filePath);
+      await fs.promises.unlink(filePath);
     } catch (e) {
       console.error("[Multer cleanup] Error unlinking temp file:", e);
     }
@@ -9280,7 +9280,7 @@ app.delete('/api/clients/:clientId/logos/:fileName', authenticateToken as any, a
     const filePath = path.join(process.cwd(), 'media', 'clients', clientId, 'logos', fileName);
 
     if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+      await fs.promises.unlink(filePath);
 
       // Si el logo eliminado era el que estaba activo en la base de datos, asignar el último disponible o null
       const logosDir = path.dirname(filePath);
