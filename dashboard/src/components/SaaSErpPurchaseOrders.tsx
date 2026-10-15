@@ -101,6 +101,7 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
     const [shippingCost, setShippingCost] = useState<number | ''>('');
     const [notes, setNotes] = useState('');
     const [items, setItems] = useState<PurchaseOrderItem[]>([{ product_id: '', quantity: 1, cost_price: 0, is_new_product: false }]);
+    const [itemSearchTerms, setItemSearchTerms] = useState<{ [index: number]: string }>({});
 
     const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || '';
 
@@ -760,7 +761,12 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
 
                                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                 <div className="flex flex-col gap-1">
-                                                    <label className="text-[10px] text-[#6B6862] font-semibold">Producto del Pedido</label>
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-[10px] text-[#6B6862] font-semibold">Producto del Pedido</label>
+                                                        {!item.is_new_product && (
+                                                            <span className="text-[9px] text-[#8C877D] font-mono">Búsqueda rápida</span>
+                                                        )}
+                                                    </div>
                                                     {item.is_new_product ? (
                                                         <div className="p-2 bg-white rounded-md border border-[#D9381E]/40 text-xs flex justify-between items-center h-[38px]">
                                                             <div className="overflow-hidden">
@@ -776,17 +782,45 @@ export const SaaSErpPurchaseOrders: React.FC<PurchaseOrdersProps> = ({ clientId 
                                                             </button>
                                                         </div>
                                                     ) : (
-                                                        <select 
-                                                            required={!item.is_new_product}
-                                                            value={item.product_id || ''}
-                                                            onChange={(e) => handleItemChange(idx, 'product_id', e.target.value)}
-                                                            className="bg-white border border-[#E2DFD7] rounded-md p-2 text-xs text-[#161616] outline-none cursor-pointer h-[38px]"
-                                                        >
-                                                            <option value="">-- Selecciona del Catálogo --</option>
-                                                            {products.map(p => (
-                                                                <option key={p.id} value={p.id}>{p.name} {p.sku ? `(${p.sku})` : ''}</option>
-                                                            ))}
-                                                        </select>
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="🔍 Filtrar por nombre o SKU..."
+                                                                    value={itemSearchTerms[idx] || ''}
+                                                                    onChange={(e) => setItemSearchTerms({ ...itemSearchTerms, [idx]: e.target.value })}
+                                                                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] rounded-none px-2 py-1 text-[11px] text-[#161616] outline-none font-sans placeholder:text-[#8C877D]"
+                                                                />
+                                                                {itemSearchTerms[idx] && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setItemSearchTerms({ ...itemSearchTerms, [idx]: '' })}
+                                                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#8C877D] hover:text-[#161616] text-xs cursor-pointer"
+                                                                    >
+                                                                        ✕
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                            <select 
+                                                                required={!item.is_new_product}
+                                                                value={item.product_id || ''}
+                                                                onChange={(e) => handleItemChange(idx, 'product_id', e.target.value)}
+                                                                className="bg-white border border-[#E2DFD7] rounded-none p-2 text-xs text-[#161616] outline-none cursor-pointer h-[38px]"
+                                                            >
+                                                                <option value="">-- Selecciona del Catálogo --</option>
+                                                                {products
+                                                                    .filter(p => {
+                                                                        const term = (itemSearchTerms[idx] || '').trim().toLowerCase();
+                                                                        if (!term) return true;
+                                                                        return (p.name && p.name.toLowerCase().includes(term)) || 
+                                                                               (p.sku && p.sku.toLowerCase().includes(term)) ||
+                                                                               p.id === item.product_id;
+                                                                    })
+                                                                    .map(p => (
+                                                                        <option key={p.id} value={p.id}>{p.name} {p.sku ? `(${p.sku})` : ''}</option>
+                                                                    ))}
+                                                            </select>
+                                                        </div>
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col gap-1">

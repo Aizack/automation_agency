@@ -50,7 +50,10 @@ export const initDatabase = async () => {
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS is_activated BOOLEAN DEFAULT FALSE;`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'optica';`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS person_type VARCHAR(30) DEFAULT 'persona_juridica';`);
-        console.log("[DB Init] ✅ Tabla 'clients' creada y alterada con columnas de Login, agent_phone, drive_folder_id, owner_phone, first_message_notified, is_activated, category y person_type.");
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'Colombia';`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS country_code VARCHAR(10) DEFAULT '57';`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS timezone VARCHAR(100) DEFAULT 'America/Bogota';`);
+        console.log("[DB Init] ✅ Tabla 'clients' creada y alterada con columnas de Login, agent_phone, drive_folder_id, owner_phone, first_message_notified, is_activated, category, person_type, country, country_code y timezone.");
 
         // 2.1 Crear tabla users (usuarios de plataforma) y user_client_roles (acceso multi-tenant)
         await pool.query(`
@@ -60,10 +63,16 @@ export const initDatabase = async () => {
                 password_hash VARCHAR(255),
                 full_name VARCHAR(150),
                 email VARCHAR(150),
+                phone VARCHAR(30),
+                country VARCHAR(100) DEFAULT 'Colombia',
+                country_code VARCHAR(10) DEFAULT '57',
                 is_global_admin BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
+        await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(30);`);
+        await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'Colombia';`);
+        await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS country_code VARCHAR(10) DEFAULT '57';`);
         await pool.query(`
             CREATE TABLE IF NOT EXISTS user_client_roles (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1370,6 +1379,11 @@ export const initDatabase = async () => {
             ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS client_timestamp TIMESTAMP;
             ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS server_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
             ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS clock_drift_seconds INT DEFAULT 0;
+            ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS opened_by_name VARCHAR(100);
+            ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS closed_by_name VARCHAR(100);
+            ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS cash_expenses NUMERIC(12,2) DEFAULT 0.00;
+            ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS expected_cash NUMERIC(12,2) DEFAULT 0.00;
+            ALTER TABLE cash_shifts ADD COLUMN IF NOT EXISTS shift_date DATE DEFAULT CURRENT_DATE;
             ALTER TABLE employees ADD COLUMN IF NOT EXISTS professional_license VARCHAR(50);
 
             CREATE TABLE IF NOT EXISTS patient_clinical_records (

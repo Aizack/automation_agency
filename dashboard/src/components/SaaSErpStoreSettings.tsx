@@ -104,9 +104,13 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
 
     try {
       setMfaSaving(true);
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('emp_token') || '';
       const res = await fetch('/api/auth/mfa/update-methods', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           clientId,
           mfaEnabled: nextEnabled,
@@ -134,16 +138,20 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
     try {
       setTotpLoading(true);
       setTotpError(null);
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('emp_token') || '';
       const res = await fetch('/api/auth/mfa/setup-totp', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ clientId, email: email || storeName })
       });
       const json = await res.json();
       if (json.success) {
         setTotpSecret(json.secret);
-        // QR URL vía servicio universal Google Chart QR
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(json.otpauthUrl)}`;
+        const otpUrl = json.otpauthUrl || json.qrUri || '';
+        const qrUrl = json.qrDataUrl || `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(otpUrl)}`;
         setTotpQrUrl(qrUrl);
         setTotpModalOpen(true);
       } else {
@@ -164,10 +172,14 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
     try {
       setTotpLoading(true);
       setTotpError(null);
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('emp_token') || '';
       const res = await fetch('/api/auth/mfa/confirm-totp', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId, secret: totpSecret, code: totpConfirmCode.trim() })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ clientId, secret: totpSecret, code: totpConfirmCode.trim(), token: totpConfirmCode.trim() })
       });
       const json = await res.json();
       if (json.success) {
@@ -192,9 +204,13 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   const handleGenerateBackupCodes = async () => {
     try {
       setBackupLoading(true);
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('emp_token') || '';
       const res = await fetch('/api/auth/mfa/backup-codes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ clientId })
       });
       const json = await res.json();

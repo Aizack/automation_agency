@@ -9,6 +9,8 @@ interface TenantUser {
   full_name: string;
   email: string;
   phone?: string;
+  country?: string;
+  country_code?: string;
   role: string;
   permissions: string[];
   created_at: string;
@@ -17,6 +19,25 @@ interface TenantUser {
 interface SaaSErpUsersProps {
   clientId: string;
 }
+
+export const COUNTRIES = [
+  { name: 'Colombia', code: '57', flag: '🇨🇴' },
+  { name: 'México', code: '52', flag: '🇲🇽' },
+  { name: 'Estados Unidos / Canadá', code: '1', flag: '🇺🇸' },
+  { name: 'España', code: '34', flag: '🇪🇸' },
+  { name: 'Argentina', code: '54', flag: '🇦🇷' },
+  { name: 'Chile', code: '56', flag: '🇨🇱' },
+  { name: 'Perú', code: '51', flag: '🇵🇪' },
+  { name: 'Ecuador', code: '593', flag: '🇪🇨' },
+  { name: 'Venezuela', code: '58', flag: '🇻🇪' },
+  { name: 'Bolivia', code: '591', flag: '🇧🇴' },
+  { name: 'Guatemala', code: '502', flag: '🇬🇹' },
+  { name: 'Costa Rica', code: '506', flag: '🇨🇷' },
+  { name: 'Panamá', code: '507', flag: '🇵🇦' },
+  { name: 'Uruguay', code: '598', flag: '🇺🇾' },
+  { name: 'Paraguay', code: '595', flag: '🇵🇾' },
+  { name: 'Brasil', code: '55', flag: '🇧🇷' },
+];
 
 const ALL_MODULES = [
   { key: 'inventory',       label: 'Inventario & Stock',  icon: 'inventory_2' },
@@ -63,6 +84,7 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
   const [formUsername, setFormUsername] = useState('');
   const [formFullName, setFormFullName] = useState('');
   const [formEmail, setFormEmail] = useState('');
+  const [formCountry, setFormCountry] = useState('Colombia');
   const [formPhone, setFormPhone] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [formRole, setFormRole] = useState('vendedor');
@@ -89,6 +111,7 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
     setFormUsername('');
     setFormFullName('');
     setFormEmail('');
+    setFormCountry('Colombia');
     setFormPhone('');
     setFormPassword('');
     setFormRole('vendedor');
@@ -102,7 +125,19 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
     setFormUsername(user.username);
     setFormFullName(user.full_name);
     setFormEmail(user.email || '');
-    setFormPhone(user.phone || '');
+
+    const userCountry = user.country || 'Colombia';
+    setFormCountry(userCountry);
+
+    // Extraer solo dígitos locales limpios (sin código de país)
+    const matched = COUNTRIES.find(c => c.name.toLowerCase() === userCountry.toLowerCase()) || COUNTRIES[0];
+    const code = user.country_code || matched.code;
+    let digits = (user.phone || '').replace(/\D/g, '');
+    if (digits.startsWith(code) && digits.length > 10) {
+      digits = digits.slice(code.length);
+    }
+    setFormPhone(digits);
+
     setFormPassword('');
     setFormRole(user.role);
     setFormPermissions(user.permissions || []);
@@ -129,11 +164,19 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
     setSaving(true);
     setError(null);
     try {
+      const matched = COUNTRIES.find(c => c.name.toLowerCase() === formCountry.toLowerCase()) || COUNTRIES[0];
+      let cleanDigits = formPhone.replace(/\D/g, '');
+      if (cleanDigits.startsWith(matched.code) && cleanDigits.length > 10) {
+        cleanDigits = cleanDigits.slice(matched.code.length);
+      }
+
       const body: any = {
         username: formUsername.trim(),
         full_name: formFullName.trim(),
         email: formEmail.trim() || null,
-        phone: formPhone.trim() || null,
+        phone: cleanDigits || null, // LIMPIO SIN INDICATIVO
+        country: formCountry,
+        country_code: matched.code,
         role: formRole,
         permissions: formPermissions,
       };
@@ -334,9 +377,13 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
                       )}
                       <span>·</span>
                       {user.phone ? (
-                        <span className="inline-flex items-center gap-1 text-[#1E4620] bg-[#E6F4EA] px-1.5 py-0.5 border border-[#B7E1CD] text-[11px]" title="Celular personal registrado para 2FA por WhatsApp">
+                        <span className="inline-flex items-center gap-1.5 text-[#1E4620] bg-[#E6F4EA] px-1.5 py-0.5 border border-[#B7E1CD] text-[11px]" title={`Celular MFA: +${user.country_code || '57'} ${user.phone} (${user.country || 'Colombia'})`}>
                           <span className="material-symbols-outlined text-[13px] text-emerald-600">smartphone</span>
-                          <span>{user.phone}</span>
+                          <span>
+                            {COUNTRIES.find(c => c.name.toLowerCase() === (user.country || 'colombia').toLowerCase())?.flag || '🇨🇴'}{' '}
+                            <span className="text-[#3b6e44] font-medium">+{user.country_code || COUNTRIES.find(c => c.name.toLowerCase() === (user.country || 'colombia').toLowerCase())?.code || '57'}</span>{' '}
+                            <span className="font-bold">{user.phone}</span>
+                          </span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[#D9381E] bg-[#FCE8E6] px-1.5 py-0.5 border border-[#F5C2C7] text-[10px]" title="Sin celular registrado para 2FA">
@@ -477,17 +524,43 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
                 </div>
 
                 <div className="space-y-1">
+                  <label className="block text-[10px] uppercase tracking-wider text-[#76746E] font-bold font-mono">
+                    País de Residencia *
+                  </label>
+                  <select
+                    value={formCountry}
+                    onChange={e => setFormCountry(e.target.value)}
+                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2.5 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-sans rounded-none cursor-pointer transition-colors"
+                  >
+                    {COUNTRIES.map(c => (
+                      <option key={c.name} value={c.name}>
+                        {c.flag} {c.name} (+{c.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
                   <label className="block text-[10px] uppercase tracking-wider text-[#76746E] font-bold font-mono flex items-center justify-between">
                     <span>Celular Personal (MFA / 2FA)</span>
                     <span className="text-[#1E4620] bg-[#E6F4EA] px-1 text-[9px] font-bold">whatsapp otp</span>
                   </label>
-                  <input
-                    type="tel"
-                    value={formPhone}
-                    onChange={e => setFormPhone(e.target.value)}
-                    placeholder="Ej. +57 300 1234567"
-                    className="w-full bg-[#FAF8F5] border border-[#E2DFD7] p-2.5 text-xs text-[#161616] focus:border-[#161616] focus:bg-white outline-none font-mono rounded-none transition-colors"
-                  />
+                  <div className="flex border border-[#E2DFD7] bg-[#FAF8F5] focus-within:border-[#161616] focus-within:bg-white transition-colors">
+                    <div className="px-3 py-2 bg-[#F6F4EE] border-r border-[#E2DFD7] text-xs font-mono font-bold text-[#161616] flex items-center gap-1.5 select-none shrink-0" title={`Indicativo automático para ${formCountry}`}>
+                      <span>{COUNTRIES.find(c => c.name.toLowerCase() === formCountry.toLowerCase())?.flag || '🌐'}</span>
+                      <span>+{COUNTRIES.find(c => c.name.toLowerCase() === formCountry.toLowerCase())?.code || '57'}</span>
+                    </div>
+                    <input
+                      type="tel"
+                      value={formPhone}
+                      onChange={e => setFormPhone(e.target.value)}
+                      placeholder="Ej. 3001234567"
+                      className="w-full bg-transparent p-2.5 text-xs text-[#161616] outline-none font-mono"
+                    />
+                  </div>
+                  <span className="text-[10px] text-[#76746E] font-mono block">
+                    Solo ingresa tu número local (sin código de país). Se usará para enviarte códigos OTP de verificación por WhatsApp.
+                  </span>
                 </div>
 
                 <div className="space-y-1 sm:col-span-2">

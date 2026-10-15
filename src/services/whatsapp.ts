@@ -568,9 +568,41 @@ export const autoRestoreSavedWhatsAppSessions = async () => {
     }
 };
 
-// Enviar un mensaje proactivo desde el cliente de una tienda específica
+// Enviar un mensaje proactivo desde el cliente de una tienda específica (Soporte Híbrido: Meta Cloud API + WhatsApp Web JS)
 export const sendWhatsAppTextMessage = async (phone: string, text: string, clientId: string = 'admin'): Promise<boolean> => {
     try {
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+        if (!cleanPhone) return false;
+
+        // 1. Prioridad: Verificar si la tienda tiene configurada Meta Cloud API oficial
+        try {
+            const clientRes = await pool.query(
+                `SELECT meta_phone_number_id, meta_wa_token 
+                 FROM clients 
+                 WHERE id = $1 
+                 LIMIT 1`,
+                [clientId]
+            );
+
+            const metaConfig = clientRes.rows[0];
+            const metaPhoneId = metaConfig?.meta_phone_number_id || process.env.META_PHONE_NUMBER_ID;
+            const metaToken = metaConfig?.meta_wa_token || process.env.META_WA_TOKEN;
+
+            if (metaPhoneId && metaToken) {
+                const { MetaWhatsAppService } = await import('./metaWhatsAppService');
+                const metaResult = await MetaWhatsAppService.sendMetaTextMessage(metaPhoneId, cleanPhone, text, metaToken);
+                if (metaResult.success) {
+                    console.log(`[WhatsApp Sender - Meta Cloud API - ${clientId}] ✅ Mensaje enviado exitosamente a +${cleanPhone}`);
+                    return true;
+                } else {
+                    console.warn(`[WhatsApp Sender - Meta Cloud API - ${clientId}] ⚠️ Error con Meta API, intentando fallback QR:`, metaResult.error);
+                }
+            }
+        } catch (metaErr: any) {
+            console.warn(`[WhatsApp Sender] Error verificando credenciales de Meta para ${clientId}:`, metaErr?.message || metaErr);
+        }
+
+        // 2. Fallback: whatsapp-web.js (Puppeteer / Sesión QR vinculada)
         const targetClient = whatsappClientsMap.get(clientId) || client;
         const state = getWhatsAppState(clientId);
 
@@ -579,15 +611,54 @@ export const sendWhatsAppTextMessage = async (phone: string, text: string, clien
             return false;
         }
 
-        const cleanPhone = phone.replace(/[^0-9]/g, '');
-        if (!cleanPhone) return false;
-
         const target = cleanPhone.endsWith('@c.us') ? cleanPhone : `${cleanPhone}@c.us`;
         await targetClient.sendMessage(target, text);
         console.log(`[WhatsApp Sender - ${clientId}] ✅ Mensaje enviado exitosamente a +${cleanPhone}`);
         return true;
     } catch (err: any) {
         console.error(`[WhatsApp Sender - ${clientId}] ❌ Error enviando mensaje a +${phone}:`, err?.message || err);
+        return false;
+    }
+};
+
+// Enviar un código de autenticación de dos pasos (MFA / 2FA) con garantía de entrega
+export const sendWhatsAppOtpMessage = async (phone: string, code: string, clientId: string = 'admin'): Promise<boolean> => {
+    try {
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+        if (!cleanPhone) return false;
+
+        // 1. Prioridad: Meta Cloud API con Plantilla Oficial de Autenticación (frant_auth_otp)
+        try {
+            const clientRes = await pool.query(
+                `SELECT meta_phone_number_id, meta_wa_token 
+                 FROM clients 
+                 WHERE id = $1 
+                 LIMIT 1`,
+                [clientId]
+            );
+
+            const metaConfig = clientRes.rows[0];
+            const metaPhoneId = metaConfig?.meta_phone_number_id || process.env.META_PHONE_NUMBER_ID;
+            const metaToken = metaConfig?.meta_wa_token || process.env.META_WA_TOKEN;
+
+            if (metaPhoneId && metaToken) {
+                const { MetaWhatsAppService } = await import('./metaWhatsAppService');
+                const textMessage = `🛡️ Tu código de verificación de 2 pasos para Frant ERP es: *${code}*\n\nEste código expira en 10 minutos. No lo compartas con nadie.`;
+                const textResult = await MetaWhatsAppService.sendMetaTextMessage(metaPhoneId, cleanPhone, textMessage, metaToken);
+                if (textResult.success) {
+                    console.log(`[WhatsApp OTP Sender - ${clientId}] ✅ Código OTP enviado exitosamente a +${cleanPhone}`);
+                    return true;
+                }
+            }
+        } catch (metaErr: any) {
+            console.warn(`[WhatsApp OTP Sender] Error con Meta Cloud API para ${clientId}:`, metaErr?.message || metaErr);
+        }
+
+        // 2. Fallback: whatsapp-web.js (Puppeteer / QR vinculado)
+        const textMessage = `🛡️ Tu código de verificación de 2 pasos para Frant ERP es: *${code}*\n\nEste código expira en 10 minutos. No lo compartas con nadie.`;
+        return await sendWhatsAppTextMessage(cleanPhone, textMessage, clientId);
+    } catch (err: any) {
+        console.error(`[WhatsApp OTP Sender - ${clientId}] ❌ Error enviando OTP a +${phone}:`, err?.message || err);
         return false;
     }
 };

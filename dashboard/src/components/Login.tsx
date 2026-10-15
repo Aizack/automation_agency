@@ -6,24 +6,31 @@ interface LoginProps {
   onLoginSuccess: (clientId: string, role: string, token: string, extra?: Record<string, any>) => void;
 }
 
-const COUNTRY_CODES = [
-  { code: '57', flag: '🇨🇴', name: 'Colombia (+57)' },
-  { code: '52', flag: '🇲🇽', name: 'México (+52)' },
-  { code: '1', flag: '🇺🇸', name: 'EE.UU. / Canadá (+1)' },
-  { code: '34', flag: '🇪🇸', name: 'España (+34)' },
-  { code: '54', flag: '🇦🇷', name: 'Argentina (+54)' },
-  { code: '56', flag: '🇨🇱', name: 'Chile (+56)' },
-  { code: '51', flag: '🇵🇪', name: 'Perú (+51)' },
-  { code: '593', flag: '🇪🇨', name: 'Ecuador (+593)' },
-  { code: '58', flag: '🇻🇪', name: 'Venezuela (+58)' },
-  { code: '591', flag: '🇧🇴', name: 'Bolivia (+591)' },
-  { code: '502', flag: '🇬🇹', name: 'Guatemala (+502)' },
-  { code: '506', flag: '🇨🇷', name: 'Costa Rica (+506)' },
-  { code: '507', flag: '🇵🇦', name: 'Panamá (+507)' },
-  { code: '598', flag: '🇺🇾', name: 'Uruguay (+598)' },
-  { code: '595', flag: '🇵🇾', name: 'Paraguay (+595)' },
-  { code: '55', flag: '🇧🇷', name: 'Brasil (+55)' },
+export const COUNTRY_LIST = [
+  { country: 'Colombia', code: '57', flag: '🇨🇴' },
+  { country: 'México', code: '52', flag: '🇲🇽' },
+  { country: 'Estados Unidos / Canadá', code: '1', flag: '🇺🇸' },
+  { country: 'España', code: '34', flag: '🇪🇸' },
+  { country: 'Argentina', code: '54', flag: '🇦🇷' },
+  { country: 'Chile', code: '56', flag: '🇨🇱' },
+  { country: 'Perú', code: '51', flag: '🇵🇪' },
+  { country: 'Ecuador', code: '593', flag: '🇪🇨' },
+  { country: 'Venezuela', code: '58', flag: '🇻🇪' },
+  { country: 'Bolivia', code: '591', flag: '🇧🇴' },
+  { country: 'Guatemala', code: '502', flag: '🇬🇹' },
+  { country: 'Costa Rica', code: '506', flag: '🇨🇷' },
+  { country: 'Panamá', code: '507', flag: '🇵🇦' },
+  { country: 'Uruguay', code: '598', flag: '🇺🇾' },
+  { country: 'Paraguay', code: '595', flag: '🇵🇾' },
+  { country: 'Brasil', code: '55', flag: '🇧🇷' },
 ];
+
+const COUNTRY_CODES = COUNTRY_LIST.map(c => ({
+  code: c.code,
+  flag: c.flag,
+  name: `${c.country} (+${c.code})`,
+  country: c.country
+}));
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
@@ -58,6 +65,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [regContactName, setRegContactName] = useState('');
   const [regBusinessName, setRegBusinessName] = useState('');
   const [regCategory, setRegCategory] = useState('optica');
+  const [regCountry, setRegCountry] = useState('Colombia');
   const [regUsername, setRegUsername] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regEmail, setRegEmail] = useState('');
@@ -66,6 +74,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [regSuccess, setRegSuccess] = useState<string | null>(null);
   const [regLoading, setRegLoading] = useState(false);
 
+  // Helper para resolver el objeto del país de registro seleccionado
+  const regSelectedCountryObj = useMemo(() => {
+    return COUNTRY_LIST.find(c => c.country.toLowerCase() === regCountry.toLowerCase()) || COUNTRY_LIST[0];
+  }, [regCountry]);
+
   // Auto-detectar país por IP (para seleccionar indicativo predeterminado)
   useEffect(() => {
     fetch('https://ipapi.co/json/')
@@ -73,8 +86,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       .then(data => {
         if (data && data.country_calling_code) {
           const cleanCode = data.country_calling_code.replace('+', '');
-          if (COUNTRY_CODES.some(c => c.code === cleanCode)) {
-            setSelectedCountry(cleanCode);
+          const matched = COUNTRY_LIST.find(c => c.code === cleanCode);
+          if (matched) {
+            setSelectedCountry(matched.code);
+            setRegCountry(matched.country);
           }
         }
       })
@@ -108,11 +123,27 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
       if (json.mfaRequired) {
         setMfaTempToken(json.tempToken);
-        setMfaAvailableMethods(json.availableMethods || ['whatsapp']);
-        if (json.availableMethods && json.availableMethods.length > 0) {
-          setMfaSelectedMethod(json.availableMethods[0] as any);
+        const methods: string[] = json.availableMethods || ['whatsapp'];
+        setMfaAvailableMethods(methods);
+        
+        let primaryMethod = 'whatsapp';
+        if (methods.includes('totp')) {
+          primaryMethod = 'totp';
+        } else if (methods.length > 0) {
+          primaryMethod = methods[0];
         }
+
+        setMfaSelectedMethod(primaryMethod as any);
         setMfaModalOpen(true);
+        setMfaSuccessMsg(null);
+        setMfaError(null);
+        setMfaCode('');
+
+        // Solo auto-enviar si WhatsApp/Email es el ÚNICO método configurado (1 solo método).
+        // Si hay más de una opción o TOTP, el usuario decide cuál método usar y presiona el botón.
+        if (methods.length === 1 && (primaryMethod === 'whatsapp' || primaryMethod === 'email')) {
+          handleSendMfaOtp(primaryMethod, json.tempToken);
+        }
         return;
       }
 
@@ -154,11 +185,25 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
       if (json.mfaRequired) {
         setMfaTempToken(json.tempToken);
-        setMfaAvailableMethods(json.availableMethods || ['whatsapp']);
-        if (json.availableMethods && json.availableMethods.length > 0) {
-          setMfaSelectedMethod(json.availableMethods[0] as any);
+        const methods: string[] = json.availableMethods || ['whatsapp'];
+        setMfaAvailableMethods(methods);
+
+        let primaryMethod = 'whatsapp';
+        if (methods.includes('totp')) {
+          primaryMethod = 'totp';
+        } else if (methods.length > 0) {
+          primaryMethod = methods[0];
         }
+
+        setMfaSelectedMethod(primaryMethod as any);
         setMfaModalOpen(true);
+        setMfaSuccessMsg(null);
+        setMfaError(null);
+        setMfaCode('');
+
+        if (methods.length === 1 && (primaryMethod === 'whatsapp' || primaryMethod === 'email')) {
+          handleSendMfaOtp(primaryMethod, json.tempToken);
+        }
         return;
       }
 
@@ -208,17 +253,20 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleSendMfaOtp = async () => {
+  const handleSendMfaOtp = async (methodParam?: string, tokenParam?: string) => {
     try {
       setMfaLoading(true);
       setMfaError(null);
       setMfaSuccessMsg(null);
+      const activeMethod = methodParam || mfaSelectedMethod;
+      const activeToken = tokenParam || mfaTempToken;
+
       const res = await fetch('/api/auth/mfa/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tempToken: mfaTempToken,
-          method: mfaSelectedMethod,
+          tempToken: activeToken,
+          method: activeMethod,
         }),
       });
       const json = await res.json();
@@ -245,8 +293,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    const cleanPhoneDigits = regPhone.replace(/\D/g, '');
-    const fullPhone = cleanPhoneDigits.length === 10 ? `${selectedCountry}${cleanPhoneDigits}` : cleanPhoneDigits;
+    let cleanPhoneDigits = regPhone.replace(/\D/g, '');
+    const callingCode = regSelectedCountryObj.code;
+    if (cleanPhoneDigits.startsWith(callingCode) && cleanPhoneDigits.length > 10) {
+      cleanPhoneDigits = cleanPhoneDigits.slice(callingCode.length);
+    }
 
     try {
       setRegLoading(true);
@@ -257,8 +308,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           contact_name: regContactName.trim(),
           business_name: regBusinessName.trim(),
           category: regCategory,
+          country: regCountry,
+          country_code: callingCode,
           username: regUsername.trim(),
-          phone_number: fullPhone,
+          phone_number: cleanPhoneDigits,
           email: regEmail.trim() || undefined,
           password: regPassword,
         }),
@@ -700,6 +753,23 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                 <label style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6B6862', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  País de la Empresa *
+                </label>
+                <select
+                  value={regCountry}
+                  onChange={e => setRegCountry(e.target.value)}
+                  style={{ width: '100%', padding: '0.65rem 0.8rem', border: '1px solid #E2DFD7', borderRadius: '3px', fontSize: '0.85rem', color: '#161616', background: '#FFFFFF', outline: 'none', cursor: 'pointer', fontWeight: 500 }}
+                >
+                  {COUNTRY_LIST.map(c => (
+                    <option key={c.country} value={c.country}>
+                      {c.flag} {c.country} (+{c.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                <label style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6B6862', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   Tipo de Negocio / Sector *
                 </label>
                 <select
@@ -732,24 +802,37 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 <label style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6B6862', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   Teléfono / WhatsApp *
                 </label>
-                <div style={{ display: 'flex', border: '1px solid #E2DFD7', borderRadius: '3px', overflow: 'hidden' }}>
-                  <select
-                    value={selectedCountry}
-                    onChange={e => setSelectedCountry(e.target.value)}
-                    style={{ background: '#FAF8F3', border: 'none', borderRight: '1px solid #E2DFD7', padding: '0.65rem 0.5rem', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600 }}
+                <div style={{ display: 'flex', border: '1px solid #E2DFD7', borderRadius: '3px', overflow: 'hidden', background: '#FFFFFF' }}>
+                  <div
+                    style={{
+                      background: '#FAF8F3',
+                      borderRight: '1px solid #E2DFD7',
+                      padding: '0.65rem 0.75rem',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      color: '#6B6862',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      userSelect: 'none',
+                      whiteSpace: 'nowrap'
+                    }}
+                    title={`Indicativo asignado automáticamente para ${regSelectedCountryObj.country}: +${regSelectedCountryObj.code}`}
                   >
-                    {COUNTRY_CODES.map(c => (
-                      <option key={c.code} value={c.code}>{c.flag} +{c.code}</option>
-                    ))}
-                  </select>
+                    <span>{regSelectedCountryObj.flag}</span>
+                    <span>+{regSelectedCountryObj.code}</span>
+                  </div>
                   <input
-                    type="text"
+                    type="tel"
                     placeholder="3116718652"
                     value={regPhone}
-                    onChange={e => setRegPhone(e.target.value)}
-                    style={{ flex: 1, border: 'none', padding: '0.65rem 0.8rem', fontSize: '0.85rem', outline: 'none' }}
+                    onChange={e => setRegPhone(e.target.value.replace(/\D/g, ''))}
+                    style={{ flex: 1, border: 'none', padding: '0.65rem 0.8rem', fontSize: '0.85rem', outline: 'none', color: '#161616' }}
                   />
                 </div>
+                <span style={{ fontSize: '0.68rem', color: '#8C8983' }}>
+                  Indicativo (+{regSelectedCountryObj.code}) asignado automáticamente según el país ({regSelectedCountryObj.country}). Ingresa únicamente los dígitos locales.
+                </span>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
@@ -1416,24 +1499,58 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               )}
             </div>
 
+            {mfaSelectedMethod === 'totp' && (
+              <div style={{ backgroundColor: '#FAF8F3', border: '1px solid #E2DFD7', padding: '8px 12px', borderRadius: '4px' }}>
+                <p style={{ margin: 0, fontSize: '0.74rem', color: '#161616', textAlign: 'center', fontWeight: 600 }}>
+                  🔑 Abre Google Authenticator o Authy en tu celular e ingresa el código actual de 6 dígitos.
+                </p>
+              </div>
+            )}
+
             {/* Acción de Envío si es WhatsApp o Correo */}
             {(mfaSelectedMethod === 'whatsapp' || mfaSelectedMethod === 'email') && (
-              <button
-                type="button"
-                onClick={handleSendMfaOtp}
-                disabled={mfaLoading}
-                style={{
-                  padding: '0.5rem',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  backgroundColor: '#FAF8F3',
-                  border: '1px solid #E2DFD7',
-                  color: '#161616',
-                  cursor: 'pointer',
-                }}
-              >
-                {mfaLoading ? 'Enviando...' : `📩 Solicitar / Enviar Código por ${mfaSelectedMethod === 'whatsapp' ? 'WhatsApp' : 'Correo'}`}
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleSendMfaOtp()}
+                  disabled={mfaLoading}
+                  style={{
+                    padding: '0.65rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    backgroundColor: mfaSuccessMsg ? '#FAF8F3' : '#161616',
+                    border: '1px solid #161616',
+                    color: mfaSuccessMsg ? '#161616' : '#FFFFFF',
+                    cursor: mfaLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    borderRadius: '4px',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 16, animation: mfaLoading ? 'spin 1s linear infinite' : 'none' }}>
+                    {mfaLoading ? 'sync' : (mfaSuccessMsg ? 'refresh' : 'send')}
+                  </span>
+                  {mfaLoading 
+                    ? 'Enviando código...' 
+                    : (mfaSuccessMsg 
+                        ? `Reenviar código por ${mfaSelectedMethod === 'whatsapp' ? 'WhatsApp' : 'Correo'}` 
+                        : `📩 Solicitar / Enviar Código por ${mfaSelectedMethod === 'whatsapp' ? 'WhatsApp' : 'Correo'}`
+                      )}
+                </button>
+                {mfaSelectedMethod === 'whatsapp' && (
+                  <p style={{ margin: 0, fontSize: '0.7rem', color: '#6B6862', textAlign: 'center' }}>
+                    📲 Presiona el botón para recibir el código de 6 dígitos en tu WhatsApp.
+                  </p>
+                )}
+                {mfaSelectedMethod === 'email' && (
+                  <p style={{ margin: 0, fontSize: '0.7rem', color: '#6B6862', textAlign: 'center' }}>
+                    ✉️ Presiona el botón para recibir el código de 6 dígitos en tu bandeja de correo.
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Campo de Código */}

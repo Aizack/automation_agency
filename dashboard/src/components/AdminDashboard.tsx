@@ -233,6 +233,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
           </button>
 
           <button 
+            className="w-full text-left text-[#161616] hover:bg-white flex items-center gap-3 px-4 py-3 transition-all duration-200 rounded-[4px] bg-transparent border-0 cursor-pointer text-xs font-bold"
+            onClick={(e) => {
+              e.preventDefault();
+              onViewClient?.('admin');
+            }}
+            title="Abrir ERP de mi Tienda (Diaz Lab)"
+          >
+            <span className="material-symbols-outlined text-[18px] text-[#D9381E]">storefront</span>
+            <span>Mi Tienda (Diaz Lab)</span>
+          </button>
+
+          <button 
             className="w-full text-left text-[#6B6862] hover:text-[#161616] hover:bg-white flex items-center gap-3 px-4 py-3 transition-all duration-200 rounded-[4px] bg-transparent border-0 cursor-pointer text-xs font-bold"
             onClick={(e) => {
               e.preventDefault();
@@ -301,13 +313,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
               </button>
             )}
             {activeTab === 'overview' && (
-              <button 
-                className="bg-[#D9381E] hover:bg-[#b82b14] text-white text-xs font-bold px-5 py-2.5 rounded-[4px] flex items-center gap-2 shadow-sm transition-all cursor-pointer border-0"
-                onClick={() => setShowModal(true)}
-              >
-                <span className="material-symbols-outlined text-[18px]">person_add</span>
-                + Crear Nuevo Cliente
-              </button>
+              <>
+                <button 
+                  className="bg-[#161616] hover:bg-[#2C2A29] text-white text-xs font-bold px-4 py-2.5 rounded-[4px] flex items-center gap-2 shadow-sm transition-all cursor-pointer border-0"
+                  onClick={() => onViewClient?.('admin')}
+                  title="Abrir ERP de mi Tienda (Diaz Lab)"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-[#F39C12]">storefront</span>
+                  <span>Mi Tienda (Diaz Lab)</span>
+                </button>
+                <button 
+                  className="bg-[#D9381E] hover:bg-[#b82b14] text-white text-xs font-bold px-5 py-2.5 rounded-[4px] flex items-center gap-2 shadow-sm transition-all cursor-pointer border-0"
+                  onClick={() => setShowModal(true)}
+                >
+                  <span className="material-symbols-outlined text-[18px]">person_add</span>
+                  + Crear Nuevo Cliente
+                </button>
+              </>
             )}
           </div>
         </header>

@@ -43,6 +43,8 @@ import {
   createTrustedDevice, 
   isTrustedDevice 
 } from './services/mfaService';
+import QRCode from 'qrcode';
+import { sendEmailOtp } from './services/emailService';
 
 import { 
   createClient, 
@@ -53,7 +55,7 @@ import {
   updateClientStatus 
 } from './database/clientsCrud';
 import { pool } from './database/postgres';
-import { getWhatsAppState, whatsappState, initializeWhatsAppClient, connectWhatsApp, logoutWhatsApp, client, sendWhatsAppTextMessage } from './services/whatsapp';
+import { getWhatsAppState, whatsappState, initializeWhatsAppClient, connectWhatsApp, logoutWhatsApp, client, sendWhatsAppTextMessage, sendWhatsAppOtpMessage } from './services/whatsapp';
 import { 
   fetchDocumentsFromDrive, 
   createClientFolder, 
@@ -98,6 +100,29 @@ restoreSystemState();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_fallback_key_123';
 
+export const COUNTRY_PREFIX_MAP: Record<string, string> = {
+  'colombia': '57',
+  'méxico': '52',
+  'mexico': '52',
+  'estados unidos / canadá': '1',
+  'estados unidos': '1',
+  'ee.uu.': '1',
+  'españa': '34',
+  'argentina': '54',
+  'chile': '56',
+  'perú': '51',
+  'peru': '51',
+  'ecuador': '593',
+  'venezuela': '58',
+  'bolivia': '591',
+  'guatemala': '502',
+  'costa rica': '506',
+  'panamá': '507',
+  'panama': '507',
+  'uruguay': '598',
+  'paraguay': '595',
+  'brasil': '55'
+};
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -248,7 +273,9 @@ app.post('/api/clients', authenticateToken as any, requireRole(['superadmin', 'a
       password,
       email,
       contact_name,
-      category
+      category,
+      country,
+      country_code
     } = req.body;
 
     if (!name) {
@@ -260,6 +287,14 @@ app.post('/api/clients', authenticateToken as any, requireRole(['superadmin', 'a
 
     const clientId = id || 'client_' + Math.random().toString(36).substring(2, 10);
     const finalPrompt = system_prompt || `Eres un asistente de IA amable y servicial para la empresa ${name}.`;
+    const finalCountry = String(country || 'Colombia').trim();
+    const finalCountryCode = String(country_code || (finalCountry.toLowerCase() === 'colombia' ? '57' : (COUNTRY_PREFIX_MAP[finalCountry.toLowerCase()] || '57'))).replace('+', '').trim();
+
+    // Limpiar el teléfono de caracteres no numéricos y remover el indicativo si vino antepuesto
+    let cleanPhone = phone_number ? String(phone_number).replace(/\D/g, '') : null;
+    if (cleanPhone && cleanPhone.startsWith(finalCountryCode) && cleanPhone.length > 10) {
+      cleanPhone = cleanPhone.slice(finalCountryCode.length);
+    }
 
     let finalDriveFolderId = drive_folder_id;
     // Si no nos pasan una carpeta de drive por parámetro, la creamos automáticamente en tu Drive de 5TB!
@@ -275,7 +310,7 @@ app.post('/api/clients', authenticateToken as any, requireRole(['superadmin', 'a
     await createClient({ 
       id: clientId, 
       name, 
-      phone_number: phone_number || null, 
+      phone_number: cleanPhone, 
       system_prompt: finalPrompt, 
       active_tools: active_tools || [], 
       agent_phone: agent_phone || null,
@@ -285,7 +320,9 @@ app.post('/api/clients', authenticateToken as any, requireRole(['superadmin', 'a
       email: email || null,
       contact_name: contact_name || null,
       is_activated: true,
-      category: category || 'optica'
+      category: category || 'optica',
+      country: finalCountry,
+      country_code: finalCountryCode
     });
 
     // Sincronizar automáticamente el usuario administrador en `users` y `user_client_roles`
@@ -296,14 +333,17 @@ app.post('/api/clients', authenticateToken as any, requireRole(['superadmin', 'a
         const hashedPass = password ? (isHashedPassword(password) ? password : await hashPassword(password)) : null;
 
         const userUpsert = await pool.query(
-          `INSERT INTO users (username, password_hash, full_name, email, is_global_admin)
-           VALUES ($1, $2, $3, $4, $5)
+          `INSERT INTO users (username, password_hash, full_name, email, is_global_admin, phone, country, country_code)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
            ON CONFLICT (username) DO UPDATE SET
              password_hash = COALESCE(EXCLUDED.password_hash, users.password_hash),
              full_name = EXCLUDED.full_name,
-             email = COALESCE(EXCLUDED.email, users.email)
+             email = COALESCE(EXCLUDED.email, users.email),
+             phone = COALESCE(EXCLUDED.phone, users.phone),
+             country = COALESCE(EXCLUDED.country, users.country),
+             country_code = COALESCE(EXCLUDED.country_code, users.country_code)
            RETURNING id`,
-          [cleanUser, hashedPass, cleanName, email || null, cleanUser === 'admin']
+          [cleanUser, hashedPass, cleanName, email || null, cleanUser === 'admin', cleanPhone, finalCountry, finalCountryCode]
         );
 
         if (userUpsert.rows.length > 0) {
@@ -312,7 +352,7 @@ app.post('/api/clients', authenticateToken as any, requireRole(['superadmin', 'a
             `SELECT id FROM user_client_roles WHERE user_id = $1 AND client_id = $2 LIMIT 1`,
             [uId, clientId]
           );
-          const allModules = ["inventory","billing","cartera","crm","employees","appointments","formulas","lab","domicilios","campaigns","marketing","suppliers","purchase_orders","settings"];
+          const allModules = ["inventory","billing","cartera","contabilidad","registro_gastos","crm","employees","appointments","formulas","lab","domicilios","campaigns","marketing","metas_ventas","suppliers","purchase_orders","trazabilidad","system_status","settings"];
           await pool.query(
             `INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
              VALUES ($1, $2, 'admin_tenant', $3::jsonb)
@@ -624,15 +664,23 @@ app.post('/api/clients/:id/sync-drive', authenticateToken as any, authorizeClien
 // Registro público de inquilinos (tiendas)
 app.post('/api/auth/register-client', async (req: Request, res: Response) => {
   try {
-    const { contact_name, username, password, phone_number, email, business_name, name, category } = req.body;
+    const { contact_name, username, password, phone_number, email, business_name, name, category, country, country_code } = req.body;
 
     if (!contact_name || !username || !password || !phone_number) {
       return res.status(400).json({ success: false, error: 'Faltan campos obligatorios para el registro.' });
     }
 
-    const cleanPhone = phone_number.replace(/\D/g, '');
     const finalBusinessName = (business_name || name || '').trim() || 'Mi Negocio';
     const finalCategory = (category || 'optica').trim().toLowerCase();
+    const finalCountry = String(country || 'Colombia').trim();
+    const finalCountryCode = String(country_code || (finalCountry.toLowerCase() === 'colombia' ? '57' : (COUNTRY_PREFIX_MAP[finalCountry.toLowerCase()] || '57'))).replace('+', '').trim();
+
+    // Limpiar el teléfono de caracteres no numéricos y remover el indicativo para guardarlo limpio
+    let cleanPhone = String(phone_number).replace(/\D/g, '');
+    if (cleanPhone.startsWith(finalCountryCode) && cleanPhone.length > 10) {
+      cleanPhone = cleanPhone.slice(finalCountryCode.length);
+    }
+
     const systemPrompt = `Eres un asistente de IA amable y servicial para la empresa ${finalBusinessName}.`;
 
     // Verificar si el usuario ya existe
@@ -641,7 +689,7 @@ app.post('/api/auth/register-client', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'El nombre de usuario ya está registrado.' });
     }
 
-    // Verificar si el teléfono ya existe
+    // Verificar si el teléfono ya existe (comparando el número limpio)
     const phoneCheck = await pool.query("SELECT id FROM clients WHERE phone_number = $1 LIMIT 1", [cleanPhone]);
     if (phoneCheck.rows.length > 0) {
       return res.status(400).json({ success: false, error: 'El número de teléfono ya está registrado.' });
@@ -658,8 +706,8 @@ app.post('/api/auth/register-client', async (req: Request, res: Response) => {
     await pool.query(`
       INSERT INTO clients (
         id, name, phone_number, system_prompt, status, 
-        username, password, email, contact_name, is_activated, category, drive_folder_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        username, password, email, contact_name, is_activated, category, drive_folder_id, country, country_code
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     `, [
       clientId,
       finalBusinessName,
@@ -672,8 +720,42 @@ app.post('/api/auth/register-client', async (req: Request, res: Response) => {
       contact_name,
       true,
       finalCategory,
-      driveFolderId
+      driveFolderId,
+      finalCountry,
+      finalCountryCode
     ]);
+
+    // Sincronizar automáticamente el usuario administrador en `users` y `user_client_roles`
+    try {
+      const cleanUser = username.trim().toLowerCase();
+      const hashedPass = isHashedPassword(password) ? password : await hashPassword(password);
+      const userUpsert = await pool.query(
+        `INSERT INTO users (username, password_hash, full_name, email, phone, country, country_code, is_global_admin)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (username) DO UPDATE SET
+           password_hash = COALESCE(EXCLUDED.password_hash, users.password_hash),
+           full_name = EXCLUDED.full_name,
+           email = COALESCE(EXCLUDED.email, users.email),
+           phone = COALESCE(EXCLUDED.phone, users.phone),
+           country = COALESCE(EXCLUDED.country, users.country),
+           country_code = COALESCE(EXCLUDED.country_code, users.country_code)
+         RETURNING id`,
+        [cleanUser, hashedPass, contact_name, email || null, cleanPhone, finalCountry, finalCountryCode, false]
+      );
+
+      if (userUpsert.rows.length > 0) {
+        const uId = userUpsert.rows[0].id;
+        const allModules = ["inventory","billing","cartera","contabilidad","registro_gastos","crm","employees","appointments","formulas","lab","domicilios","campaigns","marketing","metas_ventas","suppliers","purchase_orders","trazabilidad","system_status","settings"];
+        await pool.query(
+          `INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
+           VALUES ($1, $2, 'admin_tenant', $3::jsonb)
+           ON CONFLICT (user_id, client_id, role) DO NOTHING`,
+          [uId, clientId, JSON.stringify({ modules: allModules })]
+        );
+      }
+    } catch (userSyncErr) {
+      console.error("[register-client] Error sincronizando usuario en users:", userSyncErr);
+    }
 
     res.json({ success: true, message: 'Registro exitoso.', data: { clientId } });
   } catch (err: any) {
@@ -1116,7 +1198,8 @@ app.post('/api/login', async (req: Request, res: Response) => {
         }
 
         const permissions = Array.isArray(tenantUser.permissions_json?.modules) ? tenantUser.permissions_json.modules : [];
-        const sessionRole = (tenantUser.is_global_admin && tenantUser.client_id === 'client_admin') ? 'superadmin' : 'client';
+        const isSuperAdminUser = Boolean(tenantUser.is_global_admin || ((tenantUser.client_id === 'client_admin' || tenantUser.client_id === 'admin') && tenantUser.username.toLowerCase() === 'admin'));
+        const sessionRole = isSuperAdminUser ? 'superadmin' : 'client';
         const sessionId = crypto.randomUUID();
 
         await registerActiveSession('user', tenantUser.user_id, tenantUser.client_id, sessionId, req);
@@ -1187,8 +1270,9 @@ app.post('/api/login', async (req: Request, res: Response) => {
         const allowedBranches = Array.isArray(empUser.allowed_branches)
           ? empUser.allowed_branches
           : (typeof empUser.allowed_branches === 'string' ? JSON.parse(empUser.allowed_branches || '[]') : []);
-        const isEmpAdmin = (empUser.employee_role === 'admin' || empUser.employee_role === 'superadmin' || empUser.employee_role === 'dueño');
-        const sessionRole = isEmpAdmin ? 'client' : 'employee';
+        // Un colaborador o empleado de tienda siempre tiene rol de sesión 'employee',
+        // rigiéndose estrictamente por sus allowed_modules configurados en su ficha.
+        const sessionRole = 'employee';
         const sessionId = crypto.randomUUID();
 
         await registerActiveSession('employee', empUser.employee_id, empUser.client_id, sessionId, req);
@@ -1362,15 +1446,19 @@ app.post('/api/auth/mfa/send-otp', async (req: Request, res: Response) => {
       } catch (e) {}
     }
 
+    let userCountry = 'Colombia';
+    let userCountryCode = '57';
     if (!targetRecipient) {
       // 1. Consultar teléfono personal del usuario en users
       if (targetUserId) {
         const uRes = await pool.query(
-          `SELECT phone, email FROM users WHERE id::text = $1 OR LOWER(username) = LOWER($1) LIMIT 1`,
+          `SELECT phone, email, country, country_code FROM users WHERE id::text = $1 OR LOWER(username) = LOWER($1) LIMIT 1`,
           [String(targetUserId)]
         );
         if (uRes.rows.length > 0) {
           targetRecipient = method === 'whatsapp' ? uRes.rows[0].phone : uRes.rows[0].email;
+          if (uRes.rows[0].country) userCountry = uRes.rows[0].country;
+          if (uRes.rows[0].country_code) userCountryCode = String(uRes.rows[0].country_code).replace('+', '').trim();
         }
       }
 
@@ -1387,14 +1475,18 @@ app.post('/api/auth/mfa/send-otp', async (req: Request, res: Response) => {
 
       // 3. Si targetClientId está presente, buscar el usuario del dueño en users
       if (!targetRecipient && targetClientId) {
-        const cRes = await pool.query(`SELECT username, email FROM clients WHERE id = $1 LIMIT 1`, [targetClientId]);
+        const cRes = await pool.query(`SELECT username, email, country, country_code FROM clients WHERE id = $1 LIMIT 1`, [targetClientId]);
         if (cRes.rows.length > 0 && cRes.rows[0].username) {
+          if (cRes.rows[0].country) userCountry = cRes.rows[0].country;
+          if (cRes.rows[0].country_code) userCountryCode = String(cRes.rows[0].country_code).replace('+', '').trim();
           const uOwnerRes = await pool.query(
-            `SELECT phone, email FROM users WHERE LOWER(username) = LOWER($1) LIMIT 1`,
+            `SELECT phone, email, country, country_code FROM users WHERE LOWER(username) = LOWER($1) LIMIT 1`,
             [cRes.rows[0].username]
           );
           if (uOwnerRes.rows.length > 0) {
             targetRecipient = method === 'whatsapp' ? uOwnerRes.rows[0].phone : uOwnerRes.rows[0].email;
+            if (uOwnerRes.rows[0].country) userCountry = uOwnerRes.rows[0].country;
+            if (uOwnerRes.rows[0].country_code) userCountryCode = String(uOwnerRes.rows[0].country_code).replace('+', '').trim();
           }
         }
       }
@@ -1407,26 +1499,71 @@ app.post('/api/auth/mfa/send-otp', async (req: Request, res: Response) => {
     storeOtp(resolvedUserId, resolvedClientId, method, code);
 
     if (method === 'whatsapp') {
-      const cleanPhone = String(targetRecipient || '').replace(/\D/g, '');
+      let cleanPhone = String(targetRecipient || '').replace(/\D/g, '');
       console.log(`[MFA WhatsApp] 📱 Código OTP generado para ${cleanPhone || resolvedUserId}: ${code}`);
       
       if (!cleanPhone) {
         return res.status(400).json({
           success: false,
-          error: 'No tienes un número de celular personal registrado en tu cuenta de usuario. Configura tu celular en la sección de Usuarios (o en tu perfil de empleado) para recibir el código por WhatsApp.'
+          error: 'No tienes un número de celular personal registrado en tu cuenta de usuario. Configura tu país y celular en la sección de Usuarios para recibir el código por WhatsApp.'
         });
       }
 
+      // El número se guarda limpio (sin indicativo). Anteponemos el indicativo guardado en country_code
+      const COUNTRY_PREFIX_MAP: Record<string, string> = {
+        'colombia': '57',
+        'méxico': '52',
+        'mexico': '52',
+        'estados unidos / canadá': '1',
+        'estados unidos': '1',
+        'ee.uu.': '1',
+        'españa': '34',
+        'argentina': '54',
+        'chile': '56',
+        'perú': '51',
+        'peru': '51',
+        'ecuador': '593',
+        'venezuela': '58',
+        'bolivia': '591',
+        'guatemala': '502',
+        'costa rica': '506',
+        'panamá': '507',
+        'panama': '507',
+        'uruguay': '598',
+        'paraguay': '595',
+        'brasil': '55'
+      };
+      const prefix = userCountryCode || COUNTRY_PREFIX_MAP[userCountry.toLowerCase().trim()] || '57';
+      if (!cleanPhone.startsWith(prefix)) {
+        cleanPhone = `${prefix}${cleanPhone}`;
+      }
+
       try {
-        await sendWhatsAppTextMessage(cleanPhone, `🛡️ Tu código de verificación de 2 pasos para Frant ERP es: *${code}*\n\nEste código expira en 10 minutos. No lo compartas con nadie.`, 'admin');
+        await sendWhatsAppOtpMessage(cleanPhone, code, 'admin');
       } catch (waErr) {
         console.warn("[MFA WhatsApp] No se pudo enviar mensaje por Meta Cloud API, código disponible en consola.");
       }
 
-      return res.json({ success: true, message: `Código de verificación enviado por WhatsApp al número registrado.` });
+      return res.json({ 
+        success: true, 
+        message: `Código de verificación enviado por WhatsApp a tu número (+${cleanPhone.slice(0, 4)}...${cleanPhone.slice(-4)}).`,
+        destinationPhone: cleanPhone
+      });
     } else if (method === 'email') {
-      console.log(`[MFA Email] ✉️ Código OTP generado para ${targetRecipient || resolvedUserId}: ${code}`);
-      return res.json({ success: true, message: `Código de verificación enviado al correo ${targetRecipient || 'registrado'}.` });
+      const emailTarget = String(targetRecipient || '').trim() || 'diazbisac@gmail.com';
+      console.log(`[MFA Email] ✉️ Código OTP generado para ${emailTarget}: ${code}`);
+      const emailResult = await sendEmailOtp(emailTarget, code);
+      if (!emailResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: emailResult.error || 'No se pudo enviar el correo de verificación.'
+        });
+      }
+      const maskedEmail = emailTarget.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+      return res.json({ 
+        success: true, 
+        message: `Código de verificación enviado al correo ${maskedEmail}. Revisa tu bandeja de entrada o spam.` 
+      });
     }
 
     return res.status(400).json({ success: false, error: 'Método de OTP no soportado' });
@@ -1444,46 +1581,83 @@ app.post('/api/auth/mfa/verify-challenge', async (req: Request, res: Response) =
 
     let targetClientId = clientId;
     let targetUserId = userId;
-    let targetUserType = userType || 'client';
+    let targetUserType = userType || null;
+    let decodedRole: string | null = null;
 
     if (tempToken) {
       try {
         const decoded: any = jwt.verify(tempToken, JWT_SECRET);
         targetClientId = targetClientId || decoded.clientId || decoded.id;
         targetUserId = targetUserId || decoded.userId || decoded.id;
-        targetUserType = targetUserType || decoded.role || 'client';
+        decodedRole = decoded.role || null;
+        if (!targetUserType && decoded.role) {
+          targetUserType = decoded.role;
+        }
       } catch (e) {}
     }
 
     const resolvedClientId = targetClientId || 'admin';
     const resolvedUserId = targetUserId || resolvedClientId;
+
+    let resolvedType = targetUserType || decodedRole || 'client';
+    if (
+      resolvedType === 'superadmin' ||
+      decodedRole === 'superadmin' ||
+      resolvedClientId === 'admin' ||
+      resolvedClientId === 'client_admin' ||
+      String(resolvedUserId).toLowerCase() === 'admin'
+    ) {
+      resolvedType = 'superadmin';
+    }
     const shouldRemember = rememberDevice !== undefined ? rememberDevice : trustedDevice;
 
     let isValid = false;
+    const isUuid = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 
     if (method === 'totp') {
-      const clientRes = await pool.query(`SELECT mfa_totp_secret FROM clients WHERE id = $1`, [clientId]);
-      const empRes = await pool.query(`SELECT mfa_totp_secret FROM employees WHERE id = $1`, [userId]);
-      const secret = clientRes.rows[0]?.mfa_totp_secret || empRes.rows[0]?.mfa_totp_secret;
+      const clientRes = await pool.query(`SELECT mfa_totp_secret FROM clients WHERE id = $1`, [resolvedClientId]);
+      let secret = clientRes.rows[0]?.mfa_totp_secret;
+      if (!secret && isUuid(resolvedUserId)) {
+        const empRes = await pool.query(`SELECT mfa_totp_secret FROM employees WHERE id = $1`, [resolvedUserId]);
+        secret = empRes.rows[0]?.mfa_totp_secret;
+      }
+      if (!secret) {
+        const uRes = await pool.query(`SELECT mfa_totp_secret FROM users WHERE id::text = $1 OR LOWER(username) = LOWER($1) LIMIT 1`, [String(resolvedUserId)]);
+        secret = uRes.rows[0]?.mfa_totp_secret;
+      }
       isValid = verifyTotp(secret, code);
     } else if (method === 'whatsapp' || method === 'email') {
-      isValid = verifyOtp(userId, clientId, method, code);
+      isValid = verifyOtp(resolvedUserId, resolvedClientId, method, code);
     }
 
     if (!isValid) {
-      const resCheck = await pool.query(
-        `SELECT id, backup_codes FROM clients WHERE id = $1 UNION SELECT id, backup_codes FROM employees WHERE id = $2`,
-        [clientId, userId]
-      );
+      let backupQuery = `SELECT id::text, backup_codes FROM clients WHERE id = $1`;
+      let queryParams: any[] = [resolvedClientId];
+      if (isUuid(resolvedUserId)) {
+        backupQuery += ` UNION SELECT id::text, backup_codes FROM employees WHERE id = $2`;
+        queryParams.push(resolvedUserId);
+      } else {
+        backupQuery += ` UNION SELECT id::text, backup_codes FROM users WHERE LOWER(username) = LOWER($2)`;
+        queryParams.push(String(resolvedUserId));
+      }
+
+      const resCheck = await pool.query(backupQuery, queryParams);
       if (resCheck.rows.length > 0) {
-        const rawCodes = resCheck.rows[0].backup_codes || [];
-        const backupList = Array.isArray(rawCodes) ? rawCodes : JSON.parse(rawCodes || '[]');
-        const codeIndex = backupList.indexOf(String(code).trim().toUpperCase());
-        if (codeIndex !== -1) {
-          isValid = true;
-          backupList.splice(codeIndex, 1);
-          await pool.query(`UPDATE clients SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(backupList), clientId]);
-          await pool.query(`UPDATE employees SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(backupList), userId]);
+        for (const row of resCheck.rows) {
+          const rawCodes = row.backup_codes || [];
+          const backupList = Array.isArray(rawCodes) ? rawCodes : JSON.parse(rawCodes || '[]');
+          const codeIndex = backupList.indexOf(String(code).trim().toUpperCase());
+          if (codeIndex !== -1) {
+            isValid = true;
+            backupList.splice(codeIndex, 1);
+            await pool.query(`UPDATE clients SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(backupList), resolvedClientId]);
+            if (isUuid(resolvedUserId)) {
+              await pool.query(`UPDATE employees SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(backupList), resolvedUserId]);
+            } else {
+              await pool.query(`UPDATE users SET backup_codes = $1 WHERE LOWER(username) = LOWER($2)`, [JSON.stringify(backupList), String(resolvedUserId)]);
+            }
+            break;
+          }
         }
       }
     }
@@ -1493,17 +1667,25 @@ app.post('/api/auth/mfa/verify-challenge', async (req: Request, res: Response) =
     }
 
     let trustedDeviceToken: string | null = null;
-    if (rememberDevice) {
+    if (shouldRemember) {
       const userAgent = req.headers['user-agent'] || '';
-      trustedDeviceToken = await createTrustedDevice(clientId, userId, userAgent);
+      trustedDeviceToken = await createTrustedDevice(resolvedClientId, resolvedUserId, userAgent);
     }
 
     const sessionId = crypto.randomUUID();
-    const resolvedType = userType || 'client';
-    await registerActiveSession(resolvedType, userId, clientId, sessionId, req);
+    await registerActiveSession(resolvedType, resolvedUserId, resolvedClientId, sessionId, req);
 
+    const displayName = resolvedType === 'superadmin' ? 'Super Admin' : 'Usuario Verificado';
     const token = jwt.sign(
-      { id: userId, employeeId: resolvedType === 'employee' ? userId : undefined, userId, name: 'Usuario Verificado', role: resolvedType, clientId, sessionId },
+      { 
+        id: resolvedUserId, 
+        employeeId: resolvedType === 'employee' ? resolvedUserId : undefined, 
+        userId: resolvedUserId, 
+        name: displayName, 
+        role: resolvedType, 
+        clientId: resolvedClientId, 
+        sessionId 
+      },
       JWT_SECRET,
       { expiresIn: '4h' }
     );
@@ -1513,8 +1695,9 @@ app.post('/api/auth/mfa/verify-challenge', async (req: Request, res: Response) =
       message: 'Verificación de 2 pasos completada con éxito',
       trustedDeviceToken,
       data: {
-        id: clientId,
-        userId,
+        id: resolvedClientId,
+        userId: resolvedUserId,
+        name: displayName,
         role: resolvedType,
         token
       }
@@ -1526,18 +1709,41 @@ app.post('/api/auth/mfa/verify-challenge', async (req: Request, res: Response) =
 
 app.post('/api/auth/mfa/setup-totp', authenticateToken as any, async (req: Request, res: Response) => {
   try {
-    const reqUser = (req as any).user;
-    const clientId = reqUser.clientId || reqUser.id;
-    const userId = reqUser.userId || reqUser.id;
-    const username = reqUser.username || reqUser.name || 'usuario';
+    const reqUser = (req as any).user || {};
+    const clientId = req.body.clientId || reqUser.clientId || reqUser.id;
+    const userId = req.body.userId || reqUser.userId || reqUser.id || clientId;
+    const username = reqUser.username || req.body.email || reqUser.name || 'usuario';
 
-    const secret = generateBase32Secret(20);
-    const qrUri = getTotpUri(username, 'Diaz Lab ERP', secret);
+    const secret = generateBase32Secret(32);
+    const qrUri = getTotpUri(username, 'Frant ERP', secret);
+    const qrDataUrl = await QRCode.toDataURL(qrUri, {
+      width: 260,
+      margin: 2,
+      color: {
+        dark: '#161616',
+        light: '#FFFFFF'
+      }
+    });
 
-    await pool.query(`UPDATE clients SET mfa_totp_secret = $1 WHERE id = $2`, [secret, clientId]);
-    await pool.query(`UPDATE employees SET mfa_totp_secret = $1 WHERE id = $2`, [secret, userId]);
+    const isUuid = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 
-    return res.json({ success: true, secret, qrUri });
+    if (clientId) {
+      await pool.query(`UPDATE clients SET mfa_totp_secret = $1 WHERE id = $2`, [secret, clientId]);
+    }
+    if (isUuid(userId)) {
+      await pool.query(`UPDATE employees SET mfa_totp_secret = $1 WHERE id = $2`, [secret, userId]);
+      await pool.query(`UPDATE users SET mfa_totp_secret = $1 WHERE id = $2`, [secret, userId]);
+    } else {
+      await pool.query(`UPDATE users SET mfa_totp_secret = $1 WHERE LOWER(username) = LOWER($2)`, [secret, String(userId)]);
+    }
+
+    return res.json({ 
+      success: true, 
+      secret, 
+      qrUri, 
+      otpauthUrl: qrUri,
+      qrDataUrl 
+    });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }
@@ -1545,18 +1751,23 @@ app.post('/api/auth/mfa/setup-totp', authenticateToken as any, async (req: Reque
 
 app.post('/api/auth/mfa/confirm-totp', authenticateToken as any, async (req: Request, res: Response) => {
   try {
-    const { token } = req.body;
-    const reqUser = (req as any).user;
-    const clientId = reqUser.clientId || reqUser.id;
-    const userId = reqUser.userId || reqUser.id;
+    const code = req.body.token || req.body.code;
+    if (!code) {
+      return res.status(400).json({ success: false, error: 'Código de 6 dígitos requerido.' });
+    }
+    const reqUser = (req as any).user || {};
+    const clientId = req.body.clientId || reqUser.clientId || reqUser.id;
+    const userId = req.body.userId || reqUser.userId || reqUser.id || clientId;
+
+    const isUuid = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 
     const resCheck = await pool.query(
-      `SELECT mfa_totp_secret, mfa_methods FROM clients WHERE id = $1 UNION SELECT mfa_totp_secret, mfa_methods FROM employees WHERE id = $2`,
-      [clientId, userId]
+      `SELECT mfa_totp_secret, mfa_methods FROM clients WHERE id = $1` + (isUuid(userId) ? ` UNION SELECT mfa_totp_secret, mfa_methods FROM employees WHERE id = $2` : ''),
+      isUuid(userId) ? [clientId, userId] : [clientId]
     );
 
-    const secret = resCheck.rows[0]?.mfa_totp_secret;
-    if (!secret || !verifyTotp(secret, token)) {
+    const secret = resCheck.rows[0]?.mfa_totp_secret || req.body.secret;
+    if (!secret || !verifyTotp(secret, String(code))) {
       return res.status(400).json({ success: false, error: 'Código TOTP no válido. Verifícalo en tu aplicación autenticadora.' });
     }
 
@@ -1564,8 +1775,15 @@ app.post('/api/auth/mfa/confirm-totp', authenticateToken as any, async (req: Req
     const methods: string[] = Array.isArray(rawMethods) ? rawMethods : JSON.parse(rawMethods || '[]');
     if (!methods.includes('totp')) methods.push('totp');
 
-    await pool.query(`UPDATE clients SET mfa_enabled = TRUE, mfa_methods = $1 WHERE id = $2`, [JSON.stringify(methods), clientId]);
-    await pool.query(`UPDATE employees SET mfa_enabled = TRUE, mfa_methods = $1 WHERE id = $2`, [JSON.stringify(methods), userId]);
+    if (clientId) {
+      await pool.query(`UPDATE clients SET mfa_enabled = TRUE, mfa_methods = $1 WHERE id = $2`, [JSON.stringify(methods), clientId]);
+    }
+    if (isUuid(userId)) {
+      await pool.query(`UPDATE employees SET mfa_enabled = TRUE, mfa_methods = $1 WHERE id = $2`, [JSON.stringify(methods), userId]);
+      await pool.query(`UPDATE users SET mfa_enabled = TRUE, mfa_methods = $1 WHERE id = $2`, [JSON.stringify(methods), userId]);
+    } else {
+      await pool.query(`UPDATE users SET mfa_enabled = TRUE, mfa_methods = $1 WHERE LOWER(username) = LOWER($2)`, [JSON.stringify(methods), String(userId)]);
+    }
 
     return res.json({ success: true, message: 'Autenticador activado con éxito', mfaMethods: methods });
   } catch (err: any) {
@@ -1579,9 +1797,18 @@ app.post('/api/auth/mfa/backup-codes', authenticateToken as any, async (req: Req
     const clientId = reqUser.clientId || reqUser.id;
     const userId = reqUser.userId || reqUser.id;
 
+    const isUuid = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
     const codes = generateBackupCodes();
-    await pool.query(`UPDATE clients SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(codes), clientId]);
-    await pool.query(`UPDATE employees SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(codes), userId]);
+
+    if (clientId) {
+      await pool.query(`UPDATE clients SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(codes), clientId]);
+    }
+    if (isUuid(userId)) {
+      await pool.query(`UPDATE employees SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(codes), userId]);
+      await pool.query(`UPDATE users SET backup_codes = $1 WHERE id = $2`, [JSON.stringify(codes), userId]);
+    } else {
+      await pool.query(`UPDATE users SET backup_codes = $1 WHERE LOWER(username) = LOWER($2)`, [JSON.stringify(codes), String(userId)]);
+    }
 
     return res.json({ success: true, backupCodes: codes });
   } catch (err: any) {
@@ -1844,7 +2071,7 @@ app.get('/api/me', authenticateToken as any, async (req: Request, res: Response)
 
       if (tenantUserResult.rows.length > 0) {
         const tUser = tenantUserResult.rows[0];
-        const isSuperAdmin = (tUser.is_global_admin && tUser.client_id === 'client_admin');
+        const isSuperAdmin = Boolean(tUser.is_global_admin || ((tUser.client_id === 'client_admin' || tUser.client_id === 'admin') && tUser.username.toLowerCase() === 'admin'));
         const sessionRole = isSuperAdmin ? 'superadmin' : 'client';
         const permissions = Array.isArray(tUser.permissions_json?.modules) ? tUser.permissions_json.modules : [];
 
@@ -6796,7 +7023,10 @@ app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authori
     }
 
     const result = await pool.query(
-      `SELECT u.id AS id, u.username, u.full_name, u.email, u.phone, u.created_at,
+      `SELECT u.id AS id, u.username, u.full_name, u.email, u.phone, 
+              COALESCE(u.country, 'Colombia') AS country, 
+              COALESCE(u.country_code, '57') AS country_code, 
+              u.created_at,
               r.id AS role_id, r.role,
               COALESCE(r.permissions_json, '{}'::jsonb) AS permissions_json
        FROM user_client_roles r
@@ -6812,6 +7042,8 @@ app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authori
       full_name: row.full_name,
       email: row.email,
       phone: row.phone || '',
+      country: row.country || 'Colombia',
+      country_code: row.country_code || '57',
       role: row.role,
       permissions: Array.isArray(row.permissions_json?.modules) ? row.permissions_json.modules : [],
       created_at: row.created_at
@@ -6826,7 +7058,7 @@ app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authori
 app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
-    const { username, password, full_name, email, phone, role, permissions = [] } = req.body;
+    const { username, password, full_name, email, phone, country, country_code, role, permissions = [] } = req.body;
 
     if (!username || !String(username).trim()) {
       return res.status(400).json({ success: false, error: 'El usuario del negocio es requerido.' });
@@ -6835,7 +7067,15 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
     const cleanUsername = String(username).trim().toLowerCase();
     const cleanFullName = String(full_name || '').trim() || cleanUsername;
     const cleanEmail = String(email || '').trim();
-    const cleanPhone = String(phone || '').trim();
+    const cleanCountry = String(country || 'Colombia').trim();
+    const cleanCountryCode = String(country_code || (cleanCountry.toLowerCase() === 'colombia' ? '57' : (COUNTRY_PREFIX_MAP[cleanCountry.toLowerCase()] || '57'))).replace('+', '').trim();
+
+    // Limpiar el teléfono de caracteres no numéricos y remover el indicativo para guardarlo limpio
+    let cleanPhone = phone ? String(phone).replace(/\D/g, '') : null;
+    if (cleanPhone && cleanPhone.startsWith(cleanCountryCode) && cleanPhone.length > 10) {
+      cleanPhone = cleanPhone.slice(cleanCountryCode.length);
+    }
+
     const cleanRole = String(role || 'admin_tenant').trim();
     const cleanPermissions = Array.isArray(permissions)
       ? permissions.map((item: any) => String(item).trim()).filter(Boolean)
@@ -6847,15 +7087,17 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
     }
 
     const userResult = await pool.query(
-      `INSERT INTO users (username, password_hash, full_name, email, phone)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO users (username, password_hash, full_name, email, phone, country, country_code)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (username) DO UPDATE SET
          password_hash = COALESCE(EXCLUDED.password_hash, users.password_hash),
          full_name = EXCLUDED.full_name,
          email = EXCLUDED.email,
-         phone = COALESCE(EXCLUDED.phone, users.phone)
-       RETURNING id, username, full_name, email, phone`,
-      [cleanUsername, passwordHash, cleanFullName, cleanEmail || null, cleanPhone || null]
+         phone = COALESCE(EXCLUDED.phone, users.phone),
+         country = COALESCE(EXCLUDED.country, users.country),
+         country_code = COALESCE(EXCLUDED.country_code, users.country_code)
+       RETURNING id, username, full_name, email, phone, country, country_code`,
+      [cleanUsername, passwordHash, cleanFullName, cleanEmail || null, cleanPhone || null, cleanCountry, cleanCountryCode]
     );
 
     const user = userResult.rows[0];
@@ -6876,7 +7118,9 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
         username: user.username,
         full_name: user.full_name,
         email: user.email,
-        phone: user.phone || cleanPhone,
+        phone: user.phone || cleanPhone || '',
+        country: user.country || cleanCountry,
+        country_code: user.country_code || cleanCountryCode,
         role: roleResult.rows[0]?.role || cleanRole,
         permissions: cleanPermissions,
         created_at: new Date().toISOString()
@@ -6890,12 +7134,20 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
 app.put('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, userId } = req.params;
-    const { username, password, full_name, email, phone, role, permissions = [] } = req.body;
+    const { username, password, full_name, email, phone, country, country_code, role, permissions = [] } = req.body;
 
     const cleanUsername = String(username || '').trim().toLowerCase();
     const cleanFullName = String(full_name || '').trim();
     const cleanEmail = String(email || '').trim();
-    const cleanPhone = String(phone || '').trim();
+    const cleanCountry = String(country || 'Colombia').trim();
+    const cleanCountryCode = String(country_code || (cleanCountry.toLowerCase() === 'colombia' ? '57' : (COUNTRY_PREFIX_MAP[cleanCountry.toLowerCase()] || '57'))).replace('+', '').trim();
+
+    // Limpiar el teléfono de caracteres no numéricos y remover el indicativo para guardarlo limpio
+    let cleanPhone = phone ? String(phone).replace(/\D/g, '') : null;
+    if (cleanPhone && cleanPhone.startsWith(cleanCountryCode) && cleanPhone.length > 10) {
+      cleanPhone = cleanPhone.slice(cleanCountryCode.length);
+    }
+
     const cleanRole = String(role || 'admin_tenant').trim();
     const cleanPermissions = Array.isArray(permissions)
       ? permissions.map((item: any) => String(item).trim()).filter(Boolean)
@@ -6914,18 +7166,18 @@ app.put('/api/clients/:clientId/tenant-users/:userId', authenticateToken as any,
     if (passwordHash) {
       userUpdate = await pool.query(
         `UPDATE users
-         SET username = $1, password_hash = $2, full_name = $3, email = $4, phone = $5
-         WHERE id = $6
-         RETURNING id, username, full_name, email, phone`,
-        [cleanUsername, passwordHash, cleanFullName || cleanUsername, cleanEmail || null, cleanPhone || null, userId]
+         SET username = $1, password_hash = $2, full_name = $3, email = $4, phone = $5, country = $6, country_code = $7
+         WHERE id = $8
+         RETURNING id, username, full_name, email, phone, country, country_code`,
+        [cleanUsername, passwordHash, cleanFullName || cleanUsername, cleanEmail || null, cleanPhone || null, cleanCountry, cleanCountryCode, userId]
       );
     } else {
       userUpdate = await pool.query(
         `UPDATE users
-         SET username = $1, full_name = $2, email = $3, phone = $4
-         WHERE id = $5
-         RETURNING id, username, full_name, email, phone`,
-        [cleanUsername, cleanFullName || cleanUsername, cleanEmail || null, cleanPhone || null, userId]
+         SET username = $1, full_name = $2, email = $3, phone = $4, country = $5, country_code = $6
+         WHERE id = $7
+         RETURNING id, username, full_name, email, phone, country, country_code`,
+        [cleanUsername, cleanFullName || cleanUsername, cleanEmail || null, cleanPhone || null, cleanCountry, cleanCountryCode, userId]
       );
     }
 
@@ -7353,7 +7605,7 @@ app.get('/api/clients/:clientId/shifts/today', authenticateToken as any, authori
               EXTRACT(EPOCH FROM (COALESCE(s.clock_out, NOW()) - s.clock_in))/3600 as hours_worked
        FROM shift_logs s
        JOIN employees e ON s.employee_id = e.id
-       WHERE s.client_id = $1 AND (s.clock_in >= CURRENT_DATE OR s.clock_out IS NULL)
+       WHERE e.client_id = $1 AND (s.clock_in >= CURRENT_DATE OR s.clock_out IS NULL)
        ORDER BY s.clock_in DESC`,
       [clientId]
     );
@@ -9805,39 +10057,53 @@ export const server = app.listen(PORT, () => {
   // ══════════════════════════════════════════════════════════════════════════
 
   // 1. Resumen Contable (/api/clients/:clientId/accounting/summary)
+  // 1. Resumen Contable (/api/clients/:clientId/accounting/summary)
   app.get('/api/clients/:clientId/accounting/summary', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
       const period = (req.query.period as string) || 'month';
       const refDate = (req.query.date as string) || new Date().toISOString().split('T')[0];
+      const queryMonth = req.query.month ? parseInt(req.query.month as string) : null;
+      const queryYear = req.query.year ? parseInt(req.query.year as string) : null;
 
-      let dateFrom = new Date(refDate);
-      let dateTo = new Date(refDate);
-      dateTo.setHours(23, 59, 59, 999);
+      let dateFromStr: string;
+      let dateToStr: string;
 
-      if (period === 'day') {
-        dateFrom.setHours(0, 0, 0, 0);
-      } else if (period === 'week') {
-        const day = dateFrom.getDay();
-        const diffToMon = dateFrom.getDate() - day + (day === 0 ? -6 : 1);
-        dateFrom = new Date(dateFrom.setDate(diffToMon));
-        dateFrom.setHours(0, 0, 0, 0);
-      } else if (period === 'month') {
-        dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
-        dateFrom.setHours(0, 0, 0, 0);
-      } else if (period === 'quarter') {
-        const currentMonth = dateFrom.getMonth();
-        const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
-        dateFrom = new Date(dateFrom.getFullYear(), quarterStartMonth, 1);
-        dateFrom.setHours(0, 0, 0, 0);
-      } else if (period === 'semester') {
-        const currentMonth = dateFrom.getMonth();
-        const semesterStartMonth = currentMonth < 6 ? 0 : 6;
-        dateFrom = new Date(dateFrom.getFullYear(), semesterStartMonth, 1);
-        dateFrom.setHours(0, 0, 0, 0);
-      } else if (period === 'year') {
-        dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
-        dateFrom.setHours(0, 0, 0, 0);
+      if (queryMonth !== null && queryYear !== null && !isNaN(queryMonth) && !isNaN(queryYear)) {
+        const lastDay = new Date(queryYear, queryMonth, 0).getDate();
+        dateFromStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-01 00:00:00`;
+        dateToStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')} 23:59:59.999`;
+      } else {
+        let dateFrom = new Date(refDate);
+        let dateTo = new Date(refDate);
+        dateTo.setHours(23, 59, 59, 999);
+
+        if (period === 'day') {
+          dateFrom.setHours(0, 0, 0, 0);
+        } else if (period === 'week') {
+          const day = dateFrom.getDay();
+          const diffToMon = dateFrom.getDate() - day + (day === 0 ? -6 : 1);
+          dateFrom = new Date(dateFrom.setDate(diffToMon));
+          dateFrom.setHours(0, 0, 0, 0);
+        } else if (period === 'month') {
+          dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
+          dateFrom.setHours(0, 0, 0, 0);
+        } else if (period === 'quarter') {
+          const currentMonth = dateFrom.getMonth();
+          const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
+          dateFrom = new Date(dateFrom.getFullYear(), quarterStartMonth, 1);
+          dateFrom.setHours(0, 0, 0, 0);
+        } else if (period === 'semester') {
+          const currentMonth = dateFrom.getMonth();
+          const semesterStartMonth = currentMonth < 6 ? 0 : 6;
+          dateFrom = new Date(dateFrom.getFullYear(), semesterStartMonth, 1);
+          dateFrom.setHours(0, 0, 0, 0);
+        } else if (period === 'year') {
+          dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
+          dateFrom.setHours(0, 0, 0, 0);
+        }
+        dateFromStr = dateFrom.toISOString();
+        dateToStr = dateTo.toISOString();
       }
 
       // Consulta de métodos de pago y totales
@@ -9853,7 +10119,7 @@ export const server = app.listen(PORT, () => {
           AND status != 'cancelled'
         GROUP BY LOWER(payment_method)
         ORDER BY total DESC
-      `, [clientId, dateFrom.toISOString(), dateTo.toISOString()]);
+      `, [clientId, dateFromStr, dateToStr]);
 
       // Mapear nomenclatura de BD a etiquetas estándar
       const methodMap: Record<string, string> = {
@@ -9896,8 +10162,8 @@ export const server = app.listen(PORT, () => {
         success: true,
         period,
         date_range: {
-          from: dateFrom.toISOString().split('T')[0],
-          to: dateTo.toISOString().split('T')[0]
+          from: dateFromStr.split(' ')[0],
+          to: dateToStr.split(' ')[0]
         },
         total_revenue: grandTotalRevenue,
         total_invoices: grandTotalInvoices,
@@ -9916,16 +10182,29 @@ export const server = app.listen(PORT, () => {
       const { clientId } = req.params;
       const period = (req.query.period as string) || 'month';
       const refDate = (req.query.date as string) || new Date().toISOString().split('T')[0];
+      const queryMonth = req.query.month ? parseInt(req.query.month as string) : null;
+      const queryYear = req.query.year ? parseInt(req.query.year as string) : null;
       const limit = parseInt(req.query.limit as string) || 10;
 
-      let dateFrom = new Date(refDate);
-      let dateTo = new Date(refDate);
-      dateTo.setHours(23, 59, 59, 999);
+      let dateFromStr: string;
+      let dateToStr: string;
 
-      if (period === 'day') dateFrom.setHours(0, 0, 0, 0);
-      else if (period === 'month') dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
-      else if (period === 'quarter') dateFrom = new Date(dateFrom.getFullYear(), Math.floor(dateFrom.getMonth() / 3) * 3, 1);
-      else if (period === 'year') dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
+      if (queryMonth !== null && queryYear !== null && !isNaN(queryMonth) && !isNaN(queryYear)) {
+        const lastDay = new Date(queryYear, queryMonth, 0).getDate();
+        dateFromStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-01 00:00:00`;
+        dateToStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')} 23:59:59.999`;
+      } else {
+        let dateFrom = new Date(refDate);
+        let dateTo = new Date(refDate);
+        dateTo.setHours(23, 59, 59, 999);
+
+        if (period === 'day') dateFrom.setHours(0, 0, 0, 0);
+        else if (period === 'month') dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
+        else if (period === 'quarter') dateFrom = new Date(dateFrom.getFullYear(), Math.floor(dateFrom.getMonth() / 3) * 3, 1);
+        else if (period === 'year') dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
+        dateFromStr = dateFrom.toISOString();
+        dateToStr = dateTo.toISOString();
+      }
 
       const topRes = await pool.query(`
         SELECT 
@@ -9944,7 +10223,7 @@ export const server = app.listen(PORT, () => {
         GROUP BY p.id, p.name
         ORDER BY total_sold DESC
         LIMIT $4
-      `, [clientId, dateFrom.toISOString(), dateTo.toISOString(), limit]);
+      `, [clientId, dateFromStr, dateToStr, limit]);
 
       const products = topRes.rows.map((r, index) => ({
         product_id: r.product_id,
@@ -9968,21 +10247,34 @@ export const server = app.listen(PORT, () => {
       const { clientId } = req.params;
       const period = (req.query.period as string) || 'month';
       const refDate = (req.query.date as string) || new Date().toISOString().split('T')[0];
+      const queryMonth = req.query.month ? parseInt(req.query.month as string) : null;
+      const queryYear = req.query.year ? parseInt(req.query.year as string) : null;
 
-      let dateFrom = new Date(refDate);
-      let dateTo = new Date(refDate);
-      dateTo.setHours(23, 59, 59, 999);
+      let dateFromStr: string;
+      let dateToStr: string;
 
-      if (period === 'day') dateFrom.setHours(0, 0, 0, 0);
-      else if (period === 'week') {
-        const day = dateFrom.getDay();
-        const diffToMon = dateFrom.getDate() - day + (day === 0 ? -6 : 1);
-        dateFrom = new Date(dateFrom.setDate(diffToMon));
-        dateFrom.setHours(0, 0, 0, 0);
+      if (queryMonth !== null && queryYear !== null && !isNaN(queryMonth) && !isNaN(queryYear)) {
+        const lastDay = new Date(queryYear, queryMonth, 0).getDate();
+        dateFromStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-01 00:00:00`;
+        dateToStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')} 23:59:59.999`;
+      } else {
+        let dateFrom = new Date(refDate);
+        let dateTo = new Date(refDate);
+        dateTo.setHours(23, 59, 59, 999);
+
+        if (period === 'day') dateFrom.setHours(0, 0, 0, 0);
+        else if (period === 'week') {
+          const day = dateFrom.getDay();
+          const diffToMon = dateFrom.getDate() - day + (day === 0 ? -6 : 1);
+          dateFrom = new Date(dateFrom.setDate(diffToMon));
+          dateFrom.setHours(0, 0, 0, 0);
+        }
+        else if (period === 'month') dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
+        else if (period === 'quarter') dateFrom = new Date(dateFrom.getFullYear(), Math.floor(dateFrom.getMonth() / 3) * 3, 1);
+        else if (period === 'year') dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
+        dateFromStr = dateFrom.toISOString();
+        dateToStr = dateTo.toISOString();
       }
-      else if (period === 'month') dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
-      else if (period === 'quarter') dateFrom = new Date(dateFrom.getFullYear(), Math.floor(dateFrom.getMonth() / 3) * 3, 1);
-      else if (period === 'year') dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
 
       const trendRes = await pool.query(`
         SELECT 
@@ -9996,7 +10288,7 @@ export const server = app.listen(PORT, () => {
           AND status != 'cancelled'
         GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
         ORDER BY date ASC
-      `, [clientId, dateFrom.toISOString(), dateTo.toISOString()]);
+      `, [clientId, dateFromStr, dateToStr]);
 
       const trend = trendRes.rows.map(r => ({
         date: r.date,
@@ -10789,6 +11081,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
   // --- SAAS ERP: ARQUEO Y RELEVO DE CAJA (TURNOS DE EMPLEADOS) ---
+  // Obtener arqueos y registro diario
   app.get('/api/clients/:clientId/cash-shifts', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
@@ -10797,7 +11090,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
          FROM cash_shifts cs 
          WHERE cs.client_id = $1 
          ORDER BY cs.created_at DESC 
-         LIMIT 50`,
+         LIMIT 100`,
         [clientId]
       );
       res.json({ success: true, shifts: result.rows });
@@ -10806,6 +11099,275 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
+  // Obtener estado actual de la caja del día (abierta o cerrada y cálculo en vivo)
+  app.get('/api/clients/:clientId/cash-shifts/current', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+
+      // Buscar si hay un turno abierto
+      const openShiftRes = await pool.query(
+        `SELECT * FROM cash_shifts 
+         WHERE client_id = $1 AND status = 'open' 
+         ORDER BY start_time DESC LIMIT 1`,
+        [clientId]
+      );
+
+      const openShift = openShiftRes.rows[0] || null;
+
+      if (!openShift) {
+        return res.json({ success: true, isOpen: false, currentShift: null });
+      }
+
+      const startTime = openShift.start_time;
+
+      // Calcular ventas en efectivo desde el inicio del turno
+      const salesQuery = await pool.query(
+        `SELECT 
+           LOWER(COALESCE(payment_method, 'efectivo')) as method,
+           COALESCE(SUM(total_amount), 0)::numeric as total
+         FROM invoices
+         WHERE client_id = $1 
+           AND created_at >= $2 
+           AND status != 'cancelled'
+         GROUP BY LOWER(COALESCE(payment_method, 'efectivo'))`,
+        [clientId, startTime]
+      );
+
+      let cashSales = 0;
+      let cardSales = 0;
+      let transferSales = 0;
+
+      for (const row of salesQuery.rows) {
+        const amt = parseFloat(row.total || '0');
+        if (row.method === 'efectivo' || row.method === 'contado') cashSales += amt;
+        else if (row.method.includes('tarjeta')) cardSales += amt;
+        else transferSales += amt;
+      }
+
+      // Calcular gastos en efectivo registrados desde el inicio del turno
+      const expensesQuery = await pool.query(
+        `SELECT COALESCE(SUM(amount), 0)::numeric as total_expenses
+         FROM monthly_fixed_expenses
+         WHERE client_id = $1 
+           AND created_at >= $2`,
+        [clientId, startTime]
+      );
+      const cashExpenses = parseFloat(expensesQuery.rows[0]?.total_expenses || '0');
+
+      const initialBase = parseFloat(openShift.initial_cash || '0');
+      const expectedCash = initialBase + cashSales - cashExpenses;
+
+      res.json({
+        success: true,
+        isOpen: true,
+        currentShift: {
+          ...openShift,
+          live_cash_sales: cashSales,
+          live_card_sales: cardSales,
+          live_transfer_sales: transferSales,
+          live_total_sales: cashSales + cardSales + transferSales,
+          live_cash_expenses: cashExpenses,
+          live_expected_cash: expectedCash
+        }
+      });
+    } catch (err: any) {
+      console.error("[Cash Shift Current Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 1. Apertura / Inicio de Caja del Día
+  app.post('/api/clients/:clientId/cash-shifts/open', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { openedByName, employeeId, initialCash = 0, notes, pcTimestamp } = req.body;
+
+      if (!openedByName || !String(openedByName).trim()) {
+        return res.status(400).json({ success: false, error: 'Debe ingresar el nombre del responsable de apertura.' });
+      }
+
+      // Verificar si ya hay una caja abierta
+      const existingOpen = await pool.query(
+        `SELECT id FROM cash_shifts WHERE client_id = $1 AND status = 'open' LIMIT 1`,
+        [clientId]
+      );
+
+      if (existingOpen.rows.length > 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Ya existe una caja abierta en el sistema. Debes cerrarla o hacer el arqueo antes de iniciar una nueva.' 
+        });
+      }
+
+      const pcTime = pcTimestamp ? new Date(pcTimestamp) : new Date();
+      const serverTime = new Date();
+      const clockDriftSeconds = isNaN(pcTime.getTime()) ? 0 : Math.round(Math.abs(serverTime.getTime() - pcTime.getTime()) / 1000);
+      const baseCash = parseFloat(initialCash || '0');
+
+      const insertResult = await pool.query(
+        `INSERT INTO cash_shifts (
+           client_id, opened_by_name, employee_out_name, employee_out_id,
+           initial_cash, status, notes, shift_date, start_time,
+           client_timestamp, server_timestamp, clock_drift_seconds
+         )
+         VALUES ($1, $2, $2, $3, $4, 'open', $5, CURRENT_DATE, NOW(), $6, $7, $8)
+         RETURNING *`,
+        [
+          clientId,
+          String(openedByName).trim(),
+          employeeId || null,
+          baseCash,
+          notes || '',
+          pcTime,
+          serverTime,
+          clockDriftSeconds
+        ]
+      );
+
+      res.json({
+        success: true,
+        shift: insertResult.rows[0],
+        message: 'Caja del día iniciada exitosamente.'
+      });
+    } catch (err: any) {
+      console.error("[Cash Shift Open Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 2. Cierre / Arqueo de Caja del Día
+  app.post('/api/clients/:clientId/cash-shifts/close', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { 
+        shiftId,
+        closedByName,
+        employeeInName,
+        reportedCashInDrawer,
+        notes,
+        pcTimestamp
+      } = req.body;
+
+      if (!closedByName || !String(closedByName).trim()) {
+        return res.status(400).json({ success: false, error: 'Debe ingresar el nombre del responsable del cierre.' });
+      }
+
+      if (reportedCashInDrawer === undefined || reportedCashInDrawer === null || isNaN(parseFloat(reportedCashInDrawer))) {
+        return res.status(400).json({ success: false, error: 'Debe ingresar el efectivo físico contado en caja.' });
+      }
+
+      // Obtener el turno a cerrar (o el último abierto)
+      let shiftQuery;
+      if (shiftId) {
+        shiftQuery = await pool.query(
+          `SELECT * FROM cash_shifts WHERE client_id = $1 AND id = $2`,
+          [clientId, shiftId]
+        );
+      } else {
+        shiftQuery = await pool.query(
+          `SELECT * FROM cash_shifts WHERE client_id = $1 AND status = 'open' ORDER BY start_time DESC LIMIT 1`,
+          [clientId]
+        );
+      }
+
+      if (shiftQuery.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'No se encontró una caja abierta para cerrar.' });
+      }
+
+      const currentShift = shiftQuery.rows[0];
+      const startTime = currentShift.start_time;
+
+      // Calcular ventas desde el inicio del turno
+      const salesQuery = await pool.query(
+        `SELECT 
+           LOWER(COALESCE(payment_method, 'efectivo')) as method,
+           COALESCE(SUM(total_amount), 0)::numeric as total
+         FROM invoices
+         WHERE client_id = $1 
+           AND created_at >= $2 
+           AND status != 'cancelled'
+         GROUP BY LOWER(COALESCE(payment_method, 'efectivo'))`,
+        [clientId, startTime]
+      );
+
+      let cashSales = 0;
+      let cardSales = 0;
+      let transferSales = 0;
+
+      for (const row of salesQuery.rows) {
+        const amt = parseFloat(row.total || '0');
+        if (row.method === 'efectivo' || row.method === 'contado') cashSales += amt;
+        else if (row.method.includes('tarjeta')) cardSales += amt;
+        else transferSales += amt;
+      }
+
+      // Gastos en efectivo
+      const expensesQuery = await pool.query(
+        `SELECT COALESCE(SUM(amount), 0)::numeric as total_expenses
+         FROM monthly_fixed_expenses
+         WHERE client_id = $1 
+           AND created_at >= $2`,
+        [clientId, startTime]
+      );
+      const cashExpenses = parseFloat(expensesQuery.rows[0]?.total_expenses || '0');
+
+      const totalSales = cashSales + cardSales + transferSales;
+      const reportedCash = parseFloat(reportedCashInDrawer || '0');
+      const baseCash = parseFloat(currentShift.initial_cash || '0');
+      const expectedCash = baseCash + cashSales - cashExpenses;
+      const cashDiff = reportedCash - expectedCash;
+
+      const pcTime = pcTimestamp ? new Date(pcTimestamp) : new Date();
+      const serverTime = new Date();
+      const clockDriftSeconds = isNaN(pcTime.getTime()) ? 0 : Math.round(Math.abs(serverTime.getTime() - pcTime.getTime()) / 1000);
+
+      const closeResult = await pool.query(
+        `UPDATE cash_shifts
+         SET closed_by_name = $1,
+             employee_in_name = COALESCE($2, employee_in_name),
+             end_time = NOW(),
+             total_cash_sales = $3,
+             total_card_sales = $4,
+             total_transfer_sales = $5,
+             total_sales = $6,
+             cash_expenses = $7,
+             expected_cash = $8,
+             reported_cash_in_drawer = $9,
+             cash_difference = $10,
+             status = 'closed',
+             notes = CASE WHEN $11 != '' THEN COALESCE(notes || E'\n', '') || $11 ELSE notes END,
+             confirmed_at = NOW()
+         WHERE id = $12 AND client_id = $13
+         RETURNING *`,
+        [
+          String(closedByName).trim(),
+          employeeInName ? String(employeeInName).trim() : null,
+          cashSales,
+          cardSales,
+          transferSales,
+          totalSales,
+          cashExpenses,
+          expectedCash,
+          reportedCash,
+          cashDiff,
+          notes ? String(notes).trim() : '',
+          currentShift.id,
+          clientId
+        ]
+      );
+
+      res.json({
+        success: true,
+        shift: closeResult.rows[0],
+        message: 'Cierre y arqueo de caja registrado correctamente.'
+      });
+    } catch (err: any) {
+      console.error("[Cash Shift Close Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Relevo directo (compatibilidad con relevo empleado a empleado)
   app.post('/api/clients/:clientId/cash-shifts', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
@@ -10846,7 +11408,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 
       for (const row of salesQuery.rows) {
         const amt = parseFloat(row.total || '0');
-        if (row.method === 'efectivo') cashSales += amt;
+        if (row.method === 'efectivo' || row.method === 'contado') cashSales += amt;
         else if (row.method.includes('tarjeta')) cardSales += amt;
         else transferSales += amt;
       }
@@ -10860,10 +11422,11 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const insertResult = await pool.query(
         `INSERT INTO cash_shifts (
            client_id, employee_out_id, employee_out_name, employee_in_id, employee_in_name,
+           opened_by_name, closed_by_name,
            initial_cash, total_cash_sales, total_card_sales, total_transfer_sales, total_sales,
-           reported_cash_in_drawer, cash_difference, status, notes, client_timestamp, server_timestamp, clock_drift_seconds
+           reported_cash_in_drawer, expected_cash, cash_difference, status, notes, client_timestamp, server_timestamp, clock_drift_seconds
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending_confirmation', $13, $14, $15, $16)
+         VALUES ($1, $2, $3, $4, $5, $3, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending_confirmation', $14, $15, $16, $17)
          RETURNING *`,
         [
           clientId,
@@ -10877,6 +11440,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           transferSales,
           totalSales,
           reportedCash,
+          expectedCash,
           cashDiff,
           notes || '',
           pcTime,
@@ -11119,10 +11683,29 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
   app.get('/api/clients/:clientId/fixed-expenses', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
-      const result = await pool.query(
-        `SELECT *, TO_CHAR(COALESCE(expense_date, created_at::date), 'YYYY-MM-DD') as effective_date, TO_CHAR(expense_date, 'YYYY-MM-DD') as expense_date_str FROM monthly_fixed_expenses WHERE client_id = $1 ORDER BY COALESCE(expense_date, created_at::date) DESC, created_at DESC`,
-        [clientId]
-      );
+      const queryMonth = req.query.month ? parseInt(req.query.month as string) : null;
+      const queryYear = req.query.year ? parseInt(req.query.year as string) : null;
+
+      let query = `
+        SELECT *, 
+               TO_CHAR(COALESCE(expense_date, created_at::date), 'YYYY-MM-DD') as effective_date, 
+               TO_CHAR(expense_date, 'YYYY-MM-DD') as expense_date_str 
+        FROM monthly_fixed_expenses 
+        WHERE client_id = $1
+      `;
+      const params: any[] = [clientId];
+
+      if (queryMonth !== null && queryYear !== null && !isNaN(queryMonth) && !isNaN(queryYear)) {
+        params.push(queryMonth, queryYear);
+        query += ` AND (
+          (EXTRACT(MONTH FROM COALESCE(expense_date, created_at::date)) = $2 AND EXTRACT(YEAR FROM COALESCE(expense_date, created_at::date)) = $3)
+          OR expense_type = 'fijo'
+        )`;
+      }
+
+      query += ` ORDER BY COALESCE(expense_date, created_at::date) DESC, created_at DESC`;
+
+      const result = await pool.query(query, params);
       res.json({ success: true, expenses: result.rows });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });

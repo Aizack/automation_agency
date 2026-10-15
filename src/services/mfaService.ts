@@ -53,10 +53,10 @@ export function verifyOtp(userId: string, clientId: string, method: string, inpu
   return false;
 }
 
-// Base32 helper for TOTP secrets
+// Base32 helper for TOTP secrets (RFC 4648 / RFC 6238)
 const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
-export function generateBase32Secret(length = 20): string {
+export function generateBase32Secret(length = 32): string {
   let secret = '';
   const bytes = crypto.randomBytes(length);
   for (let i = 0; i < length; i++) {
@@ -110,9 +110,12 @@ export function verifyTotp(secret: string, token: string, window = 1): boolean {
   return false;
 }
 
-// Generate OTPauth QR URL for Google Authenticator / Authy
+// Generate OTPauth QR URL for Google Authenticator / Authy / Microsoft Authenticator
 export function getTotpUri(label: string, issuer: string, secret: string): string {
-  return `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(label)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
+  const cleanIssuer = issuer.trim();
+  const cleanLabel = label.trim();
+  const path = `${encodeURIComponent(cleanIssuer)}:${encodeURIComponent(cleanLabel)}`;
+  return `otpauth://totp/${path}?secret=${secret}&issuer=${encodeURIComponent(cleanIssuer)}&algorithm=SHA1&digits=6&period=30`;
 }
 
 // Trusted Devices (30-day Remember Device)

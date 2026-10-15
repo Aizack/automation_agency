@@ -52,6 +52,78 @@ export class MetaWhatsAppService {
   }
 
   /**
+   * Envía un código OTP usando la plantilla oficial de autenticación de Meta (frant_auth_otp).
+   * Al ser de categoría AUTHENTICATION aprobada por Meta, se entrega SIEMPRE incluso fuera de la ventana de 24h.
+   */
+  static async sendMetaAuthOtpTemplate(
+    phoneNumberId: string, 
+    toPhone: string, 
+    code: string, 
+    accessToken: string
+  ): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      if (!toPhone) {
+        return { success: false, error: 'toPhone es invalido' };
+      }
+      const cleanPhone = String(toPhone).replace(/[^0-9]/g, '');
+      const url = `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: cleanPhone,
+          type: 'template',
+          template: {
+            name: 'frant_auth_otp',
+            language: { code: 'es' },
+            components: [
+              {
+                type: 'body',
+                parameters: [
+                  {
+                    type: 'text',
+                    text: String(code)
+                  }
+                ]
+              },
+              {
+                type: 'button',
+                sub_type: 'url',
+                index: '0',
+                parameters: [
+                  {
+                    type: 'text',
+                    text: String(code)
+                  }
+                ]
+              }
+            ]
+          }
+        })
+      });
+
+      const resData: any = await response.json();
+
+      if (!response.ok) {
+        console.warn(`[Meta Auth Template Sender] ⚠️ Error enviando plantilla a +${cleanPhone}:`, resData);
+        return { success: false, error: resData.error?.message || 'Error enviando plantilla en Meta' };
+      }
+
+      console.log(`[Meta Auth Template Sender] ✅ Plantilla OTP enviada exitosamente a +${cleanPhone} (ID: ${resData.messages?.[0]?.id})`);
+      return { success: true, data: resData };
+    } catch (error: any) {
+      console.error('[Meta Auth Template Sender] Excepción de red:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Procesa la carga útil (Payload) de mensajes entrantes enviados por el Webhook de Meta.
    */
   static async processIncomingMetaWebhook(payload: any): Promise<void> {

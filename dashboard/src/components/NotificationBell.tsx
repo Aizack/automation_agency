@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getStoredToken } from '../utils/api';
 
 export interface AlertItem {
   id: string;
@@ -30,12 +31,11 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   const fetchAlerts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
-      const res = await fetch(`/api/clients/${clientId}/alerts/active`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const token = getStoredToken();
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`/api/clients/${clientId}/alerts/active`, { headers });
       const data = await res.json();
       if (data.success) {
         setAlerts(data.alerts || []);
@@ -50,15 +50,15 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   useEffect(() => {
     fetchAlerts(); // Carga inicial estática
 
-    // Escuchar eventos SSE en tiempo real sin polling
-    const es = new EventSource(`/api/events/stream?clientId=${clientId}`);
-
-    es.addEventListener('alert_update', () => {
+    // Escuchar del bus de eventos SSE compartido por la pantalla para no consumir sockets adicionales
+    const handleAlertUpdate = () => {
       fetchAlerts();
-    });
+    };
+
+    window.addEventListener('sse:alert_update', handleAlertUpdate);
 
     return () => {
-      es.close();
+      window.removeEventListener('sse:alert_update', handleAlertUpdate);
     };
   }, [clientId]);
 

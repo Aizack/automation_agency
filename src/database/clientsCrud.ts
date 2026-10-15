@@ -20,11 +20,14 @@ export const createClient = async (client: {
   first_message_notified?: boolean;
   is_activated?: boolean;
   category?: string;
+  country?: string;
+  country_code?: string;
+  timezone?: string;
 }): Promise<void> => {
   try {
     await pool.query(
-      `INSERT INTO clients (id, name, phone_number, system_prompt, active_tools, agent_phone, drive_folder_id, username, password, email, contact_name, owner_phone, first_message_notified, is_activated, category, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'active')`,
+      `INSERT INTO clients (id, name, phone_number, system_prompt, active_tools, agent_phone, drive_folder_id, username, password, email, contact_name, owner_phone, first_message_notified, is_activated, category, status, country, country_code, timezone)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'active', $16, $17, $18)`,
       [
         client.id,
         client.name,
@@ -40,7 +43,10 @@ export const createClient = async (client: {
         client.owner_phone || null,
         client.first_message_notified || false,
         client.is_activated || false,
-        client.category || 'optica'
+        client.category || 'optica',
+        client.country || 'Colombia',
+        client.country_code || '57',
+        client.timezone || 'America/Bogota'
       ]
     );
     console.log(`[CRUD] Client '${client.name}' (ID: ${client.id}) successfully created.`);
@@ -73,6 +79,9 @@ export const getClientById = async (id: string): Promise<ClientConfig | null> =>
         first_message_notified AS "firstMessageNotified",
         is_activated AS "isActivated",
         category,
+        COALESCE(country, 'Colombia') AS country,
+        COALESCE(country_code, '57') AS country_code,
+        COALESCE(timezone, 'America/Bogota') AS timezone,
         person_type AS "personType",
         enabled_modules AS "enabledModules",
         logo_url,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { translateErrorMessage } from '../utils/errorHandler';
+import { authFetch as fetch } from '../utils/api';
 
 interface Employee {
     id: string;
@@ -589,29 +590,44 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     const fetchData = async () => {
         try {
             setLoading(true);
-            const headers = { 'Authorization': `Bearer ${token}` };
-            
-            const [empRes, deptRes, rolesRes, branchesRes, clientRes] = await Promise.all([
-                fetch(`/api/clients/${clientId}/employees`, { headers }),
-                fetch(`/api/clients/${clientId}/departments`, { headers }),
-                fetch(`/api/clients/${clientId}/employee-roles`, { headers }),
-                fetch(`/api/clients/${clientId}/branches`, { headers }),
-                fetch(`/api/clients/${clientId}`, { headers })
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+            // 1. Cargar empleados prioritariamente para mostrar la lista de inmediato
+            const empPromise = fetch(`/api/clients/${clientId}/employees`, { signal: controller.signal })
+                .then(r => r.ok ? r.json() : { success: false })
+                .catch(() => ({ success: false }));
+
+            // 2. Cargar dependencias auxiliares protegidas con allSettled
+            const auxPromise = Promise.allSettled([
+                fetch(`/api/clients/${clientId}/departments`, { signal: controller.signal }).then(r => r.ok ? r.json() : { success: false }),
+                fetch(`/api/clients/${clientId}/employee-roles`, { signal: controller.signal }).then(r => r.ok ? r.json() : { success: false }),
+                fetch(`/api/clients/${clientId}/branches`, { signal: controller.signal }).then(r => r.ok ? r.json() : { success: false }),
+                fetch(`/api/clients/${clientId}`, { signal: controller.signal }).then(r => r.ok ? r.json() : { success: false })
             ]);
 
-            const empJson = await empRes.json();
-            const deptJson = await deptRes.json();
-            const rolesJson = await rolesRes.json();
-            const branchesJson = await branchesRes.json();
-            const clientJson = await clientRes.json();
+            const empJson = await empPromise;
+            clearTimeout(timeoutId);
 
-            if (clientJson.success && clientJson.data?.category) {
-                setClientCategory(clientJson.data.category);
+            if (empJson && empJson.success) {
+                setEmployees(empJson.employees || []);
             }
 
-            if (empJson.success) setEmployees(empJson.employees || []);
-            if (deptJson.success) setDepartments(deptJson.departments || []);
-            if (rolesJson.success) {
+            // Desactivar spinner de inmediato
+            setLoading(false);
+
+            const auxResults = await auxPromise;
+            const deptJson = auxResults[0].status === 'fulfilled' ? auxResults[0].value : { success: false };
+            const rolesJson = auxResults[1].status === 'fulfilled' ? auxResults[1].value : { success: false };
+            const branchesJson = auxResults[2].status === 'fulfilled' ? auxResults[2].value : { success: false };
+            const clientJson = auxResults[3].status === 'fulfilled' ? auxResults[3].value : { success: false };
+
+            if (clientJson?.success && clientJson.data?.category) {
+                setClientCategory(clientJson.data.category);
+            }
+            if (deptJson?.success) setDepartments(deptJson.departments || []);
+            if (rolesJson?.success) {
                 const roles = (rolesJson.roles || []).map((role: any) => String(role.name || '').trim().toLowerCase()).filter(Boolean);
                 const defaultRoles = isRestaurant 
                     ? ['agent', 'sales', 'delivery', 'admin', 'mesero', 'cocinero', 'bartender', 'caja', 'capitan_meseros']
@@ -619,7 +635,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                 const mergedRoles = Array.from(new Set([...defaultRoles, ...roles])).filter(r => isRestaurant || !restaurantRolesList.includes(r));
                 setWorkRoles(mergedRoles);
             }
-            if (branchesJson.success) {
+            if (branchesJson?.success) {
                 setBranchesList(branchesJson.branches || []);
             }
         } catch (err) {

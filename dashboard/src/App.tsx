@@ -67,6 +67,13 @@ function App() {
     };
   }, []);
 
+  // Limpieza inmediata de URL para prevenir exposición de /admin en la barra de direcciones
+  useEffect(() => {
+    if (window.location.pathname.toLowerCase() === '/admin') {
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
+
   // Sincronizar estado y verificar sesión activa
   useEffect(() => {
     const checkAuthAndRoute = async () => {
@@ -157,16 +164,21 @@ function App() {
           const currentPath = window.location.pathname.toLowerCase();
 
           if (user.role === 'superadmin') {
-            const savedClientId = localStorage.getItem('current_client_id');
-            const viewAsClient = localStorage.getItem('view_as_client');
-            const currentView = localStorage.getItem('current_view');
-            if (savedClientId && (viewAsClient === 'true' || currentView === 'client')) {
-              setClientId(savedClientId);
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewParam = urlParams.get('view');
+            const clientParam = urlParams.get('clientId');
+            if (viewParam === 'client' && clientParam) {
+              setClientId(clientParam);
               setView('client');
-              localStorage.setItem('view_as_client', 'true');
-              localStorage.setItem('current_view', 'client');
             } else {
+              // Super Admin por defecto entra directamente al panel maestro de Super Admin
               setView('admin');
+              localStorage.setItem('current_view', 'admin');
+              localStorage.removeItem('view_as_client');
+              localStorage.removeItem('current_client_id');
+              if (window.location.pathname === '/admin') {
+                window.history.replaceState({}, '', '/');
+              }
             }
           } else if (user.role === 'employee') {
             localStorage.setItem('employee_role', user.employeeRole || '');
@@ -246,7 +258,8 @@ function App() {
       setView('admin');
       localStorage.removeItem('current_client_id');
       localStorage.removeItem('view_as_client');
-      window.history.pushState({}, '', '/admin');
+      localStorage.setItem('current_view', 'admin');
+      window.history.pushState({}, '', '/');
     } else if (role === 'employee') {
       localStorage.setItem('employee_role', extra?.employeeRole || '');
       localStorage.setItem('employee_permissions', JSON.stringify(extra?.permissions || []));

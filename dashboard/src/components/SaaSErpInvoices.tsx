@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { authFetch as fetch } from '../utils/api';
 import { AuditLogModal } from './AuditLogModal';
 import { HistoricalInvoicesModal } from './HistoricalInvoicesModal';
+import { formatLocalDate, formatLocalTime } from '../utils/dateTime';
 
 interface Invoice {
     id: string;
@@ -299,43 +300,54 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         try {
             setLoading(true);
             setFetchError(null);
-            const [invRes, prodRes, crmRes, clientRes, bankRes, empRes, tblRes] = await Promise.all([
-                fetch(`/api/clients/${clientId}/invoices`),
-                fetch(`/api/clients/${clientId}/products`),
-                fetch(`/api/clients/${clientId}/crm-customers`),
-                fetch(`/api/clients/${clientId}`),
-                fetch(`/api/clients/${clientId}/bank-accounts`),
-                fetch(`/api/clients/${clientId}/employees`),
-                fetch(`/api/clients/${clientId}/restaurant/tables`)
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+            // 1. Cargar facturas prioritarias de inmediato (como en Cartera)
+            const invPromise = fetch(`/api/clients/${clientId}/invoices`, { signal: controller.signal })
+                .then(r => r.ok ? r.json() : { success: false })
+                .catch(() => ({ success: false }));
+
+            // 2. Cargar datos auxiliares concurrentes protegidos con allSettled
+            const auxPromises = Promise.allSettled([
+                fetch(`/api/clients/${clientId}/products`, { signal: controller.signal }).then(r => r.ok ? r.json() : { success: false }),
+                fetch(`/api/clients/${clientId}/crm-customers`, { signal: controller.signal }).then(r => r.ok ? r.json() : { success: false }),
+                fetch(`/api/clients/${clientId}`, { signal: controller.signal }).then(r => r.ok ? r.json() : { success: false }),
+                fetch(`/api/clients/${clientId}/bank-accounts`, { signal: controller.signal }).then(r => r.ok ? r.json() : { success: false }),
+                fetch(`/api/clients/${clientId}/employees`, { signal: controller.signal }).then(r => r.ok ? r.json() : { success: false }),
+                fetch(`/api/clients/${clientId}/restaurant/tables`, { signal: controller.signal }).then(r => r.ok ? r.json() : { success: false })
             ]);
 
-            // Detect authentication failures
-            if (invRes.status === 401 || invRes.status === 403 || prodRes.status === 401 || prodRes.status === 403) {
-                setFetchError('Tu sesión ha expirado o no tienes permisos. Por favor recarga la página e inicia sesión nuevamente.');
-                return;
-            }
+            const invData = await invPromise;
+            clearTimeout(timeoutId);
 
-            const invData = invRes.ok ? await invRes.json() : { success: false };
-            const prodData = prodRes.ok ? await prodRes.json() : { success: false };
-            const crmData = crmRes.ok ? await crmRes.json() : { success: false };
-            const clientData = clientRes.ok ? await clientRes.json() : { success: false };
-            const bankData = bankRes.ok ? await bankRes.json() : { success: false };
-            const empData = empRes.ok ? await empRes.json() : { success: false };
-            const tblData = tblRes.ok ? await tblRes.json() : { success: false };
-
-            if (invData.success) {
+            if (invData && invData.success) {
                 const fetchedInvoices = invData.invoices || [];
                 setInvoices(fetchedInvoices);
                 setInvoiceNumber(getNextInvoiceNumber(fetchedInvoices));
-            } else if (invData.error) console.warn('[Facturas] Error API:', invData.error);
-            else if (invData.error) console.warn('[Facturas] Error API:', invData.error);
-            if (prodData.success) setProducts(prodData.products || []);
-            else if (prodData.error) console.warn('[Productos] Error API:', prodData.error);
-            if (crmData.success) setCrmCustomers(crmData.customers || []);
-            if (clientData.success) setClientProfile(clientData.data || null);
-            if (bankData.success) setBankAccounts(bankData.accounts || []);
-            if (empData.success) setEmployees(empData.employees || []);
-            if (tblData.success) setTables(tblData.tables || []);
+            } else if (invData && invData.error) {
+                console.warn('[Facturas] Error API:', invData.error);
+            }
+
+            // Desbloquear vista de inmediato para eliminar el spinner
+            setLoading(false);
+
+            // Resolver datos secundarios para formularios y filtros
+            const results = await auxPromises;
+            const prodData = results[0].status === 'fulfilled' ? results[0].value : { success: false };
+            const crmData = results[1].status === 'fulfilled' ? results[1].value : { success: false };
+            const clientData = results[2].status === 'fulfilled' ? results[2].value : { success: false };
+            const bankData = results[3].status === 'fulfilled' ? results[3].value : { success: false };
+            const empData = results[4].status === 'fulfilled' ? results[4].value : { success: false };
+            const tblData = results[5].status === 'fulfilled' ? results[5].value : { success: false };
+
+            if (prodData?.success) setProducts(prodData.products || []);
+            if (crmData?.success) setCrmCustomers(crmData.customers || []);
+            if (clientData?.success) setClientProfile(clientData.data || null);
+            if (bankData?.success) setBankAccounts(bankData.accounts || []);
+            if (empData?.success) setEmployees(empData.employees || []);
+            if (tblData?.success) setTables(tblData.tables || []);
         } catch (err: any) {
             console.error("Error loading billing data:", err);
             setFetchError(`Error al cargar datos de facturación: ${err?.message || 'Error de red'}`);
@@ -2602,10 +2614,10 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     <td className="p-4 text-xs font-mono font-medium text-[#161616]">
                                         <div>
                                             <p className="font-bold text-[#161616]">
-                                                {inv.created_at ? new Date(inv.created_at).toLocaleDateString('es-CO') : 'N/A'}
+                                                {inv.created_at ? formatLocalDate(inv.created_at) : 'N/A'}
                                             </p>
                                             <p className="text-[10px] text-[#6B6862] font-mono">
-                                                {inv.created_at ? new Date(inv.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
+                                                {inv.created_at ? formatLocalTime(inv.created_at) : ''}
                                             </p>
                                         </div>
                                     </td>
@@ -2623,7 +2635,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     </td>
                                     <td className="p-4 text-xs font-medium text-[#6B6862]">
                                         <div className="font-mono">
-                                            <p className="font-semibold text-[#161616]">{inv.due_date ? new Date(inv.due_date).toLocaleDateString('es-CO') : 'N/A'}</p>
+                                            <p className="font-semibold text-[#161616]">{inv.due_date ? formatLocalDate(inv.due_date) : 'N/A'}</p>
                                             {inv.payment_method === 'credito' && (
                                                 <span className="text-[9px] bg-[#FEF7E0] text-[#7A5A00] px-1 py-0.5 font-bold uppercase tracking-wider block w-max mt-0.5 border border-[#FEEFC3]">
                                                     Límite Crédito

@@ -14,3 +14,8 @@ dashboard/dist_deploy/
 external/
 media/
 uploads/
+logs/
+*.log
+scratch/
+shutdown_state.json
+graphify-out/

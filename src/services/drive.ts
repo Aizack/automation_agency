@@ -232,14 +232,21 @@ export const uploadFileToFolder = async (
 export const listFilesFromFolder = async (folderId: string): Promise<Array<{ id: string, name: string, mimeType: string }>> => {
     try {
         const drive = getDriveClient();
-        const response = await drive.files.list({
+        
+        // Timeout de seguridad de 2 segundos para evitar bloquear el servidor si las credenciales de Drive fallan
+        const listPromise = drive.files.list({
             q: `'${folderId}' in parents and trashed = false`,
             fields: 'files(id, name, mimeType)',
         });
+        
+        const timeoutPromise = new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Google Drive API Timeout (2000ms)')), 2000)
+        );
 
+        const response: any = await Promise.race([listPromise, timeoutPromise]);
         return (response.data.files || []) as Array<{ id: string, name: string, mimeType: string }>;
-    } catch (error) {
-        console.error("[Google Drive Service] ❌ Error listando archivos de Drive:", error);
-        throw error;
+    } catch (error: any) {
+        console.warn("[Google Drive Service] ⚠️ No se pudieron listar archivos de Drive:", error?.message || error);
+        return [];
     }
 };

@@ -46,6 +46,11 @@ interface FixedExpense {
 
 export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, onNavigateTab }) => {
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year'>('month');
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth() + 1); // 1-12
+  const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
+  const [isSpecificMonthMode, setIsSpecificMonthMode] = useState<boolean>(true);
+
   const [summary, setSummary] = useState<AccountingSummary | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [dailyTrend, setDailyTrend] = useState<DailyTrendItem[]>([]);
@@ -65,11 +70,15 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, 
   const fetchAccountingData = async () => {
     try {
       setLoading(true);
+      const queryParams = isSpecificMonthMode
+        ? `month=${selectedMonth}&year=${selectedYear}`
+        : `period=${period}`;
+
       const [sumRes, topRes, trendRes, expRes] = await Promise.all([
-        fetch(`/api/clients/${clientId}/accounting/summary?period=${period}`),
-        fetch(`/api/clients/${clientId}/accounting/top-products?period=${period}&limit=10`),
-        fetch(`/api/clients/${clientId}/accounting/daily-trend?period=${period}`),
-        fetch(`/api/clients/${clientId}/fixed-expenses`)
+        fetch(`/api/clients/${clientId}/accounting/summary?${queryParams}`),
+        fetch(`/api/clients/${clientId}/accounting/top-products?${queryParams}&limit=10`),
+        fetch(`/api/clients/${clientId}/accounting/daily-trend?${queryParams}`),
+        fetch(`/api/clients/${clientId}/fixed-expenses?${isSpecificMonthMode ? `month=${selectedMonth}&year=${selectedYear}` : ''}`)
       ]);
 
       const sumJson = await sumRes.json();
@@ -90,7 +99,7 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, 
 
   useEffect(() => {
     fetchAccountingData();
-  }, [clientId, period]);
+  }, [clientId, period, selectedMonth, selectedYear, isSpecificMonthMode]);
 
   const handleAddFixedExpense = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,7 +187,7 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, 
           </p>
         </div>
 
-        {/* Período Tabs & Botón Agregar Gasto Fijo */}
+        {/* Período Tabs & Selector de Mes Específico & Botón Registrar Gasto */}
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
@@ -189,14 +198,70 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, 
             Registrar Gasto
           </button>
 
+          {/* Selector de Mes y Año Específico */}
+          <div className="flex items-center gap-1.5 bg-white border border-[#E2DFD7] px-2 h-9 shadow-xs">
+            <span className="material-symbols-outlined text-[16px] text-[#76746E]">calendar_month</span>
+            <select
+              value={selectedMonth}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                if (!isNaN(val)) {
+                  setSelectedMonth(val);
+                  setIsSpecificMonthMode(true);
+                }
+              }}
+              className="bg-transparent text-xs font-mono font-bold text-[#161616] outline-none cursor-pointer border-0 py-1"
+            >
+              {[
+                { m: 1, name: 'Enero' },
+                { m: 2, name: 'Febrero' },
+                { m: 3, name: 'Marzo' },
+                { m: 4, name: 'Abril' },
+                { m: 5, name: 'Mayo' },
+                { m: 6, name: 'Junio' },
+                { m: 7, name: 'Julio' },
+                { m: 8, name: 'Agosto' },
+                { m: 9, name: 'Septiembre' },
+                { m: 10, name: 'Octubre' },
+                { m: 11, name: 'Noviembre' },
+                { m: 12, name: 'Diciembre' }
+              ].map(item => (
+                <option key={item.m} value={item.m}>{item.name}</option>
+              ))}
+            </select>
+
+            <select
+              value={selectedYear}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                if (!isNaN(val)) {
+                  setSelectedYear(val);
+                  setIsSpecificMonthMode(true);
+                }
+              }}
+              className="bg-transparent text-xs font-mono font-bold text-[#161616] outline-none cursor-pointer border-0 py-1"
+            >
+              {[2024, 2025, 2026, 2027, 2028].map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Intervalos rápidos (Hoy, Semana, etc.) */}
           <div className="flex flex-wrap items-center gap-1 bg-white border border-[#E2DFD7] p-0.5 rounded-none shadow-xs h-9">
             {(['day', 'week', 'month', 'quarter', 'semester', 'year'] as const).map((p) => {
-              const labels = { day: 'Hoy', week: 'Semana', month: 'Mes', quarter: 'Trimestre', semester: 'Semestre', year: 'Año' };
-              const isSelected = period === p;
+              const labels = { day: 'Hoy', week: 'Semana', month: 'Mes Actual', quarter: 'Trimestre', semester: 'Semestre', year: 'Año' };
+              const isSelected = !isSpecificMonthMode && period === p;
               return (
                 <button
                   key={p}
-                  onClick={() => setPeriod(p)}
+                  onClick={() => {
+                    const currentDate = new Date();
+                    setSelectedMonth(currentDate.getMonth() + 1);
+                    setSelectedYear(currentDate.getFullYear());
+                    setPeriod(p);
+                    setIsSpecificMonthMode(false);
+                  }}
                   className={`h-full px-2.5 text-xs font-mono font-bold rounded-none transition cursor-pointer border-0 uppercase tracking-wider ${
                     isSelected ? 'bg-[#161616] text-[#F6F4EE]' : 'bg-transparent text-[#76746E] hover:text-[#161616]'
                   }`}

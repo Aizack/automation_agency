@@ -26,6 +26,9 @@ export interface ClientConfig {
   metaPhoneNumberId?: string;
   metaWabaId?: string;
   metaWaToken?: string;
+  country?: string;
+  country_code?: string;
+  timezone?: string;
 }
 
 /**
@@ -48,6 +51,9 @@ export const getClientConfigByPhone = async (phone: string): Promise<ClientConfi
         first_message_notified AS "firstMessageNotified",
         is_activated AS "isActivated",
         category,
+        COALESCE(country, 'Colombia') AS country,
+        COALESCE(country_code, '57') AS country_code,
+        COALESCE(timezone, 'America/Bogota') AS timezone,
         person_type AS "personType",
         enabled_modules AS "enabledModules",
         logo_url,

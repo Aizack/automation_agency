@@ -1,21 +1,21 @@
-# Graph Report - Bot multi-tenant-exp  (2026-09-28)
+# Graph Report - Bot multi-tenant-exp  (2026-10-14)
 
 ## Corpus Check
-- 368 files · ~546,495 words
+- 454 files · ~589,280 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2481 nodes · 3476 edges · 252 communities (204 shown, 48 thin omitted)
+- 2696 nodes · 3698 edges · 334 communities (269 shown, 65 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 29 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5c6dfb48`
+- Built from commit: `32d3d07b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- base.ts
+- SaaSErpInvoices.tsx
 - 3. CATÁLOGO MAESTRO DE AGENTES & PROMPTS DE SISTEMA DEFINIDOS
 - dependencies
 - SaaSErpInventory.tsx
@@ -36,17 +36,17 @@
 - 3. Portales de acceso
 - SaaSErpEmployees.tsx
 - plugins
-- SaaSErpPurchaseOrders.tsx
-- AIAgent
+- generate_audit_report
+- getClientById
 - SaaSErpAppointments.tsx
-- AdminDashboard.tsx
+- clientsCrud.ts
 - 🧪 GUÍA DE TESTING: Sistema de Gestión de Errores y Logging
 - Plan de Implementación: Módulo Contable, Métodos de Pago y Rotación de Inventario
 - 📄 ANÁLISIS, DISEÑO ARQUITECTÓNICO Y PLAN OFICIAL: MÓDULO DE CONTABILIDAD Y NÓMINA ELECTRÓNICA UNIFICADA
 - pdfGeneratorService.ts
 - 🚨 Error 502 Bad Gateway - Diagnosis & Solutions
 - Documentación Permanente de Cambios, Seguridad y Módulo de Cotizaciones (2026)
-- auditor.py
+- config.py
 - 2. 🔒 Protección de Memoria en el Navegador (`sessionStorage` + Limpieza Atómica)
 - Plan de Mejoras Arquitectónicas
 - dashboard/tsconfig.json
@@ -79,9 +79,9 @@
 - 🛠️ 2. Módulos y Herramientas Integradas
 - Modelo multi-tenant: usuarios, roles, negocio y CRM
 - 🏛️ Plan Arquitectónico: Módulo de Finanzas & Planeación Empresarial de Élite + Sistema IA AutoFix & Tickets
-- cli.py
+- authFetch
 - Contexto de Desarrollo - Multi-tenant SaaS ERP
-- SaaSErpInvoices2.tsx
+- test_ticketing.py
 - 🚀 2. Oportunidades de Escalación Vertical con IA
 - ESPECIFICACIONES TÉCNICAS Y REPORTE DE EJECUCIÓN - PARA JULES
 - stitch_unified_admin_platform dark mode/DESIGN.md
@@ -112,25 +112,25 @@
 - 2. Separación de responsabilidades
 - 12. Recomendación de optimización por prioridad
 - Informe de análisis técnico por fases
-- 3. Relación entre conceptos
+- server
 - INSTRUCCIONES PARA EL AGENTE LOCAL (ANTIGRAVITY)
-- 7. Optimización de ruta
+- SaaSErpPurchaseOrders.tsx
 - rules/graphify.md
 - workflows/graphify.md
 - optometry_rules.md
 - Detalle de cada Paso del Wizard:
-- test_crypto.py
+- cmd_ticket
 - QUICK_START.md
 - 🛡️ Reglas de Seguridad de Git y Estrategia de Ramas
 - sca.py
-- build_parser
+- cli.py
 - 📋 2. PLAN DE IMPLEMENTACIÓN PASO A PASO
 - SCA (60 findings)
 - package.json
 - dotenv
-- qrcode-terminal
-- @types/bcrypt
-- clientsCrud.ts
+- SaaSErpInvoices2.tsx
+- Guía Oficial de Integración: Meta Tech Provider & WhatsApp Business Cloud API
+- SaaSErpAiAgentModule.tsx
 - 📜 Guía y Hoja de Ruta: Rediseño Wabi-Sabi Paper (KOI ERP)
 - 📋 2. PLAN DE IMPLEMENTACIÓN TÉCNICA
 - react
@@ -142,27 +142,27 @@
 - SaaSErpEmployeeProfile.tsx
 - test_history_and_asm.py
 - ComplianceChecker
-- test_ticketing.py
-- generate_audit_report
+- 3. Relación entre conceptos
+- check_admin_phones.js
 - test_risk_score.py
 - Wabi-Sabi Paper Design System Rule
-- catalogService.ts
+- 7. Optimización de ruta
 - SCA (54 findings)
-- http.py
+- auditor.py
 - Changelog
 - test_logging.py
 - send
-- authFetch
+- AdminDashboard.tsx
 - xss.py
-- postgres.ts
+- base.ts
 - PublicCatalog.tsx
 - csrf.py
 - xxe.py
 - report.py
 - trend_report.py
-- idor.py
+- fix_admin_phone.js
 - 🔍 VPulse Security Audit Report
-- EnterprisePlanningModule.tsx
+- postgres.ts
 - 🔍 VPulse Security Audit Report
 - 🔍 VPulse Security Audit Report
 - test_audit_api.js
@@ -176,6 +176,7 @@
 - ticketing/__init__.py
 - vpulse
 - AGENTE VERTICAL 01: DATOS DE LA EMPRESA, SEDES & CONFIGURACIÓN IA
+- EnterprisePlanningModule.tsx
 - 🔍 VPulse Security Audit Report
 - 🔍 VPulse Security Audit Report
 - 🔍 VPulse Security Audit Report
@@ -196,7 +197,7 @@
 - AGENTE HORIZONTAL 03: DISEÑADOR UI/UX REACT (WABI-SABI PAPER SYSTEM)
 - AGENTE HORIZONTAL 04: AUDITOR DE SEGURIDAD, AUTENTICACIÓN Y ROLES
 - AGENTE HORIZONTAL 05: QA TESTER & BUILD VERIFICATION
-- SaaSErpAccounting.tsx
+- catalogService.ts
 - AGENTE 01: ARQUITECTO DE SOFTWARE (SOFTWARE ARCHITECT)
 - AGENTE 02: EXPERTO DE DOMINIO DE NEGOCIO (BUSINESS DOMAIN EXPERT)
 - AGENTE 03: DESARROLLADOR FULLSTACK (FULLSTACK DEVELOPER)
@@ -232,13 +233,35 @@
 - antigravity-universal-framework/context.md
 - 03_reglas_y_constraints_salud.md
 - 04_modelo_datos_pacientes.md
+- search_inv_routes.js
+- pg
+- search_server.js
+- test_habid_login.js
+- check_db_habid.js
+- check_invoices_count.js
+- check_meta_admin.js
+- test_meta_send.js
+- test_uuid_err.js
+- @types/bcrypt
+- SaaSErpAccounting.tsx
+- sqli.py
+- check_phones.js
+- test_valid_token.js
+- SaaSErpFormulas.tsx
+- @aws-sdk/client-s3
+- check_admin.js
+- check_perf.js
+- test_meta.js
+- googleapis
+- nodemailer
+- @types/nodemailer
 
 ## God Nodes (most connected - your core abstractions)
 1. `SCA (60 findings)` - 61 edges
-2. `react` - 56 edges
+2. `react` - 58 edges
 3. `SCA (54 findings)` - 55 edges
-4. `pool` - 39 edges
-5. `authFetch()` - 36 edges
+4. `authFetch()` - 38 edges
+5. `pool` - 38 edges
 6. `Auditor` - 35 edges
 7. `FakeSession` - 27 edges
 8. `send()` - 21 edges
@@ -246,57 +269,57 @@
 10. `AuditConfig` - 20 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `test()` --calls--> `listFilesFromFolder()`  [EXTRACTED]
+  scratch/test_drive.js → src/services/drive.ts
 - `runValidation()` --calls--> `initDatabase()`  [EXTRACTED]
   scratch/test_restaurant_validation.ts → src/database/initDb.ts
 - `InventoryRotationView()` --calls--> `authFetch()`  [EXTRACTED]
   dashboard/src/components/SaaSErpInventory.tsx → dashboard/src/utils/api.ts
 - `sample_config()` --uses--> `AuditConfig`  [INFERRED]
   vpulse/tests/conftest.py → vpulse/vpulse/config.py
-- `_build_config()` --uses--> `AuditConfig`  [INFERRED]
-  vpulse/vpulse/cli.py → vpulse/vpulse/config.py
-- `Auditor` --uses--> `AuditConfig`  [INFERRED]
-  vpulse/vpulse/core/auditor.py → vpulse/vpulse/config.py
+- `test_default_config_has_sane_defaults()` --uses--> `AuditConfig`  [INFERRED]
+  vpulse/tests/test_config.py → vpulse/vpulse/config.py
 
 ## Import Cycles
 - 2-file cycle: `src/server.ts -> src/services/shutdownManager.ts -> src/server.ts`
 
-## Communities (252 total, 48 thin omitted)
+## Communities (334 total, 65 thin omitted)
 
-### Community 0 - "base.ts"
-Cohesion: 0.13
-Nodes (12): genAI, agendarCitaTool, AsignarTareaArgs, asignarTareaTool, ConsultarEstadoCuentaArgs, consultarEstadoCuentaTool, ConsultarInventarioArgs, consultarInventarioTool (+4 more)
+### Community 0 - "SaaSErpInvoices.tsx"
+Cohesion: 0.16
+Nodes (18): HistoricalInvoicesModal(), HistoricalInvoicesModalProps, CashShift, CurrentShiftData, Employee, SaaSErpCashShifts(), SaaSErpCashShiftsProps, Invoice (+10 more)
 
 ### Community 1 - "3. CATÁLOGO MAESTRO DE AGENTES & PROMPTS DE SISTEMA DEFINIDOS"
 Cohesion: 0.06
 Nodes (30): 1. PROPÓSITO Y FILOSOFÍA DEL MARCO DE TRABAJO, 2. ESTRUCTURA UNIVERSAL DE CARPETAS (`.antigravity/` ó `.cloud/`), 3. CATÁLOGO MAESTRO DE AGENTES & PROMPTS DE SISTEMA DEFINIDOS, 4. PROTOCOLO ESTRICTO DE 7 PASOS PARA LA IA (ALGORITMO DE EJECUCIÓN), 5. CAPA DE ORQUESTACIÓN & MATRIZ DE DELEGACIÓN, 6. GUÍA DE INSTALACIÓN Y REUTILIZACIÓN RÁPIDA, AGENTE 01: ARQUITECTO DE SOFTWARE (SOFTWARE ARCHITECT), AGENTE 02: EXPERTO DE DOMINIO DE NEGOCIO (BUSINESS DOMAIN EXPERT) (+22 more)
 
 ### Community 2 - "dependencies"
-Cohesion: 0.11
-Nodes (19): @aws-sdk/client-s3, bcrypt, express, @google/generative-ai, googleapis, jsonwebtoken, multer, dependencies (+11 more)
+Cohesion: 0.10
+Nodes (21): bcrypt, express, @google/genai, @google/generative-ai, jsonwebtoken, multer, dependencies, bcrypt (+13 more)
 
 ### Community 3 - "SaaSErpInventory.tsx"
 Cohesion: 0.12
-Nodes (25): ColorOption, colorOptions, FieldWrapper(), getColorHex(), getColorPreview(), InventoryRotationView(), Product, ProductVariant (+17 more)
+Nodes (26): ColorOption, colorOptions, FieldWrapper(), getColorHex(), getColorPreview(), InventoryRotationView(), Product, ProductVariant (+18 more)
 
 ### Community 4 - "api.ts"
-Cohesion: 0.10
-Nodes (22): App(), ActivateAccount(), ActivateAccountProps, AuthFast(), AuthFastProps, DocRequest, EmployeePortal(), Task (+14 more)
+Cohesion: 0.11
+Nodes (19): App(), ActivateAccount(), ActivateAccountProps, AuthFast(), AuthFastProps, DocRequest, EmployeePortal(), Task (+11 more)
 
 ### Community 5 - "ClientDashboard.tsx"
 Cohesion: 0.05
-Nodes (39): AgentContact, AudioContact, Client, ClientDashboardProps, Interaction, WhatsappStatus, Product, RecipeItem (+31 more)
+Nodes (41): AgentContact, AudioContact, Client, ClientDashboard(), ClientDashboardProps, Interaction, isOpticaCategory(), isRestaurantCategory() (+33 more)
 
 ### Community 6 - "Auditor"
-Cohesion: 0.11
-Nodes (8): Tests for the Auditor orchestration and config wiring., test_auditor_accepts_external_session(), test_auditor_builds_session_from_config(), test_auditor_derives_proxy_and_verify_from_config(), Auditor, Orchestrates a full web security audit against a single target.…, Passively scan crawled page bodies for exposed secrets/credentials., Fingerprint JS libraries linked/inlined on the target and flag known-vulnerable…
+Cohesion: 0.08
+Nodes (19): Certificate, test_auditor_accepts_external_session(), test_auditor_builds_session_from_config(), Tests for post-quantum cipher classification and TLS audit., test_audit_connection_refused_reports_info(), test_classify_aes256_is_neutral(), test_classify_des_does_not_match_aes(), test_classify_quantum_safe_cipher_is_info() (+11 more)
 
 ### Community 7 - "compilerOptions"
 Cohesion: 0.08
 Nodes (23): compilerOptions, allowArbitraryExtensions, allowImportingTsExtensions, erasableSyntaxOnly, jsx, lib, module, moduleDetection (+15 more)
 
 ### Community 8 - "server.ts"
-Cohesion: 0.07
-Nodes (25): deleteClient(), updateClientStatus(), AuthenticatedRequest, authenticateToken(), authorizeClientAccess(), requireRole(), authRateLimiter, generalApiLimiter (+17 more)
+Cohesion: 0.05
+Nodes (41): RFC-6238, AuthenticatedRequest, authenticateToken(), authorizeClientAccess(), requireRole(), authRateLimiter, generalApiLimiter, RateLimitStore (+33 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.10
@@ -327,8 +350,8 @@ Cohesion: 0.17
 Nodes (11): compilerOptions, esModuleInterop, forceConsistentCasingInFileNames, module, outDir, rootDir, skipLibCheck, strict (+3 more)
 
 ### Community 16 - "whatsapp.ts"
-Cohesion: 0.11
-Nodes (23): updateClient(), alertThrottleMap, logger, LOGS_DIR, broadcastSseEvent(), registerSseClient(), sseClients, autoRestoreSavedWhatsAppSessions() (+15 more)
+Cohesion: 0.08
+Nodes (32): updateClient(), runTest(), STATE_FILE_PATH, stopEscalationService(), alertThrottleMap, logger, LOGS_DIR, captureSystemState() (+24 more)
 
 ### Community 17 - "electronicInvoiceService.ts"
 Cohesion: 0.13
@@ -346,21 +369,21 @@ Nodes (7): Department, Employee, MODULES, SaaSErpEmployees(), SaaSErpEmployeesPr
 Cohesion: 0.22
 Nodes (8): plugins, rules, react/only-export-components, react/rules-of-hooks, $schema, oxc, typescript, warn
 
-### Community 21 - "SaaSErpPurchaseOrders.tsx"
-Cohesion: 0.13
-Nodes (16): DynamicSelect(), DynamicSelectProps, ColorOption, colorOptions, getColorHex(), getColorPreview(), SaaSErpProductFormModal(), SaaSErpProductFormModalProps (+8 more)
+### Community 21 - "generate_audit_report"
+Cohesion: 0.22
+Nodes (15): Reporter unit tests — output generation and HTML escaping (stored-XSS guard)., _sample_result(), test_checklist_is_persisted(), test_checklist_state_is_restored(), test_generate_report_writes_json_md_html(), test_html_report_escapes_payload_and_url(), test_severity_summary_counts(), _esc() (+7 more)
 
-### Community 22 - "AIAgent"
-Cohesion: 0.24
-Nodes (11): AIAgent, ClientConfig, getClientConfigById(), getClientConfigByPhone(), pendingAgentConfirmations, pendingCustomerConfirmations, routeIncomingMessage(), test() (+3 more)
+### Community 22 - "getClientById"
+Cohesion: 0.23
+Nodes (12): AIAgent, ClientConfig, getClientConfigById(), getClientConfigByPhone(), pendingAgentConfirmations, pendingCustomerConfirmations, routeIncomingMessage(), getClientById() (+4 more)
 
 ### Community 23 - "SaaSErpAppointments.tsx"
 Cohesion: 0.40
 Nodes (5): Appointment, Customer, formatLocalDateInput(), SaaSErpAppointments(), SaaSErpAppointmentsProps
 
-### Community 24 - "AdminDashboard.tsx"
-Cohesion: 0.25
-Nodes (7): AdminDashboard(), AdminDashboardProps, Client, Metrics, SystemAlert, SystemAlertsPanel(), SystemAlertsPanelProps
+### Community 24 - "clientsCrud.ts"
+Cohesion: 0.18
+Nodes (15): { listFilesFromFolder }, test(), createClient(), deleteClient(), updateClientStatus(), VectorDatabase, testDriveWriter(), runTest() (+7 more)
 
 ### Community 25 - "🧪 GUÍA DE TESTING: Sistema de Gestión de Errores y Logging"
 Cohesion: 0.08
@@ -386,9 +409,9 @@ Nodes (20): **1. Nginx Proxy NO está corriendo**, **2. Configuración de Nginx 
 Cohesion: 0.11
 Nodes (17): 1. 🛡️ Seguridad y Aislamiento Multi-Tenant, 2. 🔐 Reglas de Permisos de Empleados en Inventario, 3. 📋 Módulo de Cotizaciones y Prospectos Comerciales (CRM), 4. 🎨 Sistema de Diseño Obsidian Gold & Escalado Tipográfico, 5. ⚙️ Reglas Git y Despliegue Automático en VPS, Componentes y Esquema de Base de Datos, Despliegue Continuo (CI/CD), Documentación Permanente de Cambios, Seguridad y Módulo de Cotizaciones (2026) (+9 more)
 
-### Community 32 - "auditor.py"
-Cohesion: 0.19
-Nodes (18): Any, Tests for the AuditConfig dataclass and YAML loader., test_default_config_has_sane_defaults(), test_load_config_empty_file_returns_defaults(), test_load_config_missing_file_returns_defaults(), test_load_config_none_returns_defaults(), test_load_config_parses_yaml(), _as_str_list() (+10 more)
+### Community 32 - "config.py"
+Cohesion: 0.25
+Nodes (14): Any, Tests for the AuditConfig dataclass and YAML loader., test_default_config_has_sane_defaults(), test_load_config_empty_file_returns_defaults(), test_load_config_missing_file_returns_defaults(), test_load_config_none_returns_defaults(), test_load_config_parses_yaml(), _as_str_list() (+6 more)
 
 ### Community 33 - "2. 🔒 Protección de Memoria en el Navegador (`sessionStorage` + Limpieza Atómica)"
 Cohesion: 0.20
@@ -470,17 +493,17 @@ Nodes (10): 1. Objetivo, 5. Caso de ejemplo: Óptica Prueba, 6. Qué falta en el
 Cohesion: 0.20
 Nodes (9): 🎯 1. Visión General del Proyecto, 📊 2. Arquitectura de Flujo de Datos Financieros (Sin Redundancia), 🛡️ 3. Especificación Técnica de IA AutoFix, 📅 4. Roadmap de Ejecución, A. Gastos Fijos Operativos (Ubicación: `SaaSErpAccounting.tsx`), B. Inversión Inicial & Préstamos Bancarios (Ubicación: `EnterprisePlanningModule.tsx`), Modelo de Datos (`support_tickets`):, 🏛️ Plan Arquitectónico: Módulo de Finanzas & Planeación Empresarial de Élite + Sistema IA AutoFix & Tickets (+1 more)
 
-### Community 67 - "cli.py"
-Cohesion: 0.17
-Nodes (15): test_dedup_state_prevents_refiling(), cmd_awareness_send(), cmd_ticket(), main(), print_ascii(), Command-line interface for VPulse — automated web security audit toolkit., Never accept the SMTP password as a CLI flag (shell history / `ps` exposure).…, _resolve_smtp_password() (+7 more)
+### Community 67 - "authFetch"
+Cohesion: 0.09
+Nodes (25): AuditLogItem, AuditLogModal(), AuditLogModalProps, ChatMessage, FrantErpMobileView(), FrantErpMobileViewProps, CarteraProps, Installment (+17 more)
 
 ### Community 68 - "Contexto de Desarrollo - Multi-tenant SaaS ERP"
 Cohesion: 0.20
 Nodes (9): 1. Agenda de Citas (`SaaSErpAppointments.tsx`), 2. Personal y Control de Asistencia (`SaaSErpEmployees.tsx`), 3. CRM e Historial Clínico (`SaaSErpCRM.tsx`), 4. Chat Corporativo (`EmployeePortal.tsx`), 🛠️ Arquitectura General, Contexto de Desarrollo - Multi-tenant SaaS ERP, 🤖 Marco de Agentes Antigravity (`.antigravity/`), 🚀 Módulos y Funcionalidades Activas (+1 more)
 
-### Community 69 - "SaaSErpInvoices2.tsx"
-Cohesion: 0.22
-Nodes (8): BankAccount, Category, Employee, Invoice, InvoiceItem, Product, SaaSErpInvoices2(), SaaSErpInvoices2Props
+### Community 69 - "test_ticketing.py"
+Cohesion: 0.12
+Nodes (22): _findings(), Tests for the ticketing integration: formatter, dedup state, and dry-run…, test_build_backend_rejects_unknown_name(), test_build_tickets_produces_title_body_and_labels(), test_csv_backend_dry_run_does_not_write_file(), test_csv_backend_live_writes_row(), test_filter_by_severity_default_high_excludes_medium_and_info(), test_filter_by_severity_medium_includes_critical_and_medium() (+14 more)
 
 ### Community 70 - "🚀 2. Oportunidades de Escalación Vertical con IA"
 Cohesion: 0.22
@@ -602,21 +625,21 @@ Nodes (4): 12. Recomendación de optimización por prioridad, Prioridad alta, Pr
 Cohesion: 0.50
 Nodes (4): 13. Conclusión final, 1. Resumen ejecutivo, 2. Estado verificado antes del análisis, Informe de análisis técnico por fases
 
-### Community 101 - "3. Relación entre conceptos"
-Cohesion: 0.50
-Nodes (4): 3.1. Usuario global vs negocio, 3.2. Empleado vs usuario, 3.3. Cliente del negocio vs usuario del negocio, 3. Relación entre conceptos
+### Community 101 - "server"
+Cohesion: 0.17
+Nodes (12): main(), isDbConnectionError(), resolveProductClientId(), server, startEscalationService(), MetaWhatsAppService, checkAndSendReminders(), delay() (+4 more)
 
-### Community 103 - "7. Optimización de ruta"
-Cohesion: 0.67
-Nodes (3): 7. Optimización de ruta, Cuándo sí usar Google Maps, Método recomendado
+### Community 103 - "SaaSErpPurchaseOrders.tsx"
+Cohesion: 0.14
+Nodes (15): DynamicSelect(), DynamicSelectProps, ColorOption, colorOptions, getColorHex(), getColorPreview(), SaaSErpProductFormModal(), SaaSErpProductFormModalProps (+7 more)
 
 ### Community 107 - "Detalle de cada Paso del Wizard:"
 Cohesion: 0.13
 Nodes (14): 1. 🔍 DIAGNÓSTICO Y DECISIÓN DE PROVEEDOR TECNOLÓGICO, 2. 🎨 ARQUITECTURA DE EXPERIENCIA DE USUARIO (WIZARD ESTILO ALEGRA), 3. 🛠️ COMPONENTES A IMPLEMENTAR EN EL CÓDIGO, 4. 🎯 CONCLUSIÓN, A. Backend (`src/services/factusService.ts` & `src/server.ts`):, B. Frontend (`dashboard/src/components/SaaSErpHabilitacionDian.tsx`):, Detalle de cada Paso del Wizard:, 📄 DOCUMENTO OFICIAL DE ARQUITECTURA Y UX: INTEGRACIÓN FACTUS API Y WIZARD DE HABILITACIÓN DIAN (ESTILO ALEGRA) (+6 more)
 
-### Community 108 - "test_crypto.py"
-Cohesion: 0.23
-Nodes (13): Certificate, Tests for post-quantum cipher classification and TLS audit., test_audit_connection_refused_reports_info(), test_classify_aes256_is_neutral(), test_classify_des_does_not_match_aes(), test_classify_quantum_safe_cipher_is_info(), test_classify_rc4_is_critical(), audit_tls_post_quantum() (+5 more)
+### Community 108 - "cmd_ticket"
+Cohesion: 0.46
+Nodes (7): test_dedup_state_prevents_refiling(), cmd_ticket(), already_filed(), load_state(), Tracks which findings already have a filed ticket, so re-running `vpulse…, record_filed(), save_state()
 
 ### Community 114 - "🛡️ Reglas de Seguridad de Git y Estrategia de Ramas"
 Cohesion: 0.33
@@ -624,11 +647,11 @@ Nodes (5): ⚠️ 1. REGLAS INVIOLABLES DE SEGURIDAD (ANTI-PÉRDIDA DE CÓDIGO),
 
 ### Community 115 - "sca.py"
 Cohesion: 0.10
-Nodes (33): Tests for passive exposure checks: secret detection and SCA (dependency…, test_scan_js_content_flags_old_jquery(), test_scan_js_content_ignores_modern_jquery(), test_scan_local_dependencies_walks_directory(), test_scan_package_json_flags_vulnerable_pin(), test_scan_requirements_txt_flags_vulnerable_pin(), test_scan_text_detects_aws_key_and_redacts_evidence(), test_scan_text_ignores_clean_content() (+25 more)
+Nodes (34): Tests for passive exposure checks: secret detection and SCA (dependency…, test_scan_js_content_flags_old_jquery(), test_scan_js_content_ignores_modern_jquery(), test_scan_local_dependencies_walks_directory(), test_scan_package_json_flags_vulnerable_pin(), test_scan_requirements_txt_flags_vulnerable_pin(), test_scan_text_detects_aws_key_and_redacts_evidence(), test_scan_text_ignores_clean_content() (+26 more)
 
-### Community 116 - "build_parser"
-Cohesion: 0.17
-Nodes (19): ArgumentParser, CLI unit tests — parser wiring, consent gate, and target normalization., test_audit_parser_supports_insecure_and_no_attacks(), test_check_consent_allows_authorized(), test_check_consent_allows_regular_domains(), test_check_consent_blocks_protected_domains(), test_normalize_target_adds_https(), test_parser_has_audit_crawl_report_subcommands() (+11 more)
+### Community 116 - "cli.py"
+Cohesion: 0.12
+Nodes (26): ArgumentParser, CLI unit tests — parser wiring, consent gate, and target normalization., test_audit_parser_supports_insecure_and_no_attacks(), test_check_consent_allows_authorized(), test_check_consent_allows_regular_domains(), test_check_consent_blocks_protected_domains(), test_normalize_target_adds_https(), test_parser_has_audit_crawl_report_subcommands() (+18 more)
 
 ### Community 117 - "📋 2. PLAN DE IMPLEMENTACIÓN PASO A PASO"
 Cohesion: 0.15
@@ -642,9 +665,17 @@ Nodes (61): 10. 🟡 MEDIUM — Vulnerable Dependency (OSV): requests 2.32.0, 11
 Cohesion: 0.40
 Nodes (4): description, main, name, version
 
-### Community 123 - "clientsCrud.ts"
-Cohesion: 0.17
-Nodes (17): createClient(), getClientById(), listClients(), genAI, VectorDatabase, test(), testDriveWriter(), runTest() (+9 more)
+### Community 121 - "SaaSErpInvoices2.tsx"
+Cohesion: 0.22
+Nodes (8): BankAccount, Category, Employee, Invoice, InvoiceItem, Product, SaaSErpInvoices2(), SaaSErpInvoices2Props
+
+### Community 122 - "Guía Oficial de Integración: Meta Tech Provider & WhatsApp Business Cloud API"
+Cohesion: 0.20
+Nodes (9): 1. Visión General de Arquitectura Dual, 2. Variables de Entorno Requeridas (`.env`), 3. Endpoints Implementados en el Servidor, 4. Flujo de Embedded Signup para Clientes (Tech Provider Flow), 5. Guía de Aprobación de la App (Meta App Review), 6. Mantenimiento y Control del Repositorio, Guía Oficial de Integración: Meta Tech Provider & WhatsApp Business Cloud API, Permisos a Solicitar en Meta Developers: (+1 more)
+
+### Community 123 - "SaaSErpAiAgentModule.tsx"
+Cohesion: 0.29
+Nodes (6): AgentContact, AudioContact, Interaction, SaaSErpAiAgentModule(), SaaSErpAiAgentModuleProps, WhatsappStatus
 
 ### Community 124 - "📜 Guía y Hoja de Ruta: Rediseño Wabi-Sabi Paper (KOI ERP)"
 Cohesion: 0.18
@@ -655,8 +686,8 @@ Cohesion: 0.20
 Nodes (9): 🎯 1. OBJETIVO DEL PROYECTO, 2.1. Configuración Dinámica de Impuestos por Negocio y Producto, 2.2. Protección de Precios de Costo en Inventario (`SaaSErpInventory.tsx`), 2.3. Filtro por Tipo de Comprobante DIAN (`SaaSErpInvoices.tsx`), 2.4. Módulo de Contabilidad Fiscal & P&L Adaptativo (`SaaSErpAccounting.tsx`), 📋 2. PLAN DE IMPLEMENTACIÓN TÉCNICA, 🧪 3. VERIFICACIÓN Y PRUEBAS AUTOMATIZADAS, 📌 4. WALKTHROUGH & RESUMEN DE CAMBIOS EJECUTADOS (+1 more)
 
 ### Community 126 - "react"
-Cohesion: 0.12
-Nodes (18): ClientDashboard(), isOpticaCategory(), isRestaurantCategory(), AgentContact, AudioContact, Interaction, SaaSErpAiAgentModule(), SaaSErpAiAgentModuleProps (+10 more)
+Cohesion: 0.15
+Nodes (13): BranchItem, CategoryItem, SaaSErpECommerceWizard(), SaaSErpECommerceWizardProps, GeneralERP(), GeneralERPProps, OpticaERP(), OpticaERPProps (+5 more)
 
 ### Community 127 - "📋 3. Mapeo Oficial de Campos de Inventario (`SaaSErpInventory.tsx`)"
 Cohesion: 0.20
@@ -690,29 +721,25 @@ Nodes (21): _assessment(), Tests for risk-score history/trend tracking and basic
 Cohesion: 0.24
 Nodes (6): audit_compliance(), ComplianceChecker, Response, Session, LatAm compliance audit: LGPD, LFPDPPP, LEPD, and more., Checks a target against LatAm data-protection requirements.
 
-### Community 135 - "test_ticketing.py"
-Cohesion: 0.12
-Nodes (22): _findings(), Tests for the ticketing integration: formatter, dedup state, and dry-run…, test_build_backend_rejects_unknown_name(), test_build_tickets_produces_title_body_and_labels(), test_csv_backend_dry_run_does_not_write_file(), test_csv_backend_live_writes_row(), test_filter_by_severity_default_high_excludes_medium_and_info(), test_filter_by_severity_medium_includes_critical_and_medium() (+14 more)
-
-### Community 136 - "generate_audit_report"
-Cohesion: 0.22
-Nodes (15): Reporter unit tests — output generation and HTML escaping (stored-XSS guard)., _sample_result(), test_checklist_is_persisted(), test_checklist_state_is_restored(), test_generate_report_writes_json_md_html(), test_html_report_escapes_payload_and_url(), test_severity_summary_counts(), _esc() (+7 more)
+### Community 135 - "3. Relación entre conceptos"
+Cohesion: 0.50
+Nodes (4): 3.1. Usuario global vs negocio, 3.2. Empleado vs usuario, 3.3. Cliente del negocio vs usuario del negocio, 3. Relación entre conceptos
 
 ### Community 137 - "test_risk_score.py"
 Cohesion: 0.24
 Nodes (16): Unified risk score tests — technical + human blending and grading., test_build_risk_assessment_blends_both_dimensions(), test_human_score_defaults_to_perfect_with_no_campaigns(), test_human_score_drops_with_high_click_rate(), test_technical_score_penalizes_critical_more_than_low(), test_technical_score_perfect_with_no_findings(), build_risk_assessment(), compute_human_score() (+8 more)
 
-### Community 139 - "catalogService.ts"
-Cohesion: 0.38
-Nodes (6): CatalogBranch, CatalogProduct, createCatalogOrder(), getClientBySlugOrId(), getPublicCatalog(), PublicCatalogData
+### Community 139 - "7. Optimización de ruta"
+Cohesion: 0.67
+Nodes (3): 7. Optimización de ruta, Cuándo sí usar Google Maps, Método recomendado
 
 ### Community 140 - "SCA (54 findings)"
 Cohesion: 0.04
 Nodes (55): 10. 🟡 MEDIUM — Vulnerable Dependency (OSV): cryptography 42.0.0, 11. 🟡 MEDIUM — Vulnerable Dependency (OSV): cryptography 42.0.0, 12. 🟡 MEDIUM — Vulnerable Dependency (OSV): cryptography 42.0.0, 13. 🟡 MEDIUM — Vulnerable Dependency (OSV): cryptography 42.0.0, 14. 🟡 MEDIUM — Vulnerable Dependency (OSV): cryptography 42.0.0, 15. 🟡 MEDIUM — Vulnerable Dependency (OSV): cryptography 42.0.0, 16. 🟡 MEDIUM — Vulnerable Dependency (OSV): cryptography 42.0.0, 17. 🟡 MEDIUM — Vulnerable Dependency (OSV): cryptography 42.0.0 (+47 more)
 
-### Community 141 - "http.py"
-Cohesion: 0.16
-Nodes (14): HTTPAdapter, Tests for the HTTP session builder and rate limiter., test_build_session_applies_headers_cookies_and_verify(), test_build_session_applies_proxy(), test_rate_limit_adapter_no_sleep_when_idle(), test_rate_limit_adapter_sleeps_when_too_soon(), test_rate_limit_adapter_zero_delay_never_sleeps(), build_session() (+6 more)
+### Community 141 - "auditor.py"
+Cohesion: 0.13
+Nodes (19): HTTPAdapter, Tests for the Auditor orchestration and config wiring., test_auditor_derives_proxy_and_verify_from_config(), Tests for the HTTP session builder and rate limiter., test_build_session_applies_headers_cookies_and_verify(), test_build_session_applies_proxy(), test_rate_limit_adapter_no_sleep_when_idle(), test_rate_limit_adapter_sleeps_when_too_soon() (+11 more)
 
 ### Community 142 - "Changelog"
 Cohesion: 0.15
@@ -723,20 +750,20 @@ Cohesion: 0.27
 Nodes (10): Logger, Tests for the logging module., test_get_logger_returns_logger(), test_setup_logging_info_hides_debug(), test_setup_logging_sets_levels(), get_logger(), Structured logging for VPulse., Configure the root logger. Idempotent — ``logging.basicConfig`` is a no-op if… (+2 more)
 
 ### Community 144 - "send"
-Cohesion: 0.15
-Nodes (21): Response, Issue a request through ``session`` if given, else a bare ``requests`` call.…, send(), _build_finding(), _fix_steps(), Session, _replication_steps(), test_cmdi() (+13 more)
+Cohesion: 0.14
+Nodes (22): Response, Session, Issue a request through ``session`` if given, else a bare ``requests`` call.…, send(), _build_finding(), _fix_steps(), Session, _replication_steps() (+14 more)
 
-### Community 145 - "authFetch"
-Cohesion: 0.07
-Nodes (35): AuditLogItem, AuditLogModal(), AuditLogModalProps, ChatMessage, FrantErpMobileView(), FrantErpMobileViewProps, HistoricalInvoicesModal(), HistoricalInvoicesModalProps (+27 more)
+### Community 145 - "AdminDashboard.tsx"
+Cohesion: 0.11
+Nodes (17): AdminDashboard(), AdminDashboardProps, Client, Metrics, FrantLogo(), FrantLogoProps, LandingPage(), LandingPageProps (+9 more)
 
 ### Community 146 - "xss.py"
 Cohesion: 0.36
 Nodes (7): _build_finding(), _fix_steps(), is_reflected(), Session, _replication_steps(), test_xss(), _verification_command()
 
-### Community 147 - "postgres.ts"
+### Community 147 - "base.ts"
 Cohesion: 0.09
-Nodes (23): runValidation(), runAutoFixAgent(), TicketFixResult, initDatabase(), isDbConnectionError(), pool, ExtendedRequest, runTest() (+15 more)
+Nodes (16): ERPBridgeService, agendarCitaTool, AsignarTareaArgs, asignarTareaTool, ConsultarDomicilioArgs, consultarDomicilioTool, ConsultarEstadoCuentaArgs, consultarEstadoCuentaTool (+8 more)
 
 ### Community 148 - "PublicCatalog.tsx"
 Cohesion: 0.25
@@ -758,17 +785,13 @@ Nodes (6): cmd_awareness_report(), _esc(), Aggregate a campaign's tracking event
 Cohesion: 0.48
 Nodes (6): _esc(), Renders a risk-score trend (sparkline + delta) from assessment history., save_trend(), _sparkline_points(), to_html(), to_markdown()
 
-### Community 154 - "idor.py"
-Cohesion: 0.48
-Nodes (6): _build_finding(), _fix_steps(), Session, _replication_steps(), test_idor(), _verification_command()
-
 ### Community 155 - "🔍 VPulse Security Audit Report"
 Cohesion: 0.33
 Nodes (5): 🔎 Detailed Findings, 📊 Executive Summary, ✅ Remediation Checklist, 📝 Report Metadata, 🔍 VPulse Security Audit Report
 
-### Community 156 - "EnterprisePlanningModule.tsx"
-Cohesion: 0.16
-Nodes (9): EnterprisePlanningModule(), EnterprisePlanningModuleProps, FinancialModelData, InvestmentItem, LoanItem, BranchItem, CategoryItem, SaaSErpECommerceWizard() (+1 more)
+### Community 156 - "postgres.ts"
+Cohesion: 0.12
+Nodes (8): runValidation(), runAutoFixAgent(), TicketFixResult, listClients(), initDatabase(), pool, ExtendedRequest, test()
 
 ### Community 157 - "🔍 VPulse Security Audit Report"
 Cohesion: 0.17
@@ -785,6 +808,10 @@ Nodes (3): http, options, req
 ### Community 188 - "AGENTE VERTICAL 01: DATOS DE LA EMPRESA, SEDES & CONFIGURACIÓN IA"
 Cohesion: 0.40
 Nodes (4): AGENTE VERTICAL 01: DATOS DE LA EMPRESA, SEDES & CONFIGURACIÓN IA, Componentes y Tablas Relacionadas:, Directrices de Negocio:, Submódulos Alineados del Menú:
+
+### Community 189 - "EnterprisePlanningModule.tsx"
+Cohesion: 0.33
+Nodes (5): EnterprisePlanningModule(), EnterprisePlanningModuleProps, FinancialModelData, InvestmentItem, LoanItem
 
 ### Community 190 - "🔍 VPulse Security Audit Report"
 Cohesion: 0.33
@@ -819,8 +846,8 @@ Cohesion: 0.13
 Nodes (14): 📘 Bitácora de Seguridad: Explicación de Auditoría y Correcciones Aplicadas, **Etapa 1: El usuario entra a tu página**, **Etapa 1: Tu proyecto usa librerías de terceros**, **Etapa 2: Detección de Vulnerabilidades en la Cadena de Suministro (SCA)**, **Etapa 2: Tu servidor procesa la respuesta**, **Etapa 3: Detección de la Vulnerabilidad (¿Dónde estaba el problema?)**, **Etapa 3: La Reparación (¿Cómo lo arreglamos?)**, **Etapa 4: La Reparación (¿Cómo lo arreglamos?)** (+6 more)
 
 ### Community 198 - "SaaSErpUsers.tsx"
-Cohesion: 0.16
-Nodes (9): Customer, Formula, FormulasProps, SaaSErpFormulas(), ALL_MODULES, ROLE_LABELS, SaaSErpUsers(), SaaSErpUsersProps (+1 more)
+Cohesion: 0.29
+Nodes (6): ALL_MODULES, COUNTRIES, ROLE_LABELS, SaaSErpUsers(), SaaSErpUsersProps, TenantUser
 
 ### Community 199 - "AGENTE VERTICAL 04: FINANZAS, CONTABILIDAD, NÓMINA & PLANEACIÓN"
 Cohesion: 0.40
@@ -866,9 +893,9 @@ Nodes (3): AGENTE HORIZONTAL 04: AUDITOR DE SEGURIDAD, AUTENTICACIÓN Y ROLES, R
 Cohesion: 0.50
 Nodes (3): AGENTE HORIZONTAL 05: QA TESTER & BUILD VERIFICATION, Rol & Misión, System Prompt de Activación
 
-### Community 211 - "SaaSErpAccounting.tsx"
-Cohesion: 0.29
-Nodes (6): AccountingSummary, DailyTrendItem, FixedExpense, SaaSErpAccounting(), SaaSErpAccountingProps, TopProduct
+### Community 212 - "catalogService.ts"
+Cohesion: 0.38
+Nodes (6): CatalogBranch, CatalogProduct, createCatalogOrder(), getClientBySlugOrId(), getPublicCatalog(), PublicCatalogData
 
 ### Community 213 - "AGENTE 01: ARQUITECTO DE SOFTWARE (SOFTWARE ARCHITECT)"
 Cohesion: 0.50
@@ -938,25 +965,45 @@ Nodes (3): Matriz de Enrutamiento, Misión, Orquestador Principal de NutriApp
 Cohesion: 0.50
 Nodes (3): Flujo 1: Implementación de Nuevo Módulo de Cálculo Nutricional, Flujo 2: Corrección de Bug o Excepción en Runtime, Flujos de Trabajo Inter-Agentes
 
+### Community 254 - "search_inv_routes.js"
+Cohesion: 0.50
+Nodes (3): content, fs, lines
+
+### Community 311 - "search_server.js"
+Cohesion: 0.50
+Nodes (3): content, fs, lines
+
+### Community 319 - "SaaSErpAccounting.tsx"
+Cohesion: 0.29
+Nodes (6): AccountingSummary, DailyTrendItem, FixedExpense, SaaSErpAccounting(), SaaSErpAccountingProps, TopProduct
+
+### Community 320 - "sqli.py"
+Cohesion: 0.48
+Nodes (6): _build_finding(), _fix_steps(), Session, _replication_steps(), test_sqli(), _verification_command()
+
+### Community 323 - "SaaSErpFormulas.tsx"
+Cohesion: 0.40
+Nodes (4): Customer, Formula, FormulasProps, SaaSErpFormulas()
+
 ## Knowledge Gaps
-- **1138 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+1133 more)
+- **1181 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+1176 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **48 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **65 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `SaaSErpQuotes.tsx`, `SaaSErpInventory.tsx`, `api.ts`, `ClientDashboard.tsx`, `SaaSErpEmployeeProfile.tsx`, `SaaSErpUsers.tsx`, `SaaSErpInvoices2.tsx`, `authFetch`, `SaaSErpAccounting.tsx`, `plugins`, `SaaSErpPurchaseOrders.tsx`, `PublicCatalog.tsx`, `SaaSErpAppointments.tsx`, `AdminDashboard.tsx`, `SaaSErpEmployees.tsx`, `EnterprisePlanningModule.tsx`?**
-  _High betweenness centrality (0.009) - this node is a cross-community bridge._
-- **Why does `Auditor` connect `Auditor` to `auditor.py`, `cli.py`, `build_parser`, `generate_audit_report`?**
-  _High betweenness centrality (0.009) - this node is a cross-community bridge._
-- **Why does `AuditConfig` connect `auditor.py` to `cli.py`, `FakeSession`, `Auditor`, `http.py`, `build_parser`?**
+- **Why does `react` connect `react` to `SaaSErpInvoices.tsx`, `SaaSErpInventory.tsx`, `api.ts`, `ClientDashboard.tsx`, `SaaSErpEmployeeProfile.tsx`, `AdminDashboard.tsx`, `SaaSErpEmployees.tsx`, `plugins`, `PublicCatalog.tsx`, `SaaSErpAppointments.tsx`, `EnterprisePlanningModule.tsx`, `SaaSErpAccounting.tsx`, `SaaSErpQuotes.tsx`, `authFetch`, `SaaSErpFormulas.tsx`, `SaaSErpUsers.tsx`, `SaaSErpPurchaseOrders.tsx`, `SaaSErpInvoices2.tsx`, `SaaSErpAiAgentModule.tsx`?**
   _High betweenness centrality (0.006) - this node is a cross-community bridge._
+- **Why does `Auditor` connect `Auditor` to `generate_audit_report`, `cli.py`, `auditor.py`?**
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
+- **Why does `build_risk_assessment()` connect `test_risk_score.py` to `unified_report.py`, `cli.py`?**
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
 - **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
-  _1138 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `base.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.12554112554112554 - nodes in this community are weakly interconnected._
+  _1181 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `3. CATÁLOGO MAESTRO DE AGENTES & PROMPTS DE SISTEMA DEFINIDOS` be split into smaller, more focused modules?**
   _Cohesion score 0.06451612903225806 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09523809523809523 - nodes in this community are weakly interconnected._
+- **Should `SaaSErpInventory.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.11576354679802955 - nodes in this community are weakly interconnected._

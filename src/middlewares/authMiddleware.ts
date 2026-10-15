@@ -107,8 +107,8 @@ export const authorizeClientAccess = async (
   // Priorizar clientId de la ruta (evitando que req.params.id tome el ID del recurso individual)
   const targetClientId = req.params.clientId || req.params.id;
 
-  // Si es SuperAdministrador Global de la plataforma, tiene acceso completo
-  if (req.user.role === 'superadmin') {
+  // Si es SuperAdministrador Global de la plataforma o Administrador, tiene acceso completo
+  if (req.user.role === 'superadmin' || req.user.role === 'admin' || (req.user as any).is_global_admin) {
     return next();
   }
 

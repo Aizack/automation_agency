@@ -118,9 +118,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
     : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
   const [clientData, setClientData] = useState<Client | null>(null);
 
-  // Permisos de sesión de empleado
+  // Permisos de sesión de empleado (colaboradores de tienda)
   const sessionRole = localStorage.getItem('session_role');
-  const isEmployeeSession = sessionRole === 'employee';
+  const hasEmpData = !!(localStorage.getItem('emp_id') || localStorage.getItem('employee_role') || localStorage.getItem('employee_permissions'));
+  const isEmployeeSession = sessionRole === 'employee' || (sessionRole !== 'superadmin' && hasEmpData);
   const employeePermissions: string[] = (() => {
     try {
       return JSON.parse(localStorage.getItem('employee_permissions') || '[]');
@@ -138,7 +139,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   })();
 
   const hasPermission = (moduleKey: string) => {
-    if (!isEmployeeSession) return true; // Admins y dueños del negocio ven todo
+    if (!isEmployeeSession) return true; // Únicamente Super Admin y cuentas de plataforma ven todo
     return employeePermissions.includes(moduleKey);
   };
 
@@ -785,6 +786,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
       fetchLogsAndMetrics();
     });
 
+    // Reenviar eventos de alertas al bus de ventana para evitar conexiones SSE duplicadas
+    es.addEventListener('alert_update', () => {
+      window.dispatchEvent(new CustomEvent('sse:alert_update'));
+    });
+
     return () => {
       es.close();
     };
@@ -1055,8 +1061,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
   const activeUserName = localStorage.getItem('session_name') || localStorage.getItem('emp_name') || localStorage.getItem('user_name') || clientData?.name || 'Usuario Activo';
   const rawRole = (localStorage.getItem('session_role') || localStorage.getItem('emp_role') || localStorage.getItem('employee_role') || 'client').toLowerCase().trim();
+  const isSuperAdminUser = rawRole === 'admin' || rawRole === 'superadmin' || localStorage.getItem('session_role') === 'superadmin';
+  const empRoleName = localStorage.getItem('employee_role') || '';
+  const formattedEmpRole = empRoleName.toLowerCase() === 'admin' ? 'Administrador de Tienda' : (empRoleName || 'Colaborador');
+  const activeUserRole = isSuperAdminUser ? 'Super Admin' : isEmployeeSession ? formattedEmpRole : 'Administrador de Tienda';
   const isOperationalStaff = isEmployeeSession && ['mesero', 'waiter', 'cocinero', 'kitchen', 'bartender', 'bar_kds', 'chef', 'capitan_meseros'].includes(rawRole);
-  const activeUserRole = rawRole === 'admin' ? 'Super Admin' : rawRole === 'employee' ? (localStorage.getItem('employee_role') || 'Colaborador') : 'Administrador de Tienda';
 
   if (isMobile) {
     return (
@@ -1342,7 +1351,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     </button>
                   </li>
                 )}
-                {rawRole === 'admin' && (
+                {isSuperAdminUser && (
                   <li>
                     <button 
                       onClick={() => setActiveTab('facturacion2')} 
@@ -1626,7 +1635,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         {/* User Session Info & Back / Logout footer */}
         <div className="sidebar-footer">
           <span className="text-[10px] font-mono opacity-50">KOI ERP v1.0</span>
-          {rawRole === 'admin' && (
+          {isSuperAdminUser && (
             <button 
               onClick={onBack}
               className="text-[10px] text-[#D9381E] hover:underline font-bold bg-transparent border-0 cursor-pointer flex items-center gap-1"
@@ -1856,14 +1865,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             )}
 
             {/* Botón Volver al Panel Admin / SuperAdmin (si aplica) */}
-            {rawRole === 'admin' && (
+            {isSuperAdminUser && (
               <button 
                 onClick={onBack}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] bg-white hover:bg-[#FAF8F3] text-[#161616] border border-[#E2DFD7] transition cursor-pointer text-xs font-bold"
-                title="Regresar a la Consola General de Administrador"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] bg-[#161616] hover:bg-[#2C2A29] text-white shadow-sm transition cursor-pointer text-xs font-bold border-0"
+                title="Regresar a la Consola General de Super Admin"
               >
-                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-                <span className="hidden md:inline">Volver a Admin</span>
+                <span className="material-symbols-outlined text-[16px] text-[#F39C12]">shield_person</span>
+                <span>👑 Panel Super Admin</span>
               </button>
             )}
 
@@ -1895,7 +1904,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                   </div>
 
                   <div className="py-1 space-y-1">
-                    {(rawRole === 'admin' || rawRole === 'superadmin' || localStorage.getItem('session_role') === 'superadmin') && (
+                    {isSuperAdminUser && (
                       <button
                         onClick={() => {
                           setIsUserMenuOpen(false);
