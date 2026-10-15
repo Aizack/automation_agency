@@ -44,6 +44,18 @@ interface FixedExpense {
   created_at: string;
 }
 
+interface AccountingInvoiceItem {
+  id: string;
+  invoice_number: string;
+  customer_name: string;
+  customer_phone?: string;
+  total_amount: string | number;
+  status: string;
+  payment_method: string;
+  created_at: string;
+  seller_name?: string;
+}
+
 export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, onNavigateTab }) => {
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'quarter' | 'semester' | 'year'>('month');
   const now = new Date();
@@ -55,6 +67,9 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, 
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [dailyTrend, setDailyTrend] = useState<DailyTrendItem[]>([]);
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
+  const [invoicesList, setInvoicesList] = useState<AccountingInvoiceItem[]>([]);
+  const [activeTableTab, setActiveTableTab] = useState<'incomes' | 'expenses'>('incomes');
+  const [tableSearch, setTableSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Modal para agregar gasto (Fijo u Ocasional)
@@ -74,22 +89,25 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, 
         ? `month=${selectedMonth}&year=${selectedYear}`
         : `period=${period}`;
 
-      const [sumRes, topRes, trendRes, expRes] = await Promise.all([
+      const [sumRes, topRes, trendRes, expRes, invRes] = await Promise.all([
         fetch(`/api/clients/${clientId}/accounting/summary?${queryParams}`),
         fetch(`/api/clients/${clientId}/accounting/top-products?${queryParams}&limit=10`),
         fetch(`/api/clients/${clientId}/accounting/daily-trend?${queryParams}`),
-        fetch(`/api/clients/${clientId}/fixed-expenses?${isSpecificMonthMode ? `month=${selectedMonth}&year=${selectedYear}` : ''}`)
+        fetch(`/api/clients/${clientId}/fixed-expenses?${queryParams}`),
+        fetch(`/api/clients/${clientId}/accounting/invoices?${queryParams}`)
       ]);
 
       const sumJson = await sumRes.json();
       const topJson = await topRes.json();
       const trendJson = await trendRes.json();
       const expJson = await expRes.json();
+      const invJson = await invRes.json();
 
       if (sumJson.success) setSummary(sumJson);
       if (topJson.success) setTopProducts(topJson.products || []);
       if (trendJson.success) setDailyTrend(trendJson.trend || []);
       if (expJson.success) setFixedExpenses(expJson.expenses || []);
+      if (invJson.success) setInvoicesList(invJson.invoices || []);
     } catch (err) {
       console.error("Error al cargar módulo de contabilidad:", err);
     } finally {
@@ -169,6 +187,32 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, 
 
   const maxTrendRevenue = Math.max(1, ...dailyTrend.map(t => t.revenue));
   const totalFixedExpensesSum = fixedExpenses.reduce((acc, curr) => acc + parseFloat(curr.amount || '0'), 0);
+
+  const filteredInvoices = invoicesList.filter(inv => {
+    if (!tableSearch.trim()) return true;
+    const q = tableSearch.toLowerCase();
+    return (
+      (inv.invoice_number && String(inv.invoice_number).toLowerCase().includes(q)) ||
+      (inv.customer_name && inv.customer_name.toLowerCase().includes(q)) ||
+      (inv.payment_method && inv.payment_method.toLowerCase().includes(q)) ||
+      (inv.seller_name && inv.seller_name.toLowerCase().includes(q)) ||
+      (inv.status && inv.status.toLowerCase().includes(q))
+    );
+  });
+
+  const filteredExpenses = fixedExpenses.filter(exp => {
+    if (!tableSearch.trim()) return true;
+    const q = tableSearch.toLowerCase();
+    return (
+      (exp.concept && exp.concept.toLowerCase().includes(q)) ||
+      (exp.category && exp.category.toLowerCase().includes(q)) ||
+      (exp.notes && exp.notes.toLowerCase().includes(q)) ||
+      (exp.expense_type && exp.expense_type.toLowerCase().includes(q))
+    );
+  });
+
+  const totalInvoicesSum = filteredInvoices.reduce((acc, curr) => acc + parseFloat(String(curr.total_amount || 0)), 0);
+  const totalFilteredExpensesSum = filteredExpenses.reduce((acc, curr) => acc + parseFloat(String(curr.amount || 0)), 0);
 
   return (
     <div className="space-y-6 text-[#161616] font-sans antialiased">
@@ -324,62 +368,221 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, 
             </div>
           </div>
 
-          {/* Sección de Gastos Operativos (Fijos y Ocasionales) */}
+          {/* Sección de Tablas Contables (Intercambiable entre Ingresos y Gastos con Formato de Tabla Tradicional) */}
           <div className="bg-white border border-[#E2DFD7] p-6 rounded-none space-y-4 shadow-xs">
-            <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
-              <h3 className="font-serif font-bold text-base text-[#161616] flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#D9381E] text-[20px]">account_balance_wallet</span>
-                Gastos Operativos del Negocio (Fijos y Ocasionales)
-              </h3>
-              <span className="text-[11px] text-[#76746E] font-mono">Total: {fixedExpenses.length} registrados</span>
+            {/* Header con Pestañas de Intercambio y Buscador Rápido */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2DFD7] pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTableTab('incomes')}
+                  className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 border transition cursor-pointer ${
+                    activeTableTab === 'incomes'
+                      ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                      : 'bg-[#FAF8F5] text-[#76746E] hover:text-[#161616] border-[#E2DFD7]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px] text-[#22C55E]">payments</span>
+                  <span>Tabla de Ingresos</span>
+                  <span className="px-1.5 py-0.5 bg-white/20 text-[10px] font-mono rounded">
+                    {filteredInvoices.length}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTableTab('expenses')}
+                  className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-2 border transition cursor-pointer ${
+                    activeTableTab === 'expenses'
+                      ? 'bg-[#161616] text-[#F6F4EE] border-[#161616]'
+                      : 'bg-[#FAF8F5] text-[#76746E] hover:text-[#161616] border-[#E2DFD7]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px] text-[#D9381E]">account_balance_wallet</span>
+                  <span>Tabla de Gastos</span>
+                  <span className="px-1.5 py-0.5 bg-white/20 text-[10px] font-mono rounded">
+                    {filteredExpenses.length}
+                  </span>
+                </button>
+              </div>
+
+              {/* Buscador Rápido */}
+              <div className="flex items-center gap-2 bg-[#FAF8F5] border border-[#E2DFD7] px-2.5 py-1.5">
+                <span className="material-symbols-outlined text-[16px] text-[#76746E]">search</span>
+                <input
+                  type="text"
+                  placeholder={activeTableTab === 'incomes' ? 'Buscar cliente, factura o método...' : 'Buscar concepto, categoría o notas...'}
+                  value={tableSearch}
+                  onChange={(e) => setTableSearch(e.target.value)}
+                  className="bg-transparent text-xs font-mono outline-none w-56 sm:w-64 placeholder:text-[#A8A29E]"
+                />
+                {tableSearch && (
+                  <button onClick={() => setTableSearch('')} className="text-[#76746E] hover:text-[#161616] cursor-pointer border-0 bg-transparent">
+                    <span className="material-symbols-outlined text-[14px]">close</span>
+                  </button>
+                )}
+              </div>
             </div>
 
-            {fixedExpenses.length === 0 ? (
-              <p className="text-xs text-[#76746E] text-center py-6 italic font-mono">
-                No hay gastos registrados. Haz clic en "Registrar Gasto" para agregar arriendos, servicios o imprevistos.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {fixedExpenses.map((item) => {
-                  const isOccasional = item.expense_type === 'ocasional';
-                  const dateStr = item.effective_date || item.expense_date || item.created_at;
-                  const formattedDate = dateStr ? dateStr.substring(0, 10) : '';
+            {/* TABLA DE INGRESOS */}
+            {activeTableTab === 'incomes' && (
+              filteredInvoices.length === 0 ? (
+                <p className="text-xs text-[#76746E] text-center py-10 italic font-mono">
+                  {tableSearch ? 'No se encontraron facturas con el criterio de búsqueda.' : 'No hay ingresos registrados en el período seleccionado.'}
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[#76746E] font-mono uppercase text-[10px] font-bold tracking-wider">
+                        <th className="py-2.5 px-3">Factura</th>
+                        <th className="py-2.5 px-3">Fecha & Hora</th>
+                        <th className="py-2.5 px-3">Cliente</th>
+                        <th className="py-2.5 px-3">Asesor / Vendedor</th>
+                        <th className="py-2.5 px-3">Método de Pago</th>
+                        <th className="py-2.5 px-3 text-center">Estado</th>
+                        <th className="py-2.5 px-3 text-right">Total Ingreso</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E2DFD7]">
+                      {filteredInvoices.map((inv) => {
+                        const dateObj = new Date(inv.created_at);
+                        const formattedDate = isNaN(dateObj.getTime())
+                          ? inv.created_at
+                          : dateObj.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-                  return (
-                    <div key={item.id} className="bg-[#FAF8F5] border border-[#E2DFD7] p-4 rounded-none flex justify-between items-start shadow-xs">
-                      <div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-none border ${
-                            isOccasional 
-                              ? 'bg-white text-[#161616] border-[#E2DFD7]' 
-                              : 'bg-[#FEF7E0] text-[#B45309] border-[#FDE68A]'
-                          }`}>
-                            {isOccasional ? '⚡ Ocasional' : '📌 Fijo'}
-                          </span>
-                          <span className="text-[9px] uppercase font-mono font-bold text-[#76746E] px-2 py-0.5 bg-white rounded-none border border-[#E2DFD7]">
-                            {item.category}
-                          </span>
-                        </div>
-                        <h4 className="font-serif font-bold text-sm text-[#161616] mt-2">{item.concept}</h4>
-                        <p className="text-sm font-mono font-bold text-[#D9381E] mt-0.5">{formatCOP(parseFloat(item.amount))}</p>
-                        <p className="text-[10px] text-[#76746E] font-mono mt-1 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[12px]">calendar_today</span>
-                          Fecha: {formattedDate}
-                        </p>
-                        {item.notes && <p className="text-[11px] text-[#76746E] mt-1 italic">{item.notes}</p>}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteExpense(item.id)}
-                        className="text-[#76746E] hover:text-[#C5221F] p-1 rounded-none hover:bg-white border border-transparent hover:border-[#E2DFD7] transition cursor-pointer"
-                        title="Eliminar gasto"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">delete</span>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
+                        return (
+                          <tr key={inv.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
+                            <td className="py-3 px-3 font-mono font-bold text-[#161616]">
+                              #FAC-{inv.invoice_number || inv.id.substring(0, 6)}
+                            </td>
+                            <td className="py-3 px-3 font-mono text-[#76746E] whitespace-nowrap">
+                              {formattedDate}
+                            </td>
+                            <td className="py-3 px-3">
+                              <span className="font-serif font-bold text-[#161616] block">{inv.customer_name || 'Consumidor Final'}</span>
+                              {inv.customer_phone && <span className="font-mono text-[10px] text-[#76746E] block">{inv.customer_phone}</span>}
+                            </td>
+                            <td className="py-3 px-3 font-mono text-[#76746E]">
+                              {inv.seller_name || 'Sin asignar'}
+                            </td>
+                            <td className="py-3 px-3">
+                              <span className="px-2 py-0.5 bg-[#FAF8F5] border border-[#E2DFD7] text-[11px] font-mono rounded-none inline-block">
+                                {getMethodLabel(inv.payment_method)}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-center">
+                              <span className={`px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded-none border ${
+                                inv.status === 'paid' || inv.status === 'completed'
+                                  ? 'bg-[#E6F4EA] text-[#137333] border-[#CEEAD6]'
+                                  : 'bg-[#FEF7E0] text-[#B45309] border-[#FDE68A]'
+                              }`}>
+                                {inv.status === 'paid' ? 'Pagada' : inv.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-right font-mono font-bold text-[#161616] whitespace-nowrap">
+                              {formatCOP(parseFloat(String(inv.total_amount || 0)))}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-[#FAF8F5] border-t-2 border-[#161616] font-mono font-bold text-xs">
+                        <td colSpan={6} className="py-3 px-3 text-right uppercase text-[#76746E]">
+                          Total Ingresos ({filteredInvoices.length} facturas):
+                        </td>
+                        <td className="py-3 px-3 text-right text-[#161616] text-sm">
+                          {formatCOP(totalInvoicesSum)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )
+            )}
+
+            {/* TABLA DE GASTOS */}
+            {activeTableTab === 'expenses' && (
+              filteredExpenses.length === 0 ? (
+                <p className="text-xs text-[#76746E] text-center py-10 italic font-mono">
+                  {tableSearch ? 'No se encontraron gastos con el criterio de búsqueda.' : 'No hay gastos registrados en el período seleccionado. Haz clic en "Registrar Gasto" para agregar.'}
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[#76746E] font-mono uppercase text-[10px] font-bold tracking-wider">
+                        <th className="py-2.5 px-3">Fecha</th>
+                        <th className="py-2.5 px-3">Tipo</th>
+                        <th className="py-2.5 px-3">Categoría</th>
+                        <th className="py-2.5 px-3">Concepto</th>
+                        <th className="py-2.5 px-3">Notas / Proveedor</th>
+                        <th className="py-2.5 px-3 text-right">Monto Gasto</th>
+                        <th className="py-2.5 px-3 text-center">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E2DFD7]">
+                      {filteredExpenses.map((exp) => {
+                        const isOccasional = exp.expense_type === 'ocasional';
+                        const dateStr = exp.effective_date || exp.expense_date || exp.created_at;
+                        const formattedDate = dateStr ? dateStr.substring(0, 10) : '';
+
+                        return (
+                          <tr key={exp.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
+                            <td className="py-3 px-3 font-mono text-[#76746E] whitespace-nowrap">
+                              {formattedDate}
+                            </td>
+                            <td className="py-3 px-3">
+                              <span className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-none border ${
+                                isOccasional 
+                                  ? 'bg-white text-[#161616] border-[#E2DFD7]' 
+                                  : 'bg-[#FEF7E0] text-[#B45309] border-[#FDE68A]'
+                              }`}>
+                                {isOccasional ? '⚡ Ocasional' : '📌 Fijo'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3">
+                              <span className="text-[10px] uppercase font-mono font-bold text-[#76746E] px-2 py-0.5 bg-[#FAF8F5] rounded-none border border-[#E2DFD7]">
+                                {exp.category}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 font-serif font-bold text-[#161616]">
+                              {exp.concept}
+                            </td>
+                            <td className="py-3 px-3 font-mono text-[#76746E] text-[11px]">
+                              {exp.notes || '—'}
+                            </td>
+                            <td className="py-3 px-3 text-right font-mono font-bold text-[#D9381E] whitespace-nowrap">
+                              {formatCOP(parseFloat(exp.amount || '0'))}
+                            </td>
+                            <td className="py-3 px-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteExpense(exp.id)}
+                                className="text-[#76746E] hover:text-[#C5221F] p-1 rounded-none hover:bg-white border border-transparent hover:border-[#E2DFD7] transition cursor-pointer"
+                                title="Eliminar gasto"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-[#FAF8F5] border-t-2 border-[#161616] font-mono font-bold text-xs">
+                        <td colSpan={5} className="py-3 px-3 text-right uppercase text-[#76746E]">
+                          Total Gastos ({filteredExpenses.length} registros):
+                        </td>
+                        <td className="py-3 px-3 text-right text-[#D9381E] text-sm">
+                          {formatCOP(totalFilteredExpensesSum)}
+                        </td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )
             )}
           </div>
 

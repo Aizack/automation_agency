@@ -10019,55 +10019,61 @@ export const server = app.listen(PORT, () => {
   // ENDPOINTS TAREA 2 — MÓDULO CONTABLE
   // ══════════════════════════════════════════════════════════════════════════
 
-  // 1. Resumen Contable (/api/clients/:clientId/accounting/summary)
+  // Función unificada para cálculo preciso de períodos contables (Ingresos y Gastos)
+  const getAccountingDateRange = (query: any): { dateFromStr: string; dateToStr: string } => {
+    const queryMonth = query.month ? parseInt(query.month as string) : null;
+    const queryYear = query.year ? parseInt(query.year as string) : null;
+    const period = (query.period as string) || 'month';
+    const refDate = (query.date as string) || new Date().toISOString().split('T')[0];
+
+    if (queryMonth !== null && queryYear !== null && !isNaN(queryMonth) && !isNaN(queryYear)) {
+      const lastDay = new Date(queryYear, queryMonth, 0).getDate();
+      return {
+        dateFromStr: `${queryYear}-${String(queryMonth).padStart(2, '0')}-01 00:00:00`,
+        dateToStr: `${queryYear}-${String(queryMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')} 23:59:59.999`
+      };
+    }
+
+    let dateFrom = new Date(refDate);
+    let dateTo = new Date(refDate);
+    dateTo.setHours(23, 59, 59, 999);
+
+    if (period === 'day') {
+      dateFrom.setHours(0, 0, 0, 0);
+    } else if (period === 'week') {
+      const day = dateFrom.getDay();
+      const diffToMon = dateFrom.getDate() - day + (day === 0 ? -6 : 1);
+      dateFrom = new Date(dateFrom.setDate(diffToMon));
+      dateFrom.setHours(0, 0, 0, 0);
+    } else if (period === 'month') {
+      dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
+      dateFrom.setHours(0, 0, 0, 0);
+    } else if (period === 'quarter') {
+      // Trimestre: Últimos 3 meses continuos (desde el día 1 de hace 2 meses hasta hoy)
+      dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth() - 2, 1);
+      dateFrom.setHours(0, 0, 0, 0);
+    } else if (period === 'semester') {
+      // Semestre: Últimos 6 meses continuos (desde el día 1 de hace 5 meses hasta hoy)
+      dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth() - 5, 1);
+      dateFrom.setHours(0, 0, 0, 0);
+    } else if (period === 'year') {
+      // Año en curso: Desde el 1 de enero hasta hoy
+      dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
+      dateFrom.setHours(0, 0, 0, 0);
+    }
+
+    return {
+      dateFromStr: dateFrom.toISOString(),
+      dateToStr: dateTo.toISOString()
+    };
+  };
+
   // 1. Resumen Contable (/api/clients/:clientId/accounting/summary)
   app.get('/api/clients/:clientId/accounting/summary', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
       const period = (req.query.period as string) || 'month';
-      const refDate = (req.query.date as string) || new Date().toISOString().split('T')[0];
-      const queryMonth = req.query.month ? parseInt(req.query.month as string) : null;
-      const queryYear = req.query.year ? parseInt(req.query.year as string) : null;
-
-      let dateFromStr: string;
-      let dateToStr: string;
-
-      if (queryMonth !== null && queryYear !== null && !isNaN(queryMonth) && !isNaN(queryYear)) {
-        const lastDay = new Date(queryYear, queryMonth, 0).getDate();
-        dateFromStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-01 00:00:00`;
-        dateToStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')} 23:59:59.999`;
-      } else {
-        let dateFrom = new Date(refDate);
-        let dateTo = new Date(refDate);
-        dateTo.setHours(23, 59, 59, 999);
-
-        if (period === 'day') {
-          dateFrom.setHours(0, 0, 0, 0);
-        } else if (period === 'week') {
-          const day = dateFrom.getDay();
-          const diffToMon = dateFrom.getDate() - day + (day === 0 ? -6 : 1);
-          dateFrom = new Date(dateFrom.setDate(diffToMon));
-          dateFrom.setHours(0, 0, 0, 0);
-        } else if (period === 'month') {
-          dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
-          dateFrom.setHours(0, 0, 0, 0);
-        } else if (period === 'quarter') {
-          const currentMonth = dateFrom.getMonth();
-          const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
-          dateFrom = new Date(dateFrom.getFullYear(), quarterStartMonth, 1);
-          dateFrom.setHours(0, 0, 0, 0);
-        } else if (period === 'semester') {
-          const currentMonth = dateFrom.getMonth();
-          const semesterStartMonth = currentMonth < 6 ? 0 : 6;
-          dateFrom = new Date(dateFrom.getFullYear(), semesterStartMonth, 1);
-          dateFrom.setHours(0, 0, 0, 0);
-        } else if (period === 'year') {
-          dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
-          dateFrom.setHours(0, 0, 0, 0);
-        }
-        dateFromStr = dateFrom.toISOString();
-        dateToStr = dateTo.toISOString();
-      }
+      const { dateFromStr, dateToStr } = getAccountingDateRange(req.query);
 
       // Consulta de métodos de pago y totales
       const queryResult = await pool.query(`
@@ -10143,31 +10149,8 @@ export const server = app.listen(PORT, () => {
   app.get('/api/clients/:clientId/accounting/top-products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
-      const period = (req.query.period as string) || 'month';
-      const refDate = (req.query.date as string) || new Date().toISOString().split('T')[0];
-      const queryMonth = req.query.month ? parseInt(req.query.month as string) : null;
-      const queryYear = req.query.year ? parseInt(req.query.year as string) : null;
       const limit = parseInt(req.query.limit as string) || 10;
-
-      let dateFromStr: string;
-      let dateToStr: string;
-
-      if (queryMonth !== null && queryYear !== null && !isNaN(queryMonth) && !isNaN(queryYear)) {
-        const lastDay = new Date(queryYear, queryMonth, 0).getDate();
-        dateFromStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-01 00:00:00`;
-        dateToStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')} 23:59:59.999`;
-      } else {
-        let dateFrom = new Date(refDate);
-        let dateTo = new Date(refDate);
-        dateTo.setHours(23, 59, 59, 999);
-
-        if (period === 'day') dateFrom.setHours(0, 0, 0, 0);
-        else if (period === 'month') dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
-        else if (period === 'quarter') dateFrom = new Date(dateFrom.getFullYear(), Math.floor(dateFrom.getMonth() / 3) * 3, 1);
-        else if (period === 'year') dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
-        dateFromStr = dateFrom.toISOString();
-        dateToStr = dateTo.toISOString();
-      }
+      const { dateFromStr, dateToStr } = getAccountingDateRange(req.query);
 
       const topRes = await pool.query(`
         SELECT 
@@ -10208,36 +10191,7 @@ export const server = app.listen(PORT, () => {
   app.get('/api/clients/:clientId/accounting/daily-trend', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
-      const period = (req.query.period as string) || 'month';
-      const refDate = (req.query.date as string) || new Date().toISOString().split('T')[0];
-      const queryMonth = req.query.month ? parseInt(req.query.month as string) : null;
-      const queryYear = req.query.year ? parseInt(req.query.year as string) : null;
-
-      let dateFromStr: string;
-      let dateToStr: string;
-
-      if (queryMonth !== null && queryYear !== null && !isNaN(queryMonth) && !isNaN(queryYear)) {
-        const lastDay = new Date(queryYear, queryMonth, 0).getDate();
-        dateFromStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-01 00:00:00`;
-        dateToStr = `${queryYear}-${String(queryMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')} 23:59:59.999`;
-      } else {
-        let dateFrom = new Date(refDate);
-        let dateTo = new Date(refDate);
-        dateTo.setHours(23, 59, 59, 999);
-
-        if (period === 'day') dateFrom.setHours(0, 0, 0, 0);
-        else if (period === 'week') {
-          const day = dateFrom.getDay();
-          const diffToMon = dateFrom.getDate() - day + (day === 0 ? -6 : 1);
-          dateFrom = new Date(dateFrom.setDate(diffToMon));
-          dateFrom.setHours(0, 0, 0, 0);
-        }
-        else if (period === 'month') dateFrom = new Date(dateFrom.getFullYear(), dateFrom.getMonth(), 1);
-        else if (period === 'quarter') dateFrom = new Date(dateFrom.getFullYear(), Math.floor(dateFrom.getMonth() / 3) * 3, 1);
-        else if (period === 'year') dateFrom = new Date(dateFrom.getFullYear(), 0, 1);
-        dateFromStr = dateFrom.toISOString();
-        dateToStr = dateTo.toISOString();
-      }
+      const { dateFromStr, dateToStr } = getAccountingDateRange(req.query);
 
       const trendRes = await pool.query(`
         SELECT 
@@ -10262,6 +10216,32 @@ export const server = app.listen(PORT, () => {
       res.json({ success: true, trend });
     } catch (err: any) {
       console.error("[Accounting Daily Trend Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 4. Listado Detallado de Facturas / Ingresos Contables (/api/clients/:clientId/accounting/invoices)
+  app.get('/api/clients/:clientId/accounting/invoices', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+      const { dateFromStr, dateToStr } = getAccountingDateRange(req.query);
+
+      const result = await pool.query(`
+        SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, 
+               i.total_amount, i.status, i.payment_method, i.created_at,
+               COALESCE(i.seller_name, NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name
+        FROM invoices i
+        LEFT JOIN employees e ON i.seller_employee_id = e.id
+        WHERE i.client_id = $1
+          AND i.created_at >= $2
+          AND i.created_at <= $3
+          AND i.status != 'cancelled'
+        ORDER BY i.created_at DESC
+      `, [clientId, dateFromStr, dateToStr]);
+
+      res.json({ success: true, invoices: result.rows });
+    } catch (err: any) {
+      console.error("[Accounting Invoices Error]:", err);
       res.status(500).json({ success: false, error: err.message });
     }
   });
@@ -11642,33 +11622,24 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
   // ENDPOINTS DE FINANZAS Y GASTOS FIJOS (CONTABILIDAD)
   // ==========================================
 
-  // Obtener Gastos Fijos Operativos (Contabilidad)
+  // Obtener Gastos Operativos (Contabilidad)
   app.get('/api/clients/:clientId/fixed-expenses', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
-      const queryMonth = req.query.month ? parseInt(req.query.month as string) : null;
-      const queryYear = req.query.year ? parseInt(req.query.year as string) : null;
+      const { dateFromStr, dateToStr } = getAccountingDateRange(req.query);
 
-      let query = `
+      const query = `
         SELECT *, 
                TO_CHAR(COALESCE(expense_date, created_at::date), 'YYYY-MM-DD') as effective_date, 
                TO_CHAR(expense_date, 'YYYY-MM-DD') as expense_date_str 
         FROM monthly_fixed_expenses 
         WHERE client_id = $1
+          AND COALESCE(expense_date, created_at::date) >= $2::date
+          AND COALESCE(expense_date, created_at::date) <= $3::date
+        ORDER BY COALESCE(expense_date, created_at::date) DESC, created_at DESC
       `;
-      const params: any[] = [clientId];
 
-      if (queryMonth !== null && queryYear !== null && !isNaN(queryMonth) && !isNaN(queryYear)) {
-        params.push(queryMonth, queryYear);
-        query += ` AND (
-          (EXTRACT(MONTH FROM COALESCE(expense_date, created_at::date)) = $2 AND EXTRACT(YEAR FROM COALESCE(expense_date, created_at::date)) = $3)
-          OR expense_type = 'fijo'
-        )`;
-      }
-
-      query += ` ORDER BY COALESCE(expense_date, created_at::date) DESC, created_at DESC`;
-
-      const result = await pool.query(query, params);
+      const result = await pool.query(query, [clientId, dateFromStr, dateToStr]);
       res.json({ success: true, expenses: result.rows });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });

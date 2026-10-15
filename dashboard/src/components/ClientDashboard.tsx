@@ -1634,7 +1634,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         
         {/* User Session Info & Back / Logout footer */}
         <div className="sidebar-footer">
-          <span className="text-[10px] font-mono opacity-50">KOI ERP v1.0</span>
+          <span className="text-[10px] font-mono opacity-50">FRANT ERP v1.0</span>
           {isSuperAdminUser && (
             <button 
               onClick={onBack}

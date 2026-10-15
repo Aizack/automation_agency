@@ -297,7 +297,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onView
             </h2>
             <p className="text-xs text-[#6B6862] mt-1">
               {activeTab === 'overview' 
-                ? 'Monitoreo en tiempo real y orquestación multi-inquilino de KOI ERP.' 
+                ? 'Monitoreo en tiempo real y orquestación multi-inquilino de FRANT ERP.' 
                 : 'Historial y diagnóstico de salud del servidor.'}
             </p>
           </div>
