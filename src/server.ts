@@ -1102,7 +1102,8 @@ app.post('/api/login', async (req: Request, res: Response) => {
         );
         const mfaRow = clientResMfa.rows[0];
         const rawMfa = mfaRow?.mfa_methods;
-        const clientMfaMethods = Array.isArray(rawMfa) ? rawMfa : (typeof rawMfa === 'string' ? JSON.parse(rawMfa || '[]') : []);
+        const parsedMfa = Array.isArray(rawMfa) ? rawMfa : (typeof rawMfa === 'string' ? JSON.parse(rawMfa || '[]') : []);
+        const clientMfaMethods = parsedMfa.filter((m: string) => m !== 'whatsapp');
         const trustedToken = req.headers['x-trusted-device-token'] as string;
         const isDeviceTrusted = await isTrustedDevice(client.id, client.id, trustedToken);
 
@@ -1499,55 +1500,9 @@ app.post('/api/auth/mfa/send-otp', async (req: Request, res: Response) => {
     storeOtp(resolvedUserId, resolvedClientId, method, code);
 
     if (method === 'whatsapp') {
-      let cleanPhone = String(targetRecipient || '').replace(/\D/g, '');
-      console.log(`[MFA WhatsApp] 📱 Código OTP generado para ${cleanPhone || resolvedUserId}: ${code}`);
-      
-      if (!cleanPhone) {
-        return res.status(400).json({
-          success: false,
-          error: 'No tienes un número de celular personal registrado en tu cuenta de usuario. Configura tu país y celular en la sección de Usuarios para recibir el código por WhatsApp.'
-        });
-      }
-
-      // El número se guarda limpio (sin indicativo). Anteponemos el indicativo guardado en country_code
-      const COUNTRY_PREFIX_MAP: Record<string, string> = {
-        'colombia': '57',
-        'méxico': '52',
-        'mexico': '52',
-        'estados unidos / canadá': '1',
-        'estados unidos': '1',
-        'ee.uu.': '1',
-        'españa': '34',
-        'argentina': '54',
-        'chile': '56',
-        'perú': '51',
-        'peru': '51',
-        'ecuador': '593',
-        'venezuela': '58',
-        'bolivia': '591',
-        'guatemala': '502',
-        'costa rica': '506',
-        'panamá': '507',
-        'panama': '507',
-        'uruguay': '598',
-        'paraguay': '595',
-        'brasil': '55'
-      };
-      const prefix = userCountryCode || COUNTRY_PREFIX_MAP[userCountry.toLowerCase().trim()] || '57';
-      if (!cleanPhone.startsWith(prefix)) {
-        cleanPhone = `${prefix}${cleanPhone}`;
-      }
-
-      try {
-        await sendWhatsAppOtpMessage(cleanPhone, code, 'admin');
-      } catch (waErr) {
-        console.warn("[MFA WhatsApp] No se pudo enviar mensaje por Meta Cloud API, código disponible en consola.");
-      }
-
-      return res.json({ 
-        success: true, 
-        message: `Código de verificación enviado por WhatsApp a tu número (+${cleanPhone.slice(0, 4)}...${cleanPhone.slice(-4)}).`,
-        destinationPhone: cleanPhone
+      return res.status(400).json({
+        success: false,
+        error: 'El método de verificación por WhatsApp ha sido retirado. Por favor utiliza Google Authenticator o Correo Electrónico.'
       });
     } else if (method === 'email') {
       const emailTarget = String(targetRecipient || '').trim() || 'diazbisac@gmail.com';

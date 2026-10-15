@@ -430,35 +430,8 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
               </div>
             </div>
 
-            {/* Cuadrícula de Métodos MFA de 3 Pasos Independientes */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-              
-              {/* Opción 1: WhatsApp OTP */}
-              <div className={`p-5 border rounded-sm space-y-3 transition ${mfaMethods.includes('whatsapp') ? 'bg-[#FAF8F3] border-[#161616]' : 'bg-[#FFFFFF] border-[#E2DFD7]'}`}>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl">📱</span>
-                  <input
-                    type="checkbox"
-                    checked={mfaMethods.includes('whatsapp')}
-                    onChange={() => handleToggleMfaMethod('whatsapp')}
-                    disabled={mfaSaving}
-                    className="w-5 h-5 accent-[#D9381E] cursor-pointer"
-                  />
-                </div>
-                <h5 className="font-bold text-sm text-[#161616]">WhatsApp Verification (OTP)</h5>
-                <p className="text-xs text-[#6B6862] leading-relaxed">
-                  Envía un token de 6 dígitos automáticamente al número de WhatsApp <strong>personal</strong> configurado en el perfil de cada usuario o colaborador al iniciar sesión.
-                </p>
-                <div className="p-2 bg-[#FAF8F3] border border-[#E2DFD7] text-[10px] text-[#76746E] flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[13px] text-[#161616]">manage_accounts</span>
-                  <span>Los números celulares personales se administran individualmente en <strong>Accesos & Permisos</strong>.</span>
-                </div>
-                <div className="pt-2">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm font-mono ${mfaMethods.includes('whatsapp') ? 'bg-[#E6F4EA] text-[#1E4620]' : 'bg-[#F6F4EE] text-[#6B6862]'}`}>
-                    {mfaMethods.includes('whatsapp') ? '✓ Habilitado' : '○ Desactivado'}
-                  </span>
-                </div>
-              </div>
+            {/* Cuadrícula de Métodos MFA de Doble Factor Oficiales */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
 
               {/* Opción 2: App Autenticadora (TOTP) */}
               <div className={`p-5 border rounded-sm space-y-3 transition ${mfaMethods.includes('totp') ? 'bg-[#FAF8F3] border-[#161616]' : 'bg-[#FFFFFF] border-[#E2DFD7]'}`}>

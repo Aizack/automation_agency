@@ -541,9 +541,8 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] uppercase tracking-wider text-[#76746E] font-bold font-mono flex items-center justify-between">
-                    <span>Celular Personal (MFA / 2FA)</span>
-                    <span className="text-[#1E4620] bg-[#E6F4EA] px-1 text-[9px] font-bold">whatsapp otp</span>
+                  <label className="block text-[10px] uppercase tracking-wider text-[#76746E] font-bold font-mono">
+                    Celular Personal / Contacto
                   </label>
                   <div className="flex border border-[#E2DFD7] bg-[#FAF8F5] focus-within:border-[#161616] focus-within:bg-white transition-colors">
                     <div className="px-3 py-2 bg-[#F6F4EE] border-r border-[#E2DFD7] text-xs font-mono font-bold text-[#161616] flex items-center gap-1.5 select-none shrink-0" title={`Indicativo automático para ${formCountry}`}>
@@ -559,7 +558,7 @@ export const SaaSErpUsers: React.FC<SaaSErpUsersProps> = ({ clientId }) => {
                     />
                   </div>
                   <span className="text-[10px] text-[#76746E] font-mono block">
-                    Solo ingresa tu número local (sin código de país). Se usará para enviarte códigos OTP de verificación por WhatsApp.
+                    Solo ingresa tu número local (sin código de país). Se usará para contacto corporativo y avisos del sistema.
                   </span>
                 </div>
 

@@ -54,7 +54,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [mfaModalOpen, setMfaModalOpen] = useState(false);
   const [mfaTempToken, setMfaTempToken] = useState('');
   const [mfaAvailableMethods, setMfaAvailableMethods] = useState<string[]>([]);
-  const [mfaSelectedMethod, setMfaSelectedMethod] = useState<'whatsapp' | 'totp' | 'email' | 'backup'>('whatsapp');
+  const [mfaSelectedMethod, setMfaSelectedMethod] = useState<'totp' | 'email' | 'backup'>('totp');
   const [mfaCode, setMfaCode] = useState('');
   const [mfaTrustedDevice, setMfaTrustedDevice] = useState(true);
   const [mfaLoading, setMfaLoading] = useState(false);
@@ -123,12 +123,16 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
       if (json.mfaRequired) {
         setMfaTempToken(json.tempToken);
-        const methods: string[] = json.availableMethods || ['whatsapp'];
+        const rawMethods: string[] = json.availableMethods || ['totp', 'email'];
+        const methods = rawMethods.filter((m: string) => m !== 'whatsapp');
+        if (methods.length === 0) methods.push('totp', 'email');
         setMfaAvailableMethods(methods);
         
-        let primaryMethod = 'whatsapp';
+        let primaryMethod = 'totp';
         if (methods.includes('totp')) {
           primaryMethod = 'totp';
+        } else if (methods.includes('email')) {
+          primaryMethod = 'email';
         } else if (methods.length > 0) {
           primaryMethod = methods[0];
         }
@@ -139,10 +143,8 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         setMfaError(null);
         setMfaCode('');
 
-        // Solo auto-enviar si WhatsApp/Email es el ÚNICO método configurado (1 solo método).
-        // Si hay más de una opción o TOTP, el usuario decide cuál método usar y presiona el botón.
-        if (methods.length === 1 && (primaryMethod === 'whatsapp' || primaryMethod === 'email')) {
-          handleSendMfaOtp(primaryMethod, json.tempToken);
+        if (methods.length === 1 && primaryMethod === 'email') {
+          handleSendMfaOtp('email', json.tempToken);
         }
         return;
       }
@@ -185,12 +187,16 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
       if (json.mfaRequired) {
         setMfaTempToken(json.tempToken);
-        const methods: string[] = json.availableMethods || ['whatsapp'];
+        const rawMethods: string[] = json.availableMethods || ['totp', 'email'];
+        const methods = rawMethods.filter((m: string) => m !== 'whatsapp');
+        if (methods.length === 0) methods.push('totp', 'email');
         setMfaAvailableMethods(methods);
 
-        let primaryMethod = 'whatsapp';
+        let primaryMethod = 'totp';
         if (methods.includes('totp')) {
           primaryMethod = 'totp';
+        } else if (methods.includes('email')) {
+          primaryMethod = 'email';
         } else if (methods.length > 0) {
           primaryMethod = methods[0];
         }
@@ -201,8 +207,8 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         setMfaError(null);
         setMfaCode('');
 
-        if (methods.length === 1 && (primaryMethod === 'whatsapp' || primaryMethod === 'email')) {
-          handleSendMfaOtp(primaryMethod, json.tempToken);
+        if (methods.length === 1 && primaryMethod === 'email') {
+          handleSendMfaOtp('email', json.tempToken);
         }
         return;
       }
@@ -1425,25 +1431,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
             {/* Selector de Método MFA */}
             <div style={{ display: 'flex', gap: '4px', backgroundColor: '#FAF8F3', padding: '3px', border: '1px solid #E2DFD7' }}>
-              {(mfaAvailableMethods.includes('whatsapp') || mfaAvailableMethods.length === 0) && (
-                <button
-                  type="button"
-                  onClick={() => { setMfaSelectedMethod('whatsapp'); setMfaError(null); setMfaSuccessMsg(null); }}
-                  style={{
-                    flex: 1,
-                    padding: '6px 2px',
-                    fontSize: '0.72rem',
-                    fontWeight: 600,
-                    border: mfaSelectedMethod === 'whatsapp' ? '1px solid #161616' : 'none',
-                    backgroundColor: mfaSelectedMethod === 'whatsapp' ? '#FFFFFF' : 'transparent',
-                    color: mfaSelectedMethod === 'whatsapp' ? '#161616' : '#6B6862',
-                    cursor: 'pointer',
-                  }}
-                >
-                  📱 WhatsApp
-                </button>
-              )}
-              {mfaAvailableMethods.includes('totp') && (
+              {(mfaAvailableMethods.includes('totp') || mfaAvailableMethods.length === 0) && (
                 <button
                   type="button"
                   onClick={() => { setMfaSelectedMethod('totp'); setMfaError(null); setMfaSuccessMsg(null); }}
@@ -1507,12 +1495,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </div>
             )}
 
-            {/* Acción de Envío si es WhatsApp o Correo */}
-            {(mfaSelectedMethod === 'whatsapp' || mfaSelectedMethod === 'email') && (
+            {/* Acción de Envío si es Correo */}
+            {mfaSelectedMethod === 'email' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <button
                   type="button"
-                  onClick={() => handleSendMfaOtp()}
+                  onClick={() => handleSendMfaOtp('email')}
                   disabled={mfaLoading}
                   style={{
                     padding: '0.65rem',
@@ -1536,20 +1524,13 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   {mfaLoading 
                     ? 'Enviando código...' 
                     : (mfaSuccessMsg 
-                        ? `Reenviar código por ${mfaSelectedMethod === 'whatsapp' ? 'WhatsApp' : 'Correo'}` 
-                        : `📩 Solicitar / Enviar Código por ${mfaSelectedMethod === 'whatsapp' ? 'WhatsApp' : 'Correo'}`
+                        ? 'Reenviar código al correo' 
+                        : '📩 Solicitar / Enviar Código al Correo'
                       )}
                 </button>
-                {mfaSelectedMethod === 'whatsapp' && (
-                  <p style={{ margin: 0, fontSize: '0.7rem', color: '#6B6862', textAlign: 'center' }}>
-                    📲 Presiona el botón para recibir el código de 6 dígitos en tu WhatsApp.
-                  </p>
-                )}
-                {mfaSelectedMethod === 'email' && (
-                  <p style={{ margin: 0, fontSize: '0.7rem', color: '#6B6862', textAlign: 'center' }}>
-                    ✉️ Presiona el botón para recibir el código de 6 dígitos en tu bandeja de correo.
-                  </p>
-                )}
+                <p style={{ margin: 0, fontSize: '0.7rem', color: '#6B6862', textAlign: 'center' }}>
+                  ✉️ Presiona el botón para recibir el código de 6 dígitos en tu bandeja de correo.
+                </p>
               </div>
             )}
 
