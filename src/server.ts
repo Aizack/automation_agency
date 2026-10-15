@@ -164,7 +164,15 @@ if (!fs.existsSync(uploadsDir)) {
 app.use('/uploads', express.static(uploadsDir));
 
 // Servir los archivos estáticos de la aplicación React (Dashboard)
-app.use(express.static(path.join(process.cwd(), 'dashboard/dist')));
+app.use(express.static(path.join(process.cwd(), 'dashboard/dist'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // Puerto de ejecución del servidor (default: 3000)
 const PORT = process.env.PORT || 3000;
@@ -12947,6 +12955,9 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
   // Fallback para SPA en React (cualquier ruta de navegación sirve el index.html)
   app.get(/.*/, (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith('/api')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.sendFile(path.join(process.cwd(), 'dashboard/dist/index.html'));
     } else {
       next();
