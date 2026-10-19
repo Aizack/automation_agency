@@ -18,6 +18,7 @@ interface Invoice {
   installments_count: number;
   installment_frequency: string;
   created_at: string;
+  paid_at?: string | null;
 }
 
 interface Installment {
@@ -296,6 +297,12 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                       </span>
                     </div>
                     <h5 className="font-serif font-bold text-sm text-[#161616] mt-1.5 truncate">{inv.customer_name}</h5>
+                    {inv.status === 'paid' && inv.paid_at && (
+                      <p className="text-[10px] text-[#137333] font-mono flex items-center gap-1 mt-1">
+                        <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                        Pagada: {new Date(inv.paid_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </p>
+                    )}
                     <div className="flex justify-between items-end mt-2 pt-2 border-t border-[#E2DFD7] text-[11px]">
                       <span className="text-[#76746E] font-mono">
                         {inv.installments_count ? `${inv.installments_count} cuotas` : 'Crédito'} {inv.installment_frequency ? `(${inv.installment_frequency})` : ''}
@@ -319,6 +326,11 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                   <h4 className="font-serif font-bold text-xl text-[#161616] mt-0.5">{selectedInvoice.customer_name}</h4>
                   <p className="text-xs text-[#76746E] font-mono mt-0.5">
                     Factura: <strong className="text-[#161616]">#{selectedInvoice.invoice_number}</strong> | Doc: {selectedInvoice.customer_document_number || 'N/A'}
+                    {selectedInvoice.status === 'paid' && selectedInvoice.paid_at && (
+                      <span className="text-[#137333] font-bold ml-2 inline-flex items-center gap-1">
+                        • <span className="material-symbols-outlined text-[13px]">event_available</span> Liquidada: {new Date(selectedInvoice.paid_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="text-right space-y-1 bg-[#FAF8F5] p-3 border border-[#E2DFD7] min-w-[220px]">
@@ -361,6 +373,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                       <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[#76746E] font-mono text-[10px] uppercase font-bold tracking-wider">
                         <th className="p-3">Cuota #</th>
                         <th className="p-3">Vencimiento</th>
+                        <th className="p-3">Fecha de Pago</th>
                         <th className="p-3 text-right">Valor Cuota</th>
                         <th className="p-3 text-right">Abonado</th>
                         <th className="p-3 text-center">Estado</th>
@@ -379,6 +392,16 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
                             </td>
                             <td className="p-3 font-mono text-[#76746E]">
                               {new Date(inst.due_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </td>
+                            <td className="p-3 font-mono text-xs">
+                              {inst.paid_at ? (
+                                <span title={new Date(inst.paid_at).toLocaleString('es-CO')} className="text-[#137333] font-medium inline-flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                                  {new Date(inst.paid_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                </span>
+                              ) : (
+                                <span className="text-[#76746E]/50 font-mono">—</span>
+                              )}
                             </td>
                             <td className="p-3 text-right font-mono font-bold text-[#161616]">{formatCOP(amountVal)}</td>
                             <td className="p-3 text-right font-mono font-bold text-[#137333]">{formatCOP(paidVal)}</td>

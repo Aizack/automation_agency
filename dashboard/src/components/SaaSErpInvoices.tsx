@@ -36,6 +36,7 @@ interface Invoice {
     electronic_status?: string | null;
     seller_employee_id?: string | null;
     seller_name?: string | null;
+    paid_at?: string | null;
 }
 
 interface Product {
@@ -2682,6 +2683,12 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                 </span>
                                             )}
                                         </div>
+                                        {inv.status === 'paid' && inv.paid_at && (
+                                            <div className="text-[10px] text-[#1E4620] font-mono flex items-center gap-1 mt-0.5" title={new Date(inv.paid_at).toLocaleString('es-CO')}>
+                                                <span className="material-symbols-outlined text-[12px]">event_available</span>
+                                                Pagado: {formatLocalDate(inv.paid_at)}
+                                            </div>
+                                        )}
                                     </td>
                                     <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                                         <div className="flex justify-end gap-1.5">
@@ -2810,6 +2817,23 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                 {selectedInvoice.payment_method || 'Efectivo'}
                                             </span>
                                         </p>
+                                        <p className="flex items-center gap-2">
+                                            <strong className="text-[#161616]">Estado:</strong>
+                                            <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${
+                                                selectedInvoice.status === 'paid' ? 'bg-[#E6F4EA] text-[#1E4620] border-[#A8DADC]' :
+                                                selectedInvoice.status === 'overdue' ? 'bg-[#FCE8E6] text-[#C5221F] border-[#F5C6CB]' :
+                                                'bg-[#FEF7E0] text-[#7A5A00] border-[#FEEFC3]'
+                                            }`}>
+                                                {selectedInvoice.status === 'paid' ? 'PAGADO' : selectedInvoice.status === 'overdue' ? 'MORA' : 'PENDIENTE'}
+                                            </span>
+                                        </p>
+                                        {selectedInvoice.status === 'paid' && selectedInvoice.paid_at && (
+                                            <p className="flex items-center gap-1.5 text-[#1E4620] font-medium">
+                                                <span className="material-symbols-outlined text-[15px]">event_available</span>
+                                                <strong className="text-[#161616]">Fecha de Pago:</strong>
+                                                <span className="font-mono">{formatLocalDate(selectedInvoice.paid_at)}</span>
+                                            </p>
+                                        )}
                                         {selectedInvoice.transfer_bank && (
                                             <p><strong className="text-[#161616]">Banco Origen:</strong> {selectedInvoice.transfer_bank}</p>
                                         )}
@@ -2943,6 +2967,71 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     <p className="text-xs text-[#6B6862] italic">No se encontraron ítems detallados.</p>
                                 )}
                             </div>
+
+                            {/* TABLA DE CUOTAS / AMORTIZACIÓN SI ES A CRÉDITO */}
+                            {invoiceDetail?.installments && invoiceDetail.installments.length > 0 && (
+                                <div className="space-y-3">
+                                    <h3 className="font-serif text-lg text-[#161616] border-b border-[#E2DFD7] pb-2 font-normal flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-[18px] text-[#D9381E]">calendar_month</span>
+                                        Plan de Cuotas & Registro de Pagos
+                                    </h3>
+                                    <div className="bg-white overflow-hidden border border-[#E2DFD7]">
+                                        <table className="w-full text-left text-xs border-collapse">
+                                            <thead>
+                                                <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[#6B6862] uppercase font-bold tracking-wider text-[11px]">
+                                                    <th className="p-3">CUOTA</th>
+                                                    <th className="p-3">VENCIMIENTO</th>
+                                                    <th className="p-3">FECHA DE PAGO</th>
+                                                    <th className="p-3 text-right">VALOR</th>
+                                                    <th className="p-3 text-right">ABONADO</th>
+                                                    <th className="p-3 text-center">ESTADO</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-[#E2DFD7]">
+                                                {invoiceDetail.installments.map((inst: any) => (
+                                                    <tr key={inst.id} className="hover:bg-[#FAF8F5]">
+                                                        <td className="p-3 font-mono font-bold text-[#161616]">
+                                                            {inst.installment_number === 0 ? 'Abono Inicial' : `Cuota #${inst.installment_number}`}
+                                                        </td>
+                                                        <td className="p-3 font-mono text-[#6B6862]">
+                                                            {formatLocalDate(inst.due_date)}
+                                                        </td>
+                                                        <td className="p-3 font-mono text-xs">
+                                                            {inst.paid_at ? (
+                                                                <span title={new Date(inst.paid_at).toLocaleString('es-CO')} className="text-[#1E4620] font-medium inline-flex items-center gap-1">
+                                                                    <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                                                                    {formatLocalDate(inst.paid_at)}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-[#6B6862]/50 font-mono">—</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-3 text-right font-mono font-bold text-[#161616]">
+                                                            {formatPrice(parseFloat(inst.amount))}
+                                                        </td>
+                                                        <td className="p-3 text-right font-mono font-bold text-[#1E4620]">
+                                                            {formatPrice(parseFloat(inst.paid_amount || '0'))}
+                                                        </td>
+                                                        <td className="p-3 text-center">
+                                                            <span className={`px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider border ${
+                                                                inst.status === 'paid' 
+                                                                    ? 'bg-[#E6F4EA] text-[#1E4620] border-[#A8DADC]' 
+                                                                    : inst.status === 'partially_paid'
+                                                                        ? 'bg-[#FEF7E0] text-[#7A5A00] border-[#FEEFC3]'
+                                                                        : new Date(inst.due_date) < new Date()
+                                                                            ? 'bg-[#FCE8E6] text-[#C5221F] border-[#F5C6CB]'
+                                                                            : 'bg-[#FEF7E0] text-[#7A5A00] border-[#FEEFC3]'
+                                                            }`}>
+                                                                {inst.status === 'paid' ? 'PAGADO' : inst.status === 'partially_paid' ? 'ABONADO' : new Date(inst.due_date) < new Date() ? 'VENCIDO' : 'PENDIENTE'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Pie Fijo Sticky del Modal con Grid de Botones Wabi-Sabi */}
