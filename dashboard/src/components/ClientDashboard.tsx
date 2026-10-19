@@ -258,8 +258,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
       if (json.success && json.shifts && json.shifts.length > 0) {
         const latest = json.shifts[0];
         if (!latest.clock_out) {
-          const clockInTs = new Date(latest.clock_in).getTime();
-          setShiftStartTs(clockInTs);
+          if (typeof latest.elapsed_seconds === 'number' && !isNaN(latest.elapsed_seconds)) {
+            setShiftStartTs(Date.now() - (latest.elapsed_seconds * 1000));
+          } else {
+            const clockInTs = new Date(latest.clock_in).getTime();
+            setShiftStartTs(clockInTs);
+          }
           if (latest.lunch_start && !latest.lunch_end) {
             setShiftStatus('lunch');
           } else {

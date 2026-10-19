@@ -181,7 +181,8 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
 
             const attrs = editingProduct.attributes || {};
             setCustomAttrs(attrs);
-            setIsLensMode(Boolean(attrs.is_lens));
+            const isLens = Boolean(attrs.is_lens) || (editingProduct.category_id && categories.find((c: any) => String(c.id) === String(editingProduct.category_id))?.name.toLowerCase().includes('lente'));
+            setIsLensMode(Boolean(isLens));
             setLensDesign(attrs.lens_design || '');
             setLensMaterial(attrs.lens_material || '');
             setLensTreatment(attrs.lens_treatment || '');
@@ -191,7 +192,8 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
             setColor(editingProduct.color || '');
 
             setHasVariants(editingProduct.has_variants ?? true);
-            setStock(editingProduct.stock ?? '');
+            const cleanStock = (editingProduct.stock === 999999 || editingProduct.stock === '999999') ? '' : (editingProduct.stock ?? '');
+            setStock(cleanStock);
             setMinStock(editingProduct.min_stock ?? 5);
 
             if (Array.isArray(editingProduct.variants) && editingProduct.variants.length > 0) {
@@ -199,12 +201,12 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                     id: v.id,
                     color: v.variant_name || v.color || '',
                     sku: v.sku || '',
-                    stock: v.stock ?? 0,
+                    stock: (v.stock === 999999 || v.stock === '999999') ? 0 : (v.stock ?? 0),
                     min_stock: v.min_stock ?? 2,
                     image_url: v.image_url || ''
                 })));
             } else {
-                setVariantList([{ color: 'Negro', sku: editingProduct.sku || '', stock: editingProduct.stock || 10, min_stock: editingProduct.min_stock || 2, image_url: editingProduct.image_url || '' }]);
+                setVariantList([{ color: 'Negro', sku: editingProduct.sku || '', stock: (editingProduct.stock === 999999 || editingProduct.stock === '999999') ? 10 : (editingProduct.stock || 10), min_stock: editingProduct.min_stock || 2, image_url: editingProduct.image_url || '' }]);
             }
             setActivePhotoColorIdx(0);
         } else {
@@ -245,8 +247,12 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
         const selectedCat = categories.find((c: any) => String(c.id) === String(catId));
         if (selectedCat && selectedCat.name.toLowerCase().includes('lente')) {
             setIsLensMode(true);
-            setProductType('service');
-            setStock(999999);
+            if (productType === 'service') {
+                setProductType('product');
+            }
+            if (stock === 999999) {
+                setStock('');
+            }
         }
     };
 
@@ -280,8 +286,8 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
         e.preventDefault();
 
         const isLensType = isLensMode || (categoryId && categories.find((c: any) => String(c.id) === String(categoryId))?.name.toLowerCase().includes('lente')) || Boolean(lensDesign || lensMaterial || lensTreatment);
-        const resolvedProductType = productType === 'service' ? 'service' : (isLensType ? 'product' : productType);
-        const hasVarBool = !isLensType && hasVariants && resolvedProductType === 'product' && variantList.length > 0;
+        const resolvedProductType = productType === 'service' ? 'service' : 'product';
+        const hasVarBool = hasVariants && resolvedProductType === 'product' && variantList.length > 0;
 
         const formattedVariants = hasVarBool ? variantList.map(v => ({
             ...(v.id ? { id: v.id } : {}),
@@ -314,7 +320,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
             : null;
 
         const lensDetailStr = [lensDesign, lensMaterial, lensTreatment].filter(Boolean).join(' - ');
-        const finalName = name.trim() || (isLensType ? `Lente ${lensDetailStr}`.trim() : 'Producto Sin Nombre');
+        const finalName = name.trim() || (isLensType && lensDetailStr ? `Lente ${lensDetailStr}`.trim() : 'Producto Sin Nombre');
 
         const body = { 
             name: finalName, 
@@ -670,33 +676,26 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                 const val = e.target.value;
                                                 if (val === 'lens') {
                                                     setIsLensMode(true);
-                                                    setProductType('service');
-                                                    setStock(999999);
-                                                    setHasVariants(false);
-                                                    setVariantList([{ color: 'NEGRO', sku: sku || '', stock: 999999, min_stock: 0, image_url: '' }]);
-                                                    setActivePhotoColorIdx(0);
+                                                    setProductType('product');
+                                                    if (stock === 999999) setStock('');
                                                     const lentesCat = categories.find((c: any) => c.name.toLowerCase().includes('lente'));
-                                                    if (lentesCat) setCategoryId(String(lentesCat.id));
+                                                    if (lentesCat && !categoryId) setCategoryId(String(lentesCat.id));
+                                                } else if (val === 'service') {
+                                                    setIsLensMode(false);
+                                                    setProductType('service');
+                                                    setStock(0);
+                                                    setHasVariants(false);
                                                 } else {
                                                     setIsLensMode(false);
-                                                    const pVal = val as 'product' | 'service';
-                                                    setProductType(pVal);
-                                                    if (pVal === 'service') {
-                                                        setStock(999999);
-                                                        setHasVariants(false);
-                                                        setVariantList([{ color: 'NEGRO', sku: sku || '', stock: 999999, min_stock: 0, image_url: '' }]);
-                                                        setActivePhotoColorIdx(0);
-                                                    } else {
-                                                        if (stock === 999999) setStock('');
-                                                        setHasVariants(true);
-                                                    }
+                                                    setProductType('product');
+                                                    if (stock === 999999) setStock('');
                                                 }
                                             }}
                                             className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-semibold outline-none focus:border-[#161616] transition rounded-none"
                                         >
                                             <option value="product">Producto Inventariable (Físico)</option>
+                                            <option value="lens">Lentes</option>
                                             <option value="service">Servicio / Honorario Médico (Sin Stock)</option>
-                                            <option value="lens">Lente / Cristal Oftálmico (Servicio Sin Stock)</option>
                                         </select>
                                     </div>
 
@@ -734,8 +733,8 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                 <span className="material-symbols-outlined text-[#D9381E] text-[18px]">visibility</span>
                                                 <span className="text-xs font-bold text-[#161616] uppercase tracking-wider">Características del Lente / Cristal</span>
                                             </div>
-                                            <span className="text-[10px] bg-white text-[#6B6862] border border-[#E2DFD7] px-2 py-0.5 font-mono uppercase tracking-wider">
-                                                Servicio Sin Stock
+                                            <span className="text-[10px] bg-white text-[#161616] border border-[#E2DFD7] px-2 py-0.5 font-mono uppercase tracking-wider font-semibold">
+                                                Atributos Ópticos
                                             </span>
                                         </div>
 

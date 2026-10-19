@@ -175,13 +175,21 @@ export const SaaSErpEmployeeProfile: React.FC<SaaSErpEmployeeProfileProps> = ({
                 if (json.shifts.length > 0) {
                     const latestShift = json.shifts[0];
                     if (!latestShift.clock_out) {
-                        const clockInTs = new Date(latestShift.clock_in).getTime();
-                        setShiftStartTimestamp(clockInTs);
+                        if (typeof latestShift.elapsed_seconds === 'number' && !isNaN(latestShift.elapsed_seconds)) {
+                            setShiftStartTimestamp(Date.now() - (latestShift.elapsed_seconds * 1000));
+                        } else {
+                            const clockInTs = new Date(latestShift.clock_in).getTime();
+                            setShiftStartTimestamp(clockInTs);
+                        }
 
                         if (latestShift.lunch_start && !latestShift.lunch_end) {
                             setShiftStatus('lunch');
-                            const lunchStartTs = new Date(latestShift.lunch_start).getTime();
-                            setLunchStartTimestamp(lunchStartTs);
+                            if (typeof latestShift.lunch_elapsed_seconds === 'number' && !isNaN(latestShift.lunch_elapsed_seconds)) {
+                                setLunchStartTimestamp(Date.now() - (latestShift.lunch_elapsed_seconds * 1000));
+                            } else {
+                                const lunchStartTs = new Date(latestShift.lunch_start).getTime();
+                                setLunchStartTimestamp(lunchStartTs);
+                            }
                             setLunchTimerActive(true);
                             setTimerActive(false);
                         } else {

@@ -746,7 +746,7 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             customerEmail,
             customerAddress,
             totalAmount,
-            dueDate: paymentMethod === 'credito' ? (dueDate || firstDueDate) : (dueDate || new Date().toISOString().split('T')[0]),
+            dueDate: paymentMethod === 'credito' ? firstDueDate : (dueDate || new Date().toISOString().split('T')[0]),
             firstDueDate: paymentMethod === 'credito' ? firstDueDate : null,
             paymentMethod,
             transferBank: paymentMethod === 'transferencia' ? transferBank : null,
@@ -2149,7 +2149,11 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                                 <select
                                                                     className="bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-semibold outline-none cursor-pointer rounded-none"
                                                                     value={installmentFrequency}
-                                                                    onChange={(e) => setInstallmentFrequency(e.target.value as any)}
+                                                                    onChange={(e) => {
+                                                                        const newFreq = e.target.value as any;
+                                                                        setInstallmentFrequency(newFreq);
+                                                                        setFirstDueDate(getDefaultFirstDueDate(newFreq));
+                                                                    }}
                                                                 >
                                                                     <option value="quincenal">Quincenal</option>
                                                                     <option value="mensual">Mensual</option>
@@ -2161,12 +2165,20 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                                 )}
 
                                                 <div className="flex flex-col gap-1.5">
-                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Fecha de Vencimiento</label>
+                                                    <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">
+                                                        {paymentMethod === 'credito' ? 'Fecha Primer Vencimiento (Cuota #1)' : 'Fecha de Vencimiento'}
+                                                    </label>
                                                     <input
                                                         type="date"
                                                         className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-mono outline-none rounded-none"
-                                                        value={dueDate}
-                                                        onChange={(e) => setDueDate(e.target.value)}
+                                                        value={paymentMethod === 'credito' ? firstDueDate : dueDate}
+                                                        onChange={(e) => {
+                                                            if (paymentMethod === 'credito') {
+                                                                setFirstDueDate(e.target.value);
+                                                            } else {
+                                                                setDueDate(e.target.value);
+                                                            }
+                                                        }}
                                                     />
                                                 </div>
                                             </div>
@@ -2636,9 +2648,13 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                                     <td className="p-4 text-xs font-medium text-[#6B6862]">
                                         <div className="font-mono">
                                             <p className="font-semibold text-[#161616]">{inv.due_date ? formatLocalDate(inv.due_date) : 'N/A'}</p>
-                                            {inv.payment_method === 'credito' && (
-                                                <span className="text-[9px] bg-[#FEF7E0] text-[#7A5A00] px-1 py-0.5 font-bold uppercase tracking-wider block w-max mt-0.5 border border-[#FEEFC3]">
-                                                    Límite Crédito
+                                            {['credito', 'crédito', 'cuotas'].includes((inv.payment_method || '').toLowerCase()) && (
+                                                <span className={`text-[9px] px-1 py-0.5 font-bold uppercase tracking-wider block w-max mt-0.5 border ${
+                                                    inv.status === 'paid' 
+                                                        ? 'bg-[#E6F4EA] text-[#1E4620] border-[#A8DADC]' 
+                                                        : 'bg-[#FEF7E0] text-[#7A5A00] border-[#FEEFC3]'
+                                                }`}>
+                                                    {inv.status === 'paid' ? 'Crédito Saldado' : 'Vence Cuota'}
                                                 </span>
                                             )}
                                         </div>

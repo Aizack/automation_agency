@@ -3972,7 +3972,13 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
   try {
     const { clientId } = req.params;
     const result = await pool.query(
-      `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_document_type, i.customer_document_number, i.customer_email, i.customer_address, i.total_amount, i.status, i.due_date, i.reminder_sent, i.overdue_sent, i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_by_user_id, i.created_by_user_name, i.created_at, COALESCE(i.seller_name, NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name 
+      `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_document_type, i.customer_document_number, i.customer_email, i.customer_address, i.total_amount, i.status, 
+              COALESCE(
+                (SELECT MIN(ii.due_date) FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.status = 'pending' AND ii.installment_number > 0),
+                (SELECT MAX(ii.due_date) FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.installment_number > 0),
+                i.due_date
+              ) as due_date,
+              i.reminder_sent, i.overdue_sent, i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_by_user_id, i.created_by_user_name, i.created_at, COALESCE(i.seller_name, NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name 
        FROM invoices i 
        LEFT JOIN employees e ON i.seller_employee_id = e.id
        WHERE i.client_id = $1 
@@ -4272,6 +4278,13 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
             VALUES ($1, $2, $3, $4, 'pending', 0.00)
           `, [invoice.id, i, installmentDate, installmentAmount]);
         }
+
+        // Sincronizar el due_date de la factura con la primera cuota de crédito
+        await dbClient.query(`
+          UPDATE invoices 
+          SET due_date = $1 
+          WHERE id = $2
+        `, [baseStartDate, invoice.id]);
       }
     }
 
@@ -5502,7 +5515,13 @@ app.get('/api/clients/:clientId/invoices/:invoiceId', authenticateToken as any, 
     
     // Consultar factura
     const invRes = await pool.query(
-      `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_document_type, i.customer_document_number, i.customer_email, i.customer_address, i.total_amount, i.status, i.due_date, i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_at, COALESCE(NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name
+      `SELECT i.id, i.invoice_number, i.customer_name, i.customer_phone, i.customer_document_type, i.customer_document_number, i.customer_email, i.customer_address, i.total_amount, i.status, 
+              COALESCE(
+                (SELECT MIN(ii.due_date) FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.status = 'pending' AND ii.installment_number > 0),
+                (SELECT MAX(ii.due_date) FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.installment_number > 0),
+                i.due_date
+              ) as due_date,
+              i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_at, COALESCE(NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name
        FROM invoices i
        LEFT JOIN employees e ON i.seller_employee_id = e.id
        WHERE i.client_id = $1 AND i.id = $2`,
@@ -6256,12 +6275,26 @@ app.put('/api/clients/:clientId/invoices/:invoiceId/installments/:installmentId/
 
     if (pendingCount === 0) {
       await dbClient.query(
-        `UPDATE invoices SET status = 'paid', updated_at = NOW() WHERE id = $1`,
+        `UPDATE invoices 
+         SET status = 'paid', 
+             due_date = COALESCE(
+               (SELECT MAX(due_date) FROM invoice_installments WHERE invoice_id = $1 AND installment_number > 0),
+               due_date
+             ),
+             updated_at = NOW() 
+         WHERE id = $1`,
         [invoiceId]
       );
     } else {
       await dbClient.query(
-        `UPDATE invoices SET status = 'pending', updated_at = NOW() WHERE id = $1`,
+        `UPDATE invoices 
+         SET status = 'pending', 
+             due_date = COALESCE(
+               (SELECT MIN(due_date) FROM invoice_installments WHERE invoice_id = $1 AND status = 'pending' AND installment_number > 0),
+               due_date
+             ),
+             updated_at = NOW() 
+         WHERE id = $1`,
         [invoiceId]
       );
     }
@@ -7565,7 +7598,9 @@ app.get('/api/clients/:clientId/shifts/today', authenticateToken as any, authori
     const { clientId } = req.params;
     const result = await pool.query(
       `SELECT s.id, s.employee_id, e.name as employee_name, e.last_name as employee_last_name, s.clock_in, s.clock_out, s.lunch_start, s.lunch_end,
-              EXTRACT(EPOCH FROM (COALESCE(s.clock_out, NOW()) - s.clock_in))/3600 as hours_worked
+              EXTRACT(EPOCH FROM (COALESCE(s.clock_out, NOW()) - s.clock_in))/3600 as hours_worked,
+              GREATEST(0, EXTRACT(EPOCH FROM (NOW() - s.clock_in)))::INT as elapsed_seconds,
+              CASE WHEN s.lunch_start IS NOT NULL AND s.lunch_end IS NULL THEN GREATEST(0, EXTRACT(EPOCH FROM (NOW() - s.lunch_start)))::INT ELSE 0 END as lunch_elapsed_seconds
        FROM shift_logs s
        JOIN employees e ON s.employee_id = e.id
        WHERE e.client_id = $1 AND (s.clock_in >= CURRENT_DATE OR s.clock_out IS NULL)
@@ -7583,7 +7618,10 @@ app.get('/api/clients/:clientId/employees/:employeeId/shifts', authenticateToken
   try {
     const { employeeId } = req.params;
     const result = await pool.query(
-      `SELECT id, clock_in, clock_out, lunch_start, lunch_end, EXTRACT(EPOCH FROM (COALESCE(clock_out, NOW()) - clock_in))/3600 as hours_worked
+      `SELECT id, clock_in, clock_out, lunch_start, lunch_end, 
+              EXTRACT(EPOCH FROM (COALESCE(clock_out, NOW()) - clock_in))/3600 as hours_worked,
+              GREATEST(0, EXTRACT(EPOCH FROM (NOW() - clock_in)))::INT as elapsed_seconds,
+              CASE WHEN lunch_start IS NOT NULL AND lunch_end IS NULL THEN GREATEST(0, EXTRACT(EPOCH FROM (NOW() - lunch_start)))::INT ELSE 0 END as lunch_elapsed_seconds
        FROM shift_logs 
        WHERE employee_id = $1 
        ORDER BY clock_in DESC LIMIT 100`,
