@@ -87,6 +87,7 @@ import { verifyPassword, hashPassword, isHashedPassword } from './utils/password
 import { runAutoFixAgent } from './agents/autoFixAgent';
 import { getPublicCatalog, createCatalogOrder } from './services/catalogService';
 import { getPrivacyPolicyHTML } from './services/privacyPolicy';
+import { getTermsOfServiceHTML } from './services/termsOfService';
 import { MetaWhatsAppService } from './services/metaWhatsAppService';
 
 // Validar variables de entorno antes de cualquier otra cosa
@@ -12880,10 +12881,15 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
-  // --- RUTA PÚBLICA DE POLÍTICA DE PRIVACIDAD (CUMPLIMIENTO META REVIEW) ---
-  app.get('/privacy', (req: Request, res: Response) => {
+  // --- RUTAS PÚBLICAS LEGALES (CUMPLIMIENTO META REVIEW & HABEAS DATA) ---
+  app.get(['/privacy', '/privacidad'], (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(getPrivacyPolicyHTML());
+  });
+
+  app.get(['/terms', '/terminos'], (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(getTermsOfServiceHTML());
   });
 
   // --- ENDPOINTS META WHATSAPP CLOUD API & WEBHOOK ---
