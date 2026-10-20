@@ -2723,7 +2723,10 @@ app.get('/api/clients/:clientId/products/sku/:sku', authenticateToken as any, au
               p.id, p.name, p.sku, p.description, p.price, p.stock, p.cost_price, p.min_stock, p.supplier_name, p.supplier_phone, p.brand, p.material, p.style, p.color, p.promo_discount, p.attributes, p.has_variants, p.product_type 
        FROM product_variants pv
        JOIN products p ON pv.product_id = p.id
-       WHERE pv.client_id = $1 AND LOWER(pv.sku) = LOWER($2) LIMIT 1`,
+       WHERE pv.client_id = $1 AND (
+         LOWER(pv.sku) = LOWER($2) 
+         OR REPLACE(LOWER(pv.sku), '-', '') = REPLACE(LOWER($2), '-', '')
+       ) LIMIT 1`,
       [targetClientId, sku]
     );
 
@@ -2746,7 +2749,10 @@ app.get('/api/clients/:clientId/products/sku/:sku', authenticateToken as any, au
     const result = await pool.query(
       `SELECT id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, attributes, has_variants, image_url, product_type 
        FROM products 
-       WHERE client_id = $1 AND LOWER(sku) = LOWER($2) LIMIT 1`,
+       WHERE client_id = $1 AND (
+         LOWER(sku) = LOWER($2) 
+         OR REPLACE(LOWER(sku), '-', '') = REPLACE(LOWER($2), '-', '')
+       ) LIMIT 1`,
       [targetClientId, sku]
     );
 
@@ -12950,6 +12956,86 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     } catch (err: any) {
       console.error('[Meta Data Deletion Error]:', err);
       return res.status(500).json({ error: 'Error procesando eliminación de datos.' });
+    }
+  });
+
+  // 4.1 Endpoint de Ejecución cURL para Meta App Review (POST /api/v1/meta/execute-curl)
+  app.post('/api/v1/meta/execute-curl', async (req: Request, res: Response) => {
+    try {
+      const { curlCommand, url, method, token, headers, body } = req.body;
+      
+      let targetUrl = url;
+      let targetMethod = method || 'POST';
+      let targetToken = token;
+      let targetBody = body;
+      const targetHeaders = headers || {};
+
+      if (curlCommand && typeof curlCommand === 'string') {
+        const cleanCmd = curlCommand.replace(/`\r?\n/g, ' ').replace(/\\\r?\n/g, ' ');
+        const urlMatch = cleanCmd.match(/https:\/\/graph\.facebook\.com[^\s'"`\\]+/);
+        if (urlMatch) {
+          targetUrl = urlMatch[0];
+        }
+        const authMatch = cleanCmd.match(/Bearer\s+([A-Za-z0-9_\-\.]+)/i);
+        if (authMatch) {
+          targetToken = authMatch[1];
+        }
+
+        const idxD = cleanCmd.indexOf('-d');
+        if (idxD !== -1) {
+          const afterD = cleanCmd.substring(idxD + 2).trim();
+          let rawBody = afterD;
+          if (afterD.startsWith("'") || afterD.startsWith('"')) {
+            const quoteChar = afterD[0];
+            const lastQuoteIdx = afterD.lastIndexOf(quoteChar);
+            if (lastQuoteIdx > 0) {
+              rawBody = afterD.substring(1, lastQuoteIdx);
+            } else {
+              rawBody = afterD.substring(1);
+            }
+          }
+          const cleaned = rawBody.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/`/g, '').trim();
+          try {
+            targetBody = JSON.parse(cleaned);
+          } catch (e) {
+            console.warn('[cURL Parse Error] Fallback a cuerpo procesado:', e);
+            targetBody = cleaned;
+          }
+        }
+      }
+
+      if (!targetUrl) {
+        return res.status(400).json({ success: false, error: 'URL de Meta Graph API no especificada.' });
+      }
+
+      const reqHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...targetHeaders
+      };
+      if (targetToken) {
+        reqHeaders['Authorization'] = `Bearer ${targetToken}`;
+      }
+
+      const startTime = Date.now();
+      const metaResponse = await fetch(targetUrl, {
+        method: targetMethod,
+        headers: reqHeaders,
+        body: typeof targetBody === 'object' ? JSON.stringify(targetBody) : targetBody
+      });
+      const durationMs = Date.now() - startTime;
+
+      const resData = await metaResponse.json().catch(() => null);
+
+      return res.status(metaResponse.status).json({
+        success: metaResponse.ok,
+        status: metaResponse.status,
+        statusText: metaResponse.statusText,
+        durationMs,
+        data: resData
+      });
+    } catch (err: any) {
+      console.error('[cURL Execution Error]:', err);
+      return res.status(500).json({ success: false, error: err.message });
     }
   });
 
