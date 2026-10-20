@@ -853,81 +853,228 @@ const DEFAULT_DROPDOWN_OPTIONS: Record<string, string[]> = {
 };
 
 // GET Opciones Personalizadas de Dropdowns por Inquilino
+
 app.get('/api/clients/:clientId/custom-options', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+
   try {
+
     const { clientId } = req.params;
-    const clientRes = await pool.query('SELECT custom_dropdown_options FROM clients WHERE id = $1', [clientId]);
+
+    const clientRes = await pool.query('SELECT custom_dropdown_options, parent_client_id FROM clients WHERE id = $1', [clientId]);
+
     let storedOptions = clientRes.rows[0]?.custom_dropdown_options || {};
 
+    const parentClientId = clientRes.rows[0]?.parent_client_id;
+
+
+
+    // Si es una sucursal, heredar y combinar las opciones personalizadas de la sede matriz
+
+    if (parentClientId) {
+
+      const parentRes = await pool.query('SELECT custom_dropdown_options FROM clients WHERE id = $1', [parentClientId]);
+
+      const parentOptions = parentRes.rows[0]?.custom_dropdown_options || {};
+
+      for (const [key, val] of Object.entries(parentOptions)) {
+
+        if (Array.isArray(val)) {
+
+          const current = Array.isArray(storedOptions[key]) ? storedOptions[key] : [];
+
+          storedOptions[key] = Array.from(new Set([...current, ...val]));
+
+        }
+
+      }
+
+    }
+
+
+
     // Auto-Sanitización: Mover opciones de género agregadas por error a 'frame_styles' hacia 'target_genders'
+
     const genderWords = ['MUJER', 'HOMBRE', 'UNISEX', 'INFANTIL', 'NIÑOS', 'NIÑAS', 'MASCULINO', 'FEMENINO', 'KIDS', 'BOYS', 'GIRLS'];
+
     if (Array.isArray(storedOptions.frame_styles) && storedOptions.frame_styles.length > 0) {
+
       const misplacedGenders = storedOptions.frame_styles.filter((opt: string) => 
+
         genderWords.includes(opt.trim().toUpperCase())
+
       );
 
+
+
       if (misplacedGenders.length > 0) {
+
         storedOptions.frame_styles = storedOptions.frame_styles.filter((opt: string) => 
+
           !genderWords.includes(opt.trim().toUpperCase())
+
         );
 
+
+
         const currentTargetGenders: string[] = Array.isArray(storedOptions.target_genders) ? storedOptions.target_genders : [];
+
         for (const g of misplacedGenders) {
+
           if (!currentTargetGenders.includes(g)) {
+
             currentTargetGenders.push(g);
+
           }
+
         }
+
         storedOptions.target_genders = currentTargetGenders;
 
+
+
         await pool.query('UPDATE clients SET custom_dropdown_options = $1 WHERE id = $2', [JSON.stringify(storedOptions), clientId]);
+
       }
+
     }
+
+
+
+    // Traer marcas existentes en la tabla de productos para que ninguna marca ya registrada (ej: LUXOR) falte en el dropdown
+
+    try {
+
+      const prodBrandsRes = await pool.query(
+
+        `SELECT DISTINCT TRIM(brand) as brand 
+
+         FROM products 
+
+         WHERE (client_id = $1 OR client_id = (SELECT parent_client_id FROM clients WHERE id = $1) OR client_id IN (SELECT id FROM clients WHERE parent_client_id = $1))
+
+           AND brand IS NOT NULL AND TRIM(brand) != ''`,
+
+        [clientId]
+
+      );
+
+      const existingProductBrands = prodBrandsRes.rows.map((r: any) => r.brand).filter(Boolean);
+
+      if (existingProductBrands.length > 0) {
+
+        const currentBrands = Array.isArray(storedOptions.brands) ? storedOptions.brands : [];
+
+        storedOptions.brands = Array.from(new Set([...currentBrands, ...existingProductBrands]));
+
+      }
+
+    } catch (bErr) {
+
+      console.warn('[Custom Options] Advertencia consultando marcas existentes en products:', bErr);
+
+    }
+
+
 
     const mergedOptions: Record<string, string[]> = {};
+
     const allKeys = Array.from(new Set([...Object.keys(DEFAULT_DROPDOWN_OPTIONS), ...Object.keys(storedOptions)]));
 
+
+
     for (const key of allKeys) {
+
       const defaults = DEFAULT_DROPDOWN_OPTIONS[key] || [];
+
       const customs = Array.isArray(storedOptions[key]) ? storedOptions[key] : [];
-      mergedOptions[key] = Array.from(new Set([...defaults, ...customs]));
+
+      const combined = Array.from(new Set([...defaults, ...customs])).filter(Boolean);
+
+      // Ordenamiento alfabético automático A-Z para facilitar la búsqueda
+
+      combined.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+
+      mergedOptions[key] = combined;
+
     }
+
+
 
     res.json({ success: true, options: mergedOptions });
+
   } catch (err: any) {
+
     res.status(500).json({ success: false, error: err.message });
+
   }
+
 });
 
+
+
 // POST Agregar Nueva Opción a un Dropdown Dinámico
+
 app.post('/api/clients/:clientId/custom-options', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+
   try {
+
     const { clientId } = req.params;
+
     const { categoryKey, optionValue } = req.body;
 
+
+
     if (!categoryKey || !optionValue || typeof optionValue !== 'string' || !optionValue.trim()) {
+
       return res.status(400).json({ success: false, error: 'Se requiere una categoría y un valor de opción válido.' });
+
     }
+
+
 
     const cleanVal = optionValue.trim();
+
     const clientRes = await pool.query('SELECT custom_dropdown_options FROM clients WHERE id = $1', [clientId]);
+
     const storedOptions = clientRes.rows[0]?.custom_dropdown_options || {};
+
     const currentList: string[] = Array.isArray(storedOptions[categoryKey]) ? storedOptions[categoryKey] : [];
 
+
+
     if (!currentList.includes(cleanVal)) {
+
       currentList.push(cleanVal);
+
     }
+
     storedOptions[categoryKey] = currentList;
+
+
 
     await pool.query('UPDATE clients SET custom_dropdown_options = $1 WHERE id = $2', [JSON.stringify(storedOptions), clientId]);
 
+
+
     const defaults = DEFAULT_DROPDOWN_OPTIONS[categoryKey] || [];
-    const fullList = Array.from(new Set([...defaults, ...currentList]));
+
+    const fullList = Array.from(new Set([...defaults, ...currentList])).filter(Boolean);
+
+    fullList.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+
+
 
     res.json({ success: true, message: 'Opción agregada exitosamente.', categoryKey, options: fullList, addedValue: cleanVal });
+
   } catch (err: any) {
+
     res.status(500).json({ success: false, error: err.message });
+
   }
+
 });
+
+
 
 // DELETE Eliminar Opción Personalizada de un Dropdown
 app.delete('/api/clients/:clientId/custom-options', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
@@ -2681,7 +2828,7 @@ app.get('/api/clients/:clientId/products', authenticateToken as any, authorizeCl
     );
 
     const variantsRes = await pool.query(
-      `SELECT pv.id, pv.product_id, pv.variant_name, pv.color_hex, pv.sku, pv.stock, pv.min_stock, pv.image_url 
+      `SELECT pv.id, pv.product_id, pv.variant_name, pv.color_hex, pv.sku, pv.stock, pv.min_stock, pv.image_url, pv.formula 
        FROM product_variants pv
        JOIN products p ON pv.product_id = p.id
        WHERE p.client_id = $1 
@@ -2871,9 +3018,9 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
         }
 
         await pool.query(
-          `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, stock, min_stock, image_url)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [insertedProduct.id, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null]
+          `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, stock, min_stock, image_url, formula)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [insertedProduct.id, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null, v.formula ? v.formula.trim() : null]
         );
       }
     }
@@ -2978,9 +3125,9 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
         }
 
         await pool.query(
-          `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, stock, min_stock, image_url)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [productId, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null]
+          `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, stock, min_stock, image_url, formula)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [productId, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null, v.formula ? v.formula.trim() : null]
         );
       }
     } else if (!hasVarBool) {

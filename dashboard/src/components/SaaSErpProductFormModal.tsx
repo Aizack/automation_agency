@@ -111,12 +111,14 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     const [gender, setGender] = useState('');
     const [color, setColor] = useState('');
 
-    // Variantes & Stock
+    // Variantes & Stock por Características (Color, Fórmula/Graduación)
     const [hasVariants, setHasVariants] = useState<boolean>(true);
+    const [useColorVariant, setUseColorVariant] = useState<boolean>(true);
+    const [useFormulaVariant, setUseFormulaVariant] = useState<boolean>(false);
     const [stock, setStock] = useState<number | string>('');
     const [minStock, setMinStock] = useState<number | string>(5);
-    const [variantList, setVariantList] = useState<Array<{ id?: string, color: string, sku: string, stock: number | string, min_stock: number | string, image_url?: string }>>([
-        { color: 'Negro', sku: '', stock: 10, min_stock: 2, image_url: '' }
+    const [variantList, setVariantList] = useState<Array<{ id?: string, color: string, formula?: string, sku: string, stock: number | string, min_stock: number | string, image_url?: string }>>([
+        { color: 'Negro', formula: '', sku: '', stock: 10, min_stock: 2, image_url: '' }
     ]);
     const [activePhotoColorIdx, setActivePhotoColorIdx] = useState<number>(0);
     const [customAttrs, setCustomAttrs] = useState<Record<string, any>>({});
@@ -196,17 +198,38 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
             setStock(cleanStock);
             setMinStock(editingProduct.min_stock ?? 5);
 
+            let hasFormulaFromVariants = false;
+            let hasColorFromVariants = false;
             if (Array.isArray(editingProduct.variants) && editingProduct.variants.length > 0) {
-                setVariantList(editingProduct.variants.map((v: any) => ({
-                    id: v.id,
-                    color: v.variant_name || v.color || '',
-                    sku: v.sku || '',
-                    stock: (v.stock === 999999 || v.stock === '999999') ? 0 : (v.stock ?? 0),
-                    min_stock: v.min_stock ?? 2,
-                    image_url: v.image_url || ''
-                })));
+                const mapped = editingProduct.variants.map((v: any) => {
+                    let fVal = v.formula || '';
+                    let cVal = v.color || v.variant_name || '';
+                    if (!fVal && (v.variant_name || '').toLowerCase().includes('fórmula:')) {
+                        const parts = v.variant_name.split(/fórmula:/i);
+                        cVal = parts[0].replace(/[-–]\s*$/, '').trim();
+                        fVal = parts[1].trim();
+                    }
+                    if (fVal) hasFormulaFromVariants = true;
+                    if (cVal && cVal.toLowerCase() !== 'variante' && cVal.toLowerCase() !== 'sin color') {
+                        hasColorFromVariants = true;
+                    }
+                    return {
+                        id: v.id,
+                        color: cVal || (isLens ? 'Transparente' : 'Negro'),
+                        formula: fVal,
+                        sku: v.sku || '',
+                        stock: (v.stock === 999999 || v.stock === '999999') ? 0 : (v.stock ?? 0),
+                        min_stock: v.min_stock ?? 2,
+                        image_url: v.image_url || ''
+                    };
+                });
+                setVariantList(mapped);
+                setUseFormulaVariant(Boolean(isLens || hasFormulaFromVariants));
+                setUseColorVariant(hasColorFromVariants || !hasFormulaFromVariants);
             } else {
-                setVariantList([{ color: 'Negro', sku: editingProduct.sku || '', stock: (editingProduct.stock === 999999 || editingProduct.stock === '999999') ? 10 : (editingProduct.stock || 10), min_stock: editingProduct.min_stock || 2, image_url: editingProduct.image_url || '' }]);
+                setVariantList([{ color: isLens ? 'Transparente' : 'Negro', formula: '', sku: editingProduct.sku || '', stock: (editingProduct.stock === 999999 || editingProduct.stock === '999999') ? 10 : (editingProduct.stock || 10), min_stock: editingProduct.min_stock || 2, image_url: editingProduct.image_url || '' }]);
+                setUseFormulaVariant(Boolean(isLens));
+                setUseColorVariant(true);
             }
             setActivePhotoColorIdx(0);
         } else {
@@ -235,9 +258,11 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
         setGender('');
         setColor('');
         setHasVariants(true);
+        setUseColorVariant(true);
+        setUseFormulaVariant(false);
         setStock('');
         setMinStock(5);
-        setVariantList([{ color: 'Negro', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
+        setVariantList([{ color: 'Negro', formula: '', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
         setActivePhotoColorIdx(0);
         setCustomAttrs({});
     };
@@ -247,6 +272,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
         const selectedCat = categories.find((c: any) => String(c.id) === String(catId));
         if (selectedCat && selectedCat.name.toLowerCase().includes('lente')) {
             setIsLensMode(true);
+            setUseFormulaVariant(true);
             if (productType === 'service') {
                 setProductType('product');
             }
@@ -289,15 +315,32 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
         const resolvedProductType = productType === 'service' ? 'service' : 'product';
         const hasVarBool = hasVariants && resolvedProductType === 'product' && variantList.length > 0;
 
-        const formattedVariants = hasVarBool ? variantList.map(v => ({
-            ...(v.id ? { id: v.id } : {}),
-            variant_name: v.color || 'Variante',
-            color_hex: null,
-            sku: v.sku ? v.sku.trim() : '',
-            stock: v.stock === '' ? 0 : (parseInt(v.stock.toString()) || 0),
-            min_stock: v.min_stock === '' ? 2 : (parseInt(v.min_stock.toString()) || 2),
-            image_url: v.image_url || null
-        })) : [];
+        const formattedVariants = hasVarBool ? variantList.map(v => {
+            let vName = '';
+            const cClean = v.color ? v.color.trim() : '';
+            const fClean = v.formula ? v.formula.trim() : '';
+            if (useColorVariant && useFormulaVariant) {
+                vName = [cClean, fClean ? `Fórmula: ${fClean}` : ''].filter(Boolean).join(' - ');
+            } else if (useFormulaVariant) {
+                vName = fClean ? `Fórmula: ${fClean}` : (cClean || 'Variante');
+            } else if (useColorVariant) {
+                vName = cClean || 'Variante';
+            } else {
+                vName = cClean || fClean || 'Variante';
+            }
+            if (!vName.trim()) vName = 'Variante';
+
+            return {
+                ...(v.id ? { id: v.id } : {}),
+                variant_name: vName,
+                formula: fClean || null,
+                color_hex: null,
+                sku: v.sku ? v.sku.trim() : '',
+                stock: v.stock === '' ? 0 : (parseInt(v.stock.toString()) || 0),
+                min_stock: v.min_stock === '' ? 2 : (parseInt(v.min_stock.toString()) || 2),
+                image_url: v.image_url || null
+            };
+        }) : [];
 
         const calculatedTotalStock = resolvedProductType === 'service'
             ? 0
@@ -869,10 +912,10 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                 ) : (
                                     <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-3 flex items-center justify-between mb-4">
                                         <div className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-[#D9381E] text-[20px]">palette</span>
+                                            <span className="material-symbols-outlined text-[#D9381E] text-[20px]">tune</span>
                                             <div>
-                                                <p className="text-xs font-bold text-[#161616]">Producto con Variantes de Color Activas</p>
-                                                <p className="text-[10px] text-[#6B6862]">Los códigos de barras y stock se definen individualmente por cada color en el Paso 2.</p>
+                                                <p className="text-xs font-bold text-[#161616]">Producto con Variantes por Características Activas</p>
+                                                <p className="text-[10px] text-[#6B6862]">Los códigos SKU y stock se definen individualmente por cada variante (color, fórmula, etc.) en el Paso 2.</p>
                                             </div>
                                         </div>
                                         <button
@@ -925,7 +968,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                             <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
                                 <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-2 mb-4">
                                     <h4 className="font-serif text-xl text-[#161616] font-normal">
-                                        2. Variantes de Color, Fotografía & Control de Stock
+                                        2. Variantes por Características, Fotografía & Control de Stock
                                     </h4>
                                     {editingProduct && (
                                         <button
@@ -996,7 +1039,9 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                         {variantList.length > 0 && (
                                             <div className="flex flex-col gap-2 flex-1">
                                                 <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-wider">
-                                                    COLOR SELECCIONADO PARA FOTO: {variantList[activePhotoColorIdx]?.color || 'NEGRO'}
+                                                    {useColorVariant 
+                                                        ? `COLOR SELECCIONADO PARA FOTO: ${variantList[activePhotoColorIdx]?.color || 'NEGRO'}`
+                                                        : `VARIANTE SELECCIONADA PARA FOTO: ${variantList[activePhotoColorIdx]?.formula || `Variante ${activePhotoColorIdx + 1}`}`}
                                                 </span>
                                                 <div className="flex flex-wrap gap-2">
                                                     {variantList.map((v, idx) => (
@@ -1010,11 +1055,17 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                                     : 'bg-white text-[#161616] border-[#E2DFD7]'
                                                             }`}
                                                         >
-                                                            <span 
-                                                                className="w-3.5 h-3.5 rounded-none border border-black/20 shrink-0" 
-                                                                style={{ background: getColorPreview(v.color) }}
-                                                            />
-                                                            <span>{v.color || `Color ${idx + 1}`}</span>
+                                                            {useColorVariant && (
+                                                                <span 
+                                                                    className="w-3.5 h-3.5 rounded-none border border-black/20 shrink-0" 
+                                                                    style={{ background: getColorPreview(v.color) }}
+                                                                />
+                                                            )}
+                                                            <span>
+                                                                {useColorVariant && useFormulaVariant
+                                                                    ? `${v.color || 'Color'} (${v.formula || 'Sin Fórm.'})`
+                                                                    : (useColorVariant ? (v.color || `Color ${idx + 1}`) : (v.formula ? `Fórm: ${v.formula}` : `Var ${idx + 1}`))}
+                                                            </span>
                                                         </button>
                                                     ))}
                                                 </div>
@@ -1027,26 +1078,78 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                     <div className="space-y-4">
                                         {hasVariants ? (
                                             <div className="bg-white p-5 border border-[#E2DFD7] space-y-4">
-                                                <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
+                                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#E2DFD7] pb-3">
                                                     <div>
-                                                        <h5 className="font-bold text-xs uppercase tracking-wider text-[#161616]">Tabla de Existencias por Color</h5>
-                                                        <p className="text-[11px] text-[#6B6862]">Asigna códigos SKU y cantidad para cada variante de color.</p>
+                                                        <h5 className="font-bold text-xs uppercase tracking-wider text-[#161616]">Tabla de Existencias por Características</h5>
+                                                        <p className="text-[11px] text-[#6B6862]">Asigna características (Color, Fórmula/Graduación), código SKU y cantidad para cada variante.</p>
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setVariantList([...variantList, { color: '', sku: '', stock: 1, min_stock: 2, image_url: '' }])}
-                                                        className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[10px] font-bold py-2 px-3 rounded-none flex items-center gap-1 transition uppercase tracking-wider"
+                                                        onClick={() => setVariantList([...variantList, { color: useColorVariant ? (isLensMode ? 'Transparente' : 'Negro') : '', formula: '', sku: '', stock: 1, min_stock: 2, image_url: '' }])}
+                                                        className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[10px] font-bold py-2 px-3 rounded-none flex items-center gap-1 transition uppercase tracking-wider cursor-pointer"
                                                     >
                                                         <span className="material-symbols-outlined text-[14px] text-[#D9381E]">add</span>
-                                                        + Color
+                                                        + Agregar Variante
                                                     </button>
+                                                </div>
+
+                                                {/* Selector de Campos de Características Activos */}
+                                                <div className="flex flex-wrap items-center gap-4 p-3 bg-[#FAF8F5] border border-[#E2DFD7] text-xs">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B6862] flex items-center gap-1">
+                                                        <span className="material-symbols-outlined text-[15px] text-[#D9381E]">tune</span>
+                                                        Campos de la Tabla:
+                                                    </span>
+
+                                                    <label className="flex items-center gap-2 cursor-pointer font-bold text-xs text-[#161616] select-none hover:text-[#D9381E] transition">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={useColorVariant}
+                                                            onChange={(e) => {
+                                                                const checked = e.target.checked;
+                                                                if (!checked && !useFormulaVariant) {
+                                                                    setUseFormulaVariant(true);
+                                                                }
+                                                                setUseColorVariant(checked);
+                                                            }}
+                                                            className="accent-[#D9381E] w-4 h-4 cursor-pointer"
+                                                        />
+                                                        <span className="flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[15px] text-[#6B6862]">palette</span>
+                                                            Incluir Color
+                                                        </span>
+                                                    </label>
+
+                                                    <label className="flex items-center gap-2 cursor-pointer font-bold text-xs text-[#161616] select-none hover:text-[#D9381E] transition">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={useFormulaVariant}
+                                                            onChange={(e) => {
+                                                                const checked = e.target.checked;
+                                                                if (!checked && !useColorVariant) {
+                                                                    setUseColorVariant(true);
+                                                                }
+                                                                setUseFormulaVariant(checked);
+                                                            }}
+                                                            className="accent-[#D9381E] w-4 h-4 cursor-pointer"
+                                                        />
+                                                        <span className="flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[15px] text-[#6B6862]">visibility</span>
+                                                            Incluir Fórmula / Graduación
+                                                        </span>
+                                                    </label>
+
+                                                    <span className="text-[10px] text-[#6B6862] ml-auto hidden md:inline italic">
+                                                        * Activa o desactiva columnas según las especificaciones del producto
+                                                    </span>
                                                 </div>
 
                                                 <div className="overflow-x-auto">
                                                     <table className="w-full text-left text-xs border-collapse">
                                                         <thead>
                                                             <tr className="border-b border-[#E2DFD7] text-[#6B6862] text-[10px] uppercase font-mono">
-                                                                <th className="py-2 pr-2">Color / Variante</th>
+                                                                {useColorVariant && <th className="py-2 pr-2">Color</th>}
+                                                                {useFormulaVariant && <th className="py-2 px-2">Fórmula / Graduación</th>}
+                                                                {!useColorVariant && !useFormulaVariant && <th className="py-2 pr-2">Descripción / Variante</th>}
                                                                 <th className="py-2 px-2">Código SKU / Barras</th>
                                                                 <th className="py-2 px-2 text-center">{isDraftMode ? 'Cantidad a Pedir' : 'Stock'}</th>
                                                                 <th className="py-2 px-2 text-center">Min. Stock</th>
@@ -1056,39 +1159,74 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                         <tbody className="divide-y divide-[#FAF8F5]">
                                                             {variantList.map((v, idx) => (
                                                                 <tr key={idx}>
-                                                                    <td className="py-2 pr-2 min-w-[210px] relative">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={(e) => {
-                                                                                if (openColorDropdownIdx === idx) {
-                                                                                    setOpenColorDropdownIdx(null);
-                                                                                    setColorDropdownCoords(null);
-                                                                                } else {
-                                                                                    const rect = e.currentTarget.getBoundingClientRect();
-                                                                                    setColorDropdownCoords({
-                                                                                        top: rect.bottom + 4,
-                                                                                        left: rect.left,
-                                                                                        width: Math.max(rect.width, 240)
-                                                                                    });
-                                                                                    setOpenColorDropdownIdx(idx);
-                                                                                }
-                                                                            }}
-                                                                            className="w-full bg-white border border-[#E2DFD7] hover:border-[#161616] p-2 text-xs text-[#161616] font-normal flex items-center justify-between transition rounded-none cursor-pointer"
-                                                                        >
-                                                                            <div className="flex items-center gap-2 overflow-hidden">
-                                                                                <span 
-                                                                                    className="w-4 h-4 rounded-none border border-black/20 shrink-0 shadow-xs" 
-                                                                                    style={{ background: getColorPreview(v.color, undefined, availableColorOptions) }}
-                                                                                />
-                                                                                <span className="truncate font-sans font-medium text-[#161616]">
-                                                                                    {v.color || 'Seleccionar Color'}
+                                                                    {useColorVariant && (
+                                                                        <td className="py-2 pr-2 min-w-[200px] relative">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={(e) => {
+                                                                                    if (openColorDropdownIdx === idx) {
+                                                                                        setOpenColorDropdownIdx(null);
+                                                                                        setColorDropdownCoords(null);
+                                                                                    } else {
+                                                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                                                        setColorDropdownCoords({
+                                                                                            top: rect.bottom + 4,
+                                                                                            left: rect.left,
+                                                                                            width: Math.max(rect.width, 240)
+                                                                                        });
+                                                                                        setOpenColorDropdownIdx(idx);
+                                                                                    }
+                                                                                }}
+                                                                                className="w-full bg-white border border-[#E2DFD7] hover:border-[#161616] p-2 text-xs text-[#161616] font-normal flex items-center justify-between transition rounded-none cursor-pointer"
+                                                                            >
+                                                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                                                    <span 
+                                                                                        className="w-4 h-4 rounded-none border border-black/20 shrink-0 shadow-xs" 
+                                                                                        style={{ background: getColorPreview(v.color, undefined, availableColorOptions) }}
+                                                                                    />
+                                                                                    <span className="truncate font-sans font-medium text-[#161616]">
+                                                                                        {v.color || 'Seleccionar Color'}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <span className="material-symbols-outlined text-[16px] text-[#6B6862] shrink-0">
+                                                                                    {openColorDropdownIdx === idx ? 'expand_less' : 'expand_more'}
                                                                                 </span>
-                                                                            </div>
-                                                                            <span className="material-symbols-outlined text-[16px] text-[#6B6862] shrink-0">
-                                                                                {openColorDropdownIdx === idx ? 'expand_less' : 'expand_more'}
-                                                                            </span>
-                                                                        </button>
-                                                                    </td>
+                                                                            </button>
+                                                                        </td>
+                                                                    )}
+
+                                                                    {useFormulaVariant && (
+                                                                        <td className="py-2 px-2 min-w-[150px]">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={v.formula || ''}
+                                                                                onChange={(e) => {
+                                                                                    const updated = [...variantList];
+                                                                                    updated[idx].formula = e.target.value;
+                                                                                    setVariantList(updated);
+                                                                                }}
+                                                                                placeholder="Ej: -1.75 / +2.00 / Neutro"
+                                                                                className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono outline-none rounded-none w-full font-semibold focus:border-[#161616]"
+                                                                            />
+                                                                        </td>
+                                                                    )}
+
+                                                                    {!useColorVariant && !useFormulaVariant && (
+                                                                        <td className="py-2 pr-2 min-w-[160px]">
+                                                                            <input
+                                                                                type="text"
+                                                                                value={v.color || ''}
+                                                                                onChange={(e) => {
+                                                                                    const updated = [...variantList];
+                                                                                    updated[idx].color = e.target.value;
+                                                                                    setVariantList(updated);
+                                                                                }}
+                                                                                placeholder="Ej: Estándar, Grande, etc."
+                                                                                className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none rounded-none w-full"
+                                                                            />
+                                                                        </td>
+                                                                    )}
+
                                                                     <td className="py-2 px-2">
                                                                         <input
                                                                             type="text"
@@ -1098,7 +1236,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                                                 updated[idx].sku = e.target.value;
                                                                                 setVariantList(updated);
                                                                             }}
-                                                                            placeholder="SKU-COLOR"
+                                                                            placeholder="SKU / Barras"
                                                                             className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono outline-none rounded-none w-full uppercase"
                                                                         />
                                                                     </td>
@@ -1167,7 +1305,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                         className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[10px] font-bold py-2 px-3 rounded-none flex items-center gap-1 transition uppercase tracking-wider cursor-pointer"
                                                     >
                                                         <span className="material-symbols-outlined text-[14px] text-[#D9381E]">palette</span>
-                                                        + Activar Variantes de Color
+                                                        + Activar Variantes por Características
                                                     </button>
                                                 </div>
 

@@ -934,6 +934,7 @@ export const initDatabase = async () => {
             ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS color_hex VARCHAR(30);
             ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS price NUMERIC(10,2);
             ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10,2) DEFAULT 0.00;
+            ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS formula VARCHAR(100);
 
             UPDATE product_variants pv 
             SET client_id = p.client_id 

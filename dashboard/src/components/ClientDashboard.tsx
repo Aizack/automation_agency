@@ -1854,6 +1854,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                   onChange={(e) => {
                     const newClientId = e.target.value;
                     localStorage.setItem('current_client_id', newClientId);
+                    localStorage.setItem('current_view', 'client');
+                    if (isSuperAdminUser) {
+                      localStorage.setItem('view_as_client', 'true');
+                    }
                     window.location.reload();
                   }}
                   className="bg-white border border-[#E2DFD7] rounded-[4px] px-3 py-1.5 text-xs font-bold text-[#161616] outline-none cursor-pointer"
@@ -2581,6 +2585,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                               type="button"
                               onClick={() => {
                                 localStorage.setItem('current_client_id', b.id);
+                                localStorage.setItem('current_view', 'client');
+                                if (isSuperAdminUser) {
+                                  localStorage.setItem('view_as_client', 'true');
+                                }
                                 window.location.reload();
                               }}
                               className="w-full py-1.5 px-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition shadow-xs"

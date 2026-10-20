@@ -1259,9 +1259,20 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
 
                     {/* Formulario de Configuración Manual de Credenciales de Meta */}
                     <div className="p-5 bg-[#FAF8F3] border border-[#E2DFD7] rounded-2xl space-y-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <span className="text-xs font-bold text-[#1C1B1A]">Credenciales Directas de Meta Cloud API</span>
-                        <span className="text-[10px] font-mono text-[#6E6B65]">Graph API v20.0</span>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href="/test-whatsapp"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1 bg-[#0866FF] hover:bg-[#0052cc] text-white text-[10px] font-bold rounded-md transition flex items-center gap-1 shadow-xs"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">terminal</span>
+                            <span>Abrir Test_whatsapp_business_messaging</span>
+                          </a>
+                          <span className="text-[10px] font-mono text-[#6E6B65]">Graph API v21.0</span>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">

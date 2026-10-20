@@ -8,14 +8,20 @@ import { ActivateAccount } from './components/ActivateAccount';
 import { LandingPage } from './components/LandingPage';
 import { PublicRestaurantMenu } from './components/PublicRestaurantMenu';
 import { PublicCatalog } from './components/public/PublicCatalog';
+import { TestWhatsappBusinessMessaging } from './components/TestWhatsappBusinessMessaging';
 import { clearAllSessionData, getStoredToken } from './utils/api';
 
 function App() {
-  const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing' | 'menu' | 'catalog'>(() => {
+  const [view, setView] = useState<'admin' | 'client' | 'login' | 'activate' | 'employee' | 'landing' | 'menu' | 'catalog' | 'test_whatsapp'>(() => {
     const path = window.location.pathname.toLowerCase();
     const params = new URLSearchParams(window.location.search);
     const urlView = params.get('view');
     const host = window.location.hostname.toLowerCase();
+
+    // Test WhatsApp Business Messaging para Meta App Review (/test-whatsapp, ?view=test_whatsapp)
+    if (path.startsWith('/test-whatsapp') || params.has('test-whatsapp') || urlView === 'test_whatsapp' || urlView === 'test_whatsapp_business_messaging') {
+      return 'test_whatsapp';
+    }
 
     // Catálogo Digital Público (/c/:slug, /catalogo/:slug, /tienda/:slug)
     if (path.startsWith('/c/') || path.startsWith('/catalogo') || path.startsWith('/tienda/') || params.has('c') || params.has('catalog')) {
@@ -40,7 +46,7 @@ function App() {
     // Por defecto en localhost y app.diazlab.online -> ERP / Login directo
     return 'login';
   });
-  const [clientId, setClientId] = useState('');
+  const [clientId, setClientId] = useState(() => localStorage.getItem('current_client_id') || '');
   const [loading, setLoading] = useState(true);
 
   // Escuchadores de eventos de seguridad (desconexión remota, 401/403 o cierre de sesión en otra pestaña)
@@ -83,6 +89,13 @@ function App() {
       const urlToken = params.get('token');
       const path = window.location.pathname.toLowerCase();
       const host = window.location.hostname.toLowerCase();
+
+      // Caso Test WhatsApp Business Messaging para Meta App Review (/test-whatsapp o ?view=test_whatsapp)
+      if (path.startsWith('/test-whatsapp') || params.has('test-whatsapp') || urlView === 'test_whatsapp' || urlView === 'test_whatsapp_business_messaging') {
+        setView('test_whatsapp');
+        setLoading(false);
+        return;
+      }
 
       // Caso Catálogo Digital Público para Clientes
       if (path.startsWith('/c/') || path.startsWith('/catalogo') || path.startsWith('/tienda/') || params.has('c') || params.has('catalog')) {
@@ -167,9 +180,31 @@ function App() {
             const urlParams = new URLSearchParams(window.location.search);
             const viewParam = urlParams.get('view');
             const clientParam = urlParams.get('clientId');
-            if (viewParam === 'client' && clientParam) {
+            const savedViewAsClient = localStorage.getItem('view_as_client') === 'true';
+            const savedClientId = localStorage.getItem('current_client_id');
+            const savedCurrentView = localStorage.getItem('current_view');
+
+            if (viewParam === 'admin') {
+              // Solicitud explícita para regresar al panel SuperAdmin
+              setView('admin');
+              localStorage.setItem('current_view', 'admin');
+              localStorage.removeItem('view_as_client');
+              localStorage.removeItem('current_client_id');
+              if (window.location.pathname === '/admin') {
+                window.history.replaceState({}, '', '/');
+              }
+            } else if (viewParam === 'client' && clientParam) {
               setClientId(clientParam);
               setView('client');
+              localStorage.setItem('current_view', 'client');
+              localStorage.setItem('view_as_client', 'true');
+              localStorage.setItem('current_client_id', clientParam);
+            } else if ((savedViewAsClient || savedCurrentView === 'client') && savedClientId) {
+              // Persistencia al recargar (F5): mantener la tienda y sucursal que el usuario estaba visualizando
+              setClientId(savedClientId);
+              setView('client');
+              localStorage.setItem('current_view', 'client');
+              localStorage.setItem('view_as_client', 'true');
             } else {
               // Super Admin por defecto entra directamente al panel maestro de Super Admin
               setView('admin');
@@ -347,6 +382,10 @@ function App() {
 
   if (view === 'menu') {
     return <PublicRestaurantMenu />;
+  }
+
+  if (view === 'test_whatsapp') {
+    return <TestWhatsappBusinessMessaging onBack={() => setView('login')} />;
   }
 
   if (view === 'catalog') {
