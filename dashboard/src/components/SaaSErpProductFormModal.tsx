@@ -405,7 +405,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
 
         const finalSku = hasVarBool 
             ? null 
-            : (sku.trim() || (isLensType ? 'LENS-' + Math.floor(10000 + Math.random() * 90000) : 'OP' + Math.floor(100000 + Math.random() * 900000)));
+            : (sku.trim() || null);
 
         const primaryImageUrl = hasVarBool 
             ? (variantList.find(v => v.image_url?.trim())?.image_url || null) 

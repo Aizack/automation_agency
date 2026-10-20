@@ -2991,13 +2991,20 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 
     const modsJson = available_modifiers ? (typeof available_modifiers === 'string' ? available_modifiers : JSON.stringify(available_modifiers)) : '[]';
 
+    // Regla del sistema: Generar SKU consecutivo de 8 dígitos si no se suministra
+    let finalProductSku = sku ? sku.trim() : null;
+    if (!hasVarBool && !finalProductSku) {
+      const seqRes = await pool.query(`SELECT nextval('product_sku_seq')::TEXT as next_sku`);
+      finalProductSku = seqRes.rows[0].next_sku;
+    }
+
     const result = await pool.query(
       `INSERT INTO products (
          client_id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type, has_variants
        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) 
        RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type, has_variants, created_at`,
       [
-        targetClientId, name, sku || null, description || null, price, finalStock, 
+        targetClientId, name, finalProductSku || null, description || null, price, finalStock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null,
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
@@ -3007,21 +3014,27 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 
     const insertedProduct = result.rows[0];
 
-    // Si tiene variantes habilitadas, insertarlas en product_variants
+    // Si tiene variantes habilitadas, insertarlas en product_variants con SKU numérico consecutivo
     if (hasVarBool && Array.isArray(variants) && variants.length > 0) {
-      for (const v of variants) {
+      let firstVariantSku: string | null = null;
+      for (let i = 0; i < variants.length; i++) {
+        const v = variants[i];
         let vSku = v.sku ? v.sku.trim() : '';
         if (!vSku) {
-          const shortColor = (v.variant_name || 'VAR').substring(0, 3).toUpperCase();
-          const baseSku = sku ? sku.trim() : name.substring(0, 4).toUpperCase();
-          vSku = `${baseSku}-${shortColor}-${Math.floor(100 + Math.random() * 900)}`;
+          const seqRes = await pool.query(`SELECT nextval('product_sku_seq')::TEXT as next_sku`);
+          vSku = seqRes.rows[0].next_sku;
         }
+        if (i === 0) firstVariantSku = vSku;
 
         await pool.query(
           `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, stock, min_stock, image_url, formula)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
           [insertedProduct.id, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null, v.formula ? v.formula.trim() : null]
         );
+      }
+      if (firstVariantSku && !insertedProduct.sku) {
+        await pool.query(`UPDATE products SET sku = $1 WHERE id = $2`, [firstVariantSku, insertedProduct.id]);
+        insertedProduct.sku = firstVariantSku;
       }
     }
 
@@ -3090,6 +3103,18 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
 
     const modsJson = available_modifiers ? (typeof available_modifiers === 'string' ? available_modifiers : JSON.stringify(available_modifiers)) : '[]';
 
+    // Regla del sistema: Generar SKU consecutivo de 8 dígitos si no se suministra
+    let finalProductSku = sku ? sku.trim() : null;
+    if (!hasVarBool && !finalProductSku) {
+      const existing = await pool.query(`SELECT sku FROM products WHERE id = $1 AND client_id = $2`, [productId, targetClientId]);
+      if (existing.rows[0]?.sku) {
+        finalProductSku = existing.rows[0].sku;
+      } else {
+        const seqRes = await pool.query(`SELECT nextval('product_sku_seq')::TEXT as next_sku`);
+        finalProductSku = seqRes.rows[0].next_sku;
+      }
+    }
+
     const result = await pool.query(
       `UPDATE products 
        SET name = $1, sku = $2, description = $3, price = $4, stock = $5, 
@@ -3100,7 +3125,7 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
        WHERE client_id = $21 AND id = $22 
        RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type, has_variants, created_at`,
       [
-        name, sku || null, description || null, price, finalStock, 
+        name, finalProductSku || null, description || null, price, finalStock, 
         cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null, 
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
@@ -3113,16 +3138,18 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
       return res.status(404).json({ success: false, error: 'Producto no encontrado.' });
     }
 
-    // Actualizar variantes
+    // Actualizar variantes con SKU numérico consecutivo
     if (hasVarBool && Array.isArray(variants)) {
       await pool.query(`DELETE FROM product_variants WHERE product_id = $1 AND client_id = $2`, [productId, targetClientId]);
-      for (const v of variants) {
+      let firstVariantSku: string | null = null;
+      for (let i = 0; i < variants.length; i++) {
+        const v = variants[i];
         let vSku = v.sku ? v.sku.trim() : '';
         if (!vSku) {
-          const shortColor = (v.variant_name || 'VAR').substring(0, 3).toUpperCase();
-          const baseSku = sku ? sku.trim() : name.substring(0, 4).toUpperCase();
-          vSku = `${baseSku}-${shortColor}-${Math.floor(100 + Math.random() * 900)}`;
+          const seqRes = await pool.query(`SELECT nextval('product_sku_seq')::TEXT as next_sku`);
+          vSku = seqRes.rows[0].next_sku;
         }
+        if (i === 0) firstVariantSku = vSku;
 
         await pool.query(
           `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, stock, min_stock, image_url, formula)
@@ -3130,10 +3157,12 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
           [productId, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null, v.formula ? v.formula.trim() : null]
         );
       }
+      if (firstVariantSku && (!finalProductSku || finalProductSku === '')) {
+        await pool.query(`UPDATE products SET sku = $1 WHERE id = $2`, [firstVariantSku, productId]);
+      }
     } else if (!hasVarBool) {
       await pool.query(`DELETE FROM product_variants WHERE product_id = $1 AND client_id = $2`, [productId, targetClientId]);
     }
-
     const updatedProd = result.rows[0];
     if (updatedProd.stock > updatedProd.min_stock) {
       // Resolver alerta si existía activa

@@ -1571,7 +1571,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                             {variantCount > 0 ? (
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() => {
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
                                                                         setSelectedVariantProduct(prod);
                                                                         setIsVariantViewModalOpen(true);
                                                                     }}
