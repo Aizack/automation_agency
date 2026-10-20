@@ -198,7 +198,7 @@ export function getTermsOfServiceHTML(): string {
     </div>
 
     <p>
-      Bienvenido a <strong>Frant</strong> (derivado de <em>Friendly Automation</em>), plataforma desarrollada, operada y de propiedad exclusiva de <strong>Diaz Lab Automation</strong> (en adelante, "la Empresa", "nosotros" o "Frant"), con domicilio en Bogotá D.C., Colombia.
+      Bienvenido a <strong>Frant</strong> (derivado de <em>Friendly Automation</em>), plataforma desarrollada, operada y de propiedad exclusiva de <strong>Diaz Lab Automation</strong> (en adelante, "la Empresa", "nosotros" o "Frant"), con domicilio en Barranquilla, Atlántico, Colombia.
     </p>
     <p>
       Los presentes Términos y Condiciones Generales de Uso (los "Términos") rigen el acceso, suscripción, navegación y utilización de la plataforma web, APIs, agentes de Inteligencia Artificial y servicios conexos disponibles a través del dominio <strong>https://frant.app</strong> y sus respectivos subdominios.
@@ -212,7 +212,7 @@ export function getTermsOfServiceHTML(): string {
     <ul>
       <li><strong>Denominación comercial:</strong> Frant (Friendly Automation).</li>
       <li><strong>Razón Social del Desarrollador y Operador:</strong> Diaz Lab Automation.</li>
-      <li><strong>Domicilio principal:</strong> Bogotá D.C., República de Colombia.</li>
+      <li><strong>Domicilio principal:</strong> Barranquilla, Atlántico, República de Colombia.</li>
       <li><strong>Contacto general y soporte:</strong> <code>contactanos@diazlab.online</code> / <code>soporte@diazlab.online</code>.</li>
       <li><strong>Contacto para asuntos legales y notificaciones:</strong> <code>legal@diazlab.online</code>.</li>
       <li><strong>Sitio web oficial:</strong> <a href="https://frant.app" target="_blank" rel="noopener">https://frant.app</a>.</li>
@@ -326,7 +326,7 @@ export function getTermsOfServiceHTML(): string {
       Estos Términos y Condiciones se rigen e interpretan de conformidad con las <strong>leyes de la República de Colombia</strong> (en particular la Ley 527 de 1999 de Comercio Electrónico, Ley 1480 de 2011 - Estatuto del Consumidor, Ley 1581 de 2012 de Protección de Datos Personales y demás normas concordantes).
     </p>
     <p>
-      Cualquier discrepancia o controversia que surja entre las partes se intentará solucionar inicialmente por la vía del arreglo directo en un plazo máximo de treinta (30) días calendario. De persistir la controversia, las partes se someterán a la jurisdicción ordinaria de los jueces de la ciudad de <strong>Bogotá D.C., Colombia</strong>, renunciando expresamente a cualquier otro fuero que pudiera corresponderles por razón de sus domicilios presentes o futuros.
+      Cualquier discrepancia o controversia que surja entre las partes se intentará solucionar inicialmente por la vía del arreglo directo en un plazo máximo de treinta (30) días calendario. De persistir la controversia, las partes se someterán a la jurisdicción ordinaria de los jueces de la ciudad de <strong>Barranquilla, Atlántico, Colombia</strong>, renunciando expresamente a cualquier otro fuero que pudiera corresponderles por razón de sus domicilios presentes o futuros.
     </p>
 
     <h2>12. Modificaciones a los Términos</h2>
@@ -348,7 +348,7 @@ export function getTermsOfServiceHTML(): string {
 
   <div class="footer">
     &copy; 2026 <strong>Frant (Friendly Automation)</strong> • Desarrollado por <strong>Diaz Lab Automation</strong>.<br>
-    Bogotá D.C., Colombia • Todos los derechos reservados.<br>
+    Barranquilla, Atlántico, Colombia • Todos los derechos reservados.<br>
     Consulte también nuestra <a href="/privacy">Política de Privacidad y Tratamiento de Datos</a>.
   </div>
 </body>

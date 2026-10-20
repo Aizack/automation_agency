@@ -199,7 +199,7 @@ export function getPrivacyPolicyHTML(): string {
 
     <h2>1. Responsable del Tratamiento y Ámbito de Aplicación</h2>
     <p>
-      El presente documento constituye la Política de Privacidad y Tratamiento de Datos Personales de la plataforma <strong>Frant</strong> (derivado de <em>Friendly Automation</em>), desarrollada, operada y de propiedad de <strong>Diaz Lab Automation</strong> (en adelante, "la Empresa", "nosotros" o "Frant"), con domicilio principal en Bogotá D.C., Colombia, y con canal de contacto oficial en <code>contactanos@diazlab.online</code> y <code>legal@diazlab.online</code>.
+      El presente documento constituye la Política de Privacidad y Tratamiento de Datos Personales de la plataforma <strong>Frant</strong> (derivado de <em>Friendly Automation</em>), desarrollada, operada y de propiedad de <strong>Diaz Lab Automation</strong> (en adelante, "la Empresa", "nosotros" o "Frant"), con domicilio principal en Barranquilla, Atlántico, Colombia, y con canal de contacto oficial en <code>contactanos@diazlab.online</code> y <code>legal@diazlab.online</code>.
     </p>
     <p>
       Esta política aplica a todos los datos recopilados a través de nuestro sitio web <strong>https://frant.app</strong>, el panel de control (Dashboard SaaS), los conectores con la API Oficial de Meta (WhatsApp Business Cloud API) y los módulos de automatización con Inteligencia Artificial.
@@ -323,14 +323,14 @@ export function getPrivacyPolicyHTML(): string {
       <li><strong>Oficial de Privacidad / Área Legal:</strong> <code>legal@diazlab.online</code></li>
       <li><strong>Atención al Cliente y Soporte:</strong> <code>soporte@diazlab.online</code> / <code>contactanos@diazlab.online</code></li>
       <li><strong>Razón Social:</strong> Diaz Lab Automation</li>
-      <li><strong>Domicilio:</strong> Bogotá D.C., Colombia</li>
+      <li><strong>Domicilio:</strong> Barranquilla, Atlántico, Colombia</li>
       <li><strong>Portal Oficial:</strong> <a href="https://frant.app">https://frant.app</a></li>
     </ul>
   </div>
 
   <div class="footer">
     &copy; 2026 <strong>Frant (Friendly Automation)</strong> • Desarrollado por <strong>Diaz Lab Automation</strong>.<br>
-    Bogotá D.C., Colombia • Todos los derechos reservados.<br>
+    Barranquilla, Atlántico, Colombia • Todos los derechos reservados.<br>
     Consulte también nuestros <a href="/terms">Términos y Condiciones Generales de Uso</a>.
   </div>
 </body>

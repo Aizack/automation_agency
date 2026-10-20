@@ -125,7 +125,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                     1. Aceptación de los Términos y Operador
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    Al acceder, registrarse o utilizar la plataforma SaaS <strong>Frant</strong> (Friendly Automation), operada por <strong>Diaz Lab Automation</strong> con domicilio en Bogotá D.C., Colombia, el cliente ("el Usuario") acepta sin reservas los presentes Términos de Servicio. Si el Usuario no está de acuerdo con alguno de los términos, debe abstenerse de utilizar la Plataforma.
+                                    Al acceder, registrarse o utilizar la plataforma SaaS <strong>Frant</strong> (Friendly Automation), operada por <strong>Diaz Lab Automation</strong> con domicilio en Barranquilla, Atlántico, Colombia, el cliente ("el Usuario") acepta sin reservas los presentes Términos de Servicio. Si el Usuario no está de acuerdo con alguno de los términos, debe abstenerse de utilizar la Plataforma.
                                 </p>
                             </div>
 
@@ -170,7 +170,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                     6. Niveles de Servicio, IA y Limitación de Responsabilidad
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    Frant tiene un objetivo de disponibilidad del 99.5%. No asumimos responsabilidad por caídas atribuibles a fallas globales de Meta, Google, OpenAI o proveedores de conectividad. Las sugerencias de IA son de asistencia operativa y deben ser supervisadas por el personal del comercio. La legislación aplicable es la de la República de Colombia, con domicilio en Bogotá D.C.
+                                    Frant tiene un objetivo de disponibilidad del 99.5%. No asumimos responsabilidad por caídas atribuibles a fallas globales de Meta, Google, OpenAI o proveedores de conectividad. Las sugerencias de IA son de asistencia operativa y deben ser supervisadas por el personal del comercio. La legislación aplicable es la de la República de Colombia, con domicilio en Barranquilla, Atlántico, Colombia
                                 </p>
                             </div>
                         </div>
@@ -203,7 +203,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                     1. Responsable del Tratamiento de Datos
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    <strong>Diaz Lab Automation</strong>, con domicilio principal en Bogotá D.C., Colombia, es el Responsable del tratamiento de los datos personales recolectados a través de Frant. Canales de contacto: <code>contactanos@diazlab.online</code> y <code>legal@diazlab.online</code>.
+                                    <strong>Diaz Lab Automation</strong>, con domicilio principal en Barranquilla, Atlántico, Colombia, es el Responsable del tratamiento de los datos personales recolectados a través de Frant. Canales de contacto: <code>contactanos@diazlab.online</code> y <code>legal@diazlab.online</code>.
                                 </p>
                             </div>
 
@@ -290,7 +290,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                 {/* Footer del Modal - Wabi Sabi Actions */}
                 <div className="bg-[#FAF8F3] px-6 py-4 border-t border-[#E2DFD7] flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-[#6B6862]">
                     <div className="flex items-center gap-3">
-                        <span>© 2026 Frant by Diaz Lab Automation • Bogotá, Colombia.</span>
+                        <span>© 2026 Frant by Diaz Lab Automation • Barranquilla, Colombia.</span>
                         <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:underline text-[#161616]">/terms</a>
                         <span>•</span>
                         <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline text-[#161616]">/privacy</a>
