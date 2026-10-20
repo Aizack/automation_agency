@@ -1978,26 +1978,105 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/annul', authenticateToken a
 
     await dbClient.query(`UPDATE invoices SET status = 'annulled', updated_at = NOW() WHERE client_id = $1 AND id = $2`, [clientId, invoiceId]);
 
-    const itemsRes = await dbClient.query(`SELECT product_id, quantity FROM invoice_items WHERE invoice_id = $1`, [invoiceId]);
+    const itemsRes = await dbClient.query(
+      `SELECT product_id, variant_id, quantity, product_name, product_type 
+       FROM invoice_items 
+       WHERE invoice_id = $1`, 
+      [invoiceId]
+    );
+
+    const isUUID = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
     for (const item of itemsRes.rows) {
-      await dbClient.query(`UPDATE products SET stock_quantity = stock_quantity + $1 WHERE id = $2 AND client_id = $3`, [item.quantity, item.product_id, clientId]);
-      await dbClient.query(
-        `INSERT INTO stock_movements (client_id, product_id, change_type, quantity, notes, created_by)
-         VALUES ($1, $2, 'annulment_restock', $3, $4, $5)`,
-        [clientId, item.product_id, item.quantity, `Reintegro por anulación de factura ${inv.invoice_number}`, reqUser.name || 'Admin']
-      );
+      const qty = parseInt(item.quantity) || 1;
+      const validProdId = isUUID(item.product_id) ? item.product_id : null;
+      const validVariantId = isUUID(item.variant_id) ? item.variant_id : null;
+
+      // 1. Si tenía variante específica, devolver stock a la variante
+      if (validVariantId) {
+        await dbClient.query(
+          `UPDATE product_variants 
+           SET stock = stock + $1 
+           WHERE id = $2 AND client_id = $3`,
+          [qty, validVariantId, clientId]
+        );
+      }
+
+      // 2. Si tenía producto base, devolver stock al producto
+      if (validProdId) {
+        const prodRes = await dbClient.query(
+          `UPDATE products 
+           SET stock = stock + $1 
+           WHERE id = $2 AND client_id = $3
+           RETURNING stock, min_stock, name`,
+          [qty, validProdId, clientId]
+        );
+
+        const currentStock = prodRes.rows[0]?.stock || 0;
+        const prevStock = Math.max(0, currentStock - qty);
+
+        // Registrar movimiento de inventario en bitácora
+        try {
+          await dbClient.query(
+            `INSERT INTO stock_movements (client_id, product_id, movement_type, quantity, previous_stock, new_stock, reference_id, reference_type, notes, created_by)
+             VALUES ($1, $2, 'annulment_restock', $3, $4, $5, $6, 'invoice', $7, $8)`,
+            [
+              clientId, 
+              validProdId, 
+              qty, 
+              prevStock, 
+              currentStock, 
+              invoiceId, 
+              `Reintegro por anulación de factura ${inv.invoice_number}: ${reason.trim()}`, 
+              reqUser?.name || reqUser?.username || 'Admin'
+            ]
+          );
+        } catch (movErr) {
+          console.warn('[Invoice Annul] Warning al registrar stock_movement:', movErr);
+        }
+      }
     }
+
+    // Cancelar órdenes de laboratorio asociadas si existían
+    try {
+      await dbClient.query(`UPDATE lab_jobs SET status = 'cancelled' WHERE invoice_id = $1 AND client_id = $2`, [invoiceId, clientId]);
+    } catch (labErr) {
+      // Ignorar si no aplica
+    }
+
+    // Registrar en tabla de anulaciones
+    const annulledUserId = reqUser?.id || reqUser?.userId || reqUser?.employeeId || null;
+    const annulledUserName = reqUser?.name || reqUser?.contact_name || reqUser?.username || 'Admin';
 
     await dbClient.query(
       `INSERT INTO invoice_annulments (client_id, invoice_id, annulled_by_user_id, annulled_by_name, reason)
        VALUES ($1, $2, $3, $4, $5)`,
-      [clientId, invoiceId, reqUser.id, reqUser.name || reqUser.username || 'Admin', reason.trim()]
+      [clientId, invoiceId, annulledUserId, annulledUserName, reason.trim()]
     );
+
+    // Registrar en bitácora de auditoría general
+    try {
+      await dbClient.query(`
+        INSERT INTO system_audit_logs (client_id, user_id, user_name, user_role, action, module, entity_type, entity_id, description, details)
+        VALUES ($1, $2, $3, $4, 'ANULAR_FACTURA', 'Facturación', 'invoice', $5, $6, $7)
+      `, [
+        clientId,
+        annulledUserId,
+        annulledUserName,
+        reqUser?.role || 'admin',
+        invoiceId,
+        `Anulación de factura ${inv.invoice_number} (Cliente: ${inv.customer_name || 'N/A'}). Motivo: ${reason.trim()}`,
+        JSON.stringify({ invoice_number: inv.invoice_number, reason: reason.trim(), items_restocked: itemsRes.rows.length })
+      ]);
+    } catch (auditErr) {
+      console.warn('[Invoice Annul] Warning al registrar auditoría:', auditErr);
+    }
 
     await dbClient.query('COMMIT');
     return res.json({ success: true, message: `Factura ${inv.invoice_number} anulada correctamente. Stock devuelto a inventario.` });
   } catch (err: any) {
     await dbClient.query('ROLLBACK');
+    console.error('[Invoice Annul] Error anulando factura:', err);
     return res.status(500).json({ success: false, error: err.message || 'Error anulando factura' });
   } finally {
     dbClient.release();
