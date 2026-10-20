@@ -213,8 +213,8 @@ export function getTermsOfServiceHTML(): string {
       <li><strong>Denominación comercial:</strong> Frant (Friendly Automation).</li>
       <li><strong>Razón Social del Desarrollador y Operador:</strong> Diaz Lab Automation.</li>
       <li><strong>Domicilio principal:</strong> Barranquilla, Atlántico, República de Colombia.</li>
-      <li><strong>Contacto general y soporte:</strong> <code>contactanos@diazlab.online</code> / <code>soporte@diazlab.online</code>.</li>
-      <li><strong>Contacto para asuntos legales y notificaciones:</strong> <code>legal@diazlab.online</code>.</li>
+      <li><strong>Contacto general y soporte:</strong> <code>contacto@diazlab.online</code>.</li>
+      <li><strong>Contacto para asuntos legales y notificaciones:</strong> <code>contacto@diazlab.online</code>.</li>
       <li><strong>Sitio web oficial:</strong> <a href="https://frant.app" target="_blank" rel="noopener">https://frant.app</a>.</li>
     </ul>
 
@@ -235,7 +235,7 @@ export function getTermsOfServiceHTML(): string {
     </p>
     <ul>
       <li><strong>Custodia de Credenciales:</strong> El Usuario es el único responsable de salvaguardar sus contraseñas, tokens de autenticación JWT y claves de acceso de usuarios empleados o cajeros.</li>
-      <li><strong>Notificación de Vulneraciones:</strong> En caso de sospecha de acceso no autorizado, el Usuario debe notificar inmediatamente a <code>soporte@diazlab.online</code> para congelar credenciales.</li>
+      <li><strong>Notificación de Vulneraciones:</strong> En caso de sospecha de acceso no autorizado, el Usuario debe notificar inmediatamente a <code>contacto@diazlab.online</code> para congelar credenciales.</li>
       <li><strong>Cifrado de Seguridad:</strong> Las contraseñas se almacenan mediante hashing criptográfico robusto (bcrypt/PBKDF2) y las comunicaciones se cifran en tránsito mediante TLS 1.3.</li>
     </ul>
 
@@ -339,9 +339,7 @@ export function getTermsOfServiceHTML(): string {
       Para cualquier duda, solicitud de soporte, reporte de incidentes o notificación legal:
     </p>
     <ul>
-      <li><strong>Correo de Soporte Técnico:</strong> <code>soporte@diazlab.online</code></li>
-      <li><strong>Correo de Asuntos Legales y Notificaciones Judiciales:</strong> <code>legal@diazlab.online</code></li>
-      <li><strong>Atención Comercial y General:</strong> <code>contactanos@diazlab.online</code></li>
+      <li><strong>Correo Oficial de Contacto, Soporte y Notificaciones:</strong> <code>contacto@diazlab.online</code></li>
       <li><strong>Portal Web:</strong> <a href="https://frant.app">https://frant.app</a></li>
     </ul>
   </div>

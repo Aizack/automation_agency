@@ -199,7 +199,7 @@ export function getPrivacyPolicyHTML(): string {
 
     <h2>1. Responsable del Tratamiento y Ámbito de Aplicación</h2>
     <p>
-      El presente documento constituye la Política de Privacidad y Tratamiento de Datos Personales de la plataforma <strong>Frant</strong> (derivado de <em>Friendly Automation</em>), desarrollada, operada y de propiedad de <strong>Diaz Lab Automation</strong> (en adelante, "la Empresa", "nosotros" o "Frant"), con domicilio principal en Barranquilla, Atlántico, Colombia, y con canal de contacto oficial en <code>contactanos@diazlab.online</code> y <code>legal@diazlab.online</code>.
+      El presente documento constituye la Política de Privacidad y Tratamiento de Datos Personales de la plataforma <strong>Frant</strong> (derivado de <em>Friendly Automation</em>), desarrollada, operada y de propiedad de <strong>Diaz Lab Automation</strong> (en adelante, "la Empresa", "nosotros" o "Frant"), con domicilio principal en Barranquilla, Atlántico, Colombia, y con canal de contacto oficial en <code>contacto@diazlab.online</code>.
     </p>
     <p>
       Esta política aplica a todos los datos recopilados a través de nuestro sitio web <strong>https://frant.app</strong>, el panel de control (Dashboard SaaS), los conectores con la API Oficial de Meta (WhatsApp Business Cloud API) y los módulos de automatización con Inteligencia Artificial.
@@ -290,7 +290,7 @@ export function getPrivacyPolicyHTML(): string {
 
     <div class="highlight-box">
       <strong>3. Canal Directo por Correo Electrónico:</strong><br>
-      Puede solicitar la eliminación total de su cuenta y base de datos escribiendo a <code>legal@diazlab.online</code> o <code>soporte@diazlab.online</code> indicando su nombre comercial y NIT. Su petición será ejecutada en menos de 24 horas hábiles.
+      Puede solicitar la eliminación total de su cuenta y base de datos escribiendo a <code>contacto@diazlab.online</code> indicando su nombre comercial y NIT. Su petición será ejecutada en menos de 24 horas hábiles.
     </div>
 
     <h2>9. Derechos de los Titulares (Derechos ARCO y Ley 1581)</h2>
@@ -305,7 +305,7 @@ export function getPrivacyPolicyHTML(): string {
 
     <h3>Procedimiento y Términos Legales de Respuesta</h3>
     <p>
-      Para ejercer cualquiera de estos derechos, remita una solicitud escrita a <code>legal@diazlab.online</code>. Los tiempos de respuesta observan estrictamente los plazos legales:
+      Para ejercer cualquiera de estos derechos, remita una solicitud escrita a <code>contacto@diazlab.online</code>. Los tiempos de respuesta observan estrictamente los plazos legales:
     </p>
     <ul>
       <li><strong>Consultas:</strong> Serán atendidas en un término máximo de <strong>diez (10) días hábiles</strong> contados a partir de la fecha de recibo.</li>
@@ -320,8 +320,8 @@ export function getPrivacyPolicyHTML(): string {
     <h2>11. Canales Oficiales de Contacto Legal</h2>
     <p>Para consultas, aclaraciones o ejercicio de derechos de privacidad:</p>
     <ul>
-      <li><strong>Oficial de Privacidad / Área Legal:</strong> <code>legal@diazlab.online</code></li>
-      <li><strong>Atención al Cliente y Soporte:</strong> <code>soporte@diazlab.online</code> / <code>contactanos@diazlab.online</code></li>
+      <li><strong>Oficial de Privacidad / Área Legal:</strong> <code>contacto@diazlab.online</code></li>
+      <li><strong>Atención al Cliente y Soporte:</strong> <code>contacto@diazlab.online</code></li>
       <li><strong>Razón Social:</strong> Diaz Lab Automation</li>
       <li><strong>Domicilio:</strong> Barranquilla, Atlántico, Colombia</li>
       <li><strong>Portal Oficial:</strong> <a href="https://frant.app">https://frant.app</a></li>

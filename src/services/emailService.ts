@@ -60,7 +60,7 @@ export async function sendEmailOtp(to: string, code: string): Promise<{ success:
       };
     }
 
-    const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || 'contactanos@diazlab.online';
+    const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || 'contacto@diazlab.online';
 
     const htmlContent = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F6F4EE; padding: 40px 20px; color: #161616;">

@@ -203,7 +203,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                     1. Responsable del Tratamiento de Datos
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    <strong>Diaz Lab Automation</strong>, con domicilio principal en Barranquilla, Atlántico, Colombia, es el Responsable del tratamiento de los datos personales recolectados a través de Frant. Canales de contacto: <code>contactanos@diazlab.online</code> y <code>legal@diazlab.online</code>.
+                                    <strong>Diaz Lab Automation</strong>, con domicilio principal en Barranquilla, Atlántico, Colombia, es el Responsable del tratamiento de los datos personales recolectados a través de Frant. Canales de contacto: <code>contacto@diazlab.online</code> y <code>contacto@diazlab.online</code>.
                                 </p>
                             </div>
 
@@ -230,7 +230,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                     4. Mecanismos Autónomos de Eliminación (Meta Data Deletion Callback)
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    Garantizamos eliminación inmediata a través de: (i) Botón <em>"Desconectar y Eliminar Datos"</em> en el Dashboard; (ii) Webhook automático oficial de Meta en <code className="font-mono bg-[#FAF8F3] px-1 border border-[#E2DFD7]">https://frant.app/api/v1/meta/data-deletion</code>; o (iii) Solicitud a <code>legal@diazlab.online</code>.
+                                    Garantizamos eliminación inmediata a través de: (i) Botón <em>"Desconectar y Eliminar Datos"</em> en el Dashboard; (ii) Webhook automático oficial de Meta en <code className="font-mono bg-[#FAF8F3] px-1 border border-[#E2DFD7]">https://frant.app/api/v1/meta/data-deletion</code>; o (iii) Solicitud a <code>contacto@diazlab.online</code>.
                                 </p>
                             </div>
 
