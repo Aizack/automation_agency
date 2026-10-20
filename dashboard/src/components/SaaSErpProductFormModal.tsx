@@ -111,14 +111,15 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     const [gender, setGender] = useState('');
     const [color, setColor] = useState('');
 
-    // Variantes & Stock por Características (Color, Fórmula/Graduación)
+    // Variantes & Stock por Características (Color, Fórmula/Graduación, Presentación)
     const [hasVariants, setHasVariants] = useState<boolean>(true);
     const [useColorVariant, setUseColorVariant] = useState<boolean>(true);
     const [useFormulaVariant, setUseFormulaVariant] = useState<boolean>(false);
+    const [useDetailVariant, setUseDetailVariant] = useState<boolean>(false);
     const [stock, setStock] = useState<number | string>('');
     const [minStock, setMinStock] = useState<number | string>(5);
-    const [variantList, setVariantList] = useState<Array<{ id?: string, color: string, formula?: string, sku: string, stock: number | string, min_stock: number | string, image_url?: string }>>([
-        { color: 'Negro', formula: '', sku: '', stock: 10, min_stock: 2, image_url: '' }
+    const [variantList, setVariantList] = useState<Array<{ id?: string, color: string, formula?: string, detail?: string, sku: string, stock: number | string, min_stock: number | string, image_url?: string }>>([
+        { color: 'Negro', formula: '', detail: '', sku: '', stock: 10, min_stock: 2, image_url: '' }
     ]);
     const [activePhotoColorIdx, setActivePhotoColorIdx] = useState<number>(0);
     const [customAttrs, setCustomAttrs] = useState<Record<string, any>>({});
@@ -198,25 +199,37 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
             setStock(cleanStock);
             setMinStock(editingProduct.min_stock ?? 5);
 
+            const catName = (categories.find((c: any) => String(c.id) === String(editingProduct.category_id))?.name || '').toLowerCase();
+            const isLiquidOrAcc = catName.includes('liquido') || catName.includes('líquido') || catName.includes('solucion') || catName.includes('solución') || catName.includes('gotas') || catName.includes('accesorio') || catName.includes('limpiador');
+
             let hasFormulaFromVariants = false;
             let hasColorFromVariants = false;
+            let hasDetailFromVariants = false;
             if (Array.isArray(editingProduct.variants) && editingProduct.variants.length > 0) {
                 const mapped = editingProduct.variants.map((v: any) => {
                     let fVal = v.formula || '';
-                    let cVal = v.color || v.variant_name || '';
-                    if (!fVal && (v.variant_name || '').toLowerCase().includes('fórmula:')) {
-                        const parts = v.variant_name.split(/fórmula:/i);
+                    let cVal = v.color || '';
+                    let dVal = '';
+                    const vName = v.variant_name || '';
+
+                    if (!fVal && vName.toLowerCase().includes('fórmula:')) {
+                        const parts = vName.split(/fórmula:/i);
                         cVal = parts[0].replace(/[-–]\s*$/, '').trim();
                         fVal = parts[1].trim();
+                    } else if (!cVal && vName && vName.toLowerCase() !== 'estándar' && vName.toLowerCase() !== 'variante') {
+                        if (isLiquidOrAcc) dVal = vName;
+                        else cVal = vName;
                     }
                     if (fVal) hasFormulaFromVariants = true;
-                    if (cVal && cVal.toLowerCase() !== 'variante' && cVal.toLowerCase() !== 'sin color') {
+                    if (cVal && cVal.toLowerCase() !== 'variante' && cVal.toLowerCase() !== 'sin color' && cVal.toLowerCase() !== 'estándar') {
                         hasColorFromVariants = true;
                     }
+                    if (dVal) hasDetailFromVariants = true;
                     return {
                         id: v.id,
-                        color: cVal || (isLens ? 'Transparente' : 'Negro'),
+                        color: cVal || '',
                         formula: fVal,
+                        detail: dVal,
                         sku: v.sku || '',
                         stock: (v.stock === 999999 || v.stock === '999999') ? 0 : (v.stock ?? 0),
                         min_stock: v.min_stock ?? 2,
@@ -224,12 +237,26 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                     };
                 });
                 setVariantList(mapped);
-                setUseFormulaVariant(Boolean(isLens || hasFormulaFromVariants));
-                setUseColorVariant(hasColorFromVariants || !hasFormulaFromVariants);
+                if (isLiquidOrAcc) {
+                    setUseColorVariant(false);
+                    setUseFormulaVariant(false);
+                    setUseDetailVariant(hasDetailFromVariants);
+                } else {
+                    setUseFormulaVariant(Boolean(isLens || hasFormulaFromVariants));
+                    setUseColorVariant(hasColorFromVariants || (!hasFormulaFromVariants && !isLens));
+                    setUseDetailVariant(hasDetailFromVariants);
+                }
             } else {
-                setVariantList([{ color: isLens ? 'Transparente' : 'Negro', formula: '', sku: editingProduct.sku || '', stock: (editingProduct.stock === 999999 || editingProduct.stock === '999999') ? 10 : (editingProduct.stock || 10), min_stock: editingProduct.min_stock || 2, image_url: editingProduct.image_url || '' }]);
-                setUseFormulaVariant(Boolean(isLens));
-                setUseColorVariant(true);
+                setVariantList([{ color: isLens ? 'Transparente' : (isLiquidOrAcc ? '' : 'Negro'), formula: '', detail: '', sku: editingProduct.sku || '', stock: (editingProduct.stock === 999999 || editingProduct.stock === '999999') ? 10 : (editingProduct.stock || 10), min_stock: editingProduct.min_stock || 2, image_url: editingProduct.image_url || '' }]);
+                if (isLiquidOrAcc) {
+                    setUseColorVariant(false);
+                    setUseFormulaVariant(false);
+                    setUseDetailVariant(false);
+                } else {
+                    setUseFormulaVariant(Boolean(isLens));
+                    setUseColorVariant(!isLens);
+                    setUseDetailVariant(false);
+                }
             }
             setActivePhotoColorIdx(0);
         } else {
@@ -260,9 +287,10 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
         setHasVariants(true);
         setUseColorVariant(true);
         setUseFormulaVariant(false);
+        setUseDetailVariant(false);
         setStock('');
         setMinStock(5);
-        setVariantList([{ color: 'Negro', formula: '', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
+        setVariantList([{ color: 'Negro', formula: '', detail: '', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
         setActivePhotoColorIdx(0);
         setCustomAttrs({});
     };
@@ -270,14 +298,26 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     const handleSelectCategory = (catId: string) => {
         setCategoryId(catId);
         const selectedCat = categories.find((c: any) => String(c.id) === String(catId));
-        if (selectedCat && selectedCat.name.toLowerCase().includes('lente')) {
-            setIsLensMode(true);
-            setUseFormulaVariant(true);
-            if (productType === 'service') {
-                setProductType('product');
-            }
-            if (stock === 999999) {
-                setStock('');
+        if (selectedCat) {
+            const catLower = selectedCat.name.toLowerCase();
+            if (catLower.includes('lente')) {
+                setIsLensMode(true);
+                setUseFormulaVariant(true);
+                setUseColorVariant(catLower.includes('contacto'));
+                setUseDetailVariant(false);
+                if (productType === 'service') setProductType('product');
+                if (stock === 999999) setStock('');
+            } else if (catLower.includes('liquido') || catLower.includes('líquido') || catLower.includes('solucion') || catLower.includes('solución') || catLower.includes('gotas') || catLower.includes('accesorio') || catLower.includes('limpiador')) {
+                setIsLensMode(false);
+                setUseColorVariant(false);
+                setUseFormulaVariant(false);
+                setUseDetailVariant(false);
+                if (stock === 999999) setStock('');
+            } else {
+                setIsLensMode(false);
+                setUseColorVariant(true);
+                setUseFormulaVariant(false);
+                setUseDetailVariant(false);
             }
         }
     };
@@ -316,24 +356,33 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
         const hasVarBool = hasVariants && resolvedProductType === 'product' && variantList.length > 0;
 
         const formattedVariants = hasVarBool ? variantList.map(v => {
-            let vName = '';
+            const parts: string[] = [];
             const cClean = v.color ? v.color.trim() : '';
             const fClean = v.formula ? v.formula.trim() : '';
-            if (useColorVariant && useFormulaVariant) {
-                vName = [cClean, fClean ? `Fórmula: ${fClean}` : ''].filter(Boolean).join(' - ');
-            } else if (useFormulaVariant) {
-                vName = fClean ? `Fórmula: ${fClean}` : (cClean || 'Variante');
-            } else if (useColorVariant) {
-                vName = cClean || 'Variante';
-            } else {
-                vName = cClean || fClean || 'Variante';
+            const dClean = v.detail ? v.detail.trim() : '';
+
+            if (useColorVariant && cClean && cClean.toLowerCase() !== 'sin color') {
+                parts.push(cClean);
             }
-            if (!vName.trim()) vName = 'Variante';
+            if (useFormulaVariant && fClean) {
+                parts.push(`Fórmula: ${fClean}`);
+            }
+            if (useDetailVariant && dClean) {
+                parts.push(dClean);
+            }
+            // Fallback cuando ningún campo está seleccionado o todos están vacíos
+            if (parts.length === 0) {
+                if (dClean) parts.push(dClean);
+                else if (fClean) parts.push(`Fórmula: ${fClean}`);
+                else if (cClean && cClean.toLowerCase() !== 'sin color') parts.push(cClean);
+                else parts.push('Estándar');
+            }
+            const vName = parts.join(' - ');
 
             return {
                 ...(v.id ? { id: v.id } : {}),
                 variant_name: vName,
-                formula: fClean || null,
+                formula: useFormulaVariant && fClean ? fClean : null,
                 color_hex: null,
                 sku: v.sku ? v.sku.trim() : '',
                 stock: v.stock === '' ? 0 : (parseInt(v.stock.toString()) || 0),
@@ -1085,7 +1134,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setVariantList([...variantList, { color: useColorVariant ? (isLensMode ? 'Transparente' : 'Negro') : '', formula: '', sku: '', stock: 1, min_stock: 2, image_url: '' }])}
+                                                        onClick={() => setVariantList([...variantList, { color: useColorVariant ? (isLensMode ? 'Transparente' : 'Negro') : '', formula: '', detail: '', sku: '', stock: 1, min_stock: 2, image_url: '' }])}
                                                         className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[10px] font-bold py-2 px-3 rounded-none flex items-center gap-1 transition uppercase tracking-wider cursor-pointer"
                                                     >
                                                         <span className="material-symbols-outlined text-[14px] text-[#D9381E]">add</span>
@@ -1104,13 +1153,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                         <input
                                                             type="checkbox"
                                                             checked={useColorVariant}
-                                                            onChange={(e) => {
-                                                                const checked = e.target.checked;
-                                                                if (!checked && !useFormulaVariant) {
-                                                                    setUseFormulaVariant(true);
-                                                                }
-                                                                setUseColorVariant(checked);
-                                                            }}
+                                                            onChange={(e) => setUseColorVariant(e.target.checked)}
                                                             className="accent-[#D9381E] w-4 h-4 cursor-pointer"
                                                         />
                                                         <span className="flex items-center gap-1">
@@ -1123,13 +1166,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                         <input
                                                             type="checkbox"
                                                             checked={useFormulaVariant}
-                                                            onChange={(e) => {
-                                                                const checked = e.target.checked;
-                                                                if (!checked && !useColorVariant) {
-                                                                    setUseColorVariant(true);
-                                                                }
-                                                                setUseFormulaVariant(checked);
-                                                            }}
+                                                            onChange={(e) => setUseFormulaVariant(e.target.checked)}
                                                             className="accent-[#D9381E] w-4 h-4 cursor-pointer"
                                                         />
                                                         <span className="flex items-center gap-1">
@@ -1138,8 +1175,21 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                         </span>
                                                     </label>
 
+                                                    <label className="flex items-center gap-2 cursor-pointer font-bold text-xs text-[#161616] select-none hover:text-[#D9381E] transition">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={useDetailVariant}
+                                                            onChange={(e) => setUseDetailVariant(e.target.checked)}
+                                                            className="accent-[#D9381E] w-4 h-4 cursor-pointer"
+                                                        />
+                                                        <span className="flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[15px] text-[#6B6862]">label</span>
+                                                            Incluir Presentación / Medida
+                                                        </span>
+                                                    </label>
+
                                                     <span className="text-[10px] text-[#6B6862] ml-auto hidden md:inline italic">
-                                                        * Activa o desactiva columnas según las especificaciones del producto
+                                                        * Puedes desmarcar todo si el producto no requiere color ni fórmula
                                                     </span>
                                                 </div>
 
@@ -1149,7 +1199,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                             <tr className="border-b border-[#E2DFD7] text-[#6B6862] text-[10px] uppercase font-mono">
                                                                 {useColorVariant && <th className="py-2 pr-2">Color</th>}
                                                                 {useFormulaVariant && <th className="py-2 px-2">Fórmula / Graduación</th>}
-                                                                {!useColorVariant && !useFormulaVariant && <th className="py-2 pr-2">Descripción / Variante</th>}
+                                                                {useDetailVariant && <th className="py-2 px-2">Presentación / Medida</th>}
                                                                 <th className="py-2 px-2">Código SKU / Barras</th>
                                                                 <th className="py-2 px-2 text-center">{isDraftMode ? 'Cantidad a Pedir' : 'Stock'}</th>
                                                                 <th className="py-2 px-2 text-center">Min. Stock</th>
@@ -1205,24 +1255,24 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                                                     updated[idx].formula = e.target.value;
                                                                                     setVariantList(updated);
                                                                                 }}
-                                                                                placeholder="Ej: -1.75 / +2.00 / Neutro"
+                                                                                placeholder="Ej: -1.75 / +2.00"
                                                                                 className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono outline-none rounded-none w-full font-semibold focus:border-[#161616]"
                                                                             />
                                                                         </td>
                                                                     )}
 
-                                                                    {!useColorVariant && !useFormulaVariant && (
-                                                                        <td className="py-2 pr-2 min-w-[160px]">
+                                                                    {useDetailVariant && (
+                                                                        <td className="py-2 px-2 min-w-[160px]">
                                                                             <input
                                                                                 type="text"
-                                                                                value={v.color || ''}
+                                                                                value={v.detail || ''}
                                                                                 onChange={(e) => {
                                                                                     const updated = [...variantList];
-                                                                                    updated[idx].color = e.target.value;
+                                                                                    updated[idx].detail = e.target.value;
                                                                                     setVariantList(updated);
                                                                                 }}
-                                                                                placeholder="Ej: Estándar, Grande, etc."
-                                                                                className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none rounded-none w-full"
+                                                                                placeholder="Ej: 60 ml, 120 ml, Pequeño..."
+                                                                                className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] outline-none rounded-none w-full focus:border-[#161616]"
                                                                             />
                                                                         </td>
                                                                     )}

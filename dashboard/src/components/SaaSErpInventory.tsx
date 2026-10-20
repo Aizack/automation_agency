@@ -1569,8 +1569,17 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                     <td>
                                                         <div className="flex items-center gap-1.5 flex-wrap">
                                                             {variantCount > 0 ? (
-                                                                <>
-                                                                    <span className="text-xs font-semibold text-[#161616]">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setSelectedVariantProduct(prod);
+                                                                        setIsVariantViewModalOpen(true);
+                                                                    }}
+                                                                    className="flex items-center gap-1.5 p-1 -m-1 hover:bg-[#FAF8F5] border border-transparent hover:border-[#E2DFD7] rounded-none transition cursor-pointer text-left group"
+                                                                    title="Hacer clic para ver el desglose de existencias por variante"
+                                                                >
+                                                                    <span className="text-xs font-semibold text-[#161616] group-hover:text-[#D9381E] group-hover:underline flex items-center gap-1">
+                                                                        <span className="material-symbols-outlined text-[14px] text-[#6B6862] group-hover:text-[#D9381E]">visibility</span>
                                                                         {variantCount} Variantes
                                                                     </span>
                                                                     <div className="flex items-center gap-1">
@@ -1586,7 +1595,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                                             <span className="text-[10px] text-[#6B6862] font-mono">+{variantCount - 4}</span>
                                                                         )}
                                                                     </div>
-                                                                </>
+                                                                </button>
                                                             ) : prod.color ? (
                                                                 <div className="flex items-center gap-1.5">
                                                                     <span className="color-swatch-box" style={{ background: getColorPreview(prod.color) }} title={prod.color} />
@@ -2481,45 +2490,57 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                 document.body
             )}
 
-            {/* Modal de Detalle de Variantes (Ojito Barcodes) */}
+            {/* Modal de Detalle de Variantes (Popup al hacer clic en Variantes) */}
             {isVariantViewModalOpen && selectedVariantProduct && createPortal(
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[99999] p-4 text-left">
-                    <div className="bg-[#141517] border border-[#2d3036] p-6 rounded-2xl max-w-xl w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-outline/10 pb-3">
+                <div className="fixed inset-0 bg-[#161616]/70 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left">
+                    <div className="bg-[#FAF8F5] border-2 border-[#161616] p-6 max-w-xl w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto animate-fade-in my-auto">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3">
                             <div>
-                                <h3 className="font-bold text-sm text-on-surface flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-amber-400">qr_code_2</span>
-                                    Códigos de Barras por Variante
+                                <h3 className="font-serif text-lg font-normal text-[#161616] flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[#D9381E]">tune</span>
+                                    Desglose de Variantes & Existencias
                                 </h3>
-                                <p className="text-[11px] text-on-surface-variant">{selectedVariantProduct.name}</p>
+                                <p className="text-xs text-[#6B6862]">
+                                    {selectedVariantProduct.name} {selectedVariantProduct.brand ? `— ${selectedVariantProduct.brand}` : ''}
+                                </p>
                             </div>
                             <button
+                                type="button"
                                 onClick={() => { setIsVariantViewModalOpen(false); setSelectedVariantProduct(null); }}
-                                className="text-on-surface-variant hover:text-on-surface bg-transparent border-0 cursor-pointer"
+                                className="text-xl font-light text-[#161616] hover:text-[#D9381E] bg-transparent border-0 cursor-pointer"
                             >
-                                <span className="material-symbols-outlined">close</span>
+                                &times;
                             </button>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             {selectedVariantProduct.variants && selectedVariantProduct.variants.length > 0 ? (
                                 selectedVariantProduct.variants.map((v: any, idx: number) => (
-                                    <div key={idx} className="p-3 bg-[#181a1c] border border-[#2d3036] rounded-xl flex items-center justify-between gap-3">
+                                    <div key={idx} className="p-3 bg-white border border-[#E2DFD7] hover:border-[#161616] flex items-center justify-between gap-3 transition">
                                         <div className="flex items-center gap-3">
-                                            <div
-                                                className="w-4 h-4 rounded-none border border-white/20 shrink-0 shadow-sm"
-                                                style={{ background: getColorPreview(v.color || v.variant_name, v.color_hex) }}
-                                            />
+                                            {v.color && v.color.toLowerCase() !== 'sin color' && (
+                                                <div
+                                                    className="w-4 h-4 rounded-none border border-black/20 shrink-0 shadow-xs"
+                                                    style={{ background: getColorPreview(v.color || v.variant_name, v.color_hex) }}
+                                                    title={v.color}
+                                                />
+                                            )}
                                             <div>
-                                                <p className="font-bold text-xs text-on-surface">{v.variant_name || v.color}</p>
-                                                <p className="text-[10px] font-mono text-on-surface-variant">Stock: {v.stock} uds</p>
+                                                <p className="font-bold text-xs text-[#161616]">{v.variant_name || v.color || `Variante ${idx + 1}`}</p>
+                                                <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono text-[#6B6862]">
+                                                    <span>Stock: <strong className="text-[#161616] font-bold">{v.stock} uds</strong></span>
+                                                    {v.min_stock !== undefined && <span>(Mín: {v.min_stock})</span>}
+                                                    {v.formula && <span className="bg-[#F0EEE6] px-1.5 py-0.5 font-bold text-[#161616]">Fórmula: {v.formula}</span>}
+                                                    {v.sku && <span>SKU: {v.sku}</span>}
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {v.sku && <BarcodeSVG value={v.sku} size="sm" />}
                                             <button
+                                                type="button"
                                                 onClick={() => openPrintModal(selectedVariantProduct, v)}
-                                                className="px-2.5 py-1.5 bg-primary/20 text-primary font-bold text-xs rounded-lg hover:bg-primary/30 transition border border-primary/30 cursor-pointer flex items-center gap-1"
+                                                className="px-2.5 py-1.5 bg-[#FAF8F5] hover:bg-[#161616] text-[#161616] hover:text-white font-bold text-xs transition border border-[#E2DFD7] cursor-pointer flex items-center gap-1"
                                                 title="Imprimir código de barras"
                                             >
                                                 <span className="material-symbols-outlined text-[14px]">print</span>
@@ -2528,14 +2549,18 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-xs text-on-surface-variant italic">No hay variantes registradas.</p>
+                                <p className="text-xs text-[#6B6862] italic p-4 text-center">No hay variantes registradas.</p>
                             )}
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-3 border-t border-outline/10">
+                        <div className="flex justify-between items-center pt-3 border-t border-[#E2DFD7]">
+                            <span className="text-xs font-mono font-bold text-[#161616]">
+                                Total Existencias: {selectedVariantProduct.variants?.reduce((sum: number, v: any) => sum + (Number(v.stock) || 0), 0) || selectedVariantProduct.stock} unidades
+                            </span>
                             <button
+                                type="button"
                                 onClick={() => { setIsVariantViewModalOpen(false); setSelectedVariantProduct(null); }}
-                                className="px-4 py-2 border border-outline/20 rounded-xl text-on-surface text-xs hover:bg-surface-container cursor-pointer bg-transparent"
+                                className="px-4 py-2 border border-[#E2DFD7] bg-white text-[#161616] text-xs font-bold uppercase tracking-wider hover:bg-[#FAF8F5] cursor-pointer"
                             >
                                 Cerrar
                             </button>
