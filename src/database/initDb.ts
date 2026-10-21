@@ -218,6 +218,26 @@ export const initDatabase = async () => {
         `);
         console.log("[DB Init] ✅ Tabla 'invoice_items' creada o ya existente.");
 
+        // 4.4.1 Historial de Envíos de Correo Electrónico para Facturas
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS invoice_email_logs (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                client_id VARCHAR(255) NOT NULL,
+                invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+                recipient_email VARCHAR(255) NOT NULL,
+                sender_email VARCHAR(255),
+                channel VARCHAR(50) DEFAULT 'gmail',
+                subject VARCHAR(500),
+                status VARCHAR(50) DEFAULT 'sent',
+                message_id VARCHAR(255),
+                error_message TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_invoice_email_logs_invoice_id ON invoice_email_logs(invoice_id);
+            CREATE INDEX IF NOT EXISTS idx_invoice_email_logs_client_id ON invoice_email_logs(client_id);
+        `);
+        console.log("[DB Init] ✅ Tabla 'invoice_email_logs' creada o ya existente.");
+
         // 4.5 Tabla de Cotizaciones Comerciales
         await pool.query(`
             CREATE TABLE IF NOT EXISTS quotes (
