@@ -259,7 +259,26 @@ export function getPrivacyPolicyHTML(): string {
       <strong>Compromiso de No Re-entrenamiento:</strong> Las conversaciones procesadas por nuestros agentes de IA, los datos de inventario y los prompts enviados a los modelos de lenguaje (Google Gemini y OpenAI) <strong>NO son utilizados para entrenar modelos públicos de lenguaje</strong>. Se procesan de manera efímera bajo acuerdos de confidencialidad comercial con políticas estrictas de cero retención de entrenamiento de API (Zero Data Retention for Training).
     </div>
 
-    <h2>7. Cumplimiento Específico con Políticas de Meta for Developers</h2>
+    <h2>7. Cumplimiento Específico con Políticas de Google API y Uso Limitado (Google API Services User Data Policy)</h2>
+    <div class="callout-meta" style="border-left-color: #4285F4;">
+      <strong>Declaración de Uso Limitado de las API de Google:</strong><br>
+      El uso y la transferencia a cualquier otra aplicación por parte de <strong>Frant ERP</strong> de la información recibida a través de las API de Google se apegarán estrictamente a la 
+      <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" style="color:#1A73E8; font-weight:600; text-decoration:underline;">
+        Política de Datos de Usuario de los Servicios de la API de Google (Google API Services User Data Policy)
+      </a>, incluidos los requisitos de <strong>Uso Limitado (Limited Use Requirements)</strong>.
+      <br><br>
+      <strong>Alcance y Finalidad Exclusiva (gmail.send):</strong><br>
+      • Frant solicita el permiso sensible <code>https://www.googleapis.com/auth/gmail.send</code> junto con la identificación básica de la cuenta (email y perfil).<br>
+      • <strong>Finalidad:</strong> Permitir que los administradores de los comercios y ópticas emitan y despachen facturas comerciales, recibos de caja y cotizaciones directamente a los correos de sus clientes finales utilizando su propia cuenta de Gmail conectada.<br>
+      • <strong>Sin lectura ni acceso a buzón:</strong> Frant <strong>NO</strong> lee, no procesa, no escanea ni almacena correos electrónicos de la bandeja de entrada del usuario ni listas de contactos personales.<br>
+      • <strong>Cero publicidad y no re-entrenamiento:</strong> La información obtenida a través de las API de Google nunca es vendida, transferida a redes publicitarias ni utilizada para entrenar modelos de lenguaje o inteligencia artificial.<br>
+      • <strong>Revocación Autónoma Inmediata:</strong> El usuario puede desvincular su cuenta en cualquier momento desde el panel de Frant (<em>Configuración de Tienda → Desvincular</em>) o directamente desde la consola de seguridad de Google en 
+      <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" style="color:#1A73E8; text-decoration:underline;">
+        myaccount.google.com/permissions
+      </a>.
+    </div>
+
+    <h2>8. Cumplimiento Específico con Políticas de Meta for Developers</h2>
     <div class="callout-meta">
       <strong>Garantías WhatsApp Cloud API:</strong><br>
       • Los tokens de acceso de Meta se almacenan con cifrado simétrico en variables aisladas y bases de datos protegidas.<br>
@@ -267,7 +286,7 @@ export function getPrivacyPolicyHTML(): string {
       • Cumplimos rigurosamente con la <em>WhatsApp Commerce Policy</em> y los <em>Meta Platform Terms</em>.
     </div>
 
-    <h2>8. Mecanismos Autónomos de Eliminación de Datos (Data Deletion Callback)</h2>
+    <h2>9. Mecanismos Autónomos de Eliminación de Datos (Data Deletion Callback)</h2>
     <p>
       En cumplimiento con los requerimientos obligatorios de Meta for Developers y el derecho constitucional de cancelación de datos, Frant ofrece tres métodos garantizados e inmediatos para solicitar o ejecutar la eliminación de datos:
     </p>
@@ -293,7 +312,7 @@ export function getPrivacyPolicyHTML(): string {
       Puede solicitar la eliminación total de su cuenta y base de datos escribiendo a <code>contacto@diazlab.online</code> indicando su nombre comercial y NIT. Su petición será ejecutada en menos de 24 horas hábiles.
     </div>
 
-    <h2>9. Derechos de los Titulares (Derechos ARCO y Ley 1581)</h2>
+    <h2>10. Derechos de los Titulares (Derechos ARCO y Ley 1581)</h2>
     <p>Conforme al artículo 8 de la Ley 1581 de 2012, el titular de los datos personales tiene derecho a:</p>
     <ul>
       <li><strong>Conocer, actualizar y rectificar</strong> sus datos personales frente a Diaz Lab Automation.</li>
@@ -312,12 +331,12 @@ export function getPrivacyPolicyHTML(): string {
       <li><strong>Reclamos (Actualización, Corrección o Supresión):</strong> Serán tramitados en un término máximo de <strong>quince (15) días hábiles</strong> contados a partir del día siguiente a la fecha de su recibo, con posibilidad de prórroga motivada de hasta ocho (8) días hábiles conforme al artículo 15 de la Ley 1581 de 2012.</li>
     </ul>
 
-    <h2>10. Cookies y Almacenamiento Local</h2>
+    <h2>11. Cookies y Almacenamiento Local</h2>
     <p>
       Frant utiliza cookies técnicas esenciales y tokens criptográficos en el almacenamiento local (Local Storage) del navegador exclusivamente para mantener la sesión de autenticación segura del usuario mediante estándares JWT. No utilizamos cookies de rastreo de terceros con fines de perfilamiento publicitario externo.
     </p>
 
-    <h2>11. Canales Oficiales de Contacto Legal</h2>
+    <h2>12. Canales Oficiales de Contacto Legal</h2>
     <p>Para consultas, aclaraciones o ejercicio de derechos de privacidad:</p>
     <ul>
       <li><strong>Oficial de Privacidad / Área Legal:</strong> <code>contacto@diazlab.online</code></li>
