@@ -176,6 +176,11 @@ app.use(express.static(path.join(process.cwd(), 'dashboard/dist'), {
 }));
 
 // Puerto de ejecución del servidor (default: 3000)
+// Google Search Console Site Verification
+app.get('/google002ba6272563e07c.html', (req: Request, res: Response) => {
+  res.type('text/html').send('google-site-verification: google002ba6272563e07c.html');
+});
+
 const PORT = process.env.PORT || 3000;
 
 // --- CANAL DE EVENTOS EN TIEMPO REAL (SSE - Server-Sent Events) ---
