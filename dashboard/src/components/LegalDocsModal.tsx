@@ -227,7 +227,23 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
 
                             <div className="space-y-2 bg-white p-5 border border-[#E2DFD7] shadow-xs">
                                 <h4 className="font-bold text-[#161616] text-xs uppercase tracking-wider flex items-center gap-2 m-0 border-l-2 border-[#161616] pl-2.5">
-                                    4. Mecanismos Autónomos de Eliminación (Meta Data Deletion Callback)
+                            <div className="space-y-2 bg-white p-5 border border-[#4285F4]/30 shadow-xs border-l-4 border-l-[#4285F4]">
+                                <h4 className="font-bold text-[#161616] text-xs uppercase tracking-wider flex items-center gap-2 m-0">
+                                    <span className="material-symbols-outlined text-[16px] text-[#4285F4]">verified_user</span>
+                                    4. Cumplimiento Google API (Acceso, Uso, Almacenamiento y Compartición)
+                                </h4>
+                                <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
+                                    El uso y la transferencia de información recibida a través de las API de Google se apegan a la <em>Política de Datos de Usuario de los Servicios de la API de Google</em>, incluidos los requisitos de <strong>Uso Limitado</strong>:
+                                </p>
+                                <ul className="text-xs text-[#555] space-y-1 list-disc pl-4 pt-1 m-0">
+                                    <li><strong>Acceso:</strong> Solo mediante OAuth 2.0 previa autorización expresa para el alcance <code>gmail.send</code> e identidad básica. No se solicita acceso a buzón ni lectura de mensajes.</li>
+                                    <li><strong>Uso:</strong> Únicamente para despachar facturas y cotizaciones a los clientes finales del comercio titular.</li>
+                                    <li><strong>Almacenamiento:</strong> Guardamos únicamente el refresh token cifrado con seguridad simétrica en base de datos protegida. No se guardan contraseñas ni correos personales.</li>
+                                    <li><strong>Compartición:</strong> NUNCA vendemos, transferimos ni compartimos datos de Google con terceros, redes publicitarias ni para entrenamiento de modelos IA.</li>
+                                </ul>
+                            </div>
+
+                                    5. Mecanismos Autónomos de Eliminación (Meta Data Deletion Callback)
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
                                     Garantizamos eliminación inmediata a través de: (i) Botón <em>"Desconectar y Eliminar Datos"</em> en el Dashboard; (ii) Webhook automático oficial de Meta en <code className="font-mono bg-[#FAF8F3] px-1 border border-[#E2DFD7]">https://frant.app/api/v1/meta/data-deletion</code>; o (iii) Solicitud a <code>contacto@diazlab.online</code>.
@@ -236,7 +252,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
 
                             <div className="space-y-2 bg-white p-5 border border-[#E2DFD7] shadow-xs">
                                 <h4 className="font-bold text-[#161616] text-xs uppercase tracking-wider flex items-center gap-2 m-0 border-l-2 border-[#161616] pl-2.5">
-                                    5. Derechos ARCO y Tiempos de Respuesta Legales
+                                    6. Derechos ARCO y Tiempos de Respuesta Legales
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
                                     Conforme a la Ley 1581 de 2012, cualquier titular puede conocer, actualizar o solicitar la supresión de sus datos. Las consultas se responden en un plazo legal máximo de <strong>10 días hábiles</strong> y los reclamos en <strong>15 días hábiles</strong>.

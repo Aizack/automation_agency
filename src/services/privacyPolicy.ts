@@ -261,18 +261,37 @@ export function getPrivacyPolicyHTML(): string {
 
     <h2>7. Cumplimiento Específico con Políticas de Google API y Uso Limitado (Google API Services User Data Policy)</h2>
     <div class="callout-meta" style="border-left-color: #4285F4;">
-      <strong>Declaración de Uso Limitado de las API de Google:</strong><br>
-      El uso y la transferencia a cualquier otra aplicación por parte de <strong>Frant ERP</strong> de la información recibida a través de las API de Google se apegarán estrictamente a la 
+      <strong>Declaración Integral sobre el Tratamiento de Datos de Usuarios de Google:</strong><br>
+      El uso y la transferencia a cualquier otra aplicación por parte de <strong>Frant ERP</strong> de la información recibida a través de las API de Google se apegan estrictamente a la 
       <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" style="color:#1A73E8; font-weight:600; text-decoration:underline;">
         Política de Datos de Usuario de los Servicios de la API de Google (Google API Services User Data Policy)
       </a>, incluidos los requisitos de <strong>Uso Limitado (Limited Use Requirements)</strong>.
       <br><br>
-      <strong>Alcance y Finalidad Exclusiva (gmail.send):</strong><br>
-      • Frant solicita el permiso sensible <code>https://www.googleapis.com/auth/gmail.send</code> junto con la identificación básica de la cuenta (email y perfil).<br>
-      • <strong>Finalidad:</strong> Permitir que los administradores de los comercios y ópticas emitan y despachen facturas comerciales, recibos de caja y cotizaciones directamente a los correos de sus clientes finales utilizando su propia cuenta de Gmail conectada.<br>
-      • <strong>Sin lectura ni acceso a buzón:</strong> Frant <strong>NO</strong> lee, no procesa, no escanea ni almacena correos electrónicos de la bandeja de entrada del usuario ni listas de contactos personales.<br>
-      • <strong>Cero publicidad y no re-entrenamiento:</strong> La información obtenida a través de las API de Google nunca es vendida, transferida a redes publicitarias ni utilizada para entrenar modelos de lenguaje o inteligencia artificial.<br>
-      • <strong>Revocación Autónoma Inmediata:</strong> El usuario puede desvincular su cuenta en cualquier momento desde el panel de Frant (<em>Configuración de Tienda → Desvincular</em>) o directamente desde la consola de seguridad de Google en 
+      En cumplimiento con las directrices de verificación de Google OAuth, revelamos de manera integral cómo nuestra aplicación accede, utiliza, almacena y comparte los datos de usuario de Google:
+      <br><br>
+      <strong>1. Acceso a los Datos (Access):</strong><br>
+      • Frant ERP solicita acceso únicamente mediante el protocolo estándar y seguro <strong>OAuth 2.0</strong> tras el consentimiento explícito del usuario en la pantalla de autorización de Google.<br>
+      • Los alcances (scopes) solicitados son: el permiso sensible <code>https://www.googleapis.com/auth/gmail.send</code> y la información básica de identidad (dirección de correo electrónico y perfil público).<br>
+      • <strong>Sin acceso a buzón:</strong> Frant ERP <strong>NO</strong> solicita permisos de lectura (<code>gmail.readonly</code>) ni modificación completa (<code>mail.google.com</code>). En ningún momento accedemos a sus correos entrantes, mensajes guardados, borradores o lista de contactos.
+      <br><br>
+      <strong>2. Uso de los Datos (Use):</strong><br>
+      • Los datos obtenidos se utilizan de manera exclusiva para permitir que los administradores y usuarios de los comercios afiliados emitan y despachen facturas comerciales, comprobantes de pago, recibos de caja y cotizaciones a sus respectivos clientes finales desde su propia dirección de Gmail empresarial.<br>
+      • El despacho de correos solo se ejecuta bajo acción directa del usuario en el panel de facturación o mediante eventos transaccionales configurados por el propio comercio.
+      <br><br>
+      <strong>3. Almacenamiento y Protección de Datos (Storage):</strong><br>
+      • Frant ERP <strong>NUNCA</strong> almacena ni tiene acceso a su contraseña de Google.<br>
+      • Únicamente almacenamos en nuestra base de datos relacional protegida la dirección de correo conectada y el token de actualización (<em>refresh token</em>) otorgado por Google, el cual se guarda cifrado mediante algoritmos de seguridad simétrica para mantener activa la conexión de envío.<br>
+      • No almacenamos copias ni contenidos de correos de la bandeja de entrada de su cuenta de Gmail.
+      <br><br>
+      <strong>4. Compartición y Transferencia de Datos (Sharing & Transfer):</strong><br>
+      • <strong>Cero Venta o Transferencia:</strong> Frant ERP <strong>NO vende, NO transfiere, NO divulga ni comparte</strong> los datos de usuario obtenidos de las API de Google con ningún tercero, plataforma de publicidad, intermediario de datos ni agentes externos.<br>
+      • <strong>No Re-entrenamiento de Inteligencia Artificial:</strong> Los datos y contenidos de las API de Google no se utilizan bajo ninguna circunstancia para alimentar, entrenar o ajustar modelos de inteligencia artificial o algoritmos de aprendizaje automático.<br>
+      • Los datos permanecen estrictamente confinados al entorno operativo del comercio titular para el envío de sus documentos comerciales.
+      <br><br>
+      <strong>5. Revocación y Eliminación Inmediata de Datos:</strong><br>
+      El usuario conserva en todo momento el control absoluto sobre sus credenciales y puede revocar el acceso de forma inmediata:<br>
+      • Desde el panel de Frant ERP en <em>Configuración de Tienda ➔ Correo / Gmail ➔ Desvincular</em> (lo cual purga de inmediato los tokens almacenados).<br>
+      • Desde la página de seguridad de su cuenta Google en 
       <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" style="color:#1A73E8; text-decoration:underline;">
         myaccount.google.com/permissions
       </a>.
