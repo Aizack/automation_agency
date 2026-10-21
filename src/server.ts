@@ -4516,7 +4516,10 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
     const cleanCustomerDocType = customerDocumentType || 'CC';
     const cleanCustomerDocNum = (customerDocumentNumber && String(customerDocumentNumber).trim()) ? String(customerDocumentNumber).trim() : '222222222222';
     const cleanCustomerEmail = (customerEmail && String(customerEmail).trim()) ? String(customerEmail).trim() : 'consumidorfinal@cliente.com';
-    const cleanDueDate = dueDate || issueDate || new Date().toISOString().split('T')[0];
+    const rawDueDate = dueDate || issueDate || new Date().toISOString().split('T')[0];
+    const cleanDueDate = (typeof rawDueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawDueDate.trim()))
+      ? `${rawDueDate.trim()} 12:00:00`
+      : rawDueDate;
 
     if (!invoiceNumber || totalAmount === undefined) {
       return res.status(400).json({ success: false, error: 'Campos obligatorios incompletos. Se requiere número de factura y monto total.' });
@@ -4586,8 +4589,31 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
     const validCustomerId = isUUID(resolvedCustomerId) ? resolvedCustomerId : null;
     const validCreatedByUserId = isUUID(createdByUserId) ? createdByUserId : null;
 
+    const now = new Date();
+    // Obtener la fecha de hoy en Colombia (América/Bogotá, UTC-5) y en UTC
+    const bogotaTodayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(now);
+    const utcTodayStr = now.toISOString().split('T')[0];
+
     const rawIssueDate = issueDate || customCreatedAt;
-    const validCreatedAt = rawIssueDate ? new Date(rawIssueDate) : new Date();
+    let validCreatedAt: Date;
+
+    if (!rawIssueDate) {
+      validCreatedAt = now;
+    } else if (typeof rawIssueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawIssueDate.trim())) {
+      const cleanDate = rawIssueDate.trim();
+      // Si la fecha coincide con el día de hoy, usar el timestamp exacto actual para mantener orden y arqueo de caja
+      if (cleanDate === bogotaTodayStr || cleanDate === utcTodayStr) {
+        validCreatedAt = now;
+      } else {
+        // Si es una fecha histórica (pasada o futura), fijar mediodía hora Colombia para evitar retroceso de día
+        validCreatedAt = new Date(`${cleanDate}T12:00:00-05:00`);
+      }
+    } else {
+      validCreatedAt = new Date(rawIssueDate);
+      if (isNaN(validCreatedAt.getTime())) {
+        validCreatedAt = now;
+      }
+    }
 
     if (validCustomerId) {
       await dbClient.query(`
@@ -11860,15 +11886,26 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 
       const startTime = openShift.start_time;
 
-      // Calcular ventas en efectivo desde el inicio del turno
+      // Calcular ventas en efectivo desde el inicio del turno (o del día si no hubo turno previo cerrado)
       const salesQuery = await pool.query(
         `SELECT 
            LOWER(COALESCE(payment_method, 'efectivo')) as method,
            COALESCE(SUM(total_amount), 0)::numeric as total
          FROM invoices
          WHERE client_id = $1 
-           AND created_at >= $2 
            AND status != 'cancelled'
+           AND (
+             created_at >= $2 
+             OR (
+               created_at >= DATE_TRUNC('day', $2)
+               AND NOT EXISTS (
+                 SELECT 1 FROM cash_shifts prev_cs 
+                 WHERE prev_cs.client_id = $1 
+                   AND prev_cs.status = 'closed' 
+                   AND prev_cs.end_time > invoices.created_at
+               )
+             )
+           )
          GROUP BY LOWER(COALESCE(payment_method, 'efectivo'))`,
         [clientId, startTime]
       );
@@ -11884,12 +11921,55 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         else transferSales += amt;
       }
 
+      // Cuotas / abonos de crédito cobrados en efectivo durante el turno
+      const installmentsQuery = await pool.query(
+        `SELECT 
+           LOWER(COALESCE(ii.payment_method, 'efectivo')) as method,
+           COALESCE(SUM(ii.paid_amount), 0)::numeric as total
+         FROM invoice_installments ii
+         JOIN invoices i ON i.id = ii.invoice_id
+         WHERE i.client_id = $1 
+           AND ii.status IN ('paid', 'partially_paid')
+           AND i.payment_method IN ('credito', 'cuotas')
+           AND (
+             ii.paid_at >= $2
+             OR (
+               ii.paid_at >= DATE_TRUNC('day', $2)
+               AND NOT EXISTS (
+                 SELECT 1 FROM cash_shifts prev_cs 
+                 WHERE prev_cs.client_id = $1 
+                   AND prev_cs.status = 'closed' 
+                   AND prev_cs.end_time > ii.paid_at
+               )
+             )
+           )
+         GROUP BY LOWER(COALESCE(ii.payment_method, 'efectivo'))`,
+        [clientId, startTime]
+      );
+      for (const row of installmentsQuery.rows) {
+        const amt = parseFloat(row.total || '0');
+        if (row.method === 'efectivo' || row.method === 'contado') cashSales += amt;
+        else if (row.method.includes('tarjeta')) cardSales += amt;
+        else transferSales += amt;
+      }
+
       // Calcular gastos en efectivo registrados desde el inicio del turno
       const expensesQuery = await pool.query(
         `SELECT COALESCE(SUM(amount), 0)::numeric as total_expenses
          FROM monthly_fixed_expenses
          WHERE client_id = $1 
-           AND created_at >= $2`,
+           AND (
+             created_at >= $2
+             OR (
+               created_at >= DATE_TRUNC('day', $2)
+               AND NOT EXISTS (
+                 SELECT 1 FROM cash_shifts prev_cs 
+                 WHERE prev_cs.client_id = $1 
+                   AND prev_cs.status = 'closed' 
+                   AND prev_cs.end_time > monthly_fixed_expenses.created_at
+               )
+             )
+           )`,
         [clientId, startTime]
       );
       const cashExpenses = parseFloat(expensesQuery.rows[0]?.total_expenses || '0');
@@ -12017,15 +12097,26 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       const currentShift = shiftQuery.rows[0];
       const startTime = currentShift.start_time;
 
-      // Calcular ventas desde el inicio del turno
+      // Calcular ventas desde el inicio del turno (o del día si no hubo turno previo cerrado)
       const salesQuery = await pool.query(
         `SELECT 
            LOWER(COALESCE(payment_method, 'efectivo')) as method,
            COALESCE(SUM(total_amount), 0)::numeric as total
          FROM invoices
          WHERE client_id = $1 
-           AND created_at >= $2 
            AND status != 'cancelled'
+           AND (
+             created_at >= $2 
+             OR (
+               created_at >= DATE_TRUNC('day', $2)
+               AND NOT EXISTS (
+                 SELECT 1 FROM cash_shifts prev_cs 
+                 WHERE prev_cs.client_id = $1 
+                   AND prev_cs.status = 'closed' 
+                   AND prev_cs.end_time > invoices.created_at
+               )
+             )
+           )
          GROUP BY LOWER(COALESCE(payment_method, 'efectivo'))`,
         [clientId, startTime]
       );
@@ -12041,12 +12132,55 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         else transferSales += amt;
       }
 
+      // Cuotas / abonos de crédito cobrados en efectivo durante el turno
+      const installmentsQuery = await pool.query(
+        `SELECT 
+           LOWER(COALESCE(ii.payment_method, 'efectivo')) as method,
+           COALESCE(SUM(ii.paid_amount), 0)::numeric as total
+         FROM invoice_installments ii
+         JOIN invoices i ON i.id = ii.invoice_id
+         WHERE i.client_id = $1 
+           AND ii.status IN ('paid', 'partially_paid')
+           AND i.payment_method IN ('credito', 'cuotas')
+           AND (
+             ii.paid_at >= $2
+             OR (
+               ii.paid_at >= DATE_TRUNC('day', $2)
+               AND NOT EXISTS (
+                 SELECT 1 FROM cash_shifts prev_cs 
+                 WHERE prev_cs.client_id = $1 
+                   AND prev_cs.status = 'closed' 
+                   AND prev_cs.end_time > ii.paid_at
+               )
+             )
+           )
+         GROUP BY LOWER(COALESCE(ii.payment_method, 'efectivo'))`,
+        [clientId, startTime]
+      );
+      for (const row of installmentsQuery.rows) {
+        const amt = parseFloat(row.total || '0');
+        if (row.method === 'efectivo' || row.method === 'contado') cashSales += amt;
+        else if (row.method.includes('tarjeta')) cardSales += amt;
+        else transferSales += amt;
+      }
+
       // Gastos en efectivo
       const expensesQuery = await pool.query(
         `SELECT COALESCE(SUM(amount), 0)::numeric as total_expenses
          FROM monthly_fixed_expenses
          WHERE client_id = $1 
-           AND created_at >= $2`,
+           AND (
+             created_at >= $2
+             OR (
+               created_at >= DATE_TRUNC('day', $2)
+               AND NOT EXISTS (
+                 SELECT 1 FROM cash_shifts prev_cs 
+                 WHERE prev_cs.client_id = $1 
+                   AND prev_cs.status = 'closed' 
+                   AND prev_cs.end_time > monthly_fixed_expenses.created_at
+               )
+             )
+           )`,
         [clientId, startTime]
       );
       const cashExpenses = parseFloat(expensesQuery.rows[0]?.total_expenses || '0');

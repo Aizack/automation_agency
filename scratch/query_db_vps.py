@@ -14,8 +14,9 @@ def query_db():
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(VPS_IP, username=VPS_USER, password=VPS_PASS, timeout=15)
 
+    sql = sys.argv[1] if len(sys.argv) > 1 else "SELECT id, name, parent_client_id, logo_url FROM clients;"
     commands = [
-        "docker exec -i agency_bot_db psql -U agency_user -d agency_db -c \"SELECT id, name, parent_client_id, logo_url FROM clients;\""
+        f"docker exec -i agency_bot_db psql -U agency_user -d agency_db -c \"{sql}\""
     ]
 
     for cmd in commands:

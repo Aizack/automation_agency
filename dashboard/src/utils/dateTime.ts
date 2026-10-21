@@ -47,6 +47,13 @@ export const parseDateTime = (raw: string | Date | null | undefined): Date | nul
     return new Date(y, m - 1, d, 12, 0, 0);
   }
 
+  // Si es una fecha con medianoche exacta (ej: "2026-10-21 00:00:00" o "2026-10-21T00:00:00.000Z"),
+  // proviene de un campo de fecha pura almacenado en columna timestamp. Usar mediodía local para evitar retroceso al día anterior.
+  if (/^\d{4}-\d{2}-\d{2}[ T]00:00:00(\.0+)?(Z|[+-]\d{2}:\d{2})?$/.test(str)) {
+    const [y, m, d] = str.slice(0, 10).split('-').map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0);
+  }
+
   // Si es un timestamp sin indicador de zona horaria (ej: "2026-08-30 01:06:08.026545" o "2026-08-30T01:06:08")
   // proveniente de Postgres (que almacena en UTC), añadirle la Z para que JS lo entienda como UTC
   if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}/.test(str) && !str.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(str)) {
