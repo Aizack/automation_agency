@@ -102,13 +102,14 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
       setConnectingGmail(true);
       const res = await fetch(`/api/clients/${clientId}/auth/gmail/url`);
       const json = await res.json();
-      if (json.success && json.url) {
+      const targetUrl = json.authUrl || json.url;
+      if (json.success && targetUrl) {
         const width = 550;
         const height = 650;
         const left = window.screenX + Math.max(0, (window.outerWidth - width) / 2);
         const top = window.screenY + Math.max(0, (window.outerHeight - height) / 2);
         const popup = window.open(
-          json.url,
+          targetUrl,
           'Conectar con Google',
           `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,status=no`
         );

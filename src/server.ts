@@ -2460,7 +2460,7 @@ app.get('/api/clients/:clientId/auth/gmail/url', authenticateToken as any, autho
     `&prompt=consent` +
     `&state=${stateData}`;
 
-  return res.json({ success: true, authUrl });
+  return res.json({ success: true, authUrl, url: authUrl });
 });
 
 // 7.8.1 Desvincular Gmail de una tienda
