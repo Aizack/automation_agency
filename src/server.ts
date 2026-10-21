@@ -6021,11 +6021,183 @@ app.get('/api/clients/:clientId/invoices/:invoiceId', authenticateToken as any, 
   }
 });
 
-// Endpoint para enviar la factura por correo electrónico (vía Gmail OAuth de la tienda o fallback del sistema)
+// Función auxiliar para construir el contenido y HTML del correo de la factura
+function buildInvoiceEmailContent(invoice: any, items: any[], store: any, recipientEmail: string) {
+  const storeName = store.name || 'Nuestra Tienda';
+  const formattedTotal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(parseFloat(invoice.total_amount || 0));
+  const formattedDate = new Date(invoice.created_at || Date.now()).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const itemsRowsHtml = (items || []).map((item: any) => `
+    <tr style="border-bottom: 1px solid #E2DFD7;">
+      <td style="padding: 12px 8px; font-size: 13px; color: #161616;">
+        <strong>${item.product_name || 'Producto'}</strong>
+        ${item.lens_design || item.lens_material ? `<br><span style="font-size: 11px; color: #6B6862;">${[item.lens_design, item.lens_material].filter(Boolean).join(' • ')}</span>` : ''}
+      </td>
+      <td style="padding: 12px 8px; font-size: 13px; text-align: center; color: #161616;">${item.quantity}</td>
+      <td style="padding: 12px 8px; font-size: 13px; text-align: right; color: #161616; font-family: monospace;">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(parseFloat(item.price || 0))}</td>
+      <td style="padding: 12px 8px; font-size: 13px; text-align: right; color: #161616; font-family: monospace; font-weight: bold;">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(parseFloat(item.price || 0) * (item.quantity || 1))}</td>
+    </tr>
+  `).join('');
+
+  const html = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>Factura #${invoice.invoice_number}</title>
+  </head>
+  <body style="margin: 0; padding: 20px; background-color: #FAF8F5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #161616;">
+    <div style="max-width: 620px; margin: 0 auto; background: #FFFFFF; border: 1px solid #E2DFD7; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      
+      <!-- Header -->
+      <table style="width: 100%; border-bottom: 2px solid #161616; padding-bottom: 20px; margin-bottom: 24px;">
+        <tr>
+          <td style="vertical-align: top;">
+            <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #161616; font-family: Georgia, serif;">${storeName}</h1>
+            ${store.nit ? `<p style="margin: 3px 0 0; font-size: 12px; color: #6B6862;">NIT / CC: ${store.nit}</p>` : ''}
+            ${store.address ? `<p style="margin: 2px 0 0; font-size: 12px; color: #6B6862;">${store.address}</p>` : ''}
+            ${store.phone_number ? `<p style="margin: 2px 0 0; font-size: 12px; color: #6B6862;">Tel: ${store.phone_number}</p>` : ''}
+          </td>
+          <td style="text-align: right; vertical-align: top;">
+            <div style="display: inline-block; background: #FAF8F5; border: 1px solid #E2DFD7; padding: 8px 14px; text-align: right;">
+              <span style="display: block; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #D9381E; letter-spacing: 0.1em;">Comprobante de Venta</span>
+              <span style="font-size: 18px; font-weight: bold; color: #161616; font-family: monospace;">#${invoice.invoice_number}</span>
+            </div>
+            <p style="margin: 6px 0 0; font-size: 11px; color: #6B6862;">Fecha: ${formattedDate}</p>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Cliente & Estado -->
+      <table style="width: 100%; background: #FAF8F5; border: 1px solid #E2DFD7; padding: 14px; margin-bottom: 24px;">
+        <tr>
+          <td style="width: 60%; vertical-align: top;">
+            <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Facturado a:</span>
+            <strong style="font-size: 15px; color: #161616;">${invoice.customer_name || 'Consumidor Final'}</strong>
+            ${invoice.customer_document ? `<div style="font-size: 12px; color: #6B6862; margin-top: 2px;">Doc: ${invoice.customer_document}</div>` : ''}
+            ${invoice.customer_phone ? `<div style="font-size: 12px; color: #6B6862; margin-top: 2px;">Tel: ${invoice.customer_phone}</div>` : ''}
+            <div style="font-size: 12px; color: #6B6862; margin-top: 2px;">Email: ${recipientEmail}</div>
+          </td>
+          <td style="text-align: right; vertical-align: top;">
+            <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Estado de Pago:</span>
+            <span style="display: inline-block; background: ${invoice.status === 'paid' ? '#E6F4EA' : '#FEF7E0'}; color: ${invoice.status === 'paid' ? '#1E4620' : '#7A5A00'}; border: 1px solid ${invoice.status === 'paid' ? '#A8DADC' : '#FEEFC3'}; font-size: 11px; font-weight: bold; padding: 3px 8px; text-transform: uppercase; font-family: monospace;">
+              ${invoice.status === 'paid' ? 'PAGADO' : 'PENDIENTE'}
+            </span>
+            ${invoice.payment_method ? `<div style="font-size: 11px; color: #6B6862; margin-top: 6px; text-transform: uppercase;">Método: ${invoice.payment_method}</div>` : ''}
+          </td>
+        </tr>
+      </table>
+
+      <!-- Detalle de Items -->
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+        <thead>
+          <tr style="border-bottom: 2px solid #161616; background: #FAF8F5;">
+            <th style="padding: 10px 8px; text-align: left; font-size: 11px; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em;">Descripción</th>
+            <th style="padding: 10px 8px; text-align: center; font-size: 11px; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em; width: 50px;">Cant.</th>
+            <th style="padding: 10px 8px; text-align: right; font-size: 11px; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em; width: 100px;">Unitario</th>
+            <th style="padding: 10px 8px; text-align: right; font-size: 11px; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em; width: 110px;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsRowsHtml}
+        </tbody>
+      </table>
+
+      <!-- Totales -->
+      <table style="width: 100%; margin-bottom: 28px;">
+        <tr>
+          <td style="width: 50%; vertical-align: bottom; font-size: 11px; color: #6B6862;">
+            ${store.invoice_footer || '¡Gracias por su compra y confianza!'}
+          </td>
+          <td style="width: 50%; text-align: right;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="border-top: 2px solid #161616;">
+                <td style="padding: 10px 0; font-size: 14px; font-weight: bold; color: #161616;">TOTAL:</td>
+                <td style="padding: 10px 0; font-size: 18px; font-weight: bold; color: #D9381E; font-family: monospace; text-align: right;">${formattedTotal}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Footer -->
+      <div style="border-top: 1px solid #E2DFD7; padding-top: 14px; text-align: center; font-size: 10px; color: #9E9B95;">
+        Comprobante electrónico emitido por la plataforma Frant ERP • ${storeName}
+      </div>
+    </div>
+  </body>
+  </html>
+  `;
+
+  const subject = `Factura #${invoice.invoice_number} - ${storeName}`;
+  const text = `Hola ${invoice.customer_name || 'Cliente'},\n\nAdjuntamos el resumen de tu Factura #${invoice.invoice_number} de ${storeName}.\nTotal: ${formattedTotal}\nEstado: ${invoice.status === 'paid' ? 'PAGADO' : 'PENDIENTE'}\n\n¡Gracias por elegirnos!`;
+
+  return { html, subject, text, formattedTotal, formattedDate, storeName };
+}
+
+// Endpoint para obtener la VISTA PREVIA (Preview) de la factura por correo antes de enviarla
+app.get('/api/clients/:clientId/invoices/:invoiceId/email-preview', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    const toParam = (req.query.to as string) || '';
+
+    const invRes = await pool.query(
+      `SELECT * FROM invoices WHERE client_id = $1 AND id = $2`,
+      [clientId, invoiceId]
+    );
+    if (invRes.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Factura no encontrada.' });
+    }
+    const invoice = invRes.rows[0];
+
+    const recipientEmail = (toParam || invoice.customer_email || '').trim();
+
+    const itemsRes = await pool.query(
+      `SELECT ii.product_name, ii.quantity, ii.price, ii.product_type, ii.lens_design, ii.lens_material
+       FROM invoice_items ii
+       WHERE ii.invoice_id = $1`,
+      [invoiceId]
+    );
+    const items = itemsRes.rows;
+
+    const clientRes = await pool.query(
+      `SELECT name, nit, address, phone_number, email, logo_url, invoice_footer, gmail_account_email,
+              (gmail_refresh_token IS NOT NULL AND gmail_refresh_token != '') as has_gmail
+       FROM clients WHERE id = $1`,
+      [clientId]
+    );
+    const store = clientRes.rows[0] || {};
+    const hasGmail = Boolean(store.has_gmail);
+
+    const emailContent = buildInvoiceEmailContent(invoice, items, store, recipientEmail);
+
+    res.json({
+      success: true,
+      preview: {
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.invoice_number,
+        customerName: invoice.customer_name,
+        recipientEmail,
+        storeName: emailContent.storeName,
+        isGmailConnected: hasGmail,
+        senderEmail: store.gmail_account_email || store.email || '',
+        subject: emailContent.subject,
+        html: emailContent.html,
+        total: emailContent.formattedTotal,
+        date: emailContent.formattedDate
+      }
+    });
+  } catch (err: any) {
+    console.error('[Invoice Email Preview Error]:', err);
+    res.status(500).json({ success: false, error: err.message || 'Error generando vista previa del correo.' });
+  }
+});
+
+// Endpoint para enviar la factura por correo electrónico (vía Gmail OAuth de la tienda)
 app.post('/api/clients/:clientId/invoices/:invoiceId/send-email', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const { clientId, invoiceId } = req.params;
-    const { to } = req.body;
+    const { to, customSubject } = req.body;
 
     // 1. Consultar factura
     const invRes = await pool.query(
@@ -6039,10 +6211,31 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/send-email', authenticateTo
 
     const recipientEmail = (to || invoice.customer_email || '').trim();
     if (!recipientEmail) {
-      return res.status(400).json({ success: false, error: 'La factura no posee un correo electrónico de cliente y no se suministró uno.' });
+      return res.status(400).json({ success: false, error: 'La factura no posee un correo electrónico de cliente y no se suministró uno válido.' });
     }
 
-    // 2. Consultar items
+    // 2. Consultar perfil de la tienda y estado de Gmail
+    const clientRes = await pool.query(
+      `SELECT name, nit, address, phone_number, email, logo_url, invoice_footer, gmail_account_email,
+              (gmail_refresh_token IS NOT NULL AND gmail_refresh_token != '') as has_gmail 
+       FROM clients WHERE id = $1`,
+      [clientId]
+    );
+    const store = clientRes.rows[0] || {};
+    const hasGmail = Boolean(store.has_gmail);
+
+    // REGLA CRÍTICA: Si la tienda NO tiene Gmail conectado, NO enviar por canal secundario silencioso.
+    // Detener la operación y requerir explícitamente la vinculación de su cuenta.
+    if (!hasGmail) {
+      return res.status(400).json({
+        success: false,
+        code: 'GMAIL_NOT_CONNECTED',
+        error: 'Hola en estos momentos tu cuenta de gmail no está vinculada, para completar el proceso y envíar el email a tu cliente por favor vincula tu cuenta con el botón a continuación',
+        isGmailConnected: false
+      });
+    }
+
+    // 3. Consultar items
     const itemsRes = await pool.query(
       `SELECT ii.product_name, ii.quantity, ii.price, ii.product_type, ii.lens_design, ii.lens_material
        FROM invoice_items ii
@@ -6051,138 +6244,82 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/send-email', authenticateTo
     );
     const items = itemsRes.rows;
 
-    // 3. Consultar perfil del cliente / tienda
-    const clientRes = await pool.query(
-      `SELECT name, nit, address, phone_number, email, logo_url, invoice_footer FROM clients WHERE id = $1`,
-      [clientId]
-    );
-    const store = clientRes.rows[0] || {};
-    const storeName = store.name || 'Nuestra Tienda';
-
-    const formattedTotal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(parseFloat(invoice.total_amount || 0));
-    const formattedDate = new Date(invoice.created_at || Date.now()).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
-
-    const itemsRowsHtml = items.map((item: any) => `
-      <tr style="border-bottom: 1px solid #E2DFD7;">
-        <td style="padding: 12px 8px; font-size: 13px; color: #161616;">
-          <strong>${item.product_name || 'Producto'}</strong>
-          ${item.lens_design || item.lens_material ? `<br><span style="font-size: 11px; color: #6B6862;">${[item.lens_design, item.lens_material].filter(Boolean).join(' • ')}</span>` : ''}
-        </td>
-        <td style="padding: 12px 8px; font-size: 13px; text-align: center; color: #161616;">${item.quantity}</td>
-        <td style="padding: 12px 8px; font-size: 13px; text-align: right; color: #161616; font-family: monospace;">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(parseFloat(item.price || 0))}</td>
-        <td style="padding: 12px 8px; font-size: 13px; text-align: right; color: #161616; font-family: monospace; font-weight: bold;">${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(parseFloat(item.price || 0) * (item.quantity || 1))}</td>
-      </tr>
-    `).join('');
-
-    const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Factura #${invoice.invoice_number}</title>
-    </head>
-    <body style="margin: 0; padding: 20px; background-color: #FAF8F5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #161616;">
-      <div style="max-width: 620px; margin: 0 auto; background: #FFFFFF; border: 1px solid #E2DFD7; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-        
-        <!-- Header -->
-        <table style="width: 100%; border-bottom: 2px solid #161616; padding-bottom: 20px; margin-bottom: 24px;">
-          <tr>
-            <td style="vertical-align: top;">
-              <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #161616; font-family: Georgia, serif;">${storeName}</h1>
-              ${store.nit ? `<p style="margin: 3px 0 0; font-size: 12px; color: #6B6862;">NIT / CC: ${store.nit}</p>` : ''}
-              ${store.address ? `<p style="margin: 2px 0 0; font-size: 12px; color: #6B6862;">${store.address}</p>` : ''}
-              ${store.phone_number ? `<p style="margin: 2px 0 0; font-size: 12px; color: #6B6862;">Tel: ${store.phone_number}</p>` : ''}
-            </td>
-            <td style="text-align: right; vertical-align: top;">
-              <div style="display: inline-block; background: #FAF8F5; border: 1px solid #E2DFD7; padding: 8px 14px; text-align: right;">
-                <span style="display: block; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #D9381E; letter-spacing: 0.1em;">Comprobante de Venta</span>
-                <span style="font-size: 18px; font-weight: bold; color: #161616; font-family: monospace;">#${invoice.invoice_number}</span>
-              </div>
-              <p style="margin: 6px 0 0; font-size: 11px; color: #6B6862;">Fecha: ${formattedDate}</p>
-            </td>
-          </tr>
-        </table>
-
-        <!-- Cliente & Estado -->
-        <table style="width: 100%; background: #FAF8F5; border: 1px solid #E2DFD7; padding: 14px; margin-bottom: 24px;">
-          <tr>
-            <td style="width: 60%; vertical-align: top;">
-              <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Facturado a:</span>
-              <strong style="font-size: 15px; color: #161616;">${invoice.customer_name || 'Consumidor Final'}</strong>
-              ${invoice.customer_document ? `<div style="font-size: 12px; color: #6B6862; margin-top: 2px;">Doc: ${invoice.customer_document}</div>` : ''}
-              ${invoice.customer_phone ? `<div style="font-size: 12px; color: #6B6862; margin-top: 2px;">Tel: ${invoice.customer_phone}</div>` : ''}
-              <div style="font-size: 12px; color: #6B6862; margin-top: 2px;">Email: ${recipientEmail}</div>
-            </td>
-            <td style="text-align: right; vertical-align: top;">
-              <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Estado de Pago:</span>
-              <span style="display: inline-block; background: ${invoice.status === 'paid' ? '#E6F4EA' : '#FEF7E0'}; color: ${invoice.status === 'paid' ? '#1E4620' : '#7A5A00'}; border: 1px solid ${invoice.status === 'paid' ? '#A8DADC' : '#FEEFC3'}; font-size: 11px; font-weight: bold; padding: 3px 8px; text-transform: uppercase; font-family: monospace;">
-                ${invoice.status === 'paid' ? 'PAGADO' : 'PENDIENTE'}
-              </span>
-              ${invoice.payment_method ? `<div style="font-size: 11px; color: #6B6862; margin-top: 6px; text-transform: uppercase;">Método: ${invoice.payment_method}</div>` : ''}
-            </td>
-          </tr>
-        </table>
-
-        <!-- Detalle de Items -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-          <thead>
-            <tr style="border-bottom: 2px solid #161616; background: #FAF8F5;">
-              <th style="padding: 10px 8px; text-align: left; font-size: 11px; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em;">Descripción</th>
-              <th style="padding: 10px 8px; text-align: center; font-size: 11px; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em; width: 50px;">Cant.</th>
-              <th style="padding: 10px 8px; text-align: right; font-size: 11px; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em; width: 100px;">Unitario</th>
-              <th style="padding: 10px 8px; text-align: right; font-size: 11px; text-transform: uppercase; color: #6B6862; letter-spacing: 0.05em; width: 110px;">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsRowsHtml}
-          </tbody>
-        </table>
-
-        <!-- Totales -->
-        <table style="width: 100%; margin-bottom: 28px;">
-          <tr>
-            <td style="width: 50%; vertical-align: bottom; font-size: 11px; color: #6B6862;">
-              ${store.invoice_footer || '¡Gracias por su compra y confianza!'}
-            </td>
-            <td style="width: 50%; text-align: right;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-top: 2px solid #161616;">
-                  <td style="padding: 10px 0; font-size: 14px; font-weight: bold; color: #161616;">TOTAL:</td>
-                  <td style="padding: 10px 0; font-size: 18px; font-weight: bold; color: #D9381E; font-family: monospace; text-align: right;">${formattedTotal}</td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-
-        <!-- Footer -->
-        <div style="border-top: 1px solid #E2DFD7; padding-top: 14px; text-align: center; font-size: 10px; color: #9E9B95;">
-          Comprobante electrónico emitido por la plataforma Frant ERP • ${storeName}
-        </div>
-      </div>
-    </body>
-    </html>
-    `;
-
-    const subject = `Factura #${invoice.invoice_number} - ${storeName}`;
-    const text = `Hola ${invoice.customer_name || 'Cliente'},\n\nAdjuntamos el resumen de tu Factura #${invoice.invoice_number} de ${storeName}.\nTotal: ${formattedTotal}\nEstado: ${invoice.status === 'paid' ? 'PAGADO' : 'PENDIENTE'}\n\n¡Gracias por elegirnos!`;
+    const emailContent = buildInvoiceEmailContent(invoice, items, store, recipientEmail);
+    const finalSubject = customSubject || emailContent.subject;
 
     const result = await sendEmailForClient(String(clientId), {
       to: recipientEmail,
-      subject,
-      html,
-      text
+      subject: finalSubject,
+      html: emailContent.html,
+      text: emailContent.text
     });
+
+    if (!result.success) {
+      // Registrar log de error
+      await pool.query(
+        `INSERT INTO invoice_email_logs (client_id, invoice_id, recipient_email, sender_email, channel, subject, status, error_message)
+         VALUES ($1, $2, $3, $4, $5, $6, 'error', $7)`,
+        [clientId, invoiceId, recipientEmail, store.gmail_account_email || '', result.channel || 'gmail', finalSubject, result.error || 'Error desconocido']
+      );
+      return res.status(500).json({ success: false, error: result.error || 'Error despachando el correo.' });
+    }
+
+    // Registrar en tabla de historial de envíos (invoice_email_logs)
+    await pool.query(
+      `INSERT INTO invoice_email_logs (client_id, invoice_id, recipient_email, sender_email, channel, subject, status, message_id)
+       VALUES ($1, $2, $3, $4, $5, $6, 'sent', $7)`,
+      [clientId, invoiceId, recipientEmail, store.gmail_account_email || '', result.channel || 'gmail', finalSubject, result.messageId || null]
+    );
 
     res.json({
       success: true,
       message: `Factura enviada con éxito a ${recipientEmail}`,
       channel: result.channel,
+      sender: store.gmail_account_email,
       messageId: result.messageId
     });
   } catch (err: any) {
     console.error('[Invoice Send Email Error]:', err);
     res.status(500).json({ success: false, error: err.message || 'Error enviando correo de la factura.' });
+  }
+});
+
+// Endpoint para consultar el historial de envíos de correo de una factura en específico
+app.get('/api/clients/:clientId/invoices/:invoiceId/email-logs', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId, invoiceId } = req.params;
+    const logsRes = await pool.query(
+      `SELECT id, client_id, invoice_id, recipient_email, sender_email, channel, subject, status, message_id, error_message, created_at
+       FROM invoice_email_logs
+       WHERE client_id = $1 AND invoice_id = $2
+       ORDER BY created_at DESC`,
+      [clientId, invoiceId]
+    );
+    res.json({ success: true, logs: logsRes.rows });
+  } catch (err: any) {
+    console.error('[Invoice Email Logs Error]:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Endpoint para consultar el HISTORIAL GENERAL de correos de facturas de la tienda
+app.get('/api/clients/:clientId/invoices-email-logs', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const logsRes = await pool.query(
+      `SELECT l.id, l.client_id, l.invoice_id, l.recipient_email, l.sender_email, l.channel, l.subject, l.status, l.created_at,
+              i.invoice_number, i.customer_name, i.total_amount, i.status as invoice_status, i.payment_method
+       FROM invoice_email_logs l
+       LEFT JOIN invoices i ON i.id = l.invoice_id
+       WHERE l.client_id = $1
+       ORDER BY l.created_at DESC
+       LIMIT 100`,
+      [clientId]
+    );
+    res.json({ success: true, logs: logsRes.rows });
+  } catch (err: any) {
+    console.error('[Invoices General Email Logs Error]:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

@@ -125,6 +125,21 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
     // Lightbox modal para ver foto del comprobante grande
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
+    // Estados para Vista Previa, Validación y Envío de Correo
+    const [emailPreviewModalOpen, setEmailPreviewModalOpen] = useState(false);
+    const [emailPreviewData, setEmailPreviewData] = useState<any | null>(null);
+    const [emailPreviewLoading, setEmailPreviewLoading] = useState(false);
+    const [emailRecipientInput, setEmailRecipientInput] = useState('');
+    const [emailSubjectInput, setEmailSubjectInput] = useState('');
+    const [emailSending, setEmailSending] = useState(false);
+    const [gmailNotConnectedModalOpen, setGmailNotConnectedModalOpen] = useState(false);
+    const [isConnectingGmail, setIsConnectingGmail] = useState(false);
+
+    // Estados para Historial de Envíos de Correo
+    const [globalEmailHistoryModalOpen, setGlobalEmailHistoryModalOpen] = useState(false);
+    const [emailLogsList, setEmailLogsList] = useState<any[]>([]);
+    const [loadingEmailLogs, setLoadingEmailLogs] = useState(false);
+
     // Estado para Modal de Anulación Formal de Factura
     const [annulModalOpen, setAnnulModalOpen] = useState(false);
     const [invoiceToAnnul, setInvoiceToAnnul] = useState<Invoice | null>(null);
@@ -454,37 +469,145 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         window.open(waUrl, '_blank');
     };
 
-    const [sendingEmailInvoiceId, setSendingEmailInvoiceId] = useState<string | null>(null);
+    const handleConnectGmailRedirect = async () => {
+        try {
+            setIsConnectingGmail(true);
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('emp_token') || '';
+            const res = await fetch(`/api/clients/${clientId}/auth/gmail/url`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                alert(data.error || 'No se pudo generar la URL de vinculación con Google.');
+                setIsConnectingGmail(false);
+            }
+        } catch (err: any) {
+            console.error('Error iniciando vinculación con Gmail:', err);
+            alert('Error de conexión al iniciar vinculación con Google.');
+            setIsConnectingGmail(false);
+        }
+    };
 
-    const handleSendInvoiceEmail = async (invoice: Invoice) => {
-        let recipient = invoice.customer_email;
-        if (!recipient) {
-            recipient = prompt('El cliente no posee un correo electrónico registrado. Ingrese el correo de destino:') || '';
-            if (!recipient.trim()) return;
+    const openEmailPreviewModal = async (invoice: Invoice) => {
+        try {
+            setEmailPreviewLoading(true);
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('emp_token') || '';
+            const res = await fetch(`/api/clients/${clientId}/invoices/${invoice.id}/email-preview?to=${encodeURIComponent(invoice.customer_email || '')}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (!json.success) {
+                alert(json.error || 'Error cargando vista previa.');
+                return;
+            }
+
+            // Si la tienda NO tiene Gmail conectado
+            if (!json.preview.isGmailConnected) {
+                setGmailNotConnectedModalOpen(true);
+                return;
+            }
+
+            setEmailPreviewData(json.preview);
+            setEmailRecipientInput(json.preview.recipientEmail || invoice.customer_email || '');
+            setEmailSubjectInput(json.preview.subject || `Factura #${invoice.invoice_number}`);
+            setEmailPreviewModalOpen(true);
+        } catch (err: any) {
+            console.error('Error obteniendo preview de factura:', err);
+            alert('Error al consultar vista previa del correo.');
+        } finally {
+            setEmailPreviewLoading(false);
+        }
+    };
+
+    const handleConfirmSendInvoiceEmail = async () => {
+        if (!emailPreviewData) return;
+        if (!emailRecipientInput || !emailRecipientInput.trim()) {
+            alert('Por favor especifica un correo electrónico de destino válido.');
+            return;
         }
 
         try {
-            setSendingEmailInvoiceId(invoice.id);
+            setEmailSending(true);
             const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('emp_token') || '';
-            const res = await fetch(`/api/clients/${clientId}/invoices/${invoice.id}/send-email`, {
+            const res = await fetch(`/api/clients/${clientId}/invoices/${emailPreviewData.invoiceId}/send-email`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ to: recipient.trim() })
+                body: JSON.stringify({
+                    to: emailRecipientInput.trim(),
+                    customSubject: emailSubjectInput.trim()
+                })
             });
             const json = await res.json();
             if (json.success) {
-                alert(`¡Factura #${invoice.invoice_number} enviada exitosamente a ${recipient.trim()}!\n\nCanal: ${json.channel === 'gmail' ? 'Cuenta de Google / Gmail oficial de la tienda' : 'Servidor Central Frant'}`);
+                setEmailPreviewModalOpen(false);
+                alert(`¡Factura #${emailPreviewData.invoiceNumber} enviada con éxito!
+
+Destinatario: ${emailRecipientInput.trim()}
+Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
             } else {
-                alert(json.error || 'No se pudo enviar la factura por correo.');
+                if (json.code === 'GMAIL_NOT_CONNECTED') {
+                    setEmailPreviewModalOpen(false);
+                    setGmailNotConnectedModalOpen(true);
+                } else {
+                    alert(json.error || 'No se pudo enviar la factura por correo.');
+                }
             }
         } catch (err: any) {
-            console.error('Error enviando factura por correo:', err);
-            alert('Error de conexión al despachar la factura.');
+            console.error('Error despachando factura:', err);
+            alert('Error de conexión al enviar el correo.');
         } finally {
-            setSendingEmailInvoiceId(null);
+            setEmailSending(false);
+        }
+    };
+
+    const openGlobalEmailHistoryModal = async () => {
+        setGlobalEmailHistoryModalOpen(true);
+        setLoadingEmailLogs(true);
+        try {
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('emp_token') || '';
+            const res = await fetch(`/api/clients/${clientId}/invoices-email-logs`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setEmailLogsList(json.logs || []);
+            } else {
+                setEmailLogsList([]);
+            }
+        } catch (err: any) {
+            console.error('Error cargando historial de correos:', err);
+            setEmailLogsList([]);
+        } finally {
+            setLoadingEmailLogs(false);
+        }
+    };
+
+    const handleSelectInvoiceFromHistory = async (invoiceId: string) => {
+        setGlobalEmailHistoryModalOpen(false);
+        const existingInv = invoices.find(i => i.id === invoiceId);
+        if (existingInv) {
+            handleOpenInvoiceDetail(existingInv);
+        } else {
+            try {
+                const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('emp_token') || '';
+                const res = await fetch(`/api/clients/${clientId}/invoices/${invoiceId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const json = await res.json();
+                if (json.success && json.invoice) {
+                    handleOpenInvoiceDetail(json.invoice);
+                } else {
+                    alert('No se pudo abrir el detalle de la factura seleccionada.');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error cargando la factura del historial.');
+            }
         }
     };
 
@@ -1306,6 +1429,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
                         className="bg-[#C8A968] hover:bg-[#B39353] text-[#161616] text-[12px] font-bold py-3.5 px-5 flex items-center gap-2 transition-all cursor-pointer border-0 uppercase tracking-widest shadow-sm"
                     >
                         🏛️ FACTURAS HISTÓRICAS
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => openGlobalEmailHistoryModal()}
+                        className="bg-white hover:bg-[#FAF8F5] text-[#161616] text-[12px] font-bold py-3.5 px-4 flex items-center gap-2 transition-all cursor-pointer border border-[#E2DFD7] uppercase tracking-wider shadow-sm"
+                        title="Ver historial de todas las facturas enviadas por correo electrónico"
+                    >
+                        <span className="material-symbols-outlined text-[16px] text-blue-600">history_edu</span>
+                        HISTORIAL DE CORREOS
                     </button>
                     <button
                         type="button"
@@ -3083,15 +3215,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
                                 <button
                                     type="button"
-                                    disabled={sendingEmailInvoiceId === selectedInvoice.id}
-                                    onClick={() => handleSendInvoiceEmail(selectedInvoice)}
+                                    disabled={emailPreviewLoading}
+                                    onClick={() => openEmailPreviewModal(selectedInvoice)}
                                     className="bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] font-semibold text-[11px] py-2 px-2.5 rounded-none transition cursor-pointer flex items-center justify-center gap-1 truncate uppercase tracking-wider disabled:opacity-50"
-                                    title="Enviar factura por Correo Electrónico"
+                                    title="Ver Vista Previa y Enviar por Correo Electrónico"
                                 >
-                                    <span className={`material-symbols-outlined text-[14px] text-blue-600 shrink-0 ${sendingEmailInvoiceId === selectedInvoice.id ? 'animate-spin' : ''}`}>
-                                        {sendingEmailInvoiceId === selectedInvoice.id ? 'sync' : 'mail'}
+                                    <span className={`material-symbols-outlined text-[14px] text-blue-600 shrink-0 ${emailPreviewLoading ? 'animate-spin' : ''}`}>
+                                        {emailPreviewLoading ? 'sync' : 'mail'}
                                     </span>
-                                    <span className="truncate">{sendingEmailInvoiceId === selectedInvoice.id ? 'Enviando...' : 'Email'}</span>
+                                    <span className="truncate">{emailPreviewLoading ? 'Cargando...' : 'Email'}</span>
                                 </button>
 
                                 <button
@@ -3501,6 +3633,283 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             )}
 
             {/* Modal de Importación de Facturas Antiguas (Secuencial + Escáner IA) */}
+            
+            {/* 1. Modal: Cuenta de Gmail NO Vinculada */}
+            {gmailNotConnectedModalOpen && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+                    <div className="bg-white border border-[#E2DFD7] shadow-2xl max-w-md w-full p-6 space-y-5 animate-in fade-in duration-200">
+                        <div className="flex items-center gap-3 border-b border-[#E2DFD7] pb-3">
+                            <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0">
+                                <span className="material-symbols-outlined text-[22px]">warning</span>
+                            </div>
+                            <div>
+                                <h3 className="text-base font-serif font-bold text-[#161616] m-0">Vinculación de Gmail Requerida</h3>
+                                <p className="text-xs text-[#6B6862] m-0 mt-0.5">Envío de facturas por correo</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-[#FAF8F5] border border-[#E2DFD7] p-4 text-xs text-[#333333] leading-relaxed">
+                            <p className="m-0 font-medium text-slate-800">
+                                Hola, en estos momentos tu cuenta de Gmail no está vinculada. Para completar el proceso y enviar el email a tu cliente por favor vincula tu cuenta con el botón a continuación.
+                            </p>
+                            <p className="mt-2 mb-0 text-[11px] text-[#6B6862]">
+                                Al vincular tu cuenta oficial de Google, los correos saldrán directamente desde la dirección de tu tienda con tu propio nombre y comprobantes fiscales.
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setGmailNotConnectedModalOpen(false)}
+                                className="flex-1 py-2.5 px-4 text-xs font-semibold uppercase tracking-wider text-[#6B6862] bg-white border border-[#E2DFD7] hover:bg-[#FAF8F5] transition cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isConnectingGmail}
+                                onClick={handleConnectGmailRedirect}
+                                className="flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-white bg-[#1A73E8] hover:bg-[#1557B0] transition cursor-pointer flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">
+                                    {isConnectingGmail ? 'sync' : 'link'}
+                                </span>
+                                <span>{isConnectingGmail ? 'Redirigiendo...' : 'Vincular Gmail'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 2. Modal: Vista Previa (Preview) de la Factura antes de Enviar */}
+            {emailPreviewModalOpen && emailPreviewData && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+                    <div className="bg-white border border-[#E2DFD7] shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col animate-in fade-in duration-200">
+                        {/* Header Modal */}
+                        <div className="p-4 sm:p-5 border-b border-[#E2DFD7] flex items-center justify-between bg-white shrink-0">
+                            <div>
+                                <h3 className="text-base sm:text-lg font-serif font-bold text-[#161616] m-0 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-blue-600 text-[20px]">preview</span>
+                                    Vista Previa del Correo • Factura #{emailPreviewData.invoiceNumber}
+                                </h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[11px] text-[#6B6862]">
+                                        De: <strong>{emailPreviewData.senderEmail}</strong>
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2">
+                                        ● GMAIL VINCULADO
+                                    </span>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setEmailPreviewModalOpen(false)}
+                                className="text-[#6B6862] hover:text-[#D9381E] text-2xl font-light cursor-pointer border-0 bg-transparent leading-none"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        {/* Campos de Destinatario y Asunto */}
+                        <div className="p-4 bg-[#FAF8F5] border-b border-[#E2DFD7] space-y-3 shrink-0">
+                            <div>
+                                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#161616] mb-1">
+                                    Para (Correo del Cliente):
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type="email"
+                                        value={emailRecipientInput}
+                                        onChange={(e) => setEmailRecipientInput(e.target.value)}
+                                        placeholder="ejemplo@gmail.com"
+                                        className="w-full bg-white border border-[#E2DFD7] text-xs px-3 py-2 text-[#161616] focus:border-blue-600 focus:outline-none"
+                                    />
+                                    {emailRecipientInput.toLowerCase().includes('gamil.com') && (
+                                        <p className="text-[11px] text-amber-700 mt-1 flex items-center gap-1 font-semibold">
+                                            <span className="material-symbols-outlined text-[14px]">warning</span>
+                                            Atención: Se detectó "gamil.com". ¿Quisiste escribir "gmail.com"?
+                                        </p>
+                                    )}
+                                </div>
+                                <span className="text-[10px] text-[#6B6862] mt-0.5 block">
+                                    Verifica la dirección antes de enviar. Puedes corregirla directamente aquí si notas algún error.
+                                </span>
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#161616] mb-1">
+                                    Asunto del Correo:
+                                </label>
+                                <input
+                                    type="text"
+                                    value={emailSubjectInput}
+                                    onChange={(e) => setEmailSubjectInput(e.target.value)}
+                                    className="w-full bg-white border border-[#E2DFD7] text-xs px-3 py-2 text-[#161616] focus:border-blue-600 focus:outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Visor HTML de la Factura */}
+                        <div className="flex-1 overflow-y-auto p-4 bg-slate-100/70">
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-[#6B6862] mb-2 flex items-center justify-between">
+                                <span>Diseño visual que recibirá el cliente:</span>
+                                <span className="font-mono text-emerald-800 bg-emerald-100/60 px-2 py-0.5">Total: {emailPreviewData.total}</span>
+                            </div>
+                            <div className="bg-white border border-[#E2DFD7] shadow-xs p-1">
+                                <iframe
+                                    srcDoc={emailPreviewData.html}
+                                    title="Vista Previa de Factura"
+                                    className="w-full h-[320px] sm:h-[400px] border-0"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Footer Botones */}
+                        <div className="p-4 bg-white border-t border-[#E2DFD7] flex items-center justify-between gap-3 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setEmailPreviewModalOpen(false)}
+                                className="py-2.5 px-5 text-xs font-semibold uppercase tracking-wider text-[#6B6862] bg-white border border-[#E2DFD7] hover:bg-[#FAF8F5] transition cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                disabled={emailSending}
+                                onClick={handleConfirmSendInvoiceEmail}
+                                className="py-2.5 px-6 text-xs font-bold uppercase tracking-wider text-white bg-[#161616] hover:bg-blue-600 transition cursor-pointer flex items-center gap-2 shadow-sm disabled:opacity-50"
+                            >
+                                <span className={`material-symbols-outlined text-[16px] ${emailSending ? 'animate-spin' : ''}`}>
+                                    {emailSending ? 'sync' : 'send'}
+                                </span>
+                                <span>{emailSending ? 'Enviando correo...' : 'Confirmar y Enviar Email'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 3. Modal: Historial General de Envíos de Correo */}
+            {globalEmailHistoryModalOpen && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+                    <div className="bg-white border border-[#E2DFD7] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col animate-in fade-in duration-200">
+                        {/* Header */}
+                        <div className="p-4 sm:p-5 border-b border-[#E2DFD7] flex items-center justify-between bg-white shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+                                    <span className="material-symbols-outlined text-[20px]">history_edu</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-base sm:text-lg font-serif font-bold text-[#161616] m-0">Historial de Facturas Enviadas por Email</h3>
+                                    <p className="text-xs text-[#6B6862] m-0 mt-0.5">Haz clic sobre cualquier factura para ver su detalle completo</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setGlobalEmailHistoryModalOpen(false)}
+                                className="text-[#6B6862] hover:text-[#D9381E] text-2xl font-light cursor-pointer border-0 bg-transparent leading-none"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        {/* Contenido Tabla */}
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+                            {loadingEmailLogs ? (
+                                <div className="py-16 text-center text-[#6B6862]">
+                                    <span className="material-symbols-outlined text-[32px] animate-spin text-blue-600 mb-2">sync</span>
+                                    <p className="text-xs m-0">Cargando historial de envíos...</p>
+                                </div>
+                            ) : emailLogsList.length === 0 ? (
+                                <div className="py-16 text-center bg-[#FAF8F5] border border-[#E2DFD7]">
+                                    <span className="material-symbols-outlined text-[36px] text-slate-400 mb-2">mail_lock</span>
+                                    <p className="text-sm font-semibold text-[#161616] m-0">No hay registros de envíos de correo</p>
+                                    <p className="text-xs text-[#6B6862] m-0 mt-1">Los comprobantes que despaches por email a tus clientes aparecerán aquí automáticamente.</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto border border-[#E2DFD7]">
+                                    <table className="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[#6B6862] uppercase tracking-wider text-[10px]">
+                                                <th className="py-3 px-3">Fecha y Hora</th>
+                                                <th className="py-3 px-3">Factura</th>
+                                                <th className="py-3 px-3">Cliente</th>
+                                                <th className="py-3 px-3">Destinatario</th>
+                                                <th className="py-3 px-3">Canal</th>
+                                                <th className="py-3 px-3 text-center">Estado</th>
+                                                <th className="py-3 px-3 text-right">Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[#E2DFD7] text-[#161616]">
+                                            {emailLogsList.map((log: any) => (
+                                                <tr
+                                                    key={log.id}
+                                                    onClick={() => handleSelectInvoiceFromHistory(log.invoice_id)}
+                                                    className="hover:bg-blue-50/60 cursor-pointer transition-colors"
+                                                    title="Haz clic para abrir el detalle de esta factura"
+                                                >
+                                                    <td className="py-3 px-3 font-mono text-[11px] whitespace-nowrap text-[#6B6862]">
+                                                        {new Date(log.created_at).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })}
+                                                    </td>
+                                                    <td className="py-3 px-3 font-mono font-bold whitespace-nowrap text-blue-700">
+                                                        #{log.invoice_number || 'S/N'}
+                                                    </td>
+                                                    <td className="py-3 px-3 font-medium max-w-[140px] truncate">
+                                                        {log.customer_name || 'Consumidor Final'}
+                                                    </td>
+                                                    <td className="py-3 px-3 font-mono text-[11px] text-slate-700 max-w-[160px] truncate">
+                                                        {log.recipient_email}
+                                                    </td>
+                                                    <td className="py-3 px-3 whitespace-nowrap">
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#161616] bg-slate-100 px-1.5 py-0.5 border border-slate-200">
+                                                            {log.channel === 'gmail' ? 'Google Gmail' : 'Servidor Central'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                                                        <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                            log.status === 'sent' 
+                                                                ? 'bg-emerald-100 text-emerald-800' 
+                                                                : 'bg-red-100 text-red-800'
+                                                        }`}>
+                                                            {log.status === 'sent' ? 'ENVIADO' : 'ERROR'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-3 text-right whitespace-nowrap">
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleSelectInvoiceFromHistory(log.invoice_id);
+                                                            }}
+                                                            className="text-xs text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1 border-0 bg-transparent cursor-pointer p-0"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[16px]">visibility</span>
+                                                            Ver Factura
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-4 bg-[#FAF8F5] border-t border-[#E2DFD7] flex items-center justify-between text-xs text-[#6B6862] shrink-0">
+                            <span>Total registros mostrados: {emailLogsList.length}</span>
+                            <button
+                                type="button"
+                                onClick={() => setGlobalEmailHistoryModalOpen(false)}
+                                className="py-1.5 px-4 text-xs font-semibold uppercase tracking-wider text-[#161616] bg-white border border-[#E2DFD7] hover:bg-white transition cursor-pointer"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <HistoricalInvoicesModal
                 isOpen={isHistoricalModalOpen}
                 onClose={() => setIsHistoricalModalOpen(false)}
