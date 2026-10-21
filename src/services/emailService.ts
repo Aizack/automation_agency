@@ -78,9 +78,12 @@ export async function getStoreEmailConfig(clientId: string) {
     storeName: row.name,
     storeEmail: row.email,
     gmailAccountEmail: row.gmail_account_email,
+    gmailEmail: row.gmail_account_email,
     gmailConnectedAt: row.gmail_connected_at,
+    connectedAt: row.gmail_connected_at,
     emailChannel: row.email_channel || 'system',
-    isGmailConnected: Boolean(row.has_gmail)
+    isGmailConnected: Boolean(row.has_gmail),
+    connected: Boolean(row.has_gmail)
   };
 }
 

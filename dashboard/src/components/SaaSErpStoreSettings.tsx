@@ -51,10 +51,13 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
 
     // Estados de Configuración de Correo & Gmail OAuth
   const [emailSettings, setEmailSettings] = useState<{
-    channel: string;
-    connected: boolean;
+    channel?: string;
+    connected?: boolean;
+    isGmailConnected?: boolean;
     gmailEmail?: string | null;
+    gmailAccountEmail?: string | null;
     connectedAt?: string | null;
+    gmailConnectedAt?: string | null;
     systemEmail?: string;
   } | null>(null);
   const [, setEmailLoading] = useState(false);
@@ -71,8 +74,9 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
       const json = await res.json();
       if (json.success && json.data) {
         setEmailSettings(json.data);
-        if (json.data.gmailEmail && !testEmailAddress) {
-          setTestEmailAddress(json.data.gmailEmail);
+        const emailAddr = json.data.gmailEmail || json.data.gmailAccountEmail;
+        if (emailAddr && !testEmailAddress) {
+          setTestEmailAddress(emailAddr);
         }
       }
     } catch (err) {
@@ -517,7 +521,7 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
         >
           <span className="material-symbols-outlined text-[16px]">mail</span>
           <span>Canales de Correo (Gmail)</span>
-          {emailSettings?.connected ? (
+          {(emailSettings?.connected || emailSettings?.isGmailConnected) ? (
             <span className="bg-[#E6F4EA] text-[#1E4620] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#A8DADC] font-mono">
               GMAIL ACTIVO
             </span>
@@ -782,18 +786,18 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
                 </p>
               </div>
 
-              {emailSettings?.connected && (
+              {(emailSettings?.connected || emailSettings?.isGmailConnected) && (
                 <div className="shrink-0 flex items-center gap-2 bg-[#E6F4EA] border border-[#A8DADC] px-3 py-1.5 rounded-sm">
                   <span className="w-2 h-2 rounded-full bg-[#1e4620] animate-pulse"></span>
                   <span className="text-xs font-bold text-[#1e4620] uppercase tracking-wider font-mono">
-                    Gmail Vinculado
+                    Gmail Vinculado & Activo
                   </span>
                 </div>
               )}
             </div>
 
             {/* ESTADO A: CONECTADO */}
-            {emailSettings?.connected ? (
+            {(emailSettings?.connected || emailSettings?.isGmailConnected) ? (
               <div className="space-y-6">
                 <div className="p-5 bg-[#FAF8F3] border border-[#161616] rounded-sm space-y-4">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -811,28 +815,40 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
                           Cuenta de Google Conectada
                         </span>
                         <div className="font-serif text-xl font-bold text-[#161616]">
-                          {emailSettings.gmailEmail}
+                          {emailSettings?.gmailEmail || emailSettings?.gmailAccountEmail}
                         </div>
                         <div className="text-[11px] text-[#6B6862] mt-0.5 flex items-center gap-2">
-                          <span>Vinculado el: {emailSettings.connectedAt ? new Date(emailSettings.connectedAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Reciente'}</span>
+                          <span>Vinculado el: {(emailSettings?.connectedAt || emailSettings?.gmailConnectedAt) ? new Date(emailSettings.connectedAt || emailSettings.gmailConnectedAt!).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Reciente'}</span>
                           <span>•</span>
                           <span className="font-mono text-[#15803d]">Permiso: gmail.send activo</span>
                         </div>
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleDisconnectGmail}
-                      disabled={disconnectingGmail}
-                      className="px-4 py-2 text-xs font-bold uppercase tracking-wider border border-[#D9381E] text-[#D9381E] hover:bg-[#D9381E] hover:text-white transition rounded-sm cursor-pointer"
-                    >
-                      {disconnectingGmail ? 'Desvinculando...' : 'Desvincular Cuenta'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleConnectGmail}
+                        disabled={connectingGmail}
+                        className="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-white border border-[#161616] text-[#161616] hover:bg-[#161616] hover:text-white transition rounded-sm cursor-pointer flex items-center gap-1.5"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">sync_alt</span>
+                        <span>{connectingGmail ? 'Abriendo Google...' : 'Cambiar Cuenta'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDisconnectGmail}
+                        disabled={disconnectingGmail}
+                        className="px-4 py-2 text-xs font-bold uppercase tracking-wider border border-[#D9381E] text-[#D9381E] hover:bg-[#D9381E] hover:text-white transition rounded-sm cursor-pointer flex items-center gap-1.5"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">link_off</span>
+                        <span>{disconnectingGmail ? 'Desvinculando...' : 'Desvincular'}</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="border-t border-[#E2DFD7] pt-3 text-xs text-[#6B6862] leading-relaxed">
-                    ✨ Tus clientes recibirán las facturas y cotizaciones directamente desde <strong className="text-[#161616] font-medium">{emailSettings.gmailEmail}</strong>. Si el cliente responde el correo, entrará a tu bandeja de entrada de Gmail sin intermediarios.
+                    ✨ Tus clientes recibirán las facturas y cotizaciones directamente desde <strong className="text-[#161616] font-medium">{emailSettings?.gmailEmail || emailSettings?.gmailAccountEmail}</strong>. Si el cliente responde el correo, entrará a tu bandeja de entrada de Gmail sin intermediarios.
                   </div>
                 </div>
 

@@ -2457,7 +2457,7 @@ app.get('/api/clients/:clientId/auth/gmail/url', authenticateToken as any, autho
     `&response_type=code` +
     `&scope=${encodeURIComponent(scopes.join(' '))}` +
     `&access_type=offline` +
-    `&prompt=consent` +
+    `&prompt=select_account consent` +
     `&state=${stateData}`;
 
   return res.json({ success: true, authUrl, url: authUrl });
