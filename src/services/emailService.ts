@@ -92,7 +92,7 @@ export async function getStoreEmailConfig(clientId: string) {
 export async function sendEmailForClient(
   clientId: string,
   options: SendEmailOptions
-): Promise<{ success: boolean; messageId?: string; sender?: string; error?: string }> {
+): Promise<{ success: boolean; messageId?: string; sender?: string; channel?: 'gmail' | 'system'; error?: string }> {
   try {
     const clientRes = await pool.query(
       `SELECT id, name, email, gmail_account_email, gmail_refresh_token, email_channel 
@@ -147,7 +147,7 @@ export async function sendEmailForClient(
         });
 
         console.log(`[Store Email] ✅ Correo enviado mediante Gmail OAuth de la tienda (${client.gmail_account_email}) a ${options.to}. ID: ${info.messageId}`);
-        return { success: true, messageId: info.messageId, sender: client.gmail_account_email };
+        return { success: true, messageId: info.messageId, sender: client.gmail_account_email, channel: 'gmail' };
       }
     }
 
@@ -174,7 +174,7 @@ export async function sendEmailForClient(
     });
 
     console.log(`[Store Email] ✅ Correo enviado mediante transporte del sistema a ${options.to} (Reply-To: ${replyTo}). ID: ${info.messageId}`);
-    return { success: true, messageId: info.messageId, sender: systemFrom };
+    return { success: true, messageId: info.messageId, sender: systemFrom, channel: 'system' };
   } catch (err: any) {
     console.error(`[Store Email] ❌ Error enviando correo para la tienda ${clientId}:`, err);
     return { success: false, error: err.message || 'Error al enviar correo' };

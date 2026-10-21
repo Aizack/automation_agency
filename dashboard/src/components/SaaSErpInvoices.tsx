@@ -454,15 +454,38 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
         window.open(waUrl, '_blank');
     };
 
-    const handleSendInvoiceEmail = (invoice: Invoice) => {
-        if (!invoice.customer_email) {
-            alert('El cliente no posee una dirección de correo electrónico registrada en esta factura.');
-            return;
+    const [sendingEmailInvoiceId, setSendingEmailInvoiceId] = useState<string | null>(null);
+
+    const handleSendInvoiceEmail = async (invoice: Invoice) => {
+        let recipient = invoice.customer_email;
+        if (!recipient) {
+            recipient = prompt('El cliente no posee un correo electrónico registrado. Ingrese el correo de destino:') || '';
+            if (!recipient.trim()) return;
         }
-        const subject = `Factura #${invoice.invoice_number} - ${clientProfile?.name || 'Comprobante de Venta'}`;
-        const body = `Hola ${invoice.customer_name || 'Cliente'},\n\nAdjuntamos el resumen de tu Factura #${invoice.invoice_number}.\n\nDetalles de la transacción:\n- Factura N°: ${invoice.invoice_number}\n- Fecha de Emisión: ${new Date(invoice.created_at || Date.now()).toLocaleDateString('es-CO')}\n- Total Facturado: ${formatPrice(parseFloat(invoice.total_amount))}\n- Estado: ${invoice.status === 'paid' ? 'PAGADO' : 'PENDIENTE'}\n\n¡Gracias por elegirnos!`;
-        const mailtoUrl = `mailto:${invoice.customer_email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.open(mailtoUrl, '_blank');
+
+        try {
+            setSendingEmailInvoiceId(invoice.id);
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || localStorage.getItem('emp_token') || '';
+            const res = await fetch(`/api/clients/${clientId}/invoices/${invoice.id}/send-email`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ to: recipient.trim() })
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert(`¡Factura #${invoice.invoice_number} enviada exitosamente a ${recipient.trim()}!\n\nCanal: ${json.channel === 'gmail' ? 'Cuenta de Google / Gmail oficial de la tienda' : 'Servidor Central Frant'}`);
+            } else {
+                alert(json.error || 'No se pudo enviar la factura por correo.');
+            }
+        } catch (err: any) {
+            console.error('Error enviando factura por correo:', err);
+            alert('Error de conexión al despachar la factura.');
+        } finally {
+            setSendingEmailInvoiceId(null);
+        }
     };
 
     useEffect(() => {
@@ -3060,12 +3083,15 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
 
                                 <button
                                     type="button"
+                                    disabled={sendingEmailInvoiceId === selectedInvoice.id}
                                     onClick={() => handleSendInvoiceEmail(selectedInvoice)}
-                                    className="bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] font-semibold text-[11px] py-2 px-2.5 rounded-none transition cursor-pointer flex items-center justify-center gap-1 truncate uppercase tracking-wider"
+                                    className="bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] font-semibold text-[11px] py-2 px-2.5 rounded-none transition cursor-pointer flex items-center justify-center gap-1 truncate uppercase tracking-wider disabled:opacity-50"
                                     title="Enviar factura por Correo Electrónico"
                                 >
-                                    <span className="material-symbols-outlined text-[14px] text-blue-600 shrink-0">mail</span>
-                                    <span className="truncate">Email</span>
+                                    <span className={`material-symbols-outlined text-[14px] text-blue-600 shrink-0 ${sendingEmailInvoiceId === selectedInvoice.id ? 'animate-spin' : ''}`}>
+                                        {sendingEmailInvoiceId === selectedInvoice.id ? 'sync' : 'mail'}
+                                    </span>
+                                    <span className="truncate">{sendingEmailInvoiceId === selectedInvoice.id ? 'Enviando...' : 'Email'}</span>
                                 </button>
 
                                 <button
