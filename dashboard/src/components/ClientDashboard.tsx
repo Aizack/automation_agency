@@ -223,7 +223,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   }, [activeTab]);
 
   const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
-  const [storeSettingsSubTab, setStoreSettingsSubTab] = useState<'profile' | 'security'>('profile');
+  const [storeSettingsSubTab, setStoreSettingsSubTab] = useState<'profile' | 'security' | 'email'>('profile');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -1175,6 +1175,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     className={activeTab === 'configuracion' && storeSettingsSubTab === 'security' ? 'active-link font-bold text-[#D9381E]' : 'text-[#D9381E] font-bold'}
                   >
                     🛡️ Seguridad & MFA
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => { setStoreSettingsSubTab('email'); setActiveTab('configuracion'); }} 
+                    className={activeTab === 'configuracion' && storeSettingsSubTab === 'email' ? 'active-link font-bold text-[#1a73e8]' : 'text-[#1a73e8] font-bold'}
+                  >
+                    ✉️ Correo & Gmail
                   </button>
                 </li>
                 <li>

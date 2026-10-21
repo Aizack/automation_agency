@@ -43,7 +43,12 @@ export const initDatabase = async () => {
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS drive_folder_id VARCHAR(100);`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE;`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS password VARCHAR(100);`);
-        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS email VARCHAR(100);`);
+        await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS email VARCHAR(100);
+        await pool.query(            ALTER TABLE clients ADD COLUMN IF NOT EXISTS gmail_account_email VARCHAR(150);
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS gmail_refresh_token TEXT;
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS gmail_connected_at TIMESTAMP;
+            ALTER TABLE clients ADD COLUMN IF NOT EXISTS email_channel VARCHAR(50) DEFAULT 'system';
+        \);`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS contact_name VARCHAR(100);`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS owner_phone VARCHAR(20);`);
         await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_message_notified BOOLEAN DEFAULT FALSE;`);

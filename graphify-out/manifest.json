@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1792523258.85277,
-    "seen": 1792523489.4821858,
-    "ast_hash": "853647ecb8ce93b1910bdb71a532c501",
+    "mtime": 1792553089.8909805,
+    "seen": 1792553456.9457462,
+    "ast_hash": "3db5be07a0e3277bc1e84a37838e45e1",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
-    "mtime": 1790895864.2667255,
-    "seen": 1791751858.7980504,
-    "ast_hash": "5e0b6de92614061341edb26116926bc8",
+    "mtime": 1792526477.3479538,
+    "seen": 1792553456.9458067,
+    "ast_hash": "809fd597558e5ecc100f844da33ecf50",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpStoreSettings.tsx": {
-    "mtime": 1792104395.5629754,
-    "seen": 1792459482.6378539,
-    "ast_hash": "36ddcbdd3777f71e72e7586fbe495533",
+    "mtime": 1792553413.4651823,
+    "seen": 1792553456.9458234,
+    "ast_hash": "ecec746583b71dd6f94deba92aa3d87f",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSuppliers.tsx": {
@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "src/database/initDb.ts": {
-    "mtime": 1792524087.5790453,
-    "seen": 1792524380.6750617,
-    "ast_hash": "a25f701185ccd9e0dda11b699dcffb67",
+    "mtime": 1792552608.6667979,
+    "seen": 1792553456.9459484,
+    "ast_hash": "5fa4588dc36783026ad5d926bd479d49",
     "semantic_hash": ""
   },
   "src/database/postgres.ts": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1792524180.8956594,
-    "seen": 1792524380.6751153,
-    "ast_hash": "c82a40cf4f8acc3c4c8efdf68b5dd393",
+    "mtime": 1792552857.7183316,
+    "seen": 1792553456.946,
+    "ast_hash": "c32a57b4d90c132b07eb0f4dac01c16b",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -834,9 +834,9 @@
     "semantic_hash": ""
   },
   "dashboard/index.html": {
-    "mtime": 1790881632.8373015,
-    "seen": 1791751858.7987318,
-    "ast_hash": "99229e4f1826165a8af9c97a618cc600",
+    "mtime": 1792550412.9891002,
+    "seen": 1792553456.9462397,
+    "ast_hash": "0f3827794ba197461f3a2aef3932afad",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -2070,9 +2070,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpProductFormModal.tsx": {
-    "mtime": 1792524318.5988991,
-    "seen": 1792524380.6749234,
-    "ast_hash": "d5d1e96c2b6e0874437ee8a1f4b1eaa5",
+    "mtime": 1792526933.8140116,
+    "seen": 1792553456.945816,
+    "ast_hash": "6452e9dcd25d4b4475166af085923c55",
     "semantic_hash": ""
   },
   "dashboard/src/components/public/PublicCatalog.tsx": {
@@ -2616,9 +2616,9 @@
     "semantic_hash": ""
   },
   "src/services/emailService.ts": {
-    "mtime": 1792459960.2287197,
-    "seen": 1792460105.9809108,
-    "ast_hash": "ab7585a6f3bbd2cd979e3279a4b391d5",
+    "mtime": 1792552666.557482,
+    "seen": 1792553456.9460094,
+    "ast_hash": "80012ab8d7da577f6f06df9d9595dd02",
     "semantic_hash": ""
   },
   "src/services/termsOfService.ts": {
@@ -2643,6 +2643,18 @@
     "mtime": 1792469739.7882226,
     "seen": 1792469820.251485,
     "ast_hash": "5998f44677960dce7676bc46b241f089",
+    "semantic_hash": ""
+  },
+  "src/scripts/migrateAllSkusConsecutive.ts": {
+    "mtime": 1792527191.329264,
+    "seen": 1792553456.9459987,
+    "ast_hash": "1c1cbfa9b8e6d413f1cef6b6c52d7538",
+    "semantic_hash": ""
+  },
+  "dashboard/public/google002ba6272563e07c.html": {
+    "mtime": 1792549758.454709,
+    "seen": 1792553456.9462411,
+    "ast_hash": "9982b203a617a61c131aeb7bf9737aeb",
     "semantic_hash": ""
   }
 }

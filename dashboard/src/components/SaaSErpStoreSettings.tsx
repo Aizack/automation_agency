@@ -4,7 +4,7 @@ import { authFetch as fetch } from '../utils/api';
 interface StoreSettingsProps {
   clientId: string;
   onProfileUpdated: () => void;
-  initialSubTab?: 'profile' | 'security';
+  initialSubTab?: 'profile' | 'security' | 'email';
 }
 
 export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, onProfileUpdated, initialSubTab }) => {
@@ -20,7 +20,7 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   const [logos, setLogos] = useState<Array<{ fileName: string, url: string }>>([]);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoBuster, setLogoBuster] = useState(Date.now());
-  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'security'>(initialSubTab || 'profile');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'security' | 'email'>(initialSubTab || 'profile');
 
   useEffect(() => {
     if (initialSubTab) {
@@ -48,6 +48,134 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   const [backupModalOpen, setBackupModalOpen] = useState(false);
   const [backupCodesList, setBackupCodesList] = useState<string[]>([]);
   const [backupLoading, setBackupLoading] = useState(false);
+
+    // Estados de Configuración de Correo & Gmail OAuth
+  const [emailSettings, setEmailSettings] = useState<{
+    channel: string;
+    connected: boolean;
+    gmailEmail?: string | null;
+    connectedAt?: string | null;
+    systemEmail?: string;
+  } | null>(null);
+  const [, setEmailLoading] = useState(false);
+  const [connectingGmail, setConnectingGmail] = useState(false);
+  const [disconnectingGmail, setDisconnectingGmail] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState('');
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const fetchEmailSettings = async () => {
+    try {
+      setEmailLoading(true);
+      const res = await fetch(`/api/clients/${clientId}/email-settings`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        setEmailSettings(json.data);
+        if (json.data.gmailEmail && !testEmailAddress) {
+          setTestEmailAddress(json.data.gmailEmail);
+        }
+      }
+    } catch (err) {
+      console.error("Error cargando configuración de correo:", err);
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmailSettings();
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'GMAIL_CONNECTED') {
+        fetchEmailSettings();
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 4000);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [clientId]);
+
+  const handleConnectGmail = async () => {
+    try {
+      setConnectingGmail(true);
+      const res = await fetch(`/api/clients/${clientId}/auth/gmail/url`);
+      const json = await res.json();
+      if (json.success && json.url) {
+        const width = 550;
+        const height = 650;
+        const left = window.screenX + Math.max(0, (window.outerWidth - width) / 2);
+        const top = window.screenY + Math.max(0, (window.outerHeight - height) / 2);
+        const popup = window.open(
+          json.url,
+          'Conectar con Google',
+          `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,status=no`
+        );
+        if (!popup) {
+          alert('Por favor permite las ventanas emergentes en tu navegador para continuar.');
+        }
+      } else {
+        alert(json.error || 'No se pudo generar la URL de autenticación con Google.');
+      }
+    } catch (err) {
+      console.error('Error conectando con Gmail:', err);
+      alert('Error de conexión con el servidor al iniciar vinculación con Google.');
+    } finally {
+      setConnectingGmail(false);
+    }
+  };
+
+  const handleDisconnectGmail = async () => {
+    if (!confirm('¿Estás seguro de que deseas desvincular tu cuenta de Gmail? Las facturas y notificaciones volverán a enviarse desde el servidor global de Frant.')) {
+      return;
+    }
+    try {
+      setDisconnectingGmail(true);
+      const res = await fetch(`/api/clients/${clientId}/auth/gmail/disconnect`, {
+        method: 'POST'
+      });
+      const json = await res.json();
+      if (json.success) {
+        await fetchEmailSettings();
+      } else {
+        alert(json.error || 'No se pudo desvincular la cuenta.');
+      }
+    } catch (err) {
+      console.error('Error desvinculando Gmail:', err);
+      alert('Error de conexión al desvincular.');
+    } finally {
+      setDisconnectingGmail(false);
+    }
+  };
+
+  const handleSendTestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testEmailAddress) {
+      alert('Por favor ingresa un correo destinatario para la prueba.');
+      return;
+    }
+    try {
+      setTestingEmail(true);
+      setTestEmailResult(null);
+      const res = await fetch(`/api/clients/${clientId}/email-settings/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: testEmailAddress })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setTestEmailResult({ success: true, message: json.message || '¡Correo de prueba enviado con éxito!' });
+      } else {
+        setTestEmailResult({ success: false, message: json.error || 'Error al enviar el correo de prueba.' });
+      }
+    } catch (err: any) {
+      console.error('Error en prueba de correo:', err);
+      setTestEmailResult({ success: false, message: 'Error de conexión al enviar el correo de prueba.' });
+    } finally {
+      setTestingEmail(false);
+    }
+  };
 
   const fetchLogos = async () => {
     try {
@@ -377,6 +505,27 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
             </span>
           )}
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('email')}
+          className={`pb-3 border-b-2 transition cursor-pointer flex items-center gap-2 ${
+            activeSubTab === 'email'
+              ? 'border-[#D9381E] text-[#D9381E]'
+              : 'border-transparent text-[#6B6862] hover:text-[#161616]'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">mail</span>
+          <span>Canales de Correo (Gmail)</span>
+          {emailSettings?.connected ? (
+            <span className="bg-[#E6F4EA] text-[#1E4620] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#A8DADC] font-mono">
+              GMAIL ACTIVO
+            </span>
+          ) : (
+            <span className="bg-[#FAF8F3] text-[#6B6862] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#E2DFD7] font-mono">
+              SISTEMA
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Alertas Nativas Wabi-Sabi */}
@@ -610,6 +759,211 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
                 Cerrar & Guardar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* RENDER PESTAÑA 3: CORREO ELECTRÓNICO & GMAIL OAUTH */}
+      {activeSubTab === 'email' && (
+        <div className="space-y-6">
+          {/* Tarjeta Principal de Configuración */}
+          <div className="bg-[#FFFFFF] border border-[#E2DFD7] p-6 space-y-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2DFD7] pb-4">
+              <div>
+                <span className="text-[10px] font-bold text-[#D9381E] uppercase tracking-widest block">
+                  Despacho de Facturas, Cotizaciones & Notificaciones
+                </span>
+                <h4 className="font-serif text-2xl text-[#161616] mt-0.5">
+                  Canal de Envío de Correos Electrónicos
+                </h4>
+                <p className="text-xs text-[#6B6862] mt-1 max-w-2xl">
+                  Decide si los correos a tus clientes finales saldrán desde el servidor centralizado de la plataforma o directamente desde la cuenta oficial de Google (Gmail / Google Workspace) de tu óptica o tienda.
+                </p>
+              </div>
+
+              {emailSettings?.connected && (
+                <div className="shrink-0 flex items-center gap-2 bg-[#E6F4EA] border border-[#A8DADC] px-3 py-1.5 rounded-sm">
+                  <span className="w-2 h-2 rounded-full bg-[#1e4620] animate-pulse"></span>
+                  <span className="text-xs font-bold text-[#1e4620] uppercase tracking-wider font-mono">
+                    Gmail Vinculado
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* ESTADO A: CONECTADO */}
+            {emailSettings?.connected ? (
+              <div className="space-y-6">
+                <div className="p-5 bg-[#FAF8F3] border border-[#161616] rounded-sm space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-white border border-[#E2DFD7] flex items-center justify-center shrink-0 shadow-sm">
+                        <svg className="w-6 h-6" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
+                          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                          Cuenta de Google Conectada
+                        </span>
+                        <div className="font-serif text-xl font-bold text-[#161616]">
+                          {emailSettings.gmailEmail}
+                        </div>
+                        <div className="text-[11px] text-[#6B6862] mt-0.5 flex items-center gap-2">
+                          <span>Vinculado el: {emailSettings.connectedAt ? new Date(emailSettings.connectedAt).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Reciente'}</span>
+                          <span>•</span>
+                          <span className="font-mono text-[#15803d]">Permiso: gmail.send activo</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleDisconnectGmail}
+                      disabled={disconnectingGmail}
+                      className="px-4 py-2 text-xs font-bold uppercase tracking-wider border border-[#D9381E] text-[#D9381E] hover:bg-[#D9381E] hover:text-white transition rounded-sm cursor-pointer"
+                    >
+                      {disconnectingGmail ? 'Desvinculando...' : 'Desvincular Cuenta'}
+                    </button>
+                  </div>
+
+                  <div className="border-t border-[#E2DFD7] pt-3 text-xs text-[#6B6862] leading-relaxed">
+                    ✨ Tus clientes recibirán las facturas y cotizaciones directamente desde <strong className="text-[#161616] font-medium">{emailSettings.gmailEmail}</strong>. Si el cliente responde el correo, entrará a tu bandeja de entrada de Gmail sin intermediarios.
+                  </div>
+                </div>
+
+                {/* Formulario de Correo de Prueba */}
+                <div className="border border-[#E2DFD7] p-5 bg-white space-y-3">
+                  <h5 className="font-serif text-base text-[#161616]">
+                    Verificar y Probar Envío Inmediato
+                  </h5>
+                  <p className="text-xs text-[#6B6862]">
+                    Envía un correo de prueba de alta fidelidad desde tu cuenta de Gmail conectada para confirmar que Google autorizó el despacho correctamente.
+                  </p>
+
+                  <form onSubmit={handleSendTestEmail} className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <input
+                      type="email"
+                      value={testEmailAddress}
+                      onChange={(e) => setTestEmailAddress(e.target.value)}
+                      placeholder="correo-destino@ejemplo.com"
+                      required
+                      className="flex-1 p-2.5 border border-[#E2DFD7] text-xs font-mono outline-none focus:border-[#161616] bg-[#FAF8F3]"
+                    />
+                    <button
+                      type="submit"
+                      disabled={testingEmail}
+                      className="bg-[#161616] hover:bg-[#D9381E] text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-sm transition cursor-pointer flex items-center justify-center gap-2 shrink-0"
+                    >
+                      {testingEmail ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin text-[16px]">sync</span>
+                          Enviando Prueba...
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[16px]">send</span>
+                          Enviar Prueba Ahora
+                        </>
+                      )}
+                    </button>
+                  </form>
+
+                  {testEmailResult && (
+                    <div className={`p-3 text-xs font-medium border-l-4 rounded-xs mt-3 flex items-center justify-between ${
+                      testEmailResult.success
+                        ? 'bg-[#E6F4EA] border-[#15803d] text-[#1E4620]'
+                        : 'bg-[#FCE8E6] border-[#D9381E] text-[#D9381E]'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">
+                          {testEmailResult.success ? 'check_circle' : 'error'}
+                        </span>
+                        <span>{testEmailResult.message}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* ESTADO B: DESCONECTADO (SISTEMA GLOBAL) */
+              <div className="space-y-6">
+                <div className="p-6 bg-[#FAF8F3] border border-[#E2DFD7] space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <span className="bg-[#FEF7E0] text-[#7A5A00] text-[9px] font-bold px-2.5 py-0.5 rounded-full border border-[#FEEFC3] font-mono uppercase tracking-wider">
+                        Canal Activo: Servidor Global Frant
+                      </span>
+                      <h5 className="font-serif text-xl text-[#161616] mt-1">
+                        Vincula tu Cuenta de Google (Gmail / Workspace)
+                      </h5>
+                      <p className="text-xs text-[#6B6862] max-w-xl">
+                        Actualmente los comprobantes de tus clientes se envían desde <code className="bg-white px-1.5 py-0.5 border border-[#E2DFD7] text-[#161616] font-mono">noreply@frant.app</code>. Al vincular tu Gmail, saldrán desde tu propia dirección con 1 solo clic.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleConnectGmail}
+                      disabled={connectingGmail}
+                      className="bg-[#161616] hover:bg-[#D9381E] text-white text-xs font-bold uppercase tracking-wider px-6 py-3.5 rounded-sm transition cursor-pointer flex items-center justify-center gap-3 shadow-md shrink-0 border-0"
+                    >
+                      <svg className="w-4 h-4 bg-white p-0.5 rounded-full shrink-0" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                      </svg>
+                      <span>{connectingGmail ? 'Abriendo Google...' : 'Conectar con Google'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3 Beneficios Editoriales */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+                  <div className="p-4 bg-white border border-[#E2DFD7] space-y-2">
+                    <span className="material-symbols-outlined text-[#D9381E] text-2xl">verified</span>
+                    <h6 className="font-serif text-sm font-bold text-[#161616]">Identidad & Confianza</h6>
+                    <p className="text-[11px] text-[#6B6862] leading-relaxed">
+                      El remitente que ve tu cliente es exactamente tu correo corporativo o de óptica, evitando filtros de spam y generando cercanía.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-white border border-[#E2DFD7] space-y-2">
+                    <span className="material-symbols-outlined text-[#D9381E] text-2xl">mark_email_read</span>
+                    <h6 className="font-serif text-sm font-bold text-[#161616]">Respuestas Directas</h6>
+                    <p className="text-[11px] text-[#6B6862] leading-relaxed">
+                      Si el paciente o cliente responde al correo con una duda sobre su fórmula o factura, la respuesta cae directamente en tu bandeja de Gmail.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-white border border-[#E2DFD7] space-y-2">
+                    <span className="material-symbols-outlined text-[#D9381E] text-2xl">lock</span>
+                    <h6 className="font-serif text-sm font-bold text-[#161616]">OAuth 2.0 Seguro</h6>
+                    <p className="text-[11px] text-[#6B6862] leading-relaxed">
+                      Nunca ingresas tu contraseña en Frant ERP. Google otorga un token con alcance exclusivo para enviar correos (<code className="font-mono text-[10px]">gmail.send</code>).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Tarjeta Informativa de Seguridad & Verificación de Google */}
+          <div className="p-5 bg-[#FAF8F3] border border-[#E2DFD7] space-y-2 text-xs">
+            <h5 className="font-serif text-base text-[#161616] font-normal flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#D9381E] text-lg">info</span>
+              Transparencia & Privacidad de Google OAuth
+            </h5>
+            <p className="text-[#6B6862] leading-relaxed">
+              La integración utiliza el protocolo estándar Google OAuth 2.0. Solo se solicita el alcance <code className="font-mono text-[#161616] bg-white px-1 py-0.5 border border-[#E2DFD7]">https://www.googleapis.com/auth/gmail.send</code> necesario para despachar los comprobantes. La plataforma no tiene acceso a leer tus correos recibidos, historial de búsqueda ni archivos en Google Drive.
+            </p>
+            <p className="text-[11px] text-[#6B6862] leading-relaxed">
+              * Nota: Si durante la conexión Google te muestra una advertencia indicando que la aplicación aún está en proceso de verificación, haz clic en <strong className="text-[#161616]">Configuración avanzada</strong> y selecciona <strong className="text-[#161616]">Ir a Frant (no seguro)</strong> para otorgar el permiso de envío.
+            </p>
           </div>
         </div>
       )}

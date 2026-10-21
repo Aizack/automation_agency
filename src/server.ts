@@ -44,7 +44,7 @@ import {
   isTrustedDevice 
 } from './services/mfaService';
 import QRCode from 'qrcode';
-import { sendEmailOtp } from './services/emailService';
+import { sendEmailOtp, getStoreEmailConfig, sendEmailForClient } from './services/emailService';
 
 import { 
   createClient, 
@@ -2433,6 +2433,117 @@ app.post('/api/clients/:id/upload', authenticateToken as any, authorizeClientAcc
   }
 });
 
+// 7.8 Generar URL para vincular Gmail de una tienda (OAuth 2.0)
+app.get('/api/clients/:clientId/auth/gmail/url', authenticateToken as any, authorizeClientAccess as any, (req: Request, res: Response) => {
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+  
+  if (!CLIENT_ID || !REDIRECT_URI) {
+    return res.status(400).json({ success: false, error: "Falta GOOGLE_CLIENT_ID o GOOGLE_REDIRECT_URI en el servidor." });
+  }
+
+  const clientId = req.params.clientId;
+  const stateData = Buffer.from(JSON.stringify({ type: 'gmail_tenant', clientId })).toString('base64url');
+  
+  const scopes = [
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile'
+  ];
+
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
+    `client_id=${encodeURIComponent(CLIENT_ID)}` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scopes.join(' '))}` +
+    `&access_type=offline` +
+    `&prompt=consent` +
+    `&state=${stateData}`;
+
+  return res.json({ success: true, authUrl });
+});
+
+// 7.8.1 Desvincular Gmail de una tienda
+app.post('/api/clients/:clientId/auth/gmail/disconnect', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const clientId = String(req.params.clientId);
+    await pool.query(
+      `UPDATE clients 
+       SET gmail_account_email = NULL, 
+           gmail_refresh_token = NULL, 
+           gmail_connected_at = NULL, 
+           email_channel = 'system' 
+       WHERE id = $1`,
+      [clientId]
+    );
+    return res.json({ success: true, message: 'Cuenta de Gmail desvinculada exitosamente.' });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 7.8.2 Consultar estado de configuración de correo de la tienda
+app.get('/api/clients/:clientId/email-settings', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const clientId = String(req.params.clientId);
+    const config = await getStoreEmailConfig(clientId);
+    return res.json({ success: true, data: config });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 7.8.3 Enviar correo de prueba para verificar conexión
+app.post('/api/clients/:clientId/email-settings/test', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+  try {
+    const clientId = String(req.params.clientId);
+    const { testEmail } = req.body;
+    const config = await getStoreEmailConfig(clientId);
+    const targetTo = testEmail || config?.gmailAccountEmail || config?.storeEmail;
+
+    if (!targetTo) {
+      return res.status(400).json({ success: false, error: 'Debes proporcionar un correo destino para la prueba.' });
+    }
+
+    const htmlBody = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #FAF8F5; padding: 40px 20px; color: #161616;">
+        <div style="max-width: 520px; margin: 0 auto; background-color: #FFFFFF; border: 2px solid #161616; padding: 32px; box-shadow: 6px 6px 0px #161616;">
+          <div style="display: inline-block; background: #E6F4EA; color: #137333; font-weight: bold; font-size: 11px; padding: 4px 10px; margin-bottom: 16px; border: 1px solid #137333; text-transform: uppercase; letter-spacing: 1px;">
+            ● Conexión Verificada
+          </div>
+          <h1 style="font-family: serif; font-size: 24px; margin: 0 0 12px 0; color: #161616;">Prueba de Envío Exitosa</h1>
+          <p style="font-size: 13px; color: #6B6862; line-height: 1.5; margin-bottom: 20px;">
+            Este es un correo de prueba enviado desde <strong>${config?.storeName || 'tu tienda'}</strong> a través de Frant ERP.
+          </p>
+          <div style="background: #FAF8F5; border: 1px solid #E2DFD7; padding: 14px; font-size: 12px; margin-bottom: 24px;">
+            <div><strong>Remitente Oficial:</strong> ${config?.isGmailConnected ? config?.gmailAccountEmail : 'Servicio Transaccional Frant'}</div>
+            <div><strong>Canal Utilizado:</strong> ${config?.isGmailConnected ? 'Google Gmail API (OAuth 2.0)' : 'Servidor Transaccional'}</div>
+            <div><strong>Fecha:</strong> ${new Date().toLocaleString('es-CO')}</div>
+          </div>
+          <p style="font-size: 11px; color: #8F8C84; line-height: 1.4; margin: 0;">
+            A partir de este momento, tus facturas, cotizaciones y avisos de pedidos saldrán con esta identidad.
+          </p>
+        </div>
+      </div>
+    `;
+
+    const result = await sendEmailForClient(clientId, {
+      to: targetTo,
+      subject: `✅ Prueba de Correo Exitosa — ${config?.storeName || 'Frant ERP'}`,
+      text: `Prueba de correo exitosa para ${config?.storeName || 'tu tienda'}. Conexión activa.`,
+      html: htmlBody
+    });
+
+    if (result.success) {
+      return res.json({ success: true, message: `Correo de prueba enviado con éxito a ${targetTo}`, sender: result.sender });
+    } else {
+      return res.status(500).json({ success: false, error: result.error || 'No se pudo enviar el correo de prueba' });
+    }
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 7.9 Redirección para iniciar sesión de Administrador con Google (OAuth 2.0)
 app.get('/api/auth/google/admin', (req: Request, res: Response) => {
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -2453,7 +2564,7 @@ app.get('/api/auth/google/admin', (req: Request, res: Response) => {
   res.redirect(authUrl);
 });
 
-// 7.10 Callback de Google OAuth 2.0 para capturar e imprimir el refresh_token
+// 7.10 Callback unificado de Google OAuth 2.0 (Tiendas & Admin)
 app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
   const code = req.query.code as string;
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -2469,9 +2580,80 @@ app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
     
     // Intercambiar el código por los tokens
     const { tokens } = await oauth2Client.getToken(code);
+
+    // Revisar si viene de una tienda específica (state)
+    let tenantState: any = null;
+    if (req.query.state) {
+      try {
+        const decoded = Buffer.from(String(req.query.state), 'base64url').toString('utf-8');
+        tenantState = JSON.parse(decoded);
+      } catch (e) {}
+    }
+
+    if (tenantState && tenantState.type === 'gmail_tenant' && tenantState.clientId) {
+      oauth2Client.setCredentials(tokens);
+      let connectedEmail = 'tienda@gmail.com';
+      try {
+        const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+        const userInfo = await oauth2.userinfo.get();
+        if (userInfo.data.email) connectedEmail = userInfo.data.email;
+      } catch (uiErr) {
+        console.warn('[Gmail OAuth] Warning obteniendo email del perfil:', uiErr);
+      }
+
+      await pool.query(
+        `UPDATE clients 
+         SET gmail_account_email = $1, 
+             gmail_refresh_token = COALESCE($2, gmail_refresh_token), 
+             gmail_connected_at = NOW(), 
+             email_channel = 'gmail_oauth' 
+         WHERE id = $3`,
+        [connectedEmail, tokens.refresh_token || null, tenantState.clientId]
+      );
+
+      console.log(`[Gmail OAuth] ✅ Tienda ${tenantState.clientId} vinculada exitosamente con Gmail: ${connectedEmail}`);
+
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Conexión Exitosa con Gmail</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #FAF8F5; color: #161616; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+            .card { background: white; border: 2px solid #161616; padding: 40px; max-width: 480px; text-align: center; box-shadow: 8px 8px 0px #161616; }
+            .badge { display: inline-block; background: #E6F4EA; color: #137333; font-weight: bold; font-size: 11px; padding: 4px 10px; margin-bottom: 16px; border: 1px solid #137333; text-transform: uppercase; letter-spacing: 1px; }
+            h1 { font-family: serif; font-size: 26px; margin: 0 0 10px; }
+            p { font-size: 13px; color: #6B6862; line-height: 1.5; margin-bottom: 24px; }
+            .email-box { background: #FAF8F5; border: 1px solid #E2DFD7; padding: 12px; font-family: monospace; font-size: 14px; font-weight: bold; margin-bottom: 24px; color: #D9381E; }
+            button { background: #161616; color: white; border: none; padding: 12px 24px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; }
+            button:hover { background: #D9381E; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="badge">● Conexión Activa</div>
+            <h1>¡Gmail Vinculado con Éxito!</h1>
+            <p>Tu cuenta oficial de Gmail ha sido conectada a Frant ERP. A partir de ahora, las facturas, cotizaciones y notificaciones saldrán desde:</p>
+            <div class="email-box">${connectedEmail}</div>
+            <button onclick="if (window.opener) { window.opener.postMessage({ type: 'GMAIL_CONNECTED', email: '${connectedEmail}' }, '*'); window.close(); } else { window.location.href = '/?tab=settings&subTab=email'; }">Volver al ERP</button>
+            <script>
+              setTimeout(() => {
+                if (window.opener) {
+                  window.opener.postMessage({ type: 'GMAIL_CONNECTED', email: '${connectedEmail}' }, '*');
+                  window.close();
+                }
+              }, 2500);
+            </script>
+          </div>
+        </body>
+        </html>
+      `);
+    }
     
+    // Si es flujo de admin Google Drive
     console.log("\n=======================================================");
-    console.log("🔑 [GOOGLE OAUTH] ¡AUTENTICACIÓN EXITOSA!");
+    console.log("🔑 [GOOGLE OAUTH ADMIN] ¡AUTENTICACIÓN EXITOSA!");
     console.log("-------------------------------------------------------");
     console.log("Copia el siguiente REFRESH_TOKEN y pégalo en tu archivo .env:");
     console.log(`GOOGLE_REFRESH_TOKEN=${tokens.refresh_token}`);

@@ -1,4 +1,6 @@
 import nodemailer, { Transporter } from 'nodemailer';
+import { google } from 'googleapis';
+import { pool } from '../database/postgres';
 
 interface SmtpConfig {
   host?: string;
@@ -43,6 +45,140 @@ function getTransporter(): Transporter | null {
       pass
     }
   });
+}
+
+export interface SendEmailOptions {
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
+  fromName?: string;
+  attachments?: Array<{
+    filename: string;
+    content?: any;
+    path?: string;
+    contentType?: string;
+  }>;
+}
+
+/**
+ * Obtiene la configuración de correo de una tienda/sede específica.
+ */
+export async function getStoreEmailConfig(clientId: string) {
+  const res = await pool.query(
+    `SELECT name, email, gmail_account_email, gmail_connected_at, email_channel,
+            (gmail_refresh_token IS NOT NULL AND gmail_refresh_token != '') as has_gmail
+     FROM clients 
+     WHERE id = $1`,
+    [clientId]
+  );
+  if (res.rows.length === 0) return null;
+  const row = res.rows[0];
+  return {
+    storeName: row.name,
+    storeEmail: row.email,
+    gmailAccountEmail: row.gmail_account_email,
+    gmailConnectedAt: row.gmail_connected_at,
+    emailChannel: row.email_channel || 'system',
+    isGmailConnected: Boolean(row.has_gmail)
+  };
+}
+
+/**
+ * Envía un correo electrónico a nombre de una tienda/sede en particular.
+ * Si la tienda tiene Gmail OAuth conectado, el correo sale directamente desde su cuenta de Gmail.
+ * Si no, usa el servicio transaccional por defecto con Reply-To al correo de la tienda.
+ */
+export async function sendEmailForClient(
+  clientId: string,
+  options: SendEmailOptions
+): Promise<{ success: boolean; messageId?: string; sender?: string; error?: string }> {
+  try {
+    const clientRes = await pool.query(
+      `SELECT id, name, email, gmail_account_email, gmail_refresh_token, email_channel 
+       FROM clients 
+       WHERE id = $1`,
+      [clientId]
+    );
+
+    const client = clientRes.rows[0];
+    if (!client) {
+      return { success: false, error: 'Tienda no encontrada' };
+    }
+
+    const senderName = options.fromName || client.name || 'Frant ERP';
+
+    // 1. Si la tienda tiene Gmail OAuth vinculado
+    if (client.gmail_refresh_token && client.gmail_account_email) {
+      const clientIdGoogle = process.env.GOOGLE_CLIENT_ID;
+      const clientSecretGoogle = process.env.GOOGLE_CLIENT_SECRET;
+      const redirectUriGoogle = process.env.GOOGLE_REDIRECT_URI;
+
+      if (!clientIdGoogle || !clientSecretGoogle) {
+        console.warn(`[Store Email] ⚠️ GOOGLE_CLIENT_ID o GOOGLE_CLIENT_SECRET no configurados para enviar vía Gmail.`);
+      } else {
+        const oauth2Client = new google.auth.OAuth2(
+          clientIdGoogle,
+          clientSecretGoogle,
+          redirectUriGoogle
+        );
+        oauth2Client.setCredentials({ refresh_token: client.gmail_refresh_token });
+        const accessToken = await oauth2Client.getAccessToken();
+
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            type: 'OAuth2',
+            user: client.gmail_account_email,
+            clientId: clientIdGoogle,
+            clientSecret: clientSecretGoogle,
+            refreshToken: client.gmail_refresh_token,
+            accessToken: accessToken.token || undefined
+          }
+        });
+
+        const info = await transporter.sendMail({
+          from: `"${senderName}" <${client.gmail_account_email}>`,
+          to: options.to,
+          subject: options.subject,
+          text: options.text || '',
+          html: options.html,
+          attachments: options.attachments
+        });
+
+        console.log(`[Store Email] ✅ Correo enviado mediante Gmail OAuth de la tienda (${client.gmail_account_email}) a ${options.to}. ID: ${info.messageId}`);
+        return { success: true, messageId: info.messageId, sender: client.gmail_account_email };
+      }
+    }
+
+    // 2. Fallback: Servicio transaccional global con Reply-To de la tienda
+    const transporter = getTransporter();
+    if (!transporter) {
+      return {
+        success: false,
+        error: 'No hay servicio de correo configurado. Vincula tu cuenta de Gmail en Ajustes o configura el servidor SMTP.'
+      };
+    }
+
+    const systemFrom = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || 'contacto@diazlab.online';
+    const replyTo = client.email || client.gmail_account_email || systemFrom;
+
+    const info = await transporter.sendMail({
+      from: `"${senderName}" <${systemFrom}>`,
+      replyTo: `"${senderName}" <${replyTo}>`,
+      to: options.to,
+      subject: options.subject,
+      text: options.text || '',
+      html: options.html,
+      attachments: options.attachments
+    });
+
+    console.log(`[Store Email] ✅ Correo enviado mediante transporte del sistema a ${options.to} (Reply-To: ${replyTo}). ID: ${info.messageId}`);
+    return { success: true, messageId: info.messageId, sender: systemFrom };
+  } catch (err: any) {
+    console.error(`[Store Email] ❌ Error enviando correo para la tienda ${clientId}:`, err);
+    return { success: false, error: err.message || 'Error al enviar correo' };
+  }
 }
 
 /**
