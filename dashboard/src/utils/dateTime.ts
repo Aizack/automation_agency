@@ -25,6 +25,34 @@ export const COUNTRY_TIMEZONE_MAP: Record<string, string> = {
   'paraguay': 'America/Asuncion'
 };
 
+export const COUNTRY_FLAG_MAP: Record<string, string> = {
+  'colombia': '🇨🇴',
+  'mexico': '🇲🇽',
+  'méxico': '🇲🇽',
+  'peru': '🇵🇪',
+  'perú': '🇵🇪',
+  'ecuador': '🇪🇨',
+  'chile': '🇨🇱',
+  'argentina': '🇦🇷',
+  'espana': '🇪🇸',
+  'españa': '🇪🇸',
+  'venezuela': '🇻🇪',
+  'estados unidos': '🇺🇸',
+  'usa': '🇺🇸',
+  'panama': '🇵🇦',
+  'panamá': '🇵🇦',
+  'costa rica': '🇨🇷',
+  'guatemala': '🇬🇹',
+  'bolivia': '🇧🇴',
+  'uruguay': '🇺🇾',
+  'paraguay': '🇵🇾'
+};
+
+export const getClientCountryFlag = (countryName?: string): string => {
+  const c = (countryName || localStorage.getItem('client_country') || 'Colombia').toLowerCase().trim();
+  return COUNTRY_FLAG_MAP[c] || '🌐';
+};
+
 export const getClientTimeZone = (countryName?: string, explicitTimeZone?: string): string => {
   if (explicitTimeZone && explicitTimeZone.trim()) return explicitTimeZone.trim();
   const c = (countryName || localStorage.getItem('client_country') || 'Colombia').toLowerCase().trim();

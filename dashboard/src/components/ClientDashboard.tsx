@@ -37,6 +37,7 @@ import { SaaSErpEmployeeProfile } from './SaaSErpEmployeeProfile';
 import { NotificationBell } from './NotificationBell';
 import { FrantErpMobileView } from './FrantErpMobileView';
 import { SaaSErpECommerceWizard } from './SaaSErpECommerceWizard';
+import { HeaderBranchClock } from './HeaderBranchClock';
 
 interface Client {
   id: string;
@@ -63,6 +64,8 @@ interface Client {
   address?: string;
   mfa_enabled?: boolean;
   mfa_methods?: string[];
+  country?: string;
+  timezone?: string;
 }
 
 interface Interaction {
@@ -714,6 +717,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
         setAgentPhone(clientJson.data.agentPhone || '');
         setDriveFolderId(clientJson.data.driveFolderId || '');
         setCategory(clientJson.data.category || 'optica');
+        if (clientJson.data.country) {
+          localStorage.setItem('client_country', clientJson.data.country);
+        }
+        if (clientJson.data.timezone) {
+          localStorage.setItem('client_timezone', clientJson.data.timezone);
+        }
         
         // Cargar archivos de entrenamiento (Google Drive + Local)
         setLoadingFiles(true);
@@ -1891,6 +1900,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 <span>👑 Panel Super Admin</span>
               </button>
             )}
+
+            {/* Reloj Oficial de la Sede / País */}
+            <HeaderBranchClock 
+              country={clientData?.country} 
+              timezone={clientData?.timezone} 
+            />
 
             {/* User Profile Badge & Dropdown Menu */}
             <div className="relative">
