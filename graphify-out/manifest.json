@@ -60,9 +60,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/LegalDocsModal.tsx": {
-    "mtime": 1792459960.2287197,
-    "seen": 1792460105.9806566,
-    "ast_hash": "17c5d54110737d011490343fa2d3e97e",
+    "mtime": 1792595031.0644512,
+    "seen": 1792598951.6647336,
+    "ast_hash": "9050af09993d03f49e738b08ca1b1b97",
     "semantic_hash": ""
   },
   "dashboard/src/components/Login.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
-    "mtime": 1792440408.2561796,
-    "seen": 1792459482.6378388,
-    "ast_hash": "af5195cec2341fbba212c975d96264bf",
+    "mtime": 1792596824.2386477,
+    "seen": 1792598951.6647787,
+    "ast_hash": "88f59c1457944215846200d2f50d9bd0",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpMarketing.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpStoreSettings.tsx": {
-    "mtime": 1792553413.4651823,
-    "seen": 1792553456.9458234,
-    "ast_hash": "ecec746583b71dd6f94deba92aa3d87f",
+    "mtime": 1792559632.7407854,
+    "seen": 1792598951.6647947,
+    "ast_hash": "ce9dd214f82f5914ca330a00ea1d92e5",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSuppliers.tsx": {
@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "src/database/initDb.ts": {
-    "mtime": 1792552608.6667979,
-    "seen": 1792553456.9459484,
-    "ast_hash": "5fa4588dc36783026ad5d926bd479d49",
+    "mtime": 1792598809.9967403,
+    "seen": 1792598951.6649215,
+    "ast_hash": "1ecdbaf5df230f10ff8423a3fbcd85a5",
     "semantic_hash": ""
   },
   "src/database/postgres.ts": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1792552857.7183316,
-    "seen": 1792553456.946,
-    "ast_hash": "c32a57b4d90c132b07eb0f4dac01c16b",
+    "mtime": 1792596441.2663705,
+    "seen": 1792598951.6649733,
+    "ast_hash": "7646bdb232753110a2854da55362f59c",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -2574,9 +2574,9 @@
     "semantic_hash": ""
   },
   "src/services/privacyPolicy.ts": {
-    "mtime": 1792459978.7232437,
-    "seen": 1792460105.9809272,
-    "ast_hash": "870b9d80eb989526ccc5a70d79fdbd67",
+    "mtime": 1792594970.1386168,
+    "seen": 1792598951.6649954,
+    "ast_hash": "e70e5c2bea0a746da262e76e7420e435",
     "semantic_hash": ""
   },
   "src/tools/consultarDomicilio.ts": {
@@ -2616,9 +2616,9 @@
     "semantic_hash": ""
   },
   "src/services/emailService.ts": {
-    "mtime": 1792552666.557482,
-    "seen": 1792553456.9460094,
-    "ast_hash": "80012ab8d7da577f6f06df9d9595dd02",
+    "mtime": 1792559541.3528633,
+    "seen": 1792598951.664982,
+    "ast_hash": "71f54c7672b3de0b84a4a32e402d2482",
     "semantic_hash": ""
   },
   "src/services/termsOfService.ts": {
