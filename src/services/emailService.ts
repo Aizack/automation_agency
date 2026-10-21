@@ -123,31 +123,34 @@ export async function sendEmailForClient(
           redirectUriGoogle
         );
         oauth2Client.setCredentials({ refresh_token: client.gmail_refresh_token });
-        const accessToken = await oauth2Client.getAccessToken();
 
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            type: 'OAuth2',
-            user: client.gmail_account_email,
-            clientId: clientIdGoogle,
-            clientSecret: clientSecretGoogle,
-            refreshToken: client.gmail_refresh_token,
-            accessToken: accessToken.token || undefined
-          }
+        const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+        
+        // Formatear mensaje MIME RFC 2822 para Gmail REST API
+        const utf8Subject = `=?utf-8?B?${Buffer.from(options.subject).toString('base64')}?=`;
+        const messageParts = [
+          `From: "${senderName}" <${client.gmail_account_email}>`,
+          `To: ${options.to}`,
+          `Content-Type: text/html; charset=utf-8`,
+          `MIME-Version: 1.0`,
+          `Subject: ${utf8Subject}`,
+          '',
+          options.html || options.text || ''
+        ];
+        const rawMessage = messageParts.join('\r\n');
+        const encoded = Buffer.from(rawMessage)
+          .toString('base64')
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+$/, '');
+
+        const sendRes = await gmail.users.messages.send({
+          userId: 'me',
+          requestBody: { raw: encoded }
         });
 
-        const info = await transporter.sendMail({
-          from: `"${senderName}" <${client.gmail_account_email}>`,
-          to: options.to,
-          subject: options.subject,
-          text: options.text || '',
-          html: options.html,
-          attachments: options.attachments
-        });
-
-        console.log(`[Store Email] ✅ Correo enviado mediante Gmail OAuth de la tienda (${client.gmail_account_email}) a ${options.to}. ID: ${info.messageId}`);
-        return { success: true, messageId: info.messageId, sender: client.gmail_account_email, channel: 'gmail' };
+        console.log(`[Store Email] ✅ Correo enviado mediante Gmail API REST de la tienda (${client.gmail_account_email}) a ${options.to}. ID: ${sendRes.data.id}`);
+        return { success: true, messageId: sendRes.data.id || undefined, sender: client.gmail_account_email, channel: 'gmail' };
       }
     }
 
