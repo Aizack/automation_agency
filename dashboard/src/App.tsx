@@ -32,23 +32,20 @@ function App() {
       return 'menu';
     }
 
-    // Si la ruta explícita es /login o ?view=login -> Login directo
-    if (path === '/login' || urlView === 'login') {
-      return 'login';
-    }
+    const host = window.location.hostname.toLowerCase();
 
     // Si la ruta es /landpage o /landing -> Mostrar la Landing Page
     if (path === '/landpage' || path === '/landing' || urlView === 'landpage' || urlView === 'landing') {
       return 'landing';
     }
 
-    // Homepage pública para frant.app, diazlab.online y localhost sin login wall (requisito estricto de Google OAuth)
-    const initialToken = getStoredToken();
-    if (!initialToken && (path === '/' || path === '')) {
+    // Si está en el dominio comercial diazlab.online en el root / -> Mostrar Landing Page pública
+    if ((host === 'diazlab.online' || host === 'www.diazlab.online') && (path === '/' || path === '')) {
       return 'landing';
     }
 
-    return initialToken ? 'client' : 'landing';
+    // En frant.app y app.diazlab.online -> Portal SaaS / Login directo
+    return 'login';
   });
   const [clientId, setClientId] = useState(() => localStorage.getItem('current_client_id') || '');
   const [loading, setLoading] = useState(true);
@@ -141,18 +138,20 @@ function App() {
         return;
       }
 
+      const host = window.location.hostname.toLowerCase();
+
       // 2. Verificar si existe token en almacenamiento
       const token = getStoredToken();
       if (!token) {
-        // Si el usuario navegó explícitamente a /login o tiene ?view=login
-        if (path === '/login' || urlView === 'login') {
-          setView('login');
-        } else {
-          // Por defecto en la raíz / mostrar la Homepage / Landing Page pública sin login wall
+        // Si el usuario navegó a /landing o está en diazlab.online
+        if (path === '/landpage' || path === '/landing' || ((host === 'diazlab.online' || host === 'www.diazlab.online') && (path === '/' || path === ''))) {
           setView('landing');
+        } else {
+          // En frant.app sin token -> ERP / Login directo
+          setView('login');
         }
         setLoading(false);
-        if (window.location.search !== '' && !urlView) {
+        if (window.location.search !== '') {
           window.history.pushState({}, '', '/');
         }
         return;

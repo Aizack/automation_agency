@@ -8,11 +8,8 @@ interface LandingPageProps {
 export type ProposalTheme = 'wabi-sabi' | 'kuro-dark' | 'modern-grid';
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
-  // Estado de propuesta activa (guarda preferencia en localStorage)
-  const [proposal, setProposal] = useState<ProposalTheme>(() => {
-    const saved = localStorage.getItem('dla_landing_proposal') as ProposalTheme | null;
-    return saved && ['wabi-sabi', 'kuro-dark', 'modern-grid'].includes(saved) ? saved : 'wabi-sabi';
-  });
+  // Tema Wabi-Sabi fijado como diseño principal
+  const proposal: ProposalTheme = 'wabi-sabi';
 
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
@@ -21,11 +18,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   // Pestaña activa en la vitrina interactiva de Frant ERP
   const [activeShowcase, setActiveShowcase] = useState<'pos' | 'ai' | 'delivery' | 'resto' | 'optica'>('pos');
 
-  // Guardar propuesta seleccionada
-  const handleSelectProposal = (theme: ProposalTheme) => {
-    setProposal(theme);
-    localStorage.setItem('dla_landing_proposal', theme);
-  };
+
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index);
@@ -121,57 +114,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   return (
     <div className={`min-h-screen transition-colors duration-500 overflow-x-hidden relative ${themeStyles.wrapper}`}>
       
-      {/* =========================================================================
-          BARRA FLOTANTE INTERACTIVA: SELECTOR DE LAS 3 PROPUESTAS DE DISEÑO
-          Permite al usuario conmutar entre Wabi-Sabi, Kuro Dark y Modern Grid
-         ========================================================================= */}
-      <aside aria-label="Selector de Propuestas" className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-[95vw]">
-        <div className={`px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-full backdrop-blur-xl border flex items-center gap-1.5 sm:gap-3 shadow-2xl transition-all ${themeStyles.proposalPill}`}>
-          <div className="hidden lg:flex items-center gap-2 pr-2 border-r border-current/20 text-[10px] uppercase font-mono tracking-widest opacity-80">
-            <span className="material-symbols-outlined text-sm">palette</span>
-            <span>Propuestas:</span>
-          </div>
-
-          <button
-            onClick={() => handleSelectProposal('wabi-sabi')}
-            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-              proposal === 'wabi-sabi'
-                ? 'bg-[#161616] text-[#F6F4EE] shadow-sm'
-                : 'hover:bg-black/5 opacity-70 hover:opacity-100'
-            }`}
-          >
-            <span>📜</span>
-            <span className="font-['Instrument_Serif'] text-sm hidden sm:inline">Propuesta 1:</span>
-            <span className="font-medium">Wabi-Sabi Paper</span>
-          </button>
-
-          <button
-            onClick={() => handleSelectProposal('kuro-dark')}
-            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-              proposal === 'kuro-dark'
-                ? 'bg-[#E63946] text-white shadow-[0_0_15px_rgba(230,57,70,0.5)]'
-                : 'hover:bg-white/10 opacity-70 hover:opacity-100'
-            }`}
-          >
-            <span>🌑</span>
-            <span className="font-['Instrument_Serif'] text-sm hidden sm:inline">Propuesta 2:</span>
-            <span className="font-medium">Kuro Sumi Dark</span>
-          </button>
-
-          <button
-            onClick={() => handleSelectProposal('modern-grid')}
-            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-              proposal === 'modern-grid'
-                ? 'bg-[#F59E0B] text-black font-black border border-black shadow-[2px_2px_0px_#000]'
-                : 'hover:bg-black/5 opacity-70 hover:opacity-100'
-            }`}
-          >
-            <span>🟡</span>
-            <span className="font-['Syne'] text-xs uppercase hidden sm:inline">Propuesta 3:</span>
-            <span className="font-medium">Modern Grid</span>
-          </button>
-        </div>
-      </aside>
+      
 
       {/* =========================================================================
           1. HEADER & NAVBAR EDITORIAL
@@ -622,181 +565,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       </section>
 
       {/* =========================================================================
-          5. PLANES DE SUSCRIPCIÓN TRANSPARENTES (PRECIOS COP)
+          5. PROPUESTA Y PLANES A LA MEDIDA
          ========================================================================= */}
       <section id="planes" className={`py-20 sm:py-28 px-6 sm:px-12 max-w-7xl mx-auto border-t ${themeStyles.borderThin}`}>
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-          <span className={`text-xs font-mono tracking-widest uppercase px-3 py-1 rounded-full ${themeStyles.badgeBg}`}>
-            Suscripción Mensual en Pesos Colombianos
+        <div className="text-center max-w-2xl mx-auto p-10 sm:p-14 bg-white border border-[#E2DFD7] rounded-3xl shadow-sm space-y-6">
+          <span className="text-xs font-mono tracking-widest uppercase px-3 py-1 rounded-full bg-[#D9381E]/10 text-[#D9381E] font-bold">
+            Propuesta Comercial a la Medida
           </span>
-          <h2 className={`text-3xl sm:text-5xl ${themeStyles.sectionTitle}`}>
-            Inversión Clara. Cero Letra Chica.
+          <h2 className="text-3xl sm:text-5xl font-['Instrument_Serif',Georgia,serif] text-[#161616] tracking-tight font-normal">
+            Planes Adaptados a la Realidad de tu Comercio
           </h2>
-          <p className={`text-sm sm:text-base ${themeStyles.textMuted}`}>
-            Comienza a usar Frant ERP hoy mismo con soporte directo del equipo de Diaz Lab Automation.
+          <p className="text-sm sm:text-base text-[#6B6862] leading-relaxed">
+            Diseñamos una solución acorde a tus requerimientos operativos: número de sedes, puntos de venta (POS), volumen de facturación electrónica y automatización con WhatsApp IA. Sin cargos ocultos ni sobrecostos.
           </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left items-stretch">
-          
-          {/* PLAN 1: BÁSICO MICRO */}
-          <div className={`p-8 sm:p-10 rounded-3xl border flex flex-col justify-between transition-all ${themeStyles.cardBg} ${themeStyles.cardHover}`}>
-            <div className="space-y-6">
-              <div>
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 block mb-1">
-                  🟢 Para Comenzar
-                </span>
-                <h3 className="text-2xl font-bold">Plan Básico (Micro)</h3>
-                <p className={`text-xs mt-2 ${themeStyles.textMuted}`}>
-                  Para pequeños comercios, profesionales independientes y tiendas de barrio.
-                </p>
-              </div>
-
-              <div>
-                <span className="text-4xl font-extrabold tracking-tight">$49.000</span>
-                <span className="text-xs font-mono opacity-60 ml-1">COP / mes</span>
-              </div>
-
-              <div className="space-y-3 text-xs border-t pt-6 border-current/10">
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Hasta 10 Facturas Electrónicas DIAN / mes</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Tiquetes POS Térmicos 80mm Ilimitados</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Hasta 3 Colaboradores / Usuarios</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Inventario, Stock Mínimo & Alertas</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Catálogo Público Digital para Clientes</span>
-                </div>
-              </div>
-            </div>
-
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href={whatsappSalesUrl("Cotización personalizada para mi negocio en Frant ERP")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-8 py-4 bg-[#D9381E] hover:bg-[#B82B14] text-white font-mono font-bold text-xs uppercase tracking-wider rounded-full shadow-md transition-all text-center flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">chat</span>
+              <span>Solicitar Cotización por WhatsApp</span>
+            </a>
             <button
               onClick={handleLoginRedirection}
-              className={`mt-8 w-full py-3.5 rounded-full text-xs font-semibold uppercase tracking-wider text-center transition-all cursor-pointer ${themeStyles.buttonOutline}`}
+              className="w-full sm:w-auto px-8 py-4 border border-[#161616]/25 hover:border-[#161616] text-[#161616] font-mono font-bold text-xs uppercase tracking-wider rounded-full hover:bg-black/5 transition-all text-center cursor-pointer"
             >
-              Comenzar con Plan Básico
+              Acceso a Clientes Registrados
             </button>
           </div>
-
-          {/* PLAN 2: PRO CRECIMIENTO (MÁS POPULAR) */}
-          <div className={`p-8 sm:p-10 rounded-3xl border-2 relative flex flex-col justify-between transition-all shadow-xl ${themeStyles.cardBg} border-[#D9381E]`}>
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-mono font-black uppercase tracking-widest bg-[#D9381E] text-white shadow-md">
-              ★ Más Recomendado
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#D9381E] block mb-1">
-                  🚀 Crecimiento & Ventas Automáticas
-                </span>
-                <h3 className="text-2xl font-bold">Plan Pro (Crecimiento)</h3>
-                <p className={`text-xs mt-2 ${themeStyles.textMuted}`}>
-                  Para negocios que quieren vender en automático con IA, Domicilios y Landing propia.
-                </p>
-              </div>
-
-              <div>
-                <span className="text-4xl font-extrabold tracking-tight">$149.000</span>
-                <span className="text-xs font-mono opacity-60 ml-1">COP / mes</span>
-              </div>
-
-              <div className="space-y-3 text-xs border-t pt-6 border-current/10">
-                <div className="flex items-center gap-2 font-bold text-[#D9381E]">
-                  <span>★</span>
-                  <span>Facturas Electrónicas DIAN ILIMITADAS</span>
-                </div>
-                <div className="flex items-center gap-2 font-bold text-[#D9381E]">
-                  <span>★</span>
-                  <span>Agente WhatsApp Autónomo con IA 24/7</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Hojas de Ruta de Domicilios + Google Maps</span>
-                </div>
-                <div className="flex items-center gap-2 font-semibold">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Incluye Diseño y Montaje de Landing Page</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Módulo de Restaurantes (KDS / Mesas / Carta QR)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Cartera, Créditos & Control de Empleados</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={handleLoginRedirection}
-              className={`mt-8 w-full py-4 rounded-full text-xs font-bold uppercase tracking-wider text-center transition-all cursor-pointer ${themeStyles.buttonAccent}`}
-            >
-              Elegir Plan Pro Crecimiento
-            </button>
-          </div>
-
-          {/* PLAN 3: ENTERPRISE & AGENCIA */}
-          <div className={`p-8 sm:p-10 rounded-3xl border flex flex-col justify-between transition-all ${themeStyles.cardBg} ${themeStyles.cardHover}`}>
-            <div className="space-y-6">
-              <div>
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-purple-600 block mb-1">
-                  👑 Negocio Integral + Agencia
-                </span>
-                <h3 className="text-2xl font-bold">Plan Enterprise & Agencia</h3>
-                <p className={`text-xs mt-2 ${themeStyles.textMuted}`}>
-                  Solución 360°: Frant ERP + Dominio Propio + Posicionamiento en Google Maps.
-                </p>
-              </div>
-
-              <div>
-                <span className="text-4xl font-extrabold tracking-tight">$349.000</span>
-                <span className="text-xs font-mono opacity-60 ml-1">COP / mes</span>
-              </div>
-
-              <div className="space-y-3 text-xs border-t pt-6 border-current/10">
-                <div className="flex items-center gap-2 font-bold text-purple-600">
-                  <span>✦</span>
-                  <span>Dominio Web Propio Incluido (.com / .co)</span>
-                </div>
-                <div className="flex items-center gap-2 font-bold text-purple-600">
-                  <span>✦</span>
-                  <span>Diseño Web Personalizado & Landing Comercial</span>
-                </div>
-                <div className="flex items-center gap-2 font-bold text-purple-600">
-                  <span>✦</span>
-                  <span>Optimización de Perfil Google Maps (SEO Local)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Frant ERP Completo con Usuarios ILIMITADOS</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Soporte Prioritario VIP de Diaz Lab Automation</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={handleLoginRedirection}
-              className={`mt-8 w-full py-3.5 rounded-full text-xs font-semibold uppercase tracking-wider text-center transition-all cursor-pointer ${themeStyles.buttonPrimary}`}
-            >
-              Comenzar con Enterprise
-            </button>
-          </div>
-
         </div>
       </section>
 
