@@ -16,7 +16,6 @@ function App() {
     const path = window.location.pathname.toLowerCase();
     const params = new URLSearchParams(window.location.search);
     const urlView = params.get('view');
-    const host = window.location.hostname.toLowerCase();
 
     // Test WhatsApp Business Messaging para Meta App Review (/test-whatsapp, ?view=test_whatsapp)
     if (path.startsWith('/test-whatsapp') || params.has('test-whatsapp') || urlView === 'test_whatsapp' || urlView === 'test_whatsapp_business_messaging') {
@@ -33,18 +32,23 @@ function App() {
       return 'menu';
     }
 
+    // Si la ruta explícita es /login o ?view=login -> Login directo
+    if (path === '/login' || urlView === 'login') {
+      return 'login';
+    }
+
     // Si la ruta es /landpage o /landing -> Mostrar la Landing Page
     if (path === '/landpage' || path === '/landing' || urlView === 'landpage' || urlView === 'landing') {
       return 'landing';
     }
 
-    // Si está en el dominio comercial diazlab.online en el root / -> Mostrar landing
-    if ((host === 'diazlab.online' || host === 'www.diazlab.online') && path === '/') {
+    // Homepage pública para frant.app, diazlab.online y localhost sin login wall (requisito estricto de Google OAuth)
+    const initialToken = getStoredToken();
+    if (!initialToken && (path === '/' || path === '')) {
       return 'landing';
     }
 
-    // Por defecto en localhost y app.diazlab.online -> ERP / Login directo
-    return 'login';
+    return initialToken ? 'client' : 'landing';
   });
   const [clientId, setClientId] = useState(() => localStorage.getItem('current_client_id') || '');
   const [loading, setLoading] = useState(true);
@@ -88,8 +92,7 @@ function App() {
       const urlClientId = params.get('clientId');
       const urlToken = params.get('token');
       const path = window.location.pathname.toLowerCase();
-      const host = window.location.hostname.toLowerCase();
-
+  
       // Caso Test WhatsApp Business Messaging para Meta App Review (/test-whatsapp o ?view=test_whatsapp)
       if (path.startsWith('/test-whatsapp') || params.has('test-whatsapp') || urlView === 'test_whatsapp' || urlView === 'test_whatsapp_business_messaging') {
         setView('test_whatsapp');
@@ -141,15 +144,15 @@ function App() {
       // 2. Verificar si existe token en almacenamiento
       const token = getStoredToken();
       if (!token) {
-        // Si el usuario navegó a /landpage explícitamente o está en diazlab.online
-        if (path === '/landpage' || path === '/landing' || ((host === 'diazlab.online' || host === 'www.diazlab.online') && path === '/')) {
-          setView('landing');
-        } else {
-          // En localhost:3000 o app.diazlab.online sin token -> ERP / Login directo
+        // Si el usuario navegó explícitamente a /login o tiene ?view=login
+        if (path === '/login' || urlView === 'login') {
           setView('login');
+        } else {
+          // Por defecto en la raíz / mostrar la Homepage / Landing Page pública sin login wall
+          setView('landing');
         }
         setLoading(false);
-        if (window.location.search !== '') {
+        if (window.location.search !== '' && !urlView) {
           window.history.pushState({}, '', '/');
         }
         return;
