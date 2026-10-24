@@ -8,24 +8,24 @@ interface DiazLabLandingPageProps {
 
 const AVAILABLE_ERP_MODULES = [
   'Facturación Electrónica DIAN (CUFE)',
-  'Agente IA WhatsApp 24/7',
-  'Hojas de Ruta de Domicilios Maps',
+  'Agente IA de WhatsApp 24/7',
+  'Hojas de Ruta de Domicilios (Maps)',
   'Multi-Sede / Sucursales Adicionales',
 ];
 
 const AVAILABLE_AGENCY_SERVICES = [
-  'Diseño de Website / E-Commerce Conectado',
-  'Automatización RPA & Integración API',
+  'Diseño de Website / E-Commerce Propio',
+  'Automatización RPA & Integraciones API',
 ];
 
 export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginClick, onGoToFrant }) => {
   const [selectedRubro, setSelectedRubro] = useState<string>('Óptica / Salud Visual');
   const [selectedMods, setSelectedMods] = useState<string[]>([
     'Facturación Electrónica DIAN (CUFE)',
-    'Agente IA WhatsApp 24/7',
+    'Agente IA de WhatsApp 24/7',
   ]);
   const [selectedAgency, setSelectedAgency] = useState<string[]>([
-    'Diseño de Website / E-Commerce Conectado',
+    'Diseño de Website / E-Commerce Propio',
   ]);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<'terminos' | 'privacidad' | 'ia_transparency'>('terminos');
@@ -68,10 +68,10 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
       setSelectedMods([]);
       setSelectedAgency([]);
     } else if (tier === 2) {
-      setSelectedMods(['Facturación Electrónica DIAN (CUFE)', 'Agente IA WhatsApp 24/7']);
+      setSelectedMods(['Facturación Electrónica DIAN (CUFE)', 'Agente IA de WhatsApp 24/7']);
       setSelectedAgency([]);
     } else {
-      setSelectedMods(['Facturación Electrónica DIAN (CUFE)', 'Agente IA WhatsApp 24/7']);
+      setSelectedMods(['Facturación Electrónica DIAN (CUFE)', 'Agente IA de WhatsApp 24/7']);
       setSelectedAgency([...AVAILABLE_AGENCY_SERVICES]);
     }
     const el = document.getElementById('configurador');
@@ -86,6 +86,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
     }
     if (onGoToFrant) {
       e.preventDefault();
+      window.history.pushState({}, '', '/');
       onGoToFrant();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -128,15 +129,27 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
 
   const whatsappMessage = `Hola Diaz Lab Automation, armé mi configuración en diazlab.online:\n• Nivel: *${currentTierLabel}*\n• Rubro: *${selectedRubro}*\n• Módulos ERP: ${
     selectedMods.length ? selectedMods.join(', ') : 'Solo Base'
-  }\n• Servicios Diaz Lab: ${
+  }\n• Servicios Diaz Lab Automation: ${
     selectedAgency.length ? selectedAgency.join(', ') : 'Ninguno'
   }\nDeseo recibir cotización.`;
 
   const whatsappHref = `https://wa.me/573116718652?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
-    <div className="min-h-screen bg-[#08090B] text-[#F4F1EA] font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden relative selection:bg-[#FF5520] selection:text-white">
+    <div className="diaz-landing-root min-h-screen bg-[#08090B] text-[#F4F1EA] font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden relative selection:bg-[#FF5520] selection:text-white">
       <style>{`
+        /* Garantiza escala exacta 16px = 1rem idéntica al mockup aprobado (sin inflación de portátil del ERP) */
+        html {
+          font-size: 16px !important;
+        }
+        .diaz-film-grain {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 9999;
+          opacity: 0.032;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
         .diaz-blueprint-grid {
           background-size: 56px 56px;
           background-image: 
@@ -208,47 +221,68 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
         }
       `}</style>
 
+      <div className="diaz-film-grain"></div>
+
+      {/* =======================================================================
+          BARRA FLOTANTE INFERIOR DE CONEXIÓN CON FRANT.APP (IDÉNTICA AL MOCKUP)
+         ======================================================================= */}
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#121318]/95 backdrop-blur-xl border border-white/15 px-5 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.85)] hidden sm:flex items-center gap-4 text-xs whitespace-nowrap">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-white/80">
+            DIAZ LAB AUTOMATION (CASA MATRIZ & PLANES)
+          </span>
+        </div>
+        <a
+          href="https://frant.app"
+          onClick={handleGoToFrantApp}
+          className="pl-4 border-l border-white/15 font-mono text-[11px] text-[#FF5520] hover:text-white font-semibold flex items-center gap-1.5 no-underline cursor-pointer"
+        >
+          <span>← Volver a frant.app (Plataforma ERP)</span>
+        </a>
+      </div>
+
       <div className="diaz-blueprint-grid min-h-screen">
         {/* =======================================================================
             1. HEADER EDITORIAL INDUSTRIAL: DIAZ LAB AUTOMATION
            ======================================================================= */}
         <header className="sticky top-0 z-40 bg-[#08090B]/85 backdrop-blur-xl border-b border-white/10 px-6 lg:px-14 py-4">
-          <div className="max-w-[1400px] mx-auto flex items-center justify-between">
-            <a href="#top" className="flex items-center gap-3.5 no-underline">
-              <div className="w-9 h-9 rounded-lg bg-[#FF5520] flex items-center justify-center font-['Space_Grotesk',sans-serif] font-bold text-lg text-white shadow-[0_0_20px_rgba(255,85,32,0.4)]">
+          <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
+            <a href="#top" className="flex items-center gap-3.5 no-underline shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-[#FF5520] flex items-center justify-center font-['Space_Grotesk',sans-serif] font-bold text-lg text-white shadow-[0_0_20px_rgba(255,85,32,0.4)] shrink-0">
                 DL
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-['Space_Grotesk',sans-serif] font-bold text-lg tracking-[0.08em] text-white uppercase leading-none">
-                    DIAZ LAB
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <span className="font-['Space_Grotesk',sans-serif] font-bold text-base sm:text-lg tracking-[0.06em] text-white uppercase leading-none">
+                    DIAZ LAB AUTOMATION
                   </span>
-                  <span className="w-2 h-2 rounded-full bg-[#FF5520]"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#FF5520] shrink-0"></span>
                 </div>
-                <span className="font-mono text-[9px] uppercase tracking-[0.26em] text-white/50 block mt-1">
-                  AUTOMATION & SOFTWARE ATELIER
+                <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-white/50 block mt-1 whitespace-nowrap">
+                  SOFTWARE & AI ENGINEERING ATELIER
                 </span>
               </div>
             </a>
 
-            <nav className="hidden xl:flex items-center gap-8 font-mono text-xs uppercase tracking-[0.15em] text-white/65">
-              <a href="#arquitectura-3d" className="hover:text-white transition-colors no-underline text-white/70">01. Ecosistema</a>
+            <nav className="hidden xl:flex items-center gap-7 font-mono text-xs uppercase tracking-[0.14em] text-white/65 whitespace-nowrap">
+              <a href="#arquitectura-3d" className="hover:text-white transition-colors no-underline text-white/65">01. Ecosistema</a>
               <a href="#planes" className="hover:text-white transition-colors text-[#D4A359] font-semibold no-underline">02. Estructura 3 Niveles</a>
-              <a href="#configurador" className="hover:text-white transition-colors no-underline text-white/70">03. Cotizador Interactivo</a>
-              <a href="#ingenieria" className="hover:text-white transition-colors no-underline text-white/70">04. Ingeniería a Medida</a>
+              <a href="#configurador" className="hover:text-white transition-colors no-underline text-white/65">03. Cotizador Interactivo</a>
+              <a href="#ingenieria" className="hover:text-white transition-colors no-underline text-white/65">04. Ingeniería a Medida</a>
             </nav>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0 whitespace-nowrap">
               <a
                 href="https://frant.app"
                 onClick={handleGoToFrantApp}
-                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 font-mono text-xs text-white/90 uppercase tracking-wider diaz-btn-tactile no-underline cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 font-mono text-xs text-white/90 uppercase tracking-wider diaz-btn-tactile no-underline cursor-pointer whitespace-nowrap"
               >
                 Ir a frant.app →
               </a>
               <a
                 href="#configurador"
-                className="hidden sm:inline-flex px-5 py-2.5 rounded-xl bg-[#FF5520] hover:bg-[#e04412] text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(255,85,32,0.35)] diaz-btn-tactile no-underline"
+                className="hidden sm:inline-flex px-5 py-2.5 rounded-xl bg-[#FF5520] hover:bg-[#e04412] text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(255,85,32,0.35)] diaz-btn-tactile no-underline whitespace-nowrap"
               >
                 Armar Paquete
               </a>
@@ -257,7 +291,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
         </header>
 
         {/* =======================================================================
-            2. HERO SECTION: CASA MATRIZ DIAZ LAB + FOTOGRAFÍA 8K DEL ESTUDIO
+            2. HERO SECTION: CASA MATRIZ DIAZ LAB AUTOMATION + FOTOGRAFÍA 8K DEL ESTUDIO
            ======================================================================= */}
         <section id="top" className="relative pt-14 lg:pt-20 pb-16 px-6 lg:px-14 max-w-[1400px] mx-auto">
           <div className="absolute top-12 right-1/4 w-[650px] h-[350px] bg-[#FF5520]/10 blur-[150px] rounded-full pointer-events-none"></div>
@@ -271,7 +305,10 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                 </span>
               </div>
 
-              <h1 className="font-['Space_Grotesk',sans-serif] text-4xl sm:text-6xl font-bold tracking-[-0.03em] leading-[1.03] text-white">
+              <h1
+                className="font-['Space_Grotesk',sans-serif] text-4xl sm:text-6xl font-bold tracking-[-0.03em] leading-[1.03] text-white"
+                style={{ textWrap: 'balance', color: '#FFFFFF' }}
+              >
                 Construimos el software que{' '}
                 <span className="font-['Newsreader',Georgia,serif] italic font-normal text-[#D4A359]">
                   automatiza tu operación
@@ -279,8 +316,8 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                 de punta a punta.
               </h1>
 
-              <p className="text-base sm:text-lg text-white/70 leading-relaxed">
-                Somos la casa matriz detrás de <strong className="text-white">Frant ERP</strong> y el estudio de ingeniería que diseña tus plataformas web conectadas al inventario, flujos de automatización RPA y agentes autónomos de Inteligencia Artificial.
+              <p className="text-base sm:text-lg text-white/65 leading-relaxed">
+                Somos <strong className="text-white">Diaz Lab Automation</strong>, la casa matriz detrás de <strong className="text-white">Frant ERP</strong> y el estudio de ingeniería que diseña tus plataformas web conectadas al inventario, flujos de automatización RPA y agentes autónomos de Inteligencia Artificial.
               </p>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
@@ -306,14 +343,14 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                 onMouseLeave={handleTiltLeave}
                 className="diaz-tilt-card rounded-[28px] p-2.5 bg-gradient-to-b from-white/15 to-white/5 border border-white/15 shadow-[0_35px_90px_rgba(0,0,0,0.8)]"
               >
-                <div className="relative rounded-[20px] overflow-hidden aspect-[16/10] border border-white/10">
+                <div className="relative rounded-[20px] overflow-hidden aspect-[16/10] outline outline-1 outline-white/10 -outline-offset-1">
                   <img
                     src="/proposals/assets/diazlab_engineering_atelier.jpg"
                     alt="Diaz Lab Automation Engineering Studio"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#08090B] via-transparent to-transparent"></div>
-                  <div className="absolute bottom-4 inset-x-4 bg-[#0D0F14]/90 backdrop-blur-xl border border-white/15 p-4 rounded-xl flex items-center justify-between">
+                  <div className="absolute bottom-4 inset-x-4 bg-[#0D0F14]/90 backdrop-blur-xl border border-white/15 p-4 rounded-xl flex items-center justify-between gap-3">
                     <div>
                       <div className="font-mono text-[10px] uppercase tracking-widest text-[#FF5520] font-bold">
                         ARQUITECTURA LLAVE EN MANO
@@ -322,8 +359,8 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                         Frant ERP Core + E-Commerce Propio + RPA + IA
                       </div>
                     </div>
-                    <span className="font-mono text-xs px-3 py-1 rounded-lg bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 font-bold">
-                      CLOUD SLA
+                    <span className="font-mono text-xs px-3 py-1 rounded-lg bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 font-bold whitespace-nowrap shrink-0">
+                      99.5% SLA
                     </span>
                   </div>
                 </div>
@@ -346,7 +383,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                 <div className="flex items-center gap-3">
                   <span className="w-3 h-3 rounded-full bg-[#FF5520]"></span>
                   <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/80 font-bold">
-                    DIAZ LAB TELEMETRY • ORQUESTACIÓN CENTRAL
+                    DIAZ LAB AUTOMATION TELEMETRY • ORQUESTACIÓN CENTRAL
                   </span>
                 </div>
                 <span className="font-mono text-xs text-[#10B981]">
@@ -363,7 +400,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                     <h3 className="font-['Space_Grotesk',sans-serif] text-xl font-bold text-white pt-1">
                       Núcleo Operativo Frant ERP
                     </h3>
-                    <p className="text-xs text-white/70 leading-relaxed">
+                    <p className="text-xs text-white/65 leading-relaxed">
                       Caja POS, arqueo por turno, inventario multi-sede, Facturación Electrónica DIAN y despacho nativo por Gmail OAuth y WhatsApp.
                     </p>
                   </div>
@@ -380,7 +417,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                     <h3 className="font-['Space_Grotesk',sans-serif] text-xl font-bold text-white pt-1">
                       Agentes IA & Flujos RPA
                     </h3>
-                    <p className="text-xs text-white/70 leading-relaxed">
+                    <p className="text-xs text-white/65 leading-relaxed">
                       Bots conversacionales entrenados con el stock vivo del ERP, conciliación automática, webhooks con pasarelas (Wompi, Bold) y alertas gerenciales.
                     </p>
                   </div>
@@ -397,7 +434,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                     <h3 className="font-['Space_Grotesk',sans-serif] text-xl font-bold text-white pt-1">
                       Websites & E-Commerce de Autor
                     </h3>
-                    <p className="text-xs text-white/70 leading-relaxed">
+                    <p className="text-xs text-white/65 leading-relaxed">
                       Diseñamos y programamos el portal web de tu marca conectado directamente a las existencias y facturación de tu Frant ERP.
                     </p>
                   </div>
@@ -424,8 +461,8 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                 Crece a tu propio ritmo.
               </span>
             </h2>
-            <p className="text-sm sm:text-base text-white/65 leading-relaxed">
-              Ya sea que necesites únicamente el software Frant ERP para tu local o un ecosistema corporativo completo con desarrollo web y automatización de agencia, nuestra estructura se divide en tres niveles claros:
+            <p className="text-sm sm:text-base text-white/60 leading-relaxed">
+              Ya sea que necesites únicamente el software Frant ERP para tu local o un ecosistema corporativo completo con desarrollo web y automatización de <strong className="text-white">Diaz Lab Automation</strong>, nuestra estructura se divide en tres niveles claros:
             </p>
           </div>
 
@@ -438,21 +475,21 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
               <div className="space-y-6">
                 <div className="flex items-center justify-between font-mono text-xs">
                   <span className="px-3 py-1 rounded-full bg-white/10 text-white font-bold">NIVEL 01</span>
-                  <span className="text-white/55">NÚCLEO SAAS</span>
+                  <span className="text-white/50">NÚCLEO SAAS</span>
                 </div>
                 <div>
                   <h3 className="font-['Space_Grotesk',sans-serif] text-2xl font-bold text-white">
                     Acceso Base a Frant ERP
                   </h3>
-                  <p className="text-xs text-white/65 mt-2 leading-relaxed">
+                  <p className="text-xs text-white/60 mt-2 leading-relaxed">
                     La base operativa esencial para digitalizar tu comercio con aislamiento multi-tenant seguro en la nube.
                   </p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 font-mono text-xs">
-                  <span className="text-white/55 block text-[10px] uppercase">MODALIDAD DE COSTO</span>
+                  <span className="text-white/50 block text-[10px] uppercase">MODALIDAD DE COSTO</span>
                   <span className="text-base font-bold text-white mt-0.5 block">Suscripción Base del Sistema</span>
                 </div>
-                <ul className="space-y-3 text-xs text-white/80 list-none p-0 m-0">
+                <ul className="space-y-3 text-xs text-white/75 list-none p-0 m-0">
                   <li className="flex items-start gap-2.5">
                     <span className="text-[#10B981] font-bold">✓</span>
                     <span>Punto de Venta (POS) y Arqueo de Caja Diario con reloj en tiempo real.</span>
@@ -500,7 +537,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                   <h3 className="font-['Space_Grotesk',sans-serif] text-2xl font-bold text-white">
                     Módulos & Funciones Adicionales del ERP
                   </h3>
-                  <p className="text-xs text-white/65 mt-2 leading-relaxed">
+                  <p className="text-xs text-white/60 mt-2 leading-relaxed">
                     Suma al Núcleo Base únicamente las capacidades avanzadas o verticales que tu operación requiera activar.
                   </p>
                 </div>
@@ -508,7 +545,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                   <span className="text-[#D4A359] block text-[10px] uppercase">MODALIDAD DE COSTO</span>
                   <span className="text-base font-bold text-white mt-0.5 block">Base + Módulos Activos a Demanda</span>
                 </div>
-                <ul className="space-y-3 text-xs text-white/85 list-none p-0 m-0">
+                <ul className="space-y-3 text-xs text-white/80 list-none p-0 m-0">
                   <li className="flex items-start gap-2.5">
                     <span className="text-[#D4A359] font-bold">+</span>
                     <span>
@@ -558,9 +595,9 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                 </div>
                 <div>
                   <h3 className="font-['Space_Grotesk',sans-serif] text-2xl font-bold text-white">
-                    Paquetes Integrales: Frant ERP + Servicios Diaz Lab
+                    Paquetes Integrales: Frant ERP + Diaz Lab Automation
                   </h3>
-                  <p className="text-xs text-white/70 mt-2 leading-relaxed">
+                  <p className="text-xs text-white/65 mt-2 leading-relaxed">
                     La solución corporativa total: entregamos el ERP configurado junto con el desarrollo de tu propio sitio web comercial y automatizaciones a medida.
                   </p>
                 </div>
@@ -568,7 +605,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                   <span className="text-[#FF5520] block text-[10px] uppercase">MODALIDAD DE COSTO</span>
                   <span className="text-base font-bold text-white mt-0.5 block">Paquete Todo Incluido (ERP + Ingeniería)</span>
                 </div>
-                <ul className="space-y-3 text-xs text-white/90 list-none p-0 m-0">
+                <ul className="space-y-3 text-xs text-white/85 list-none p-0 m-0">
                   <li className="flex items-start gap-2.5">
                     <span className="text-[#FF5520] font-bold">★</span>
                     <span>
@@ -619,14 +656,14 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                   <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#D9381E] font-bold">
                     // 03. CONFIGURADOR TÁCTIL DE PROPUESTA
                   </span>
-                  <h3 className="font-['Space_Grotesk',sans-serif] text-3xl sm:text-4xl font-bold tracking-tight mt-1">
+                  <h3 className="font-['Space_Grotesk',sans-serif] text-3xl sm:text-4xl font-bold tracking-tight mt-1 text-[#0D0E11]">
                     Selecciona los módulos de tu negocio y recibe tu propuesta exacta.
                   </h3>
                 </div>
 
                 {/* Paso 1: Rubro */}
                 <div className="space-y-3">
-                  <label className="font-mono text-xs uppercase tracking-wider font-bold text-[#3F3D38] block">
+                  <label className="font-mono text-xs uppercase tracking-wider font-bold text-[#4A4843] block">
                     1. Selecciona tu Vertical o Rubro Principal:
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -653,14 +690,14 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
 
                 {/* Paso 2: Módulos Nivel 2 (ERP) */}
                 <div className="space-y-3">
-                  <label className="font-mono text-xs uppercase tracking-wider font-bold text-[#3F3D38] block">
+                  <label className="font-mono text-xs uppercase tracking-wider font-bold text-[#4A4843] block">
                     2. Módulos Adicionales de Frant ERP (Nivel 2):
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {AVAILABLE_ERP_MODULES.map((mod) => (
                       <label
                         key={mod}
-                        className="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-black/15 cursor-pointer select-none text-[#161616]"
+                        className="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-black/15 cursor-pointer select-none text-[#0D0E11]"
                       >
                         <input
                           type="checkbox"
@@ -668,22 +705,22 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                           onChange={() => toggleMod(mod)}
                           className="w-4 h-4 accent-[#FF5520]"
                         />
-                        <span className="text-xs font-semibold">{mod}</span>
+                        <span className="text-xs font-semibold text-[#0D0E11]">{mod}</span>
                       </label>
                     ))}
                   </div>
                 </div>
 
-                {/* Paso 3: Servicios Agencia Nivel 3 (Diaz Lab) */}
+                {/* Paso 3: Servicios Agencia Nivel 3 (Diaz Lab Automation) */}
                 <div className="space-y-3">
-                  <label className="font-mono text-xs uppercase tracking-wider font-bold text-[#3F3D38] block">
-                    3. Servicios de Ingeniería Diaz Lab (Paquete Nivel 3):
+                  <label className="font-mono text-xs uppercase tracking-wider font-bold text-[#4A4843] block">
+                    3. Servicios de Ingeniería Diaz Lab Automation (Paquete Nivel 3):
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {AVAILABLE_AGENCY_SERVICES.map((svc) => (
                       <label
                         key={svc}
-                        className="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-black/15 cursor-pointer select-none text-[#161616]"
+                        className="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-black/15 cursor-pointer select-none text-[#0D0E11]"
                       >
                         <input
                           type="checkbox"
@@ -691,7 +728,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                           onChange={() => toggleAgency(svc)}
                           className="w-4 h-4 accent-[#FF5520]"
                         />
-                        <span className="text-xs font-semibold">{svc}</span>
+                        <span className="text-xs font-semibold text-[#0D0E11]">{svc}</span>
                       </label>
                     ))}
                   </div>
@@ -710,30 +747,30 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
 
                   <div className="space-y-3 font-mono text-xs">
                     <div>
-                      <span className="text-white/50 block text-[10px] uppercase">RUBRO SELECCIONADO</span>
+                      <span className="text-white/45 block text-[10px] uppercase">RUBRO SELECCIONADO</span>
                       <span className="font-bold text-sm text-white">{selectedRubro}</span>
                     </div>
                     <div>
-                      <span className="text-white/50 block text-[10px] uppercase">NÚCLEO INCLUIDO (NIVEL 1)</span>
+                      <span className="text-white/45 block text-[10px] uppercase">NÚCLEO INCLUIDO (NIVEL 1)</span>
                       <span className="text-white/85">✓ Frant ERP Core + POS + Caja + Gmail OAuth</span>
                     </div>
                     <div>
-                      <span className="text-white/50 block text-[10px] uppercase">MÓDULOS ERP ACTIVOS (NIVEL 2)</span>
+                      <span className="text-white/45 block text-[10px] uppercase">MÓDULOS ERP ACTIVOS (NIVEL 2)</span>
                       <ul className="space-y-1 text-[#D4A359] mt-1 list-none p-0 m-0">
                         {selectedMods.length > 0 ? (
                           selectedMods.map((m) => <li key={m}>+ {m}</li>)
                         ) : (
-                          <li className="text-white/45">Ninguno (Solo Núcleo Base Nivel 1)</li>
+                          <li className="text-white/40">Ninguno (Solo Núcleo Base Nivel 1)</li>
                         )}
                       </ul>
                     </div>
                     <div>
-                      <span className="text-white/50 block text-[10px] uppercase">INGENIERÍA DIAZ LAB (NIVEL 3)</span>
+                      <span className="text-white/45 block text-[10px] uppercase">INGENIERÍA DIAZ LAB AUTOMATION (NIVEL 3)</span>
                       <ul className="space-y-1 text-[#10B981] mt-1 list-none p-0 m-0">
                         {selectedAgency.length > 0 ? (
                           selectedAgency.map((a) => <li key={a}>★ {a}</li>)
                         ) : (
-                          <li className="text-white/45">Sin servicios adicionales de agencia</li>
+                          <li className="text-white/40">Sin servicios adicionales de agencia</li>
                         )}
                       </ul>
                     </div>
@@ -750,7 +787,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                     <span>Enviar Configuración a WhatsApp Comercial</span>
                     <span>→</span>
                   </a>
-                  <p className="text-[11px] font-mono text-white/50 text-center">
+                  <p className="text-[11px] font-mono text-white/45 text-center">
                     Respuesta directa de un ingeniero de Diaz Lab Automation.
                   </p>
                 </div>
@@ -768,7 +805,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
               // 04. DIVISIÓN DE INGENIERÍA CORPORATIVA
             </span>
             <h2 className="font-['Space_Grotesk',sans-serif] text-3xl sm:text-5xl font-bold text-white">
-              Ingeniería de software a la medida por Diaz Lab.
+              Ingeniería de software a la medida por Diaz Lab Automation.
             </h2>
           </div>
 
@@ -778,7 +815,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
               <h3 className="font-['Space_Grotesk',sans-serif] text-xl font-bold text-white">
                 Portales Web de Alta Conversión
               </h3>
-              <p className="text-xs text-white/70 leading-relaxed">
+              <p className="text-xs text-white/65 leading-relaxed">
                 Diseño y programación de sitios web comerciales y tiendas en línea conectadas al inventario y facturación de tu negocio.
               </p>
             </div>
@@ -787,7 +824,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
               <h3 className="font-['Space_Grotesk',sans-serif] text-xl font-bold text-white">
                 Automatización de Procesos
               </h3>
-              <p className="text-xs text-white/70 leading-relaxed">
+              <p className="text-xs text-white/65 leading-relaxed">
                 Eliminamos tareas repetitivas en hojas de cálculo, conciliaciones bancarias y generación de reportes operativos.
               </p>
             </div>
@@ -796,7 +833,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
               <h3 className="font-['Space_Grotesk',sans-serif] text-xl font-bold text-white">
                 Integración de Sistemas
               </h3>
-              <p className="text-xs text-white/70 leading-relaxed">
+              <p className="text-xs text-white/65 leading-relaxed">
                 Conectamos pasarelas de pago (Wompi, Bold, Stripe), transportadoras y sistemas contables mediante APIs seguras.
               </p>
             </div>
@@ -805,7 +842,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
               <h3 className="font-['Space_Grotesk',sans-serif] text-xl font-bold text-white">
                 IA & Modelos con RAG Propio
               </h3>
-              <p className="text-xs text-white/70 leading-relaxed">
+              <p className="text-xs text-white/65 leading-relaxed">
                 Asistentes autónomos entrenados con los documentos, precios y políticas reales de tu organización.
               </p>
             </div>
@@ -815,13 +852,13 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
         {/* =======================================================================
             7. FOOTER CON CUMPLIMIENTO LEGAL VISIBLE (/privacy y /terms)
            ======================================================================= */}
-        <footer className="border-t border-white/10 bg-[#050608] py-16 px-6 lg:px-14 text-xs text-white/55">
+        <footer className="border-t border-white/10 bg-[#050608] py-16 px-6 lg:px-14 text-xs text-white/50">
           <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
             <div className="space-y-3">
               <span className="font-['Space_Grotesk',sans-serif] font-bold text-lg text-white tracking-wider">
                 DIAZ LAB AUTOMATION
               </span>
-              <p className="text-xs text-white/50 leading-relaxed">
+              <p className="text-xs text-white/45 leading-relaxed">
                 Estudio de ingeniería de software, automatización empresarial y creadores de la plataforma SaaS{' '}
                 <strong className="text-white">Frant ERP</strong>.
               </p>
@@ -870,7 +907,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                     href="https://frant.app/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-white text-white/75 underline decoration-white/25"
+                    className="hover:text-white text-white/75 underline decoration-white/20"
                   >
                     Política de Privacidad (https://frant.app/privacy)
                   </a>
@@ -880,7 +917,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
                     href="https://frant.app/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-white text-white/75 underline decoration-white/25"
+                    className="hover:text-white text-white/75 underline decoration-white/20"
                   >
                     Términos y Condiciones (https://frant.app/terms)
                   </a>

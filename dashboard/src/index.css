@@ -588,7 +588,7 @@ body {
               color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-h1, h2, h3, h4, h5, h6, .font-display {
+.content-area h1, .content-area h2, .content-area h3, .content-area h4, .content-area h5, .content-area h6, .modal-overlay h1, .modal-overlay h2, .modal-overlay h3, .font-display {
   font-family: var(--font-display);
   font-weight: 600;
   color: var(--text-color);
@@ -596,10 +596,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   transition: color 0.3s ease;
 }
 
-/* ==========================================================================
-   WABI-SABI PAPER RECTANGULAR FORM CONTROLS & CARDS (90° Sharp Edges)
-   ========================================================================== */
-label {
+.content-area label, .modal-overlay label {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -2165,13 +2162,13 @@ html[data-theme='obsidian-precision'] .content-area .bg-\[\#FEF7E0\] {
    ========================================================================== */
 
 /* Combinación 1 (Predeterminada del Mockup): Space Grotesk (Títulos y KPIs) + Plus Jakarta Sans (Tablas/UI) */
-html[data-font-pair='industrial'] h1,
-html[data-font-pair='industrial'] h2,
-html[data-font-pair='industrial'] h3,
+html[data-font-pair='industrial'] .content-area h1,
+html[data-font-pair='industrial'] .content-area h2,
+html[data-font-pair='industrial'] .content-area h3,
 html[data-font-pair='industrial'] .content-area .font-serif,
-html:not([data-font-pair]) h1,
-html:not([data-font-pair]) h2,
-html:not([data-font-pair]) h3,
+html:not([data-font-pair]) .content-area h1,
+html:not([data-font-pair]) .content-area h2,
+html:not([data-font-pair]) .content-area h3,
 html:not([data-font-pair]) .content-area .font-serif {
   font-family: "Space Grotesk", system-ui, sans-serif !important;
   font-weight: 700 !important;
@@ -2179,18 +2176,18 @@ html:not([data-font-pair]) .content-area .font-serif {
   letter-spacing: -0.025em !important;
 }
 
-html[data-font-pair='industrial'] h4,
-html[data-font-pair='industrial'] h5,
-html[data-font-pair='industrial'] h6 {
+html[data-font-pair='industrial'] .content-area h4,
+html[data-font-pair='industrial'] .content-area h5,
+html[data-font-pair='industrial'] .content-area h6 {
   font-family: "Plus Jakarta Sans", system-ui, sans-serif !important;
   font-weight: 700 !important;
   letter-spacing: -0.015em !important;
 }
 
 /* Combinación 2: Editorial Calibrada (Instrument Serif 400 en títulos principales + Space Grotesk en KPIs + Jakarta en tablas) */
-html[data-font-pair='editorial-calibrated'] h1,
-html[data-font-pair='editorial-calibrated'] h2,
-html[data-font-pair='editorial-calibrated'] h3,
+html[data-font-pair='editorial-calibrated'] .content-area h1,
+html[data-font-pair='editorial-calibrated'] .content-area h2,
+html[data-font-pair='editorial-calibrated'] .content-area h3,
 html[data-font-pair='editorial-calibrated'] .content-area .font-serif {
   font-family: "Instrument Serif", Georgia, serif !important;
   font-weight: 400 !important;
@@ -2204,12 +2201,12 @@ html[data-font-pair='editorial-calibrated'] .content-area .font-serif.font-mono 
 }
 
 /* Combinación 3: 100% Plus Jakarta Sans Geometric */
-html[data-font-pair='swiss-clean'] h1,
-html[data-font-pair='swiss-clean'] h2,
-html[data-font-pair='swiss-clean'] h3,
-html[data-font-pair='swiss-clean'] h4,
-html[data-font-pair='swiss-clean'] h5,
-html[data-font-pair='swiss-clean'] h6,
+html[data-font-pair='swiss-clean'] .content-area h1,
+html[data-font-pair='swiss-clean'] .content-area h2,
+html[data-font-pair='swiss-clean'] .content-area h3,
+html[data-font-pair='swiss-clean'] .content-area h4,
+html[data-font-pair='swiss-clean'] .content-area h5,
+html[data-font-pair='swiss-clean'] .content-area h6,
 html[data-font-pair='swiss-clean'] .content-area .font-serif {
   font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif !important;
   font-weight: 700 !important;

@@ -111,8 +111,20 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
   };
 
   return (
-    <div className="min-h-screen bg-[#090A0C] text-[#F4F1EA] font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden relative selection:bg-[#FF3B1D] selection:text-white">
+    <div className="frant-landing-root min-h-screen bg-[#090A0C] text-[#F4F1EA] font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden relative selection:bg-[#FF3B1D] selection:text-white">
       <style>{`
+        /* Garantiza escala exacta 16px = 1rem idéntica al mockup aprobado (sin inflación de portátil del ERP) */
+        html {
+          font-size: 16px !important;
+        }
+        .frant-film-grain {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 9999;
+          opacity: 0.032;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
         .frant-tech-grid {
           background-size: 48px 48px;
           background-image: 
@@ -192,19 +204,69 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
         }
       `}</style>
 
+      <div className="frant-film-grain"></div>
+
+      {/* =======================================================================
+          BARRA FLOTANTE DE CONTROL DEL TEMA 3D Y PUENTE A DIAZ LAB AUTOMATION
+         ======================================================================= */}
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#121318]/95 backdrop-blur-xl border border-white/15 px-4 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] hidden md:flex items-center gap-3 text-xs whitespace-nowrap">
+        <div className="flex items-center gap-2 pr-3 border-r border-white/10">
+          <span className="w-2 h-2 rounded-full bg-[#FF3B1D] animate-pulse"></span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-white/70">FRANT.APP</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-[10px] text-white/50 uppercase mr-1">Tema Consola ERP:</span>
+          <button
+            type="button"
+            onClick={() => setErpTheme('titanium')}
+            className={`px-2.5 py-1 rounded-lg font-mono text-[11px] cursor-pointer frant-btn-tactile border-0 ${
+              erpTheme === 'titanium' ? 'bg-[#FF3B1D] text-white font-semibold' : 'bg-white/5 hover:bg-white/10 text-white/70'
+            }`}
+          >
+            1. Braun Titanium
+          </button>
+          <button
+            type="button"
+            onClick={() => setErpTheme('obsidian')}
+            className={`px-2.5 py-1 rounded-lg font-mono text-[11px] cursor-pointer frant-btn-tactile border-0 ${
+              erpTheme === 'obsidian' ? 'bg-[#FF3B1D] text-white font-semibold' : 'bg-white/5 hover:bg-white/10 text-white/70'
+            }`}
+          >
+            2. Obsidian Pro (Dark)
+          </button>
+          <button
+            type="button"
+            onClick={() => setErpTheme('swiss')}
+            className={`px-2.5 py-1 rounded-lg font-mono text-[11px] cursor-pointer frant-btn-tactile border-0 ${
+              erpTheme === 'swiss' ? 'bg-[#FF3B1D] text-white font-semibold' : 'bg-white/5 hover:bg-white/10 text-white/70'
+            }`}
+          >
+            3. Swiss Daylight
+          </button>
+        </div>
+        <a
+          href="https://diazlab.online"
+          onClick={handleGoToPlanesDiazLab}
+          className="ml-2 pl-3 border-l border-white/10 font-mono text-[11px] text-[#C89D54] hover:text-white flex items-center gap-1 font-semibold no-underline cursor-pointer"
+        >
+          <span>Diaz Lab Automation</span>
+          <span>→</span>
+        </a>
+      </div>
+
       <div className="frant-tech-grid min-h-screen">
         {/* =======================================================================
             1. NAVBAR INDUSTRIAL DE ALTA PRECISIÓN (FRANT.APP)
            ======================================================================= */}
         <header className="sticky top-0 z-40 bg-[#090A0C]/85 backdrop-blur-xl border-b border-white/10 px-6 lg:px-14 py-4">
-          <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+          <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
             {/* Brand Identity */}
-            <a href="#top" className="flex items-center gap-3.5 group no-underline">
-              <div className="w-9 h-9 rounded-lg bg-[#16181D] border border-white/15 flex items-center justify-center relative overflow-hidden shadow-inner">
+            <a href="#top" className="flex items-center gap-3.5 group no-underline shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-[#16181D] border border-white/15 flex items-center justify-center relative overflow-hidden shadow-inner shrink-0">
                 <span className="font-['Space_Grotesk',sans-serif] font-bold text-lg tracking-tighter text-white">F</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FF3B1D] absolute top-1.5 right-1.5"></span>
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   <span className="font-['Space_Grotesk',sans-serif] font-bold text-lg tracking-[0.06em] text-white leading-none">FRANT</span>
                   <span className="font-mono text-[9px] uppercase tracking-[0.2em] px-1.5 py-0.5 rounded bg-white/10 text-white/80 border border-white/10">ERP v2.6</span>
@@ -214,31 +276,31 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
             </a>
 
             {/* Navigation Links (Strictly Frant ERP Modules & Verticals) */}
-            <nav className="hidden xl:flex items-center gap-8 text-xs font-mono uppercase tracking-[0.14em] text-white/65">
-              <a href="#consola-3d" className="hover:text-white transition-colors no-underline text-white/70">01. Consola 3D</a>
-              <a href="#despacho-nativo" className="hover:text-white transition-colors flex items-center gap-1.5 no-underline text-white/70">
+            <nav className="hidden xl:flex items-center gap-7 text-xs font-mono uppercase tracking-[0.14em] text-white/65 whitespace-nowrap">
+              <a href="#consola-3d" className="hover:text-white transition-colors no-underline text-white/65">01. Consola</a>
+              <a href="#despacho-nativo" className="hover:text-white transition-colors flex items-center gap-1.5 no-underline text-white/65">
                 <span>02. Gmail & WhatsApp</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
               </a>
-              <a href="#verticales" className="hover:text-white transition-colors no-underline text-white/70">03. Verticales</a>
+              <a href="#verticales" className="hover:text-white transition-colors no-underline text-white/65">03. Verticales</a>
               <a href="#planes-erp" className="hover:text-white transition-colors no-underline text-[#C89D54]">04. Planes</a>
             </nav>
 
             {/* Direct Actions: Login (/login) & Demo */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0 whitespace-nowrap">
               <a
                 href="/login"
                 onClick={handleLogin}
-                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs font-mono uppercase tracking-wider text-white transition-colors frant-btn-tactile flex items-center gap-2 no-underline cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs font-mono uppercase tracking-wider text-white transition-colors frant-btn-tactile flex items-center gap-2 no-underline cursor-pointer whitespace-nowrap"
               >
-                <svg className="w-3.5 h-3.5 text-[#FF3B1D]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5 text-[#FF3B1D] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" />
                 </svg>
                 <span>Iniciar Sesión</span>
               </a>
               <a
                 href="#planes-erp"
-                className="hidden sm:inline-flex px-5 py-2.5 rounded-xl bg-[#FF3B1D] hover:bg-[#e02d10] text-white text-xs font-mono font-semibold uppercase tracking-wider shadow-[0_0_25px_rgba(255,59,29,0.35)] frant-btn-tactile no-underline"
+                className="hidden sm:inline-flex px-5 py-2.5 rounded-xl bg-[#FF3B1D] hover:bg-[#e02d10] text-white text-xs font-mono font-semibold uppercase tracking-wider shadow-[0_0_25px_rgba(255,59,29,0.35)] frant-btn-tactile no-underline whitespace-nowrap"
               >
                 Solicitar Acceso
               </a>
