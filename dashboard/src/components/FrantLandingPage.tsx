@@ -436,7 +436,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                   <span className="w-3 h-3 rounded-full bg-[#FF5F56] inline-block"></span>
                   <span className="w-3 h-3 rounded-full bg-[#FFBD2E] inline-block"></span>
                   <span className="w-3 h-3 rounded-full bg-[#27C93F] inline-block"></span>
-                  <span className="ml-3 text-white/45 text-[11px]">https://frant.app/workspace/hoshi-services</span>
+                  <span className="ml-3 text-white/45 text-[11px]">https://frant.app/workspace/empresa-demo</span>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 text-[11px]">
                   <span className="text-white/50">Tema Interfaz:</span>
@@ -475,9 +475,9 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                         <FrantLogo variant="dark" size={32} />
                         <div className="hidden sm:block overflow-hidden">
                           <div className="font-['Space_Grotesk',sans-serif] font-bold text-xs tracking-wide text-white truncate">
-                            Hoshi Services
+                            Comercial Aurora SAS
                           </div>
-                          <div className="font-mono text-[10px] text-white/50 truncate">Sede Matriz • Barranquilla</div>
+                          <div className="font-mono text-[10px] text-white/50 truncate">Sede Principal • Demo</div>
                         </div>
                       </div>
 
@@ -819,18 +819,18 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                               </thead>
                               <tbody className="divide-y" style={{ borderColor: 'var(--erp-border)' }}>
                                 <tr>
-                                  <td className="py-2.5 px-4 font-mono font-bold">#FE-1793</td>
-                                  <td className="py-2.5 px-4 font-semibold">ANGEL AVILA FLOREZ</td>
+                                  <td className="py-2.5 px-4 font-mono font-bold">#FE-2048</td>
+                                  <td className="py-2.5 px-4 font-semibold">INVERSIONES DEL NORTE SAS</td>
                                   <td className="py-2.5 px-4 font-mono text-[11px] text-[#10B981]">Validada DIAN • 94a8...31f2</td>
                                   <td className="py-2.5 px-4 font-mono text-[11px]">Gmail + WhatsApp ✓</td>
-                                  <td className="py-2.5 px-4 text-right font-mono font-bold tabular-nums">$ 1.300.000</td>
+                                  <td className="py-2.5 px-4 text-right font-mono font-bold tabular-nums">$ 1.480.000</td>
                                 </tr>
                                 <tr>
-                                  <td className="py-2.5 px-4 font-mono font-bold">#FE-1792</td>
-                                  <td className="py-2.5 px-4 font-semibold">ÓPTICA VISIÓN REAL SAS</td>
+                                  <td className="py-2.5 px-4 font-mono font-bold">#FE-2047</td>
+                                  <td className="py-2.5 px-4 font-semibold">GRUPO ÓPTICO CENTRAL SAS</td>
                                   <td className="py-2.5 px-4 font-mono text-[11px] text-[#10B981]">Validada DIAN • 7c12...89e0</td>
                                   <td className="py-2.5 px-4 font-mono text-[11px]">Gmail + WhatsApp ✓</td>
-                                  <td className="py-2.5 px-4 text-right font-mono font-bold tabular-nums">$ 840.000</td>
+                                  <td className="py-2.5 px-4 text-right font-mono font-bold tabular-nums">$ 920.000</td>
                                 </tr>
                               </tbody>
                             </table>
@@ -908,7 +908,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                                 TOTAL INGRESOS
                               </div>
                               <div className="font-['Space_Grotesk',sans-serif] text-xl sm:text-2xl font-bold mt-1.5 tabular-nums">
-                                $ 5.163.000
+                                $ 8.450.000
                               </div>
                             </div>
                             <div className="w-9 h-9 rounded-lg border flex items-center justify-center text-[#D9381E] shrink-0" style={{ borderColor: 'var(--erp-border)', backgroundColor: 'var(--erp-surface)' }}>
@@ -928,7 +928,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                                 GASTOS OPERATIVOS
                               </div>
                               <div className="font-['Space_Grotesk',sans-serif] text-xl sm:text-2xl font-bold mt-1.5 text-[#D9381E] tabular-nums">
-                                $ 1.952.300
+                                $ 1.620.000
                               </div>
                             </div>
                             <div className="w-9 h-9 rounded-lg border flex items-center justify-center text-[#C89D54] shrink-0" style={{ borderColor: 'var(--erp-border)', backgroundColor: 'var(--erp-surface)' }}>
@@ -947,7 +947,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                                 TICKET PROMEDIO
                               </div>
                               <div className="font-['Space_Grotesk',sans-serif] text-xl sm:text-2xl font-bold mt-1.5 tabular-nums">
-                                $ 286.833,33
+                                $ 352.083
                               </div>
                             </div>
                             <div className="w-9 h-9 rounded-lg border flex items-center justify-center shrink-0" style={{ borderColor: 'var(--erp-border)', backgroundColor: 'var(--erp-surface)' }}>
@@ -966,7 +966,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                                 FACTURAS EMITIDAS
                               </div>
                               <div className="font-['Space_Grotesk',sans-serif] text-xl sm:text-2xl font-bold mt-1.5 tabular-nums">
-                                18
+                                24
                               </div>
                             </div>
                             <div className="w-9 h-9 rounded-lg border flex items-center justify-center shrink-0" style={{ borderColor: 'var(--erp-border)', backgroundColor: 'var(--erp-surface)' }}>
@@ -988,7 +988,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                               <span className="px-3 py-1.5 rounded-lg bg-[#111215] text-white font-bold flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
                                 <span>TABLA DE INGRESOS</span>
-                                <span className="px-1.5 py-0.2 rounded bg-white/15 text-[10px]">18</span>
+                                <span className="px-1.5 py-0.2 rounded bg-white/15 text-[10px]">24</span>
                               </span>
                               <span
                                 className="px-3 py-1.5 rounded-lg border font-semibold flex items-center gap-2"
@@ -996,7 +996,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                               >
                                 <span className="w-2 h-2 rounded-full bg-[#D9381E]"></span>
                                 <span>TABLA DE GASTOS</span>
-                                <span className="px-1.5 py-0.2 rounded bg-black/5 text-[10px]">20</span>
+                                <span className="px-1.5 py-0.2 rounded bg-black/5 text-[10px]">12</span>
                               </span>
                             </div>
 
@@ -1028,16 +1028,16 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                               </thead>
                               <tbody className="divide-y" style={{ borderColor: 'var(--erp-border)' }}>
                                 <tr>
-                                  <td className="py-3 px-4 font-mono font-bold">#FAC-FV-1793</td>
+                                  <td className="py-3 px-4 font-mono font-bold">#FAC-FV-2048</td>
                                   <td className="py-3 px-4 font-mono text-[11px]" style={{ color: 'var(--erp-muted)' }}>
-                                    23 de oct de 2026, 11:32 a. m.
+                                    24 de oct de 2026, 10:15 a. m.
                                   </td>
                                   <td className="py-3 px-4">
-                                    <div className="font-bold">ANGEL AVILA FLOREZ</div>
-                                    <div className="font-mono text-[10px]" style={{ color: 'var(--erp-muted)' }}>3142044181</div>
+                                    <div className="font-bold">CARLOS MENDOZA RUIZ</div>
+                                    <div className="font-mono text-[10px]" style={{ color: 'var(--erp-muted)' }}>300 000 0000</div>
                                   </td>
                                   <td className="py-3 px-4 font-mono text-[11px]" style={{ color: 'var(--erp-muted)' }}>
-                                    Habib Orozco
+                                    Asesor Comercial 01
                                   </td>
                                   <td className="py-3 px-4">
                                     <span
@@ -1054,21 +1054,21 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                                     </span>
                                   </td>
                                   <td className="py-3 px-4 text-right font-mono font-bold tabular-nums">
-                                    $ 1.300.000
+                                    $ 1.480.000
                                   </td>
                                 </tr>
 
                                 <tr>
-                                  <td className="py-3 px-4 font-mono font-bold">#FAC-FV-1791</td>
+                                  <td className="py-3 px-4 font-mono font-bold">#FAC-FV-2047</td>
                                   <td className="py-3 px-4 font-mono text-[11px]" style={{ color: 'var(--erp-muted)' }}>
-                                    21 de oct de 2026, 02:00 a. m.
+                                    24 de oct de 2026, 09:40 a. m.
                                   </td>
                                   <td className="py-3 px-4">
-                                    <div className="font-bold">YESENIA TORREROZA ESCOBAR</div>
-                                    <div className="font-mono text-[10px]" style={{ color: 'var(--erp-muted)' }}>3004221244</div>
+                                    <div className="font-bold">VALENTINA GÓMEZ CASTRO</div>
+                                    <div className="font-mono text-[10px]" style={{ color: 'var(--erp-muted)' }}>310 000 0000</div>
                                   </td>
                                   <td className="py-3 px-4 font-mono text-[11px]" style={{ color: 'var(--erp-muted)' }}>
-                                    Lindy Orozco
+                                    Asesor Comercial 02
                                   </td>
                                   <td className="py-3 px-4">
                                     <span
@@ -1085,7 +1085,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                                     </span>
                                   </td>
                                   <td className="py-3 px-4 text-right font-mono font-bold tabular-nums">
-                                    $ 270.000
+                                    $ 390.000
                                   </td>
                                 </tr>
                               </tbody>
