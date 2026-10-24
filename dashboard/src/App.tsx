@@ -34,23 +34,28 @@ function App() {
 
     const host = window.location.hostname.toLowerCase();
 
-    // Si la ruta es /landpage o /landing -> Mostrar la Landing Page
-    if (path === '/landpage' || path === '/landing' || urlView === 'landpage' || urlView === 'landing') {
+    // Si la ruta es explícitamente /login o subdominio app.diazlab.online -> Mostrar Login directo
+    if (path === '/login' || urlView === 'login' || host === 'app.diazlab.online') {
+      return 'login';
+    }
+
+    // Si la ruta es /landpage, /landing, /diazlab -> Mostrar Landing Page
+    if (path === '/landpage' || path === '/landing' || path === '/diazlab' || urlView === 'landpage' || urlView === 'landing') {
       return 'landing';
     }
 
-    // Si está en el dominio comercial diazlab.online en el root / -> Mostrar Landing Page pública
-    if ((host === 'diazlab.online' || host === 'www.diazlab.online') && (path === '/' || path === '')) {
+    // En la raíz / de frant.app y diazlab.online sin sesión activa -> Mostrar Homepage Pública sin Login Wall (Google OAuth Compliance)
+    const token = getStoredToken();
+    if (!token && (path === '/' || path === '')) {
       return 'landing';
     }
 
-    // En frant.app y app.diazlab.online -> Portal SaaS / Login directo
     return 'login';
   });
   const [clientId, setClientId] = useState(() => localStorage.getItem('current_client_id') || '');
   const [loading, setLoading] = useState(true);
 
-  // Escuchadores de eventos de seguridad (desconexión remota, 401/403 o cierre de sesión en otra pestaña)
+  // Escuchadores de eventos de seguridad (desconexión remota, 401/403 o cierre de sesión en otra pestaña) y navegación popstate
   useEffect(() => {
     const handleUnauthorized = () => {
       clearAllSessionData();
@@ -66,11 +71,23 @@ function App() {
       }
     };
 
+    const handlePopState = () => {
+      const currentPath = window.location.pathname.toLowerCase();
+      const token = getStoredToken();
+      if (currentPath === '/login') {
+        setView('login');
+      } else if (!token && (currentPath === '/' || currentPath === '' || currentPath === '/landing' || currentPath === '/landpage' || currentPath === '/diazlab')) {
+        setView('landing');
+      }
+    };
+
     window.addEventListener('auth:unauthorized', handleUnauthorized);
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('popstate', handlePopState);
     return () => {
       window.removeEventListener('auth:unauthorized', handleUnauthorized);
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('popstate', handlePopState);
     };
   }, []);
 
@@ -111,8 +128,8 @@ function App() {
         return;
       }
 
-      // 0. Caso explícito de /landpage o /landing
-      if (path === '/landpage' || path === '/landing' || urlView === 'landpage' || urlView === 'landing') {
+      // 0. Caso explícito de /landpage, /landing o /diazlab
+      if (path === '/landpage' || path === '/landing' || path === '/diazlab' || urlView === 'landpage' || urlView === 'landing') {
         setView('landing');
         setLoading(false);
         return;
@@ -143,17 +160,20 @@ function App() {
       // 2. Verificar si existe token en almacenamiento
       const token = getStoredToken();
       if (!token) {
-        // Si el usuario navegó a /landing o está en diazlab.online
-        if (path === '/landpage' || path === '/landing' || ((host === 'diazlab.online' || host === 'www.diazlab.online') && (path === '/' || path === ''))) {
-          setView('landing');
-        } else {
-          // En frant.app sin token -> ERP / Login directo
+        if (host === 'app.diazlab.online') {
           setView('login');
+        } else {
+          // En frant.app y diazlab.online sin token en / -> Mostrar Landing Page pública sin Login Wall
+          setView('landing');
         }
         setLoading(false);
-        if (window.location.search !== '') {
-          window.history.pushState({}, '', '/');
-        }
+        return;
+      }
+
+      // Si está en el dominio comercial diazlab.online en el root / -> Mostrar Landing Page de Diaz Lab aunque tenga token de ERP
+      if ((host === 'diazlab.online' || host === 'www.diazlab.online') && (path === '/' || path === '')) {
+        setView('landing');
+        setLoading(false);
         return;
       }
 
@@ -187,7 +207,6 @@ function App() {
             const savedCurrentView = localStorage.getItem('current_view');
 
             if (viewParam === 'admin') {
-              // Solicitud explícita para regresar al panel SuperAdmin
               setView('admin');
               localStorage.setItem('current_view', 'admin');
               localStorage.removeItem('view_as_client');
@@ -202,13 +221,11 @@ function App() {
               localStorage.setItem('view_as_client', 'true');
               localStorage.setItem('current_client_id', clientParam);
             } else if ((savedViewAsClient || savedCurrentView === 'client') && savedClientId) {
-              // Persistencia al recargar (F5): mantener la tienda y sucursal que el usuario estaba visualizando
               setClientId(savedClientId);
               setView('client');
               localStorage.setItem('current_view', 'client');
               localStorage.setItem('view_as_client', 'true');
             } else {
-              // Super Admin por defecto entra directamente al panel maestro de Super Admin
               setView('admin');
               localStorage.setItem('current_view', 'admin');
               localStorage.removeItem('view_as_client');
@@ -228,17 +245,14 @@ function App() {
               setClientId(empClientId);
             }
 
-            // Si navegó explícitamente a /empleados o /employee -> Portal Personal de Trabajo
             if (currentPath.startsWith('/empleado') || currentPath.startsWith('/employee') || currentPath.startsWith('/chat')) {
               setView('employee');
             } else if (!user.hasErpAccess) {
-              // Si el colaborador NO tiene permisos de ERP (ej. solo turno/reloj) -> Forzar Portal de Empleado
               setView('employee');
               if (window.location.pathname !== '/empleados') {
                 window.history.replaceState({}, '', '/empleados');
               }
             } else {
-              // Si el colaborador TIENE permisos de ERP y está en el root / -> Mantener en ERP (ClientDashboard)
               setView('client');
               if (window.location.pathname !== '/') {
                 window.history.replaceState({}, '', '/');
@@ -250,36 +264,60 @@ function App() {
             setClientId(clientTenantId);
             setView('client');
             localStorage.setItem('current_client_id', clientTenantId);
+            if (window.location.pathname !== '/') {
+              window.history.replaceState({}, '', '/');
+            }
           }
           
-          // Limpiar cualquier residuo visual de query params si se requiere
           if (window.location.search !== '') {
             window.history.pushState({}, '', window.location.pathname);
           }
         } else {
-          // Token inválido/expirado
           clearAllSessionData();
-          setView('login');
-          window.history.pushState({}, '', '/login');
+          if (host === 'app.diazlab.online' || path === '/login') {
+            setView('login');
+            window.history.pushState({}, '', '/login');
+          } else {
+            setView('landing');
+            window.history.replaceState({}, '', '/');
+          }
         }
       } catch (err) {
         console.error("[Auth App] Error validando sesión:", err);
         clearAllSessionData();
-        setView('login');
-        window.history.pushState({}, '', '/login');
+        if (host === 'app.diazlab.online' || path === '/login') {
+          setView('login');
+          window.history.pushState({}, '', '/login');
+        } else {
+          setView('landing');
+          window.history.replaceState({}, '', '/');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     checkAuthAndRoute();
+
+    const handlePopState = () => {
+      const currentPath = window.location.pathname.toLowerCase();
+      if (currentPath === '/login') {
+        setView('login');
+      } else if (currentPath === '/privacy' || currentPath === '/privacidad') {
+        setView('privacy' as any);
+      } else if (currentPath === '/terms' || currentPath === '/terminos') {
+        setView('terms' as any);
+      } else if (currentPath === '/' && !getStoredToken()) {
+        setView('landing');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const handleLoginSuccess = (id: string, role: string, token: string, extra?: Record<string, any>) => {
-    // 1. Limpieza total de cualquier sesión o usuario previo en memoria
     clearAllSessionData();
 
-    // 2. Establecer credenciales de la nueva sesión
     sessionStorage.setItem('auth_token', token);
     localStorage.setItem('auth_token', token);
     sessionStorage.setItem('session_role', role);
@@ -331,7 +369,7 @@ function App() {
     clearAllSessionData();
     setClientId('');
     setView('login');
-    window.history.pushState({}, '', '/');
+    window.history.pushState({}, '', '/login');
   };
 
   const handleClientDashboardBack = () => {
@@ -352,7 +390,7 @@ function App() {
       <div className="min-h-screen bg-[#F6F4EE] text-[#161616] flex flex-col items-center justify-center font-sans">
         <div className="flex flex-col items-center space-y-4">
           <div className="w-10 h-10 border-3 border-[#D9381E] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-xs text-[#6B6862] font-bold uppercase tracking-wider animate-pulse font-mono">Verificando sesión segura...</p>
+          <p className="text-xs text-[#3F3D38] font-bold uppercase tracking-wider animate-pulse font-mono">Verificando sesión segura...</p>
         </div>
       </div>
     );
@@ -368,7 +406,7 @@ function App() {
         token={actToken}
         onActivated={() => {
           setView('login');
-          window.history.pushState({}, '', '/');
+          window.history.pushState({}, '', '/login');
         }}
       />
     );
@@ -414,18 +452,28 @@ function App() {
   }
 
   if (view === 'landing') {
-    return <LandingPage onLoginClick={() => setView('login')} />;
+    return (
+      <LandingPage
+        onLoginClick={() => {
+          window.history.pushState({}, '', '/login');
+          setView('login');
+        }}
+      />
+    );
   }
 
   return (
     <div>
       <div className="fixed top-4 right-4 z-50">
         <button
-          onClick={() => setView('landing')}
+          onClick={() => {
+            window.history.pushState({}, '', '/');
+            setView('landing');
+          }}
           className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-white/20 flex items-center gap-1 cursor-pointer transition shadow"
         >
           <span className="material-symbols-outlined text-[15px]">home</span>
-          Página Principal / Precios
+          Página Principal
         </button>
       </div>
       <Login onLoginSuccess={handleLoginSuccess} />

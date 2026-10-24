@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIAZ LAB AUTOMATION — Ingeniería de Software, IA & Planes Frant ERP | diazlab.online</title>
+  <!-- Google Fonts: Space Grotesk + Newsreader + Plus Jakarta Sans + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --obsidian: #08090B;
+      --concrete: #111318;
+      --stone-architect: #E9E5DC;
+      --amber-led: #FF5520;
+      --brass-gold: #D4A359;
+      --emerald-led: #10B981;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-editorial: 'Newsreader', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--obsidian);
+      color: #F4F1EA;
+      font-family: var(--font-sans);
+      overflow-x: hidden;
+    }
+
+    .film-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.032;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    .bg-blueprint {
+      background-size: 56px 56px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+    }
+
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+
+    /* 3D Perspective Stage */
+    .perspective-stage {
+      perspective: 1800px;
+      transform-style: preserve-3d;
+    }
+
+    .window-3d-unfold {
+      transform-style: preserve-3d;
+      will-change: transform;
+      transition: transform 0.12s cubic-bezier(0.2, 0, 0, 1);
+      box-shadow: 
+        0 4px 8px rgba(0,0,0,0.4),
+        0 20px 45px rgba(0,0,0,0.65),
+        0 60px 120px -20px rgba(255, 85, 32, 0.16),
+        inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+
+    /* Animated Border Trail */
+    @keyframes borderTrail {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .border-trail-frame { position: relative; }
+    .border-trail-frame::before {
+      content: "";
+      position: absolute;
+      inset: -1.5px;
+      border-radius: inherit;
+      padding: 1.5px;
+      background: linear-gradient(120deg, rgba(255,85,32,0.9), rgba(212,163,89,0.7), rgba(255,255,255,0.06), rgba(16,185,129,0.6), rgba(255,85,32,0.9));
+      background-size: 300% 300%;
+      animation: borderTrail 6s ease infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Spotlight Hover */
+    .spotlight-card { position: relative; overflow: hidden; }
+    .spotlight-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 85, 32, 0.12), transparent 40%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .spotlight-card:hover::after { opacity: 1; }
+
+    .tilt-card {
+      transform-style: preserve-3d;
+      transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+      will-change: transform;
+    }
+
+    .btn-tactile {
+      transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s ease;
+    }
+    .btn-tactile:active { transform: scale(0.96); }
+  </style>
+</head>
+<body class="bg-blueprint">
+  <div class="film-grain"></div>
+
+  <!-- =======================================================================
+       BARRA FLOTANTE PARA NAVEGAR ENTRE LOS 2 MOCKUPS HTML
+       ======================================================================= -->
+  <div class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#121318]/95 backdrop-blur-xl border border-white/15 px-5 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.85)] flex items-center gap-4 text-xs">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+      <span class="font-mono text-[10px] uppercase tracking-widest text-white/80">MOCKUP: DIAZLAB.ONLINE (CASA MATRIZ & PLANES)</span>
+    </div>
+    <a href="./propuesta_frant_erp_luxury.html" class="pl-4 border-l border-white/15 font-mono text-[11px] text-[#FF5520] hover:text-white font-semibold flex items-center gap-1.5">
+      <span>← Volver al Mockup de frant.app (ERP + Temas App)</span>
+    </a>
+  </div>
+
+  <!-- =======================================================================
+       1. HEADER EDITORIAL INDUSTRIAL: DIAZ LAB AUTOMATION
+       ======================================================================= -->
+  <header class="sticky top-0 z-40 bg-[#08090B]/85 backdrop-blur-xl border-b border-white/10 px-6 lg:px-14 py-4">
+    <div class="max-w-[1400px] mx-auto flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3.5">
+        <div class="w-9 h-9 rounded-lg bg-[#FF5520] flex items-center justify-center font-['Space_Grotesk'] font-bold text-lg text-white shadow-[0_0_20px_rgba(255,85,32,0.4)]">
+          DL
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-['Space_Grotesk'] font-bold text-lg tracking-[0.08em] text-white uppercase leading-none">DIAZ LAB</span>
+            <span class="w-2 h-2 rounded-full bg-[#FF5520]"></span>
+          </div>
+          <span class="font-mono text-[9px] uppercase tracking-[0.26em] text-white/50 block mt-1">AUTOMATION & SOFTWARE ATELIER</span>
+        </div>
+      </a>
+
+      <nav class="hidden xl:flex items-center gap-8 font-mono text-xs uppercase tracking-[0.15em] text-white/65">
+        <a href="#arquitectura-3d" class="hover:text-white transition-colors">01. Ecosistema</a>
+        <a href="#planes" class="hover:text-white transition-colors text-[#D4A359] font-semibold">02. Estructura 3 Niveles</a>
+        <a href="#configurador" class="hover:text-white transition-colors">03. Cotizador Interactivo</a>
+        <a href="#ingenieria" class="hover:text-white transition-colors">04. Ingeniería a Medida</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="./propuesta_frant_erp_luxury.html" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 font-mono text-xs text-white/90 uppercase tracking-wider btn-tactile">
+          Ir a frant.app →
+        </a>
+        <a href="#configurador" class="hidden sm:inline-flex px-5 py-2.5 rounded-xl bg-[#FF5520] hover:bg-[#e04412] text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(255,85,32,0.35)] btn-tactile">
+          Armar Paquete
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- =======================================================================
+       2. HERO SECTION: CASA MATRIZ DIAZ LAB + FOTOGRAFÍA 8K DEL ESTUDIO
+       ======================================================================= -->
+  <section class="relative pt-14 lg:pt-20 pb-16 px-6 lg:px-14 max-w-[1400px] mx-auto">
+    <div class="absolute top-12 right-1/4 w-[650px] h-[350px] bg-[#FF5520]/10 blur-[150px] rounded-full pointer-events-none"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <!-- Copywriting Principal -->
+      <div class="lg:col-span-6 space-y-6">
+        <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 font-mono text-[11px]">
+          <span class="w-2 h-2 rounded-full bg-[#FF5520]"></span>
+          <span class="text-white/80 uppercase tracking-widest">Barranquilla, Colombia • Ingeniería de Software & IA</span>
+        </div>
+
+        <h1 class="font-['Space_Grotesk'] text-4xl sm:text-6xl font-bold tracking-[-0.03em] leading-[1.03] text-white" style="text-wrap: balance;">
+          Construimos el software que <span class="font-['Newsreader'] italic font-normal text-[#D4A359]">automatiza tu operación</span> de punta a punta.
+        </h1>
+
+        <p class="text-base sm:text-lg text-white/65 leading-relaxed">
+          Somos la casa matriz detrás de <strong>Frant ERP</strong> y el estudio de ingeniería que diseña tus plataformas web conectadas al inventario, flujos de automatización RPA y agentes autónomos de Inteligencia Artificial.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+          <a href="#planes" class="px-7 py-4 rounded-2xl bg-[#FF5520] hover:bg-[#e04412] text-white font-mono text-xs font-bold uppercase tracking-[0.15em] shadow-[0_12px_32px_-8px_rgba(255,85,32,0.55)] text-center btn-tactile">
+            Ver Arquitectura de Planes (3 Niveles)
+          </a>
+          <a href="#configurador" class="px-7 py-4 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/15 text-white font-mono text-xs uppercase tracking-[0.14em] text-center btn-tactile">
+            Configurar Solución a Medida
+          </a>
+        </div>
+      </div>
+
+      <!-- Fotografía Editorial 8K del Laboratorio Diaz Lab -->
+      <div class="lg:col-span-6">
+        <div class="tilt-card rounded-[28px] p-2.5 bg-gradient-to-b from-white/15 to-white/5 border border-white/15 shadow-[0_35px_90px_rgba(0,0,0,0.8)]">
+          <div class="relative rounded-[20px] overflow-hidden aspect-[16/10] outline outline-1 outline-white/10 -outline-offset-1">
+            <img src="./assets/diazlab_engineering_atelier.jpg" alt="Diaz Lab Automation Engineering Studio" class="w-full h-full object-cover" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#08090B] via-transparent to-transparent"></div>
+            <div class="absolute bottom-4 inset-x-4 bg-[#0D0F14]/90 backdrop-blur-xl border border-white/15 p-4 rounded-xl flex items-center justify-between">
+              <div>
+                <div class="font-mono text-[10px] uppercase tracking-widest text-[#FF5520] font-bold">ARQUITECTURA LLAVE EN MANO</div>
+                <div class="font-['Space_Grotesk'] text-sm sm:text-base font-bold text-white mt-0.5">Frant ERP Core + E-Commerce Propio + RPA + IA</div>
+              </div>
+              <span class="font-mono text-xs px-3 py-1 rounded-lg bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30 font-bold">
+                99.5% SLA
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       3. VENTANA 3D ISOMÉTRICA CON SCROLL UNFOLD: ARQUITECTURA DE ECOSISTEMA
+       ======================================================================= -->
+  <section id="arquitectura-3d" class="py-12 lg:py-20 px-6 lg:px-14 max-w-[1400px] mx-auto">
+    <div class="perspective-stage">
+      <div 
+        id="agency-3d-window" 
+        class="window-3d-unfold border-trail-frame rounded-[28px] bg-[#111319] border border-white/15 p-6 sm:p-10"
+        style="transform: rotateX(18deg) rotateY(10deg) rotateZ(-2deg) scale(0.95);"
+      >
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-white/10 gap-4">
+          <div class="flex items-center gap-3">
+            <span class="w-3 h-3 rounded-full bg-[#FF5520]"></span>
+            <span class="font-mono text-xs uppercase tracking-[0.2em] text-white/80 font-bold">DIAZ LAB TELEMETRY • ORQUESTACIÓN CENTRAL</span>
+          </div>
+          <span class="font-mono text-xs text-[#10B981]">● Todos los nodos sincronizados en tiempo real</span>
+        </div>
+
+        <!-- Diagrama Interactivo de Nodos tipo Hardware Industrial -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-8 items-stretch">
+          <div class="p-6 rounded-2xl bg-[#181B24] border border-white/10 flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+              <span class="font-mono text-[10px] px-2.5 py-1 rounded bg-white/10 text-white/80 uppercase">NODO 01 • PRODUCTO PROPIO</span>
+              <h3 class="font-['Space_Grotesk'] text-xl font-bold text-white pt-1">Núcleo Operativo Frant ERP</h3>
+              <p class="text-xs text-white/65 leading-relaxed">
+                Caja POS, arqueo por turno, inventario multi-sede, Facturación Electrónica DIAN y despacho nativo por Gmail OAuth y WhatsApp.
+              </p>
+            </div>
+            <div class="pt-3 border-t border-white/10 font-mono text-[11px] text-[#D4A359]">NIVEL 1 & NIVEL 2 →</div>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-[#181B24] border border-[#FF5520]/40 flex flex-col justify-between space-y-4 shadow-[0_0_40px_rgba(255,85,32,0.12)]">
+            <div class="space-y-2">
+              <span class="font-mono text-[10px] px-2.5 py-1 rounded bg-[#FF5520] text-white font-bold uppercase">NODO 02 • PUENTE API & IA</span>
+              <h3 class="font-['Space_Grotesk'] text-xl font-bold text-white pt-1">Agentes IA & Flujos RPA</h3>
+              <p class="text-xs text-white/65 leading-relaxed">
+                Bots conversacionales entrenados con el stock vivo del ERP, conciliación automática, webhooks con pasarelas (Wompi, Bold) y alertas gerenciales.
+              </p>
+            </div>
+            <div class="pt-3 border-t border-white/10 font-mono text-[11px] text-[#10B981]">SINCRONIZACIÓN BIDIRECCIONAL →</div>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-[#181B24] border border-white/10 flex flex-col justify-between space-y-4">
+            <div class="space-y-2">
+              <span class="font-mono text-[10px] px-2.5 py-1 rounded bg-white/10 text-white/80 uppercase">NODO 03 • INGENIERÍA WEB</span>
+              <h3 class="font-['Space_Grotesk'] text-xl font-bold text-white pt-1">Websites & E-Commerce de Autor</h3>
+              <p class="text-xs text-white/65 leading-relaxed">
+                Diseñamos y programamos el portal web de tu marca conectado directamente a las existencias y facturación de tu Frant ERP.
+              </p>
+            </div>
+            <div class="pt-3 border-t border-white/10 font-mono text-[11px] text-[#D4A359]">PAQUETE INTEGRAL NIVEL 3 →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       4. ESTRUCTURA COMERCIAL EN 3 NIVELES (SEGÚN ARQUITECTURA_LANDINGS.MD)
+       ======================================================================= -->
+  <section id="planes" class="py-24 px-6 lg:px-14 max-w-[1400px] mx-auto space-y-14">
+    <div class="text-center max-w-3xl mx-auto space-y-4">
+      <span class="font-mono text-xs uppercase tracking-[0.22em] text-[#FF5520] font-bold">
+        // 02. ARQUITECTURA DE INVERSIÓN EN 3 NIVELES
+      </span>
+      <h2 class="font-['Space_Grotesk'] text-3xl sm:text-5xl font-bold tracking-tight text-white">
+        Estructura comercial transparente. <span class="font-['Newsreader'] italic font-normal text-[#D4A359]">Crece a tu propio ritmo.</span>
+      </h2>
+      <p class="text-sm sm:text-base text-white/60 leading-relaxed">
+        Ya sea que necesites únicamente el software Frant ERP para tu local o un ecosistema corporativo completo con desarrollo web y automatización de agencia, nuestra estructura se divide en tres niveles claros:
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+      
+      <!-- NIVEL 1 -->
+      <div class="spotlight-card rounded-[28px] bg-[#12141B] border border-white/10 p-8 flex flex-col justify-between">
+        <div class="space-y-6">
+          <div class="flex items-center justify-between font-mono text-xs">
+            <span class="px-3 py-1 rounded-full bg-white/10 text-white font-bold">NIVEL 01</span>
+            <span class="text-white/50">NÚCLEO SAAS</span>
+          </div>
+          <div>
+            <h3 class="font-['Space_Grotesk'] text-2xl font-bold text-white">Acceso Base a Frant ERP</h3>
+            <p class="text-xs text-white/60 mt-2 leading-relaxed">
+              La base operativa esencial para digitalizar tu comercio con aislamiento multi-tenant seguro en la nube.
+            </p>
+          </div>
+          <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/10 font-mono text-xs">
+            <span class="text-white/50 block text-[10px] uppercase">MODALIDAD DE COSTO</span>
+            <span class="text-base font-bold text-white mt-0.5 block">Suscripción Base del Sistema</span>
+          </div>
+          <ul class="space-y-3 text-xs text-white/75">
+            <li class="flex items-start gap-2.5"><span class="text-[#10B981] font-bold">✓</span><span>Punto de Venta (POS) y Arqueo de Caja Diario con reloj en tiempo real.</span></li>
+            <li class="flex items-start gap-2.5"><span class="text-[#10B981] font-bold">✓</span><span>Control de Inventario, variantes, alertas de stock mínimo y catálogo digital.</span></li>
+            <li class="flex items-start gap-2.5"><span class="text-[#10B981] font-bold">✓</span><span>Despacho de comprobantes y cotizaciones con tu cuenta de Gmail (<code class="font-mono text-[11px]">gmail.send</code>).</span></li>
+            <li class="flex items-start gap-2.5"><span class="text-[#10B981] font-bold">✓</span><span>Gestión de cartera, abonos, clientes y control de empleados con PIN.</span></li>
+          </ul>
+        </div>
+        <div class="pt-8 mt-8 border-t border-white/10">
+          <a href="#configurador" onclick="selectTier(1)" class="w-full py-3.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center btn-tactile">
+            Seleccionar Nivel 01 en Cotizador
+          </a>
+        </div>
+      </div>
+
+      <!-- NIVEL 2 -->
+      <div class="spotlight-card rounded-[28px] bg-[#151822] border border-[#D4A359]/40 p-8 flex flex-col justify-between">
+        <div class="space-y-6">
+          <div class="flex items-center justify-between font-mono text-xs">
+            <span class="px-3 py-1 rounded-full bg-[#D4A359]/20 text-[#D4A359] border border-[#D4A359]/40 font-bold">NIVEL 02</span>
+            <span class="text-[#D4A359]">ESCALABLE POR MÓDULOS</span>
+          </div>
+          <div>
+            <h3 class="font-['Space_Grotesk'] text-2xl font-bold text-white">Módulos & Funciones Adicionales del ERP</h3>
+            <p class="text-xs text-white/60 mt-2 leading-relaxed">
+              Suma al Núcleo Base únicamente las capacidades avanzadas o verticales que tu operación requiera activar.
+            </p>
+          </div>
+          <div class="p-4 rounded-2xl bg-[#D4A359]/10 border border-[#D4A359]/25 font-mono text-xs">
+            <span class="text-[#D4A359] block text-[10px] uppercase">MODALIDAD DE COSTO</span>
+            <span class="text-base font-bold text-white mt-0.5 block">Base + Módulos Activos a Demanda</span>
+          </div>
+          <ul class="space-y-3 text-xs text-white/80">
+            <li class="flex items-start gap-2.5"><span class="text-[#D4A359] font-bold">+</span><span><strong>Módulo Facturación Electrónica DIAN:</strong> Emisión legal con CUFE y QR fiscal.</span></li>
+            <li class="flex items-start gap-2.5"><span class="text-[#D4A359] font-bold">+</span><span><strong>Agente IA de WhatsApp 24/7:</strong> Conectado a WhatsApp Cloud API y a tu stock en vivo.</span></li>
+            <li class="flex items-start gap-2.5"><span class="text-[#D4A359] font-bold">+</span><span><strong>Logística & Hojas de Ruta:</strong> Despachos georreferenciados con apertura en Maps ($0 API).</span></li>
+            <li class="flex items-start gap-2.5"><span class="text-[#D4A359] font-bold">+</span><span><strong>Verticales Especializadas:</strong> Módulo Clínico de Ópticas/Laboratorio o KDS Restaurantes + Sedes adicionales.</span></li>
+          </ul>
+        </div>
+        <div class="pt-8 mt-8 border-t border-white/10">
+          <a href="#configurador" onclick="selectTier(2)" class="w-full py-3.5 rounded-xl bg-[#D4A359] hover:bg-[#c29045] text-black font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center btn-tactile">
+            Personalizar Módulos Nivel 02
+          </a>
+        </div>
+      </div>
+
+      <!-- NIVEL 3 (DESTACADO CON BORDER TRAIL) -->
+      <div class="border-trail-frame spotlight-card rounded-[28px] bg-gradient-to-b from-[#1B1618] to-[#111319] border border-[#FF5520]/50 p-8 flex flex-col justify-between shadow-[0_25px_70px_rgba(255,85,32,0.18)]">
+        <div class="space-y-6">
+          <div class="flex items-center justify-between font-mono text-xs">
+            <span class="px-3 py-1 rounded-full bg-[#FF5520] text-white font-bold">NIVEL 03 • LLAVE EN MANO</span>
+            <span class="text-[#FF5520] font-bold">ERP + AGENCIA</span>
+          </div>
+          <div>
+            <h3 class="font-['Space_Grotesk'] text-2xl font-bold text-white">Paquetes Integrales: Frant ERP + Servicios Diaz Lab</h3>
+            <p class="text-xs text-white/65 mt-2 leading-relaxed">
+              La solución corporativa total: entregamos el ERP configurado junto con el desarrollo de tu propio sitio web comercial y automatizaciones a medida.
+            </p>
+          </div>
+          <div class="p-4 rounded-2xl bg-[#FF5520]/15 border border-[#FF5520]/30 font-mono text-xs">
+            <span class="text-[#FF5520] block text-[10px] uppercase">MODALIDAD DE COSTO</span>
+            <span class="text-base font-bold text-white mt-0.5 block">Paquete Todo Incluido (ERP + Ingeniería)</span>
+          </div>
+          <ul class="space-y-3 text-xs text-white/85">
+            <li class="flex items-start gap-2.5"><span class="text-[#FF5520] font-bold">★</span><span><strong>Todo el poder de Frant ERP</strong> (Núcleo + Módulos seleccionados).</span></li>
+            <li class="flex items-start gap-2.5"><span class="text-[#FF5520] font-bold">★</span><span><strong>Diseño y Desarrollo de Website / E-Commerce a Medida</strong> con tu propio dominio web sincronizado al ERP.</span></li>
+            <li class="flex items-start gap-2.5"><span class="text-[#FF5520] font-bold">★</span><span><strong>Flujos RPA e Integraciones API</strong> (pasarelas de pago, CRMs externos, tableros BI).</span></li>
+            <li class="flex items-start gap-2.5"><span class="text-[#FF5520] font-bold">★</span><span><strong>Implementación Dedicada:</strong> Migración de catálogo y entrenamiento al personal.</span></li>
+          </ul>
+        </div>
+        <div class="pt-8 mt-8 border-t border-white/10">
+          <a href="#configurador" onclick="selectTier(3)" class="w-full py-3.5 rounded-xl bg-[#FF5520] hover:bg-[#e04412] text-white font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center shadow-[0_8px_25px_rgba(255,85,32,0.45)] btn-tactile">
+            Armar Paquete Integral Nivel 03
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       5. CONFIGURADOR INTERACTIVO EN VIVO ("ARQUITECTO DE SOLUCIÓN")
+       ======================================================================= -->
+  <section id="configurador" class="py-20 px-6 lg:px-14 max-w-[1400px] mx-auto">
+    <div class="rounded-[32px] bg-[#E9E5DC] text-[#0D0E11] p-8 sm:p-12 lg:p-16 border border-black/15 shadow-[0_30px_90px_rgba(0,0,0,0.6)]">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        
+        <div class="lg:col-span-7 space-y-8">
+          <div>
+            <span class="font-mono text-xs uppercase tracking-[0.2em] text-[#D9381E] font-bold">// 03. CONFIGURADOR TÁCTIL DE PROPUESTA</span>
+            <h3 class="font-['Space_Grotesk'] text-3xl sm:text-4xl font-bold tracking-tight mt-1">
+              Selecciona los módulos de tu negocio y recibe tu propuesta exacta.
+            </h3>
+          </div>
+
+          <!-- Paso 1: Rubro -->
+          <div class="space-y-3">
+            <label class="font-mono text-xs uppercase tracking-wider font-bold text-[#4A4843]">1. Selecciona tu Vertical o Rubro Principal:</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="rubro-selector">
+              <button onclick="setRubro('Óptica / Salud Visual')" data-rubro="Óptica / Salud Visual" class="rubro-btn p-3.5 rounded-xl border-2 border-black bg-black text-white font-mono text-xs font-bold text-left cursor-pointer btn-tactile">
+                01. Óptica / Salud Visual
+              </button>
+              <button onclick="setRubro('Restaurante / Gastronomía')" data-rubro="Restaurante / Gastronomía" class="rubro-btn p-3.5 rounded-xl border border-black/20 bg-white text-black font-mono text-xs font-semibold text-left cursor-pointer btn-tactile">
+                02. Restaurante / KDS
+              </button>
+              <button onclick="setRubro('Retail / Comercio / Mayorista')" data-rubro="Retail / Comercio / Mayorista" class="rubro-btn p-3.5 rounded-xl border border-black/20 bg-white text-black font-mono text-xs font-semibold text-left cursor-pointer btn-tactile">
+                03. Retail / Comercio
+              </button>
+            </div>
+          </div>
+
+          <!-- Paso 2: Módulos Nivel 2 (ERP) -->
+          <div class="space-y-3">
+            <label class="font-mono text-xs uppercase tracking-wider font-bold text-[#4A4843]">2. Módulos Adicionales de Frant ERP (Nivel 2):</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-black/15 cursor-pointer select-none">
+                <input type="checkbox" checked onchange="updateSummary()" class="mod-check w-4 h-4 accent-[#FF5520]" value="Facturación Electrónica DIAN" />
+                <span class="text-xs font-semibold">Facturación Electrónica DIAN (CUFE)</span>
+              </label>
+              <label class="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-black/15 cursor-pointer select-none">
+                <input type="checkbox" checked onchange="updateSummary()" class="mod-check w-4 h-4 accent-[#FF5520]" value="Agente IA WhatsApp 24/7" />
+                <span class="text-xs font-semibold">Agente IA de WhatsApp 24/7</span>
+              </label>
+              <label class="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-black/15 cursor-pointer select-none">
+                <input type="checkbox" onchange="updateSummary()" class="mod-check w-4 h-4 accent-[#FF5520]" value="Hojas de Ruta de Domicilios Maps" />
+                <span class="text-xs font-semibold">Hojas de Ruta de Domicilios (Maps)</span>
+              </label>
+              <label class="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-black/15 cursor-pointer select-none">
+                <input type="checkbox" onchange="updateSummary()" class="mod-check w-4 h-4 accent-[#FF5520]" value="Multi-Sede / Sucursales Adicionales" />
+                <span class="text-xs font-semibold">Multi-Sede / Sucursales Adicionales</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Paso 3: Servicios Agencia Nivel 3 (Diaz Lab) -->
+          <div class="space-y-3">
+            <label class="font-mono text-xs uppercase tracking-wider font-bold text-[#4A4843]">3. Servicios de Ingeniería Diaz Lab (Paquete Nivel 3):</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-black/15 cursor-pointer select-none">
+                <input type="checkbox" checked onchange="updateSummary()" class="agency-check w-4 h-4 accent-[#FF5520]" value="Diseño de Website / E-Commerce Conectado" />
+                <span class="text-xs font-semibold">Diseño de Website / E-Commerce Propio</span>
+              </label>
+              <label class="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-black/15 cursor-pointer select-none">
+                <input type="checkbox" onchange="updateSummary()" class="agency-check w-4 h-4 accent-[#FF5520]" value="Automatización RPA & Integración API" />
+                <span class="text-xs font-semibold">Automatización RPA & Integraciones API</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel Derecho: Resumen de Especificación Técnica -->
+        <div class="lg:col-span-5 bg-[#111318] text-white rounded-[24px] p-7 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4 font-mono text-xs">
+              <span class="text-[#FF5520] font-bold">ESPECIFICACIÓN DE TU SOLUCIÓN</span>
+              <span id="summary-tier-badge" class="px-2.5 py-0.5 rounded bg-[#FF5520] text-white text-[10px] font-bold">NIVEL 03 INTEGRAL</span>
+            </div>
+
+            <div class="space-y-3 font-mono text-xs">
+              <div>
+                <span class="text-white/45 block text-[10px] uppercase">RUBRO SELECCIONADO</span>
+                <span id="summary-rubro" class="font-bold text-sm text-white">Óptica / Salud Visual</span>
+              </div>
+              <div>
+                <span class="text-white/45 block text-[10px] uppercase">NÚCLEO INCLUIDO (NIVEL 1)</span>
+                <span class="text-white/85">✓ Frant ERP Core + POS + Caja + Gmail OAuth</span>
+              </div>
+              <div>
+                <span class="text-white/45 block text-[10px] uppercase">MÓDULOS ERP ACTIVOS (NIVEL 2)</span>
+                <ul id="summary-mods" class="space-y-1 text-[#D4A359] mt-1"></ul>
+              </div>
+              <div>
+                <span class="text-white/45 block text-[10px] uppercase">INGENIERÍA DIAZ LAB (NIVEL 3)</span>
+                <ul id="summary-agency" class="space-y-1 text-[#10B981] mt-1"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-3 pt-4 border-t border-white/10">
+            <a 
+              id="whatsapp-config-link"
+              href="#" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="w-full py-4 rounded-xl bg-[#FF5520] hover:bg-[#e04412] text-white font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(255,85,32,0.4)] btn-tactile"
+            >
+              <span>Enviar Configuración a WhatsApp Comercial</span>
+              <span>→</span>
+            </a>
+            <p class="text-[11px] font-mono text-white/45 text-center">
+              Respuesta directa de un ingeniero de Diaz Lab Automation.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       6. SERVICIOS DE INGENIERÍA Y AUTOMATIZACIÓN A LA MEDIDA
+       ======================================================================= -->
+  <section id="ingenieria" class="py-20 px-6 lg:px-14 max-w-[1400px] mx-auto border-t border-white/10 space-y-12">
+    <div class="max-w-3xl space-y-3">
+      <span class="font-mono text-xs uppercase tracking-[0.22em] text-[#D4A359]">// 04. DIVISIÓN DE INGENIERÍA CORPORATIVA</span>
+      <h2 class="font-['Space_Grotesk'] text-3xl sm:text-5xl font-bold text-white">
+        Ingeniería de software a la medida por Diaz Lab.
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="spotlight-card p-7 rounded-2xl bg-[#12141B] border border-white/10 space-y-3">
+        <span class="font-mono text-xs text-[#FF5520] font-bold">01 / WEBSITES & E-COMMERCE</span>
+        <h3 class="font-['Space_Grotesk'] text-xl font-bold text-white">Portales Web de Alta Conversión</h3>
+        <p class="text-xs text-white/65 leading-relaxed">Diseño y programación de sitios web comerciales y tiendas en línea conectadas al inventario y facturación de tu negocio.</p>
+      </div>
+      <div class="spotlight-card p-7 rounded-2xl bg-[#12141B] border border-white/10 space-y-3">
+        <span class="font-mono text-xs text-[#FF5520] font-bold">02 / RPA & WORKFLOWS</span>
+        <h3 class="font-['Space_Grotesk'] text-xl font-bold text-white">Automatización de Procesos</h3>
+        <p class="text-xs text-white/65 leading-relaxed">Eliminamos tareas repetitivas en hojas de cálculo, conciliaciones bancarias y generación de reportes operativos.</p>
+      </div>
+      <div class="spotlight-card p-7 rounded-2xl bg-[#12141B] border border-white/10 space-y-3">
+        <span class="font-mono text-xs text-[#FF5520] font-bold">03 / APIS & WEBHOOKS</span>
+        <h3 class="font-['Space_Grotesk'] text-xl font-bold text-white">Integración de Sistemas</h3>
+        <p class="text-xs text-white/65 leading-relaxed">Conectamos pasarelas de pago (Wompi, Bold, Stripe), transportadoras y sistemas contables mediante APIs seguras.</p>
+      </div>
+      <div class="spotlight-card p-7 rounded-2xl bg-[#12141B] border border-white/10 space-y-3">
+        <span class="font-mono text-xs text-[#FF5520] font-bold">04 / AGENTES IA</span>
+        <h3 class="font-['Space_Grotesk'] text-xl font-bold text-white">IA & Modelos con RAG Propio</h3>
+        <p class="text-xs text-white/65 leading-relaxed">Asistentes autónomos entrenados con los documentos, precios y políticas reales de tu organización.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       7. FOOTER CON CUMPLIMIENTO LEGAL VISIBLE (/privacy y /terms)
+       ======================================================================= -->
+  <footer class="border-t border-white/10 bg-[#050608] py-16 px-6 lg:px-14 text-xs text-white/50">
+    <div class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+      <div class="space-y-3">
+        <span class="font-['Space_Grotesk'] font-bold text-lg text-white tracking-wider">DIAZ LAB AUTOMATION</span>
+        <p class="text-xs text-white/45 leading-relaxed">
+          Estudio de ingeniería de software, automatización empresarial y creadores de la plataforma SaaS <strong>Frant ERP</strong>.
+        </p>
+        <p class="font-mono text-[10px] text-white/40">Barranquilla, Atlántico, Colombia • contacto@diazlab.online</p>
+      </div>
+
+      <div class="space-y-2">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-white font-semibold">Ecosistema</div>
+        <ul class="space-y-2">
+          <li><a href="./propuesta_frant_erp_luxury.html" class="hover:text-white">Plataforma Frant ERP (frant.app)</a></li>
+          <li><a href="https://frant.app/login" class="hover:text-white">Acceso Clientes (/login)</a></li>
+          <li><a href="#planes" class="hover:text-white">Planes Comerciales (3 Niveles)</a></li>
+        </ul>
+      </div>
+
+      <div class="space-y-2">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-white font-semibold">Ingeniería</div>
+        <ul class="space-y-2">
+          <li><a href="#ingenieria" class="hover:text-white">Desarrollo Web & E-Commerce</a></li>
+          <li><a href="#ingenieria" class="hover:text-white">Automatización RPA</a></li>
+          <li><a href="#ingenieria" class="hover:text-white">Agentes IA en WhatsApp</a></li>
+        </ul>
+      </div>
+
+      <div class="space-y-2">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-white font-semibold">Marco Legal & Privacidad</div>
+        <ul class="space-y-2">
+          <li><a href="https://frant.app/privacy" target="_blank" rel="noopener noreferrer" class="hover:text-white underline decoration-white/20">Política de Privacidad (https://frant.app/privacy)</a></li>
+          <li><a href="https://frant.app/terms" target="_blank" rel="noopener noreferrer" class="hover:text-white underline decoration-white/20">Términos y Condiciones (https://frant.app/terms)</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="max-w-[1400px] mx-auto pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px]">
+      <span>© 2026 Diaz Lab Automation. Todos los derechos reservados.</span>
+      <span>Barranquilla, Colombia • Operación Global</span>
+    </div>
+  </footer>
+
+  <script>
+    // 1. Scroll-Linked 3D Isometric Unfold
+    const agencyWindow = document.getElementById('agency-3d-window');
+    function updateAgency3D() {
+      if (!agencyWindow) return;
+      const rect = agencyWindow.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const rawProgress = (windowHeight - rect.top) / (windowHeight * 0.85);
+      const progress = Math.max(0, Math.min(1, rawProgress));
+      
+      const rotX = (1 - progress) * 18;
+      const rotY = (1 - progress) * 10;
+      const rotZ = (1 - progress) * -2;
+      const scale = 0.95 + (progress * 0.05);
+
+      agencyWindow.style.transform = `rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+    }
+    window.addEventListener('scroll', updateAgency3D, { passive: true });
+    window.addEventListener('load', updateAgency3D);
+
+    // 2. Interactive Solution Configurator Logic
+    let currentRubro = 'Óptica / Salud Visual';
+
+    function setRubro(rubro) {
+      currentRubro = rubro;
+      document.querySelectorAll('.rubro-btn').forEach(btn => {
+        if (btn.getAttribute('data-rubro') === rubro) {
+          btn.className = 'rubro-btn p-3.5 rounded-xl border-2 border-black bg-black text-white font-mono text-xs font-bold text-left cursor-pointer btn-tactile';
+        } else {
+          btn.className = 'rubro-btn p-3.5 rounded-xl border border-black/20 bg-white text-black font-mono text-xs font-semibold text-left cursor-pointer btn-tactile';
+        }
+      });
+      updateSummary();
+    }
+
+    function selectTier(tier) {
+      const modChecks = document.querySelectorAll('.mod-check');
+      const agencyChecks = document.querySelectorAll('.agency-check');
+      if (tier === 1) {
+        modChecks.forEach(c => c.checked = false);
+        agencyChecks.forEach(c => c.checked = false);
+      } else if (tier === 2) {
+        modChecks.forEach((c, idx) => c.checked = idx < 2);
+        agencyChecks.forEach(c => c.checked = false);
+      } else {
+        modChecks.forEach((c, idx) => c.checked = idx < 2);
+        agencyChecks.forEach(c => c.checked = true);
+      }
+      updateSummary();
+    }
+
+    function updateSummary() {
+      document.getElementById('summary-rubro').textContent = currentRubro;
+      const mods = Array.from(document.querySelectorAll('.mod-check:checked')).map(c => c.value);
+      const agency = Array.from(document.querySelectorAll('.agency-check:checked')).map(c => c.value);
+
+      const modsList = document.getElementById('summary-mods');
+      modsList.innerHTML = mods.length
+        ? mods.map(m => `<li>+ ${m}</li>`).join('')
+        : '<li class="text-white/40">Ninguno (Solo Núcleo Base Nivel 1)</li>';
+
+      const agencyList = document.getElementById('summary-agency');
+      agencyList.innerHTML = agency.length
+        ? agency.map(a => `<li>★ ${a}</li>`).join('')
+        : '<li class="text-white/40">Sin servicios adicionales de agencia</li>';
+
+      const badge = document.getElementById('summary-tier-badge');
+      let nivelTexto = 'NIVEL 01 BASE';
+      if (agency.length > 0) {
+        nivelTexto = 'NIVEL 03 INTEGRAL (ERP + AGENCIA)';
+      } else if (mods.length > 0) {
+        nivelTexto = 'NIVEL 02 ERP MODULAR';
+      }
+      badge.textContent = nivelTexto;
+
+      const msg = `Hola Diaz Lab Automation, armé mi configuración en diazlab.online:\n• Nivel: *${nivelTexto}*\n• Rubro: *${currentRubro}*\n• Módulos ERP: ${mods.length ? mods.join(', ') : 'Solo Base'}\n• Servicios Diaz Lab: ${agency.length ? agency.join(', ') : 'Ninguno'}\nDeseo recibir cotización.`;
+      document.getElementById('whatsapp-config-link').href = `https://wa.me/573116718652?text=${encodeURIComponent(msg)}`;
+    }
+
+    updateSummary();
+
+    // 3. Spotlight & Tilt Physics
+    document.querySelectorAll('.spotlight-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+      });
+    });
+
+    document.querySelectorAll('.tilt-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        card.style.transform = `perspective(1000px) rotateY(${(x * 6).toFixed(2)}deg) rotateX(${(-y * 6).toFixed(2)}deg)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg)';
+      });
+    });
+  </script>
+</body>
+</html>

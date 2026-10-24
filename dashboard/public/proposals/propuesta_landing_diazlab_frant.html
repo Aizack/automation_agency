@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diaz Lab Automation & Frant ERP — Showcase de las 3 Propuestas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <style>
+    /* Estilos compartidos e Iconos */
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined' !important;
+      font-weight: normal;
+      font-style: normal;
+      font-size: 20px;
+      line-height: 1;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      transition: background-color 0.4s ease, color 0.4s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 1. TEMA WABI-SABI PAPER */
+    body.theme-wabi-sabi {
+      background-color: #F6F4EE;
+      color: #161616;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+    body.theme-wabi-sabi .nav-bar { background: rgba(246, 244, 238, 0.95); border-bottom: 1px solid #E2DFD7; }
+    body.theme-wabi-sabi .editorial-title { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; color: #161616; }
+    body.theme-wabi-sabi .card-box { background: #FFFFFF; border: 1px solid #E2DFD7; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+    body.theme-wabi-sabi .card-box:hover { border-color: #D9381E; }
+    body.theme-wabi-sabi .accent-btn { background: #D9381E; color: #FFFFFF; }
+    body.theme-wabi-sabi .primary-btn { background: #161616; color: #F6F4EE; }
+    body.theme-wabi-sabi .outline-btn { border: 1px solid rgba(22,22,22,0.25); color: #161616; }
+    body.theme-wabi-sabi .badge-tag { background: rgba(217,56,30,0.1); color: #D9381E; border: 1px solid rgba(217,56,30,0.2); }
+    body.theme-wabi-sabi .text-muted { color: #6B6862; }
+    body.theme-wabi-sabi .dot-mark { background-color: #D9381E; }
+
+    /* 2. TEMA KURO SUMI DARK */
+    body.theme-kuro-dark {
+      background-color: #0C0D0F;
+      color: #EDEBE6;
+      font-family: 'Outfit', system-ui, sans-serif;
+    }
+    body.theme-kuro-dark .nav-bar { background: rgba(12, 13, 15, 0.95); border-bottom: 1px solid rgba(255,255,255,0.1); }
+    body.theme-kuro-dark .editorial-title { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; color: #FFFFFF; }
+    body.theme-kuro-dark .card-box { background: #131519; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+    body.theme-kuro-dark .card-box:hover { border-color: rgba(230,57,70,0.6); }
+    body.theme-kuro-dark .accent-btn { background: #E63946; color: #FFFFFF; box-shadow: 0 0 16px rgba(230,57,70,0.3); }
+    body.theme-kuro-dark .primary-btn { background: #FFFFFF; color: #0C0D0F; }
+    body.theme-kuro-dark .outline-btn { border: 1px solid rgba(255,255,255,0.2); color: #FFFFFF; }
+    body.theme-kuro-dark .badge-tag { background: rgba(230,57,70,0.15); color: #FFA5AB; border: 1px solid rgba(230,57,70,0.3); }
+    body.theme-kuro-dark .text-muted { color: #8C9099; }
+    body.theme-kuro-dark .dot-mark { background-color: #E63946; box-shadow: 0 0 8px #E63946; }
+
+    /* 3. TEMA MODERN GRID */
+    body.theme-modern-grid {
+      background-color: #F9F9F8;
+      color: #111111;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+    body.theme-modern-grid .nav-bar { background: #FFFFFF; border-bottom: 2px solid #000; }
+    body.theme-modern-grid .editorial-title { font-family: 'Syne', sans-serif; font-weight: 800; text-transform: uppercase; color: #000000; }
+    body.theme-modern-grid .card-box { background: #FFFFFF; border: 2px solid #000000; box-shadow: 4px 4px 0px #000000; }
+    body.theme-modern-grid .card-box:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #DC2626; }
+    body.theme-modern-grid .accent-btn { background: #DC2626; color: #FFFFFF; border: 2px solid #000; box-shadow: 3px 3px 0px #000; }
+    body.theme-modern-grid .primary-btn { background: #000000; color: #FFFFFF; border: 2px solid #000; box-shadow: 3px 3px 0px #DC2626; }
+    body.theme-modern-grid .outline-btn { border: 2px solid #000000; color: #000000; box-shadow: 2px 2px 0px #000; }
+    body.theme-modern-grid .badge-tag { background: #F59E0B; color: #000000; border: 1px solid #000; font-weight: 800; }
+    body.theme-modern-grid .text-muted { color: #4B5563; }
+    body.theme-modern-grid .dot-mark { background-color: #DC2626; border: 1px solid #000; }
+
+    /* Layout Utilities */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+    .nav-bar { position: sticky; top: 0; z-index: 50; padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .logo-dla { font-family: 'Instrument Serif', Georgia, serif; font-size: 2rem; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; }
+    .logo-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.28em; text-transform: uppercase; opacity: 0.8; display: flex; align-items: center; gap: 0.4rem; margin-top: 0.2rem; }
+    .dot-mark { width: 8px; height: 8px; display: inline-block; }
+    
+    .hero-section { padding: 4rem 0 5rem; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 3.5rem; align-items: center; }
+    .hero-title { font-size: 3.5rem; line-height: 1.05; margin: 1rem 0; }
+    .hero-desc { font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; font-weight: 300; }
+    
+    .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn { padding: 0.85rem 1.75rem; border-radius: 999px; text-decoration: none; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; border: none; }
+    
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-top: 2.5rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 2.5rem; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-top: 2rem; }
+    .card-box { padding: 2rem; border-radius: 1.25rem; transition: all 0.2s; }
+    .section-padding { padding: 5rem 0; border-top: 1px solid rgba(120,120,120,0.15); }
+
+    /* Barra Flotante de Conmutación de Propuestas */
+    .proposal-switcher {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #D1D5DB;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      backdrop-filter: blur(12px);
+    }
+    .switcher-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: transparent;
+      color: #374151;
+      transition: all 0.2s;
+    }
+    .switcher-btn.active {
+      background: #111827;
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body class="theme-wabi-sabi">
+
+  <!-- BARRA DE SELECCIÓN DE PROPUESTA -->
+  <div class="proposal-switcher">
+    <span style="font-family:'JetBrains Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.1em; color:#6B7280; padding:0 0.5rem; border-right:1px solid #E5E7EB;">
+      Propuestas de Diseño:
+    </span>
+    <button class="switcher-btn active" onclick="setTheme('theme-wabi-sabi', this)">
+      <span>📜</span> <span>1. Wabi-Sabi Paper</span>
+    </button>
+    <button class="switcher-btn" onclick="setTheme('theme-kuro-dark', this)">
+      <span>🌑</span> <span>2. Kuro Sumi Dark</span>
+    </button>
+    <button class="switcher-btn" onclick="setTheme('theme-modern-grid', this)">
+      <span>🟡</span> <span>3. Modern Grid</span>
+    </button>
+  </div>
+
+  <!-- NAVBAR -->
+  <header class="nav-bar">
+    <div>
+      <div class="logo-dla">DIAZ LAB</div>
+      <div class="logo-sub">
+        <span>AUTOMATION</span>
+        <span class="dot-mark"></span>
+        <span style="opacity:0.5; margin-left:0.3rem;">• FRANT ERP</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:2rem; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;">
+      <a href="#hero" style="color:inherit; text-decoration:none;">Inicio</a>
+      <a href="#frant-erp" style="color:inherit; text-decoration:none;">Frant ERP</a>
+      <a href="#sectores" style="color:inherit; text-decoration:none;">Sectores</a>
+      <a href="#planes" style="color:inherit; text-decoration:none;">Planes</a>
+      <a href="#ingenieria" style="color:inherit; text-decoration:none;">Ingeniería</a>
+    </div>
+    <div style="display:flex; gap:0.75rem;">
+      <a href="https://wa.me/573116718652" target="_blank" class="btn outline-btn">WhatsApp</a>
+      <a href="/login" class="btn accent-btn">Acceder a Frant ERP</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <main class="container">
+    <section class="hero-section" id="hero">
+      <div>
+        <span class="badge-tag" style="padding:0.25rem 0.75rem; border-radius:999px; font-size:0.7rem; font-family:'JetBrains Mono',monospace; letter-spacing:0.15em; text-transform:uppercase;">
+          Diaz Lab Automation ▪ Solución Oficial
+        </span>
+        <h1 class="editorial-title hero-title">
+          Automatizamos lo complejo. <br>
+          <span style="color:#D9381E;">Potenciamos lo que importa.</span>
+        </h1>
+        <p class="hero-desc text-muted">
+          En <strong>Diaz Lab Automation</strong> creamos <strong>Frant ERP</strong>: la plataforma de software integral con <strong>Punto de Venta POS</strong>, <strong>Facturación DIAN</strong>, <strong>Agente WhatsApp IA 24/7</strong> y <strong>Logística inteligente</strong>, respaldada con servicios de ingeniería a la medida.
+        </p>
+        <div class="btn-group">
+          <a href="#planes" class="btn accent-btn">Ver Planes Frant ERP (Desde $49.000 COP)</a>
+          <a href="#ingenieria" class="btn outline-btn">Ingeniería a la Medida</a>
+        </div>
+      </div>
+
+      <!-- Preview Consola Frant ERP -->
+      <div class="card-box" style="padding:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(120,120,120,0.2); padding-bottom:0.75rem; font-family:'JetBrains Mono',monospace; font-size:0.75rem;">
+          <div>🔴 🟡 🟢 <strong>Frant ERP Console</strong></div>
+          <div style="color:#10B981;">● En Línea</div>
+        </div>
+        <div style="margin-top:1.25rem; font-family:'JetBrains Mono',monospace; font-size:0.8rem; display:grid; gap:0.75rem;">
+          <div style="padding:0.75rem; border-radius:0.5rem; background:rgba(120,120,120,0.08); display:flex; justify-content:space-between;">
+            <span>FACTURA DIAN (CUFE)</span>
+            <strong style="color:#10B981;">$245.000 COP</strong>
+          </div>
+          <div style="padding:0.75rem; border-radius:0.5rem; background:rgba(120,120,120,0.08); display:flex; justify-content:space-between;">
+            <span>AGENTE WHATSAPP IA</span>
+            <span style="color:#8B5CF6;">Atendiendo 14 chats</span>
+          </div>
+          <div style="padding:0.75rem; border-radius:0.5rem; background:rgba(120,120,120,0.08); display:flex; justify-content:space-between;">
+            <span>HOJA DE RUTA DOMICILIOS</span>
+            <span style="color:#3B82F6;">5 entregas ordenadas</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULOS DE FRANT ERP -->
+    <section class="section-padding" id="frant-erp">
+      <div style="text-align:center; max-w:600px; margin:0 auto 2.5rem;">
+        <h2 class="editorial-title" style="font-size:2.5rem;">Frant ERP: Módulos Insignia</h2>
+        <p class="text-muted" style="margin-top:0.5rem;">El sistema todo-en-uno que tu empresa necesita para crecer.</p>
+      </div>
+
+      <div class="grid-4">
+        <div class="card-box">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; opacity:0.6;">01 / FISCAL</span>
+          <h3 style="margin:0.75rem 0 0.5rem; font-size:1.15rem;">POS & Facturación DIAN</h3>
+          <p class="text-muted" style="font-size:0.8rem; line-height:1.5;">Tiquetes térmicos 80mm, pistola de códigos de barras y factura electrónica legal con CUFE y QR fiscal.</p>
+        </div>
+        <div class="card-box">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; opacity:0.6;">02 / IA 24/7</span>
+          <h3 style="margin:0.75rem 0 0.5rem; font-size:1.15rem;">Agente WhatsApp IA</h3>
+          <p class="text-muted" style="font-size:0.8rem; line-height:1.5;">Vendedor autónomo en WhatsApp que cotiza con tu stock, agenda citas y responde dudas sin intervención humana.</p>
+        </div>
+        <div class="card-box">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; opacity:0.6;">03 / LOGÍSTICA</span>
+          <h3 style="margin:0.75rem 0 0.5rem; font-size:1.15rem;">Rutas & Domicilios</h3>
+          <p class="text-muted" style="font-size:0.8rem; line-height:1.5;">Despachos ordenados por cercanía geográfica con botón directo para abrir Google Maps a $0 costo de API.</p>
+        </div>
+        <div class="card-box">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; opacity:0.6;">04 / FINANZAS</span>
+          <h3 style="margin:0.75rem 0 0.5rem; font-size:1.15rem;">Cartera & Arqueo</h3>
+          <p class="text-muted" style="font-size:0.8rem; line-height:1.5;">Control de créditos a clientes, arqueos de turno de empleados y auditoría de inventario blindada.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLANES DE PRECIOS -->
+    <section class="section-padding" id="planes">
+      <div style="text-align:center; margin-bottom:2.5rem;">
+        <h2 class="editorial-title" style="font-size:2.5rem;">Planes de Suscripción en COP</h2>
+        <p class="text-muted" style="margin-top:0.5rem;">Acceso inmediato a Frant ERP con soporte directo de Diaz Lab Automation.</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card-box">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#10B981; font-weight:bold;">🟢 BÁSICO MICRO</span>
+          <div style="font-size:2.5rem; font-weight:800; margin:1rem 0 0.5rem;">$49.000 <span style="font-size:0.8rem; font-weight:normal;">COP/mes</span></div>
+          <p class="text-muted" style="font-size:0.8rem;">Para microcomercios y profesionales independientes.</p>
+          <ul style="margin:1.5rem 0; font-size:0.8rem; list-style:none; line-height:2;" class="text-muted">
+            <li>✓ Hasta 10 Facturas DIAN / mes</li>
+            <li>✓ Tiquetes POS 80mm Ilimitados</li>
+            <li>✓ Hasta 3 Usuarios en el sistema</li>
+            <li>✓ Control de Inventarios y Alertas</li>
+          </ul>
+          <a href="/login" class="btn outline-btn" style="width:100%; justify-content:center;">Elegir Básico</a>
+        </div>
+
+        <div class="card-box" style="border:2px solid #D9381E; position:relative;">
+          <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:#D9381E; color:#FFF; font-size:0.65rem; font-weight:bold; padding:0.25rem 0.75rem; border-radius:999px; text-transform:uppercase;">
+            ★ Más Popular
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#D9381E; font-weight:bold;">🚀 PLAN PRO</span>
+          <div style="font-size:2.5rem; font-weight:800; margin:1rem 0 0.5rem;">$149.000 <span style="font-size:0.8rem; font-weight:normal;">COP/mes</span></div>
+          <p class="text-muted" style="font-size:0.8rem;">Venta en automático con IA, Domicilios y Landing.</p>
+          <ul style="margin:1.5rem 0; font-size:0.8rem; list-style:none; line-height:2;">
+            <li style="color:#D9381E; font-weight:bold;">★ Facturas DIAN ILIMITADAS</li>
+            <li style="color:#D9381E; font-weight:bold;">★ Agente WhatsApp IA 24/7</li>
+            <li>✓ Hojas de Ruta + Google Maps</li>
+            <li style="font-weight:bold;">✓ Incluye Montaje de Landing Page</li>
+          </ul>
+          <a href="/login" class="btn accent-btn" style="width:100%; justify-content:center;">Elegir Plan Pro</a>
+        </div>
+
+        <div class="card-box">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#8B5CF6; font-weight:bold;">👑 ENTERPRISE & AGENCIA</span>
+          <div style="font-size:2.5rem; font-weight:800; margin:1rem 0 0.5rem;">$349.000 <span style="font-size:0.8rem; font-weight:normal;">COP/mes</span></div>
+          <p class="text-muted" style="font-size:0.8rem;">Solución total: ERP + Dominio Web + Estrategia Local.</p>
+          <ul style="margin:1.5rem 0; font-size:0.8rem; list-style:none; line-height:2;" class="text-muted">
+            <li style="color:#8B5CF6; font-weight:bold;">✦ Dominio Propio Incluido (.com)</li>
+            <li style="color:#8B5CF6; font-weight:bold;">✦ Diseño Web & Landing Comercial</li>
+            <li style="color:#8B5CF6; font-weight:bold;">✦ Optimización Google Maps (SEO Local)</li>
+            <li>✓ ERP Completo + Usuarios Ilimitados</li>
+          </ul>
+          <a href="/login" class="btn primary-btn" style="width:100%; justify-content:center;">Elegir Enterprise</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- INGENIERÍA A LA MEDIDA -->
+    <section class="section-padding" id="ingenieria">
+      <div class="card-box" style="padding:3rem;">
+        <h2 class="editorial-title" style="font-size:2.5rem; margin-bottom:1rem;">Ingeniería de Software a la Medida por Diaz Lab</h2>
+        <p class="text-muted" style="max-width:800px; font-size:0.95rem; line-height:1.6; margin-bottom:2rem;">
+          Además de Frant ERP, nuestro equipo de ingenieros en Diaz Lab Automation desarrolla automatizaciones robóticas de procesos (RPA), integraciones complejas de APIs, tableros de analítica avanzada y modelos de IA sobre medidas.
+        </p>
+        <a href="https://wa.me/573116718652" target="_blank" class="btn accent-btn">Hablar con un Ingeniero de Diaz Lab</a>
+      </div>
+    </section>
+  </main>
+
+  <footer style="text-align:center; padding:3rem 0; font-size:0.75rem; border-top:1px solid rgba(120,120,120,0.15); font-family:'JetBrains Mono',monospace;">
+    © 2026 Diaz Lab Automation. Frant ERP es una plataforma de software registrada.
+  </footer>
+
+  <script>
+    function setTheme(themeName, btn) {
+      document.body.className = themeName;
+      document.querySelectorAll('.switcher-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>

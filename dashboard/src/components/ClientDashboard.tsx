@@ -226,7 +226,7 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   }, [activeTab]);
 
   const [inventorySubTab, setInventorySubTab] = useState<'catalog' | 'purchase-orders' | 'suppliers'>('catalog');
-  const [storeSettingsSubTab, setStoreSettingsSubTab] = useState<'profile' | 'security' | 'email'>('profile');
+  const [storeSettingsSubTab, setStoreSettingsSubTab] = useState<'profile' | 'security' | 'email' | 'appearance'>('profile');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -310,9 +310,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   }, [shiftStatus, shiftStartTs]);
 
   useEffect(() => {
-    localStorage.setItem('app_theme', 'wabi-sabi-koi');
-    localStorage.setItem('theme', 'wabi-sabi-koi');
-    document.documentElement.setAttribute('data-theme', 'wabi-sabi-koi');
+    const savedTheme = localStorage.getItem('frant_erp_theme') || 'wabi-sabi-koi';
+    const savedScale = localStorage.getItem('frant_erp_scale') || 'comfort';
+    const savedFont = localStorage.getItem('frant_erp_font_pair') || 'jakarta';
+    localStorage.setItem('app_theme', savedTheme);
+    localStorage.setItem('theme', savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.setAttribute('data-scale', savedScale);
+    document.documentElement.setAttribute('data-font-pair', savedFont);
   }, []);
 
   useEffect(() => {
@@ -1176,6 +1181,14 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     className={activeTab === 'configuracion' && storeSettingsSubTab === 'profile' ? 'active-link' : ''}
                   >
                     Datos de la Empresa
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => { setStoreSettingsSubTab('appearance'); setActiveTab('configuracion'); }} 
+                    className={activeTab === 'configuracion' && storeSettingsSubTab === 'appearance' ? 'active-link font-bold text-[#D9381E]' : ''}
+                  >
+                    Temas & Legibilidad
                   </button>
                 </li>
                 <li>

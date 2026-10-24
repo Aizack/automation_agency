@@ -2767,47 +2767,52 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                                                 {inv.invoice_number}
                                             </span>
                                             <div>
-                                                <p className="font-bold text-[#161616] group-hover:text-[#D9381E] transition">{inv.customer_name}</p>
-                                                <p className="text-[10px] text-[#6B6862] flex items-center gap-1 mt-0.5 font-medium">
-                                                    <span className="material-symbols-outlined text-[13px] opacity-75">payments</span>
-                                                    {inv.payment_method === 'efectivo' || inv.payment_method === 'contado' ? '💵 Efectivo' :
-                                                     inv.payment_method === 'transferencia' ? `🏦 Transf. (${inv.transfer_bank || 'Banco'})` :
-                                                     inv.payment_method === 'tarjeta_credito' || inv.payment_method === 'tarjeta' ? '💳 Tarjeta Crédito' :
-                                                     inv.payment_method === 'tarjeta_debito' ? '💳 Tarjeta Débito' :
-                                                     `📋 Crédito (${inv.installments_count || 1} cuotas)`}
+                                                <p className="font-bold text-[#161616] text-sm group-hover:text-[#D9381E] transition">{inv.customer_name}</p>
+                                                <p className="text-xs text-[#3F3D38] flex items-center gap-1.5 mt-0.5 font-semibold font-sans">
+                                                    <span className="material-symbols-outlined text-[15px] text-[#161616]/80">
+                                                        {inv.payment_method === 'efectivo' || inv.payment_method === 'contado' ? 'payments' :
+                                                         inv.payment_method === 'transferencia' ? 'account_balance' :
+                                                         inv.payment_method === 'tarjeta_credito' || inv.payment_method === 'tarjeta' || inv.payment_method === 'tarjeta_debito' ? 'credit_card' :
+                                                         'event_repeat'}
+                                                    </span>
+                                                    {inv.payment_method === 'efectivo' || inv.payment_method === 'contado' ? 'Efectivo' :
+                                                     inv.payment_method === 'transferencia' ? `Transf. (${inv.transfer_bank || 'Banco'})` :
+                                                     inv.payment_method === 'tarjeta_credito' || inv.payment_method === 'tarjeta' ? 'Tarjeta Crédito' :
+                                                     inv.payment_method === 'tarjeta_debito' ? 'Tarjeta Débito' :
+                                                     `Crédito (${inv.installments_count || 1} cuotas)`}
                                                 </p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="p-4 text-xs font-mono font-medium text-[#161616]">
+                                    <td className="p-4 text-xs font-sans font-medium text-[#161616]">
                                         <div>
-                                            <p className="font-bold text-[#161616]">
+                                            <p className="font-bold text-[#161616] text-xs">
                                                 {inv.created_at ? formatLocalDate(inv.created_at) : 'N/A'}
                                             </p>
-                                            <p className="text-[10px] text-[#6B6862] font-mono">
+                                            <p className="text-xs text-[#3F3D38] font-sans font-medium mt-0.5">
                                                 {inv.created_at ? formatLocalTime(inv.created_at) : ''}
                                             </p>
                                         </div>
                                     </td>
-                                    <td className="p-4 font-mono text-xs text-[#6B6862]">+{inv.customer_phone}</td>
-                                    <td className="p-4 font-bold text-[#161616] text-xs font-mono">
+                                    <td className="p-4 font-mono text-xs font-medium text-[#3F3D38]">+{inv.customer_phone}</td>
+                                    <td className="p-4 font-bold text-[#161616] text-sm font-mono tabular-nums">
                                         {formatPrice(parseFloat(inv.total_amount) + parseFloat(inv.delivery_fee || '0'))}
                                     </td>
-                                    <td className="p-4 text-xs text-[#6B6862] font-semibold">
-                                        <div className="flex items-center gap-1 uppercase text-[10px] tracking-wider">
+                                    <td className="p-4 text-xs text-[#3F3D38] font-semibold font-sans">
+                                        <div className="inline-flex items-center gap-1.5 uppercase text-xs tracking-wide bg-[#FAF8F5] px-2.5 py-1 border border-[#E2DFD7] text-[#161616]">
                                             <span className="material-symbols-outlined text-[15px]">
                                                 {inv.delivery_method === 'domicilio' ? 'local_shipping' : 'storefront'}
                                             </span>
                                             {inv.delivery_method === 'domicilio' ? `Envío (${inv.delivery_status})` : 'Local'}
                                         </div>
                                     </td>
-                                    <td className="p-4 text-xs font-medium text-[#6B6862]">
-                                        <div className="font-mono">
-                                            <p className="font-semibold text-[#161616]">{inv.due_date ? formatLocalDate(inv.due_date) : 'N/A'}</p>
+                                    <td className="p-4 text-xs font-medium text-[#3F3D38]">
+                                        <div className="font-sans">
+                                            <p className="font-semibold text-[#161616] text-xs">{inv.due_date ? formatLocalDate(inv.due_date) : 'N/A'}</p>
                                             {['credito', 'crédito', 'cuotas'].includes((inv.payment_method || '').toLowerCase()) && (
-                                                <span className={`text-[9px] px-1 py-0.5 font-bold uppercase tracking-wider block w-max mt-0.5 border ${
+                                                <span className={`text-[11px] px-2 py-0.5 font-bold uppercase tracking-wider block w-max mt-1 border font-sans ${
                                                     inv.status === 'paid' 
-                                                        ? 'bg-[#E6F4EA] text-[#1E4620] border-[#A8DADC]' 
+                                                        ? 'bg-[#E6F4EA] text-[#14532D] border-[#86EFAC]' 
                                                         : 'bg-[#FEF7E0] text-[#7A5A00] border-[#FEEFC3]'
                                                 }`}>
                                                     {inv.status === 'paid' ? 'Crédito Saldado' : 'Vence Cuota'}
@@ -2817,12 +2822,12 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                                     </td>
                                     <td className="p-4 space-y-1">
                                         <div className="flex items-center gap-1.5 flex-wrap">
-                                            <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                                                inv.status === 'paid' ? 'bg-[#E6F4EA] text-[#1E4620] border border-[#A8DADC]' :
+                                            <span className={`px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider font-sans ${
+                                                inv.status === 'paid' ? 'bg-[#E6F4EA] text-[#14532D] border border-[#86EFAC]' :
                                                 inv.status === 'overdue' ? 'bg-[#FCE8E6] text-[#C5221F] border border-[#F5C6CB]' :
                                                 'bg-[#FEF7E0] text-[#7A5A00] border border-[#FEEFC3]'
                                             }`}>
-                                                {inv.status === ('annulled' as any) || inv.status === ('anulada' as any) ? '🚫 ANULADA' : inv.status === 'paid' ? 'Pagado' : inv.status === 'overdue' ? 'Mora' : 'Pendiente'}
+                                                {inv.status === ('annulled' as any) || inv.status === ('anulada' as any) ? 'ANULADA' : inv.status === 'paid' ? 'Pagado' : inv.status === 'overdue' ? 'Mora' : 'Pendiente'}
                                             </span>
                                             {inv.payment_receipt_url && (
                                                 <span 
@@ -2830,17 +2835,17 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                                                         e.stopPropagation();
                                                         setLightboxUrl(inv.payment_receipt_url!);
                                                     }}
-                                                    className="bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] hover:border-[#161616] px-1.5 py-0.5 text-[9px] font-bold flex items-center gap-0.5 cursor-pointer uppercase tracking-wider"
+                                                    className="bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] hover:border-[#161616] px-2 py-0.5 text-[11px] font-bold flex items-center gap-1 cursor-pointer uppercase tracking-wider font-sans"
                                                     title="Ver foto del comprobante de transferencia"
                                                 >
-                                                    <span className="material-symbols-outlined text-[11px] text-[#D9381E]">receipt_long</span>
-                                                    Soporte 📸
+                                                    <span className="material-symbols-outlined text-[13px] text-[#D9381E]">receipt_long</span>
+                                                    Soporte
                                                 </span>
                                             )}
                                         </div>
                                         {inv.status === 'paid' && inv.paid_at && (
-                                            <div className="text-[10px] text-[#1E4620] font-mono flex items-center gap-1 mt-0.5" title={new Date(inv.paid_at).toLocaleString('es-CO')}>
-                                                <span className="material-symbols-outlined text-[12px]">event_available</span>
+                                            <div className="text-xs text-[#14532D] font-sans font-semibold flex items-center gap-1 mt-1" title={new Date(inv.paid_at).toLocaleString('es-CO')}>
+                                                <span className="material-symbols-outlined text-[14px]">event_available</span>
                                                 Pagado: {formatLocalDate(inv.paid_at)}
                                             </div>
                                         )}

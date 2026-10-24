@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Propuesta: Módulo de Temas en Datos de la Empresa + Solución Legibilidad Portátiles — Frant ERP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* =========================================================================
+       1. PALETAS DE COLOR DEL ERP
+       ========================================================================= */
+    :root,
+    [data-erp-palette="wabi-titanium"] {
+      --bg-canvas: #F1EFEA;
+      --bg-topbar: #F7F5F0;
+      --bg-sidebar: #141519;
+      --text-sidebar: #F4F1EA;
+      --muted-sidebar: rgba(244, 241, 234, 0.55);
+      --border-sidebar: rgba(255, 255, 255, 0.09);
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F7F5F0;
+      --text-main: #141518;
+      --text-secondary: #3F3D38; /* Más contraste para portátiles (antes #6B6862 era muy pálido) */
+      --text-muted: #5C5952;
+      --border-card: #DFDCD3;
+      --accent-primary: #D9381E;
+      --accent-soft: rgba(217, 56, 30, 0.09);
+      --btn-secondary-bg: #181A20;
+      --btn-secondary-text: #FFFFFF;
+      --status-ok: #0F766E;
+      --status-ok-bg: #E6F4EA;
+      --status-ok-border: #A8DADC;
+      --card-shadow: 0 1px 2px rgba(20, 21, 24, 0.04), 0 6px 16px -4px rgba(20, 21, 24, 0.04);
+      --card-radius: 6px;
+    }
+
+    [data-erp-palette="wabi-paper"] {
+      --bg-canvas: #F6F4EE;
+      --bg-topbar: #FAF8F3;
+      --bg-sidebar: #F6F4EE;
+      --text-sidebar: #161616;
+      --muted-sidebar: #57544E;
+      --border-sidebar: #E2DFD7;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #FAF8F3;
+      --text-main: #161616;
+      --text-secondary: #3D3B37;
+      --text-muted: #5A5751;
+      --border-card: #E2DFD7;
+      --accent-primary: #D9381E;
+      --accent-soft: rgba(217, 56, 30, 0.08);
+      --btn-secondary-bg: #161616;
+      --btn-secondary-text: #FFFFFF;
+      --status-ok: #1E4620;
+      --status-ok-bg: #E6F4EA;
+      --status-ok-border: #A8DADC;
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      --card-radius: 4px;
+    }
+
+    [data-erp-palette="swiss-platinum"] {
+      --bg-canvas: #F3F4F6;
+      --bg-topbar: #FFFFFF;
+      --bg-sidebar: #0F172A;
+      --text-sidebar: #F8FAFC;
+      --muted-sidebar: #94A3B8;
+      --border-sidebar: rgba(255, 255, 255, 0.08);
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F8FAFC;
+      --text-main: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #475569;
+      --border-card: #E2E8F0;
+      --accent-primary: #E11D48;
+      --accent-soft: rgba(225, 29, 72, 0.08);
+      --btn-secondary-bg: #0F172A;
+      --btn-secondary-text: #FFFFFF;
+      --status-ok: #065F46;
+      --status-ok-bg: #D1FAE5;
+      --status-ok-border: #6EE7B7;
+      --card-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      --card-radius: 8px;
+    }
+
+    [data-erp-palette="obsidian-pro"] {
+      --bg-canvas: #0B0C0F;
+      --bg-topbar: #111318;
+      --bg-sidebar: #07080A;
+      --text-sidebar: #F3F4F6;
+      --muted-sidebar: #9CA3AF;
+      --border-sidebar: rgba(255, 255, 255, 0.08);
+      --bg-card: #13161C;
+      --bg-subtle: #191D24;
+      --text-main: #F3F4F6;
+      --text-secondary: #D1D5DB;
+      --text-muted: #9CA3AF;
+      --border-card: rgba(255, 255, 255, 0.09);
+      --accent-primary: #FF3B1D;
+      --accent-soft: rgba(255, 59, 29, 0.14);
+      --btn-secondary-bg: #252A34;
+      --btn-secondary-text: #F3F4F6;
+      --status-ok: #34D399;
+      --status-ok-bg: rgba(16, 185, 129, 0.15);
+      --status-ok-border: rgba(52, 211, 153, 0.3);
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+      --card-radius: 8px;
+    }
+
+    /* =========================================================================
+       2. SISTEMAS DE FUENTES
+       ========================================================================= */
+    [data-erp-fonts="industrial"] {
+      --font-heading-h1: 'Space Grotesk', sans-serif;
+      --font-heading-h1-weight: 700;
+      --font-heading-h1-tracking: -0.025em;
+      --font-subheadings: 'Plus Jakarta Sans', sans-serif;
+      --font-kpi: 'Space Grotesk', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
+    }
+
+    [data-erp-fonts="editorial-calibrated"] {
+      --font-heading-h1: 'Instrument Serif', Georgia, serif;
+      --font-heading-h1-weight: 400;
+      --font-heading-h1-tracking: 0em;
+      --font-subheadings: 'Plus Jakarta Sans', sans-serif;
+      --font-kpi: 'Space Grotesk', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
+    }
+
+    [data-erp-fonts="swiss-clean"] {
+      --font-heading-h1: 'Plus Jakarta Sans', sans-serif;
+      --font-heading-h1-weight: 700;
+      --font-heading-h1-tracking: -0.03em;
+      --font-subheadings: 'Plus Jakarta Sans', sans-serif;
+      --font-kpi: 'Plus Jakarta Sans', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      margin: 0;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    .erp-h1 {
+      font-family: var(--font-heading-h1);
+      font-weight: var(--font-heading-h1-weight);
+      letter-spacing: var(--font-heading-h1-tracking);
+    }
+    .erp-subheading { font-family: var(--font-subheadings); font-weight: 700; letter-spacing: -0.015em; }
+    .erp-kpi-number { font-family: var(--font-kpi); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .erp-mono { font-family: var(--font-code); font-variant-numeric: tabular-nums; }
+
+    .erp-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+    }
+
+    /* =========================================================================
+       3. TU SIDEBAR EXPANDIBLE EXACTO (64px -> 290px EN HOVER, INTACTO!)
+       ========================================================================= */
+    .sidebar-expandable {
+      width: 64px;
+      height: calc(100vh - 48px);
+      background-color: var(--bg-sidebar);
+      color: var(--text-sidebar);
+      border-right: 1px solid var(--border-sidebar);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 48px;
+      left: 0;
+      z-index: 100;
+      padding: 1rem 0;
+      transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
+      overflow: hidden !important;
+      white-space: nowrap;
+    }
+    .sidebar-expandable:hover {
+      width: 285px;
+      box-shadow: 14px 0 36px rgba(0,0,0,0.18);
+      border-right: 1px solid var(--accent-primary);
+      overflow-y: auto !important;
+    }
+    .sidebar-expandable:not(:hover) .hide-collapsed {
+      display: none !important;
+      opacity: 0;
+    }
+    .sidebar-expandable:hover .hide-collapsed {
+      display: flex !important;
+      opacity: 1;
+    }
+    .sidebar-expandable:hover .hide-collapsed-block {
+      display: block !important;
+      opacity: 1;
+    }
+    .sidebar-expandable:not(:hover) .hide-collapsed-block {
+      display: none !important;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body data-erp-palette="wabi-titanium" data-erp-fonts="industrial">
+
+  <!-- =========================================================================
+       BARRA SUPERIOR DE NAVEGACIÓN DEL MOCKUP
+       ========================================================================= -->
+  <div class="sticky top-0 z-[120] h-12 bg-[#090A0D] text-white border-b border-white/15 px-4 flex items-center justify-between text-xs">
+    <div class="flex items-center gap-2">
+      <span class="px-2 py-0.5 rounded bg-[#D9381E] text-[10px] font-mono font-bold">PROPUESTA ERP</span>
+      <button onclick="switchMainTab('settings')" id="top-tab-settings" class="px-3 py-1 rounded-md font-mono text-[11px] bg-white text-black font-bold cursor-pointer">
+        1. Datos de la Empresa → Nuevo Módulo "Apariencia & Temas"
+      </button>
+      <button onclick="switchMainTab('invoices')" id="top-tab-invoices" class="px-3 py-1 rounded-md font-mono text-[11px] bg-white/10 hover:bg-white/20 text-white cursor-pointer flex items-center gap-1.5">
+        <span>2. Solución Queja Portátil (Tabla Facturas Antes vs. Después)</span>
+        <span class="px-1.5 py-0.2 rounded bg-[#10B981] text-black text-[9px] font-bold">IMPORTANTE</span>
+      </button>
+      <button onclick="switchMainTab('inventory')" id="top-tab-inventory" class="px-3 py-1 rounded-md font-mono text-[11px] bg-white/10 hover:bg-white/20 text-white cursor-pointer">
+        3. Inventario & IA
+      </button>
+    </div>
+    <div class="hidden lg:flex items-center gap-2 font-mono text-[11px] text-white/60">
+      <span>👈 Pasa el mouse por el menú izquierdo para probar tu Sidebar Expandible</span>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       TU SIDEBAR EXPANDIBLE EXACTO (64px cerrado -> 285px al pasar el mouse)
+       Con iconos vectoriales limpios en lugar de emojis de WhatsApp
+       ========================================================================= -->
+  <aside class="sidebar-expandable">
+    <!-- Cabecera de Marca en Sidebar -->
+    <div class="px-3 pb-4 mb-2 border-b flex items-center gap-3.5" style="border-color: var(--border-sidebar);">
+      <div class="w-10 h-10 min-w-[40px] rounded-md bg-[#D9381E] text-white font-bold text-xs flex items-center justify-center tracking-wider">
+        HO
+      </div>
+      <div class="hide-collapsed-block overflow-hidden">
+        <div class="erp-h1 text-lg leading-tight truncate">Hoshi Services</div>
+        <div class="erp-mono text-[10px] uppercase tracking-[0.15em] text-[#D9381E] font-bold mt-0.5 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#D9381E]"></span>
+          <span>Empresa Matriz</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Menú (Con submenú de Datos de la Empresa sin emojis) -->
+    <div class="px-2 space-y-1 flex-1">
+      
+      <!-- Grupo 1: Datos de la Empresa (Activo) -->
+      <div>
+        <button onclick="switchMainTab('settings')" class="w-full flex items-center gap-3.5 px-2.5 py-2.5 rounded-md text-xs font-semibold cursor-pointer" style="background-color: var(--accent-soft); color: var(--accent-primary);">
+          <svg class="w-5 h-5 min-w-[20px] ml-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          <div class="hide-collapsed justify-between items-center w-full">
+            <span>Datos de la Empresa</span>
+            <span class="text-[10px]">▴</span>
+          </div>
+        </button>
+
+        <!-- Sub-items cuando haces hover en el Sidebar (Sin emojis 🛡️✉️, con SVG limpios) -->
+        <div class="hide-collapsed-block pl-11 pr-2 py-2 space-y-2 text-xs" style="color: var(--muted-sidebar);">
+          <div onclick="switchMainTab('settings')" class="cursor-pointer hover:text-[#D9381E] transition-colors flex items-center gap-2">
+            <span>Perfil & Razón Social</span>
+          </div>
+          <div onclick="switchMainTab('settings')" class="cursor-pointer font-bold text-[#D9381E] flex items-center gap-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z"/></svg>
+            <span>Apariencia & Temas (Nuevo)</span>
+          </div>
+          <div class="cursor-pointer hover:text-[#D9381E] transition-colors flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+            <span>Seguridad & MFA</span>
+          </div>
+          <div class="cursor-pointer hover:text-[#D9381E] transition-colors flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+            <span>Correo & Gmail</span>
+          </div>
+          <div class="cursor-pointer hover:text-[#D9381E] transition-colors">Habilitación DIAN</div>
+          <div class="cursor-pointer font-semibold pt-1">+ Nueva Sede</div>
+        </div>
+      </div>
+
+      <!-- Grupo 2: Configuración Agente IA -->
+      <button onclick="switchMainTab('inventory')" class="w-full flex items-center gap-3.5 px-2.5 py-2.5 rounded-md text-xs font-medium opacity-80 hover:opacity-100 cursor-pointer">
+        <svg class="w-5 h-5 min-w-[20px] ml-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z"/></svg>
+        <span class="hide-collapsed">Configuración Agente IA</span>
+      </button>
+
+      <!-- Grupo 3: Logística & Stock -->
+      <button onclick="switchMainTab('inventory')" class="w-full flex items-center gap-3.5 px-2.5 py-2.5 rounded-md text-xs font-medium opacity-80 hover:opacity-100 cursor-pointer">
+        <svg class="w-5 h-5 min-w-[20px] ml-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <div class="hide-collapsed justify-between items-center w-full">
+          <span>Logística & Stock</span>
+          <span class="text-[10px]">▾</span>
+        </div>
+      </button>
+
+      <!-- Grupo 4: Facturación -->
+      <button onclick="switchMainTab('invoices')" class="w-full flex items-center gap-3.5 px-2.5 py-2.5 rounded-md text-xs font-medium opacity-80 hover:opacity-100 cursor-pointer">
+        <svg class="w-5 h-5 min-w-[20px] ml-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+        <div class="hide-collapsed justify-between items-center w-full">
+          <span>Facturación</span>
+          <span class="text-[10px]">▾</span>
+        </div>
+      </button>
+    </div>
+
+    <!-- Pie de Sidebar -->
+    <div class="hide-collapsed px-4 pt-3 border-t erp-mono text-[10px] opacity-50" style="border-color: var(--border-sidebar);">
+      FRANT ERP v2.6
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       CONTENIDO PRINCIPAL (CON MARGEN IZQUIERDO DE 64PX PARA TU SIDEBAR)
+       ========================================================================= -->
+  <div class="pl-16 min-h-[calc(100vh-48px)] flex flex-col">
+
+    <!-- Topbar fija de tu ERP -->
+    <header class="px-8 py-3 border-b flex items-center justify-between" style="background-color: var(--bg-topbar); border-color: var(--border-card);">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded bg-[#161616] text-white flex items-center justify-center font-bold text-xs">
+          F<span class="w-1.5 h-1.5 rounded-full bg-[#D9381E] ml-0.5"></span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 text-xs">
+        <div class="erp-card px-3 py-1.5 flex items-center gap-2 font-semibold">
+          <svg class="w-3.5 h-3.5 text-[#D9381E]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/></svg>
+          <span>Hoshi Services (Matriz)</span>
+        </div>
+        <div class="erp-card px-3 py-1.5 erp-mono flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+          <span class="font-bold">08:46 p. m.</span>
+          <span style="color: var(--text-muted);">VIE, 23 DE OCT</span>
+        </div>
+        <div class="flex items-center gap-2 pl-2">
+          <div class="w-8 h-8 rounded-full bg-[#161616] text-white flex items-center justify-center font-bold text-xs">H</div>
+          <div class="hidden sm:block">
+            <div class="font-bold text-xs leading-none">Hoshi Diaz</div>
+            <div class="erp-mono text-[10px]" style="color: var(--text-muted);">ADMINISTRADOR</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- =======================================================================
+         VISTA 1: DATOS DE LA EMPRESA -> NUEVA PESTAÑA "APARIENCIA & TEMAS"
+         (Se integra exactamente como la 4ta pestaña junto a Perfil, MFA y Gmail)
+         ======================================================================= -->
+    <main id="view-settings" class="p-8 max-w-[1380px] w-full mx-auto space-y-6">
+      <div>
+        <span class="erp-mono text-[11px] uppercase tracking-[0.18em] font-bold" style="color: var(--accent-primary);">CONFIGURACIÓN LEGAL, SEGURIDAD & APARIENCIA</span>
+        <h1 class="erp-h1 text-3xl sm:text-4xl mt-0.5">Información & Seguridad de la Empresa</h1>
+        <p class="text-sm mt-1" style="color: var(--text-secondary);">
+          Administra los datos fiscales, logotipos, facturación DIAN, autenticación MFA y el tema visual / legibilidad de tu estación de trabajo.
+        </p>
+      </div>
+
+      <!-- Barra de Sub-Pestañas de Datos de la Empresa (Con la nueva pestaña "Apariencia, Temas & Legibilidad") -->
+      <div class="flex flex-wrap items-center gap-6 border-b text-xs font-semibold pt-2" style="border-color: var(--border-card);">
+        <button class="pb-3.5 border-b-2 border-transparent flex items-center gap-2 opacity-65 hover:opacity-100 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"/></svg>
+          <span>Perfil Comercial & Razón Social</span>
+        </button>
+
+        <button class="pb-3.5 border-b-2 border-transparent flex items-center gap-2 opacity-65 hover:opacity-100 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          <span>Seguridad & Autenticación (MFA)</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] erp-mono bg-[#FEF7E0] text-[#7A5A00] border border-[#FEEFC3]">INACTIVO (0/3)</span>
+        </button>
+
+        <button class="pb-3.5 border-b-2 border-transparent flex items-center gap-2 opacity-65 hover:opacity-100 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+          <span>Canales de Correo (Gmail)</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] erp-mono bg-[#E6F4EA] text-[#1E4620] border border-[#A8DADC]">GMAIL ACTIVO</span>
+        </button>
+
+        <!-- NUEVA PESTAÑA ACTIVA: APARIENCIA, TEMAS & LEGIBILIDAD -->
+        <button class="pb-3.5 border-b-2 flex items-center gap-2 font-bold cursor-pointer" style="border-color: var(--accent-primary); color: var(--accent-primary);">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z"/></svg>
+          <span>Apariencia, Temas & Legibilidad</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] erp-mono text-white" style="background-color: var(--accent-primary);">NUEVO</span>
+        </button>
+      </div>
+
+      <!-- CONTENIDO DEL NUEVO MÓDULO DE TEMAS EN DATOS DE LA EMPRESA -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Columna Izquierda (8 cols): Selector de Tema, Tipografía y Escala de Portátil -->
+        <div class="lg:col-span-8 space-y-6">
+          
+          <!-- Bloque 1: Paleta de Colores -->
+          <div class="erp-card p-7 space-y-5">
+            <div class="border-b pb-4 flex items-center justify-between" style="border-color: var(--border-card);">
+              <div>
+                <h2 class="erp-subheading text-lg">1. Tema Visual del Espacio de Trabajo</h2>
+                <p class="text-xs mt-0.5" style="color: var(--text-secondary);">Elige el contraste de superficie y menú lateral para esta estación o para toda tu tienda.</p>
+              </div>
+              <span class="erp-mono text-[11px] px-2.5 py-1 rounded border font-semibold" style="border-color: var(--border-card);">Guardado Instantáneo</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Card Tema 1 -->
+              <div onclick="setPalette('wabi-titanium')" id="card-pal-wabi-titanium" class="p-4 rounded-lg border-2 border-[#D9381E] cursor-pointer transition-all space-y-3" style="background-color: var(--bg-subtle);">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sm">Wabi-Sabi Titanium (Recomendado)</span>
+                  <span class="w-3 h-3 rounded-full bg-[#D9381E]"></span>
+                </div>
+                <div class="flex gap-1.5 h-7 rounded overflow-hidden border border-black/15">
+                  <div class="w-1/4 bg-[#141519]" title="Sidebar Grafito"></div>
+                  <div class="w-2/4 bg-[#F1EFEA]" title="Lienzo Piedra"></div>
+                  <div class="w-1/4 bg-[#D9381E]" title="Acento Bermellón"></div>
+                </div>
+                <p class="text-xs" style="color: var(--text-secondary);">Sidebar en grafito anodizado (#141519) que enmarca la pantalla y lienzo piedra cálido de fatiga visual cero.</p>
+              </div>
+
+              <!-- Card Tema 2 -->
+              <div onclick="setPalette('wabi-paper')" id="card-pal-wabi-paper" class="p-4 rounded-lg border cursor-pointer transition-all space-y-3" style="border-color: var(--border-card);">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sm">Wabi-Sabi Paper (Clásico Claro)</span>
+                  <span class="w-3 h-3 rounded-full border border-current opacity-40"></span>
+                </div>
+                <div class="flex gap-1.5 h-7 rounded overflow-hidden border border-black/15">
+                  <div class="w-1/4 bg-[#F6F4EE]"></div>
+                  <div class="w-2/4 bg-[#FFFFFF]"></div>
+                  <div class="w-1/4 bg-[#D9381E]"></div>
+                </div>
+                <p class="text-xs" style="color: var(--text-secondary);">Tu tema original de papel artesanal (#F6F4EE) con contraste de texto reforzado para lectura en portátiles.</p>
+              </div>
+
+              <!-- Card Tema 3 -->
+              <div onclick="setPalette('swiss-platinum')" id="card-pal-swiss-platinum" class="p-4 rounded-lg border cursor-pointer transition-all space-y-3" style="border-color: var(--border-card);">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sm">Swiss Platinum (Gris Perla Neutro)</span>
+                  <span class="w-3 h-3 rounded-full border border-current opacity-40"></span>
+                </div>
+                <div class="flex gap-1.5 h-7 rounded overflow-hidden border border-black/15">
+                  <div class="w-1/4 bg-[#0F172A]"></div>
+                  <div class="w-2/4 bg-[#F3F4F6]"></div>
+                  <div class="w-1/4 bg-[#E11D48]"></div>
+                </div>
+                <p class="text-xs" style="color: var(--text-secondary);">Elimina el tono crema/beige por completo y utiliza blanco puro con gris platino estilo Stripe / Linear.</p>
+              </div>
+
+              <!-- Card Tema 4 -->
+              <div onclick="setPalette('obsidian-pro')" id="card-pal-obsidian-pro" class="p-4 rounded-lg border cursor-pointer transition-all space-y-3" style="border-color: var(--border-card);">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-sm">Obsidian Pro (Modo Oscuro)</span>
+                  <span class="w-3 h-3 rounded-full border border-current opacity-40"></span>
+                </div>
+                <div class="flex gap-1.5 h-7 rounded overflow-hidden border border-white/20">
+                  <div class="w-1/4 bg-[#07080A]"></div>
+                  <div class="w-2/4 bg-[#13161C]"></div>
+                  <div class="w-1/4 bg-[#FF3B1D]"></div>
+                </div>
+                <p class="text-xs" style="color: var(--text-secondary);">Chasis nocturno de alto contraste para turnos largos o ambientes con poca iluminación.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bloque 2: Combinación de Fuentes -->
+          <div class="erp-card p-7 space-y-5">
+            <div class="border-b pb-4" style="border-color: var(--border-card);">
+              <h2 class="erp-subheading text-lg">2. Jerarquía de Fuentes (Títulos, KPIs y Tablas)</h2>
+              <p class="text-xs mt-0.5" style="color: var(--text-secondary);">Elimina el "faux-bold" borroso y unifica cómo se ven los números y subtítulos.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <button onclick="setFonts('industrial')" id="btn-font-industrial" class="p-4 rounded-lg border-2 border-[#D9381E] text-left cursor-pointer space-y-1.5" style="background-color: var(--bg-subtle);">
+                <div class="font-['Space_Grotesk'] font-bold text-base">1. Space Grotesk + Jakarta</div>
+                <p class="text-xs" style="color: var(--text-secondary);">Títulos y KPIs firmes en Space Grotesk; lectura de tablas ultra-clara en Plus Jakarta Sans.</p>
+              </button>
+
+              <button onclick="setFonts('editorial-calibrated')" id="btn-font-editorial-calibrated" class="p-4 rounded-lg border text-left cursor-pointer space-y-1.5" style="border-color: var(--border-card);">
+                <div class="font-['Instrument_Serif'] text-xl">2. Editorial Calibrada</div>
+                <p class="text-xs" style="color: var(--text-secondary);">Instrument Serif solo en el título principal (peso 400 real); subtítulos y KPIs en Sans/Grotesk.</p>
+              </button>
+
+              <button onclick="setFonts('swiss-clean')" id="btn-font-swiss-clean" class="p-4 rounded-lg border text-left cursor-pointer space-y-1.5" style="border-color: var(--border-card);">
+                <div class="font-['Plus_Jakarta_Sans'] font-bold text-base">3. 100% Plus Jakarta Sans</div>
+                <p class="text-xs" style="color: var(--text-secondary);">Cero serifas. Todo el sistema unificado en una sola familia geométrica limpia.</p>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Columna Derecha (4 cols): Explicación Técnica del Problema de tu Usuaria en Portátil -->
+        <div class="lg:col-span-4 erp-card p-7 space-y-5 border-l-4 border-l-[#D9381E]">
+          <div class="space-y-1">
+            <span class="erp-mono text-[10px] font-bold uppercase tracking-wider text-[#D9381E]">DIAGNÓSTICO DE INGENIERÍA UX</span>
+            <h3 class="erp-subheading text-lg">¿Por qué tu usuaria en portátil ve borrosas las descripciones de la 2da imagen?</h3>
+          </div>
+
+          <div class="space-y-3 text-xs leading-relaxed" style="color: var(--text-secondary);">
+            <p>
+              En tu monitor de <strong>45 pulgadas</strong> cualquier letra de <code>9px</code> o <code>10px</code> se ve grande físicamente. Pero en un <strong>portátil de 13" o 14" (1366×768 o 1080p)</strong> ocurren 3 problemas simultáneos en tu código actual (<code>SaaSErpInvoices.tsx</code>):
+            </p>
+            <div class="p-3.5 rounded-lg border space-y-1.5" style="background-color: var(--bg-subtle); border-color: var(--border-card);">
+              <div class="font-bold text-xs" style="color: var(--text-main);">1. Clases en píxeles fijos (<code>text-[9px]</code> y <code>text-[10px]</code>)</div>
+              <p>En <code>index.css</code> pusiste <code>html { font-size: 115%; }</code> pensando que agrandaría todo en portátiles. Pero el <code>115%</code> solo agranda unidades <code>rem</code>; <strong>ignora por completo</strong> los <code>text-[9px]</code> y <code>text-[10px]</code> quemados en las descripciones de facturas.</p>
+            </div>
+            <div class="p-3.5 rounded-lg border space-y-1.5" style="background-color: var(--bg-subtle); border-color: var(--border-card);">
+              <div class="font-bold text-xs" style="color: var(--text-main);">2. Monospace a 10px se empasta</div>
+              <p>La hora (<code>09:45 p. m.</code>) y fecha de pago usan <code>JetBrains Mono</code> a <code>10px</code>. Como el cero <code>0</code> de JetBrains Mono tiene un punto adentro, a 10px en un portátil el <code>0</code>, el <code>8</code> y el <code>6</code> se vuelven una mancha gris.</p>
+            </div>
+            <div class="p-3.5 rounded-lg border space-y-1.5" style="background-color: var(--bg-subtle); border-color: var(--border-card);">
+              <div class="font-bold text-xs" style="color: var(--text-main);">3. Estándar Mundial B2B (Stripe / Linear / WCAG)</div>
+              <p>El estándar de la industria prohíbe bajar de <strong><code>12.5px</code> (subtextos)</strong> y <strong><code>14px</code> (datos principales)</strong>, con contraste mínimo <code>#3F3D38</code> en vez de gris pálido <code>#6B6862</code>.</p>
+            </div>
+          </div>
+
+          <button onclick="switchMainTab('invoices')" class="w-full py-3 rounded-lg bg-[#D9381E] text-white font-mono text-xs font-bold uppercase tracking-wider cursor-pointer shadow-sm">
+            Ver Comparativa de su Tabla de Facturas →
+          </button>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- =======================================================================
+         VISTA 2: COMPARATIVA EN VIVO DE LA TABLA DE FACTURAS (TU 2DA IMAGEN)
+         Arriba: Como la ve tu usuaria hoy (9px-10px Mono Borroso)
+         Abajo: Con el Estándar de Legibilidad para Portátiles (13px-14px Nítido)
+         ======================================================================= -->
+    <main id="view-invoices" class="p-8 max-w-[1420px] w-full mx-auto space-y-8 hidden">
+      
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <span class="erp-mono text-[11px] uppercase tracking-[0.18em] font-bold text-[#D9381E]">COMPARATIVA REAL EN PANTALLA DE PORTÁTIL</span>
+          <h1 class="erp-h1 text-3xl sm:text-4xl mt-0.5">Tabla de Facturas: Antes vs. Después</h1>
+          <p class="text-sm mt-1" style="color: var(--text-secondary);">
+            Exactamente la misma tabla y las mismas columnas de tu segunda captura, comparando la legibilidad real para tu usuaria.
+          </p>
+        </div>
+      </div>
+
+      <!-- 1. ANTES (TAL CUAL ESTÁ HOY EN SAASERPINVOICES.TSX CON TEXT-[10PX] Y MONO CHIQUITO) -->
+      <div class="space-y-2">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded bg-red-500/15 text-red-600 font-mono text-xs font-bold uppercase">
+            ❌ ANTES (Tu código actual en SaaSErpInvoices.tsx: text-[10px] + #6B6862 + JetBrains Mono 10px + Emojis)
+          </span>
+        </div>
+
+        <div class="bg-white border border-[#E2DFD7] overflow-x-auto text-[#161616]">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[11px] text-[#6B6862] uppercase tracking-wider font-semibold">
+                <th class="p-4">Factura / Cliente</th>
+                <th class="p-4">Emisión</th>
+                <th class="p-4">WhatsApp</th>
+                <th class="p-4">Monto Total</th>
+                <th class="p-4">Despacho</th>
+                <th class="p-4">Vence</th>
+                <th class="p-4">Estado / Soporte</th>
+                <th class="p-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#E2DFD7] text-xs">
+              <tr>
+                <td class="p-4">
+                  <div class="flex items-center gap-3">
+                    <span class="font-semibold text-[#161616] text-xs font-mono bg-[#F6F4EE] py-1 px-2.5 border border-[#E2DFD7]">F-1002</span>
+                    <div>
+                      <p class="font-bold text-[#161616]">Isac Díaz</p>
+                      <p class="text-[10px] text-[#6B6862] flex items-center gap-1 mt-0.5 font-medium">💵 Efectivo</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-4 text-xs font-mono font-medium text-[#161616]">
+                  <p class="font-bold">21 de oct de 2026</p>
+                  <p class="text-[10px] text-[#6B6862] font-mono">09:45 p. m.</p>
+                </td>
+                <td class="p-4 font-mono text-xs text-[#6B6862]">+1042247164</td>
+                <td class="p-4 font-bold text-[#161616] text-xs font-mono">$ 430.000</td>
+                <td class="p-4 text-[10px] text-[#6B6862] font-semibold uppercase tracking-wider">🏪 LOCAL</td>
+                <td class="p-4 font-mono text-xs font-semibold text-[#161616]">21 de oct de 2026</td>
+                <td class="p-4 space-y-1">
+                  <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[#E6F4EA] text-[#1E4620] border border-[#A8DADC] inline-block">PAGADO</span>
+                  <div class="text-[10px] text-[#1E4620] font-mono">📅 Pagado: 21 de oct de 2026</div>
+                </td>
+                <td class="p-4 text-right font-mono text-xs text-[#6B6862]">[👁] [🖨] [↺] [⊘]</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. DESPUÉS (MISMA TABLA, MISMAS COLUMNAS, APLICANDO EL ESTÁNDAR DE LEGIBILIDAD EN PORTÁTIL) -->
+      <div class="space-y-2">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-700 font-mono text-xs font-bold uppercase">
+            ✓ DESPUÉS (Estándar B2B para Portátiles: Subtextos en 13px Plus Jakarta Sans + Contraste #3F3D38 + Cero Emojis Borrosos)
+          </span>
+        </div>
+
+        <div class="erp-card overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b text-xs uppercase tracking-wider font-bold" style="background-color: var(--bg-subtle); color: var(--text-secondary); border-color: var(--border-card);">
+                <th class="py-4 px-5">Factura / Cliente</th>
+                <th class="py-4 px-4">Emisión</th>
+                <th class="py-4 px-4">WhatsApp</th>
+                <th class="py-4 px-4">Monto Total</th>
+                <th class="py-4 px-4">Despacho</th>
+                <th class="py-4 px-4">Vence</th>
+                <th class="py-4 px-4">Estado / Soporte</th>
+                <th class="py-4 px-5 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y" style="border-color: var(--border-card);">
+              <!-- Fila 1 -->
+              <tr class="hover:bg-black/[0.02] transition-colors">
+                <td class="py-4 px-5">
+                  <div class="flex items-center gap-3.5">
+                    <span class="erp-mono font-bold text-sm py-1.5 px-3 rounded border" style="background-color: var(--bg-subtle); border-color: var(--border-card);">
+                      F-1002
+                    </span>
+                    <div>
+                      <p class="font-bold text-[15px] leading-snug">Isac Díaz</p>
+                      <!-- Sub-descripción en 13px Plus Jakarta Sans Medium con icono SVG nítido -->
+                      <p class="text-[13px] font-medium flex items-center gap-1.5 mt-0.5" style="color: var(--text-secondary);">
+                        <svg class="w-4 h-4 text-[#0F766E] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+                        <span>Efectivo</span>
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-4 px-4">
+                  <p class="font-bold text-[14px]">21 de oct de 2026</p>
+                  <p class="text-[13px] font-medium mt-0.5 tabular-nums" style="color: var(--text-secondary);">09:45 p. m.</p>
+                </td>
+                <td class="py-4 px-4 erp-mono text-[13.5px] font-medium" style="color: var(--text-secondary);">+1042247164</td>
+                <td class="py-4 px-4 erp-kpi-number text-[16px]">$430.000</td>
+                <td class="py-4 px-4">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[12.5px] font-semibold border" style="background-color: var(--bg-subtle); border-color: var(--border-card); color: var(--text-secondary);">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35"/></svg>
+                    <span>Entrega en Local</span>
+                  </span>
+                </td>
+                <td class="py-4 px-4 font-semibold text-[14px]">21 de oct de 2026</td>
+                <td class="py-4 px-4 space-y-1">
+                  <span class="px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider inline-block border" style="background-color: var(--status-ok-bg); color: var(--status-ok); border-color: var(--status-ok-border);">
+                    PAGADO
+                  </span>
+                  <div class="text-[12.5px] font-medium flex items-center gap-1.5" style="color: var(--status-ok);">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Pagado: 21 de oct de 2026</span>
+                  </div>
+                </td>
+                <td class="py-4 px-5 text-right">
+                  <div class="inline-flex items-center gap-1.5">
+                    <button class="w-8 h-8 rounded border flex items-center justify-center hover:border-current cursor-pointer" style="border-color: var(--border-card);" title="Ver detalle">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button class="w-8 h-8 rounded border flex items-center justify-center hover:border-current cursor-pointer" style="border-color: var(--border-card);" title="Imprimir">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Fila 2 -->
+              <tr class="hover:bg-black/[0.02] transition-colors">
+                <td class="py-4 px-5">
+                  <div class="flex items-center gap-3.5">
+                    <span class="erp-mono font-bold text-sm py-1.5 px-3 rounded border" style="background-color: var(--bg-subtle); border-color: var(--border-card);">
+                      F-1001
+                    </span>
+                    <div>
+                      <p class="font-bold text-[15px] leading-snug" style="color: var(--accent-primary);">Isac Díaz</p>
+                      <p class="text-[13px] font-medium flex items-center gap-1.5 mt-0.5" style="color: var(--text-secondary);">
+                        <svg class="w-4 h-4 text-[#0F766E] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+                        <span>Efectivo</span>
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-4 px-4">
+                  <p class="font-bold text-[14px]">21 de oct de 2026</p>
+                  <p class="text-[13px] font-medium mt-0.5 tabular-nums" style="color: var(--text-secondary);">09:30 p. m.</p>
+                </td>
+                <td class="py-4 px-4 erp-mono text-[13.5px] font-medium" style="color: var(--text-secondary);">+1042247164</td>
+                <td class="py-4 px-4 erp-kpi-number text-[16px]">$130.000</td>
+                <td class="py-4 px-4">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[12.5px] font-semibold border" style="background-color: var(--bg-subtle); border-color: var(--border-card); color: var(--text-secondary);">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35"/></svg>
+                    <span>Entrega en Local</span>
+                  </span>
+                </td>
+                <td class="py-4 px-4 font-semibold text-[14px]">21 de oct de 2026</td>
+                <td class="py-4 px-4 space-y-1">
+                  <span class="px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider inline-block border" style="background-color: var(--status-ok-bg); color: var(--status-ok); border-color: var(--status-ok-border);">
+                    PAGADO
+                  </span>
+                  <div class="text-[12.5px] font-medium flex items-center gap-1.5" style="color: var(--status-ok);">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Pagado: 21 de oct de 2026</span>
+                  </div>
+                </td>
+                <td class="py-4 px-5 text-right">
+                  <div class="inline-flex items-center gap-1.5">
+                    <button class="w-8 h-8 rounded border flex items-center justify-center hover:border-current cursor-pointer" style="border-color: var(--border-card);">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <button class="w-8 h-8 rounded border flex items-center justify-center hover:border-current cursor-pointer" style="border-color: var(--border-card);">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- =======================================================================
+         VISTA 3: INVENTARIO & IA (RESUMEN)
+         ======================================================================= -->
+    <main id="view-inventory" class="p-8 max-w-[1380px] w-full mx-auto space-y-6 hidden">
+      <div>
+        <span class="erp-mono text-[11px] uppercase tracking-[0.18em] font-bold" style="color: var(--accent-primary);">LOGÍSTICA & STOCK</span>
+        <h1 class="erp-h1 text-3xl sm:text-4xl mt-0.5">Inventario de Productos</h1>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="erp-card p-6">
+          <div class="erp-mono text-xs uppercase font-semibold" style="color: var(--text-secondary);">TOTAL DE ÍTEMS EN STOCK</div>
+          <div class="erp-kpi-number text-4xl mt-1">108</div>
+          <div class="text-[13px] mt-1" style="color: var(--text-secondary);">Catalogados en sistema ERP</div>
+        </div>
+        <div class="erp-card p-6">
+          <div class="erp-mono text-xs uppercase font-semibold" style="color: var(--text-secondary);">VALOR EN INVENTARIO</div>
+          <div class="erp-kpi-number text-4xl mt-1">$620.000 COP</div>
+          <div class="text-[13px] mt-1" style="color: var(--text-secondary);">Costo total de productos físicos en bodega</div>
+        </div>
+        <div class="erp-card p-6 border-l-4 border-l-[#D9381E]">
+          <div class="erp-mono text-xs uppercase font-semibold" style="color: var(--text-secondary);">ALERTAS DE STOCK BAJO</div>
+          <div class="erp-kpi-number text-4xl mt-1 text-[#D9381E]">0 Alertas</div>
+          <div class="text-[13px] mt-1" style="color: var(--text-secondary);">Ítems por debajo del stock mínimo</div>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    function switchMainTab(tab) {
+      ['settings', 'invoices', 'inventory'].forEach(t => {
+        document.getElementById('view-' + t).classList.add('hidden');
+        const btn = document.getElementById('top-tab-' + t);
+        if (btn) btn.className = 'px-3 py-1 rounded-md font-mono text-[11px] bg-white/10 hover:bg-white/20 text-white cursor-pointer flex items-center gap-1.5';
+      });
+      document.getElementById('view-' + tab).classList.remove('hidden');
+      const activeBtn = document.getElementById('top-tab-' + tab);
+      if (activeBtn) activeBtn.className = 'px-3 py-1 rounded-md font-mono text-[11px] bg-white text-black font-bold cursor-pointer flex items-center gap-1.5';
+    }
+
+    function setPalette(pal) {
+      document.body.setAttribute('data-erp-palette', pal);
+      ['wabi-titanium', 'wabi-paper', 'swiss-platinum', 'obsidian-pro'].forEach(p => {
+        const card = document.getElementById('card-pal-' + p);
+        if (!card) return;
+        if (p === pal) {
+          card.className = 'p-4 rounded-lg border-2 border-[#D9381E] cursor-pointer transition-all space-y-3';
+          card.style.backgroundColor = 'var(--bg-subtle)';
+        } else {
+          card.className = 'p-4 rounded-lg border cursor-pointer transition-all space-y-3';
+          card.style.backgroundColor = 'transparent';
+          card.style.borderColor = 'var(--border-card)';
+        }
+      });
+    }
+
+    function setFonts(fnt) {
+      document.body.setAttribute('data-erp-fonts', fnt);
+      ['industrial', 'editorial-calibrated', 'swiss-clean'].forEach(f => {
+        const btn = document.getElementById('btn-font-' + f);
+        if (!btn) return;
+        if (f === fnt) {
+          btn.className = 'p-4 rounded-lg border-2 border-[#D9381E] text-left cursor-pointer space-y-1.5';
+          btn.style.backgroundColor = 'var(--bg-subtle)';
+        } else {
+          btn.className = 'p-4 rounded-lg border text-left cursor-pointer space-y-1.5';
+          btn.style.backgroundColor = 'transparent';
+          btn.style.borderColor = 'var(--border-card)';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

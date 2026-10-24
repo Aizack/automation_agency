@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { authFetch as fetch } from '../utils/api';
+import { SaaSErpAppearanceSettings } from './SaaSErpAppearanceSettings';
 
 interface StoreSettingsProps {
   clientId: string;
   onProfileUpdated: () => void;
-  initialSubTab?: 'profile' | 'security' | 'email';
+  initialSubTab?: 'profile' | 'security' | 'email' | 'appearance';
 }
 
 export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, onProfileUpdated, initialSubTab }) => {
@@ -20,7 +21,7 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   const [logos, setLogos] = useState<Array<{ fileName: string, url: string }>>([]);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoBuster, setLogoBuster] = useState(Date.now());
-  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'security' | 'email'>(initialSubTab || 'profile');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'security' | 'email' | 'appearance'>(initialSubTab || 'profile');
 
   useEffect(() => {
     if (initialSubTab) {
@@ -531,6 +532,21 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
             </span>
           )}
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('appearance')}
+          className={`pb-3 border-b-2 transition cursor-pointer flex items-center gap-2 ${
+            activeSubTab === 'appearance'
+              ? 'border-[#D9381E] text-[#D9381E]'
+              : 'border-transparent text-[#6B6862] hover:text-[#161616]'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">palette</span>
+          <span>Apariencia, Temas & Legibilidad</span>
+          <span className="bg-[#FAF8F3] text-[#D9381E] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#D9381E]/30 font-mono">
+            PORTÁTIL & TEMAS
+          </span>
+        </button>
       </div>
 
       {/* Alertas Nativas Wabi-Sabi */}
@@ -551,6 +567,11 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
             <span>{error}</span>
           </div>
         </div>
+      )}
+
+      {/* RENDER PESTAÑA 4: APARIENCIA, TEMAS & LEGIBILIDAD EN PORTÁTIL */}
+      {activeSubTab === 'appearance' && (
+        <SaaSErpAppearanceSettings />
       )}
 
       {/* RENDER PESTAÑA 2: SEGURIDAD & AUTENTICACIÓN MFA */}

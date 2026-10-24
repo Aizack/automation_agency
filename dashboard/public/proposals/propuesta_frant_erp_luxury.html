@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRANT ERP — Sistema Operativo Comercial de Precisión | frant.app</title>
+  <!-- Google Fonts: Space Grotesk (Industrial Display) + Newsreader (Editorial Italic Accent) + Plus Jakarta Sans (UI Body) + JetBrains Mono (Telemetry) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --obsidian: #090A0C;
+      --chassis: #111317;
+      --stone-warm: #E9E5DC;
+      --stone-card: #F4F1EA;
+      --vermilion: #FF3B1D;
+      --vermilion-dark: #D9381E;
+      --gold-brass: #C89D54;
+      --emerald-telemetry: #10B981;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-editorial: 'Newsreader', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background-color: var(--obsidian);
+      color: #F4F1EA;
+      font-family: var(--font-sans);
+      overflow-x: hidden;
+      selection-background-color: var(--vermilion);
+    }
+
+    /* Subtle Analog Film Grain Overlay */
+    .film-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.032;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Industrial Technical Grid Background */
+    .bg-tech-grid {
+      background-size: 48px 48px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+
+    .bg-stone-grid {
+      background-size: 48px 48px;
+      background-image: 
+        linear-gradient(to right, rgba(15, 16, 20, 0.045) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 16, 20, 0.045) 1px, transparent 1px);
+    }
+
+    /* Tabular numbers for zero layout shift */
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 3D Perspective Stage for Scroll-Unfolding Software Window */
+    .perspective-stage {
+      perspective: 1800px;
+      transform-style: preserve-3d;
+    }
+
+    .window-3d-unfold {
+      transform-style: preserve-3d;
+      will-change: transform;
+      transition: transform 0.12s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.4s ease;
+      box-shadow: 
+        0 2px 4px rgba(0,0,0,0.4),
+        0 12px 24px rgba(0,0,0,0.5),
+        0 32px 64px rgba(0,0,0,0.65),
+        0 64px 120px -20px rgba(255, 59, 29, 0.14),
+        inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+
+    /* Border Trail Effect (from motion-primitives) */
+    @keyframes borderTrail {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .border-trail-frame {
+      position: relative;
+    }
+    .border-trail-frame::before {
+      content: "";
+      position: absolute;
+      inset: -1.5px;
+      border-radius: inherit;
+      padding: 1.5px;
+      background: linear-gradient(120deg, rgba(255,59,29,0.85), rgba(255,255,255,0.08), rgba(200,157,84,0.6), rgba(255,255,255,0.05), rgba(255,59,29,0.85));
+      background-size: 300% 300%;
+      animation: borderTrail 7s ease infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Spotlight Card Effect (from motion-primitives) */
+    .spotlight-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .spotlight-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(550px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 59, 29, 0.11), transparent 40%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .spotlight-card:hover::after {
+      opacity: 1;
+    }
+
+    /* 3D Tilt Card */
+    .tilt-card {
+      transform-style: preserve-3d;
+      transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+      will-change: transform;
+    }
+
+    /* Concentric Radii & Optical Image Outlines (from make-interfaces-feel-better) */
+    .img-optical-outline {
+      outline: 1px solid rgba(255, 255, 255, 0.12);
+      outline-offset: -1px;
+    }
+    .img-optical-outline-light {
+      outline: 1px solid rgba(0, 0, 0, 0.1);
+      outline-offset: -1px;
+    }
+
+    /* Tactile Press Effect */
+    .btn-tactile {
+      transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-tactile:active {
+      transform: scale(0.96);
+    }
+
+    /* ERP Theme Variables inside the 3D App Showcase */
+    .erp-theme-titanium {
+      --erp-bg: #ECE9E2;
+      --erp-surface: #F7F5F0;
+      --erp-card: #FFFFFF;
+      --erp-sidebar: #121316;
+      --erp-text: #111215;
+      --erp-muted: #63615B;
+      --erp-border: rgba(17, 18, 21, 0.09);
+      --erp-accent: #FF3B1D;
+      --erp-secondary-btn: #1B1D22;
+      --erp-secondary-text: #FFFFFF;
+      --erp-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 6px 16px rgba(0,0,0,0.03);
+    }
+
+    .erp-theme-obsidian {
+      --erp-bg: #0C0D10;
+      --erp-surface: #13151A;
+      --erp-card: #181B22;
+      --erp-sidebar: #08090B;
+      --erp-text: #F3F4F6;
+      --erp-muted: #8E929F;
+      --erp-border: rgba(255, 255, 255, 0.08);
+      --erp-accent: #FF3B1D;
+      --erp-secondary-btn: #262A34;
+      --erp-secondary-text: #F3F4F6;
+      --erp-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35);
+    }
+
+    .erp-theme-swiss {
+      --erp-bg: #F3F4F6;
+      --erp-surface: #FFFFFF;
+      --erp-card: #FFFFFF;
+      --erp-sidebar: #0F172A;
+      --erp-text: #0F172A;
+      --erp-muted: #64748B;
+      --erp-border: rgba(15, 23, 42, 0.08);
+      --erp-accent: #E11D48;
+      --erp-secondary-btn: #0F172A;
+      --erp-secondary-text: #FFFFFF;
+      --erp-shadow: 0 1px 3px rgba(15,23,42,0.05), 0 10px 25px -5px rgba(15,23,42,0.04);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #090A0C; }
+    ::-webkit-scrollbar-thumb { background: #262930; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #FF3B1D; }
+  </style>
+</head>
+<body class="bg-tech-grid">
+  <div class="film-grain"></div>
+
+  <!-- =======================================================================
+       BARRA FLOTANTE DE CONTROL DEL MOCKUP (PARA QUE PRUEBES TEMAS Y VISTAS)
+       ======================================================================= -->
+  <div class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#121318]/95 backdrop-blur-xl border border-white/15 px-4 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex flex-wrap items-center gap-3 text-xs">
+    <div class="flex items-center gap-2 pr-3 border-r border-white/10">
+      <span class="w-2 h-2 rounded-full bg-[#FF3B1D] animate-pulse"></span>
+      <span class="font-mono text-[10px] uppercase tracking-widest text-white/70">MOCKUP: FRANT.APP</span>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <span class="font-mono text-[10px] text-white/50 uppercase mr-1">Tema Interno del ERP:</span>
+      <button onclick="setErpTheme('titanium')" id="btn-theme-titanium" class="px-2.5 py-1 rounded-lg font-mono text-[11px] bg-[#FF3B1D] text-white font-semibold cursor-pointer btn-tactile">
+        1. Braun Titanium (Cálido Industrial)
+      </button>
+      <button onclick="setErpTheme('obsidian')" id="btn-theme-obsidian" class="px-2.5 py-1 rounded-lg font-mono text-[11px] bg-white/5 hover:bg-white/10 text-white/70 cursor-pointer btn-tactile">
+        2. Obsidian Pro (Dark)
+      </button>
+      <button onclick="setErpTheme('swiss')" id="btn-theme-swiss" class="px-2.5 py-1 rounded-lg font-mono text-[11px] bg-white/5 hover:bg-white/10 text-white/70 cursor-pointer btn-tactile">
+        3. Swiss Daylight
+      </button>
+    </div>
+    <a href="./propuesta_diazlab_agency_luxury.html" class="ml-2 pl-3 border-l border-white/10 font-mono text-[11px] text-[#C89D54] hover:text-white flex items-center gap-1 font-semibold">
+      <span>Ver Mockup diazlab.online</span>
+      <span>→</span>
+    </a>
+  </div>
+
+  <!-- =======================================================================
+       1. NAVBAR INDUSTRIAL DE ALTA PRECISIÓN (FRANT.APP)
+       ======================================================================= -->
+  <header class="sticky top-0 z-40 bg-[#090A0C]/85 backdrop-blur-xl border-b border-white/10 px-6 lg:px-14 py-4">
+    <div class="max-w-[1400px] mx-auto flex items-center justify-between">
+      <!-- Brand Identity -->
+      <a href="#" class="flex items-center gap-3.5 group">
+        <div class="w-9 h-9 rounded-lg bg-[#16181D] border border-white/15 flex items-center justify-center relative overflow-hidden shadow-inner">
+          <span class="font-['Space_Grotesk'] font-bold text-lg tracking-tighter text-white">F</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-[#FF3B1D] absolute top-1.5 right-1.5"></span>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="font-['Space_Grotesk'] font-bold text-lg tracking-[0.06em] text-white leading-none">FRANT</span>
+            <span class="font-mono text-[9px] uppercase tracking-[0.2em] px-1.5 py-0.5 rounded bg-white/8 text-white/80 border border-white/10">ERP v2.6</span>
+          </div>
+          <span class="font-mono text-[9px] tracking-[0.22em] text-white/45 uppercase mt-1">PRECISION COMMERCIAL OS</span>
+        </div>
+      </a>
+
+      <!-- Navigation Links (Strictly Frant ERP Modules & Verticals) -->
+      <nav class="hidden xl:flex items-center gap-8 text-xs font-mono uppercase tracking-[0.14em] text-white/65">
+        <a href="#consola-3d" class="hover:text-white transition-colors">01. Consola</a>
+        <a href="#despacho-nativo" class="hover:text-white transition-colors flex items-center gap-1.5">
+          <span>02. Gmail & WhatsApp</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
+        </a>
+        <a href="#verticales" class="hover:text-white transition-colors">03. Verticales</a>
+        <a href="#ui-redesign" class="hover:text-white transition-colors text-[#C89D54]">04. Nuevo Diseño App</a>
+        <a href="#planes-erp" class="hover:text-white transition-colors">05. Planes</a>
+      </nav>
+
+      <!-- Direct Actions: Login (/login) & Demo -->
+      <div class="flex items-center gap-3">
+        <a href="https://frant.app/login" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs font-mono uppercase tracking-wider text-white transition-colors btn-tactile flex items-center gap-2">
+          <svg class="w-3.5 h-3.5 text-[#FF3B1D]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          <span>Iniciar Sesión</span>
+        </a>
+        <a href="#planes-erp" class="hidden sm:inline-flex px-5 py-2.5 rounded-xl bg-[#FF3B1D] hover:bg-[#e02d10] text-white text-xs font-mono font-semibold uppercase tracking-wider shadow-[0_0_25px_rgba(255,59,29,0.35)] btn-tactile">
+          Solicitar Acceso
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- =======================================================================
+       2. HERO SECTION: LUJO INDUSTRIAL + FOTOGRAFÍA 8K + HOOK COGNITIVO
+       ======================================================================= -->
+  <section class="relative pt-14 lg:pt-20 pb-12 px-6 lg:px-14 max-w-[1400px] mx-auto">
+    <!-- Ambient Volumetric Glow -->
+    <div class="absolute top-10 left-1/4 w-[600px] h-[350px] bg-[#FF3B1D]/12 blur-[140px] rounded-full pointer-events-none"></div>
+    <div class="absolute top-32 right-10 w-[450px] h-[350px] bg-[#C89D54]/10 blur-[130px] rounded-full pointer-events-none"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+      
+      <!-- Left Column: High-Impact Copywriting (SUCCESs Framework) -->
+      <div class="lg:col-span-7 space-y-7 relative z-10">
+        <div class="inline-flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10">
+          <span class="px-2 py-0.5 rounded-full bg-[#FF3B1D] text-[10px] font-mono font-bold uppercase tracking-wider text-white">NUEVA ARQUITECTURA 2026</span>
+          <span class="font-mono text-[11px] text-white/75 tracking-wide">POS Fiscal DIAN • Gmail OAuth • WhatsApp Cloud API</span>
+        </div>
+
+        <h1 class="font-['Space_Grotesk'] text-4xl sm:text-6xl xl:text-[68px] font-bold tracking-[-0.03em] leading-[1.02] text-white" style="text-wrap: balance;">
+          Deja de operar tu comercio en cinco pestañas. <span class="font-['Newsreader'] italic font-normal text-[#E9E5DC]">Gobiérnalo con precisión quirúrgica.</span>
+        </h1>
+
+        <p class="text-base sm:text-lg text-white/65 leading-relaxed max-w-2xl font-normal" style="text-wrap: pretty;">
+          <strong>Frant ERP</strong> unifica Punto de Venta POS, arqueo de caja en tiempo real, Facturación Electrónica DIAN, inventario multi-sede y el despacho automático de facturas y cotizaciones desde <strong>tu propia cuenta de Gmail y WhatsApp Business</strong>.
+        </p>
+
+        <!-- Primary CTAs -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+          <a href="https://frant.app/login" class="px-8 py-4 rounded-2xl bg-[#FF3B1D] hover:bg-[#e02d10] text-white font-mono text-xs font-bold uppercase tracking-[0.15em] shadow-[0_12px_32px_-8px_rgba(255,59,29,0.55)] flex items-center justify-center gap-3 btn-tactile">
+            <span>Entrar a Frant ERP (/login)</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </a>
+          <a href="#consola-3d" class="px-7 py-4 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/15 text-white font-mono text-xs uppercase tracking-[0.14em] flex items-center justify-center gap-2.5 btn-tactile">
+            <span>Inspeccionar Consola 3D</span>
+            <span class="text-[#C89D54]">↓</span>
+          </a>
+        </div>
+
+        <!-- Industrial Telemetry Bar -->
+        <div class="pt-6 border-t border-white/10 grid grid-cols-3 gap-6 max-w-xl">
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">EMISIÓN FISCAL</div>
+            <div class="font-['Space_Grotesk'] text-xl sm:text-2xl font-bold text-white mt-0.5 tabular-nums flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+              <span>DIAN CUFE</span>
+            </div>
+            <div class="text-[11px] text-white/50">Tiquete 80mm & PDF QR</div>
+          </div>
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">DESPACHO OFICIAL</div>
+            <div class="font-['Space_Grotesk'] text-xl sm:text-2xl font-bold text-white mt-0.5 tabular-nums">Gmail + Meta</div>
+            <div class="text-[11px] text-white/50">API OAuth 2.0 Verificada</div>
+          </div>
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">RUTAS DOMICILIOS</div>
+            <div class="font-['Space_Grotesk'] text-xl sm:text-2xl font-bold text-[#C89D54] mt-0.5 tabular-nums">$0 Costo API</div>
+            <div class="text-[11px] text-white/50">Apertura nativa en Maps</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Art-Directed Luxury Hardware Photo with Floating Telemetry HUD -->
+      <div class="lg:col-span-5 relative">
+        <div class="tilt-card rounded-[24px] p-2.5 bg-gradient-to-b from-white/15 to-white/5 border border-white/15 shadow-[0_30px_80px_rgba(0,0,0,0.75)] relative">
+          <div class="relative rounded-[16px] overflow-hidden img-optical-outline aspect-[4/3]">
+            <img 
+              src="./assets/hero_industrial_pos.jpg" 
+              alt="Terminal POS Frant ERP en mostrador de piedra travertino y nogal" 
+              class="w-full h-full object-cover scale-[1.02] hover:scale-105 transition-transform duration-700"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#090A0C] via-transparent to-black/20"></div>
+            
+            <!-- Live Telemetry Overlay Badge Top-Left -->
+            <div class="absolute top-3.5 left-3.5 bg-[#090A0C]/85 backdrop-blur-md border border-white/15 px-3 py-1.5 rounded-lg flex items-center gap-2 font-mono text-[10px]">
+              <span class="w-2 h-2 rounded-full bg-[#10B981] animate-ping"></span>
+              <span class="text-white/90 font-semibold">CAJA MATRIZ • TURNO ACTIVO</span>
+              <span class="text-white/50 tabular-nums">19:45:08 COT</span>
+            </div>
+
+            <!-- Bottom Floating Receipt Dispatch Notification -->
+            <div class="absolute bottom-3.5 inset-x-3.5 bg-[#111317]/90 backdrop-blur-xl border border-white/15 p-3.5 rounded-xl flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-[#10B981]/15 border border-[#10B981]/30 flex items-center justify-center text-[#10B981] font-mono font-bold text-xs">
+                  ✓
+                </div>
+                <div>
+                  <div class="text-xs font-semibold text-white flex items-center gap-2">
+                    <span>Factura FE-2026-1084 Emitida</span>
+                    <span class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-white/10 text-[#C89D54]">CUFE OK</span>
+                  </div>
+                  <div class="text-[11px] font-mono text-white/60 mt-0.5">
+                    Enviada desde <span class="text-white">facturacion@tucomercio.com</span> y WhatsApp
+                  </div>
+                </div>
+              </div>
+              <div class="text-right font-mono">
+                <div class="text-xs font-bold text-[#10B981] tabular-nums">$480.000</div>
+                <div class="text-[9px] text-white/40 uppercase">0.8 seg</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       3. VENTANA DE SOFTWARE EN PERSPECTIVA 3D ISOMÉTRICA (SCROLL-UNFOLD)
+          + PROPUESTA DE NUEVO TEMA PARA LA INTERFAZ DE LA APLICACIÓN
+       ======================================================================= -->
+  <section id="consola-3d" class="py-16 lg:py-24 px-4 sm:px-8 lg:px-14 max-w-[1440px] mx-auto">
+    
+    <!-- Header de la Consola 3D -->
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between mb-10 gap-6">
+      <div>
+        <div class="font-mono text-[11px] uppercase tracking-[0.25em] text-[#FF3B1D] mb-2">
+          // 01. ARQUITECTURA DE INTERFAZ REDISEÑADA • PERSPECTIVA 3D ACTIVA
+        </div>
+        <h2 class="font-['Space_Grotesk'] text-3xl sm:text-5xl font-bold tracking-tight text-white">
+          Mira cómo se siente un ERP de <span class="font-['Newsreader'] italic font-normal text-[#C89D54]">alta relojería.</span>
+        </h2>
+      </div>
+      
+      <!-- Controls to test ERP Screens & ERP Themes -->
+      <div class="flex flex-wrap items-center gap-2 bg-[#12141A] p-1.5 rounded-2xl border border-white/10">
+        <button onclick="switchErpScreen('inventory')" id="tab-erp-inventory" class="px-4 py-2 rounded-xl font-mono text-xs font-semibold bg-[#FF3B1D] text-white cursor-pointer transition-all btn-tactile">
+          01. Inventario & Stock
+        </button>
+        <button onclick="switchErpScreen('ai')" id="tab-erp-ai" class="px-4 py-2 rounded-xl font-mono text-xs font-semibold text-white/65 hover:text-white cursor-pointer transition-all btn-tactile">
+          02. Agente IA & WhatsApp
+        </button>
+        <button onclick="switchErpScreen('dian')" id="tab-erp-dian" class="px-4 py-2 rounded-xl font-mono text-xs font-semibold text-white/65 hover:text-white cursor-pointer transition-all btn-tactile">
+          03. Facturación DIAN + Gmail
+        </button>
+        <button onclick="switchErpScreen('finance')" id="tab-erp-finance" class="px-4 py-2 rounded-xl font-mono text-xs font-semibold text-white/65 hover:text-white cursor-pointer transition-all btn-tactile">
+          04. Caja & Flujo Financiero
+        </button>
+      </div>
+    </div>
+
+    <!-- 3D ISOMETRIC STAGE THAT STRAIGHTENS ON SCROLL -->
+    <div class="perspective-stage py-4">
+      <div 
+        id="erp-3d-window" 
+        class="window-3d-unfold border-trail-frame rounded-[24px] p-3 bg-[#16181F] border border-white/15"
+        style="transform: rotateX(20deg) rotateY(-11deg) rotateZ(2.5deg) scale(0.95);"
+      >
+        <!-- Hardware Window Top Bezel -->
+        <div class="flex items-center justify-between px-4 py-2.5 bg-[#0D0E12] rounded-t-[14px] border-b border-white/10 text-xs font-mono">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-[#FF5F56] inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-[#FFBD2E] inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-[#27C93F] inline-block"></span>
+            <span class="ml-3 text-white/40 text-[11px]">https://frant.app/workspace/hoshi-services</span>
+          </div>
+          <div class="hidden sm:flex items-center gap-3 text-[11px]">
+            <span class="text-white/50">Cambiar Tema App:</span>
+            <button onclick="setErpTheme('titanium')" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white cursor-pointer">Braun Titanium</button>
+            <button onclick="setErpTheme('obsidian')" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white cursor-pointer">Obsidian Dark</button>
+            <button onclick="setErpTheme('swiss')" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white cursor-pointer">Swiss Daylight</button>
+          </div>
+        </div>
+
+        <!-- =================================================================
+             REDISEÑO VISUAL DE LA APLICACIÓN FRANT ERP (CORRIGIENDO TIPOGRAFÍA,
+             COLORES DISONANTES Y EMOJIS DE TUS CAPTURAS)
+             ================================================================= -->
+        <div id="erp-app-canvas" class="erp-theme-titanium rounded-b-[14px] overflow-hidden transition-colors duration-300" style="background-color: var(--erp-bg); color: var(--erp-text);">
+          <div class="flex min-h-[590px]">
+            
+            <!-- Left Industrial Sidebar (Clean SVG Icons, Zero Emojis) -->
+            <aside class="w-16 sm:w-56 flex flex-col justify-between p-3.5 shrink-0" style="background-color: var(--erp-sidebar); color: #F4F1EA;">
+              <div class="space-y-6">
+                <!-- Tenant Badge -->
+                <div class="flex items-center gap-3 px-2 py-1.5 border-b border-white/10 pb-4">
+                  <div class="w-8 h-8 rounded-lg bg-[#FF3B1D] text-white font-['Space_Grotesk'] font-bold text-sm flex items-center justify-center shrink-0">
+                    HO
+                  </div>
+                  <div class="hidden sm:block overflow-hidden">
+                    <div class="font-['Space_Grotesk'] font-bold text-xs tracking-wide text-white truncate">Hoshi Services</div>
+                    <div class="font-mono text-[10px] text-white/45 truncate">Sede Matriz • Barranquilla</div>
+                  </div>
+                </div>
+
+                <!-- Navigation Menu inside ERP -->
+                <nav class="space-y-1 text-xs font-medium">
+                  <button onclick="switchErpScreen('inventory')" id="side-inventory" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#FF3B1D] text-white cursor-pointer transition-all">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <span class="hidden sm:inline">Inventario & Catálogo</span>
+                  </button>
+                  <button onclick="switchErpScreen('ai')" id="side-ai" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 cursor-pointer transition-all">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                    <span class="hidden sm:inline">Agente IA WhatsApp</span>
+                  </button>
+                  <button onclick="switchErpScreen('dian')" id="side-dian" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 cursor-pointer transition-all">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span class="hidden sm:inline">Facturación DIAN & POS</span>
+                  </button>
+                  <button onclick="switchErpScreen('finance')" id="side-finance" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 cursor-pointer transition-all">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="hidden sm:inline">Contabilidad & Caja</span>
+                  </button>
+                </nav>
+              </div>
+
+              <!-- Bottom Security Status -->
+              <div class="hidden sm:block p-3 rounded-xl bg-white/[0.04] border border-white/10 space-y-1.5">
+                <div class="flex items-center justify-between text-[10px] font-mono">
+                  <span class="text-white/50">SEGURIDAD MFA</span>
+                  <span class="text-[#10B981] font-bold">BLINDADO</span>
+                </div>
+                <div class="text-[11px] text-white/75 font-mono truncate">gmail.send: Activo</div>
+              </div>
+            </aside>
+
+            <!-- Main ERP Content Area -->
+            <div class="flex-1 flex flex-col">
+              <!-- Top App Bar -->
+              <div class="px-6 py-3.5 border-b flex items-center justify-between" style="background-color: var(--erp-surface); border-color: var(--erp-border);">
+                <div class="flex items-center gap-3">
+                  <span class="font-mono text-[10px] uppercase tracking-[0.2em] px-2.5 py-1 rounded font-semibold" style="background-color: rgba(255,59,29,0.12); color: var(--erp-accent);">
+                    SISTEMA EN LÍNEA
+                  </span>
+                  <span class="text-xs font-medium hidden md:inline" style="color: var(--erp-muted);">
+                    Sincronización Multi-Sede Activa
+                  </span>
+                </div>
+                <div class="flex items-center gap-3 font-mono text-xs">
+                  <div class="px-3 py-1.5 rounded-lg border flex items-center gap-2 tabular-nums" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+                    <span class="font-semibold">07:45:12 p.m.</span>
+                    <span style="color: var(--erp-muted);">• COL</span>
+                  </div>
+                  <div class="flex items-center gap-2 pl-2">
+                    <div class="w-7 h-7 rounded-full bg-[#111215] text-white flex items-center justify-center font-bold text-xs">HD</div>
+                    <span class="hidden sm:inline font-sans font-semibold text-xs">Hoshi Diaz</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===============================================================
+                   PANTALLA 01: INVENTARIO DE PRODUCTOS (REDISEÑADO)
+                   Nota cómo se corrige la tipografía de los KPIs y el botón azul
+                   =============================================================== -->
+              <div id="screen-inventory" class="p-6 sm:p-8 space-y-6 flex-1">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div class="font-mono text-[10px] uppercase tracking-[0.22em] font-semibold" style="color: var(--erp-accent);">LOGÍSTICA & CONTROL DE STOCK</div>
+                    <h3 class="font-['Space_Grotesk'] text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">Inventario de Productos</h3>
+                  </div>
+                  <!-- Cohesive Industrial Button Group (No jarring electric blue!) -->
+                  <div class="flex flex-wrap items-center gap-2">
+                    <button class="px-3.5 py-2 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 cursor-pointer" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                      <span>Importar CSV</span>
+                    </button>
+                    <button class="px-3.5 py-2 rounded-lg border text-xs font-mono font-semibold flex items-center gap-1.5 cursor-pointer" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                      <span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+                      <span>Catálogo Web Público</span>
+                    </button>
+                    <button class="px-4 py-2 rounded-lg text-xs font-mono font-bold uppercase tracking-wider text-white bg-[#FF3B1D] shadow-sm cursor-pointer">
+                      + Nuevo Producto / Ítem
+                    </button>
+                  </div>
+                </div>
+
+                <!-- KPI Cards with Space Grotesk Bold Tabular Numbers (Clean & Expensive) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="p-5 rounded-xl border transition-all" style="background-color: var(--erp-card); border-color: var(--erp-border); box-shadow: var(--erp-shadow);">
+                    <div class="flex items-center justify-between">
+                      <span class="font-mono text-[10px] uppercase tracking-[0.18em] font-semibold" style="color: var(--erp-muted);">TOTAL ÍTEMS EN STOCK</span>
+                      <span class="font-mono text-[10px] px-2 py-0.5 rounded bg-[#10B981]/10 text-[#10B981] font-bold">Sincronizado</span>
+                    </div>
+                    <div class="font-['Space_Grotesk'] text-3xl sm:text-4xl font-bold mt-2 tabular-nums tracking-tight">
+                      108 <span class="text-sm font-normal" style="color: var(--erp-muted);">referencias</span>
+                    </div>
+                    <div class="text-xs mt-1" style="color: var(--erp-muted);">Catalogados en sistema ERP (Sede Matriz)</div>
+                  </div>
+
+                  <div class="p-5 rounded-xl border transition-all" style="background-color: var(--erp-card); border-color: var(--erp-border); box-shadow: var(--erp-shadow);">
+                    <div class="flex items-center justify-between">
+                      <span class="font-mono text-[10px] uppercase tracking-[0.18em] font-semibold" style="color: var(--erp-muted);">VALORIZACIÓN DE BODEGA</span>
+                      <span class="font-mono text-[10px]" style="color: var(--erp-muted);">COP</span>
+                    </div>
+                    <div class="font-['Space_Grotesk'] text-3xl sm:text-4xl font-bold mt-2 tabular-nums tracking-tight">
+                      $14.620.000
+                    </div>
+                    <div class="text-xs mt-1" style="color: var(--erp-muted);">Costo auditado de productos físicos activos</div>
+                  </div>
+
+                  <div class="p-5 rounded-xl border border-l-4 border-l-[#FF3B1D] transition-all" style="background-color: var(--erp-card); border-color: var(--erp-border); box-shadow: var(--erp-shadow);">
+                    <div class="flex items-center justify-between">
+                      <span class="font-mono text-[10px] uppercase tracking-[0.18em] font-semibold" style="color: var(--erp-muted);">ALERTAS DE REABASTECIMIENTO</span>
+                      <span class="font-mono text-[10px] text-[#FF3B1D] font-bold">0 Críticas</span>
+                    </div>
+                    <div class="font-['Space_Grotesk'] text-3xl sm:text-4xl font-bold mt-2 tabular-nums tracking-tight text-[#10B981]">
+                      100% <span class="text-sm font-normal" style="color: var(--erp-muted);">óptimo</span>
+                    </div>
+                    <div class="text-xs mt-1" style="color: var(--erp-muted);">Ningún ítem por debajo del stock mínimo</div>
+                  </div>
+                </div>
+
+                <!-- High-Contrast Precision Data Table -->
+                <div class="rounded-xl border overflow-hidden" style="background-color: var(--erp-card); border-color: var(--erp-border); box-shadow: var(--erp-shadow);">
+                  <div class="px-5 py-3 border-b flex items-center justify-between text-xs" style="border-color: var(--erp-border);">
+                    <div class="flex items-center gap-2 font-mono text-[11px]" style="color: var(--erp-muted);">
+                      <span>FILTRAR POR:</span>
+                      <span class="px-2 py-0.5 rounded border font-semibold" style="color: var(--erp-text); border-color: var(--erp-border);">Monturas Titanio (24)</span>
+                      <span class="px-2 py-0.5 rounded border" style="border-color: var(--erp-border);">Lentes Oftálmicos (84)</span>
+                    </div>
+                    <span class="font-mono text-[11px] font-semibold" style="color: var(--erp-accent);">Stock Inter-Sedes Activo →</span>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr class="border-b font-mono text-[10px] uppercase tracking-[0.16em]" style="color: var(--erp-muted); border-color: var(--erp-border);">
+                          <th class="py-3.5 px-5">Marca / SKU</th>
+                          <th class="py-3.5 px-4">Referencia & Producto</th>
+                          <th class="py-3.5 px-4">Categoría</th>
+                          <th class="py-3.5 px-4">Variante</th>
+                          <th class="py-3.5 px-4 text-right">Stock</th>
+                          <th class="py-3.5 px-4 text-right">Precio Unitario</th>
+                          <th class="py-3.5 px-5 text-right">Valor Total</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y text-xs" style="border-color: var(--erp-border);">
+                        <tr class="hover:bg-black/[0.02] transition-colors">
+                          <td class="py-3.5 px-5 font-mono font-semibold">RAY-BAN <span class="block text-[10px] font-normal opacity-60">SKU-100002</span></td>
+                          <td class="py-3.5 px-4 font-semibold text-sm">Montura Clubmaster Titanium</td>
+                          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[11px] font-mono border" style="border-color: var(--erp-border);">Monturas</span></td>
+                          <td class="py-3.5 px-4 font-mono text-[11px]"> Negro Mate / Dorado</td>
+                          <td class="py-3.5 px-4 text-right font-mono font-bold tabular-nums">18 Uds</td>
+                          <td class="py-3.5 px-4 text-right font-mono tabular-nums">$420.000</td>
+                          <td class="py-3.5 px-5 text-right font-mono font-bold tabular-nums">$7.560.000</td>
+                        </tr>
+                        <tr class="hover:bg-black/[0.02] transition-colors">
+                          <td class="py-3.5 px-5 font-mono font-semibold">ZEISS <span class="block text-[10px] font-normal opacity-60">SKU-100089</span></td>
+                          <td class="py-3.5 px-4 font-semibold text-sm">Lente BlueGuard Digital 1.67</td>
+                          <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[11px] font-mono border" style="border-color: var(--erp-border);">Laboratorio</span></td>
+                          <td class="py-3.5 px-4 font-mono text-[11px]">Tallado Digital AR</td>
+                          <td class="py-3.5 px-4 text-right font-mono font-bold tabular-nums">40 Uds</td>
+                          <td class="py-3.5 px-4 text-right font-mono tabular-nums">$176.500</td>
+                          <td class="py-3.5 px-5 text-right font-mono font-bold tabular-nums">$7.060.000</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===============================================================
+                   PANTALLA 02: AGENTE IA WHATSAPP (SIN EMOJIS INFANTILES)
+                   =============================================================== -->
+              <div id="screen-ai" class="p-6 sm:p-8 space-y-6 flex-1 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div class="font-mono text-[10px] uppercase tracking-[0.22em] font-semibold" style="color: var(--erp-accent);">AUTOMATIZACIÓN CONVERSACIONAL • META CLOUD API</div>
+                    <h3 class="font-['Space_Grotesk'] text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">Módulo de Inteligencia Artificial</h3>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-3.5 py-2 rounded-lg text-xs font-mono font-bold bg-[#FF3B1D] text-white">Telemetría & Conversaciones</span>
+                    <span class="px-3.5 py-2 rounded-lg border text-xs font-mono font-semibold" style="background-color: var(--erp-card); border-color: var(--erp-border);">System Prompt & RAG</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div class="p-4 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-[10px] uppercase tracking-wider" style="color: var(--erp-muted);">ROI DE AUTOMATIZACIÓN</div>
+                    <div class="font-['Space_Grotesk'] text-3xl font-bold mt-1.5 text-[#10B981] tabular-nums">+340.0%</div>
+                    <div class="text-[11px] mt-1" style="color: var(--erp-muted);">Eficiencia operativa medida</div>
+                  </div>
+                  <div class="p-4 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-[10px] uppercase tracking-wider" style="color: var(--erp-muted);">CHATS RESUELTOS HOY</div>
+                    <div class="font-['Space_Grotesk'] text-3xl font-bold mt-1.5 tabular-nums">64</div>
+                    <div class="text-[11px] mt-1" style="color: var(--erp-muted);">Cotizaciones con stock real</div>
+                  </div>
+                  <div class="p-4 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-[10px] uppercase tracking-wider" style="color: var(--erp-muted);">TIEMPO HUMANO AHORRADO</div>
+                    <div class="font-['Space_Grotesk'] text-3xl font-bold mt-1.5 tabular-nums">19.5 <span class="text-sm font-normal">h</span></div>
+                    <div class="text-[11px] mt-1" style="color: var(--erp-muted);">En los últimos 7 días</div>
+                  </div>
+                  <div class="p-4 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-[10px] uppercase tracking-wider" style="color: var(--erp-muted);">CANAL WHATSAPP OFICIAL</div>
+                    <div class="font-['Space_Grotesk'] text-xl font-bold mt-2 text-[#10B981] flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-[#10B981]"></span>
+                      <span>CONECTADO</span>
+                    </div>
+                    <div class="text-[11px] font-mono mt-1" style="color: var(--erp-muted);">+57 311 671 8652</div>
+                  </div>
+                </div>
+
+                <div class="p-5 rounded-xl border space-y-3" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                  <div class="font-mono text-xs font-bold uppercase tracking-wider">Transmisión en Vivo de Conversación (RAG Conectado a Inventario)</div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 text-xs">
+                    <div class="p-3.5 rounded-xl border" style="border-color: var(--erp-border);">
+                      <span class="font-mono text-[10px] uppercase text-[#FF3B1D] font-bold block mb-1">Cliente (+57 300 412 8890) • 19:42</span>
+                      "Buenas noches, ¿tienen montura Ray-Ban Clubmaster en titanio y me pueden enviar la cotización al correo?"
+                    </div>
+                    <div class="p-3.5 rounded-xl border border-l-4 border-l-[#10B981]" style="border-color: var(--erp-border);">
+                      <span class="font-mono text-[10px] uppercase text-[#10B981] font-bold block mb-1">Agente Frant IA • 19:42 (Respuesta en 1.2s)</span>
+                      "¡Hola! Sí, contamos con 18 unidades en stock de la Ray-Ban Clubmaster Titanium ($420.000 COP). Acabo de enviarte la cotización formal en PDF a tu correo y por este chat."
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===============================================================
+                   PANTALLA 03: FACTURACIÓN DIAN + DESPACHO GMAIL OAUTH
+                   =============================================================== -->
+              <div id="screen-dian" class="p-6 sm:p-8 space-y-6 flex-1 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div class="font-mono text-[10px] uppercase tracking-[0.22em] font-semibold" style="color: var(--erp-accent);">CUMPLIMIENTO FISCAL & DESPACHO DIRECTO</div>
+                    <h3 class="font-['Space_Grotesk'] text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">Facturación Electrónica DIAN & Gmail OAuth</h3>
+                  </div>
+                  <span class="px-3.5 py-1.5 rounded-lg font-mono text-xs font-bold bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
+                    Resolución DIAN Activa • Prefijo FE
+                  </span>
+                </div>
+
+                <!-- Stepper Industrial Limpio -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="p-5 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-xs font-bold text-[#FF3B1D]">PASO 01 / EMISIÓN POS</div>
+                    <div class="font-['Space_Grotesk'] text-lg font-bold mt-1">Firma Digital & CUFE</div>
+                    <p class="text-xs mt-1 leading-relaxed" style="color: var(--erp-muted);">Generación instantánea de XML y representación gráfica PDF con código QR oficial ante la DIAN.</p>
+                  </div>
+                  <div class="p-5 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-xs font-bold text-[#10B981]">PASO 02 / GMAIL OAUTH (gmail.send)</div>
+                    <div class="font-['Space_Grotesk'] text-lg font-bold mt-1">Envío desde tu Propio Correo</div>
+                    <p class="text-xs mt-1 leading-relaxed" style="color: var(--erp-muted);">El cliente recibe el PDF desde la cuenta oficial de tu empresa autorizada con Google OAuth 2.0.</p>
+                  </div>
+                  <div class="p-5 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-xs font-bold text-[#C89D54]">PASO 03 / WHATSAPP CLOUD API</div>
+                    <div class="font-['Space_Grotesk'] text-lg font-bold mt-1">Copia Instantánea al Celular</div>
+                    <p class="text-xs mt-1 leading-relaxed" style="color: var(--erp-muted);">Despacho simultáneo del comprobante al WhatsApp del comprador sin descargar archivos manualmente.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===============================================================
+                   PANTALLA 04: CONTABILIDAD Y FLUJO FINANCIERO
+                   =============================================================== -->
+              <div id="screen-finance" class="p-6 sm:p-8 space-y-6 flex-1 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div class="font-mono text-[10px] uppercase tracking-[0.22em] font-semibold" style="color: var(--erp-accent);">AUDITORÍA DE TURNOS & LIBRO CONTABLE</div>
+                    <h3 class="font-['Space_Grotesk'] text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">Contabilidad y Flujo Financiero</h3>
+                  </div>
+                  <button class="px-4 py-2 rounded-lg bg-[#FF3B1D] text-white font-mono text-xs font-bold uppercase">+ Registrar Gasto / Egreso</button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div class="p-4 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-[10px] uppercase" style="color: var(--erp-muted);">INGRESOS DEL TURNO</div>
+                    <div class="font-['Space_Grotesk'] text-2xl font-bold mt-1 tabular-nums">$4.560.000</div>
+                  </div>
+                  <div class="p-4 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-[10px] uppercase" style="color: var(--erp-muted);">GASTOS OPERATIVOS</div>
+                    <div class="font-['Space_Grotesk'] text-2xl font-bold mt-1 text-[#FF3B1D] tabular-nums">$350.000</div>
+                  </div>
+                  <div class="p-4 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-[10px] uppercase" style="color: var(--erp-muted);">TICKET PROMEDIO</div>
+                    <div class="font-['Space_Grotesk'] text-2xl font-bold mt-1 tabular-nums">$285.000</div>
+                  </div>
+                  <div class="p-4 rounded-xl border" style="background-color: var(--erp-card); border-color: var(--erp-border);">
+                    <div class="font-mono text-[10px] uppercase" style="color: var(--erp-muted);">ARQUEO DE CAJA</div>
+                    <div class="font-['Space_Grotesk'] text-2xl font-bold mt-1 text-[#10B981] tabular-nums">Cuadre Exacto</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       4. SECCIÓN DE TRANSICIÓN A PIEDRA ARQUITECTÓNICA (#E9E5DC):
+          DESPACHO NATIVO GMAIL OAUTH + WHATSAPP CLOUD API (CLAVE GOOGLE/META)
+       ======================================================================= -->
+  <section id="despacho-nativo" class="bg-[#E9E5DC] text-[#0D0E11] bg-stone-grid py-24 px-6 lg:px-14 border-y border-black/10">
+    <div class="max-w-[1400px] mx-auto space-y-14">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+        <div class="lg:col-span-7 space-y-3">
+          <div class="font-mono text-xs uppercase tracking-[0.22em] text-[#D9381E] font-bold">
+            // 02. MECANISMO ÚNICO • SINCRONIZACIÓN OPERATIVA TRI-CANAL™
+          </div>
+          <h2 class="font-['Space_Grotesk'] text-3xl sm:text-5xl font-bold tracking-tight leading-[1.06]">
+            Tus facturas salen desde <span class="font-['Newsreader'] italic font-normal underline decoration-[#D9381E] decoration-2 underline-offset-4">tu propio correo y WhatsApp</span>, no desde un servidor desconocido.
+          </h2>
+        </div>
+        <div class="lg:col-span-5 text-sm sm:text-base text-[#4A4843] leading-relaxed">
+          Cuando un cliente compra en tu negocio, no debería recibir un correo genérico que cae en Spam. Frant ERP se conecta mediante protocolos oficiales verificados con tu cuenta de <strong>Google Workspace / Gmail</strong> y <strong>WhatsApp Business</strong>.
+        </div>
+      </div>
+
+      <!-- 3 Architectural Cards Explaining the Native Flow -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Card 1: POS & DIAN -->
+        <div class="bg-[#F7F5F0] border border-black/10 rounded-[24px] p-8 flex flex-col justify-between shadow-[0_12px_32px_rgba(0,0,0,0.04)]">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between font-mono text-xs">
+              <span class="px-2.5 py-1 rounded bg-black text-white font-bold">ESTACIÓN 01</span>
+              <span class="text-[#63615B]">CAJA & POS</span>
+            </div>
+            <h3 class="font-['Space_Grotesk'] text-2xl font-bold pt-2">Cierre en Caja, Arqueo & Emisión DIAN</h3>
+            <p class="text-sm text-[#4A4843] leading-relaxed">
+              Escanea con código de barras, registra pagos mixtos (efectivo, transferencia, datáfono), controla turnos con reloj sincronizado por país y emite la Factura Electrónica DIAN con CUFE al instante.
+            </p>
+          </div>
+          <div class="mt-8 pt-4 border-t border-black/10 flex items-center justify-between font-mono text-[11px] text-[#63615B]">
+            <span>CARTERA & ABONOS</span>
+            <span class="text-black font-bold">TIEMPO REAL</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Gmail OAuth (gmail.send) -->
+        <div class="bg-[#111317] text-white border border-black rounded-[24px] p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.18)] relative overflow-hidden">
+          <div class="space-y-4 relative z-10">
+            <div class="flex items-center justify-between font-mono text-xs">
+              <span class="px-2.5 py-1 rounded bg-[#FF3B1D] text-white font-bold">ESTACIÓN 02 • GOOGLE OAUTH</span>
+              <span class="text-white/60">gmail.send</span>
+            </div>
+            <h3 class="font-['Space_Grotesk'] text-2xl font-bold pt-2">Despacho Directo por Gmail Oficial</h3>
+            <p class="text-sm text-white/70 leading-relaxed">
+              Autoriza tu cuenta de Gmail con un clic mediante OAuth 2.0 seguro. Frant ERP utiliza exclusivamente el permiso <code class="px-1.5 py-0.5 rounded bg-white/10 font-mono text-xs text-[#C89D54]">gmail.send</code> para enviar facturas PDF, recibos de caja y cotizaciones a tus clientes finales sin leer tu bandeja de entrada.
+            </p>
+          </div>
+          <div class="mt-8 pt-4 border-t border-white/10 flex items-center justify-between font-mono text-[11px] text-white/60 relative z-10">
+            <span>CIFRADO TLS 1.3 / AES-256</span>
+            <span class="text-[#10B981] font-bold">USO LIMITADO GOOGLE</span>
+          </div>
+        </div>
+
+        <!-- Card 3: WhatsApp Cloud API & Rutas Maps -->
+        <div class="bg-[#F7F5F0] border border-black/10 rounded-[24px] p-8 flex flex-col justify-between shadow-[0_12px_32px_rgba(0,0,0,0.04)]">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between font-mono text-xs">
+              <span class="px-2.5 py-1 rounded bg-black text-white font-bold">ESTACIÓN 03</span>
+              <span class="text-[#63615B]">META API + LOGÍSTICA</span>
+            </div>
+            <h3 class="font-['Space_Grotesk'] text-2xl font-bold pt-2">WhatsApp Business & Hojas de Ruta Maps</h3>
+            <p class="text-sm text-[#4A4843] leading-relaxed">
+              Envía el comprobante al WhatsApp del cliente y agrupa automáticamente los pedidos a domicilio en una hoja de ruta ordenada por cercanía geográfica, lista para abrir en Google Maps a $0 costo de API.
+            </p>
+          </div>
+          <div class="mt-8 pt-4 border-t border-black/10 flex items-center justify-between font-mono text-[11px] text-[#63615B]">
+            <span>META CLOUD API OFICIAL</span>
+            <span class="text-black font-bold">DESPACHO 24/7</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       5. VERTICALES POR RUBRO CON FOTOGRAFÍA EDITORIAL 8K + TILT 3D + SPOTLIGHT
+       ======================================================================= -->
+  <section id="verticales" class="py-24 px-6 lg:px-14 max-w-[1400px] mx-auto space-y-14">
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+      <div>
+        <div class="font-mono text-xs uppercase tracking-[0.22em] text-[#FF3B1D] mb-2">
+          // 03. INGENIERÍA VERTICAL POR INDUSTRIA
+        </div>
+        <h2 class="font-['Space_Grotesk'] text-3xl sm:text-5xl font-bold tracking-tight text-white">
+          No es un POS genérico. <span class="font-['Newsreader'] italic font-normal text-[#E9E5DC]">Habla el idioma de tu rubro.</span>
+        </h2>
+      </div>
+      <p class="text-sm text-white/60 max-w-md font-normal">
+        Activa los módulos clínicos, gastronómicos o comerciales diseñados específicamente para la operación diaria de tu empresa.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Vertical 01: Ópticas y Salud Visual -->
+      <article class="spotlight-card tilt-card rounded-[28px] bg-[#12141A] border border-white/10 p-4 flex flex-col justify-between group">
+        <div>
+          <div class="relative rounded-[20px] overflow-hidden aspect-[4/3] mb-6 img-optical-outline">
+            <img src="./assets/vertical_optica_lujo.jpg" alt="Ópticas y Salud Visual Frant ERP" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#12141A] via-transparent to-transparent"></div>
+            <span class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/15 font-mono text-[10px] uppercase tracking-widest text-[#C89D54]">
+              01 / SALUD VISUAL & ÓPTICAS
+            </span>
+          </div>
+          <div class="px-3 space-y-3">
+            <h3 class="font-['Space_Grotesk'] text-2xl font-bold text-white">Ópticas, Consultorios & Laboratorios</h3>
+            <p class="text-sm text-white/65 leading-relaxed">
+              Historia clínica optométrica completa, fórmulas refractivas (OD/OI, Esfera, Cilindro, Eje, Adición, DP), órdenes de tallado a laboratorio, abonos de pacientes y recordatorios automáticos de control visual.
+            </p>
+          </div>
+        </div>
+        <div class="px-3 pt-6 mt-6 border-t border-white/10 flex items-center justify-between font-mono text-[11px] text-white/50">
+          <span>OD/OI • HISTORIA CLÍNICA</span>
+          <span class="text-[#FF3B1D] font-semibold">MÓDULO NATIVO →</span>
+        </div>
+      </article>
+
+      <!-- Vertical 02: Restaurantes y Gastronomía -->
+      <article class="spotlight-card tilt-card rounded-[28px] bg-[#12141A] border border-white/10 p-4 flex flex-col justify-between group">
+        <div>
+          <div class="relative rounded-[20px] overflow-hidden aspect-[4/3] mb-6 img-optical-outline">
+            <img src="./assets/vertical_gastronomia_kds.jpg" alt="Restaurantes y KDS Frant ERP" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#12141A] via-transparent to-transparent"></div>
+            <span class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/15 font-mono text-[10px] uppercase tracking-widest text-[#10B981]">
+              02 / GASTRONOMÍA & KDS
+            </span>
+          </div>
+          <div class="px-3 space-y-3">
+            <h3 class="font-['Space_Grotesk'] text-2xl font-bold text-white">Restaurantes, Cafés & Alta Cocina</h3>
+            <p class="text-sm text-white/65 leading-relaxed">
+              Mapa interactivo de mesas y salones, toma de comandas desde el celular del mesero, pantalla de cocina en tiempo real (KDS) con cronómetro por plato, división de cuentas y Carta Digital QR.
+            </p>
+          </div>
+        </div>
+        <div class="px-3 pt-6 mt-6 border-t border-white/10 flex items-center justify-between font-mono text-[11px] text-white/50">
+          <span>MESAS • KDS • CARTA QR</span>
+          <span class="text-[#FF3B1D] font-semibold">MÓDULO NATIVO →</span>
+        </div>
+      </article>
+
+      <!-- Vertical 03: Retail, Moda y Comercio General -->
+      <article class="spotlight-card tilt-card rounded-[28px] bg-[#12141A] border border-white/10 p-4 flex flex-col justify-between group">
+        <div>
+          <div class="relative rounded-[20px] overflow-hidden aspect-[4/3] mb-6 img-optical-outline">
+            <img src="./assets/hero_industrial_pos.jpg" alt="Retail y Comercio General Frant ERP" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#12141A] via-transparent to-transparent"></div>
+            <span class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/15 font-mono text-[10px] uppercase tracking-widest text-white">
+              03 / RETAIL & DISTRIBUCIÓN
+            </span>
+          </div>
+          <div class="px-3 space-y-3">
+            <h3 class="font-['Space_Grotesk'] text-2xl font-bold text-white">Retail, Boutiques & Mayoristas</h3>
+            <p class="text-sm text-white/65 leading-relaxed">
+              Facturación veloz con lector de código de barras, matriz de variantes (tallas, colores, materiales), traslados entre sucursales, catálogo digital público con carrito de pedidos y control de cartera.
+            </p>
+          </div>
+        </div>
+        <div class="px-3 pt-6 mt-6 border-t border-white/10 flex items-center justify-between font-mono text-[11px] text-white/50">
+          <span>BARCODE • MULTI-SEDE • CRM</span>
+          <span class="text-[#FF3B1D] font-semibold">MÓDULO NATIVO →</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       6. COMPARADOR INTERACTIVO ANTES / DESPUÉS (DIAGNÓSTICO DE TU UI ACTUAL)
+       ======================================================================= -->
+  <section id="ui-redesign" class="py-20 px-6 lg:px-14 max-w-[1400px] mx-auto border-t border-white/10">
+    <div class="bg-[#12141A] border border-white/15 rounded-[28px] p-8 lg:p-12 space-y-8">
+      <div class="max-w-3xl space-y-3">
+        <span class="px-3 py-1 rounded-full bg-[#C89D54]/15 text-[#C89D54] border border-[#C89D54]/30 font-mono text-[10px] uppercase tracking-widest">
+          // 04. AUDITORÍA VISUAL DEL ERP (PARA TU REVISIÓN INTERNA)
+        </span>
+        <h3 class="font-['Space_Grotesk'] text-2xl sm:text-4xl font-bold text-white">
+          Por qué tu interfaz actual del ERP no te convencía del todo (y cómo lo solucionamos arriba)
+        </h3>
+        <p class="text-sm text-white/65 leading-relaxed">
+          Al analizar las 5 capturas que subiste, la estructura funcional es excelente, pero tenía <strong>3 choques visuales</strong> que hemos corregido en la consola interactiva de arriba:
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+        <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+          <div class="font-mono text-[#FF3B1D] font-bold uppercase">1. Choque de Tipografías en KPIs</div>
+          <p class="text-white/70 leading-relaxed">
+            En tus capturas, <em>Inventario</em> usaba una serifa muy delgada (<code>Instrument Serif</code>) para <code>$620.000 COP</code>, mientras <em>Contabilidad</em> usaba <code>JetBrains Mono</code> negrita. <strong>Solución:</strong> Unificar todos los indicadores financieros con <code>Space Grotesk Bold</code> + <code>tabular-nums</code>.
+          </p>
+        </div>
+        <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+          <div class="font-mono text-[#FF3B1D] font-bold uppercase">2. Colores Intrusos & Emojis</div>
+          <p class="text-white/70 leading-relaxed">
+            El botón azul eléctrico (<code>CATÁLOGO WEB</code>) junto al rojo ladrillo y los emojis de colores (<code>📈</code>, <code>⚙️</code>, <code>😊</code>) rompían la seriedad del sistema. <strong>Solución:</strong> Iconografía vectorial de trazo fino y botones secundarios en titanio/grafito.
+          </p>
+        </div>
+        <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+          <div class="font-mono text-[#10B981] font-bold uppercase">3. Contraste de Chasis (Braun / Titanium)</div>
+          <p class="text-white/70 leading-relaxed">
+            Al darle un sidebar en grafito oscuro (<code>#121316</code>) y un fondo piedra técnica (<code>#ECE9E2</code>) con tarjetas blancas puras y sombras multicapa, el ERP gana profundidad de hardware caro sin perder limpieza.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       7. SECCIÓN DE PLANES EN FRANT.APP (SIN PRECIOS QUEMADOS -> PUENTE A DIAZLAB)
+       ======================================================================= -->
+  <section id="planes-erp" class="py-20 px-6 lg:px-14 max-w-[1400px] mx-auto">
+    <div class="border-trail-frame rounded-[32px] bg-gradient-to-br from-[#151821] via-[#101217] to-[#0A0B0E] border border-white/15 p-10 sm:p-16 text-center max-w-4xl mx-auto space-y-7 shadow-[0_30px_90px_rgba(0,0,0,0.7)]">
+      <span class="font-mono text-[11px] uppercase tracking-[0.24em] px-3.5 py-1.5 rounded-full bg-[#FF3B1D]/15 text-[#FF3B1D] border border-[#FF3B1D]/30 inline-block">
+        // 05. ARQUITECTURA COMERCIAL MODULAR
+      </span>
+      
+      <h2 class="font-['Space_Grotesk'] text-3xl sm:text-5xl font-bold tracking-tight text-white max-w-2xl mx-auto" style="text-wrap: balance;">
+        Planes según las funciones y el escala de tu negocio.
+      </h2>
+      
+      <p class="text-base text-white/65 max-w-2xl mx-auto leading-relaxed">
+        No pagues por módulos que no utilizas. Comienza con el acceso base a <strong>Frant ERP</strong> y activa únicamente las capacidades que tu operación requiera (Facturación DIAN, Agente IA de WhatsApp, Rutas de Domicilio o Verticales Especializadas).
+      </p>
+
+      <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a 
+          href="./propuesta_diazlab_agency_luxury.html#planes" 
+          class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#FF3B1D] hover:bg-[#e02d10] text-white font-mono text-xs font-bold uppercase tracking-[0.15em] shadow-[0_12px_32px_-8px_rgba(255,59,29,0.55)] btn-tactile flex items-center justify-center gap-2.5"
+        >
+          <span>Configurar Plan en diazlab.online</span>
+          <span>→</span>
+        </a>
+        <a 
+          href="https://wa.me/573116718652?text=Hola%2C%20deseo%20informaci%C3%B3n%20sobre%20los%20planes%20de%20Frant%20ERP" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-mono text-xs font-semibold uppercase tracking-[0.15em] btn-tactile"
+        >
+          Hablar con Ventas por WhatsApp
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       8. FOOTER OFICIAL CON ENLACES LEGALES VISIBLES (/privacy y /terms)
+       ======================================================================= -->
+  <footer class="border-t border-white/10 bg-[#07080A] py-16 px-6 lg:px-14 text-xs text-white/50">
+    <div class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+      <div class="space-y-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded bg-[#FF3B1D] flex items-center justify-center font-['Space_Grotesk'] font-bold text-white">F</div>
+          <span class="font-['Space_Grotesk'] font-bold text-base text-white tracking-wider">FRANT ERP</span>
+        </div>
+        <p class="text-xs text-white/45 leading-relaxed">
+          Plataforma SaaS de Punto de Venta, Facturación Electrónica DIAN, Inventario y Despacho Conversacional.
+        </p>
+        <p class="font-mono text-[10px] text-white/35">Un producto de Diaz Lab Automation • Barranquilla, Colombia</p>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-white font-semibold">Módulos del ERP</div>
+        <ul class="space-y-2">
+          <li><a href="#consola-3d" class="hover:text-white">Punto de Venta POS & Arqueo</a></li>
+          <li><a href="#despacho-nativo" class="hover:text-white">Despacho Gmail OAuth & WhatsApp</a></li>
+          <li><a href="#verticales" class="hover:text-white">Vertical Ópticas & Salud Visual</a></li>
+          <li><a href="#verticales" class="hover:text-white">Vertical Restaurantes & KDS</a></li>
+        </ul>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-white font-semibold">Acceso & Planes</div>
+        <ul class="space-y-2">
+          <li><a href="https://frant.app/login" class="text-[#FF3B1D] hover:underline font-mono">Iniciar Sesión (/login)</a></li>
+          <li><a href="./propuesta_diazlab_agency_luxury.html" class="hover:text-white">Estructura de Planes (diazlab.online)</a></li>
+        </ul>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-white font-semibold">Cumplimiento Legal & Privacidad</div>
+        <ul class="space-y-2">
+          <li><a href="https://frant.app/privacy" target="_blank" rel="noopener noreferrer" class="hover:text-white underline decoration-white/20">Política de Privacidad (https://frant.app/privacy)</a></li>
+          <li><a href="https://frant.app/terms" target="_blank" rel="noopener noreferrer" class="hover:text-white underline decoration-white/20">Términos y Condiciones (https://frant.app/terms)</a></li>
+          <li class="text-[11px] text-white/40 pt-1">Cumplimiento Google API Limited Use Policy & Meta Cloud API</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="max-w-[1400px] mx-auto pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px]">
+      <span>© 2026 Frant ERP by Diaz Lab Automation. Todos los derechos reservados.</span>
+      <span>TLS 1.3 • AES-256 • HABEAS DATA LEY 1581</span>
+    </div>
+  </footer>
+
+  <!-- =======================================================================
+       SCRIPTS DE FÍSICA: SCROLL 3D UNFOLD, SPOTLIGHT, TILT Y SWITCH DE TEMAS
+       ======================================================================= -->
+  <script>
+    // 1. Scroll-Linked 3D Isometric Unfold for the ERP Window
+    const erpWindow = document.getElementById('erp-3d-window');
+    function update3DScroll() {
+      if (!erpWindow) return;
+      const rect = erpWindow.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      // Progress from 0 (entering bottom) to 1 (centered in viewport)
+      const rawProgress = (windowHeight - rect.top) / (windowHeight * 0.85);
+      const progress = Math.max(0, Math.min(1, rawProgress));
+      
+      const rotX = (1 - progress) * 22;     // 22deg -> 0deg
+      const rotY = (1 - progress) * -12;    // -12deg -> 0deg
+      const rotZ = (1 - progress) * 2.5;    // 2.5deg -> 0deg
+      const scale = 0.94 + (progress * 0.06); // 0.94 -> 1.00
+
+      erpWindow.style.transform = `rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+    }
+    window.addEventListener('scroll', update3DScroll, { passive: true });
+    window.addEventListener('load', update3DScroll);
+
+    // 2. Switch ERP Screens inside the 3D Console
+    function switchErpScreen(screen) {
+      ['inventory', 'ai', 'dian', 'finance'].forEach(id => {
+        document.getElementById('screen-' + id).classList.add('hidden');
+        const topBtn = document.getElementById('tab-erp-' + id);
+        const sideBtn = document.getElementById('side-' + id);
+        if (topBtn) {
+          topBtn.className = 'px-4 py-2 rounded-xl font-mono text-xs font-semibold text-white/65 hover:text-white cursor-pointer transition-all btn-tactile';
+        }
+        if (sideBtn) {
+          sideBtn.className = 'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/5 cursor-pointer transition-all';
+        }
+      });
+
+      document.getElementById('screen-' + screen).classList.remove('hidden');
+      const activeTop = document.getElementById('tab-erp-' + screen);
+      const activeSide = document.getElementById('side-' + screen);
+      if (activeTop) {
+        activeTop.className = 'px-4 py-2 rounded-xl font-mono text-xs font-semibold bg-[#FF3B1D] text-white cursor-pointer transition-all btn-tactile';
+      }
+      if (activeSide) {
+        activeSide.className = 'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#FF3B1D] text-white cursor-pointer transition-all';
+      }
+    }
+
+    // 3. Switch ERP Internal Visual Theme (Braun Titanium / Obsidian Dark / Swiss Daylight)
+    function setErpTheme(theme) {
+      const canvas = document.getElementById('erp-app-canvas');
+      canvas.classList.remove('erp-theme-titanium', 'erp-theme-obsidian', 'erp-theme-swiss');
+      canvas.classList.add('erp-theme-' + theme);
+
+      ['titanium', 'obsidian', 'swiss'].forEach(t => {
+        const btn = document.getElementById('btn-theme-' + t);
+        if (!btn) return;
+        if (t === theme) {
+          btn.className = 'px-2.5 py-1 rounded-lg font-mono text-[11px] bg-[#FF3B1D] text-white font-semibold cursor-pointer btn-tactile';
+        } else {
+          btn.className = 'px-2.5 py-1 rounded-lg font-mono text-[11px] bg-white/5 hover:bg-white/10 text-white/70 cursor-pointer btn-tactile';
+        }
+      });
+    }
+
+    // 4. Spotlight & 3D Tilt Physics on Cards (from motion-primitives)
+    document.querySelectorAll('.spotlight-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+      });
+    });
+
+    document.querySelectorAll('.tilt-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        card.style.transform = `perspective(1000px) rotateY(${(x * 7).toFixed(2)}deg) rotateX(${(-y * 7).toFixed(2)}deg) translateY(-4px)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(0px)';
+      });
+    });
+  </script>
+</body>
+</html>
