@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LegalDocsModal } from './LegalDocsModal';
+import { FrantLogo } from './FrantLogo';
 
 interface FrantLandingPageProps {
   onLoginClick: () => void;
@@ -208,15 +209,14 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
 
       <div className="frant-tech-grid min-h-screen">
         {/* =======================================================================
-            1. NAVBAR INDUSTRIAL DE ALTA PRECISIÓN (FRANT.APP)
+            1. NAVBAR INDUSTRIAL DE ALTA PRECISIÓN (FRANT.APP) - FIJA AL HACER SCROLL
            ======================================================================= */}
-        <header className="sticky top-0 z-40 bg-[#090A0C]/85 backdrop-blur-xl border-b border-white/10 px-6 lg:px-14 py-4">
+        <header className="fixed top-0 inset-x-0 z-50 bg-[#090A0C]/90 backdrop-blur-xl border-b border-white/10 px-6 lg:px-14 py-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
           <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
             {/* Brand Identity */}
             <a href="#top" className="flex items-center gap-3.5 group no-underline shrink-0">
-              <div className="w-9 h-9 rounded-lg bg-[#16181D] border border-white/15 flex items-center justify-center relative overflow-hidden shadow-inner shrink-0">
-                <span className="font-['Space_Grotesk',sans-serif] font-bold text-lg tracking-tighter text-white">F</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF3B1D] absolute top-1.5 right-1.5"></span>
+              <div className="rounded-xl border border-white/15 p-0.5 bg-[#141414] shadow-[0_4px_14px_rgba(0,0,0,0.4)] shrink-0">
+                <FrantLogo variant="dark" size={36} />
               </div>
               <div className="flex flex-col whitespace-nowrap">
                 <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
         {/* =======================================================================
             2. HERO SECTION: LUJO INDUSTRIAL + FOTOGRAFÍA 8K + HOOK COGNITIVO
            ======================================================================= */}
-        <section id="top" className="relative pt-14 lg:pt-20 pb-12 px-6 lg:px-14 max-w-[1400px] mx-auto">
+        <section id="top" className="relative pt-28 lg:pt-32 pb-12 px-6 lg:px-14 max-w-[1400px] mx-auto">
           <div className="absolute top-10 left-1/4 w-[600px] h-[350px] bg-[#FF3B1D]/12 blur-[140px] rounded-full pointer-events-none"></div>
           <div className="absolute top-32 right-10 w-[450px] h-[350px] bg-[#C89D54]/10 blur-[130px] rounded-full pointer-events-none"></div>
 
@@ -472,9 +472,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                   >
                     <div className="space-y-6">
                       <div className="flex items-center gap-3 px-2 py-1.5 border-b border-white/10 pb-4">
-                        <div className="w-8 h-8 rounded-lg bg-[#FF3B1D] text-white font-['Space_Grotesk',sans-serif] font-bold text-sm flex items-center justify-center shrink-0">
-                          HO
-                        </div>
+                        <FrantLogo variant="dark" size={32} />
                         <div className="hidden sm:block overflow-hidden">
                           <div className="font-['Space_Grotesk',sans-serif] font-bold text-xs tracking-wide text-white truncate">
                             Hoshi Services
@@ -756,7 +754,7 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
 
                     {/* SCREEN 3: DIAN + GMAIL OAUTH */}
                     {activeErpScreen === 'dian' && (
-                      <div className="p-6 sm:p-8 space-y-6 flex-1">
+                      <div className="p-6 sm:p-8 space-y-5 flex-1">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
                             <div className="font-mono text-[10px] uppercase tracking-[0.22em] font-semibold" style={{ color: 'var(--erp-accent)' }}>
@@ -772,59 +770,326 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="p-5 rounded-xl border" style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}>
+                          <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}>
                             <div className="font-mono text-xs font-bold text-[#FF3B1D]">PASO 01 / EMISIÓN POS</div>
-                            <div className="font-['Space_Grotesk',sans-serif] text-lg font-bold mt-1">Firma Digital & CUFE</div>
+                            <div className="font-['Space_Grotesk',sans-serif] text-base font-bold mt-1">Firma Digital & CUFE</div>
                             <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--erp-muted)' }}>
                               Generación instantánea de XML y representación gráfica PDF con código QR oficial ante la DIAN.
                             </p>
                           </div>
-                          <div className="p-5 rounded-xl border" style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}>
+                          <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}>
                             <div className="font-mono text-xs font-bold text-[#10B981]">PASO 02 / GMAIL OAUTH (gmail.send)</div>
-                            <div className="font-['Space_Grotesk',sans-serif] text-lg font-bold mt-1">Envío desde tu Propio Correo</div>
+                            <div className="font-['Space_Grotesk',sans-serif] text-base font-bold mt-1">Envío desde tu Propio Correo</div>
                             <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--erp-muted)' }}>
                               El cliente recibe el PDF directamente desde la cuenta oficial de tu empresa autorizada con Google OAuth 2.0.
                             </p>
                           </div>
-                          <div className="p-5 rounded-xl border" style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}>
+                          <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}>
                             <div className="font-mono text-xs font-bold text-[#C89D54]">PASO 03 / WHATSAPP CLOUD API</div>
-                            <div className="font-['Space_Grotesk',sans-serif] text-lg font-bold mt-1">Copia Instantánea al Celular</div>
+                            <div className="font-['Space_Grotesk',sans-serif] text-base font-bold mt-1">Copia Instantánea al Celular</div>
                             <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--erp-muted)' }}>
                               Despacho simultáneo del comprobante al WhatsApp del comprador sin descargar archivos manualmente.
                             </p>
                           </div>
                         </div>
+
+                        {/* Live DIAN Dispatch Log */}
+                        <div
+                          className="rounded-xl border overflow-hidden"
+                          style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)', boxShadow: 'var(--erp-shadow)' }}
+                        >
+                          <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--erp-border)' }}>
+                            <span className="font-mono text-[11px] font-bold uppercase tracking-wider">
+                              Bitácora de Emisión & Despacho Fiscal Reciente
+                            </span>
+                            <span className="font-mono text-[10px] text-[#10B981] font-semibold">
+                              ● 100% Acuse Recibido
+                            </span>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse text-xs">
+                              <thead>
+                                <tr className="border-b font-mono text-[10px] uppercase tracking-[0.12em]" style={{ color: 'var(--erp-muted)', borderColor: 'var(--erp-border)' }}>
+                                  <th className="py-2.5 px-4">Prefijo / Folio</th>
+                                  <th className="py-2.5 px-4">Adquirente</th>
+                                  <th className="py-2.5 px-4">CUFE / Estado DIAN</th>
+                                  <th className="py-2.5 px-4">Despacho OAuth</th>
+                                  <th className="py-2.5 px-4 text-right">Total</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y" style={{ borderColor: 'var(--erp-border)' }}>
+                                <tr>
+                                  <td className="py-2.5 px-4 font-mono font-bold">#FE-1793</td>
+                                  <td className="py-2.5 px-4 font-semibold">ANGEL AVILA FLOREZ</td>
+                                  <td className="py-2.5 px-4 font-mono text-[11px] text-[#10B981]">Validada DIAN • 94a8...31f2</td>
+                                  <td className="py-2.5 px-4 font-mono text-[11px]">Gmail + WhatsApp ✓</td>
+                                  <td className="py-2.5 px-4 text-right font-mono font-bold tabular-nums">$ 1.300.000</td>
+                                </tr>
+                                <tr>
+                                  <td className="py-2.5 px-4 font-mono font-bold">#FE-1792</td>
+                                  <td className="py-2.5 px-4 font-semibold">ÓPTICA VISIÓN REAL SAS</td>
+                                  <td className="py-2.5 px-4 font-mono text-[11px] text-[#10B981]">Validada DIAN • 7c12...89e0</td>
+                                  <td className="py-2.5 px-4 font-mono text-[11px]">Gmail + WhatsApp ✓</td>
+                                  <td className="py-2.5 px-4 text-right font-mono font-bold tabular-nums">$ 840.000</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
                       </div>
                     )}
 
-                    {/* SCREEN 4: FINANCE */}
+                    {/* SCREEN 4: FINANCE (CONTABILIDAD Y FLUJO FINANCIERO REAL DEL ERP) */}
                     {activeErpScreen === 'finance' && (
-                      <div className="p-6 sm:p-8 space-y-6 flex-1">
-                        <div>
-                          <div className="font-mono text-[10px] uppercase tracking-[0.22em] font-semibold" style={{ color: 'var(--erp-accent)' }}>
-                            AUDITORÍA DE TURNOS & LIBRO CONTABLE
+                      <div className="p-6 sm:p-7 space-y-5 flex-1">
+                        {/* Header Row: Title + Action & Period Selector */}
+                        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-3 border-b" style={{ borderColor: 'var(--erp-border)' }}>
+                          <div>
+                            <div className="font-mono text-[10px] uppercase tracking-[0.22em] font-bold" style={{ color: 'var(--erp-accent)' }}>
+                              ANÁLISIS FINANCIERO & LIBRO CONTABLE
+                            </div>
+                            <h3 className="font-['Space_Grotesk',sans-serif] text-2xl sm:text-[26px] font-bold tracking-tight mt-0.5 flex items-center gap-2.5">
+                              <svg className="w-5 h-5 shrink-0" style={{ color: 'var(--erp-accent)' }} fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 19V13M10 19V5M16 19v-8M22 19V9" />
+                              </svg>
+                              <span>Contabilidad y Flujo Financiero</span>
+                            </h3>
+                            <p className="text-xs mt-1" style={{ color: 'var(--erp-muted)' }}>
+                              Reporte consolidado de ingresos, gastos operativos, desglose por métodos de pago y tendencias.
+                            </p>
                           </div>
-                          <h3 className="font-['Space_Grotesk',sans-serif] text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">
-                            Contabilidad, Arqueo de Caja & Cartera
-                          </h3>
+
+                          <div className="flex flex-col sm:items-end gap-2">
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={handleLogin}
+                                className="px-3.5 py-2 rounded-lg text-[11px] font-mono font-bold uppercase tracking-wider text-white bg-[#D9381E] hover:bg-[#b82d16] border-0 cursor-pointer flex items-center gap-1.5 shadow-sm"
+                              >
+                                <span>⊕</span>
+                                <span>REGISTRAR GASTO</span>
+                              </button>
+                              <div
+                                className="px-3 py-1.5 rounded-lg border font-mono text-[11px] flex items-center gap-2"
+                                style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}
+                              >
+                                <span>📅 Octubre</span>
+                                <span style={{ color: 'var(--erp-muted)' }}>▾</span>
+                                <span className="font-bold">2026</span>
+                              </div>
+                            </div>
+                            <div
+                              className="inline-flex rounded-lg border p-0.5 font-mono text-[10px] uppercase tracking-wider"
+                              style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}
+                            >
+                              {['HOY', 'SEMANA', 'MES ACTUAL', 'TRIMESTRE', 'SEMESTRE', 'AÑO'].map((period, idx) => (
+                                <span
+                                  key={period}
+                                  className={`px-2.5 py-1 rounded-md ${
+                                    idx === 2 ? 'font-bold underline decoration-2 underline-offset-4' : ''
+                                  }`}
+                                  style={{ color: idx === 2 ? 'var(--erp-text)' : 'var(--erp-muted)' }}
+                                >
+                                  {period}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                          <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}>
-                            <div className="font-mono text-[10px] uppercase" style={{ color: 'var(--erp-muted)' }}>INGRESOS DEL TURNO</div>
-                            <div className="font-['Space_Grotesk',sans-serif] text-2xl font-bold mt-1 tabular-nums">$4.560.000</div>
+                        {/* 4 KPI Cards Row */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                          <div
+                            className="p-4 rounded-xl border flex items-center justify-between"
+                            style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)', boxShadow: 'var(--erp-shadow)' }}
+                          >
+                            <div>
+                              <div className="font-mono text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--erp-muted)' }}>
+                                TOTAL INGRESOS
+                              </div>
+                              <div className="font-['Space_Grotesk',sans-serif] text-xl sm:text-2xl font-bold mt-1.5 tabular-nums">
+                                $ 5.163.000
+                              </div>
+                            </div>
+                            <div className="w-9 h-9 rounded-lg border flex items-center justify-center text-[#D9381E] shrink-0" style={{ borderColor: 'var(--erp-border)', backgroundColor: 'var(--erp-surface)' }}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <rect x="2" y="6" width="20" height="12" rx="2" />
+                                <circle cx="12" cy="12" r="2.5" />
+                              </svg>
+                            </div>
                           </div>
-                          <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}>
-                            <div className="font-mono text-[10px] uppercase" style={{ color: 'var(--erp-muted)' }}>GASTOS OPERATIVOS</div>
-                            <div className="font-['Space_Grotesk',sans-serif] text-2xl font-bold mt-1 text-[#FF3B1D] tabular-nums">$350.000</div>
+
+                          <div
+                            className="p-4 rounded-xl border flex items-center justify-between"
+                            style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)', boxShadow: 'var(--erp-shadow)' }}
+                          >
+                            <div>
+                              <div className="font-mono text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--erp-muted)' }}>
+                                GASTOS OPERATIVOS
+                              </div>
+                              <div className="font-['Space_Grotesk',sans-serif] text-xl sm:text-2xl font-bold mt-1.5 text-[#D9381E] tabular-nums">
+                                $ 1.952.300
+                              </div>
+                            </div>
+                            <div className="w-9 h-9 rounded-lg border flex items-center justify-center text-[#C89D54] shrink-0" style={{ borderColor: 'var(--erp-border)', backgroundColor: 'var(--erp-surface)' }}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-5zm-4 0h4" />
+                              </svg>
+                            </div>
                           </div>
-                          <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}>
-                            <div className="font-mono text-[10px] uppercase" style={{ color: 'var(--erp-muted)' }}>CUENTAS POR COBRAR</div>
-                            <div className="font-['Space_Grotesk',sans-serif] text-2xl font-bold mt-1 tabular-nums">$1.280.000</div>
+
+                          <div
+                            className="p-4 rounded-xl border flex items-center justify-between"
+                            style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)', boxShadow: 'var(--erp-shadow)' }}
+                          >
+                            <div>
+                              <div className="font-mono text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--erp-muted)' }}>
+                                TICKET PROMEDIO
+                              </div>
+                              <div className="font-['Space_Grotesk',sans-serif] text-xl sm:text-2xl font-bold mt-1.5 tabular-nums">
+                                $ 286.833,33
+                              </div>
+                            </div>
+                            <div className="w-9 h-9 rounded-lg border flex items-center justify-center shrink-0" style={{ borderColor: 'var(--erp-border)', backgroundColor: 'var(--erp-surface)' }}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M18 20V10M12 20V4M6 20v-6" />
+                              </svg>
+                            </div>
                           </div>
-                          <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)' }}>
-                            <div className="font-mono text-[10px] uppercase" style={{ color: 'var(--erp-muted)' }}>ARQUEO DE CAJA</div>
-                            <div className="font-['Space_Grotesk',sans-serif] text-2xl font-bold mt-1 text-[#10B981] tabular-nums">Cuadre Exacto</div>
+
+                          <div
+                            className="p-4 rounded-xl border flex items-center justify-between"
+                            style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)', boxShadow: 'var(--erp-shadow)' }}
+                          >
+                            <div>
+                              <div className="font-mono text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--erp-muted)' }}>
+                                FACTURAS EMITIDAS
+                              </div>
+                              <div className="font-['Space_Grotesk',sans-serif] text-xl sm:text-2xl font-bold mt-1.5 tabular-nums">
+                                18
+                              </div>
+                            </div>
+                            <div className="w-9 h-9 rounded-lg border flex items-center justify-center shrink-0" style={{ borderColor: 'var(--erp-border)', backgroundColor: 'var(--erp-surface)' }}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Ledger Table Container (TABLA DE INGRESOS / TABLA DE GASTOS) */}
+                        <div
+                          className="rounded-xl border overflow-hidden"
+                          style={{ backgroundColor: 'var(--erp-card)', borderColor: 'var(--erp-border)', boxShadow: 'var(--erp-shadow)' }}
+                        >
+                          {/* Toolbar */}
+                          <div className="p-3.5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: 'var(--erp-border)' }}>
+                            <div className="flex items-center gap-2 font-mono text-[11px]">
+                              <span className="px-3 py-1.5 rounded-lg bg-[#111215] text-white font-bold flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
+                                <span>TABLA DE INGRESOS</span>
+                                <span className="px-1.5 py-0.2 rounded bg-white/15 text-[10px]">18</span>
+                              </span>
+                              <span
+                                className="px-3 py-1.5 rounded-lg border font-semibold flex items-center gap-2"
+                                style={{ borderColor: 'var(--erp-border)', color: 'var(--erp-muted)' }}
+                              >
+                                <span className="w-2 h-2 rounded-full bg-[#D9381E]"></span>
+                                <span>TABLA DE GASTOS</span>
+                                <span className="px-1.5 py-0.2 rounded bg-black/5 text-[10px]">20</span>
+                              </span>
+                            </div>
+
+                            <div
+                              className="px-3 py-1.5 rounded-lg border font-mono text-[11px] flex items-center gap-2 min-w-[230px]"
+                              style={{ backgroundColor: 'var(--erp-surface)', borderColor: 'var(--erp-border)', color: 'var(--erp-muted)' }}
+                            >
+                              <span>🔍</span>
+                              <span>Buscar cliente, factura o método...</span>
+                            </div>
+                          </div>
+
+                          {/* Ledger Rows */}
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse text-xs">
+                              <thead>
+                                <tr
+                                  className="border-b font-mono text-[10px] uppercase tracking-[0.12em]"
+                                  style={{ backgroundColor: 'var(--erp-surface)', color: 'var(--erp-muted)', borderColor: 'var(--erp-border)' }}
+                                >
+                                  <th className="py-2.5 px-4">Factura</th>
+                                  <th className="py-2.5 px-4">Fecha & Hora</th>
+                                  <th className="py-2.5 px-4">Cliente</th>
+                                  <th className="py-2.5 px-4">Asesor / Vendedor</th>
+                                  <th className="py-2.5 px-4">Método de Pago</th>
+                                  <th className="py-2.5 px-4 text-center">Estado</th>
+                                  <th className="py-2.5 px-4 text-right">Total Ingreso</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y" style={{ borderColor: 'var(--erp-border)' }}>
+                                <tr>
+                                  <td className="py-3 px-4 font-mono font-bold">#FAC-FV-1793</td>
+                                  <td className="py-3 px-4 font-mono text-[11px]" style={{ color: 'var(--erp-muted)' }}>
+                                    23 de oct de 2026, 11:32 a. m.
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className="font-bold">ANGEL AVILA FLOREZ</div>
+                                    <div className="font-mono text-[10px]" style={{ color: 'var(--erp-muted)' }}>3142044181</div>
+                                  </td>
+                                  <td className="py-3 px-4 font-mono text-[11px]" style={{ color: 'var(--erp-muted)' }}>
+                                    Habib Orozco
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span
+                                      className="px-2.5 py-1 rounded border font-mono text-[11px] inline-flex items-center gap-1.5"
+                                      style={{ backgroundColor: 'var(--erp-surface)', borderColor: 'var(--erp-border)' }}
+                                    >
+                                      <span>🏦</span>
+                                      <span>Transferencia Bancaria</span>
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-[#10B981]/15 text-[#10B981]">
+                                      PAGADA
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-right font-mono font-bold tabular-nums">
+                                    $ 1.300.000
+                                  </td>
+                                </tr>
+
+                                <tr>
+                                  <td className="py-3 px-4 font-mono font-bold">#FAC-FV-1791</td>
+                                  <td className="py-3 px-4 font-mono text-[11px]" style={{ color: 'var(--erp-muted)' }}>
+                                    21 de oct de 2026, 02:00 a. m.
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className="font-bold">YESENIA TORREROZA ESCOBAR</div>
+                                    <div className="font-mono text-[10px]" style={{ color: 'var(--erp-muted)' }}>3004221244</div>
+                                  </td>
+                                  <td className="py-3 px-4 font-mono text-[11px]" style={{ color: 'var(--erp-muted)' }}>
+                                    Lindy Orozco
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span
+                                      className="px-2.5 py-1 rounded border font-mono text-[11px] inline-flex items-center gap-1.5"
+                                      style={{ backgroundColor: 'var(--erp-surface)', borderColor: 'var(--erp-border)' }}
+                                    >
+                                      <span>📋</span>
+                                      <span>Crédito (por cuotas)</span>
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-[#C89D54]/20 text-[#C89D54]">
+                                      PENDING
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-right font-mono font-bold tabular-nums">
+                                    $ 270.000
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
                           </div>
                         </div>
                       </div>
@@ -1102,8 +1367,8 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
           <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
             <div className="space-y-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded bg-[#FF3B1D] flex items-center justify-center font-['Space_Grotesk',sans-serif] font-bold text-white">
-                  F
+                <div className="rounded-lg border border-white/15 p-0.5 bg-[#141414] shrink-0">
+                  <FrantLogo variant="dark" size={28} />
                 </div>
                 <span className="font-['Space_Grotesk',sans-serif] font-bold text-base text-white tracking-wider">FRANT ERP</span>
               </div>

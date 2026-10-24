@@ -225,9 +225,9 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
 
       <div className="diaz-blueprint-grid min-h-screen">
         {/* =======================================================================
-            1. HEADER EDITORIAL INDUSTRIAL: DIAZ LAB AUTOMATION
+            1. HEADER EDITORIAL INDUSTRIAL: DIAZ LAB AUTOMATION (FIJO AL HACER SCROLL)
            ======================================================================= */}
-        <header className="sticky top-0 z-40 bg-[#08090B]/85 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 lg:px-10 py-3.5">
+        <header className="fixed top-0 inset-x-0 z-50 bg-[#08090B]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 lg:px-10 py-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
           <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3">
             <a href="#top" className="flex items-center gap-3 no-underline shrink-0">
               <div className="w-9 h-9 rounded-lg bg-[#FF5520] flex items-center justify-center font-['Space_Grotesk',sans-serif] font-bold text-base text-white shadow-[0_0_20px_rgba(255,85,32,0.4)] shrink-0">
@@ -274,7 +274,7 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
         {/* =======================================================================
             2. HERO SECTION: CASA MATRIZ DIAZ LAB AUTOMATION + FOTOGRAFÍA 8K DEL ESTUDIO
            ======================================================================= */}
-        <section id="top" className="relative pt-14 lg:pt-20 pb-16 px-6 lg:px-14 max-w-[1400px] mx-auto">
+        <section id="top" className="relative pt-28 lg:pt-32 pb-16 px-6 lg:px-14 max-w-[1400px] mx-auto">
           <div className="absolute top-12 right-1/4 w-[650px] h-[350px] bg-[#FF5520]/10 blur-[150px] rounded-full pointer-events-none"></div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
