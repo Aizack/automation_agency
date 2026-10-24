@@ -463,17 +463,19 @@ function App() {
   }
 
   return (
-    <div>
-      <div className="fixed top-4 right-4 z-50">
+    <div className="relative">
+      <div className="fixed top-4 right-5 z-50">
         <button
           onClick={() => {
             window.history.pushState({}, '', '/');
             setView('landing');
           }}
-          className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-xl border border-white/20 flex items-center gap-1 cursor-pointer transition shadow"
+          className="bg-[#12141A]/90 hover:bg-[#FF3B1D] text-white font-mono text-[11px] uppercase tracking-wider font-semibold px-4 py-2 rounded-xl border border-white/15 flex items-center gap-2 cursor-pointer transition-all shadow-[0_10px_25px_rgba(0,0,0,0.5)] backdrop-blur-md"
         >
-          <span className="material-symbols-outlined text-[15px]">home</span>
-          Página Principal
+          <svg className="w-3.5 h-3.5 text-[#FF3B1D] group-hover:text-white" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Volver a frant.app</span>
         </button>
       </div>
       <Login onLoginSuccess={handleLoginSuccess} />
