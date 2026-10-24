@@ -223,66 +223,47 @@ export const DiazLabLandingPage: React.FC<DiazLabLandingPageProps> = ({ onLoginC
 
       <div className="diaz-film-grain"></div>
 
-      {/* =======================================================================
-          BARRA FLOTANTE INFERIOR DE CONEXIÓN CON FRANT.APP (IDÉNTICA AL MOCKUP)
-         ======================================================================= */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#121318]/95 backdrop-blur-xl border border-white/15 px-5 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.85)] hidden sm:flex items-center gap-4 text-xs whitespace-nowrap">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-white/80">
-            DIAZ LAB AUTOMATION (CASA MATRIZ & PLANES)
-          </span>
-        </div>
-        <a
-          href="https://frant.app"
-          onClick={handleGoToFrantApp}
-          className="pl-4 border-l border-white/15 font-mono text-[11px] text-[#FF5520] hover:text-white font-semibold flex items-center gap-1.5 no-underline cursor-pointer"
-        >
-          <span>← Volver a frant.app (Plataforma ERP)</span>
-        </a>
-      </div>
-
       <div className="diaz-blueprint-grid min-h-screen">
         {/* =======================================================================
             1. HEADER EDITORIAL INDUSTRIAL: DIAZ LAB AUTOMATION
            ======================================================================= */}
-        <header className="sticky top-0 z-40 bg-[#08090B]/85 backdrop-blur-xl border-b border-white/10 px-6 lg:px-14 py-4">
-          <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
-            <a href="#top" className="flex items-center gap-3.5 no-underline shrink-0">
-              <div className="w-9 h-9 rounded-lg bg-[#FF5520] flex items-center justify-center font-['Space_Grotesk',sans-serif] font-bold text-lg text-white shadow-[0_0_20px_rgba(255,85,32,0.4)] shrink-0">
+        <header className="sticky top-0 z-40 bg-[#08090B]/85 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 lg:px-10 py-3.5">
+          <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3">
+            <a href="#top" className="flex items-center gap-3 no-underline shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-[#FF5520] flex items-center justify-center font-['Space_Grotesk',sans-serif] font-bold text-base text-white shadow-[0_0_20px_rgba(255,85,32,0.4)] shrink-0">
                 DL
               </div>
               <div>
-                <div className="flex items-center gap-2 whitespace-nowrap">
-                  <span className="font-['Space_Grotesk',sans-serif] font-bold text-base sm:text-lg tracking-[0.06em] text-white uppercase leading-none">
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="font-['Space_Grotesk',sans-serif] font-bold text-sm sm:text-[15px] tracking-[0.04em] text-white uppercase leading-none">
                     DIAZ LAB AUTOMATION
                   </span>
-                  <span className="w-2 h-2 rounded-full bg-[#FF5520] shrink-0"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF5520] shrink-0"></span>
                 </div>
-                <span className="font-mono text-[9px] uppercase tracking-[0.24em] text-white/50 block mt-1 whitespace-nowrap">
+                <span className="font-mono text-[8.5px] uppercase tracking-[0.18em] text-white/50 block mt-1 whitespace-nowrap">
                   SOFTWARE & AI ENGINEERING ATELIER
                 </span>
               </div>
             </a>
 
-            <nav className="hidden xl:flex items-center gap-7 font-mono text-xs uppercase tracking-[0.14em] text-white/65 whitespace-nowrap">
+            <nav className="hidden xl:flex items-center gap-5 font-mono text-[11px] uppercase tracking-[0.08em] text-white/65 whitespace-nowrap">
               <a href="#arquitectura-3d" className="hover:text-white transition-colors no-underline text-white/65">01. Ecosistema</a>
               <a href="#planes" className="hover:text-white transition-colors text-[#D4A359] font-semibold no-underline">02. Estructura 3 Niveles</a>
               <a href="#configurador" className="hover:text-white transition-colors no-underline text-white/65">03. Cotizador Interactivo</a>
               <a href="#ingenieria" className="hover:text-white transition-colors no-underline text-white/65">04. Ingeniería a Medida</a>
             </nav>
 
-            <div className="flex items-center gap-3 shrink-0 whitespace-nowrap">
+            <div className="flex items-center gap-2.5 shrink-0 whitespace-nowrap">
               <a
                 href="https://frant.app"
                 onClick={handleGoToFrantApp}
-                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 font-mono text-xs text-white/90 uppercase tracking-wider diaz-btn-tactile no-underline cursor-pointer whitespace-nowrap"
+                className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 font-mono text-[11px] text-white/90 uppercase tracking-[0.06em] diaz-btn-tactile no-underline cursor-pointer whitespace-nowrap"
               >
                 Ir a frant.app →
               </a>
               <a
                 href="#configurador"
-                className="hidden sm:inline-flex px-5 py-2.5 rounded-xl bg-[#FF5520] hover:bg-[#e04412] text-white font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(255,85,32,0.35)] diaz-btn-tactile no-underline whitespace-nowrap"
+                className="hidden sm:inline-flex px-4 py-2 rounded-xl bg-[#FF5520] hover:bg-[#e04412] text-white font-mono text-[11px] font-bold uppercase tracking-[0.06em] shadow-[0_0_25px_rgba(255,85,32,0.35)] diaz-btn-tactile no-underline whitespace-nowrap"
               >
                 Armar Paquete
               </a>

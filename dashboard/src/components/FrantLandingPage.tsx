@@ -206,54 +206,6 @@ export const FrantLandingPage: React.FC<FrantLandingPageProps> = ({ onLoginClick
 
       <div className="frant-film-grain"></div>
 
-      {/* =======================================================================
-          BARRA FLOTANTE DE CONTROL DEL TEMA 3D Y PUENTE A DIAZ LAB AUTOMATION
-         ======================================================================= */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#121318]/95 backdrop-blur-xl border border-white/15 px-4 py-2.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] hidden md:flex items-center gap-3 text-xs whitespace-nowrap">
-        <div className="flex items-center gap-2 pr-3 border-r border-white/10">
-          <span className="w-2 h-2 rounded-full bg-[#FF3B1D] animate-pulse"></span>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-white/70">FRANT.APP</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="font-mono text-[10px] text-white/50 uppercase mr-1">Tema Consola ERP:</span>
-          <button
-            type="button"
-            onClick={() => setErpTheme('titanium')}
-            className={`px-2.5 py-1 rounded-lg font-mono text-[11px] cursor-pointer frant-btn-tactile border-0 ${
-              erpTheme === 'titanium' ? 'bg-[#FF3B1D] text-white font-semibold' : 'bg-white/5 hover:bg-white/10 text-white/70'
-            }`}
-          >
-            1. Braun Titanium
-          </button>
-          <button
-            type="button"
-            onClick={() => setErpTheme('obsidian')}
-            className={`px-2.5 py-1 rounded-lg font-mono text-[11px] cursor-pointer frant-btn-tactile border-0 ${
-              erpTheme === 'obsidian' ? 'bg-[#FF3B1D] text-white font-semibold' : 'bg-white/5 hover:bg-white/10 text-white/70'
-            }`}
-          >
-            2. Obsidian Pro (Dark)
-          </button>
-          <button
-            type="button"
-            onClick={() => setErpTheme('swiss')}
-            className={`px-2.5 py-1 rounded-lg font-mono text-[11px] cursor-pointer frant-btn-tactile border-0 ${
-              erpTheme === 'swiss' ? 'bg-[#FF3B1D] text-white font-semibold' : 'bg-white/5 hover:bg-white/10 text-white/70'
-            }`}
-          >
-            3. Swiss Daylight
-          </button>
-        </div>
-        <a
-          href="https://diazlab.online"
-          onClick={handleGoToPlanesDiazLab}
-          className="ml-2 pl-3 border-l border-white/10 font-mono text-[11px] text-[#C89D54] hover:text-white flex items-center gap-1 font-semibold no-underline cursor-pointer"
-        >
-          <span>Diaz Lab Automation</span>
-          <span>→</span>
-        </a>
-      </div>
-
       <div className="frant-tech-grid min-h-screen">
         {/* =======================================================================
             1. NAVBAR INDUSTRIAL DE ALTA PRECISIÓN (FRANT.APP)
