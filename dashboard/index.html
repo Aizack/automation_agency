@@ -13,9 +13,11 @@
     <script>
       (function() {
         try {
-          var savedTheme = localStorage.getItem('frant_erp_theme') || 'wabi-sabi-koi';
+          var rawTheme = localStorage.getItem('frant_erp_theme') || 'wabi-titanium';
+          var savedTheme = rawTheme === 'obsidian-precision' ? 'obsidian-pro' : rawTheme === 'swiss-daylight' ? 'swiss-platinum' : rawTheme;
           var savedScale = localStorage.getItem('frant_erp_scale') || 'comfort';
-          var savedFont = localStorage.getItem('frant_erp_font_pair') || 'jakarta';
+          var rawFont = localStorage.getItem('frant_erp_font_pair') || 'industrial';
+          var savedFont = rawFont === 'jakarta' ? 'industrial' : rawFont === 'editorial' ? 'editorial-calibrated' : rawFont;
           document.documentElement.setAttribute('data-theme', savedTheme);
           document.documentElement.setAttribute('data-scale', savedScale);
           document.documentElement.setAttribute('data-font-pair', savedFont);

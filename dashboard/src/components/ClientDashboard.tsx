@@ -37,7 +37,6 @@ import { SaaSErpEmployeeProfile } from './SaaSErpEmployeeProfile';
 import { NotificationBell } from './NotificationBell';
 import { FrantErpMobileView } from './FrantErpMobileView';
 import { SaaSErpECommerceWizard } from './SaaSErpECommerceWizard';
-import { HeaderBranchClock } from './HeaderBranchClock';
 
 interface Client {
   id: string;
@@ -310,11 +309,15 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
   }, [shiftStatus, shiftStartTs]);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('frant_erp_theme') || 'wabi-sabi-koi';
+    const rawTheme = localStorage.getItem('frant_erp_theme') || 'wabi-titanium';
+    const savedTheme = rawTheme === 'obsidian-precision' ? 'obsidian-pro' : rawTheme === 'swiss-daylight' ? 'swiss-platinum' : rawTheme;
     const savedScale = localStorage.getItem('frant_erp_scale') || 'comfort';
-    const savedFont = localStorage.getItem('frant_erp_font_pair') || 'jakarta';
+    const rawFont = localStorage.getItem('frant_erp_font_pair') || 'industrial';
+    const savedFont = rawFont === 'jakarta' ? 'industrial' : rawFont === 'editorial' ? 'editorial-calibrated' : rawFont;
+    localStorage.setItem('frant_erp_theme', savedTheme);
     localStorage.setItem('app_theme', savedTheme);
     localStorage.setItem('theme', savedTheme);
+    localStorage.setItem('frant_erp_font_pair', savedFont);
     document.documentElement.setAttribute('data-theme', savedTheme);
     document.documentElement.setAttribute('data-scale', savedScale);
     document.documentElement.setAttribute('data-font-pair', savedFont);
@@ -1134,8 +1137,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 ? `${clientData.name} - ${clientData.branchName || (clientData as any).branch_name}`
                 : (clientData?.name || 'Frant ERP')}
             </div>
-            <div className="brand-sub font-semibold text-primary">
-              {(clientData as any)?.is_main_branch || (clientData as any)?.isMainBranch ? '🏢 Empresa Matriz' : '📍 Sede Sucursal'}
+            <div className="brand-sub font-semibold text-primary flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D9381E] shrink-0"></span>
+              <span>{(clientData as any)?.is_main_branch || (clientData as any)?.isMainBranch ? 'Empresa Matriz' : 'Sede Sucursal'}</span>
             </div>
           </div>
         </div>
@@ -1168,7 +1172,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                 className={`nav-item-btn ${['configuracion', 'dian_habilitacion', 'nueva_sede'].includes(activeTab) ? 'active' : ''}`} 
                 onClick={() => toggleSubMenu('empresa')}
               >
-                <svg className="nav-icon" viewBox="0 0 24 24"><polygon points="12,2 19,7 19,17 12,22 5,17 5,7"/></svg>
+                <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+                </svg>
                 <span className="nav-text">
                   <span>Datos de la Empresa</span> 
                   <span className={`caret-arrow ${openSubMenus.empresa ? 'open' : ''}`}>▾</span>
@@ -1180,37 +1186,40 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     onClick={() => { setStoreSettingsSubTab('profile'); setActiveTab('configuracion'); }} 
                     className={activeTab === 'configuracion' && storeSettingsSubTab === 'profile' ? 'active-link' : ''}
                   >
-                    Datos de la Empresa
+                    Perfil & Razón Social
                   </button>
                 </li>
                 <li>
                   <button 
                     onClick={() => { setStoreSettingsSubTab('appearance'); setActiveTab('configuracion'); }} 
-                    className={activeTab === 'configuracion' && storeSettingsSubTab === 'appearance' ? 'active-link font-bold text-[#D9381E]' : ''}
+                    className={`flex items-center gap-2 ${activeTab === 'configuracion' && storeSettingsSubTab === 'appearance' ? 'active-link font-bold text-[#D9381E]' : ''}`}
                   >
-                    Temas & Legibilidad
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z"/></svg>
+                    <span>Apariencia & Temas</span>
                   </button>
                 </li>
                 <li>
                   <button 
                     onClick={() => { setStoreSettingsSubTab('security'); setActiveTab('configuracion'); }} 
-                    className={activeTab === 'configuracion' && storeSettingsSubTab === 'security' ? 'active-link font-bold text-[#D9381E]' : 'text-[#D9381E] font-bold'}
+                    className={`flex items-center gap-2 ${activeTab === 'configuracion' && storeSettingsSubTab === 'security' ? 'active-link font-bold text-[#D9381E]' : ''}`}
                   >
-                    🛡️ Seguridad & MFA
+                    <svg className="w-3.5 h-3.5 shrink-0 opacity-80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                    <span>Seguridad & MFA</span>
                   </button>
                 </li>
                 <li>
                   <button 
                     onClick={() => { setStoreSettingsSubTab('email'); setActiveTab('configuracion'); }} 
-                    className={activeTab === 'configuracion' && storeSettingsSubTab === 'email' ? 'active-link font-bold text-[#1a73e8]' : 'text-[#1a73e8] font-bold'}
+                    className={`flex items-center gap-2 ${activeTab === 'configuracion' && storeSettingsSubTab === 'email' ? 'active-link font-bold' : ''}`}
                   >
-                    ✉️ Correo & Gmail
+                    <svg className="w-3.5 h-3.5 shrink-0 opacity-80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                    <span>Correo & Gmail</span>
                   </button>
                 </li>
                 <li>
                   <button 
                     onClick={() => setActiveTab('tienda_web' as any)} 
-                    className={activeTab === ('tienda_web' as any) ? 'active-link font-bold text-blue-600' : 'text-blue-600 font-bold'}
+                    className={activeTab === ('tienda_web' as any) ? 'active-link font-bold' : ''}
                   >
                     E-Commerce
                   </button>
@@ -1834,9 +1843,9 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
 
       {/* Main Content Area Wabi-Sabi (64px margin-left on Desktop for Admins, 0px for Operational Staff) */}
       <div className={`content-area main-content-wrapper ${isOperationalStaff ? 'ml-0' : 'ml-[64px]'} flex-1 flex flex-col min-h-screen bg-[#F6F4EE]`}>
-        {/* Top Header Zen */}
-        <header className="top-header-zen sticky top-0 z-40 bg-[#F6F4EE] border-b border-[#E2DFD7] px-4 md:px-8 py-3.5 flex items-center justify-between">
-          <div className="top-header-left-zen flex items-center gap-3 md:gap-8">
+        {/* Top Header Zen (Compacto 56px estilo Mockup) */}
+        <header className="top-header-zen sticky top-0 z-40 bg-[#F6F4EE] border-b border-[#E2DFD7] px-4 md:px-8 h-14 flex items-center justify-between">
+          <div className="top-header-left-zen flex items-center gap-3">
             {/* Botón Hamburguesa Móvil (Visible solo en md:hidden) */}
             <button 
               type="button"
@@ -1848,11 +1857,11 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             </button>
 
             <div className="top-header-brand-zen flex items-center">
-              <FrantLogo variant="floating" size={48} />
+              <FrantLogo variant="floating" size={32} />
             </div>
           </div>
 
-          <div className="top-header-right-zen flex items-center gap-4">
+          <div className="top-header-right-zen flex items-center gap-3">
             {/* Widget del Reloj de Turno en Vivo para la Versión de Escritorio (PC) (Solo Empleados) */}
             {isEmployeeSession && (
               <div 
@@ -1874,11 +1883,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
               onNavigateTab={(tab) => setActiveTab(tab as any)}
             />
 
-            <div className="h-7 w-[1px] bg-[#E2DFD7] hidden sm:block"></div>
-
-            {/* Store Switcher Dropdown (Módulo Multi-Sede) */}
+            {/* Store Switcher Dropdown (Módulo Multi-Sede sin emoji genérico, con icono vectorial del Mockup) */}
             {branches.length > 0 && (
-              <div className="relative">
+              <div className="relative flex items-center bg-white border border-[#E2DFD7] rounded-md px-3 py-1.5 gap-2 shadow-2xs">
+                <svg className="w-3.5 h-3.5 text-[#D9381E] shrink-0 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" />
+                </svg>
                 <select
                   value={clientId}
                   onChange={(e) => {
@@ -1890,12 +1900,12 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
                     }
                     window.location.reload();
                   }}
-                  className="bg-white border border-[#E2DFD7] rounded-[4px] px-3 py-1.5 text-xs font-bold text-[#161616] outline-none cursor-pointer"
-                  title="Cambiar de Sede / Puntos de Venta"
+                  className="bg-transparent border-0 text-xs font-bold text-[#161616] outline-none cursor-pointer pr-1"
+                  title="Cambiar de Sede / Punto de Venta"
                 >
                   {branches.map(b => (
                     <option key={b.id} value={b.id} className="bg-white text-[#161616] font-semibold">
-                      {b.is_main_branch ? '🏢' : '📍'} {b.branch_name || b.name} {b.is_main_branch ? '(Matriz)' : ''}
+                      {b.branch_name || b.name} {b.is_main_branch ? '(Matriz)' : '(Sede)'}
                     </option>
                   ))}
                 </select>
@@ -1906,19 +1916,17 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
             {isSuperAdminUser && (
               <button 
                 onClick={onBack}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] bg-[#161616] hover:bg-[#2C2A29] text-white shadow-sm transition cursor-pointer text-xs font-bold border-0"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#161616] hover:bg-[#2C2A29] text-white shadow-sm transition cursor-pointer text-xs font-bold border-0"
                 title="Regresar a la Consola General de Super Admin"
               >
-                <span className="material-symbols-outlined text-[16px] text-[#F39C12]">shield_person</span>
-                <span>👑 Panel Super Admin</span>
+                <svg className="w-3.5 h-3.5 text-[#F39C12]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+                <span>Panel Super Admin</span>
               </button>
             )}
 
-            {/* Reloj Oficial de la Sede / País */}
-            <HeaderBranchClock 
-              country={clientData?.country} 
-              timezone={clientData?.timezone} 
-            />
+            <div className="h-5 w-[1px] bg-[#E2DFD7] hidden sm:block"></div>
 
             {/* User Profile Badge & Dropdown Menu */}
             <div className="relative">

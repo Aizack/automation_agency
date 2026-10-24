@@ -1702,20 +1702,21 @@ label,
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 3.5rem;
+  height: 56px;
+  padding: 0 2rem;
   border-bottom: 1px solid var(--border-thin);
-  background-color: var(--bg-paper);
+  background-color: var(--bg-topbar, var(--bg-paper));
 }
 
 .top-header-left-zen {
   display: flex;
   align-items: center;
-  gap: 3rem;
+  gap: 1rem;
 }
 
 .top-header-brand-zen {
   font-family: var(--font-serif);
-  font-size: 2.2rem;
+  font-size: 1.5rem;
   letter-spacing: 0.02em;
   line-height: 1;
   color: var(--text-main);
@@ -1743,7 +1744,7 @@ label,
 .top-header-right-zen {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 0.75rem;
 }
 
 .tenant-indicator-zen {
@@ -1802,178 +1803,423 @@ label,
   border-radius: 2px;
 }
 
-
-
-
-
 /* ==========================================================================
-   FRANT ERP v2.6 — MOTOR DE TEMAS, TIPOGRAFÍA Y LEGIBILIDAD EN PORTÁTIL
-   (100% No-Destructivo: Preserva .sidebar-expandable y toda la lógica funcional)
+   FRANT ERP v2.7 — MOTOR CROMÁTICO DEL MOCKUP, TIPOGRAFÍA Y PORTÁTILES
    ========================================================================== */
 
-/* 1. TEMA 1: WABI-SABI WARM PAPER (REFINADO CON ALTO CONTRASTE) */
+.erp-surface-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-thin);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(20, 21, 24, 0.04), 0 6px 16px -4px rgba(20, 21, 24, 0.04);
+}
+
+/* 1. PALETA 1 (PREDETERMINADA DEL MOCKUP): WABI-SABI TITANIUM */
+:root,
+html[data-theme='wabi-titanium'] {
+  --bg-color: #F1EFEA;
+  --bg-paper: #F1EFEA;
+  --bg-topbar: #F7F5F0;
+  --bg-sidebar: #141519;
+  --text-sidebar: #F4F1EA;
+  --muted-sidebar: rgba(244, 241, 234, 0.62);
+  --border-sidebar: rgba(255, 255, 255, 0.09);
+  --bg-card: #FFFFFF;
+  --bg-secondary: #F7F5F0;
+  --text-color: #141518;
+  --text-main: #141518;
+  --text-muted: #3F3D38;
+  --border-thin: #DFDCD3;
+  --border-strong: #141518;
+  --koi-vermilion: #D9381E;
+  --koi-vermilion-hover: #b82b14;
+  --koi-vermilion-light: rgba(217, 56, 30, 0.14);
+}
+
+/* 2. PALETA 2: WABI-SABI PAPER (CLÁSICO CLARO) */
 html[data-theme='wabi-sabi-koi'],
-:root {
-  --bg-color: #F4F1EA;
-  --bg-paper: #F4F1EA;
+html[data-theme='wabi-paper'] {
+  --bg-color: #F6F4EE;
+  --bg-paper: #F6F4EE;
+  --bg-topbar: #FAF8F3;
+  --bg-sidebar: #F6F4EE;
+  --text-sidebar: #161616;
+  --muted-sidebar: #57544E;
+  --border-sidebar: #E2DFD7;
   --bg-card: #FFFFFF;
   --bg-secondary: #FAF8F3;
-  --text-color: #141413;
-  --text-main: #141413;
-  --text-muted: #3F3D38;
-  --border-thin: #DCD8CE;
-  --border-strong: #141413;
+  --text-color: #161616;
+  --text-main: #161616;
+  --text-muted: #3D3B37;
+  --border-thin: #E2DFD7;
+  --border-strong: #161616;
   --koi-vermilion: #D9381E;
   --koi-vermilion-hover: #b82b14;
   --koi-vermilion-light: rgba(217, 56, 30, 0.08);
 }
 
-/* 2. TEMA 2: SWISS DAYLIGHT STUDIO (ALTO CONTRASTE SOLAR PARA PORTÁTILES) */
+/* 3. PALETA 3: SWISS PLATINUM (GRIS PERLA & PIZARRA) */
+html[data-theme='swiss-platinum'],
 html[data-theme='swiss-daylight'] {
-  --bg-color: #F1F5F9;
-  --bg-paper: #F1F5F9;
+  --bg-color: #F3F4F6;
+  --bg-paper: #F3F4F6;
+  --bg-topbar: #FFFFFF;
+  --bg-sidebar: #0F172A;
+  --text-sidebar: #F8FAFC;
+  --muted-sidebar: #94A3B8;
+  --border-sidebar: rgba(255, 255, 255, 0.08);
   --bg-card: #FFFFFF;
   --bg-secondary: #F8FAFC;
   --text-color: #0F172A;
   --text-main: #0F172A;
   --text-muted: #334155;
-  --border-thin: #CBD5E1;
+  --border-thin: #E2E8F0;
   --border-strong: #0F172A;
   --koi-vermilion: #E11D48;
   --koi-vermilion-hover: #BE123C;
-  --koi-vermilion-light: rgba(225, 29, 72, 0.08);
-  --primary-color: #E11D48;
-  --surface-val: #FFFFFF;
-  --surface-container-val: #F8FAFC;
-  --surface-container-low-val: #FFFFFF;
-  --on-surface-val: #0F172A;
-  --on-surface-variant-val: #334155;
+  --koi-vermilion-light: rgba(225, 29, 72, 0.14);
 }
 
-html[data-theme='swiss-daylight'] .content-area,
-html[data-theme='swiss-daylight'] .top-header-zen,
-html[data-theme='swiss-daylight'] .sidebar-expandable {
-  background-color: #F1F5F9 !important;
-  border-color: #CBD5E1 !important;
+/* 4. PALETA 4: KYOTO ESPRESSO & TERRACOTTA */
+html[data-theme='kyoto-espresso'] {
+  --bg-color: #EFECE6;
+  --bg-paper: #EFECE6;
+  --bg-topbar: #F7F5F0;
+  --bg-sidebar: #171412;
+  --text-sidebar: #F5F2EB;
+  --muted-sidebar: rgba(245, 242, 235, 0.6);
+  --border-sidebar: rgba(255, 255, 255, 0.08);
+  --bg-card: #FFFFFF;
+  --bg-secondary: #F7F5F0;
+  --text-color: #181614;
+  --text-main: #181614;
+  --text-muted: #4A453E;
+  --border-thin: #D8D2C5;
+  --border-strong: #181614;
+  --koi-vermilion: #C2410C;
+  --koi-vermilion-hover: #9A3412;
+  --koi-vermilion-light: rgba(194, 65, 12, 0.14);
 }
 
-html[data-theme='swiss-daylight'] .content-area .bg-\[\#F6F4EE\],
-html[data-theme='swiss-daylight'] .content-area .bg-\[\#FAF8F3\],
-html[data-theme='swiss-daylight'] .content-area .bg-\[\#FAF8F5\] {
-  background-color: #F8FAFC !important;
+/* 5. PALETA 5: ALPINE EMERALD & IVORY */
+html[data-theme='bottega-emerald'] {
+  --bg-color: #F3F2EE;
+  --bg-paper: #F3F2EE;
+  --bg-topbar: #F9F8F6;
+  --bg-sidebar: #0A1914;
+  --text-sidebar: #ECFDF5;
+  --muted-sidebar: rgba(236, 253, 245, 0.62);
+  --border-sidebar: rgba(255, 255, 255, 0.09);
+  --bg-card: #FFFFFF;
+  --bg-secondary: #F7F6F2;
+  --text-color: #111815;
+  --text-main: #111815;
+  --text-muted: #374740;
+  --border-thin: #DDD9CE;
+  --border-strong: #111815;
+  --koi-vermilion: #0D9488;
+  --koi-vermilion-hover: #0F766E;
+  --koi-vermilion-light: rgba(13, 148, 136, 0.16);
 }
 
-html[data-theme='swiss-daylight'] .content-area .border-\[\#E2DFD7\] {
-  border-color: #CBD5E1 !important;
-}
-
-/* 3. TEMA 3: OBSIDIAN PRECISION (MODO OSCURO TÉCNICO ANTI-FATIGA) */
+/* 6. PALETA 6: OBSIDIAN PRO (MODO OSCURO EXACTO DEL MOCKUP) */
+html[data-theme='obsidian-pro'],
 html[data-theme='obsidian-precision'] {
-  --bg-color: #0C0E12;
-  --bg-paper: #0C0E12;
-  --bg-card: #14171F;
-  --bg-secondary: #1A1E28;
+  --bg-color: #0B0C0F;
+  --bg-paper: #0B0C0F;
+  --bg-topbar: #111318;
+  --bg-sidebar: #07080A;
+  --text-sidebar: #F3F4F6;
+  --muted-sidebar: #9CA3AF;
+  --border-sidebar: rgba(255, 255, 255, 0.08);
+  --bg-card: #13161C;
+  --bg-secondary: #191D24;
   --text-color: #F3F4F6;
   --text-main: #F3F4F6;
-  --text-muted: #9CA3AF;
-  --border-thin: #262B38;
+  --text-muted: #D1D5DB;
+  --border-thin: rgba(255, 255, 255, 0.09);
   --border-strong: #F3F4F6;
-  --koi-vermilion: #FF4425;
+  --koi-vermilion: #FF3B1D;
   --koi-vermilion-hover: #E02D10;
-  --koi-vermilion-light: rgba(255, 68, 37, 0.14);
-  --primary-color: #FF4425;
-  --surface-val: #14171F;
-  --surface-container-val: #1A1E28;
-  --surface-container-low-val: #14171F;
-  --on-surface-val: #F3F4F6;
-  --on-surface-variant-val: #9CA3AF;
+  --koi-vermilion-light: rgba(255, 59, 29, 0.15);
 }
 
+/* ==========================================================================
+   VINCULACIÓN DEL SIDEBAR EXPANDIBLE CON LAS PALETAS DEL MOCKUP
+   ========================================================================== */
+.sidebar-expandable {
+  background-color: var(--bg-sidebar, var(--bg-paper)) !important;
+  color: var(--text-sidebar, var(--text-main)) !important;
+  border-right: 1px solid var(--border-sidebar, var(--border-thin)) !important;
+}
+
+.sidebar-expandable:hover {
+  border-right: 1px solid var(--koi-vermilion) !important;
+  box-shadow: 14px 0 36px rgba(0, 0, 0, 0.18) !important;
+}
+
+.sidebar-expandable .sidebar-brand,
+.sidebar-expandable .sidebar-footer {
+  border-color: var(--border-sidebar, var(--border-thin)) !important;
+}
+
+.sidebar-expandable .brand-avatar {
+  background-color: var(--koi-vermilion) !important;
+  color: #FFFFFF !important;
+  border-radius: 6px !important;
+}
+
+.sidebar-expandable .brand-name {
+  color: var(--text-sidebar, var(--text-main)) !important;
+  font-family: "Space Grotesk", var(--font-sans) !important;
+  font-weight: 700 !important;
+  font-size: 1.05rem !important;
+}
+
+.sidebar-expandable .brand-sub {
+  color: var(--koi-vermilion) !important;
+}
+
+.sidebar-expandable .nav-item-btn {
+  color: var(--text-sidebar, var(--text-main)) !important;
+}
+
+.sidebar-expandable .nav-icon {
+  stroke: var(--text-sidebar, var(--text-main)) !important;
+}
+
+.sidebar-expandable .nav-item-btn:hover,
+.sidebar-expandable .nav-item-btn.active {
+  background-color: var(--koi-vermilion-light) !important;
+  color: var(--koi-vermilion) !important;
+}
+
+.sidebar-expandable .nav-item-btn:hover .nav-icon,
+.sidebar-expandable .nav-item-btn.active .nav-icon {
+  stroke: var(--koi-vermilion) !important;
+}
+
+.sidebar-expandable .sub-menu button,
+.sidebar-expandable .sub-menu a {
+  color: var(--muted-sidebar, var(--text-muted)) !important;
+}
+
+.sidebar-expandable .sub-menu button:hover,
+.sidebar-expandable .sub-menu button.active-link {
+  color: var(--koi-vermilion) !important;
+}
+
+/* ==========================================================================
+   SINCRONIZACIÓN DE SUPERFICIES EN TEMAS CLAROS (Wabi-Titanium, Swiss, Kyoto, Alpine)
+   ========================================================================== */
+.content-area {
+  background-color: var(--bg-color) !important;
+  color: var(--text-main) !important;
+}
+
+.top-header-zen {
+  background-color: var(--bg-topbar, var(--bg-color)) !important;
+  border-color: var(--border-thin) !important;
+}
+
+.content-area .bg-\[\#F6F4EE\] {
+  background-color: var(--bg-color) !important;
+}
+
+.content-area .bg-\[\#FAF8F3\],
+.content-area .bg-\[\#FAF8F5\] {
+  background-color: var(--bg-secondary) !important;
+}
+
+.content-area .border-\[\#E2DFD7\] {
+  border-color: var(--border-thin) !important;
+}
+
+/* ==========================================================================
+   CORRECCIÓN PROFUNDA DE OBSIDIAN PRO (MODO OSCURO — CERO FILAS BLANCAS EN HOVER)
+   ========================================================================== */
+html[data-theme='obsidian-pro'] .content-area,
 html[data-theme='obsidian-precision'] .content-area,
-html[data-theme='obsidian-precision'] .top-header-zen,
-html[data-theme='obsidian-precision'] .sidebar-expandable {
-  background-color: #0C0E12 !important;
-  color: #F3F4F6 !important;
-  border-color: #262B38 !important;
+html[data-theme='obsidian-pro'] .top-header-zen,
+html[data-theme='obsidian-precision'] .top-header-zen {
+  background-color: var(--bg-color) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-thin) !important;
 }
 
+html[data-theme='obsidian-pro'] .top-header-zen,
+html[data-theme='obsidian-precision'] .top-header-zen {
+  background-color: var(--bg-topbar) !important;
+}
+
+html[data-theme='obsidian-pro'] .content-area .bg-white,
 html[data-theme='obsidian-precision'] .content-area .bg-white,
-html[data-theme='obsidian-precision'] .content-area .bg-\[\#FFFFFF\] {
-  background-color: #14171F !important;
-  color: #F3F4F6 !important;
+html[data-theme='obsidian-pro'] .content-area .bg-\[\#FFFFFF\],
+html[data-theme='obsidian-precision'] .content-area .bg-\[\#FFFFFF\],
+html[data-theme='obsidian-pro'] .top-header-zen .bg-white,
+html[data-theme='obsidian-precision'] .top-header-zen .bg-white {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
 }
 
+html[data-theme='obsidian-pro'] .content-area .bg-\[\#F6F4EE\],
 html[data-theme='obsidian-precision'] .content-area .bg-\[\#F6F4EE\],
+html[data-theme='obsidian-pro'] .content-area .bg-\[\#FAF8F3\],
 html[data-theme='obsidian-precision'] .content-area .bg-\[\#FAF8F3\],
-html[data-theme='obsidian-precision'] .content-area .bg-\[\#FAF8F5\] {
-  background-color: #1A1E28 !important;
+html[data-theme='obsidian-pro'] .content-area .bg-\[\#FAF8F5\],
+html[data-theme='obsidian-precision'] .content-area .bg-\[\#FAF8F5\],
+html[data-theme='obsidian-pro'] .content-area .bg-\[\#EAE6DF\],
+html[data-theme='obsidian-precision'] .content-area .bg-\[\#EAE6DF\] {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-main) !important;
+}
+
+/* Fix crítico: Hover en filas de tablas y botones en modo oscuro (Evita que F-1002 se ponga blanca) */
+html[data-theme='obsidian-pro'] .content-area tr:hover,
+html[data-theme='obsidian-precision'] .content-area tr:hover,
+html[data-theme='obsidian-pro'] .content-area .hover\:bg-\[\#FAF8F5\]:hover,
+html[data-theme='obsidian-precision'] .content-area .hover\:bg-\[\#FAF8F5\]:hover,
+html[data-theme='obsidian-pro'] .content-area .hover\:bg-\[\#FAF8F3\]:hover,
+html[data-theme='obsidian-precision'] .content-area .hover\:bg-\[\#FAF8F3\]:hover,
+html[data-theme='obsidian-pro'] .content-area .hover\:bg-red-50:hover,
+html[data-theme='obsidian-precision'] .content-area .hover\:bg-red-50:hover {
+  background-color: #1E232D !important;
   color: #F3F4F6 !important;
 }
 
-html[data-theme='obsidian-precision'] .content-area .text-\[\#161616\] {
+html[data-theme='obsidian-pro'] .content-area .text-\[\#161616\],
+html[data-theme='obsidian-precision'] .content-area .text-\[\#161616\],
+html[data-theme='obsidian-pro'] .content-area .text-\[\#161616\]\/80,
+html[data-theme='obsidian-precision'] .content-area .text-\[\#161616\]\/80,
+html[data-theme='obsidian-pro'] .top-header-zen .text-\[\#161616\],
+html[data-theme='obsidian-precision'] .top-header-zen .text-\[\#161616\] {
   color: #F3F4F6 !important;
 }
 
+html[data-theme='obsidian-pro'] .content-area .text-\[\#6B6862\],
 html[data-theme='obsidian-precision'] .content-area .text-\[\#6B6862\],
-html[data-theme='obsidian-precision'] .content-area .text-\[\#3F3D38\] {
+html[data-theme='obsidian-pro'] .content-area .text-\[\#3F3D38\],
+html[data-theme='obsidian-precision'] .content-area .text-\[\#3F3D38\],
+html[data-theme='obsidian-pro'] .top-header-zen .text-\[\#6B6862\],
+html[data-theme='obsidian-precision'] .top-header-zen .text-\[\#6B6862\] {
   color: #9CA3AF !important;
 }
 
-html[data-theme='obsidian-precision'] .content-area .border-\[\#E2DFD7\] {
-  border-color: #262B38 !important;
+html[data-theme='obsidian-pro'] .content-area .border-\[\#E2DFD7\],
+html[data-theme='obsidian-precision'] .content-area .border-\[\#E2DFD7\],
+html[data-theme='obsidian-pro'] .content-area .border-\[\#161616\],
+html[data-theme='obsidian-precision'] .content-area .border-\[\#161616\],
+html[data-theme='obsidian-pro'] .top-header-zen .border-\[\#E2DFD7\],
+html[data-theme='obsidian-precision'] .top-header-zen .border-\[\#E2DFD7\] {
+  border-color: rgba(255, 255, 255, 0.11) !important;
 }
 
+html[data-theme='obsidian-pro'] .content-area .divide-\[\#E2DFD7\] > :not([hidden]) ~ :not([hidden]),
+html[data-theme='obsidian-precision'] .content-area .divide-\[\#E2DFD7\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-theme='obsidian-pro'] .content-area input,
 html[data-theme='obsidian-precision'] .content-area input,
+html[data-theme='obsidian-pro'] .content-area select,
 html[data-theme='obsidian-precision'] .content-area select,
+html[data-theme='obsidian-pro'] .content-area textarea,
 html[data-theme='obsidian-precision'] .content-area textarea {
-  background-color: #1A1E28 !important;
+  background-color: #191D24 !important;
   color: #F3F4F6 !important;
-  border-color: #2E3444 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-/* 4. MOTOR DE COMBINACIÓN TIPOGRÁFICA (ELIMINACIÓN DEL FALSO BOLD DE INSTRUMENT SERIF) */
-html[data-font-pair='jakarta'] h1,
-html[data-font-pair='jakarta'] h2,
-html[data-font-pair='jakarta'] h3,
-html[data-font-pair='jakarta'] h4,
-html[data-font-pair='jakarta'] h5,
-html[data-font-pair='jakarta'] h6,
-html[data-font-pair='jakarta'] .content-area .font-serif {
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif !important;
+html[data-theme='obsidian-pro'] .content-area select option,
+html[data-theme='obsidian-precision'] .content-area select option,
+html[data-theme='obsidian-pro'] .top-header-zen select option,
+html[data-theme='obsidian-precision'] .top-header-zen select option {
+  background-color: #13161C !important;
+  color: #F3F4F6 !important;
+}
+
+/* Badges de estado en modo oscuro con contraste limpio estilo Mockup */
+html[data-theme='obsidian-pro'] .content-area .bg-\[\#E6F4EA\],
+html[data-theme='obsidian-precision'] .content-area .bg-\[\#E6F4EA\] {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+  color: #34D399 !important;
+  border-color: rgba(52, 211, 153, 0.32) !important;
+}
+
+html[data-theme='obsidian-pro'] .content-area .text-\[\#14532D\],
+html[data-theme='obsidian-precision'] .content-area .text-\[\#14532D\],
+html[data-theme='obsidian-pro'] .content-area .text-\[\#1E4620\],
+html[data-theme='obsidian-precision'] .content-area .text-\[\#1E4620\] {
+  color: #34D399 !important;
+}
+
+html[data-theme='obsidian-pro'] .content-area .bg-\[\#FEF7E0\],
+html[data-theme='obsidian-precision'] .content-area .bg-\[\#FEF7E0\] {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+  color: #FBBF24 !important;
+  border-color: rgba(251, 191, 36, 0.32) !important;
+}
+
+/* ==========================================================================
+   SISTEMA DE COMBINACIÓN DE FUENTES DEL MOCKUP (3-TIER TYPOGRAPHY)
+   ========================================================================== */
+
+/* Combinación 1 (Predeterminada del Mockup): Space Grotesk (Títulos y KPIs) + Plus Jakarta Sans (Tablas/UI) */
+html[data-font-pair='industrial'] h1,
+html[data-font-pair='industrial'] h2,
+html[data-font-pair='industrial'] h3,
+html[data-font-pair='industrial'] .content-area .font-serif,
+html:not([data-font-pair]) h1,
+html:not([data-font-pair]) h2,
+html:not([data-font-pair]) h3,
+html:not([data-font-pair]) .content-area .font-serif {
+  font-family: "Space Grotesk", system-ui, sans-serif !important;
   font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
+  font-style: normal !important;
+  letter-spacing: -0.025em !important;
 }
 
-html[data-font-pair='editorial'] h1,
-html[data-font-pair='editorial'] h2,
-html[data-font-pair='editorial'] h3,
-html[data-font-pair='editorial'] .content-area .font-serif {
-  font-family: "Instrument Serif", Georgia, serif !important;
-  font-weight: 400 !important; /* Peso nativo real 400: cero empastado sintético */
-  letter-spacing: -0.01em !important;
-}
-
-html[data-font-pair='editorial'] h4,
-html[data-font-pair='editorial'] h5,
-html[data-font-pair='editorial'] h6 {
-  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif !important;
+html[data-font-pair='industrial'] h4,
+html[data-font-pair='industrial'] h5,
+html[data-font-pair='industrial'] h6 {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif !important;
   font-weight: 700 !important;
   letter-spacing: -0.015em !important;
 }
 
-html[data-font-pair='industrial'] h1,
-html[data-font-pair='industrial'] h2,
-html[data-font-pair='industrial'] h3,
-html[data-font-pair='industrial'] h4,
-html[data-font-pair='industrial'] h5,
-html[data-font-pair='industrial'] h6,
-html[data-font-pair='industrial'] .content-area .font-serif {
-  font-family: "Space Grotesk", system-ui, sans-serif !important;
+/* Combinación 2: Editorial Calibrada (Instrument Serif 400 en títulos principales + Space Grotesk en KPIs + Jakarta en tablas) */
+html[data-font-pair='editorial-calibrated'] h1,
+html[data-font-pair='editorial-calibrated'] h2,
+html[data-font-pair='editorial-calibrated'] h3,
+html[data-font-pair='editorial-calibrated'] .content-area .font-serif {
+  font-family: "Instrument Serif", Georgia, serif !important;
+  font-weight: 400 !important;
+  letter-spacing: 0em !important;
+}
+
+html[data-font-pair='editorial-calibrated'] .content-area .font-serif.font-mono {
+  font-family: "Space Grotesk", monospace !important;
   font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Combinación 3: 100% Plus Jakarta Sans Geometric */
+html[data-font-pair='swiss-clean'] h1,
+html[data-font-pair='swiss-clean'] h2,
+html[data-font-pair='swiss-clean'] h3,
+html[data-font-pair='swiss-clean'] h4,
+html[data-font-pair='swiss-clean'] h5,
+html[data-font-pair='swiss-clean'] h6,
+html[data-font-pair='swiss-clean'] .content-area .font-serif {
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif !important;
+  font-weight: 700 !important;
+  font-style: normal !important;
   letter-spacing: -0.025em !important;
 }
 
-/* 5. MOTOR DE LEGIBILIDAD EN PORTÁTIL (INTERCEPTA CLASES FIJAS DE 9px/10px/11px) */
+/* ==========================================================================
+   MOTOR DE LEGIBILIDAD EN PORTÁTIL (INTERCEPTA CLASES FIJAS DE 9px/10px/11px)
+   ========================================================================== */
 html[data-scale='standard'] {
   font-size: 106%;
 }
@@ -1988,7 +2234,7 @@ html[data-scale='standard'] .content-area .text-\[10px\] {
 
 html[data-scale='comfort'],
 html:not([data-scale]) {
-  font-size: 115%;
+  font-size: 114%;
 }
 html[data-scale='comfort'] .content-area .text-\[9px\],
 html:not([data-scale]) .content-area .text-\[9px\] {
@@ -2022,7 +2268,7 @@ html[data-scale='max'] .content-area .text-\[11px\] {
   line-height: 1.5 !important;
 }
 
-/* Mejora de contraste para descripciones secundarias en tablas y formularios */
+/* Contraste reforzado para descripciones secundarias en tablas y formularios */
 .content-area .text-\[\#6B6862\] {
   color: var(--text-muted) !important;
 }

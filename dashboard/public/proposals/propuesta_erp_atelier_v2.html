@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frant ERP Atelier v2.7 — Laboratorio de Paletas, Fuentes, Barra Superior 56px e Iconografía</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root,
+    [data-erp-palette="wabi-titanium"] {
+      --bg-canvas: #F1EFEA;
+      --bg-topbar: #F7F5F0;
+      --bg-sidebar: #141519;
+      --text-sidebar: #F4F1EA;
+      --muted-sidebar: rgba(244, 241, 234, 0.58);
+      --border-sidebar: rgba(255, 255, 255, 0.09);
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F7F5F0;
+      --row-hover: #F3EFE7;
+      --text-main: #141518;
+      --text-secondary: #3F3D38;
+      --text-muted: #5C5952;
+      --border-card: #DFDCD3;
+      --accent-primary: #D9381E;
+      --accent-soft: rgba(217, 56, 30, 0.14);
+      --status-ok: #0F766E;
+      --status-ok-bg: #E6F4EA;
+      --status-ok-border: #A8DADC;
+    }
+
+    [data-erp-palette="obsidian-pro"] {
+      --bg-canvas: #0B0C0F;
+      --bg-topbar: #111318;
+      --bg-sidebar: #07080A;
+      --text-sidebar: #F3F4F6;
+      --muted-sidebar: #9CA3AF;
+      --border-sidebar: rgba(255, 255, 255, 0.08);
+      --bg-card: #13161C;
+      --bg-subtle: #191D24;
+      --row-hover: #1E232D;
+      --text-main: #F3F4F6;
+      --text-secondary: #D1D5DB;
+      --text-muted: #9CA3AF;
+      --border-card: rgba(255, 255, 255, 0.09);
+      --accent-primary: #FF3B1D;
+      --accent-soft: rgba(255, 59, 29, 0.15);
+      --status-ok: #34D399;
+      --status-ok-bg: rgba(16, 185, 129, 0.16);
+      --status-ok-border: rgba(52, 211, 153, 0.32);
+    }
+
+    [data-erp-palette="wabi-paper"] {
+      --bg-canvas: #F6F4EE;
+      --bg-topbar: #FAF8F3;
+      --bg-sidebar: #F6F4EE;
+      --text-sidebar: #161616;
+      --muted-sidebar: #57544E;
+      --border-sidebar: #E2DFD7;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #FAF8F3;
+      --row-hover: #F5F2EA;
+      --text-main: #161616;
+      --text-secondary: #3D3B37;
+      --text-muted: #5A5751;
+      --border-card: #E2DFD7;
+      --accent-primary: #D9381E;
+      --accent-soft: rgba(217, 56, 30, 0.09);
+      --status-ok: #1E4620;
+      --status-ok-bg: #E6F4EA;
+      --status-ok-border: #A8DADC;
+    }
+
+    [data-erp-palette="swiss-platinum"] {
+      --bg-canvas: #F3F4F6;
+      --bg-topbar: #FFFFFF;
+      --bg-sidebar: #0F172A;
+      --text-sidebar: #F8FAFC;
+      --muted-sidebar: #94A3B8;
+      --border-sidebar: rgba(255, 255, 255, 0.08);
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F8FAFC;
+      --row-hover: #F1F5F9;
+      --text-main: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #475569;
+      --border-card: #E2E8F0;
+      --accent-primary: #E11D48;
+      --accent-soft: rgba(225, 29, 72, 0.14);
+      --status-ok: #065F46;
+      --status-ok-bg: #D1FAE5;
+      --status-ok-border: #6EE7B7;
+    }
+
+    [data-erp-palette="kyoto-espresso"] {
+      --bg-canvas: #EFECE6;
+      --bg-topbar: #F7F5F0;
+      --bg-sidebar: #171412;
+      --text-sidebar: #F5F2EB;
+      --muted-sidebar: rgba(245, 242, 235, 0.6);
+      --border-sidebar: rgba(255, 255, 255, 0.08);
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F7F5F0;
+      --row-hover: #F2EFE8;
+      --text-main: #181614;
+      --text-secondary: #4A453E;
+      --text-muted: #665F56;
+      --border-card: #D8D2C5;
+      --accent-primary: #C2410C;
+      --accent-soft: rgba(194, 65, 12, 0.15);
+      --status-ok: #0F766E;
+      --status-ok-bg: #E6F4EA;
+      --status-ok-border: #A8DADC;
+    }
+
+    [data-erp-palette="bottega-emerald"] {
+      --bg-canvas: #F3F2EE;
+      --bg-topbar: #F9F8F6;
+      --bg-sidebar: #0A1914;
+      --text-sidebar: #ECFDF5;
+      --muted-sidebar: rgba(236, 253, 245, 0.6);
+      --border-sidebar: rgba(255, 255, 255, 0.09);
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F7F6F2;
+      --row-hover: #EEF5F2;
+      --text-main: #111815;
+      --text-secondary: #374740;
+      --text-muted: #52635B;
+      --border-card: #DDD9CE;
+      --accent-primary: #0D9488;
+      --accent-soft: rgba(13, 148, 136, 0.16);
+      --status-ok: #065F46;
+      --status-ok-bg: #D1FAE5;
+      --status-ok-border: #6EE7B7;
+    }
+
+    [data-erp-fonts="industrial"] {
+      --font-heading-h1: 'Space Grotesk', sans-serif;
+      --font-heading-h1-weight: 700;
+      --font-heading-h1-tracking: -0.025em;
+      --font-subheadings: 'Plus Jakarta Sans', sans-serif;
+      --font-kpi: 'Space Grotesk', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
+    }
+
+    [data-erp-fonts="editorial-calibrated"] {
+      --font-heading-h1: 'Instrument Serif', Georgia, serif;
+      --font-heading-h1-weight: 400;
+      --font-heading-h1-tracking: 0em;
+      --font-subheadings: 'Plus Jakarta Sans', sans-serif;
+      --font-kpi: 'Space Grotesk', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
+    }
+
+    [data-erp-fonts="swiss-clean"] {
+      --font-heading-h1: 'Plus Jakarta Sans', sans-serif;
+      --font-heading-h1-weight: 700;
+      --font-heading-h1-tracking: -0.03em;
+      --font-subheadings: 'Plus Jakarta Sans', sans-serif;
+      --font-kpi: 'Plus Jakarta Sans', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      margin: 0;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+    .erp-h1 { font-family: var(--font-heading-h1); font-weight: var(--font-heading-h1-weight); letter-spacing: var(--font-heading-h1-tracking); }
+    .erp-subheading { font-family: var(--font-subheadings); font-weight: 700; letter-spacing: -0.015em; }
+    .erp-kpi-number { font-family: var(--font-kpi); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .erp-mono { font-family: var(--font-code); font-variant-numeric: tabular-nums; }
+    .erp-card { background-color: var(--bg-card); border: 1px solid var(--border-card); border-radius: 8px; }
+    .erp-row:hover { background-color: var(--row-hover); }
+
+    .sidebar-expandable {
+      width: 64px;
+      height: calc(100vh - 48px);
+      background-color: var(--bg-sidebar);
+      color: var(--text-sidebar);
+      border-right: 1px solid var(--border-sidebar);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 48px;
+      left: 0;
+      z-index: 100;
+      padding: 1rem 0;
+      transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
+      overflow: hidden !important;
+      white-space: nowrap;
+    }
+    .sidebar-expandable:hover {
+      width: 285px;
+      box-shadow: 14px 0 36px rgba(0,0,0,0.22);
+      border-right: 1px solid var(--accent-primary);
+      overflow-y: auto !important;
+    }
+    .sidebar-expandable:not(:hover) .hide-collapsed { display: none !important; opacity: 0; }
+    .sidebar-expandable:hover .hide-collapsed { display: flex !important; opacity: 1; }
+    .sidebar-expandable:hover .hide-collapsed-block { display: block !important; opacity: 1; }
+    .sidebar-expandable:not(:hover) .hide-collapsed-block { display: none !important; opacity: 0; }
+  </style>
+</head>
+<body data-erp-palette="wabi-titanium" data-erp-fonts="industrial">
+
+  <!-- Barra de Control del Laboratorio -->
+  <div class="sticky top-0 z-[120] h-12 bg-[#090A0D] text-white border-b border-white/15 px-4 flex items-center justify-between text-xs">
+    <div class="flex items-center gap-2">
+      <span class="px-2 py-0.5 rounded bg-[#D9381E] text-[10px] font-mono font-bold">LABORATORIO v2.7</span>
+      <button onclick="switchView('settings')" id="btn-view-settings" class="px-3 py-1 rounded-md font-mono text-[11px] bg-white text-black font-bold cursor-pointer">
+        1. Temas (6 Paletas) & Combinaciones de Fuentes
+      </button>
+      <button onclick="switchView('invoices')" id="btn-view-invoices" class="px-3 py-1 rounded-md font-mono text-[11px] bg-white/10 hover:bg-white/20 text-white cursor-pointer">
+        2. Vista Facturación & Tabla (Hover Oscuro Corregido + Sin Reloj + Sin Emojis)
+      </button>
+    </div>
+    <div class="hidden lg:flex items-center gap-3 font-mono text-[11px] text-white/70">
+      <span>✓ Barra Superior 56px sin Reloj</span>
+      <span>•</span>
+      <span>✓ Selector de Sedes con SVG</span>
+    </div>
+  </div>
+
+  <!-- Sidebar Expandible Exacto -->
+  <aside class="sidebar-expandable">
+    <div class="px-3 pb-4 mb-2 border-b flex items-center gap-3.5" style="border-color: var(--border-sidebar);">
+      <div class="w-10 h-10 min-w-[40px] rounded-md text-white font-bold text-xs flex items-center justify-center tracking-wider" style="background-color: var(--accent-primary);">
+        HO
+      </div>
+      <div class="hide-collapsed-block overflow-hidden">
+        <div class="erp-h1 text-lg leading-tight truncate">Hoshi Services</div>
+        <div class="erp-mono text-[10px] uppercase tracking-[0.15em] font-bold mt-0.5 flex items-center gap-1.5" style="color: var(--accent-primary);">
+          <span class="w-1.5 h-1.5 rounded-full" style="background-color: var(--accent-primary);"></span>
+          <span>Empresa Matriz</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-2 space-y-1 flex-1">
+      <div>
+        <button onclick="switchView('settings')" class="w-full flex items-center gap-3.5 px-2.5 py-2.5 rounded-md text-xs font-semibold cursor-pointer" style="background-color: var(--accent-soft); color: var(--accent-primary);">
+          <svg class="w-5 h-5 min-w-[20px] ml-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          <div class="hide-collapsed justify-between items-center w-full">
+            <span>Datos de la Empresa</span>
+            <span class="text-[10px]">▴</span>
+          </div>
+        </button>
+        <div class="hide-collapsed-block pl-11 pr-2 py-2 space-y-2 text-xs" style="color: var(--muted-sidebar);">
+          <div class="cursor-pointer">Perfil & Razón Social</div>
+          <div onclick="switchView('settings')" class="cursor-pointer font-bold flex items-center gap-2" style="color: var(--accent-primary);">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z"/></svg>
+            <span>Apariencia & Temas</span>
+          </div>
+          <div class="cursor-pointer flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+            <span>Seguridad & MFA</span>
+          </div>
+          <div class="cursor-pointer flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+            <span>Correo & Gmail</span>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="switchView('invoices')" class="w-full flex items-center gap-3.5 px-2.5 py-2.5 rounded-md text-xs font-medium opacity-80 hover:opacity-100 cursor-pointer">
+        <svg class="w-5 h-5 min-w-[20px] ml-0.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+        <span class="hide-collapsed">Facturación POS & DIAN</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="pl-16 min-h-[calc(100vh-48px)] flex flex-col">
+    <!-- BARRA SUPERIOR DE 56PX (SIN RELOJ Y CON SELECTOR DE SEDE VECTORIAL) -->
+    <header class="h-14 px-8 border-b flex items-center justify-between sticky top-12 z-40" style="background-color: var(--bg-topbar); border-color: var(--border-card);">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded bg-[#161616] text-white flex items-center justify-center font-bold text-xs">
+          F<span class="w-1.5 h-1.5 rounded-full ml-0.5" style="background-color: var(--accent-primary);"></span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 text-xs">
+        <!-- Campana de Notificaciones -->
+        <button class="w-8 h-8 rounded-md flex items-center justify-center hover:bg-black/5 cursor-pointer" style="color: var(--text-main);">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+        </button>
+
+        <!-- Selector de Sedes sin emoji 🏢, con SVG arquitectónico del Mockup -->
+        <div class="erp-card px-3 py-1.5 flex items-center gap-2 font-bold">
+          <svg class="w-3.5 h-3.5 shrink-0" style="color: var(--accent-primary);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/></svg>
+          <span>Hoshi Services (Matriz)</span>
+          <span class="opacity-50 text-[10px]">▾</span>
+        </div>
+
+        <div class="h-5 w-[1px]" style="background-color: var(--border-card);"></div>
+
+        <!-- Perfil de Usuario -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-[#161616] text-white flex items-center justify-center font-bold text-xs">H</div>
+          <div class="hidden sm:block">
+            <div class="font-bold text-xs leading-none">Hoshi Diaz</div>
+            <div class="erp-mono text-[10px] mt-0.5" style="color: var(--text-muted);">ADMINISTRADOR DE TIENDA ▾</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- VISTA 1: TEMAS Y FUENTES -->
+    <main id="view-settings" class="p-8 max-w-[1380px] w-full mx-auto space-y-6">
+      <div>
+        <span class="erp-mono text-[11px] uppercase tracking-[0.18em] font-bold" style="color: var(--accent-primary);">CONFIGURACIÓN LEGAL, SEGURIDAD & APARIENCIA</span>
+        <h1 class="erp-h1 text-3xl sm:text-4xl mt-0.5">Información & Seguridad de la Empresa</h1>
+        <p class="text-sm mt-1" style="color: var(--text-secondary);">Administra los datos comerciales, logotipos, facturación DIAN y la paleta visual de tu estación de trabajo.</p>
+      </div>
+
+      <!-- Pestañas con Iconos Vectoriales Finos -->
+      <div class="flex flex-wrap items-center gap-6 border-b text-xs font-semibold pt-2" style="border-color: var(--border-card);">
+        <button class="pb-3.5 border-b-2 border-transparent flex items-center gap-2 opacity-65">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35"/></svg>
+          <span>Perfil Comercial & Razón Social</span>
+        </button>
+        <button class="pb-3.5 border-b-2 border-transparent flex items-center gap-2 opacity-65">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          <span>Seguridad & Autenticación (MFA)</span>
+        </button>
+        <button class="pb-3.5 border-b-2 border-transparent flex items-center gap-2 opacity-65">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75"/></svg>
+          <span>Canales de Correo (Gmail)</span>
+        </button>
+        <button class="pb-3.5 border-b-2 flex items-center gap-2 font-bold" style="border-color: var(--accent-primary); color: var(--accent-primary);">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072"/></svg>
+          <span>Apariencia, Temas & Legibilidad</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] erp-mono text-white" style="background-color: var(--accent-primary);">6 PALETAS</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div class="lg:col-span-8 space-y-6">
+          <div class="erp-card p-7 space-y-5">
+            <div class="border-b pb-4 flex items-center justify-between" style="border-color: var(--border-card);">
+              <div>
+                <h2 class="erp-subheading text-lg">1. Tema Visual & Paleta del Espacio de Trabajo (6 Combinaciones)</h2>
+                <p class="text-xs mt-0.5" style="color: var(--text-secondary);">Haz clic en cualquiera de las 6 paletas para probarla en vivo sobre la barra superior, el sidebar y las tablas.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div onclick="setPalette('wabi-titanium')" class="p-4 rounded-lg border-2 cursor-pointer space-y-3" style="border-color: var(--accent-primary); background-color: var(--bg-subtle);">
+                <div class="flex items-center justify-between"><span class="font-bold text-sm">Wabi-Sabi Titanium (Recomendado)</span></div>
+                <div class="flex gap-1.5 h-7 rounded overflow-hidden border border-black/15">
+                  <div class="w-1/4 bg-[#141519]"></div><div class="w-2/4 bg-[#F1EFEA]"></div><div class="w-1/4 bg-[#D9381E]"></div>
+                </div>
+                <p class="text-xs" style="color: var(--text-secondary);">Sidebar en grafito anodizado (#141519) y lienzo piedra cálido (#F1EFEA).</p>
+              </div>
+
+              <div onclick="setPalette('obsidian-pro')" class="p-4 rounded-lg border cursor-pointer space-y-3" style="border-color: var(--border-card);">
+                <div class="flex items-center justify-between"><span class="font-bold text-sm">Obsidian Pro (Modo Oscuro Mockup)</span></div>
+                <div class="flex gap-1.5 h-7 rounded overflow-hidden border border-white/20">
+                  <div class="w-1/4 bg-[#07080A]"></div><div class="w-2/4 bg-[#13161C]"></div><div class="w-1/4 bg-[#FF3B1D]"></div>
+                </div>
+                <p class="text-xs" style="color: var(--text-secondary);">Carbón profundo (#0B0C0F) y paneles grafito (#13161C) sin filas blancas en hover.</p>
+              </div>
+
+              <div onclick="setPalette('wabi-paper')" class="p-4 rounded-lg border cursor-pointer space-y-3" style="border-color: var(--border-card);">
+                <div class="flex items-center justify-between"><span class="font-bold text-sm">Wabi-Sabi Paper (Clásico Claro)</span></div>
+                <div class="flex gap-1.5 h-7 rounded overflow-hidden border border-black/15">
+                  <div class="w-1/4 bg-[#F6F4EE]"></div><div class="w-2/4 bg-[#FFFFFF]"></div><div class="w-1/4 bg-[#D9381E]"></div>
+                </div>
+                <p class="text-xs" style="color: var(--text-secondary);">Papel artesanal cálido (#F6F4EE) con contraste de tinta reforzado.</p>
+              </div>
+
+              <div onclick="setPalette('swiss-platinum')" class="p-4 rounded-lg border cursor-pointer space-y-3" style="border-color: var(--border-card);">
+                <div class="flex items-center justify-between"><span class="font-bold text-sm">Swiss Platinum (Gris Perla & Pizarra)</span></div>
+                <div class="flex gap-1.5 h-7 rounded overflow-hidden border border-black/15">
+                  <div class="w-1/4 bg-[#0F172A]"></div><div class="w-2/4 bg-[#F3F4F6]"></div><div class="w-1/4 bg-[#E11D48]"></div>
+                </div>
+                <p class="text-xs" style="color: var(--text-secondary);">Blanco puro y gris platino estilo Stripe / Linear con sidebar pizarra.</p>
+              </div>
+
+              <div onclick="setPalette('kyoto-espresso')" class="p-4 rounded-lg border cursor-pointer space-y-3" style="border-color: var(--border-card);">
+                <div class="flex items-center justify-between"><span class="font-bold text-sm">Kyoto Espresso & Terracotta</span></div>
+                <div class="flex gap-1.5 h-7 rounded overflow-hidden border border-black/15">
+                  <div class="w-1/4 bg-[#171412]"></div><div class="w-2/4 bg-[#EFECE6]"></div><div class="w-1/4 bg-[#C2410C]"></div>
+                </div>
+                <p class="text-xs" style="color: var(--text-secondary);">Sidebar en café tostado (#171412), lino natural y acento cobre terracota.</p>
+              </div>
+
+              <div onclick="setPalette('bottega-emerald')" class="p-4 rounded-lg border cursor-pointer space-y-3" style="border-color: var(--border-card);">
+                <div class="flex items-center justify-between"><span class="font-bold text-sm">Alpine Emerald & Ivory</span></div>
+                <div class="flex gap-1.5 h-7 rounded overflow-hidden border border-black/15">
+                  <div class="w-1/4 bg-[#0A1914]"></div><div class="w-2/4 bg-[#F3F2EE]"></div><div class="w-1/4 bg-[#0D9488]"></div>
+                </div>
+                <p class="text-xs" style="color: var(--text-secondary);">Sidebar en pino profundo (#0A1914), marfil limpio y acento esmeralda clínico.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="erp-card p-7 space-y-5">
+            <div class="border-b pb-4" style="border-color: var(--border-card);">
+              <h2 class="erp-subheading text-lg">2. Combinación de Fuentes (3 Sistemas Armónicos)</h2>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <button onclick="setFonts('industrial')" class="p-4 rounded-lg border-2 text-left cursor-pointer space-y-1.5" style="border-color: var(--accent-primary); background-color: var(--bg-subtle);">
+                <div class="font-['Space_Grotesk'] font-bold text-base">1. Space Grotesk + Jakarta</div>
+                <p class="text-xs" style="color: var(--text-secondary);">Títulos y KPIs en Space Grotesk; tablas en Plus Jakarta Sans.</p>
+              </button>
+              <button onclick="setFonts('editorial-calibrated')" class="p-4 rounded-lg border text-left cursor-pointer space-y-1.5" style="border-color: var(--border-card);">
+                <div class="font-['Instrument_Serif'] text-xl">2. Editorial Calibrada</div>
+                <p class="text-xs" style="color: var(--text-secondary);">Instrument Serif 400 en H1; KPIs en Grotesk y tablas en Jakarta.</p>
+              </button>
+              <button onclick="setFonts('swiss-clean')" class="p-4 rounded-lg border text-left cursor-pointer space-y-1.5" style="border-color: var(--border-card);">
+                <div class="font-['Plus_Jakarta_Sans'] font-bold text-base">3. 100% Plus Jakarta Sans</div>
+                <p class="text-xs" style="color: var(--text-secondary);">Todo el sistema en Plus Jakarta Sans + JetBrains Mono.</p>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 erp-card p-7 space-y-4 border-l-4" style="border-left-color: var(--accent-primary);">
+          <span class="erp-mono text-[10px] font-bold uppercase tracking-wider" style="color: var(--accent-primary);">RESUMEN DE CORRECCIONES APLICADAS</span>
+          <h3 class="erp-subheading text-base">Cambios en Producción</h3>
+          <ul class="space-y-2.5 text-xs leading-relaxed" style="color: var(--text-secondary);">
+            <li><strong>1. Barra Superior de 56px:</strong> Se eliminó el padding gigante de 96px y se retiró el reloj para que no tape los botones de Facturación.</li>
+            <li><strong>2. Selector de Sedes sin emoji 🏢:</strong> Ahora usa el icono arquitectónico vectorial fino.</li>
+            <li><strong>3. Cero filas blancas en Modo Oscuro:</strong> Al pasar el mouse sobre <code>F-1002</code> en Obsidian Pro, la fila cambia a grafito elevado (<code>#1E232D</code>) manteniendo el texto blanco 100% legible.</li>
+          </ul>
+          <button onclick="switchView('invoices')" class="w-full py-2.5 rounded-md text-white font-mono text-xs font-bold uppercase tracking-wider cursor-pointer" style="background-color: var(--accent-primary);">
+            Probar Tabla de Facturas →
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- VISTA 2: FACTURAS CON HOVER OSCURO CORREGIDO -->
+    <main id="view-invoices" class="p-8 max-w-[1380px] w-full mx-auto space-y-6 hidden">
+      <div class="flex flex-wrap items-end justify-between gap-4 border-b pb-5" style="border-color: var(--border-card);">
+        <div>
+          <span class="erp-mono text-[11px] uppercase tracking-widest font-bold" style="color: var(--accent-primary);">VENTAS & FACTURACIÓN</span>
+          <h1 class="erp-h1 text-3xl sm:text-4xl mt-0.5">Facturación POS & Electrónica DIAN</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <button class="px-4 py-2.5 rounded text-xs font-bold uppercase tracking-wider border cursor-pointer" style="background-color: var(--bg-card); border-color: var(--border-card);">Planes & Upgrade</button>
+          <button class="px-5 py-2.5 rounded text-xs font-bold uppercase tracking-wider text-white cursor-pointer" style="background-color: var(--accent-primary);">+ Crear Factura</button>
+        </div>
+      </div>
+
+      <div class="erp-card overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b text-xs uppercase tracking-wider font-bold" style="background-color: var(--bg-subtle); color: var(--text-secondary); border-color: var(--border-card);">
+              <th class="py-4 px-5">Factura / Cliente</th>
+              <th class="py-4 px-4">Emisión</th>
+              <th class="py-4 px-4">WhatsApp</th>
+              <th class="py-4 px-4">Monto Total</th>
+              <th class="py-4 px-4">Despacho</th>
+              <th class="py-4 px-4">Estado / Soporte</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y" style="border-color: var(--border-card);">
+            <tr class="erp-row transition-colors cursor-pointer">
+              <td class="py-4 px-5">
+                <div class="flex items-center gap-3.5">
+                  <span class="erp-mono font-bold text-xs py-1 px-2.5 rounded border" style="background-color: var(--bg-subtle); border-color: var(--border-card);">F-1002</span>
+                  <div>
+                    <p class="font-bold text-sm">Isac Diaz</p>
+                    <p class="text-xs font-semibold flex items-center gap-1.5 mt-0.5" style="color: var(--text-secondary);">
+                      <svg class="w-4 h-4 text-[#10B981]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9"/></svg>
+                      <span>Efectivo</span>
+                    </p>
+                  </div>
+                </div>
+              </td>
+              <td class="py-4 px-4 text-xs"><p class="font-bold">21 de oct de 2026</p><p style="color: var(--text-secondary);">09:45 p. m.</p></td>
+              <td class="py-4 px-4 erp-mono text-xs" style="color: var(--text-secondary);">+3046247664</td>
+              <td class="py-4 px-4 erp-kpi-number text-sm">$ 430.000</td>
+              <td class="py-4 px-4 text-xs font-semibold">LOCAL</td>
+              <td class="py-4 px-4"><span class="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase border" style="background-color: var(--status-ok-bg); color: var(--status-ok); border-color: var(--status-ok-border);">PAGADO</span></td>
+            </tr>
+            <tr class="erp-row transition-colors cursor-pointer">
+              <td class="py-4 px-5">
+                <div class="flex items-center gap-3.5">
+                  <span class="erp-mono font-bold text-xs py-1 px-2.5 rounded border" style="background-color: var(--bg-subtle); border-color: var(--border-card);">F-1001</span>
+                  <div>
+                    <p class="font-bold text-sm">Isac Diaz</p>
+                    <p class="text-xs font-semibold flex items-center gap-1.5 mt-0.5" style="color: var(--text-secondary);">
+                      <svg class="w-4 h-4 text-[#10B981]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9"/></svg>
+                      <span>Efectivo</span>
+                    </p>
+                  </div>
+                </div>
+              </td>
+              <td class="py-4 px-4 text-xs"><p class="font-bold">21 de oct de 2026</p><p style="color: var(--text-secondary);">09:30 p. m.</p></td>
+              <td class="py-4 px-4 erp-mono text-xs" style="color: var(--text-secondary);">+3046247664</td>
+              <td class="py-4 px-4 erp-kpi-number text-sm">$ 130.000</td>
+              <td class="py-4 px-4 text-xs font-semibold">LOCAL</td>
+              <td class="py-4 px-4"><span class="px-2.5 py-0.5 rounded text-[11px] font-bold uppercase border" style="background-color: var(--status-ok-bg); color: var(--status-ok); border-color: var(--status-ok-border);">PAGADO</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function setPalette(p) { document.body.setAttribute('data-erp-palette', p); }
+    function setFonts(f) { document.body.setAttribute('data-erp-fonts', f); }
+    function switchView(v) {
+      document.getElementById('view-settings').classList.toggle('hidden', v !== 'settings');
+      document.getElementById('view-invoices').classList.toggle('hidden', v !== 'invoices');
+    }
+  </script>
+</body>
+</html>

@@ -476,37 +476,41 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
         </div>
       </div>
 
-      {/* Pestañas de Sub-Navegación Wabi-Sabi */}
-      <div className="flex border-b border-[#E2DFD7] gap-8 text-xs font-bold uppercase tracking-wider">
+      {/* Pestañas de Sub-Navegación con Iconos Vectoriales Finos del Mockup */}
+      <div className="flex flex-wrap items-center border-b border-[#E2DFD7] gap-6 text-xs font-semibold">
         <button
           type="button"
           onClick={() => setActiveSubTab('profile')}
-          className={`pb-3 border-b-2 transition cursor-pointer flex items-center gap-2 ${
+          className={`pb-3.5 border-b-2 transition cursor-pointer flex items-center gap-2 ${
             activeSubTab === 'profile'
-              ? 'border-[#D9381E] text-[#D9381E]'
+              ? 'border-[#D9381E] text-[#D9381E] font-bold'
               : 'border-transparent text-[#6B6862] hover:text-[#161616]'
           }`}
         >
-          <span className="material-symbols-outlined text-[16px]">storefront</span>
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
+          </svg>
           <span>Perfil Comercial & Razón Social</span>
         </button>
         <button
           type="button"
           onClick={() => setActiveSubTab('security')}
-          className={`pb-3 border-b-2 transition cursor-pointer flex items-center gap-2 ${
+          className={`pb-3.5 border-b-2 transition cursor-pointer flex items-center gap-2 ${
             activeSubTab === 'security'
-              ? 'border-[#D9381E] text-[#D9381E]'
+              ? 'border-[#D9381E] text-[#D9381E] font-bold'
               : 'border-transparent text-[#6B6862] hover:text-[#161616]'
           }`}
         >
-          <span className="material-symbols-outlined text-[16px]">shield</span>
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          </svg>
           <span>Seguridad & Autenticación (MFA)</span>
           {mfaMethods.length > 0 ? (
-            <span className="bg-[#E6F4EA] text-[#1E4620] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#A8DADC] font-mono">
+            <span className="bg-[#E6F4EA] text-[#1E4620] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#A8DADC] font-mono">
               ACTIVO ({mfaMethods.length})
             </span>
           ) : (
-            <span className="bg-[#FEF7E0] text-[#7A5A00] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#FEEFC3] font-mono">
+            <span className="bg-[#FEF7E0] text-[#7A5A00] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#FEEFC3] font-mono">
               INACTIVO (0/3)
             </span>
           )}
@@ -514,20 +518,22 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
         <button
           type="button"
           onClick={() => setActiveSubTab('email')}
-          className={`pb-3 border-b-2 transition cursor-pointer flex items-center gap-2 ${
+          className={`pb-3.5 border-b-2 transition cursor-pointer flex items-center gap-2 ${
             activeSubTab === 'email'
-              ? 'border-[#D9381E] text-[#D9381E]'
+              ? 'border-[#D9381E] text-[#D9381E] font-bold'
               : 'border-transparent text-[#6B6862] hover:text-[#161616]'
           }`}
         >
-          <span className="material-symbols-outlined text-[16px]">mail</span>
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+          </svg>
           <span>Canales de Correo (Gmail)</span>
           {(emailSettings?.connected || emailSettings?.isGmailConnected) ? (
-            <span className="bg-[#E6F4EA] text-[#1E4620] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#A8DADC] font-mono">
+            <span className="bg-[#E6F4EA] text-[#1E4620] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#A8DADC] font-mono">
               GMAIL ACTIVO
             </span>
           ) : (
-            <span className="bg-[#FAF8F3] text-[#6B6862] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#E2DFD7] font-mono">
+            <span className="bg-[#FAF8F3] text-[#6B6862] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#E2DFD7] font-mono">
               SISTEMA
             </span>
           )}
@@ -535,16 +541,18 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
         <button
           type="button"
           onClick={() => setActiveSubTab('appearance')}
-          className={`pb-3 border-b-2 transition cursor-pointer flex items-center gap-2 ${
+          className={`pb-3.5 border-b-2 transition cursor-pointer flex items-center gap-2 ${
             activeSubTab === 'appearance'
-              ? 'border-[#D9381E] text-[#D9381E]'
+              ? 'border-[#D9381E] text-[#D9381E] font-bold'
               : 'border-transparent text-[#6B6862] hover:text-[#161616]'
           }`}
         >
-          <span className="material-symbols-outlined text-[16px]">palette</span>
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z" />
+          </svg>
           <span>Apariencia, Temas & Legibilidad</span>
-          <span className="bg-[#FAF8F3] text-[#D9381E] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#D9381E]/30 font-mono">
-            PORTÁTIL & TEMAS
+          <span className="bg-[#D9381E] text-white text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
+            NUEVO
           </span>
         </button>
       </div>
