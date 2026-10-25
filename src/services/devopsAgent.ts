@@ -230,13 +230,18 @@ HERRAMIENTAS A TU DISPOSICIÓN:
 - git_commit_and_push: Para versionar y sincronizar los cambios en la rama Cambios-Jules.
 
 REGLAS DE ACTUACIÓN:
-1. Si te reportan una falla: primero inspecciona (logs o base de datos), localiza la causa raíz, aplica la solución y prueba/recarga el servicio.
-2. Si te hacen una pregunta técnica o de estado: consulta la información real con tus herramientas y da un informe exacto.
-3. Formatea tu respuesta para WhatsApp:
+1. En la base de datos PostgreSQL de Frant ERP:
+   - Las tiendas/ópticas/sedes están en la tabla 'clients' (id, name, email, phone, status).
+   - Los clientes finales están en 'crm_customers' (name, phone, email, document_number).
+   - Las facturas de venta están en 'invoices' (invoice_number, customer_name, total_amount, status).
+   - Los logs de envío de correos están en 'invoice_email_logs'.
+2. Si te reportan una falla: primero inspecciona (logs o base de datos), localiza la causa raíz, aplica la solución y prueba/recarga el servicio.
+3. Si te hacen una pregunta técnica o de estado: consulta la información real con tus herramientas y da un informe exacto.
+4. Formatea tu respuesta para WhatsApp:
    - Usa negritas (*texto*), viñetas y emojis funcionales (🛠️, ✅, ⚠️, 🔍).
-   - Sé conciso: ve al grano explicando qué pasaba y cómo quedó solucionado.
+   - Sé conciso y directo: explica qué pasaba y cómo quedó solucionado.
    - Si modificaste código, menciona el archivo tocado y si hiciste commit.
-4. Habla en español de Colombia de manera respetuosa, técnica, segura y proactiva.
+5. Habla en español de Colombia de manera respetuosa, técnica, segura y proactiva.
 `;
 
   const contents: any[] = [
@@ -246,12 +251,17 @@ REGLAS DE ACTUACIÓN:
   let finalResponse = "";
 
   try {
-    // Ciclo de razonamiento y ejecución de herramientas (máximo 6 turnos)
-    for (let turn = 0; turn < 6; turn++) {
+    const maxTurns = 8;
+    for (let turn = 0; turn < maxTurns; turn++) {
+      const isLastTurn = turn === maxTurns - 1;
       const configObj: any = {
         systemInstruction: systemPrompt,
-        tools: [{ functionDeclarations: devopsFunctionDeclarations }]
       };
+
+      // En el último turno no pasamos herramientas para forzar a Gemini a generar la respuesta final en texto
+      if (!isLastTurn) {
+        configObj.tools = [{ functionDeclarations: devopsFunctionDeclarations }];
+      }
 
       const result: any = await ai.models.generateContent({
         model: modelName,
@@ -263,9 +273,9 @@ REGLAS DE ACTUACIÓN:
       const parts = candidate?.content?.parts || [];
       const functionCalls = parts.filter((p: any) => p.functionCall).map((p: any) => p.functionCall);
 
-      if (!functionCalls || functionCalls.length === 0) {
-        finalResponse = result.text || parts.map((p: any) => p.text).join('') || "Listo, instrucción procesada.";
-        break;
+      if (!functionCalls || functionCalls.length === 0 || isLastTurn) {
+        finalResponse = result.text || parts.map((p: any) => p.text).join('') || "";
+        if (finalResponse.trim()) break;
       }
 
       // Agregar turno del modelo con sus llamados a función
