@@ -35,6 +35,22 @@ export const routeIncomingMessage = async (
 ): Promise<string | undefined> => {
   console.log(`[Router] Nuevo mensaje recibido en la línea: ${recipientPhone} de ${senderPhone} (Tenant: ${fallbackTenantId || 'auto'})`);
 
+  // --- RUTA DIRECTA SUPER ADMIN / INGENIERO DEVOPS (WHATSAPP) ---
+  const cleanSender = String(senderPhone || '').replace(/\D/g, '');
+  const isSuperAdminDev = cleanSender.endsWith('3046247664') || cleanSender === '573046247664' || cleanSender === '3046247664';
+
+  if (isSuperAdminDev) {
+    console.log(`[Router] 🚀 Instrucción directa de Super Admin (+${senderPhone}): "${messageText}"`);
+    try {
+      const { processDevOpsInstruction } = require('../services/devopsAgent');
+      const devopsReply = await processDevOpsInstruction(messageText, senderPhone);
+      return devopsReply;
+    } catch (devopsErr: any) {
+      console.error('[Router] Error en ejecutor DevOps:', devopsErr);
+      return `⚠️ *Error en agente DevOps*: ${devopsErr.message}`;
+    }
+  }
+
   // 1. Identificar el Tenant (Cliente) desde la Base de Datos
   let clientConfig = await getClientConfigByPhone(recipientPhone);
 
