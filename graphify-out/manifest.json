@@ -12,9 +12,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/App.tsx": {
-    "mtime": 1792523252.2549343,
-    "seen": 1792523489.4821732,
-    "ast_hash": "3d92f7ef5d07902cfb59bcfceb7fbec1",
+    "mtime": 1792794971.70224,
+    "seen": 1792795109.0621285,
+    "ast_hash": "8d175d459502fbf7c4a5804a75442be0",
     "semantic_hash": ""
   },
   "dashboard/src/components/ActivateAccount.tsx": {
@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1792553089.8909805,
-    "seen": 1792553456.9457462,
-    "ast_hash": "3db5be07a0e3277bc1e84a37838e45e1",
+    "mtime": 1792623532.9388278,
+    "seen": 1792623674.9310122,
+    "ast_hash": "1044faa06c3d78c9967adadb87db9771",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
@@ -54,9 +54,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/LandingPage.tsx": {
-    "mtime": 1791267154.1910274,
-    "seen": 1791751858.79799,
-    "ast_hash": "6b4acce2ed525683c486c97ae2f84d07",
+    "mtime": 1792794931.5312197,
+    "seen": 1792795109.062168,
+    "ast_hash": "de5c6eabfd46d7c21c9d44654a721a9c",
     "semantic_hash": ""
   },
   "dashboard/src/components/LegalDocsModal.tsx": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1792596441.2663705,
-    "seen": 1792598951.6649733,
-    "ast_hash": "7646bdb232753110a2854da55362f59c",
+    "mtime": 1792620250.1879702,
+    "seen": 1792620452.517535,
+    "ast_hash": "f8a8c093cb9f58496037531e6620a031",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -834,9 +834,9 @@
     "semantic_hash": ""
   },
   "dashboard/index.html": {
-    "mtime": 1792550412.9891002,
-    "seen": 1792553456.9462397,
-    "ast_hash": "0f3827794ba197461f3a2aef3932afad",
+    "mtime": 1792632263.5683246,
+    "seen": 1792791436.459442,
+    "ast_hash": "92bfd6e561fede5e1a5f531ee1b1c6dd",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -2574,9 +2574,9 @@
     "semantic_hash": ""
   },
   "src/services/privacyPolicy.ts": {
-    "mtime": 1792594970.1386168,
-    "seen": 1792598951.6649954,
-    "ast_hash": "e70e5c2bea0a746da262e76e7420e435",
+    "mtime": 1792791025.700375,
+    "seen": 1792791436.4592347,
+    "ast_hash": "259fc80cb767fc443e2b837e9be06c08",
     "semantic_hash": ""
   },
   "src/tools/consultarDomicilio.ts": {
@@ -2610,9 +2610,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/utils/dateTime.ts": {
-    "mtime": 1791924919.112084,
-    "seen": 1791925205.1931791,
-    "ast_hash": "86e1d2b36c91b3adc3b1ae89f9ea518d",
+    "mtime": 1792623478.087177,
+    "seen": 1792623674.9311144,
+    "ast_hash": "58a42f0c4a8ce7af3262a3832c267795",
     "semantic_hash": ""
   },
   "src/services/emailService.ts": {
@@ -2655,6 +2655,18 @@
     "mtime": 1792549758.454709,
     "seen": 1792553456.9462411,
     "ast_hash": "9982b203a617a61c131aeb7bf9737aeb",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/HeaderBranchClock.tsx": {
+    "mtime": 1792623489.1768384,
+    "seen": 1792623674.9310262,
+    "ast_hash": "292ae3b385f2bebd35175179499a0ac7",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/propuesta_landing_diazlab_frant.html": {
+    "mtime": 1792632498.1264749,
+    "seen": 1792791436.4594498,
+    "ast_hash": "06aa59b7dc0e6f124a144e6c27ca4ba0",
     "semantic_hash": ""
   }
 }
