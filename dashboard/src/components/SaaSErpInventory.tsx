@@ -34,6 +34,8 @@ interface Product {
     material: string | null;
     style: string | null;
     color: string | null;
+    gender?: string | null;
+    attributes?: Record<string, any> | null;
     promo_discount: string;
     category_id?: string | null;
     product_type?: 'product' | 'service';
@@ -230,6 +232,58 @@ const PromoDiscountRow: React.FC<{
     );
 };
 
+export const getProductGender = (prod: Product): string => {
+    if (prod.gender && typeof prod.gender === 'string' && prod.gender.trim()) return prod.gender.trim();
+    if (prod.attributes && typeof prod.attributes === 'object' && prod.attributes.gender) {
+        return String(prod.attributes.gender).trim();
+    }
+    return '';
+};
+
+export const renderGenderBadge = (rawGender: string) => {
+    if (!rawGender) {
+        return <span className="text-xs text-[#6B6862] font-mono">—</span>;
+    }
+    const upper = rawGender.toUpperCase();
+    if (upper.includes('HOMBRE') && !upper.includes('MUJER')) {
+        return (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="material-symbols-outlined text-[13px]">male</span>
+                Hombre
+            </span>
+        );
+    }
+    if (upper.includes('MUJER')) {
+        return (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
+                <span className="material-symbols-outlined text-[13px]">female</span>
+                Mujer
+            </span>
+        );
+    }
+    if (upper.includes('NIÑ') || upper.includes('INFANTIL')) {
+        return (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                <span className="material-symbols-outlined text-[13px]">child_care</span>
+                Niños
+            </span>
+        );
+    }
+    if (upper.includes('UNISEX')) {
+        return (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="material-symbols-outlined text-[13px]">wc</span>
+                Unisex
+            </span>
+        );
+    }
+    return (
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7]">
+            {rawGender}
+        </span>
+    );
+};
+
 export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: rawClientId, category = 'optica' }) => {
     const clientId = (rawClientId && rawClientId !== 'undefined' && rawClientId !== 'admin')
         ? rawClientId
@@ -382,6 +436,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
 
     const [filterBrand, setFilterBrand] = useState<string>('all');
     const [filterCategory, setFilterCategory] = useState<string>('all');
+    const [filterGender, setFilterGender] = useState<string>('all');
     const [sortBy, setSortBy] = useState<string>('recent');
     const [filterStock, setFilterStock] = useState<string>('all');
     const [filterMinPrice, setFilterMinPrice] = useState<string>('');
@@ -391,6 +446,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         { id: 'brand', label: 'MARCA' },
         { id: 'name', label: 'REFERENCIA / NOMBRE' },
         { id: 'category', label: 'CATEGORÍA' },
+        { id: 'gender', label: 'GÉNERO' },
         { id: 'variants', label: 'VARIANTES' },
         { id: 'stock', label: 'UNIDADES' },
         { id: 'price', label: 'PRECIO' },
@@ -403,9 +459,22 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [visibleCols, setVisibleCols] = useState<string[]>(() => {
         try {
             const saved = localStorage.getItem(`inventory_cols_${clientId}`);
-            if (saved) return JSON.parse(saved);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    if (!parsed.includes('gender')) {
+                        const catIdx = parsed.indexOf('category');
+                        if (catIdx !== -1) {
+                            parsed.splice(catIdx + 1, 0, 'gender');
+                        } else {
+                            parsed.push('gender');
+                        }
+                    }
+                    return parsed;
+                }
+            }
         } catch (e) {}
-        return ['brand', 'name', 'category', 'variants', 'stock', 'price', 'totalValue', 'discount', 'taxes'];
+        return ['brand', 'name', 'category', 'gender', 'variants', 'stock', 'price', 'totalValue', 'discount', 'taxes'];
     });
     const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
     const columnSelectorRef = useRef<HTMLDivElement>(null);
@@ -922,6 +991,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         new Set(products.map(p => p.brand).filter((b): b is string => Boolean(b && b.trim())))
     ).sort();
 
+    const uniqueGenders = Array.from(
+        new Set(products.map(p => getProductGender(p)).filter((g): g is string => Boolean(g && g.trim())))
+    ).sort();
+
     const filteredProducts = products.filter(prod => {
         const rawMatch = searchTerm.trim().toLowerCase();
         const terms = rawMatch.split(/\s+/).filter(Boolean);
@@ -930,11 +1003,21 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             : '';
         const categoryObj = categories.find(c => c.id === prod.category_id);
         const categoryName = categoryObj?.name || '';
-        const fullSearchable = `${prod.name || ''} ${prod.sku || ''} ${prod.brand || ''} ${prod.model || ''} ${prod.color || ''} ${prod.material || ''} ${prod.style || ''} ${prod.description || ''} ${categoryName} ${variantsStr}`.toLowerCase();
+        const prodGender = getProductGender(prod);
+        const fullSearchable = `${prod.name || ''} ${prod.sku || ''} ${prod.brand || ''} ${prod.model || ''} ${prod.color || ''} ${prod.material || ''} ${prod.style || ''} ${prodGender} ${prod.description || ''} ${categoryName} ${variantsStr}`.toLowerCase();
 
         const matchesSearch = terms.length === 0 || terms.every(term => fullSearchable.includes(term));
         const matchesBrand = filterBrand === 'all' || (prod.brand && prod.brand.toLowerCase() === filterBrand.toLowerCase());
         const matchesCategory = filterCategory === 'all' || prod.category_id === filterCategory;
+
+        let matchesGender = true;
+        if (filterGender !== 'all') {
+            if (filterGender === 'none') {
+                matchesGender = !prodGender;
+            } else {
+                matchesGender = prodGender.toLowerCase() === filterGender.toLowerCase();
+            }
+        }
 
         const itemStock = prod.stock || 0;
         const itemMinStock = prod.min_stock || 2;
@@ -951,7 +1034,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         if (minP !== null && !isNaN(minP)) matchesPrice = matchesPrice && itemPrice >= minP;
         if (maxP !== null && !isNaN(maxP)) matchesPrice = matchesPrice && itemPrice <= maxP;
 
-        return matchesSearch && matchesBrand && matchesCategory && matchesStock && matchesPrice;
+        return matchesSearch && matchesBrand && matchesCategory && matchesGender && matchesStock && matchesPrice;
     }).sort((a, b) => {
         if (sortBy === 'price_asc') {
             return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0);
@@ -967,6 +1050,12 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         }
         if (sortBy === 'name_asc') {
             return (a.name || '').localeCompare(b.name || '');
+        }
+        if (sortBy === 'gender_asc') {
+            return getProductGender(a).localeCompare(getProductGender(b));
+        }
+        if (sortBy === 'gender_desc') {
+            return getProductGender(b).localeCompare(getProductGender(a));
         }
         if (sortBy === 'stock_asc') {
             return (a.stock || 0) - (b.stock || 0);
@@ -1175,6 +1264,21 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">GÉNERO:</span>
+                        <select
+                            value={filterGender}
+                            onChange={(e) => setFilterGender(e.target.value)}
+                            className="bg-white border border-[#E2DFD7] py-1.5 px-2.5 text-xs text-[#161616] outline-none cursor-pointer rounded-none font-sans"
+                        >
+                            <option value="all">Todos ({uniqueGenders.length})</option>
+                            {uniqueGenders.map(g => (
+                                <option key={g} value={g}>{g}</option>
+                            ))}
+                            <option value="none">Sin Clasificar</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
                         <span className="text-[10px] text-[#6B6862] uppercase tracking-wider font-bold">ORDENAR:</span>
                         <select
                             value={sortBy}
@@ -1186,6 +1290,8 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             <option value="price_asc">Precio: Menor a Mayor</option>
                             <option value="price_desc">Precio: Mayor a Menor</option>
                             <option value="name_asc">Nombre: A - Z</option>
+                            <option value="gender_asc">Género: A - Z</option>
+                            <option value="gender_desc">Género: Z - A</option>
                             <option value="stock_asc">Stock: Menor a Mayor</option>
                             <option value="stock_desc">Stock: Mayor a Menor</option>
                         </select>
@@ -1224,12 +1330,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                         />
                     </div>
 
-                    {(filterBrand !== 'all' || filterCategory !== 'all' || sortBy !== 'recent' || filterStock !== 'all' || filterMinPrice !== '' || filterMaxPrice !== '') && (
+                    {(filterBrand !== 'all' || filterCategory !== 'all' || filterGender !== 'all' || sortBy !== 'recent' || filterStock !== 'all' || filterMinPrice !== '' || filterMaxPrice !== '') && (
                         <button
                             type="button"
                             onClick={() => {
                                 setFilterBrand('all');
                                 setFilterCategory('all');
+                                setFilterGender('all');
                                 setSortBy('recent');
                                 setFilterStock('all');
                                 setFilterMinPrice('');
@@ -1303,6 +1410,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         {visibleCols.includes('brand') && <th>MARCA</th>}
                                         {visibleCols.includes('name') && <th>REFERENCIA / NOMBRE</th>}
                                         {visibleCols.includes('category') && <th>CATEGORÍA</th>}
+                                        {visibleCols.includes('gender') && <th>GÉNERO</th>}
                                         {visibleCols.includes('variants') && <th>VARIANTES</th>}
                                         {visibleCols.includes('stock') && <th>UNIDADES</th>}
                                         {visibleCols.includes('price') && <th>PRECIO</th>}
@@ -1561,6 +1669,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                                         <span className="text-xs font-medium text-[#161616]">
                                                             {categoryObj?.name || '—'}
                                                         </span>
+                                                    </td>
+                                                )}
+
+                                                {/* GÉNERO */}
+                                                {visibleCols.includes('gender') && (
+                                                    <td>
+                                                        {renderGenderBadge(getProductGender(prod))}
                                                     </td>
                                                 )}
 

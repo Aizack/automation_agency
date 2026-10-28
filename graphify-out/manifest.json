@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInventory.tsx": {
-    "mtime": 1792526477.3479538,
-    "seen": 1792553456.9458067,
-    "ast_hash": "809fd597558e5ecc100f844da33ecf50",
+    "mtime": 1793214444.777947,
+    "seen": 1793214513.2294617,
+    "ast_hash": "990225874d5045500610c7b88ebb30e9",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
