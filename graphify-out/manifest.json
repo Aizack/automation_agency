@@ -12,9 +12,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/App.tsx": {
-    "mtime": 1792794971.70224,
-    "seen": 1792795109.0621285,
-    "ast_hash": "8d175d459502fbf7c4a5804a75442be0",
+    "mtime": 1792860679.906032,
+    "seen": 1793203793.3456664,
+    "ast_hash": "a4626f7c9ac4ad67558d96bf30f40f05",
     "semantic_hash": ""
   },
   "dashboard/src/components/ActivateAccount.tsx": {
@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/ClientDashboard.tsx": {
-    "mtime": 1792623532.9388278,
-    "seen": 1792623674.9310122,
-    "ast_hash": "1044faa06c3d78c9967adadb87db9771",
+    "mtime": 1792854511.809819,
+    "seen": 1793203793.3456845,
+    "ast_hash": "4d28115ed4d5235ded901871b29733f4",
     "semantic_hash": ""
   },
   "dashboard/src/components/EmployeePortal.tsx": {
@@ -54,9 +54,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/LandingPage.tsx": {
-    "mtime": 1792794931.5312197,
-    "seen": 1792795109.062168,
-    "ast_hash": "de5c6eabfd46d7c21c9d44654a721a9c",
+    "mtime": 1792808077.5041997,
+    "seen": 1793203793.3457153,
+    "ast_hash": "8923778557e8c67639ab4b797a9eb486",
     "semantic_hash": ""
   },
   "dashboard/src/components/LegalDocsModal.tsx": {
@@ -66,9 +66,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/Login.tsx": {
-    "mtime": 1792104380.8904138,
-    "seen": 1792459482.6377897,
-    "ast_hash": "5022ab5982f9c2166e0ecc473aa2ff27",
+    "mtime": 1792860935.7017171,
+    "seen": 1793203793.3457212,
+    "ast_hash": "074bdc92d1349d2a351dd495cb972493",
     "semantic_hash": ""
   },
   "dashboard/src/components/PublicRestaurantMenu.tsx": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpEmployees.tsx": {
-    "mtime": 1791931998.7896214,
-    "seen": 1791932239.806193,
-    "ast_hash": "482de640017cdbdaa9ae0e5363142702",
+    "mtime": 1793203705.495942,
+    "seen": 1793203793.3457615,
+    "ast_hash": "4a293751f34545a89f3c056cf79c390d",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpFormulas.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
-    "mtime": 1792596824.2386477,
-    "seen": 1792598951.6647787,
-    "ast_hash": "88f59c1457944215846200d2f50d9bd0",
+    "mtime": 1792854904.2701242,
+    "seen": 1793203793.3457704,
+    "ast_hash": "a60eec04ef2c30b42580c0d587a3c92e",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpMarketing.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpStoreSettings.tsx": {
-    "mtime": 1792559632.7407854,
-    "seen": 1792598951.6647947,
-    "ast_hash": "ce9dd214f82f5914ca330a00ea1d92e5",
+    "mtime": 1792854550.1813524,
+    "seen": 1793203793.345785,
+    "ast_hash": "ea1c18cbca762e45af18cf26d837ca19",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSuppliers.tsx": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "src/core/router.ts": {
-    "mtime": 1791061213.6187038,
-    "seen": 1791751858.7983186,
-    "ast_hash": "1771c9ba2f816d19ef2131aeda2b212e",
+    "mtime": 1792897766.1246102,
+    "seen": 1793203793.3459203,
+    "ast_hash": "b6c225e2ab6f8bc9c8352fedb85e7866",
     "semantic_hash": ""
   },
   "src/database/clientsCrud.ts": {
@@ -834,9 +834,9 @@
     "semantic_hash": ""
   },
   "dashboard/index.html": {
-    "mtime": 1792632263.5683246,
-    "seen": 1792791436.459442,
-    "ast_hash": "92bfd6e561fede5e1a5f531ee1b1c6dd",
+    "mtime": 1792854597.582361,
+    "seen": 1793203793.346231,
+    "ast_hash": "9e75d1b91c5d262d8125397b83e88af2",
     "semantic_hash": ""
   },
   "docker-compose.yml": {
@@ -2667,6 +2667,102 @@
     "mtime": 1792632498.1264749,
     "seen": 1792791436.4594498,
     "ast_hash": "06aa59b7dc0e6f124a144e6c27ca4ba0",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/DiazLabLandingPage.tsx": {
+    "mtime": 1792862082.7375548,
+    "seen": 1793203793.3456883,
+    "ast_hash": "502b0fd8f144222e14ec8f32dacf9bb4",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/FrantLandingPage.tsx": {
+    "mtime": 1792866018.077278,
+    "seen": 1793203793.3457038,
+    "ast_hash": "e15dd111dc9b310c190b6e230f93d10a",
+    "semantic_hash": ""
+  },
+  "dashboard/src/components/SaaSErpAppearanceSettings.tsx": {
+    "mtime": 1792854277.6934514,
+    "seen": 1793203793.3457422,
+    "ast_hash": "c71f24653fa1f017e7fdaac590637088",
+    "semantic_hash": ""
+  },
+  "src/services/devopsAgent.ts": {
+    "mtime": 1792897981.3971424,
+    "seen": 1793203793.3459811,
+    "ast_hash": "bde993e89194ce741f179a45035e6778",
+    "semantic_hash": ""
+  },
+  "ARQUITECTURA_LANDINGS_FRANT_Y_DIAZLAB.md": {
+    "mtime": 1792796084.7339842,
+    "seen": 1793203793.346198,
+    "ast_hash": "bcc10bc63015c9f93791d4148cd7c860",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/propuesta_diazlab_agency_luxury.html": {
+    "mtime": 1792857054.2401545,
+    "seen": 1793203793.3462393,
+    "ast_hash": "bbce2d58e3ae3cd49c288e146f75ee40",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/propuesta_erp_atelier_v2.html": {
+    "mtime": 1792855018.895965,
+    "seen": 1793203793.3462405,
+    "ast_hash": "d608dbeb57b20c1e8f5d1fb3d9b01f19",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/propuesta_frant_erp_luxury.html": {
+    "mtime": 1792857058.4096081,
+    "seen": 1793203793.346242,
+    "ast_hash": "52a653c89dbd90b51e170c2ae0c83dec",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/propuesta_tema_erp_interno.html": {
+    "mtime": 1792806982.7817504,
+    "seen": 1793203793.346247,
+    "ast_hash": "3856ff0c3d54e4c52ca16555313ba393",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/assets/diazlab_engineering_atelier.jpg": {
+    "mtime": 1792803313.099229,
+    "seen": 1793203793.3464377,
+    "ast_hash": "976602b4115a88f68b786a92393a67e3",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/assets/erp_current_ai.png": {
+    "mtime": 1792803183.426544,
+    "seen": 1793203793.3464391,
+    "ast_hash": "fd796e7e95bcf51d8513ceca86c9a40c",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/assets/erp_current_finance.png": {
+    "mtime": 1792803183.4318233,
+    "seen": 1793203793.3464406,
+    "ast_hash": "1620bdd280fcde44429eb2107a698e82",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/assets/erp_current_inventory.png": {
+    "mtime": 1792803183.4249594,
+    "seen": 1793203793.3464417,
+    "ast_hash": "791a5588bf6a9a89181350c0fa1c45aa",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/assets/hero_industrial_pos.jpg": {
+    "mtime": 1792803253.8519928,
+    "seen": 1793203793.346443,
+    "ast_hash": "d635ca6aad31b3a4d0f97ba4a42ffb9a",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/assets/vertical_gastronomia_kds.jpg": {
+    "mtime": 1792803291.278015,
+    "seen": 1793203793.3464444,
+    "ast_hash": "c4a964b13627bfde9b89714cb540d37a",
+    "semantic_hash": ""
+  },
+  "dashboard/public/proposals/assets/vertical_optica_lujo.jpg": {
+    "mtime": 1792803271.369275,
+    "seen": 1793203793.3464456,
+    "ast_hash": "8ce32884f4e6ddb0f7f790aede678a66",
     "semantic_hash": ""
   }
 }

@@ -489,6 +489,15 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
     const [newTaskCreator, setNewTaskCreator] = useState('');
     const [detailTab, setDetailTab] = useState<'info' | 'shifts' | 'tasks' | 'contrato' | 'permisos'>('info');
 
+    // Filter tab for employees table (Activos / Inactivos / Desvinculados)
+    const [employeeFilterTab, setEmployeeFilterTab] = useState<'activos' | 'inactivos' | 'desvinculados'>('activos');
+
+    const getEmpStatus = (emp: Employee): 'activo' | 'inactivo' | 'desvinculado' => {
+        if (emp.employment_status === 'unlinked') return 'desvinculado';
+        if (emp.activity_status === 'inactive' || emp.is_active === false) return 'inactivo';
+        return 'activo';
+    };
+
     // Payroll states
     const [isPayrollOpen, setIsPayrollOpen] = useState(false);
     const [payrollSummary, setPayrollSummary] = useState<any>(null);
@@ -721,8 +730,8 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
         }
     };
 
-    const handleSaveContractInfo = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSaveContractInfo = async (e?: React.FormEvent) => {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
         if (!selectedEmpDetail) return;
         try {
             setSavingContract(true);
@@ -2376,68 +2385,164 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Employees list table */}
-                    <div className="lg:col-span-8 bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none p-6 overflow-x-auto">
-                        <h3 className="font-bold text-sm text-[#161616] mb-4">Listado de Personal</h3>
-                        {employees.length === 0 ? (
-                            <p className="text-sm text-[#76746E] text-center py-6">No hay empleados registrados en el sistema.</p>
-                        ) : (
-                            <table className="w-full text-left text-xs border-collapse">
-                                <thead>
-                                    <tr className="border-b border-[#E2DFD7] text-[#76746E] uppercase font-bold tracking-tight">
-                                        <th className="py-3 px-2">Nombre</th>
-                                        <th className="py-3 px-2">Teléfono</th>
-                                        <th className="py-3 px-2">Rol / Cargo</th>
-                                        <th className="py-3 px-2">Departamento</th>
-                                        <th className="py-3 px-2">PIN</th>
-                                        <th className="py-3 px-2 text-right">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {employees.map(emp => (
-                                        <tr key={emp.id} className="border-b border-[#E2DFD7] hover:bg-[#FAF8F5] transition-all">
-                                            <td className="py-3.5 px-2 font-bold text-[#161616] cursor-pointer hover:text-[#161616] hover:underline" onClick={() => handleOpenDetail(emp)}>{emp.name} {emp.last_name || ''}</td>
-                                            <td className="py-3.5 px-2 font-mono">+{emp.phone}</td>
-                                            <td className="py-3.5 px-2">
-                                                <span className={`px-2 py-0.5 rounded-none text-[9px] font-bold ${
-                                                    emp.role === 'admin' ? 'bg-secondary/15 text-secondary' : 'bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616]'
-                                                }`}>
-                                                    {emp.role.toUpperCase()}
-                                                </span>
-                                            </td>
-                                            <td className="py-3.5 px-2 text-[#76746E]">{emp.department_name || 'Sin Asignar'}</td>
-                                            <td className="py-3.5 px-2 font-mono">••••</td>
-                                            <td className="py-3.5 px-2 text-right space-x-1.5">
-                                                <button 
-                                                    onClick={() => handleOpenDetail(emp)}
-                                                    className="px-2.5 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 border-0 rounded-none text-[10px] font-bold cursor-pointer transition"
-                                                >
-                                                    Ficha/Turnos
-                                                </button>
-                                                <button 
-                                                    onClick={() => openPayrollModal(emp)}
-                                                    className="px-2.5 py-1.5 bg-[#FAF8F5] border border-[#E2DFD7] hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] border-0 rounded-none text-[10px] font-bold cursor-pointer transition"
-                                                >
-                                                    Nómina
-                                                </button>
-                                                <button 
-                                                    onClick={() => openEditEmpModal(emp)}
-                                                    className="p-1.5 text-[#161616] hover:bg-[#FAF8F5] rounded-none border-0 cursor-pointer transition-all inline-flex"
-                                                >
-                                                    <span className="material-symbols-outlined text-[16px]">edit</span>
-                                                </button>
-                                                <button 
-                                                    onClick={() => handleDeleteEmp(emp.id, emp.name)}
-                                                    className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-none border-0 cursor-pointer transition-all inline-flex"
-                                                >
-                                                    <span className="material-symbols-outlined text-[16px]">delete</span>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
+                    {(() => {
+                        const countActivos = employees.filter(e => getEmpStatus(e) === 'activo').length;
+                        const countInactivos = employees.filter(e => getEmpStatus(e) === 'inactivo').length;
+                        const countDesvinculados = employees.filter(e => getEmpStatus(e) === 'desvinculado').length;
+                        const filteredEmployees = employees.filter(e => {
+                            const status = getEmpStatus(e);
+                            if (employeeFilterTab === 'activos') return status === 'activo';
+                            if (employeeFilterTab === 'inactivos') return status === 'inactivo';
+                            return status === 'desvinculado';
+                        });
+
+                        return (
+                            <div className="lg:col-span-8 bg-white border border-[#E2DFD7] shadow-xs rounded-none border border-[#E2DFD7] rounded-none p-6 overflow-x-auto">
+                                {/* Header con Pestañas de Estado */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#E2DFD7]">
+                                    <div>
+                                        <h3 className="font-bold text-sm text-[#161616]">Listado de Personal</h3>
+                                        <p className="text-[11px] text-[#76746E]">Consulta colaboradores según su estado laboral</p>
+                                    </div>
+                                    
+                                    {/* Pestañas de Estado: Activos / Inactivos / Desvinculados */}
+                                    <div className="inline-flex bg-[#FAF8F5] border border-[#E2DFD7] p-1 rounded-none gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setEmployeeFilterTab('activos')}
+                                            className={`px-3 py-1.5 text-xs font-bold transition rounded-none cursor-pointer flex items-center gap-1.5 ${
+                                                employeeFilterTab === 'activos'
+                                                    ? 'bg-emerald-600 text-white shadow-xs'
+                                                    : 'text-[#76746E] hover:text-[#161616] hover:bg-white/60'
+                                            }`}
+                                        >
+                                            <span className={`w-2 h-2 rounded-full ${employeeFilterTab === 'activos' ? 'bg-white' : 'bg-emerald-500'}`}></span>
+                                            Activos ({countActivos})
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEmployeeFilterTab('inactivos')}
+                                            className={`px-3 py-1.5 text-xs font-bold transition rounded-none cursor-pointer flex items-center gap-1.5 ${
+                                                employeeFilterTab === 'inactivos'
+                                                    ? 'bg-amber-600 text-white shadow-xs'
+                                                    : 'text-[#76746E] hover:text-[#161616] hover:bg-white/60'
+                                            }`}
+                                        >
+                                            <span className={`w-2 h-2 rounded-full ${employeeFilterTab === 'inactivos' ? 'bg-white' : 'bg-amber-500'}`}></span>
+                                            Inactivos ({countInactivos})
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEmployeeFilterTab('desvinculados')}
+                                            className={`px-3 py-1.5 text-xs font-bold transition rounded-none cursor-pointer flex items-center gap-1.5 ${
+                                                employeeFilterTab === 'desvinculados'
+                                                    ? 'bg-rose-600 text-white shadow-xs'
+                                                    : 'text-[#76746E] hover:text-[#161616] hover:bg-white/60'
+                                            }`}
+                                        >
+                                            <span className={`w-2 h-2 rounded-full ${employeeFilterTab === 'desvinculados' ? 'bg-white' : 'bg-rose-500'}`}></span>
+                                            Desvinculados ({countDesvinculados})
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {filteredEmployees.length === 0 ? (
+                                    <div className="py-8 text-center space-y-1.5">
+                                        <p className="text-sm font-semibold text-[#161616]">
+                                            No hay colaboradores {employeeFilterTab === 'activos' ? 'activos' : employeeFilterTab === 'inactivos' ? 'inactivos' : 'desvinculados'} registrados.
+                                        </p>
+                                        <p className="text-xs text-[#76746E]">
+                                            {employeeFilterTab === 'desvinculados' 
+                                                ? 'Los colaboradores desvinculados aparecerán aquí para trazabilidad histórica.' 
+                                                : employeeFilterTab === 'inactivos' 
+                                                ? 'Los colaboradores con permisos o licencias prolongadas aparecerán aquí.' 
+                                                : 'Registra un colaborador o reactívalo para verlo en la lista activa.'}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <table className="w-full text-left text-xs border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-[#E2DFD7] text-[#76746E] uppercase font-bold tracking-tight">
+                                                <th className="py-3 px-2">Nombre</th>
+                                                <th className="py-3 px-2">Teléfono</th>
+                                                <th className="py-3 px-2">Rol / Cargo</th>
+                                                <th className="py-3 px-2">Estado</th>
+                                                <th className="py-3 px-2">Departamento</th>
+                                                <th className="py-3 px-2">PIN</th>
+                                                <th className="py-3 px-2 text-right">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredEmployees.map(emp => {
+                                                const status = getEmpStatus(emp);
+                                                return (
+                                                    <tr key={emp.id} className="border-b border-[#E2DFD7] hover:bg-[#FAF8F5] transition-all">
+                                                        <td className="py-3.5 px-2 font-bold text-[#161616] cursor-pointer hover:text-[#161616] hover:underline" onClick={() => handleOpenDetail(emp)}>
+                                                            {emp.name} {emp.last_name || ''}
+                                                        </td>
+                                                        <td className="py-3.5 px-2 font-mono">+{emp.phone}</td>
+                                                        <td className="py-3.5 px-2">
+                                                            <span className={`px-2 py-0.5 rounded-none text-[9px] font-bold ${
+                                                                emp.role === 'admin' ? 'bg-secondary/15 text-secondary' : 'bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616]'
+                                                            }`}>
+                                                                {emp.role.toUpperCase()}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-3.5 px-2">
+                                                            {status === 'desvinculado' ? (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                                                    Desvinculado
+                                                                </span>
+                                                            ) : status === 'inactivo' ? (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                                    Inactivo
+                                                                </span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-none text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                                    Activo
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="py-3.5 px-2 text-[#76746E]">{emp.department_name || 'Sin Asignar'}</td>
+                                                        <td className="py-3.5 px-2 font-mono">••••</td>
+                                                        <td className="py-3.5 px-2 text-right space-x-1.5">
+                                                            <button 
+                                                                onClick={() => handleOpenDetail(emp)}
+                                                                className="px-2.5 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-500 border-0 rounded-none text-[10px] font-bold cursor-pointer transition"
+                                                            >
+                                                                Ficha/Turnos
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => openPayrollModal(emp)}
+                                                                className="px-2.5 py-1.5 bg-[#FAF8F5] border border-[#E2DFD7] hover:bg-[#FAF8F5] border border-[#E2DFD7] text-[#161616] border-0 rounded-none text-[10px] font-bold cursor-pointer transition"
+                                                            >
+                                                                Nómina
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => openEditEmpModal(emp)}
+                                                                className="p-1.5 text-[#161616] hover:bg-[#FAF8F5] rounded-none border-0 cursor-pointer transition-all inline-flex"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[16px]">edit</span>
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDeleteEmp(emp.id, emp.name)}
+                                                                className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-none border-0 cursor-pointer transition-all inline-flex"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        );
+                    })()}
 
                     {/* Quick Stats & Adoption overview */}
                     <div className="lg:col-span-4 space-y-6">
@@ -2483,7 +2588,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             {isDeptOpen && createPortal(
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
                     <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none max-w-md w-full rounded-none overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto">
-                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
+                        <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4 flex-shrink-0">
                             <h3 className="font-bold text-lg text-[#161616]">Gestionar Departamentos</h3>
                             <button 
                                 onClick={() => setIsDeptOpen(false)}
@@ -3195,7 +3300,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
             {/* EMP DETAIL MODAL */}
             {isDetailOpen && selectedEmpDetail && createPortal(
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4 text-left">
-                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none max-w-2xl w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar my-auto flex flex-col">
+                    <div className="bg-white border border-[#E2DFD7] shadow-xs rounded-none max-w-2xl w-full rounded-3xl overflow-hidden p-6 shadow-2xl max-h-[90vh] my-auto flex flex-col">
                         <div className="flex justify-between items-center border-b border-[#E2DFD7] pb-3 mb-4">
                             <div>
                                 <h3 className="font-bold text-lg text-[#161616]">Ficha del Empleado</h3>
@@ -3210,7 +3315,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                         </div>
 
                         {/* Modal Navigation Tabs */}
-                        <div className="flex bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-1 rounded-none border border-[#E2DFD7] text-[10px] mb-4 gap-1">
+                        <div className="flex bg-[#FAF8F5] border border-[#E2DFD7] rounded-none p-1 rounded-none border border-[#E2DFD7] text-[10px] mb-4 gap-1 flex-shrink-0">
                             <button 
                                 type="button"
                                 onClick={() => setDetailTab('info')}
@@ -3791,13 +3896,7 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                                         </div>
                                     </div>
 
-                                    <button 
-                                        type="submit" 
-                                        disabled={savingContract}
-                                        className="w-full py-2.5 bg-primary text-on-primary font-bold text-xs rounded-none hover:opacity-90 active:scale-95 transition cursor-pointer border-0 shadow"
-                                    >
-                                        {savingContract ? 'Guardando Contrato...' : 'Guardar Configuración de Nómina'}
-                                    </button>
+                                    {/* Botón de guardado movido al pie de la ficha junto a Cerrar Ficha */}
                                 </form>
                             )}
 
@@ -3857,11 +3956,22 @@ export const SaaSErpEmployees: React.FC<SaaSErpEmployeesProps> = ({ clientId: ra
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="border-t border-[#E2DFD7] pt-4 mt-4 flex justify-end">
+                        <div className="border-t border-[#E2DFD7] pt-4 mt-4 flex items-center justify-end gap-3 flex-shrink-0">
+                            {detailTab === 'contrato' && (
+                                <button 
+                                    type="button"
+                                    onClick={(e) => handleSaveContractInfo(e as any)}
+                                    disabled={savingContract}
+                                    className="px-5 py-2.5 bg-primary hover:bg-[#c02f17] text-on-primary font-bold text-xs rounded-none transition cursor-pointer border-0 shadow flex items-center gap-1.5 active:scale-95"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">save</span>
+                                    {savingContract ? 'Guardando Contrato...' : 'Guardar Configuración de Nómina'}
+                                </button>
+                            )}
                             <button 
                                 type="button"
                                 onClick={() => setIsDetailOpen(false)}
-                                className="px-4 py-2 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none hover:bg-[#FAF8F5] border border-[#E2DFD7] rounded-none text-[#161616] text-xs font-bold rounded-none cursor-pointer transition border border-[#E2DFD7]"
+                                className="px-4 py-2.5 bg-[#FAF8F5] border border-[#E2DFD7] rounded-none hover:bg-[#FAF8F5] border border-[#E2DFD7] rounded-none text-[#161616] text-xs font-bold rounded-none cursor-pointer transition border border-[#E2DFD7]"
                             >
                                 Cerrar Ficha
                             </button>
