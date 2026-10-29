@@ -13,6 +13,7 @@ interface FixedExpense {
   expense_type?: 'fijo' | 'ocasional';
   expense_date?: string;
   effective_date?: string;
+  payment_method?: string;
   amount: string;
   notes?: string;
   created_at: string;
@@ -31,6 +32,7 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
   const [expenseConcept, setExpenseConcept] = useState('');
   const [expenseCategory, setExpenseCategory] = useState('operativo');
   const [expenseType, setExpenseType] = useState<'fijo' | 'ocasional'>('fijo');
+  const [expensePaymentMethod, setExpensePaymentMethod] = useState<'transferencia' | 'efectivo' | 'tarjeta'>('transferencia');
   const [expenseDate, setExpenseDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseNotes, setExpenseNotes] = useState('');
@@ -42,6 +44,7 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
   const [editConcept, setEditConcept] = useState('');
   const [editCategory, setEditCategory] = useState('operativo');
   const [editType, setEditType] = useState<'fijo' | 'ocasional'>('fijo');
+  const [editPaymentMethod, setEditPaymentMethod] = useState<'transferencia' | 'efectivo' | 'tarjeta'>('transferencia');
   const [editDate, setEditDate] = useState('');
   const [editAmount, setEditAmount] = useState('');
   const [editNotes, setEditNotes] = useState('');
@@ -86,6 +89,7 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
           category: expenseCategory,
           expense_type: expenseType,
           expense_date: expenseDate,
+          payment_method: expensePaymentMethod,
           amount: parseFloat(expenseAmount),
           notes: expenseNotes
         })
@@ -99,6 +103,7 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
         setExpenseDate(new Date().toISOString().split('T')[0]);
         setExpenseType('fijo');
         setExpenseCategory('operativo');
+        setExpensePaymentMethod('transferencia');
         setSuccessMessage('¡Gasto registrado exitosamente!');
         setTimeout(() => setSuccessMessage(null), 4000);
         fetchExpenses();
@@ -117,6 +122,8 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
     setEditConcept(item.concept || '');
     setEditCategory(item.category || 'operativo');
     setEditType(item.expense_type || 'fijo');
+    const rawMethod = (item.payment_method || 'transferencia').toLowerCase();
+    setEditPaymentMethod(rawMethod.includes('efectivo') ? 'efectivo' : rawMethod.includes('tarjeta') ? 'tarjeta' : 'transferencia');
     const d = item.effective_date || item.expense_date || item.created_at;
     const cleanDate = d ? String(d).split('T')[0].substring(0, 10) : new Date().toISOString().split('T')[0];
     setEditDate(cleanDate);
@@ -134,6 +141,7 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
         concept: editConcept,
         category: editCategory,
         expense_type: editType,
+        payment_method: editPaymentMethod,
         notes: editNotes,
       };
 
@@ -297,6 +305,55 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
                 onChange={(e) => setExpenseConcept(e.target.value)}
                 className="w-full bg-[#FAF8F5] border border-[#E2DFD7] focus:bg-white rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] transition-colors font-sans"
               />
+            </div>
+
+            {/* Método de Pago del Gasto */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E] flex items-center justify-between">
+                <span>Método de Pago *</span>
+                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-none border ${
+                  expensePaymentMethod === 'efectivo' 
+                    ? 'bg-amber-100 text-amber-900 border-amber-300 animate-pulse' 
+                    : 'bg-slate-100 text-slate-700 border-slate-200'
+                }`}>
+                  {expensePaymentMethod === 'efectivo' ? '⚠️ Descuenta de Caja Menor (Arqueo)' : '🏦 Pago Digital (No afecta Arqueo)'}
+                </span>
+              </label>
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#FAF8F5] border border-[#E2DFD7]">
+                <button
+                  type="button"
+                  onClick={() => setExpensePaymentMethod('transferencia')}
+                  className={`py-1.5 px-2 text-xs font-mono font-bold transition border-0 cursor-pointer ${
+                    expensePaymentMethod === 'transferencia'
+                      ? 'bg-[#161616] text-[#F6F4EE] shadow-xs'
+                      : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+                  }`}
+                >
+                  🏦 Transferencia
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExpensePaymentMethod('efectivo')}
+                  className={`py-1.5 px-2 text-xs font-mono font-bold transition border-0 cursor-pointer ${
+                    expensePaymentMethod === 'efectivo'
+                      ? 'bg-[#D9381E] text-white shadow-xs'
+                      : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+                  }`}
+                >
+                  💵 Efectivo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExpensePaymentMethod('tarjeta')}
+                  className={`py-1.5 px-2 text-xs font-mono font-bold transition border-0 cursor-pointer ${
+                    expensePaymentMethod === 'tarjeta'
+                      ? 'bg-[#161616] text-[#F6F4EE] shadow-xs'
+                      : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+                  }`}
+                >
+                  💳 Tarjeta
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -474,6 +531,19 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
                         <span className="text-[9px] uppercase font-mono font-bold text-[#76746E] px-2 py-0.5 bg-white rounded-none border border-[#E2DFD7]">
                           {item.category}
                         </span>
+                        <span className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-none border ${
+                          (item.payment_method || '').toLowerCase() === 'efectivo' || (item.payment_method || '').toLowerCase() === 'efectivo_caja'
+                            ? 'bg-amber-50 text-amber-900 border-amber-300 font-bold'
+                            : (item.payment_method || '').toLowerCase().includes('tarjeta')
+                            ? 'bg-purple-50 text-purple-800 border-purple-200'
+                            : 'bg-sky-50 text-sky-800 border-sky-200'
+                        }`}>
+                          {(item.payment_method || '').toLowerCase() === 'efectivo' || (item.payment_method || '').toLowerCase() === 'efectivo_caja'
+                            ? '💵 Efectivo (Caja Menor)'
+                            : (item.payment_method || '').toLowerCase().includes('tarjeta')
+                            ? '💳 Tarjeta'
+                            : '🏦 Transferencia'}
+                        </span>
                       </div>
                       <h4 className="font-serif font-bold text-sm text-[#161616]">{item.concept}</h4>
                       <p className="text-sm font-mono font-bold text-[#D9381E]">{formatCOP(parseFloat(item.amount))}</p>
@@ -575,6 +645,55 @@ export const SaaSErpExpenses: React.FC<SaaSErpExpensesProps> = ({ clientId }) =>
                   onChange={(e) => setEditConcept(e.target.value)}
                   className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616]"
                 />
+              </div>
+
+              {/* Método de Pago en Edición */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E] flex items-center justify-between">
+                  <span>Método de Pago *</span>
+                  <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-none border ${
+                    editPaymentMethod === 'efectivo' 
+                      ? 'bg-amber-100 text-amber-900 border-amber-300' 
+                      : 'bg-slate-100 text-slate-700 border-slate-200'
+                  }`}>
+                    {editPaymentMethod === 'efectivo' ? '💵 Afecta Caja Menor' : '🏦 Pago Digital'}
+                  </span>
+                </label>
+                <div className="grid grid-cols-3 gap-1.5 p-1 bg-white border border-[#E2DFD7]">
+                  <button
+                    type="button"
+                    onClick={() => setEditPaymentMethod('transferencia')}
+                    className={`py-1.5 px-2 text-xs font-mono font-bold transition border-0 cursor-pointer ${
+                      editPaymentMethod === 'transferencia'
+                        ? 'bg-[#161616] text-[#F6F4EE]'
+                        : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+                    }`}
+                  >
+                    🏦 Transf.
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditPaymentMethod('efectivo')}
+                    className={`py-1.5 px-2 text-xs font-mono font-bold transition border-0 cursor-pointer ${
+                      editPaymentMethod === 'efectivo'
+                        ? 'bg-[#D9381E] text-white'
+                        : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+                    }`}
+                  >
+                    💵 Efectivo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditPaymentMethod('tarjeta')}
+                    className={`py-1.5 px-2 text-xs font-mono font-bold transition border-0 cursor-pointer ${
+                      editPaymentMethod === 'tarjeta'
+                        ? 'bg-[#161616] text-[#F6F4EE]'
+                        : 'bg-transparent text-[#76746E] hover:text-[#161616]'
+                    }`}
+                  >
+                    💳 Tarjeta
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

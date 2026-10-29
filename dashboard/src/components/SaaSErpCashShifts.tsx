@@ -39,6 +39,43 @@ interface CurrentShiftData extends CashShift {
   live_expected_cash: number;
 }
 
+interface AuditIncomeItem {
+  id: string;
+  time: string;
+  type: string;
+  doc_number: string;
+  entity_name: string;
+  amount: number;
+  payment_method: string;
+}
+
+interface AuditExpenseItem {
+  id: string;
+  time: string;
+  type: string;
+  doc_number: string;
+  entity_name: string;
+  notes?: string;
+  amount: number;
+  payment_method: string;
+}
+
+interface AuditShiftData {
+  shift: CashShift;
+  incomes: AuditIncomeItem[];
+  expenses: AuditExpenseItem[];
+  summary: {
+    initial_cash: number;
+    total_cash_incomes: number;
+    total_cash_expenses: number;
+    expected_cash: number;
+    reported_cash_in_drawer: number;
+    cash_difference: number;
+    status: string;
+    notes?: string;
+  };
+}
+
 interface Employee {
   id: string;
   name: string;
@@ -70,6 +107,13 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
   const [isHandoverModalOpen, setIsHandoverModalOpen] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
+  // Estados Modal Auditoría Detallada
+  const [auditModalOpen, setAuditModalOpen] = useState(false);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditData, setAuditData] = useState<AuditShiftData | null>(null);
+  const [auditSelectedShift, setAuditSelectedShift] = useState<CashShift | null>(null);
+  const [auditActiveTab, setAuditActiveTab] = useState<'all' | 'incomes' | 'expenses'>('all');
+
   const lastClosedShift = shifts.find(s => s.status === 'closed' || s.status === 'confirmed');
 
   const handleOpenShiftModalWithSuggestedBase = () => {
@@ -81,6 +125,28 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
   const handleOpenCloseModal = () => {
     setCloseReportedCash('');
     setIsCloseModalOpen(true);
+  };
+
+  const handleOpenAuditModal = async (shift: CashShift) => {
+    setAuditSelectedShift(shift);
+    setAuditModalOpen(true);
+    setAuditLoading(true);
+    setAuditData(null);
+    setAuditActiveTab('all');
+    try {
+      const res = await fetch(`/api/clients/${clientId}/cash-shifts/${shift.id}/audit`);
+      const json = await res.json();
+      if (json.success) {
+        setAuditData(json);
+      } else {
+        alert(json.error || 'No se pudo cargar la auditoría del turno.');
+      }
+    } catch (err) {
+      console.error('Error al consultar auditoría del turno:', err);
+      alert('Error de conexión al obtener el desglose del turno.');
+    } finally {
+      setAuditLoading(false);
+    }
   };
 
   // Form states: Inicio de Caja (Apertura)
@@ -546,6 +612,7 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
                   <th className="p-3.5 text-right">Físico Contado</th>
                   <th className="p-3.5 text-right">Diferencia</th>
                   <th className="p-3.5 text-center">Estado</th>
+                  <th className="p-3.5 text-center">Detalle / Auditoría</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E2DFD7]">
@@ -571,7 +638,12 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
                   const liveExpected = isCurrentOpen && currentShift ? currentShift.live_expected_cash : (parsedExpected !== 0 ? parsedExpected : fallbackExpected);
 
                   return (
-                    <tr key={shift.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
+                    <tr 
+                      key={shift.id} 
+                      onClick={() => handleOpenAuditModal(shift)}
+                      className="hover:bg-[#FAF8F5] transition-colors cursor-pointer group"
+                      title="Haz clic para ver el desglose detallado de ingresos y egresos"
+                    >
                       <td className="p-3.5 font-mono text-xs text-[#161616] whitespace-nowrap">
                         {dateStr}
                       </td>
@@ -614,6 +686,17 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
                             ⏳ Relevo Pendiente
                           </span>
                         )}
+                      </td>
+                      <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenAuditModal(shift)}
+                          className="px-2.5 py-1 text-[11px] font-mono font-bold bg-white hover:bg-[#161616] text-[#161616] hover:text-white border border-[#E2DFD7] hover:border-[#161616] transition cursor-pointer flex items-center gap-1 mx-auto shadow-xs"
+                          title="Abrir auditoría discriminada de ingresos y egresos"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">receipt_long</span>
+                          <span>Auditar</span>
+                        </button>
                       </td>
                     </tr>
                   );
@@ -889,6 +972,299 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 4: Auditoría Discriminada de Turno (Desglose de Ingresos y Egresos) */}
+      {auditModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-3 sm:p-4 animate-fade-in" onClick={() => setAuditModalOpen(false)}>
+          <div 
+            className="bg-[#F6F4EE] border border-[#161616] p-5 sm:p-6 rounded-none w-full max-w-4xl shadow-2xl space-y-4 text-left max-h-[92vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header del Modal */}
+            <div className="flex justify-between items-start border-b border-[#E2DFD7] pb-3 shrink-0">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-mono tracking-widest text-[#D9381E] uppercase font-bold">
+                    AUDITORÍA DISCRIMINADA DE CAJA
+                  </span>
+                  {auditSelectedShift && (
+                    <span className={`px-2 py-0.5 text-[9px] font-mono font-bold uppercase border ${
+                      auditSelectedShift.status === 'open' 
+                        ? 'bg-[#E6F4EA] text-[#137333] border-[#CEEAD6]' 
+                        : 'bg-white text-[#161616] border-[#E2DFD7]'
+                    }`}>
+                      {auditSelectedShift.status === 'open' ? '● En curso' : '✓ Turno Cerrado'}
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-serif text-lg sm:text-xl font-bold text-[#161616] flex items-center gap-2 mt-1">
+                  <span className="material-symbols-outlined text-[#D9381E] text-[24px]">receipt_long</span>
+                  Desglose de Movimientos del Turno
+                </h3>
+                {auditSelectedShift && (
+                  <p className="text-xs font-mono text-[#76746E] mt-0.5">
+                    Fecha: <strong className="text-[#161616]">{formatLocalDate(auditSelectedShift.shift_date || auditSelectedShift.start_time, clientTimeZone)}</strong> | 
+                    Horario: {formatLocalTime(auditSelectedShift.start_time, clientTimeZone)} ➔ {auditSelectedShift.status === 'open' ? 'En curso' : (auditSelectedShift.end_time ? formatLocalTime(auditSelectedShift.end_time, clientTimeZone) : '-')} | 
+                    Responsable: <strong className="text-[#161616]">{auditSelectedShift.opened_by_name || auditSelectedShift.employee_out_name || 'Personal'}</strong>
+                  </p>
+                )}
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setAuditModalOpen(false)} 
+                className="text-[#76746E] hover:text-[#161616] bg-transparent border-0 cursor-pointer p-1"
+                title="Cerrar auditoría"
+              >
+                <span className="material-symbols-outlined text-[24px]">close</span>
+              </button>
+            </div>
+
+            {/* Resumen Matriz Superior */}
+            {auditData && (
+              <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 bg-white p-3 border border-[#E2DFD7] shrink-0">
+                <div className="space-y-0.5">
+                  <span className="text-[9px] font-mono uppercase text-[#76746E] block font-bold">Base Inicial</span>
+                  <p className="text-xs sm:text-sm font-mono font-bold text-[#161616]">{formatCOP(auditData.summary.initial_cash)}</p>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[9px] font-mono uppercase text-[#137333] block font-bold">(+) Ventas Efectivo</span>
+                  <p className="text-xs sm:text-sm font-mono font-bold text-[#137333]">+{formatCOP(auditData.summary.total_cash_incomes)}</p>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[9px] font-mono uppercase text-[#C5221F] block font-bold">(-) Gastos Efectivo</span>
+                  <p className="text-xs sm:text-sm font-mono font-bold text-[#C5221F]">-{formatCOP(auditData.summary.total_cash_expenses)}</p>
+                </div>
+                <div className="space-y-0.5 bg-[#FAF8F5] p-1 border-x border-[#E2DFD7]">
+                  <span className="text-[9px] font-mono uppercase text-[#161616] block font-bold">(=) Saldo Esperado</span>
+                  <p className="text-xs sm:text-sm font-mono font-bold text-[#161616]">{formatCOP(auditData.summary.expected_cash)}</p>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[9px] font-mono uppercase text-[#76746E] block font-bold">Físico Contado</span>
+                  <p className="text-xs sm:text-sm font-mono font-bold text-[#161616]">
+                    {auditSelectedShift?.status === 'open' ? 'En curso' : formatCOP(auditData.summary.reported_cash_in_drawer)}
+                  </p>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[9px] font-mono uppercase text-[#76746E] block font-bold">Diferencia</span>
+                  <p className={`text-xs sm:text-sm font-mono font-bold ${
+                    auditSelectedShift?.status === 'open' 
+                      ? 'text-[#76746E]' 
+                      : auditData.summary.cash_difference < 0 
+                      ? 'text-[#C5221F]' 
+                      : 'text-[#137333]'
+                  }`}>
+                    {auditSelectedShift?.status === 'open' 
+                      ? '-' 
+                      : auditData.summary.cash_difference === 0 
+                      ? 'Exacto ($0)' 
+                      : formatCOP(auditData.summary.cash_difference)}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Pestañas de Filtrado */}
+            <div className="flex items-center gap-2 border-b border-[#E2DFD7] shrink-0">
+              <button
+                type="button"
+                onClick={() => setAuditActiveTab('all')}
+                className={`pb-2 px-3 text-xs font-mono font-bold border-b-2 transition cursor-pointer uppercase tracking-wider ${
+                  auditActiveTab === 'all'
+                    ? 'border-[#D9381E] text-[#D9381E]'
+                    : 'border-transparent text-[#76746E] hover:text-[#161616]'
+                }`}
+              >
+                Todos los Movimientos ({auditData ? auditData.incomes.length + auditData.expenses.length : 0})
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuditActiveTab('incomes')}
+                className={`pb-2 px-3 text-xs font-mono font-bold border-b-2 transition cursor-pointer uppercase tracking-wider ${
+                  auditActiveTab === 'incomes'
+                    ? 'border-[#137333] text-[#137333]'
+                    : 'border-transparent text-[#76746E] hover:text-[#161616]'
+                }`}
+              >
+                (+) Ingresos en Efectivo ({auditData ? auditData.incomes.length : 0})
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuditActiveTab('expenses')}
+                className={`pb-2 px-3 text-xs font-mono font-bold border-b-2 transition cursor-pointer uppercase tracking-wider ${
+                  auditActiveTab === 'expenses'
+                    ? 'border-[#C5221F] text-[#C5221F]'
+                    : 'border-transparent text-[#76746E] hover:text-[#161616]'
+                }`}
+              >
+                (-) Gastos en Efectivo ({auditData ? auditData.expenses.length : 0})
+              </button>
+            </div>
+
+            {/* Cuerpo de Movimientos Scrolleable */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 min-h-[220px]">
+              {auditLoading ? (
+                <div className="py-16 text-center text-[#76746E] font-mono text-xs flex flex-col items-center justify-center gap-2">
+                  <span className="material-symbols-outlined text-3xl animate-spin text-[#D9381E]">sync</span>
+                  <span>Consultando transacciones y registros del turno...</span>
+                </div>
+              ) : !auditData ? (
+                <div className="py-12 text-center text-[#76746E] font-mono text-xs">
+                  No se encontraron datos para este turno.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Sección Ingresos */}
+                  {(auditActiveTab === 'all' || auditActiveTab === 'incomes') && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between bg-[#E6F4EA]/60 p-2 border border-[#CEEAD6]">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#137333] flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[16px]">payments</span>
+                          Ingresos en Efectivo Registrados ({auditData.incomes.length})
+                        </span>
+                        <span className="text-xs font-mono font-bold text-[#137333]">
+                          Total: +{formatCOP(auditData.summary.total_cash_incomes)}
+                        </span>
+                      </div>
+
+                      {auditData.incomes.length === 0 ? (
+                        <p className="text-xs text-[#76746E] italic font-mono px-3 py-2 bg-white border border-[#E2DFD7]">
+                          No se registraron ventas ni abonos en efectivo durante este turno.
+                        </p>
+                      ) : (
+                        <div className="bg-white border border-[#E2DFD7] overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[10px] font-mono text-[#76746E] uppercase font-bold">
+                                <th className="p-2.5">Hora</th>
+                                <th className="p-2.5">Tipo & Documento</th>
+                                <th className="p-2.5">Cliente</th>
+                                <th className="p-2.5 text-center">Método</th>
+                                <th className="p-2.5 text-right">Monto</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#E2DFD7] font-mono">
+                              {auditData.incomes.map((inc) => (
+                                <tr key={inc.id} className="hover:bg-[#FAF8F5]/80">
+                                  <td className="p-2.5 text-[11px] text-[#76746E] whitespace-nowrap">
+                                    <span className="flex items-center gap-1">
+                                      <span className="material-symbols-outlined text-[13px]">schedule</span>
+                                      {formatLocalTime(inc.time, clientTimeZone)}
+                                    </span>
+                                  </td>
+                                  <td className="p-2.5">
+                                    <span className="font-bold text-[#161616] block">{inc.doc_number}</span>
+                                    <span className="text-[10px] text-[#76746E]">{inc.type}</span>
+                                  </td>
+                                  <td className="p-2.5 text-[#161616] font-sans font-medium">
+                                    {inc.entity_name}
+                                  </td>
+                                  <td className="p-2.5 text-center">
+                                    <span className="px-2 py-0.5 text-[9px] font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                      {inc.payment_method}
+                                    </span>
+                                  </td>
+                                  <td className="p-2.5 text-right font-bold text-[#137333] whitespace-nowrap">
+                                    +{formatCOP(inc.amount)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Sección Egresos */}
+                  {(auditActiveTab === 'all' || auditActiveTab === 'expenses') && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between bg-[#FCE8E6]/60 p-2 border border-[#FAD2CF]">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#C5221F] flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[16px]">price_change</span>
+                          Gastos Pagados en Efectivo de Caja Menor ({auditData.expenses.length})
+                        </span>
+                        <span className="text-xs font-mono font-bold text-[#C5221F]">
+                          Total: -{formatCOP(auditData.summary.total_cash_expenses)}
+                        </span>
+                      </div>
+
+                      {auditData.expenses.length === 0 ? (
+                        <p className="text-xs text-[#76746E] italic font-mono px-3 py-2 bg-white border border-[#E2DFD7]">
+                          No se pagaron gastos en efectivo de caja menor durante este turno.
+                        </p>
+                      ) : (
+                        <div className="bg-white border border-[#E2DFD7] overflow-x-auto">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead>
+                              <tr className="bg-[#FAF8F5] border-b border-[#E2DFD7] text-[10px] font-mono text-[#76746E] uppercase font-bold">
+                                <th className="p-2.5">Hora</th>
+                                <th className="p-2.5">Tipo & Categoría</th>
+                                <th className="p-2.5">Concepto / Beneficiario</th>
+                                <th className="p-2.5 text-center">Método</th>
+                                <th className="p-2.5 text-right">Monto</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#E2DFD7] font-mono">
+                              {auditData.expenses.map((exp) => (
+                                <tr key={exp.id} className="hover:bg-[#FAF8F5]/80">
+                                  <td className="p-2.5 text-[11px] text-[#76746E] whitespace-nowrap">
+                                    <span className="flex items-center gap-1">
+                                      <span className="material-symbols-outlined text-[13px]">schedule</span>
+                                      {formatLocalTime(exp.time, clientTimeZone)}
+                                    </span>
+                                  </td>
+                                  <td className="p-2.5">
+                                    <span className="font-bold text-[#161616] block">{exp.doc_number}</span>
+                                    <span className="text-[10px] text-[#76746E]">{exp.type}</span>
+                                  </td>
+                                  <td className="p-2.5 font-sans">
+                                    <p className="font-bold text-[#161616]">{exp.entity_name}</p>
+                                    {exp.notes && <p className="text-[10px] text-[#76746E] italic mt-0.5">{exp.notes}</p>}
+                                  </td>
+                                  <td className="p-2.5 text-center">
+                                    <span className="px-2 py-0.5 text-[9px] font-bold uppercase bg-amber-50 text-amber-900 border border-amber-300">
+                                      {exp.payment_method}
+                                    </span>
+                                  </td>
+                                  <td className="p-2.5 text-right font-bold text-[#C5221F] whitespace-nowrap">
+                                    -{formatCOP(exp.amount)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Notas del Turno si existen */}
+                  {auditData.summary.notes && (
+                    <div className="bg-[#FAF8F5] p-3 border border-[#E2DFD7] space-y-1">
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#76746E] block">
+                        Observaciones / Justificación Registrada al Cierre:
+                      </span>
+                      <p className="text-xs text-[#161616] italic font-sans">{auditData.summary.notes}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer con Botón Cerrar */}
+            <div className="flex justify-end pt-3 border-t border-[#E2DFD7] shrink-0">
+              <button
+                type="button"
+                onClick={() => setAuditModalOpen(false)}
+                className="px-5 py-2 bg-[#161616] hover:bg-black text-[#F6F4EE] font-mono font-bold text-xs rounded-none transition cursor-pointer border-0 uppercase tracking-wider flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[16px]">check</span>
+                Entendido / Cerrar Auditoría
+              </button>
+            </div>
           </div>
         </div>
       )}

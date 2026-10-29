@@ -1,5 +1,8 @@
-import { Pool } from 'pg';
+import { Pool, types } from 'pg';
 import 'dotenv/config';
+
+// Evitar que el driver de pg desplace los timestamps sin zona horaria (OID 1114) a UTC de forma destructiva
+types.setTypeParser(1114, (stringValue: string) => stringValue);
 
 // Inicializar el Pool de conexiones a PostgreSQL
 const dbUrl = process.env.DATABASE_URL;

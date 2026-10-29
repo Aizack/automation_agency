@@ -11921,10 +11921,10 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         else transferSales += amt;
       }
 
-      // Cuotas / abonos de crédito cobrados en efectivo durante el turno
+      // Cuotas / abonos de crédito cobrados en efectivo durante el turno (filtrado estricto)
       const installmentsQuery = await pool.query(
         `SELECT 
-           LOWER(COALESCE(ii.payment_method, 'efectivo')) as method,
+           LOWER(COALESCE(NULLIF(TRIM(ii.payment_method), ''), 'transferencia')) as method,
            COALESCE(SUM(ii.paid_amount), 0)::numeric as total
          FROM invoice_installments ii
          JOIN invoices i ON i.id = ii.invoice_id
@@ -11943,7 +11943,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
                )
              )
            )
-         GROUP BY LOWER(COALESCE(ii.payment_method, 'efectivo'))`,
+         GROUP BY LOWER(COALESCE(NULLIF(TRIM(ii.payment_method), ''), 'transferencia'))`,
         [clientId, startTime]
       );
       for (const row of installmentsQuery.rows) {
@@ -11953,11 +11953,12 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         else transferSales += amt;
       }
 
-      // Calcular gastos en efectivo registrados desde el inicio del turno
+      // Calcular gastos en efectivo registrados desde el inicio del turno (solo pagos de caja menor/efectivo)
       const expensesQuery = await pool.query(
         `SELECT COALESCE(SUM(amount), 0)::numeric as total_expenses
          FROM monthly_fixed_expenses
          WHERE client_id = $1 
+           AND LOWER(COALESCE(payment_method, 'transferencia')) IN ('efectivo', 'efectivo_caja')
            AND (
              created_at >= $2
              OR (
@@ -12132,10 +12133,10 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         else transferSales += amt;
       }
 
-      // Cuotas / abonos de crédito cobrados en efectivo durante el turno
+      // Cuotas / abonos de crédito cobrados en efectivo durante el turno (filtrado estricto)
       const installmentsQuery = await pool.query(
         `SELECT 
-           LOWER(COALESCE(ii.payment_method, 'efectivo')) as method,
+           LOWER(COALESCE(NULLIF(TRIM(ii.payment_method), ''), 'transferencia')) as method,
            COALESCE(SUM(ii.paid_amount), 0)::numeric as total
          FROM invoice_installments ii
          JOIN invoices i ON i.id = ii.invoice_id
@@ -12154,7 +12155,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
                )
              )
            )
-         GROUP BY LOWER(COALESCE(ii.payment_method, 'efectivo'))`,
+         GROUP BY LOWER(COALESCE(NULLIF(TRIM(ii.payment_method), ''), 'transferencia'))`,
         [clientId, startTime]
       );
       for (const row of installmentsQuery.rows) {
@@ -12164,11 +12165,12 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         else transferSales += amt;
       }
 
-      // Gastos en efectivo
+      // Gastos en efectivo (filtrado estricto por método de pago efectivo de caja)
       const expensesQuery = await pool.query(
         `SELECT COALESCE(SUM(amount), 0)::numeric as total_expenses
          FROM monthly_fixed_expenses
          WHERE client_id = $1 
+           AND LOWER(COALESCE(payment_method, 'transferencia')) IN ('efectivo', 'efectivo_caja')
            AND (
              created_at >= $2
              OR (
@@ -12330,6 +12332,153 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       });
     } catch (err: any) {
       console.error("[Cash Shift Error]:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Auditoría detallada de un turno de caja (Desglose de cada ingreso y egreso con hora)
+  app.get('/api/clients/:clientId/cash-shifts/:shiftId/audit', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId, shiftId } = req.params;
+      const shiftRes = await pool.query(
+        `SELECT * FROM cash_shifts WHERE client_id = $1 AND id = $2`,
+        [clientId, shiftId]
+      );
+      if (shiftRes.rows.length === 0) {
+        return res.status(404).json({ success: false, error: 'Turno de caja no encontrado.' });
+      }
+
+      const shift = shiftRes.rows[0];
+      const startTime = shift.start_time;
+      const endTime = shift.end_time || null;
+
+      // 1. Facturas en efectivo durante el turno
+      const invoicesRes = await pool.query(
+        `SELECT id, invoice_number, total_amount, payment_method, created_at, customer_name, customer_phone
+         FROM invoices
+         WHERE client_id = $1 
+           AND status != 'cancelled'
+           AND LOWER(COALESCE(payment_method, 'efectivo')) IN ('efectivo', 'contado')
+           AND created_at >= $2 
+           AND ($3::timestamp IS NULL OR created_at <= $3)
+         ORDER BY created_at ASC`,
+        [clientId, startTime, endTime]
+      );
+
+      // 2. Abonos a créditos cobrados en efectivo durante el turno
+      const installmentsRes = await pool.query(
+        `SELECT ii.id, ii.paid_amount, ii.paid_at, ii.payment_method, ii.installment_number, i.invoice_number, i.customer_name
+         FROM invoice_installments ii
+         JOIN invoices i ON i.id = ii.invoice_id
+         WHERE i.client_id = $1 
+           AND ii.status IN ('paid', 'partially_paid')
+           AND LOWER(COALESCE(NULLIF(TRIM(ii.payment_method), ''), 'transferencia')) IN ('efectivo', 'contado')
+           AND ii.paid_at >= $2 
+           AND ($3::timestamp IS NULL OR ii.paid_at <= $3)
+         ORDER BY ii.paid_at ASC`,
+        [clientId, startTime, endTime]
+      );
+
+      // 3. Gastos pagados en efectivo de caja menor
+      const expensesRes = await pool.query(
+        `SELECT id, concept, category, amount, created_at, notes, payment_method
+         FROM monthly_fixed_expenses
+         WHERE client_id = $1 
+           AND LOWER(COALESCE(payment_method, 'transferencia')) IN ('efectivo', 'efectivo_caja')
+           AND created_at >= $2 
+           AND ($3::timestamp IS NULL OR created_at <= $3)
+         ORDER BY created_at ASC`,
+        [clientId, startTime, endTime]
+      );
+
+      // 4. Anticipos a empleados entregados en efectivo
+      let advancesRows: any[] = [];
+      try {
+        const advancesRes = await pool.query(
+          `SELECT ea.id, ea.amount, ea.delivered_at, ea.payment_method, ea.notes,
+                  COALESCE(NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Empleado') as employee_name
+           FROM employee_advances ea
+           LEFT JOIN employees e ON ea.employee_id = e.id
+           WHERE ea.client_id = $1 
+             AND ea.status = 'delivered'
+             AND LOWER(COALESCE(ea.payment_method, 'transferencia')) IN ('efectivo', 'efectivo_caja')
+             AND ea.delivered_at >= $2 
+             AND ($3::timestamp IS NULL OR ea.delivered_at <= $3)
+           ORDER BY ea.delivered_at ASC`,
+          [clientId, startTime, endTime]
+        );
+        advancesRows = advancesRes.rows;
+      } catch (e) {
+        advancesRows = [];
+      }
+
+      const incomes = [
+        ...invoicesRes.rows.map(inv => ({
+          id: inv.id,
+          time: inv.created_at,
+          type: 'Factura POS / Venta',
+          doc_number: `Factura #${inv.invoice_number}`,
+          entity_name: inv.customer_name || 'Cliente Mostrador',
+          amount: parseFloat(inv.total_amount || '0'),
+          payment_method: inv.payment_method || 'efectivo'
+        })),
+        ...installmentsRes.rows.map(inst => ({
+          id: inst.id,
+          time: inst.paid_at,
+          type: 'Abono Cuota Crédito',
+          doc_number: `Cuota #${inst.installment_number} (Factura #${inst.invoice_number})`,
+          entity_name: inst.customer_name || 'Cliente Cartera',
+          amount: parseFloat(inst.paid_amount || '0'),
+          payment_method: inst.payment_method || 'efectivo'
+        }))
+      ].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+
+      const expenses = [
+        ...expensesRes.rows.map(exp => ({
+          id: exp.id,
+          time: exp.created_at,
+          type: 'Gasto de Caja Menor',
+          doc_number: exp.category ? `Categoría: ${exp.category}` : 'Gasto Operativo',
+          entity_name: exp.concept,
+          notes: exp.notes,
+          amount: parseFloat(exp.amount || '0'),
+          payment_method: exp.payment_method || 'efectivo'
+        })),
+        ...advancesRows.map(adv => ({
+          id: adv.id,
+          time: adv.delivered_at,
+          type: 'Anticipo de Nómina',
+          doc_number: 'Anticipo de Sueldo',
+          entity_name: adv.employee_name,
+          notes: adv.notes,
+          amount: parseFloat(adv.amount || '0'),
+          payment_method: adv.payment_method || 'efectivo'
+        }))
+      ].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+
+      const totalCashIncomes = incomes.reduce((sum, item) => sum + item.amount, 0);
+      const totalCashExpenses = expenses.reduce((sum, item) => sum + item.amount, 0);
+      const initialCash = parseFloat(shift.initial_cash || '0');
+      const expectedCash = initialCash + totalCashIncomes - totalCashExpenses;
+
+      res.json({
+        success: true,
+        shift,
+        incomes,
+        expenses,
+        summary: {
+          initial_cash: initialCash,
+          total_cash_incomes: totalCashIncomes,
+          total_cash_expenses: totalCashExpenses,
+          expected_cash: expectedCash,
+          reported_cash_in_drawer: parseFloat(shift.reported_cash_in_drawer || '0'),
+          cash_difference: parseFloat(shift.cash_difference || '0'),
+          status: shift.status,
+          notes: shift.notes
+        }
+      });
+    } catch (err: any) {
+      console.error("[Cash Shift Audit Error]:", err);
       res.status(500).json({ success: false, error: err.message });
     }
   });
@@ -12577,11 +12726,11 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
-  // Agregar Gasto Operativo (Fijo u Ocasional)
+  // Agregar Gasto Operativo (Fijo u Ocasional) con Método de Pago
   app.post('/api/clients/:clientId/fixed-expenses', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId } = req.params;
-      const { concept, category, expense_type, expense_date, amount, notes, period_month_year } = req.body;
+      const { concept, category, expense_type, expense_date, amount, notes, period_month_year, payment_method } = req.body;
 
       if (!concept || !amount) {
         return res.status(400).json({ success: false, error: 'Concepto y monto son obligatorios.' });
@@ -12589,12 +12738,13 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 
       const effDate = expense_date || new Date().toISOString().split('T')[0];
       const periodMY = period_month_year || effDate.substring(0, 7);
+      const cleanPaymentMethod = (payment_method || 'transferencia').toLowerCase().trim();
 
       const result = await pool.query(
-        `INSERT INTO monthly_fixed_expenses (client_id, concept, category, expense_type, expense_date, amount, notes, period_month_year)
-         VALUES ($1, $2, $3, $4, $5::date, $6, $7, $8)
+        `INSERT INTO monthly_fixed_expenses (client_id, concept, category, expense_type, expense_date, amount, notes, period_month_year, payment_method)
+         VALUES ($1, $2, $3, $4, $5::date, $6, $7, $8, $9)
          RETURNING *, TO_CHAR(COALESCE(expense_date, created_at::date), 'YYYY-MM-DD') as effective_date, TO_CHAR(expense_date, 'YYYY-MM-DD') as expense_date_str`,
-        [clientId, concept, category || 'operativo', expense_type || 'fijo', effDate, parseFloat(amount), notes || null, periodMY]
+        [clientId, concept, category || 'operativo', expense_type || 'fijo', effDate, parseFloat(amount), notes || null, periodMY, cleanPaymentMethod]
       );
 
       res.json({ success: true, expense: result.rows[0] });
@@ -12614,11 +12764,11 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
     }
   });
 
-  // Editar Gasto Operativo (Fijo u Ocasional)
+  // Editar Gasto Operativo (Fijo u Ocasional) con Método de Pago
   app.put('/api/clients/:clientId/fixed-expenses/:id', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
     try {
       const { clientId, id } = req.params;
-      const { concept, category, expense_type, notes, amount, expense_date } = req.body;
+      const { concept, category, expense_type, notes, amount, expense_date, payment_method } = req.body;
 
       const reqUser = (req as any).user;
       const userRole = (reqUser?.role || reqUser?.employeeRole || '').toLowerCase();
@@ -12634,11 +12784,12 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       }
       const existing = existingRes.rows[0];
 
-      // Todos los usuarios con acceso pueden editar: concepto, categoría, tipo y notas
+      // Todos los usuarios con acceso pueden editar: concepto, categoría, tipo, notas y método de pago
       const updatedConcept = concept !== undefined ? concept : existing.concept;
       const updatedCategory = category !== undefined ? category : existing.category;
       const updatedExpenseType = expense_type !== undefined ? expense_type : existing.expense_type;
       const updatedNotes = notes !== undefined ? notes : existing.notes;
+      const updatedPaymentMethod = payment_method !== undefined ? String(payment_method).toLowerCase().trim() : (existing.payment_method || 'transferencia');
 
       // Solo administradores pueden modificar monto y fecha
       let updatedAmount = existing.amount;
@@ -12657,10 +12808,10 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
 
       const result = await pool.query(
         `UPDATE monthly_fixed_expenses
-         SET concept = $1, category = $2, expense_type = $3, notes = $4, amount = $5, expense_date = $6::date, period_month_year = $7
-         WHERE id = $8 AND client_id = $9
+         SET concept = $1, category = $2, expense_type = $3, notes = $4, amount = $5, expense_date = $6::date, period_month_year = $7, payment_method = $8
+         WHERE id = $9 AND client_id = $10
          RETURNING *, TO_CHAR(COALESCE(expense_date, created_at::date), 'YYYY-MM-DD') as effective_date, TO_CHAR(expense_date, 'YYYY-MM-DD') as expense_date_str`,
-        [updatedConcept, updatedCategory, updatedExpenseType, updatedNotes, updatedAmount, updatedExpenseDate, periodMY, id, clientId]
+        [updatedConcept, updatedCategory, updatedExpenseType, updatedNotes, updatedAmount, updatedExpenseDate, periodMY, updatedPaymentMethod, id, clientId]
       );
 
       res.json({ success: true, expense: result.rows[0], message: 'Gasto actualizado exitosamente.' });

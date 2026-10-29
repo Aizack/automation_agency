@@ -82,10 +82,13 @@ export const parseDateTime = (raw: string | Date | null | undefined): Date | nul
     return new Date(y, m - 1, d, 12, 0, 0);
   }
 
-  // Si es un timestamp sin indicador de zona horaria (ej: "2026-08-30 01:06:08.026545" o "2026-08-30T01:06:08")
-  // proveniente de Postgres (que almacena en UTC), añadirle la Z para que JS lo entienda como UTC
+  // Si es un timestamp sin indicador de zona horaria (ej: "2026-08-30 01:06:08.026545" o "2026-08-30T01:06:08"),
+  // almacenado directamente en hora local de la sede/empresa
   if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}/.test(str) && !str.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(str)) {
-    return new Date(str.replace(' ', 'T') + 'Z');
+    const parts = str.replace('T', ' ').split(' ');
+    const [y, m, d] = parts[0].split('-').map(Number);
+    const [hh, mm, ss] = parts[1].split(':').map(Number);
+    return new Date(y, m - 1, d, hh || 0, mm || 0, Math.floor(ss || 0));
   }
 
   const parsed = new Date(str);
