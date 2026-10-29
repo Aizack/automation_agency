@@ -1842,10 +1842,10 @@ export const ClientDashboard: React.FC<ClientDashboardProps> = ({ clientId: rawC
       </div>
 
       {/* Main Content Area Wabi-Sabi (64px margin-left on Desktop for Admins, 0px for Operational Staff) */}
-      <div className={`content-area main-content-wrapper ${isOperationalStaff ? 'ml-0' : 'ml-[64px]'} flex-1 flex flex-col min-h-screen bg-[#F6F4EE]`}>
+      <div className={`content-area main-content-wrapper ${isOperationalStaff ? 'ml-0' : 'ml-[64px]'} flex-1 flex flex-col min-h-screen bg-[#F6F4EE] w-full max-w-full overflow-x-hidden min-w-0`}>
         {/* Top Header Zen (Compacto 56px estilo Mockup) */}
-        <header className="top-header-zen sticky top-0 z-40 bg-[#F6F4EE] border-b border-[#E2DFD7] px-4 md:px-8 h-14 flex items-center justify-between">
-          <div className="top-header-left-zen flex items-center gap-3">
+        <header className="top-header-zen sticky top-0 z-40 bg-[#F6F4EE] border-b border-[#E2DFD7] px-4 md:px-8 h-14 flex items-center justify-between w-full max-w-full min-w-0">
+          <div className="top-header-left-zen flex items-center gap-3 shrink-0">
             {/* Botón Hamburguesa Móvil (Visible solo en md:hidden) */}
             <button 
               type="button"

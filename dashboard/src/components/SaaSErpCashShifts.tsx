@@ -70,6 +70,19 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
   const [isHandoverModalOpen, setIsHandoverModalOpen] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
+  const lastClosedShift = shifts.find(s => s.status === 'closed' || s.status === 'confirmed');
+
+  const handleOpenShiftModalWithSuggestedBase = () => {
+    const prevCash = lastClosedShift ? Number(lastClosedShift.reported_cash_in_drawer ?? lastClosedShift.expected_cash ?? 50000) : 50000;
+    setOpenInitialBase(String(prevCash > 0 ? prevCash : 50000));
+    setIsOpenModalOpen(true);
+  };
+
+  const handleOpenCloseModal = () => {
+    setCloseReportedCash('');
+    setIsCloseModalOpen(true);
+  };
+
   // Form states: Inicio de Caja (Apertura)
   const [openResponsibleName, setOpenResponsibleName] = useState(activeUserName);
   const [openInitialBase, setOpenInitialBase] = useState('50000');
@@ -348,10 +361,7 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
 
           {!isShiftOpen ? (
             <button
-              onClick={() => {
-                setOpenInitialBase('50000');
-                setIsOpenModalOpen(true);
-              }}
+              onClick={handleOpenShiftModalWithSuggestedBase}
               className="h-9 px-4 bg-[#137333] hover:bg-[#0f5b28] text-white font-mono font-bold text-xs rounded-none shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer border-0 uppercase tracking-wider"
             >
               <span className="material-symbols-outlined text-[16px]">lock_open</span>
@@ -359,10 +369,7 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
             </button>
           ) : (
             <button
-              onClick={() => {
-                setCloseReportedCash(currentShift?.live_expected_cash ? String(currentShift.live_expected_cash) : '');
-                setIsCloseModalOpen(true);
-              }}
+              onClick={handleOpenCloseModal}
               className="h-9 px-4 bg-[#D9381E] hover:bg-[#b82e18] text-white font-mono font-bold text-xs rounded-none shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer border-0 uppercase tracking-wider"
             >
               <span className="material-symbols-outlined text-[16px]">point_of_sale</span>
@@ -454,10 +461,7 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
             </div>
           </div>
           <button
-            onClick={() => {
-              setOpenInitialBase('50000');
-              setIsOpenModalOpen(true);
-            }}
+            onClick={handleOpenShiftModalWithSuggestedBase}
             className="h-9 px-4 bg-[#137333] hover:bg-[#0f5b28] text-white font-mono font-bold text-xs rounded-none shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer border-0 uppercase tracking-wider shrink-0"
           >
             <span className="material-symbols-outlined text-[16px]">lock_open</span>
@@ -550,8 +554,21 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
                   const endTimeStr = shift.status === 'open' ? 'En curso' : (shift.end_time ? formatLocalTime(shift.end_time, clientTimeZone) : '');
                   const dateStr = formatLocalDate(shift.shift_date || shift.start_time, clientTimeZone);
 
-                  const opener = shift.opened_by_name || shift.employee_out_name || 'Personal';
-                  const closer = shift.closed_by_name || shift.employee_in_name || (shift.status === 'open' ? '-' : opener);
+                  const opener = (shift.opened_by_name || shift.employee_out_name || 'Personal').trim();
+                  const rawCloser = (shift.closed_by_name || shift.employee_in_name || '').trim();
+                  const closer = (shift.status === 'open' || !rawCloser) ? '' : rawCloser;
+                  const isSamePerson = closer && (
+                    closer.toLowerCase() === opener.toLowerCase() ||
+                    opener.toLowerCase().startsWith(closer.toLowerCase()) ||
+                    closer.toLowerCase().startsWith(opener.toLowerCase())
+                  );
+
+                  const isCurrentOpen = shift.status === 'open';
+                  const liveSales = isCurrentOpen && currentShift ? currentShift.live_cash_sales : shift.total_cash_sales;
+                  const liveExpenses = isCurrentOpen && currentShift ? currentShift.live_cash_expenses : (shift.cash_expenses || 0);
+                  const parsedExpected = parseFloat(String(shift.expected_cash || '0'));
+                  const fallbackExpected = parseFloat(String(shift.initial_cash || '0')) + parseFloat(String(shift.total_cash_sales || '0')) - parseFloat(String(shift.cash_expenses || '0'));
+                  const liveExpected = isCurrentOpen && currentShift ? currentShift.live_expected_cash : (parsedExpected !== 0 ? parsedExpected : fallbackExpected);
 
                   return (
                     <tr key={shift.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
@@ -563,14 +580,14 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
                       </td>
                       <td className="p-3.5">
                         <p className="font-serif font-bold text-[#161616] text-xs">
-                          {opener} {closer && closer !== opener ? `➔ ${closer}` : ''}
+                          {opener} {closer && !isSamePerson ? `➔ ${closer}` : ''}
                         </p>
                         {shift.notes && <p className="text-[10px] text-[#76746E] italic truncate max-w-xs">{shift.notes}</p>}
                       </td>
                       <td className="p-3.5 font-mono text-xs text-[#161616] text-right">{formatCOP(shift.initial_cash)}</td>
-                      <td className="p-3.5 font-mono text-xs font-bold text-[#137333] text-right">+{formatCOP(shift.total_cash_sales)}</td>
-                      <td className="p-3.5 font-mono text-xs text-[#C5221F] text-right">-{formatCOP(shift.cash_expenses || 0)}</td>
-                      <td className="p-3.5 font-mono text-xs text-[#161616] text-right">{formatCOP(shift.expected_cash || (parseFloat(String(shift.initial_cash || 0)) + parseFloat(String(shift.total_cash_sales || 0))))}</td>
+                      <td className="p-3.5 font-mono text-xs font-bold text-[#137333] text-right">+{formatCOP(liveSales)}</td>
+                      <td className="p-3.5 font-mono text-xs text-[#C5221F] text-right">-{formatCOP(liveExpenses)}</td>
+                      <td className="p-3.5 font-mono text-xs text-[#161616] text-right">{formatCOP(liveExpected)}</td>
                       <td className="p-3.5 font-mono text-xs font-bold text-[#161616] text-right">
                         {shift.status === 'open' ? '-' : formatCOP(shift.reported_cash_in_drawer)}
                       </td>
@@ -659,9 +676,21 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
               </div>
 
               <div className="space-y-1">
-                <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
-                  Base Inicial de Caja ($ COP) *
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Base Inicial de Caja ($ COP) *
+                  </label>
+                  {lastClosedShift && (
+                    <button
+                      type="button"
+                      onClick={() => setOpenInitialBase(String(lastClosedShift.reported_cash_in_drawer ?? lastClosedShift.expected_cash ?? 0))}
+                      className="text-[10px] font-mono font-bold text-[#137333] hover:underline cursor-pointer bg-transparent border-0 p-0"
+                      title="Usar el saldo con el que cerró el último turno"
+                    >
+                      Usar saldo anterior: {formatCOP(lastClosedShift.reported_cash_in_drawer ?? lastClosedShift.expected_cash ?? 0)}
+                    </button>
+                  )}
+                </div>
                 <input
                   type="number"
                   placeholder="Ej: 50000"
@@ -671,7 +700,9 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
                   required
                 />
                 <span className="text-[10px] text-[#76746E] block font-mono">
-                  Dinero en billetes y monedas dejado como cambio inicial.
+                  {lastClosedShift 
+                    ? `Saldo al cierre anterior: ${formatCOP(lastClosedShift.reported_cash_in_drawer ?? lastClosedShift.expected_cash ?? 0)}. Si retiraste dinero para consignar o fondo fijo, ingresa la base real.`
+                    : 'Dinero en billetes y monedas dejado como cambio inicial.'}
                 </span>
               </div>
 
@@ -784,17 +815,34 @@ export const SaaSErpCashShifts: React.FC<SaaSErpCashShiftsProps> = ({ clientId: 
               </div>
 
               <div className="space-y-1">
-                <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
-                  Efectivo Físico Contado en Caja ($ COP) *
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="font-mono font-bold uppercase text-[10px] text-[#76746E] tracking-wider block">
+                    Efectivo Físico Contado en Caja ($ COP) *
+                  </label>
+                  {currentShift && currentShift.live_expected_cash > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setCloseReportedCash(String(currentShift.live_expected_cash))}
+                      className="text-[10px] font-mono text-blue-600 hover:underline cursor-pointer bg-transparent border-0 p-0"
+                      title="Copiar el monto esperado solo si el conteo físico coincide con exactitud"
+                    >
+                      Cuadre exacto ({formatCOP(currentShift.live_expected_cash)})
+                    </button>
+                  )}
+                </div>
                 <input
                   type="number"
-                  placeholder="Dinero contado en el cajón..."
+                  placeholder="Cuenta los billetes y escribe el monto exacto..."
                   value={closeReportedCash}
                   onChange={(e) => setCloseReportedCash(e.target.value)}
                   className="w-full bg-white border border-[#E2DFD7] rounded-none p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-mono font-bold"
                   required
                 />
+                {parseFloat(closeReportedCash) < 0 && (
+                  <p className="text-[11px] font-bold text-[#D9381E] bg-[#D9381E]/10 p-1.5 border border-[#D9381E]/30">
+                    ⚠️ El dinero físico contado no puede ser un número negativo. Verifica el conteo en el cajón.
+                  </p>
+                )}
               </div>
 
               {/* Diferencia calculada en vivo */}

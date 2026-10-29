@@ -1414,11 +1414,11 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                     <h2 className="font-serif text-4xl sm:text-5xl font-normal text-[#161616] tracking-tight leading-none">Facturación POS & Electrónica DIAN</h2>
                     <p className="text-xs text-[#6B6862] mt-2 font-sans">Emisión y control de facturas POS y Electrónicas DIAN con CUFE, QR fiscal y tiquetes térmicos 80mm.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5 flex-wrap">
                     <button
                         type="button"
                         onClick={() => setShowUpgradeModal(true)}
-                        className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[11px] font-bold py-2.5 px-3.5 flex items-center gap-1.5 transition cursor-pointer uppercase tracking-wider"
+                        className="bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] text-[11px] font-bold py-2.5 px-3 flex items-center gap-1.5 transition cursor-pointer uppercase tracking-wider shrink-0"
                     >
                         <span className="material-symbols-outlined text-[16px] text-[#D9381E]">workspace_premium</span>
                         Planes & Upgrade
@@ -1426,7 +1426,7 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                     <button
                         type="button"
                         onClick={() => setIsHistoricalModalOpen(true)}
-                        className="bg-[#C8A968] hover:bg-[#B39353] text-[#161616] text-[12px] font-bold py-3.5 px-5 flex items-center gap-2 transition-all cursor-pointer border-0 uppercase tracking-widest shadow-sm"
+                        className="bg-[#C8A968] hover:bg-[#B39353] text-[#161616] text-[12px] font-bold py-2.5 px-4 flex items-center gap-1.5 transition-all cursor-pointer border-0 uppercase tracking-widest shadow-sm shrink-0"
                     >
                         <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
@@ -1436,7 +1436,7 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                     <button
                         type="button"
                         onClick={() => openGlobalEmailHistoryModal()}
-                        className="bg-white hover:bg-[#FAF8F5] text-[#161616] text-[12px] font-bold py-3.5 px-4 flex items-center gap-2 transition-all cursor-pointer border border-[#E2DFD7] uppercase tracking-wider shadow-sm"
+                        className="bg-white hover:bg-[#FAF8F5] text-[#161616] text-[12px] font-bold py-2.5 px-3.5 flex items-center gap-1.5 transition-all cursor-pointer border border-[#E2DFD7] uppercase tracking-wider shadow-sm shrink-0"
                         title="Ver historial de todas las facturas enviadas por correo electrónico"
                     >
                         <span className="material-symbols-outlined text-[16px] text-blue-600">history_edu</span>
@@ -1445,7 +1445,7 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                     <button
                         type="button"
                         onClick={() => { resetForm(); setIsFormOpen(true); }}
-                        className="bg-[#161616] hover:bg-[#D9381E] text-white text-[12px] font-bold py-3.5 px-7 flex items-center gap-2 transition-all cursor-pointer border-0 uppercase tracking-widest shadow-sm"
+                        className="bg-[#161616] hover:bg-[#D9381E] text-white text-[12px] font-bold py-2.5 px-5 flex items-center gap-2 transition-all cursor-pointer border-0 uppercase tracking-widest shadow-sm shrink-0"
                     >
                         + CREAR FACTURA
                     </button>
