@@ -2049,14 +2049,16 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/annul', authenticateToken a
       // Ignorar si no aplica
     }
 
-    // Registrar en tabla de anulaciones
-    const annulledUserId = reqUser?.id || reqUser?.userId || reqUser?.employeeId || null;
+    // Registrar en tabla de anulaciones (Sanitización estricta de UUID para prevenir abortos en PostgreSQL)
+    const rawUserId = reqUser?.userId || reqUser?.id || reqUser?.employeeId || null;
+    const isValUUID = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+    const annulledUserId = isValUUID(rawUserId) ? rawUserId : (isValUUID(reqUser?.userId) ? reqUser.userId : null);
     const annulledUserName = reqUser?.name || reqUser?.contact_name || reqUser?.username || 'Admin';
 
     await dbClient.query(
       `INSERT INTO invoice_annulments (client_id, invoice_id, annulled_by_user_id, annulled_by_name, reason)
        VALUES ($1, $2, $3, $4, $5)`,
-      [clientId, invoiceId, annulledUserId, annulledUserName, reason.trim()]
+      [clientId, invoiceId, isValUUID(rawUserId) ? rawUserId : (reqUser?.id || null), annulledUserName, reason.trim()]
     );
 
     // Registrar en bitácora de auditoría general
@@ -7803,6 +7805,23 @@ app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authori
       }
     }
 
+    // Sincronizar y replicar administradores del negocio matriz a la sede si aún no existen
+    try {
+      await pool.query(
+        `INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
+         SELECT ucr.user_id, $1, ucr.role, ucr.permissions_json
+         FROM user_client_roles ucr
+         JOIN clients c ON c.id = $1
+         WHERE c.parent_client_id IS NOT NULL 
+           AND ucr.client_id = c.parent_client_id
+           AND ucr.role IN ('admin', 'admin_tenant', 'gerente')
+         ON CONFLICT (user_id, client_id, role) DO NOTHING`,
+        [clientId]
+      );
+    } catch (syncErr) {
+      console.warn('[Tenant Users Sync] Warning:', syncErr);
+    }
+
     const result = await pool.query(
       `SELECT u.id AS id, u.username, u.full_name, u.email, u.phone, 
               COALESCE(u.country, 'Colombia') AS country, 
@@ -7813,6 +7832,10 @@ app.get('/api/clients/:clientId/tenant-users', authenticateToken as any, authori
        FROM user_client_roles r
        INNER JOIN users u ON u.id = r.user_id
        WHERE r.client_id = $1
+          OR (
+            r.client_id = (SELECT parent_client_id FROM clients WHERE id = $1 AND parent_client_id IS NOT NULL)
+            AND r.role IN ('admin', 'admin_tenant', 'gerente')
+          )
        ORDER BY u.full_name ASC, u.username ASC`,
       [clientId]
     );
@@ -7891,6 +7914,24 @@ app.post('/api/clients/:clientId/tenant-users', authenticateToken as any, author
        RETURNING *`,
       [user.id, clientId, cleanRole, JSON.stringify({ modules: cleanPermissions })]
     );
+
+    // Si el rol es administrativo, sincronizarlo automáticamente a todas las sedes del negocio
+    if (cleanRole === 'admin' || cleanRole === 'admin_tenant' || cleanRole === 'gerente') {
+      try {
+        await pool.query(
+          `INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
+           SELECT $1, c.id, $3, $4::jsonb
+           FROM clients c
+           WHERE (c.parent_client_id = $2 OR (c.parent_client_id = (SELECT parent_client_id FROM clients WHERE id = $2 AND parent_client_id IS NOT NULL)) OR c.id = (SELECT parent_client_id FROM clients WHERE id = $2 AND parent_client_id IS NOT NULL))
+             AND c.id != $2
+           ON CONFLICT (user_id, client_id, role)
+           DO UPDATE SET permissions_json = EXCLUDED.permissions_json`,
+          [user.id, clientId, cleanRole, JSON.stringify({ modules: cleanPermissions })]
+        );
+      } catch (syncErr) {
+        console.warn('[Tenant Users] Warning sincronizando admin a sedes:', syncErr);
+      }
+    }
 
     res.json({
       success: true,
@@ -13510,6 +13551,20 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
           custom_tax_id || null
         ]
       );
+
+      // Replicar automáticamente todos los administradores del negocio matriz a la nueva sede
+      try {
+        await pool.query(
+          `INSERT INTO user_client_roles (user_id, client_id, role, permissions_json)
+           SELECT ucr.user_id, $1, ucr.role, ucr.permissions_json
+           FROM user_client_roles ucr
+           WHERE ucr.client_id = $2 AND ucr.role IN ('admin', 'admin_tenant', 'gerente')
+           ON CONFLICT (user_id, client_id, role) DO NOTHING`,
+          [branchId, rootClientId]
+        );
+      } catch (branchSyncErr) {
+        console.warn('[Branch Create] Warning replicando administradores:', branchSyncErr);
+      }
 
       res.json({ 
         success: true, 
