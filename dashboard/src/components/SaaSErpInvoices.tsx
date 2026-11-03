@@ -37,6 +37,10 @@ interface Invoice {
     seller_employee_id?: string | null;
     seller_name?: string | null;
     paid_at?: string | null;
+    last_email_sent_at?: string | null;
+    last_email_recipient?: string | null;
+    last_email_message_id?: string | null;
+    email_sent_count?: number;
 }
 
 interface Product {
@@ -545,6 +549,18 @@ export const SaaSErpInvoices: React.FC<SaaSErpInvoicesProps> = ({ clientId: rawC
             const json = await res.json();
             if (json.success) {
                 setEmailPreviewModalOpen(false);
+                setInvoices(prev => prev.map(inv => {
+                    if (inv.id === emailPreviewData.invoiceId) {
+                        return {
+                            ...inv,
+                            last_email_sent_at: new Date().toISOString(),
+                            last_email_recipient: emailRecipientInput.trim(),
+                            last_email_message_id: json.messageId,
+                            email_sent_count: (inv.email_sent_count || 0) + 1
+                        };
+                    }
+                    return inv;
+                }));
                 alert(`¡Factura #${emailPreviewData.invoiceNumber} enviada con éxito!
 
 Destinatario: ${emailRecipientInput.trim()}
@@ -2845,6 +2861,38 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                                                     Soporte
                                                 </span>
                                             )}
+
+                                            {/* Indicativo Visual de Envío por Correo */}
+                                            {inv.email_sent_count && inv.email_sent_count > 0 ? (
+                                                <span 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openEmailPreviewModal(inv);
+                                                    }}
+                                                    className="bg-emerald-50 text-emerald-900 border border-emerald-300 hover:border-emerald-600 px-2 py-0.5 text-[11px] font-bold flex items-center gap-1 cursor-pointer font-sans shadow-xs transition-colors"
+                                                    title={`✓ Correo Enviado con Éxito\nDestinatario: ${inv.last_email_recipient || 'Cliente'}\nFecha: ${inv.last_email_sent_at ? formatLocalDate(inv.last_email_sent_at) + ' ' + formatLocalTime(inv.last_email_sent_at) : 'Enviado'}${inv.last_email_message_id ? '\nID Google Gmail: ' + inv.last_email_message_id : ''}\n(Haz clic para ver o reenviar)`}
+                                                >
+                                                    <span className="material-symbols-outlined text-[13px] text-emerald-600 font-bold">mark_email_read</span>
+                                                    <span>Enviado</span>
+                                                    {inv.email_sent_count > 1 && (
+                                                        <span className="bg-emerald-200 text-emerald-950 text-[9px] px-1 rounded-full font-mono font-bold">
+                                                            x{inv.email_sent_count}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            ) : inv.customer_email ? (
+                                                <span 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openEmailPreviewModal(inv);
+                                                    }}
+                                                    className="bg-[#FAF8F5] text-[#76746E] hover:text-[#161616] border border-[#E2DFD7] hover:border-[#161616] px-2 py-0.5 text-[10px] font-mono flex items-center gap-1 cursor-pointer transition-colors"
+                                                    title={`Sin enviar por correo aún (Destinatario registrado: ${inv.customer_email}). Haz clic para enviar.`}
+                                                >
+                                                    <span className="material-symbols-outlined text-[12px]">mail</span>
+                                                    <span>Sin Enviar</span>
+                                                </span>
+                                            ) : null}
                                         </div>
                                         {inv.status === 'paid' && inv.paid_at && (
                                             <div className="text-xs text-[#14532D] font-sans font-semibold flex items-center gap-1 mt-1" title={new Date(inv.paid_at).toLocaleString('es-CO')}>
@@ -2882,6 +2930,21 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                                                     </button>
                                                 </>
                                             )}
+                                            <button 
+                                                onClick={() => openEmailPreviewModal(inv)}
+                                                className={`p-1.5 border rounded-none transition cursor-pointer flex items-center justify-center ${
+                                                    inv.email_sent_count && inv.email_sent_count > 0 
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-500' 
+                                                        : 'bg-white hover:bg-[#FAF8F5] text-[#161616] border-[#E2DFD7]'
+                                                }`}
+                                                title={inv.email_sent_count && inv.email_sent_count > 0 
+                                                    ? `Factura ya enviada a ${inv.last_email_recipient || 'cliente'} (Haz clic para ver o reenviar)` 
+                                                    : "Enviar Factura por Correo Electrónico"}
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">
+                                                    {inv.email_sent_count && inv.email_sent_count > 0 ? 'mark_email_read' : 'mail'}
+                                                </span>
+                                            </button>
                                             <button 
                                                 onClick={() => handlePrintInvoice(inv)}
                                                 className="p-1.5 bg-white hover:bg-[#FAF8F5] text-[#161616] border border-[#E2DFD7] rounded-none transition cursor-pointer flex items-center justify-center"

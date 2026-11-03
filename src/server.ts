@@ -4434,6 +4434,11 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
                 (CASE WHEN i.status = 'paid' THEN COALESCE(i.updated_at, i.created_at) ELSE NULL END)
               ) as paid_at,
               i.reminder_sent, i.overdue_sent, i.payment_method, i.transfer_bank, i.transfer_destination_account, i.payment_receipt_url, i.installments_count, i.installment_frequency, i.delivery_method, i.delivery_fee, i.delivery_address, i.delivery_date, i.delivery_status, i.cufe, i.qr_code_url, i.electronic_status, i.seller_employee_id, i.created_by_user_id, i.created_by_user_name, i.created_at, COALESCE(i.seller_name, NULLIF(TRIM(CONCAT(e.name, ' ', e.last_name)), ''), 'Sin asignar') as seller_name 
+,
+              (SELECT el.created_at FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent' ORDER BY el.created_at DESC LIMIT 1) as last_email_sent_at,
+              (SELECT el.recipient_email FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent' ORDER BY el.created_at DESC LIMIT 1) as last_email_recipient,
+              (SELECT el.message_id FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent' ORDER BY el.created_at DESC LIMIT 1) as last_email_message_id,
+              (SELECT COUNT(*)::int FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent') as email_sent_count
        FROM invoices i 
        LEFT JOIN employees e ON i.seller_employee_id = e.id
        WHERE i.client_id = $1 
