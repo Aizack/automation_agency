@@ -1294,13 +1294,20 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                                         <input
                                                                             type="number"
                                                                             min="0"
+                                                                            disabled={!isAdmin}
                                                                             value={v.stock}
                                                                             onChange={(e) => {
+                                                                                if (!isAdmin) return;
                                                                                 const updated = [...variantList];
                                                                                 updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
                                                                                 setVariantList(updated);
                                                                             }}
-                                                                            className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono font-bold text-center outline-none rounded-none w-20"
+                                                                            title={!isAdmin ? 'El stock solo puede ser modificado por administradores' : undefined}
+                                                                            className={`p-2 text-xs font-mono font-bold text-center outline-none rounded-none w-20 border transition ${
+                                                                                !isAdmin 
+                                                                                    ? 'bg-[#F2EFE9] text-[#8F8C84] cursor-not-allowed border-[#D1CCC0] select-none opacity-80' 
+                                                                                    : 'bg-white text-[#161616] border-[#E2DFD7] focus:border-[#161616]'
+                                                                            }`}
                                                                         />
                                                                     </td>
                                                                     <td className="py-2 px-2 text-center">
@@ -1361,18 +1368,36 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div className="flex flex-col gap-1.5">
-                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">
-                                                            {isDraftMode ? 'Cantidad a Pedir *' : 'Stock Disponible *'}
+                                                        <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
+                                                            <span>{isDraftMode ? 'Cantidad a Pedir *' : 'Stock Disponible *'}</span>
+                                                            {!isAdmin && (
+                                                                <span className="text-[9px] text-[#D9381E] font-bold tracking-normal uppercase bg-[#FFF5F5] px-1.5 py-0.5 border border-[#FAD2CF]">
+                                                                    🔒 Solo Administrador
+                                                                </span>
+                                                            )}
                                                         </label>
                                                         <input 
                                                             type="number"
                                                             min="0"
-                                                            className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-mono font-bold outline-none rounded-none"
+                                                            disabled={!isAdmin}
+                                                            className={`p-3 text-xs font-mono font-bold outline-none rounded-none border transition ${
+                                                                !isAdmin 
+                                                                    ? 'bg-[#F2EFE9] text-[#8F8C84] cursor-not-allowed border-[#D1CCC0] select-none opacity-80' 
+                                                                    : 'bg-white text-[#161616] border-[#E2DFD7] focus:border-[#161616]'
+                                                            }`}
                                                             value={stock}
-                                                            onChange={(e) => setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
+                                                            onChange={(e) => {
+                                                                if (!isAdmin) return;
+                                                                setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0));
+                                                            }}
                                                             placeholder="Ej: 15"
                                                             required
                                                         />
+                                                        {!isAdmin && (
+                                                            <span className="text-[10px] text-[#8F8C84]">
+                                                                El stock no puede modificarse directamente por colaboradores. Solo un administrador o compras pueden alterarlo.
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <div className="flex flex-col gap-1.5">
                                                         <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold">Stock Mínimo de Alerta</label>

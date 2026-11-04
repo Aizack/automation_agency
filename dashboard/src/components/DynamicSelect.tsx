@@ -34,7 +34,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
     const [saving, setSaving] = useState(false);
     const [deletingOpt, setDeletingOpt] = useState<string | null>(null);
 
-    // Estado para búsqueda rápida mediante Lupita
+    // Estado para búsqueda y gestión (Eliminar / Filtrar)
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -73,7 +73,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
         return unique.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
     }, [options]);
 
-    // Opciones filtradas en tiempo real para la Lupita de búsqueda
+    // Opciones filtradas en tiempo real para el modal de gestión
     const filteredOptions = useMemo(() => {
         if (!searchQuery.trim()) return sortedOptions;
         const q = searchQuery.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -87,6 +87,9 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
         if (val === '__ADD_NEW__') {
             setNewOptionValue('');
             setIsAddModalOpen(true);
+        } else if (val === '__MANAGE_OPTIONS__') {
+            setSearchQuery('');
+            setIsSearchOpen(true);
         } else {
             onChange(val);
         }
@@ -138,7 +141,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
             e.preventDefault();
             e.stopPropagation();
         }
-        if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente la opción "${optToDelete}"? Se borrará de la lista desplegable.`)) {
+        if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente "${optToDelete}"? Se borrará de la lista de marcas de todas las sedes.`)) {
             return;
         }
 
@@ -184,8 +187,8 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                         className="text-[10px] font-bold text-[#6B6862] hover:text-[#D9381E] flex items-center gap-1 cursor-pointer transition uppercase tracking-wider bg-transparent border-0"
                         title={`Buscar y administrar ${displayTitle}`}
                     >
-                        <span className="material-symbols-outlined text-[13px]">search</span>
-                        Buscar / Gestionar
+                        <span className="material-symbols-outlined text-[13px]">tune</span>
+                        Gestionar / Borrar
                     </button>
                 </div>
             )}
@@ -210,47 +213,67 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                     <option value="__ADD_NEW__" className="font-bold text-[#D9381E] bg-[#FAF8F5]">
                         ➕ Agregar nueva opción...
                     </option>
+                    <option value="__MANAGE_OPTIONS__" className="font-bold text-[#D9381E] bg-[#FFF5F5]">
+                        🗑️ Eliminar / Gestionar marcas...
+                    </option>
                 </select>
 
                 <button
                     type="button"
                     onClick={() => {
                         setSearchQuery('');
-                        setIsSearchOpen(!isSearchOpen);
+                        setIsSearchOpen(true);
                     }}
-                    title={`Buscar y gestionar ${displayTitle} (Lupa)`}
+                    title={`Buscar ${displayTitle}`}
                     disabled={disabled || loading}
                     className="px-2.5 bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] text-[#161616] transition cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-50"
                 >
                     <span className="material-symbols-outlined text-[16px]">search</span>
                 </button>
+
+                <button
+                    type="button"
+                    onClick={() => {
+                        setSearchQuery('');
+                        setIsSearchOpen(true);
+                    }}
+                    title={`Eliminar marcas de la lista (${displayTitle})`}
+                    disabled={disabled || loading}
+                    className="px-2.5 bg-[#FFF5F5] hover:bg-[#FAD2CF] border border-[#E2DFD7] hover:border-[#D9381E] text-[#D9381E] transition cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-50"
+                >
+                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                </button>
             </div>
 
-            {/* Popover de Búsqueda Rápida y Gestión (Eliminar/Buscar) con Lupita */}
-            {isSearchOpen && (
-                <div className="relative w-full">
-                    {/* Backdrop para cerrar al hacer clic afuera */}
+            {/* Modal de Gestión y Eliminación de Opciones Portaleado a document.body */}
+            {isSearchOpen && createPortal(
+                <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
                     <div
-                        className="fixed inset-0 z-[99998]"
+                        className="fixed inset-0"
                         onClick={() => setIsSearchOpen(false)}
                     />
-                    <div className="absolute top-1 left-0 right-0 z-[99999] bg-[#FAF8F5] border-2 border-[#161616] shadow-2xl p-2.5 space-y-2 animate-fade-in text-left">
-                        <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-1.5">
-                            <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[14px] text-[#D9381E]">tune</span>
-                                Buscar / Gestionar {displayTitle}
-                            </span>
+                    <div className="relative bg-[#FAF8F5] border-2 border-[#161616] shadow-2xl p-6 w-full max-w-lg space-y-4 text-left z-10 max-h-[90vh] flex flex-col">
+                        <div className="flex items-start justify-between border-b border-[#E2DFD7] pb-3">
+                            <div>
+                                <h4 className="font-serif text-lg font-bold text-[#161616] flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[#D9381E] text-[22px]">tune</span>
+                                    Gestionar y Eliminar {displayTitle}
+                                </h4>
+                                <p className="text-[11px] text-[#6B6862] mt-0.5">
+                                    Selecciona una opción para usarla, o haz clic en <strong>Eliminar</strong> para borrarla permanentemente de la lista de todas las sedes.
+                                </p>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => setIsSearchOpen(false)}
-                                className="text-xs font-bold text-[#6B6862] hover:text-[#D9381E] px-1 py-0.5 border-0 bg-transparent cursor-pointer"
+                                className="text-sm font-bold text-[#6B6862] hover:text-[#D9381E] p-1 border-0 bg-transparent cursor-pointer"
                             >
                                 ✕
                             </button>
                         </div>
 
                         <div className="relative">
-                            <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-[15px] text-[#6B6862]">
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[17px] text-[#6B6862]">
                                 search
                             </span>
                             <input
@@ -258,8 +281,8 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                                 autoFocus
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder={`Escribe para filtrar ${displayTitle}...`}
-                                className="w-full bg-white border border-[#E2DFD7] pl-8 pr-3 py-1.5 text-xs text-[#161616] outline-none focus:border-[#161616] font-sans"
+                                placeholder={`Buscar o filtrar ${displayTitle}...`}
+                                className="w-full bg-white border border-[#E2DFD7] pl-9 pr-3 py-2 text-xs text-[#161616] outline-none focus:border-[#161616] font-sans"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Escape') {
                                         setIsSearchOpen(false);
@@ -272,14 +295,14 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                             />
                         </div>
 
-                        <div className="max-h-52 overflow-y-auto border border-[#E2DFD7] bg-white divide-y divide-[#E2DFD7]/50">
+                        <div className="flex-1 overflow-y-auto max-h-64 border border-[#E2DFD7] bg-white divide-y divide-[#E2DFD7]/60">
                             {filteredOptions.length > 0 ? (
                                 filteredOptions.map((opt) => {
                                     const isSelected = opt.toLowerCase() === (value || '').toLowerCase();
                                     return (
                                         <div
                                             key={opt}
-                                            className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between transition ${
+                                            className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between transition ${
                                                 isSelected
                                                     ? 'bg-[#161616] text-white font-bold'
                                                     : 'hover:bg-[#FAF8F5] text-[#161616]'
@@ -291,29 +314,33 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                                                     onChange(opt);
                                                     setIsSearchOpen(false);
                                                 }}
-                                                className="flex-1 text-left bg-transparent border-0 cursor-pointer p-0 text-inherit font-inherit flex items-center justify-between py-1"
+                                                className="flex-1 text-left bg-transparent border-0 cursor-pointer p-0 text-inherit font-inherit flex items-center gap-2 py-1"
+                                                title={`Seleccionar "${opt}"`}
                                             >
                                                 <span>{opt}</span>
-                                                {isSelected && <span className="text-xs mr-2">✓</span>}
+                                                {isSelected && <span className="text-xs text-white bg-[#D9381E] px-1.5 py-0.2 rounded-xs font-mono font-bold">Activa</span>}
                                             </button>
                                             <button
                                                 type="button"
-                                                title={`Eliminar permanentemente "${opt}"`}
+                                                title={`Eliminar permanentemente "${opt}" de la lista`}
                                                 disabled={deletingOpt === opt}
                                                 onClick={(e) => handleDeleteOption(opt, e)}
-                                                className={`p-1 border-0 bg-transparent cursor-pointer transition rounded-xs flex items-center justify-center shrink-0 ml-2 ${
-                                                    isSelected ? 'text-white/70 hover:text-white' : 'text-[#8F8C84] hover:text-[#D9381E]'
+                                                className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-none cursor-pointer transition flex items-center gap-1 border shrink-0 ml-3 ${
+                                                    isSelected
+                                                        ? 'bg-white/10 hover:bg-[#D9381E] text-white border-white/20'
+                                                        : 'bg-[#FFF5F5] hover:bg-[#D9381E] text-[#D9381E] hover:text-white border-[#FAD2CF]'
                                                 }`}
                                             >
-                                                <span className="material-symbols-outlined text-[15px]">
+                                                <span className="material-symbols-outlined text-[14px]">
                                                     {deletingOpt === opt ? 'sync' : 'delete'}
                                                 </span>
+                                                {deletingOpt === opt ? 'Borrando...' : 'Borrar'}
                                             </button>
                                         </div>
                                     );
                                 })
                             ) : (
-                                <div className="p-3 text-center space-y-2">
+                                <div className="p-5 text-center space-y-3">
                                     <p className="text-xs text-[#6B6862]">
                                         No se encontró "<strong>{searchQuery}</strong>".
                                     </p>
@@ -326,7 +353,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                                             setIsSearchOpen(false);
                                             setIsAddModalOpen(true);
                                         }}
-                                        className="w-full py-1.5 px-3 bg-[#D9381E] hover:bg-[#b82e17] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer border-0 transition"
+                                        className="py-2 px-4 bg-[#D9381E] hover:bg-[#b82e17] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer border-0 transition"
                                     >
                                         ➕ Crear "{searchQuery.trim()}"
                                     </button>
@@ -334,105 +361,97 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                             )}
                         </div>
 
-                        <div className="flex items-center justify-between pt-1">
-                            <span className="text-[10px] text-[#6B6862]">
+                        <div className="flex items-center justify-between pt-2 border-t border-[#E2DFD7]">
+                            <span className="text-[11px] text-[#6B6862] font-mono">
                                 {filteredOptions.length} de {sortedOptions.length} opciones
                             </span>
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setIsSearchOpen(false);
-                                    setNewOptionValue('');
-                                    setIsAddModalOpen(true);
-                                }}
-                                className="text-[10px] font-bold text-[#D9381E] hover:underline cursor-pointer bg-transparent border-0"
-                            >
-                                + Nueva opción personalizada
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsSearchOpen(false);
+                                        setNewOptionValue('');
+                                        setIsAddModalOpen(true);
+                                    }}
+                                    className="px-3 py-1.5 bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[11px] font-bold uppercase tracking-wider cursor-pointer transition flex items-center gap-1"
+                                >
+                                    <span className="material-symbols-outlined text-[14px] text-[#D9381E]">add</span>
+                                    Nueva Opción
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsSearchOpen(false)}
+                                    className="px-4 py-1.5 bg-[#161616] hover:bg-[#2c2c2c] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer border-0 transition"
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Modal Quick Creation: Completamente aislado sin tag <form> para no disparar guardado del producto */}
             {isAddModalOpen && createPortal(
-                <div 
-                    className="fixed inset-0 bg-[#161616]/70 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div 
-                        className="bg-[#F6F4EE] border-2 border-[#161616] p-6 max-w-md w-full shadow-2xl animate-fade-in space-y-4"
-                        onClick={(e) => e.stopPropagation()}
-                    >
+                <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+                    <div
+                        className="fixed inset-0"
+                        onClick={() => !saving && setIsAddModalOpen(false)}
+                    />
+                    <div className="relative bg-[#FAF8F5] border-2 border-[#161616] shadow-2xl p-6 w-full max-w-sm space-y-4 text-left z-10">
                         <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-3">
-                            <h3 className="font-serif text-lg font-normal text-[#161616] flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[#D9381E]">add_circle</span>
-                                Agregar Opción Personalizada
-                            </h3>
+                            <h4 className="font-serif text-base font-bold text-[#161616] flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[#D9381E] text-[20px]">add_circle</span>
+                                Nueva Opción ({displayTitle})
+                            </h4>
                             <button
                                 type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsAddModalOpen(false);
-                                }}
-                                className="text-xl font-light text-[#161616] hover:text-[#D9381E] cursor-pointer border-0 bg-transparent"
+                                disabled={saving}
+                                onClick={() => setIsAddModalOpen(false)}
+                                className="text-xs font-bold text-[#6B6862] hover:text-[#D9381E] border-0 bg-transparent cursor-pointer"
                             >
-                                &times;
+                                ✕
                             </button>
                         </div>
 
-                        <p className="text-xs text-[#6B6862]">
-                            Ingresa el nombre de la nueva opción para <strong>{displayTitle}</strong>. Quedará guardada permanentemente para tu tienda.
-                        </p>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider">
+                                Nombre de la nueva opción:
+                            </label>
+                            <input
+                                type="text"
+                                autoFocus
+                                value={newOptionValue}
+                                onChange={(e) => setNewOptionValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleSaveNewOption();
+                                    }
+                                }}
+                                placeholder="Ej: Ray-Ban, Acetato Premium..."
+                                className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] outline-none focus:border-[#161616] rounded-none font-sans"
+                            />
+                        </div>
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#161616] mb-1">
-                                    Nombre de la Nueva Opción *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newOptionValue}
-                                    onChange={(e) => setNewOptionValue(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleSaveNewOption();
-                                        }
-                                    }}
-                                    placeholder="Ej: LUXOR, Titanio Flexible, AR Verde, etc."
-                                    className="w-full bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] rounded-none"
-                                    autoFocus
-                                    required
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-2 pt-2 border-t border-[#E2DFD7]">
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsAddModalOpen(false);
-                                    }}
-                                    className="px-4 py-2 bg-white border border-[#E2DFD7] text-[#161616] text-xs font-bold uppercase tracking-wider cursor-pointer rounded-none"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleSaveNewOption(e);
-                                    }}
-                                    disabled={saving || !newOptionValue.trim()}
-                                    className="px-5 py-2 bg-[#161616] hover:bg-[#D9381E] text-white text-xs font-bold uppercase tracking-wider cursor-pointer rounded-none border-0 transition disabled:opacity-50"
-                                >
-                                    {saving ? 'Guardando...' : 'Guardar y Seleccionar ✓'}
-                                </button>
-                            </div>
+                        <div className="flex justify-end gap-2 pt-2 border-t border-[#E2DFD7]">
+                            <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => setIsAddModalOpen(false)}
+                                className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] px-4 py-2 text-xs font-bold uppercase tracking-wider cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                disabled={saving || !newOptionValue.trim()}
+                                onClick={handleSaveNewOption}
+                                className="bg-[#D9381E] hover:bg-[#b82e18] text-white border-0 px-4 py-2 text-xs font-bold uppercase tracking-wider cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                            >
+                                {saving ? 'Guardando...' : 'Guardar y Seleccionar'}
+                            </button>
                         </div>
                     </div>
                 </div>,

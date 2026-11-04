@@ -995,29 +995,46 @@ app.get('/api/clients/:clientId/custom-options', authenticateToken as any, autho
 
 
 
-    const mergedOptions: Record<string, string[]> = {};
-
+        const mergedOptions: Record<string, string[]> = {};
     const allKeys = Array.from(new Set([...Object.keys(DEFAULT_DROPDOWN_OPTIONS), ...Object.keys(storedOptions)]));
 
-
-
-    for (const key of allKeys) {
-
-      const defaults = DEFAULT_DROPDOWN_OPTIONS[key] || [];
-
-      const customs = Array.isArray(storedOptions[key]) ? storedOptions[key] : [];
-
-      const combined = Array.from(new Set([...defaults, ...customs])).filter(Boolean);
-
-      // Ordenamiento alfabético automático A-Z para facilitar la búsqueda
-
-      combined.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
-
-      mergedOptions[key] = combined;
-
+    // Recolectar lista negra de opciones eliminadas (tanto de la tienda actual como de su sede matriz)
+    const deletedMap: Record<string, Set<string>> = {};
+    const collectDeleted = (optsObj: any) => {
+      if (optsObj?.deleted_options && typeof optsObj.deleted_options === 'object') {
+        for (const [cat, list] of Object.entries(optsObj.deleted_options)) {
+          if (!deletedMap[cat]) deletedMap[cat] = new Set();
+          if (Array.isArray(list)) {
+            list.forEach((item: any) => {
+              if (item) deletedMap[cat].add(String(item).trim().toLowerCase());
+            });
+          }
+        }
+      }
+    };
+    collectDeleted(storedOptions);
+    if (parentClientId) {
+      try {
+        const pCheck = await pool.query('SELECT custom_dropdown_options FROM clients WHERE id = $1', [parentClientId]);
+        collectDeleted(pCheck.rows[0]?.custom_dropdown_options);
+      } catch (pErr) {
+        console.warn('[Custom Options] Warning leyendo deleted_options de parent:', pErr);
+      }
     }
 
+    for (const key of allKeys) {
+      if (key === 'deleted_options') continue;
+      const defaults = DEFAULT_DROPDOWN_OPTIONS[key] || [];
+      const customs = Array.isArray(storedOptions[key]) ? storedOptions[key] : [];
+      const combined = Array.from(new Set([...defaults, ...customs])).filter(Boolean);
 
+      const catDeleted = deletedMap[key] || new Set();
+      const filtered = combined.filter(opt => !catDeleted.has(String(opt).trim().toLowerCase()));
+
+      // Ordenamiento alfabético automático A-Z para facilitar la búsqueda
+      filtered.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+      mergedOptions[key] = filtered;
+    }
 
     res.json({ success: true, options: mergedOptions });
 
@@ -1098,36 +1115,77 @@ app.post('/api/clients/:clientId/custom-options', authenticateToken as any, auth
 // DELETE Eliminar Opción Personalizada de un Dropdown
 app.delete('/api/clients/:clientId/custom-options', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
-    const { clientId } = req.params;
+    const clientId = String(req.params.clientId);
     const { categoryKey, optionValue } = req.body;
 
     if (!categoryKey || !optionValue) {
       return res.status(400).json({ success: false, error: 'Se requiere una categoría y la opción a eliminar.' });
     }
 
-    const clientRes = await pool.query('SELECT custom_dropdown_options FROM clients WHERE id = $1', [clientId]);
-    const storedOptions = clientRes.rows[0]?.custom_dropdown_options || {};
-    const currentList: string[] = Array.isArray(storedOptions[categoryKey]) ? storedOptions[categoryKey] : [];
-
     const targetDel = String(optionValue).trim().toLowerCase();
-    storedOptions[categoryKey] = currentList.filter(item => item && item.trim().toLowerCase() !== targetDel);
 
-    await pool.query('UPDATE clients SET custom_dropdown_options = $1 WHERE id = $2', [JSON.stringify(storedOptions), clientId]);
+    // Helper para eliminar y agregar a blacklist permanente en un cliente
+    const deleteFromClient = async (cId: string) => {
+      const cRes = await pool.query('SELECT custom_dropdown_options, parent_client_id FROM clients WHERE id = $1', [cId]);
+      if (cRes.rows.length === 0) return null;
+      const opts = cRes.rows[0].custom_dropdown_options || {};
+      const currentList: string[] = Array.isArray(opts[categoryKey]) ? opts[categoryKey] : [];
+      opts[categoryKey] = currentList.filter(item => item && item.trim().toLowerCase() !== targetDel);
+      
+      if (!opts.deleted_options) opts.deleted_options = {};
+      if (!Array.isArray(opts.deleted_options[categoryKey])) opts.deleted_options[categoryKey] = [];
+      if (!opts.deleted_options[categoryKey].some((d: string) => d.toLowerCase() === targetDel)) {
+        opts.deleted_options[categoryKey].push(targetDel);
+      }
 
+      await pool.query('UPDATE clients SET custom_dropdown_options = $1 WHERE id = $2', [JSON.stringify(opts), cId]);
+      return { parentClientId: cRes.rows[0].parent_client_id, opts };
+    };
+
+    const currentRes = await deleteFromClient(clientId);
+    const parentClientId = currentRes?.parentClientId;
+
+    if (parentClientId) {
+      await deleteFromClient(parentClientId);
+    }
+
+    // Limpiar en todas las sucursales hijas (para que no quede residuo en ninguna tienda de la empresa)
+    const rootClientId = parentClientId || clientId;
+    const childBranches = await pool.query('SELECT id FROM clients WHERE parent_client_id = $1 OR parent_client_id = $2', [rootClientId, clientId]);
+    for (const row of childBranches.rows) {
+      await deleteFromClient(row.id);
+    }
+
+    // Si la categoría es 'brands', también desvincular esa marca en productos existentes para que no se reinyecte
+    if (categoryKey === 'brands') {
+      try {
+        await pool.query(
+          `UPDATE products SET brand = NULL 
+           WHERE (client_id = $1 OR client_id = $2 OR client_id IN (SELECT id FROM clients WHERE parent_client_id = $1 OR parent_client_id = $2))
+             AND LOWER(TRIM(brand)) = $3`,
+          [clientId, rootClientId, targetDel]
+        );
+      } catch (updErr) {
+        console.warn('[Custom Options] Warning limpiando marca en productos:', updErr);
+      }
+    }
+
+    // Obtener la lista resultante filtrada
     const defaults = (DEFAULT_DROPDOWN_OPTIONS[categoryKey] || []).filter(item => item && item.trim().toLowerCase() !== targetDel);
-    const seenDel = new Set();
-    const fullList = [];
-    for (const opt of [...defaults, ...storedOptions[categoryKey]]) {
+    const remainingCustoms = (currentRes?.opts[categoryKey] || []).filter((item: string) => item && item.trim().toLowerCase() !== targetDel);
+    const seenDel = new Set<string>();
+    const fullList: string[] = [];
+    for (const opt of [...defaults, ...remainingCustoms]) {
       if (!opt) continue;
       const lower = opt.trim().toLowerCase();
-      if (!seenDel.has(lower)) {
+      if (!seenDel.has(lower) && lower !== targetDel) {
         seenDel.add(lower);
         fullList.push(opt.trim());
       }
     }
     fullList.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
 
-    res.json({ success: true, message: 'Opción eliminada con éxito.', categoryKey, options: fullList });
+    res.json({ success: true, message: 'Opción eliminada con éxito de todas las sedes.', categoryKey, options: fullList });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -3283,21 +3341,16 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
       return res.status(400).json({ success: false, error: 'Nombre y precio son requeridos.' });
     }
 
-    // Si la petición proviene de un colaborador (employee), verificar que no reduzca stock existente
+    // Si la petición proviene de un colaborador (employee), asegurar que el stock existente permanezca intacto
     const authReq = req as any;
-    if (authReq.user && authReq.user.role === 'employee' && resolvedType === 'product') {
+    let effectiveStock = finalStock;
+    if (authReq.user && (authReq.user.role === 'employee' || authReq.user.role === 'vendedor' || authReq.user.role === 'recepcion') && resolvedType === 'product') {
       const currentProdRes = await pool.query(
         `SELECT stock FROM products WHERE id = $1 AND client_id = $2`,
         [productId, targetClientId]
       );
       if (currentProdRes.rows.length > 0) {
-        const existingStock = parseInt(currentProdRes.rows[0].stock || '0', 10);
-        if (finalStock < existingStock) {
-          return res.status(403).json({
-            success: false,
-            error: 'Acceso denegado: Los colaboradores solo pueden reabastecer (sumar) inventario. Únicamente los administradores pueden reducir o modificar manualmente el stock existente.'
-          });
-        }
+        effectiveStock = parseInt(currentProdRes.rows[0].stock || '0', 10);
       }
     }
 

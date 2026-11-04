@@ -290,8 +290,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         : (localStorage.getItem('current_client_id') || localStorage.getItem('emp_client_id') || 'client_test_optica');
     const sessionRole = (localStorage.getItem('session_role') || '').toLowerCase();
     const empRole = (localStorage.getItem('emp_role') || localStorage.getItem('employee_role') || '').toLowerCase();
-    const isEmployee = empRole === 'employee' || empRole === 'vendedor' || empRole === 'optometrista' || sessionRole === 'employee' || sessionRole === 'vendedor';
-    const isAdmin = !isEmployee && (sessionRole === 'admin' || sessionRole === 'superadmin' || sessionRole === 'client' || (!sessionRole && !empRole));
+    const hasEmpData = !!(localStorage.getItem('emp_id') || localStorage.getItem('employee_role') || localStorage.getItem('emp_role') || localStorage.getItem('employee_permissions'));
+    const isEmployee = sessionRole === 'employee' || (sessionRole !== 'superadmin' && hasEmpData) || Boolean(empRole && empRole !== 'admin' && empRole !== 'gerente');
+    const isAdmin = !isEmployee && (sessionRole === 'admin' || sessionRole === 'superadmin' || sessionRole === 'client' || sessionRole === 'gerente' || (!sessionRole && !hasEmpData));
 
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
