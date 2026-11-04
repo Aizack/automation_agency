@@ -1,3 +1,4 @@
+import { encryptToken, decryptToken, signOAuthState, verifyOAuthState } from './services/cryptoService';
 import express, { Request, Response, NextFunction } from 'express';
 import 'dotenv/config';
 import { runFactusDianTestSet, emitFactusInvoice } from './services/factusService';
@@ -128,6 +129,7 @@ export const COUNTRY_PREFIX_MAP: Record<string, string> = {
 const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
+app.disable('x-powered-by');
 app.use(express.json());
 
 import { authRateLimiter, seedRateLimiter, generalApiLimiter } from './middlewares/rateLimiter';
@@ -135,15 +137,27 @@ import { authRateLimiter, seedRateLimiter, generalApiLimiter } from './middlewar
 // Registrar middlewares globales y de seguridad HTTP (ANTES de rutas)
 app.use(correlationIdMiddleware);
 
-// Middleware de Seguridad HTTP Zero-Trust Headers
+// Middleware de Seguridad HTTP Zero-Trust Headers (CASA Tier 2 & OWASP ASVS v4.0.3)
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  res.setHeader('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: http: https:;");
+  const cspDirectives = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https:",
+    "connect-src 'self' https: wss: ws:",
+    "frame-ancestors 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self' https://accounts.google.com"
+  ].join('; ');
+  res.setHeader('Content-Security-Policy', cspDirectives);
   next();
 });
 
@@ -1495,107 +1509,12 @@ app.post('/api/login', async (req: Request, res: Response) => {
   }
 });
 
-// ── Google OAuth & Autenticación Directa ──
-app.post('/api/auth/google', async (req: Request, res: Response) => {
-  try {
-    const { googleToken, email, googleId, name } = req.body;
-    if (!email && !googleToken) {
-      return res.status(400).json({ success: false, error: 'Token o correo de Google requerido.' });
-    }
-    const targetEmail = email ? String(email).trim().toLowerCase() : '';
-    
-    const clientRes = await pool.query(
-      `SELECT id, name, username, contact_name, email, is_activated, mfa_enabled, COALESCE(mfa_methods, '[]'::jsonb) AS mfa_methods, phone_number, owner_phone 
-       FROM clients 
-       WHERE LOWER(email) = $1 OR LOWER(username) = $1 OR LOWER(contact_name) = $1 LIMIT 1`,
-      [targetEmail]
-    );
-
-    let foundUser: any = null;
-    let userType: 'client' | 'user' | 'employee' = 'client';
-
-    if (clientRes.rows.length > 0) {
-      foundUser = clientRes.rows[0];
-      userType = 'client';
-    } else {
-      const userRes = await pool.query(
-        `SELECT u.id, u.username, u.email, u.full_name AS name, u.mfa_enabled, COALESCE(u.mfa_methods, '[]'::jsonb) AS mfa_methods,
-                ucr.client_id, c.name AS client_name, c.is_activated
-         FROM users u
-         LEFT JOIN user_client_roles ucr ON u.id = ucr.user_id
-         LEFT JOIN clients c ON ucr.client_id = c.id
-         WHERE LOWER(u.email) = $1 OR LOWER(u.username) = $1 LIMIT 1`,
-        [targetEmail]
-      );
-      if (userRes.rows.length > 0) {
-        foundUser = userRes.rows[0];
-        userType = 'user';
-      } else {
-        const empRes = await pool.query(
-        `SELECT e.id AS employee_id, e.client_id, e.name, e.last_name, e.role AS employee_role, e.is_active, e.phone,
-                c.name AS client_name, c.is_activated
-         FROM employees e
-         INNER JOIN clients c ON e.client_id = c.id
-         WHERE LOWER(e.name) = $1 LIMIT 1`,
-        [targetEmail]
-      );
-      if (empRes.rows.length > 0) {
-        foundUser = empRes.rows[0];
-        userType = 'employee';
-      }
-      }
-    }
-
-    if (!foundUser) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'No se encontró una cuenta vinculada a este correo de Google. Registra tu empresa primero o vincula este correo en tu perfil.' 
-      });
-    }
-
-    const trustedToken = req.headers['x-trusted-device-token'] as string;
-    const isDeviceTrusted = await isTrustedDevice(foundUser.id || foundUser.client_id, foundUser.id || foundUser.employee_id, trustedToken);
-
-    const mfaMethods = Array.isArray(foundUser.mfa_methods) ? foundUser.mfa_methods : JSON.parse(foundUser.mfa_methods || '[]');
-    if (foundUser.mfa_enabled && mfaMethods.length > 0 && !isDeviceTrusted) {
-      return res.json({
-        success: true,
-        requiresMfa: true,
-        userId: foundUser.employee_id || foundUser.id,
-        clientId: foundUser.client_id || foundUser.id,
-        userType,
-        mfaMethods,
-        userPhone: foundUser.phone_number || foundUser.owner_phone || foundUser.phone || '',
-        userEmail: targetEmail
-      });
-    }
-
-    const sessionId = crypto.randomUUID();
-    const clientId = foundUser.client_id || foundUser.id;
-    const userId = foundUser.employee_id || foundUser.id;
-    await registerActiveSession(userType, userId, clientId, sessionId, req);
-
-    const token = jwt.sign(
-      { id: userId, employeeId: userType === 'employee' ? userId : undefined, userId, name: foundUser.name || foundUser.contact_name, username: foundUser.username || foundUser.name, role: userType, clientId, sessionId },
-      JWT_SECRET,
-      { expiresIn: '4h' }
-    );
-
-    return res.json({
-      success: true,
-      message: 'Inicio de sesión con Google exitoso',
-      data: {
-        id: clientId,
-        userId,
-        name: foundUser.name || foundUser.contact_name,
-        username: foundUser.username || foundUser.name,
-        role: userType,
-        token
-      }
-    });
-  } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message || 'Error autenticando con Google' });
-  }
+// 🚫 Endpoint de autenticación directa con Google deshabilitado por directivas Zero-Trust
+app.post('/api/auth/google', (req: Request, res: Response) => {
+  return res.status(403).json({ 
+    success: false, 
+    error: 'El inicio de sesión directo con Google ha sido deshabilitado. Por favor utiliza tu usuario y contraseña con verificación en dos pasos (2FA).' 
+  });
 });
 
 // ── Endpoints de Autenticación de Doble Factor (MFA / 2FA) ──
@@ -2455,8 +2374,8 @@ app.get('/api/clients/:clientId/auth/gmail/url', authenticateToken as any, autho
     return res.status(400).json({ success: false, error: "Falta GOOGLE_CLIENT_ID o GOOGLE_REDIRECT_URI en el servidor." });
   }
 
-  const clientId = req.params.clientId;
-  const stateData = Buffer.from(JSON.stringify({ type: 'gmail_tenant', clientId })).toString('base64url');
+  const clientId = String(req.params.clientId);
+  const stateData = signOAuthState({ type: 'gmail_tenant', clientId });
   
   const scopes = [
     'https://www.googleapis.com/auth/gmail.send',
@@ -2594,13 +2513,12 @@ app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
     // Intercambiar el código por los tokens
     const { tokens } = await oauth2Client.getToken(code);
 
-    // Revisar si viene de una tienda específica (state)
-    let tenantState: any = null;
-    if (req.query.state) {
-      try {
-        const decoded = Buffer.from(String(req.query.state), 'base64url').toString('utf-8');
-        tenantState = JSON.parse(decoded);
-      } catch (e) {}
+    // Validar estado anti-CSRF firmado criptográficamente (RFC 6749 / Google CASA)
+    const tenantState = req.query.state ? verifyOAuthState(String(req.query.state)) : null;
+
+    if (!tenantState || tenantState.type !== 'gmail_tenant' || !tenantState.clientId) {
+      console.warn('[OAuth Callback] Estado OAuth inválido o expirado:', req.query.state);
+      return res.status(400).send("Estado de autorización OAuth inválido o expirado. Por favor intenta vincular tu cuenta nuevamente desde el panel.");
     }
 
     if (tenantState && tenantState.type === 'gmail_tenant' && tenantState.clientId) {
@@ -2614,6 +2532,9 @@ app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
         console.warn('[Gmail OAuth] Warning obteniendo email del perfil:', uiErr);
       }
 
+      // Cifrar refresh_token en reposo (AES-256-GCM / OWASP ASVS v4.0.3 Requisito 8.3)
+      const encryptedRefreshToken = tokens.refresh_token ? encryptToken(tokens.refresh_token) : null;
+
       await pool.query(
         `UPDATE clients 
          SET gmail_account_email = $1, 
@@ -2621,7 +2542,7 @@ app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
              gmail_connected_at = NOW(), 
              email_channel = 'gmail_oauth' 
          WHERE id = $3`,
-        [connectedEmail, tokens.refresh_token || null, tenantState.clientId]
+        [connectedEmail, encryptedRefreshToken, tenantState.clientId]
       );
 
       console.log(`[Gmail OAuth] ✅ Tienda ${tenantState.clientId} vinculada exitosamente con Gmail: ${connectedEmail}`);

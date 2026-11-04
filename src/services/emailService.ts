@@ -1,3 +1,4 @@
+import { decryptToken } from './cryptoService';
 import nodemailer, { Transporter } from 'nodemailer';
 import { google } from 'googleapis';
 import { pool } from '../database/postgres';
@@ -125,7 +126,8 @@ export async function sendEmailForClient(
           clientSecretGoogle,
           redirectUriGoogle
         );
-        oauth2Client.setCredentials({ refresh_token: client.gmail_refresh_token });
+        const plainRefreshToken = decryptToken(client.gmail_refresh_token);
+        oauth2Client.setCredentials({ refresh_token: plainRefreshToken });
 
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
         
