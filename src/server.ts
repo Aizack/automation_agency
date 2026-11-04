@@ -1047,24 +1047,24 @@ app.post('/api/clients/:clientId/custom-options', authenticateToken as any, auth
 
 
 
-    if (!currentList.includes(cleanVal)) {
-
+    if (!currentList.some(item => item && item.trim().toLowerCase() === cleanVal.toLowerCase())) {
       currentList.push(cleanVal);
-
     }
-
     storedOptions[categoryKey] = currentList;
-
-
 
     await pool.query('UPDATE clients SET custom_dropdown_options = $1 WHERE id = $2', [JSON.stringify(storedOptions), clientId]);
 
-
-
     const defaults = DEFAULT_DROPDOWN_OPTIONS[categoryKey] || [];
-
-    const fullList = Array.from(new Set([...defaults, ...currentList])).filter(Boolean);
-
+    const seenPost = new Set();
+    const fullList = [];
+    for (const opt of [...defaults, ...currentList]) {
+      if (!opt) continue;
+      const lower = opt.trim().toLowerCase();
+      if (!seenPost.has(lower)) {
+        seenPost.add(lower);
+        fullList.push(opt.trim());
+      }
+    }
     fullList.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
 
 
@@ -1095,12 +1095,23 @@ app.delete('/api/clients/:clientId/custom-options', authenticateToken as any, au
     const storedOptions = clientRes.rows[0]?.custom_dropdown_options || {};
     const currentList: string[] = Array.isArray(storedOptions[categoryKey]) ? storedOptions[categoryKey] : [];
 
-    storedOptions[categoryKey] = currentList.filter(item => item !== optionValue);
+    const targetDel = String(optionValue).trim().toLowerCase();
+    storedOptions[categoryKey] = currentList.filter(item => item && item.trim().toLowerCase() !== targetDel);
 
     await pool.query('UPDATE clients SET custom_dropdown_options = $1 WHERE id = $2', [JSON.stringify(storedOptions), clientId]);
 
-    const defaults = DEFAULT_DROPDOWN_OPTIONS[categoryKey] || [];
-    const fullList = Array.from(new Set([...defaults, ...storedOptions[categoryKey]]));
+    const defaults = (DEFAULT_DROPDOWN_OPTIONS[categoryKey] || []).filter(item => item && item.trim().toLowerCase() !== targetDel);
+    const seenDel = new Set();
+    const fullList = [];
+    for (const opt of [...defaults, ...storedOptions[categoryKey]]) {
+      if (!opt) continue;
+      const lower = opt.trim().toLowerCase();
+      if (!seenDel.has(lower)) {
+        seenDel.add(lower);
+        fullList.push(opt.trim());
+      }
+    }
+    fullList.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
 
     res.json({ success: true, message: 'Opción eliminada con éxito.', categoryKey, options: fullList });
   } catch (err: any) {
@@ -4438,7 +4449,11 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
               (SELECT el.created_at FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent' ORDER BY el.created_at DESC LIMIT 1) as last_email_sent_at,
               (SELECT el.recipient_email FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent' ORDER BY el.created_at DESC LIMIT 1) as last_email_recipient,
               (SELECT el.message_id FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent' ORDER BY el.created_at DESC LIMIT 1) as last_email_message_id,
-              (SELECT COUNT(*)::int FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent') as email_sent_count
+              (SELECT COUNT(*)::int FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent') as email_sent_count,
+              (SELECT COALESCE(SUM(ii.paid_amount), 0)::numeric FROM invoice_installments ii WHERE ii.invoice_id = i.id) as total_paid,
+              (SELECT COALESCE(SUM(ii.amount - ii.paid_amount), 0)::numeric FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.status != 'paid') as balance_due,
+              (SELECT COUNT(*)::int FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.installment_number > 0) as total_installments_count,
+              (SELECT COUNT(*)::int FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.status = 'pending' AND ii.installment_number > 0) as pending_installments_count
        FROM invoices i 
        LEFT JOIN employees e ON i.seller_employee_id = e.id
        WHERE i.client_id = $1 
@@ -6055,9 +6070,28 @@ app.get('/api/clients/:clientId/invoices/:invoiceId', authenticateToken as any, 
 });
 
 // Función auxiliar para construir el contenido y HTML del correo de la factura
-function buildInvoiceEmailContent(invoice: any, items: any[], store: any, recipientEmail: string) {
+function buildInvoiceEmailContent(invoice: any, items: any[], store: any, recipientEmail: string, installments: any[] = []) {
   const storeName = store.name || 'Nuestra Tienda';
-  const formattedTotal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(parseFloat(invoice.total_amount || 0));
+  const totalAmountNum = parseFloat(invoice.total_amount || 0);
+  const isFinanced = ['credito', 'crédito', 'cuotas'].includes(String(invoice.payment_method || '').toLowerCase()) || (installments && installments.length > 0);
+
+  let totalPaidNum = 0;
+  if (installments && installments.length > 0) {
+    totalPaidNum = installments.reduce((acc: number, inst: any) => acc + parseFloat(inst.paid_amount || 0), 0);
+  } else if (invoice.status === 'paid') {
+    totalPaidNum = totalAmountNum;
+  }
+  const balanceDueNum = Math.max(0, totalAmountNum - totalPaidNum);
+
+  const formattedTotal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(totalAmountNum);
+  const formattedPaid = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(totalPaidNum);
+  const formattedBalance = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(balanceDueNum);
+
+  const nextPendingInst = (installments || []).find((inst: any) => inst.status === 'pending' && inst.installment_number > 0);
+  const nextDueDateFormatted = nextPendingInst?.due_date 
+    ? new Date(nextPendingInst.due_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })
+    : (invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) : null);
+
   const formattedDate = new Date(invoice.created_at || Date.now()).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const itemsRowsHtml = (items || []).map((item: any) => `
@@ -6120,6 +6154,36 @@ function buildInvoiceEmailContent(invoice: any, items: any[], store: any, recipi
           </td>
         </tr>
       </table>
+
+      ${isFinanced ? `
+      <!-- Resumen Financiero de Cuotas / Abonos -->
+      <div style="background: #FAF8F5; border: 2px solid #161616; padding: 18px 20px; margin-bottom: 24px;">
+        <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #D9381E; margin-bottom: 12px; border-bottom: 1px solid #E2DFD7; padding-bottom: 6px;">
+          Desglose de Pago & Saldo Restante
+        </div>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; font-size: 13px; color: #6B6862;">Valor Total de la Factura:</td>
+            <td style="padding: 6px 0; font-size: 14px; font-weight: bold; color: #161616; text-align: right; font-family: monospace;">${formattedTotal}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; font-size: 13px; color: #1E4620;">Abono Recibido / Pagado a la Fecha:</td>
+            <td style="padding: 6px 0; font-size: 14px; font-weight: bold; color: #1E4620; text-align: right; font-family: monospace;">+ ${formattedPaid}</td>
+          </tr>
+          <tr style="border-top: 1px dashed #E2DFD7;">
+            <td style="padding: 8px 0; font-size: 14px; font-weight: bold; color: ${balanceDueNum > 0 ? '#C5221F' : '#1E4620'};">Saldo Restante por Pagar:</td>
+            <td style="padding: 8px 0; font-size: 16px; font-weight: bold; color: ${balanceDueNum > 0 ? '#C5221F' : '#1E4620'}; text-align: right; font-family: monospace;">${formattedBalance}</td>
+          </tr>
+          ${nextDueDateFormatted && balanceDueNum > 0 ? `
+          <tr>
+            <td colspan="2" style="padding-top: 8px; font-size: 11px; color: #6B6862;">
+              * Próximo vencimiento de cuota: <strong style="color: #161616;">${nextDueDateFormatted}</strong>
+            </td>
+          </tr>
+          ` : ''}
+        </table>
+      </div>
+      ` : ''}
 
       <!-- Detalle de Items -->
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
@@ -6194,6 +6258,15 @@ app.get('/api/clients/:clientId/invoices/:invoiceId/email-preview', authenticate
     );
     const items = itemsRes.rows;
 
+    const instRes = await pool.query(
+      `SELECT installment_number, amount, paid_amount, status, due_date
+       FROM invoice_installments
+       WHERE invoice_id = $1
+       ORDER BY installment_number ASC`,
+      [invoiceId]
+    );
+    const installments = instRes.rows;
+
     const clientRes = await pool.query(
       `SELECT name, nit, address, phone_number, email, logo_url, invoice_footer, gmail_account_email,
               (gmail_refresh_token IS NOT NULL AND gmail_refresh_token != '') as has_gmail
@@ -6203,7 +6276,7 @@ app.get('/api/clients/:clientId/invoices/:invoiceId/email-preview', authenticate
     const store = clientRes.rows[0] || {};
     const hasGmail = Boolean(store.has_gmail);
 
-    const emailContent = buildInvoiceEmailContent(invoice, items, store, recipientEmail);
+    const emailContent = buildInvoiceEmailContent(invoice, items, store, recipientEmail, installments);
 
     res.json({
       success: true,
@@ -6269,7 +6342,7 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/send-email', authenticateTo
       });
     }
 
-    // 3. Consultar items
+    // 3. Consultar items e installments
     const itemsRes = await pool.query(
       `SELECT ii.product_name, ii.quantity, ii.price, ii.product_type, ii.lens_design, ii.lens_material
        FROM invoice_items ii
@@ -6278,7 +6351,16 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/send-email', authenticateTo
     );
     const items = itemsRes.rows;
 
-    const emailContent = buildInvoiceEmailContent(invoice, items, store, recipientEmail);
+    const instRes = await pool.query(
+      `SELECT installment_number, amount, paid_amount, status, due_date
+       FROM invoice_installments
+       WHERE invoice_id = $1
+       ORDER BY installment_number ASC`,
+      [invoiceId]
+    );
+    const installments = instRes.rows;
+
+    const emailContent = buildInvoiceEmailContent(invoice, items, store, recipientEmail, installments);
     const finalSubject = customSubject || emailContent.subject;
 
     const result = await sendEmailForClient(String(clientId), {

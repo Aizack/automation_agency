@@ -32,6 +32,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newOptionValue, setNewOptionValue] = useState('');
     const [saving, setSaving] = useState(false);
+    const [deletingOpt, setDeletingOpt] = useState<string | null>(null);
 
     // Estado para búsqueda rápida mediante Lupita
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -57,9 +58,19 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
         loadOptions();
     }, [clientId, categoryKey]);
 
-    // Ordenamiento alfabético A-Z automático
+    // Ordenamiento alfabético A-Z y deduplicación insensible a mayúsculas/minúsculas
     const sortedOptions = useMemo(() => {
-        return [...options].filter(Boolean).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+        const seen = new Set<string>();
+        const unique: string[] = [];
+        for (const opt of options) {
+            if (!opt) continue;
+            const norm = opt.trim().toLowerCase();
+            if (!seen.has(norm)) {
+                seen.add(norm);
+                unique.push(opt.trim());
+            }
+        }
+        return unique.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
     }, [options]);
 
     // Opciones filtradas en tiempo real para la Lupita de búsqueda
@@ -81,10 +92,22 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
         }
     };
 
-    const handleSaveNewOption = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSaveNewOption = async (e?: React.SyntheticEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         const cleanVal = newOptionValue.trim();
         if (!cleanVal) return;
+
+        // Monitor anti-duplicados local: si ya existe (ignorando mayúsculas), autoseleccionar y salir
+        const existing = options.find(o => o.trim().toLowerCase() === cleanVal.toLowerCase());
+        if (existing) {
+            onChange(existing);
+            setIsAddModalOpen(false);
+            setNewOptionValue('');
+            return;
+        }
 
         try {
             setSaving(true);
@@ -110,6 +133,39 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
         }
     };
 
+    const handleDeleteOption = async (optToDelete: string, e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (!window.confirm(`¿Estás seguro de que deseas eliminar permanentemente la opción "${optToDelete}"? Se borrará de la lista desplegable.`)) {
+            return;
+        }
+
+        try {
+            setDeletingOpt(optToDelete);
+            const res = await fetch(`/api/clients/${clientId}/custom-options`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categoryKey, optionValue: optToDelete })
+            });
+            const json = await res.json();
+            if (json.success && json.options) {
+                setOptions(json.options);
+                if (value && value.trim().toLowerCase() === optToDelete.trim().toLowerCase()) {
+                    onChange('');
+                }
+            } else {
+                alert(json.error || 'No se pudo eliminar la opción.');
+            }
+        } catch (err) {
+            console.error('Error eliminando opción:', err);
+            alert('Error de conexión al eliminar la opción.');
+        } finally {
+            setDeletingOpt(null);
+        }
+    };
+
     const displayTitle = categoryTitle || categoryKey.replace(/_/g, ' ').toUpperCase();
 
     return (
@@ -126,10 +182,10 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                             setIsSearchOpen(true);
                         }}
                         className="text-[10px] font-bold text-[#6B6862] hover:text-[#D9381E] flex items-center gap-1 cursor-pointer transition uppercase tracking-wider bg-transparent border-0"
-                        title={`Buscar en ${displayTitle} con lupa`}
+                        title={`Buscar y administrar ${displayTitle}`}
                     >
                         <span className="material-symbols-outlined text-[13px]">search</span>
-                        Buscar
+                        Buscar / Gestionar
                     </button>
                 </div>
             )}
@@ -162,7 +218,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                         setSearchQuery('');
                         setIsSearchOpen(!isSearchOpen);
                     }}
-                    title={`Buscar ${displayTitle} (Lupa)`}
+                    title={`Buscar y gestionar ${displayTitle} (Lupa)`}
                     disabled={disabled || loading}
                     className="px-2.5 bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] text-[#161616] transition cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-50"
                 >
@@ -170,7 +226,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                 </button>
             </div>
 
-            {/* Popover de Búsqueda Rápida con Lupita */}
+            {/* Popover de Búsqueda Rápida y Gestión (Eliminar/Buscar) con Lupita */}
             {isSearchOpen && (
                 <div className="relative w-full">
                     {/* Backdrop para cerrar al hacer clic afuera */}
@@ -181,8 +237,8 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                     <div className="absolute top-1 left-0 right-0 z-[99999] bg-[#FAF8F5] border-2 border-[#161616] shadow-2xl p-2.5 space-y-2 animate-fade-in text-left">
                         <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-1.5">
                             <span className="text-[10px] font-bold text-[#6B6862] uppercase tracking-wider flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[14px] text-[#D9381E]">search</span>
-                                Buscar {displayTitle}
+                                <span className="material-symbols-outlined text-[14px] text-[#D9381E]">tune</span>
+                                Buscar / Gestionar {displayTitle}
                             </span>
                             <button
                                 type="button"
@@ -221,22 +277,39 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                                 filteredOptions.map((opt) => {
                                     const isSelected = opt.toLowerCase() === (value || '').toLowerCase();
                                     return (
-                                        <button
+                                        <div
                                             key={opt}
-                                            type="button"
-                                            onClick={() => {
-                                                onChange(opt);
-                                                setIsSearchOpen(false);
-                                            }}
-                                            className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between cursor-pointer transition ${
+                                            className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between transition ${
                                                 isSelected
                                                     ? 'bg-[#161616] text-white font-bold'
                                                     : 'hover:bg-[#FAF8F5] text-[#161616]'
                                             }`}
                                         >
-                                            <span>{opt}</span>
-                                            {isSelected && <span className="text-xs">✓</span>}
-                                        </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    onChange(opt);
+                                                    setIsSearchOpen(false);
+                                                }}
+                                                className="flex-1 text-left bg-transparent border-0 cursor-pointer p-0 text-inherit font-inherit flex items-center justify-between py-1"
+                                            >
+                                                <span>{opt}</span>
+                                                {isSelected && <span className="text-xs mr-2">✓</span>}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                title={`Eliminar permanentemente "${opt}"`}
+                                                disabled={deletingOpt === opt}
+                                                onClick={(e) => handleDeleteOption(opt, e)}
+                                                className={`p-1 border-0 bg-transparent cursor-pointer transition rounded-xs flex items-center justify-center shrink-0 ml-2 ${
+                                                    isSelected ? 'text-white/70 hover:text-white' : 'text-[#8F8C84] hover:text-[#D9381E]'
+                                                }`}
+                                            >
+                                                <span className="material-symbols-outlined text-[15px]">
+                                                    {deletingOpt === opt ? 'sync' : 'delete'}
+                                                </span>
+                                            </button>
+                                        </div>
                                     );
                                 })
                             ) : (
@@ -246,7 +319,9 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                                     </p>
                                     <button
                                         type="button"
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
                                             setNewOptionValue(searchQuery.trim());
                                             setIsSearchOpen(false);
                                             setIsAddModalOpen(true);
@@ -265,7 +340,9 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                             </span>
                             <button
                                 type="button"
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                     setIsSearchOpen(false);
                                     setNewOptionValue('');
                                     setIsAddModalOpen(true);
@@ -279,10 +356,16 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                 </div>
             )}
 
-            {/* Modal Quick Creation */}
+            {/* Modal Quick Creation: Completamente aislado sin tag <form> para no disparar guardado del producto */}
             {isAddModalOpen && createPortal(
-                <div className="fixed inset-0 bg-[#161616]/70 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left">
-                    <div className="bg-[#F6F4EE] border-2 border-[#161616] p-6 max-w-md w-full shadow-2xl animate-fade-in space-y-4">
+                <div 
+                    className="fixed inset-0 bg-[#161616]/70 backdrop-blur-xs flex items-center justify-center z-[99999] p-4 text-left"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div 
+                        className="bg-[#F6F4EE] border-2 border-[#161616] p-6 max-w-md w-full shadow-2xl animate-fade-in space-y-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="flex items-center justify-between border-b border-[#E2DFD7] pb-3">
                             <h3 className="font-serif text-lg font-normal text-[#161616] flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[#D9381E]">add_circle</span>
@@ -290,7 +373,10 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                             </h3>
                             <button
                                 type="button"
-                                onClick={() => setIsAddModalOpen(false)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsAddModalOpen(false);
+                                }}
                                 className="text-xl font-light text-[#161616] hover:text-[#D9381E] cursor-pointer border-0 bg-transparent"
                             >
                                 &times;
@@ -301,7 +387,7 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                             Ingresa el nombre de la nueva opción para <strong>{displayTitle}</strong>. Quedará guardada permanentemente para tu tienda.
                         </p>
 
-                        <form onSubmit={handleSaveNewOption} className="space-y-4">
+                        <div className="space-y-4">
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-wider text-[#161616] mb-1">
                                     Nombre de la Nueva Opción *
@@ -310,6 +396,13 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                                     type="text"
                                     value={newOptionValue}
                                     onChange={(e) => setNewOptionValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleSaveNewOption();
+                                        }
+                                    }}
                                     placeholder="Ej: LUXOR, Titanio Flexible, AR Verde, etc."
                                     className="w-full bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] rounded-none"
                                     autoFocus
@@ -320,20 +413,27 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                             <div className="flex justify-end gap-2 pt-2 border-t border-[#E2DFD7]">
                                 <button
                                     type="button"
-                                    onClick={() => setIsAddModalOpen(false)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsAddModalOpen(false);
+                                    }}
                                     className="px-4 py-2 bg-white border border-[#E2DFD7] text-[#161616] text-xs font-bold uppercase tracking-wider cursor-pointer rounded-none"
                                 >
                                     Cancelar
                                 </button>
                                 <button
-                                    type="submit"
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleSaveNewOption(e);
+                                    }}
                                     disabled={saving || !newOptionValue.trim()}
                                     className="px-5 py-2 bg-[#161616] hover:bg-[#D9381E] text-white text-xs font-bold uppercase tracking-wider cursor-pointer rounded-none border-0 transition disabled:opacity-50"
                                 >
                                     {saving ? 'Guardando...' : 'Guardar y Seleccionar ✓'}
                                 </button>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>,
                 document.body

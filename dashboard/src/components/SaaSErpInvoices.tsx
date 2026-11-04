@@ -41,6 +41,10 @@ interface Invoice {
     last_email_recipient?: string | null;
     last_email_message_id?: string | null;
     email_sent_count?: number;
+    total_paid?: number | string;
+    balance_due?: number | string;
+    total_installments_count?: number;
+    pending_installments_count?: number;
 }
 
 interface Product {
@@ -2815,7 +2819,21 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                                     </td>
                                     <td className="p-4 font-mono text-xs font-medium text-[#3F3D38]">+{inv.customer_phone}</td>
                                     <td className="p-4 font-bold text-[#161616] text-sm font-mono tabular-nums">
-                                        {formatPrice(parseFloat(inv.total_amount) + parseFloat(inv.delivery_fee || '0'))}
+                                        <div>{formatPrice(parseFloat(inv.total_amount) + parseFloat(inv.delivery_fee || '0'))}</div>
+                                        {['credito', 'crédito', 'cuotas'].includes((inv.payment_method || '').toLowerCase()) && (
+                                            <div className="flex flex-col text-[11px] font-sans font-normal mt-1 leading-tight">
+                                                <span className="text-[#137333] font-semibold">
+                                                    Abono: {formatPrice(inv.total_paid || 0)}
+                                                </span>
+                                                {parseFloat(String(inv.balance_due !== undefined ? inv.balance_due : (parseFloat(String(inv.total_amount)) - Number(inv.total_paid || 0)))) > 0 ? (
+                                                    <span className="text-[#C5221F] font-bold">
+                                                        Saldo: {formatPrice(inv.balance_due !== undefined ? inv.balance_due : (parseFloat(String(inv.total_amount)) - Number(inv.total_paid || 0)))}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[#137333] font-bold">✓ Saldado</span>
+                                                )}
+                                            </div>
+                                        )}
                                     </td>
                                     <td className="p-4 text-xs text-[#3F3D38] font-semibold font-sans">
                                         <div className="inline-flex items-center gap-1.5 uppercase text-xs tracking-wide bg-[#FAF8F5] px-2.5 py-1 border border-[#E2DFD7] text-[#161616]">
@@ -3270,6 +3288,16 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                                 <p className="text-2xl sm:text-3xl font-serif font-normal text-[#D9381E] font-mono tracking-tight">
                                     {formatPrice(parseFloat(selectedInvoice.total_amount) + parseFloat(selectedInvoice.delivery_fee || '0'))}
                                 </p>
+                                {['credito', 'crédito', 'cuotas'].includes((selectedInvoice.payment_method || '').toLowerCase()) && (
+                                    <div className="text-xs font-mono mt-1 space-y-0.5">
+                                        <div className="text-[#137333] font-semibold">
+                                            Abono: {formatPrice(selectedInvoice.total_paid || 0)}
+                                        </div>
+                                        <div className={`font-bold ${((parseFloat(selectedInvoice.total_amount) - Number(selectedInvoice.total_paid || 0)) > 0) ? 'text-[#C5221F]' : 'text-[#137333]'}`}>
+                                            Saldo: {formatPrice(selectedInvoice.balance_due !== undefined ? selectedInvoice.balance_due : Math.max(0, parseFloat(selectedInvoice.total_amount) - Number(selectedInvoice.total_paid || 0)))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Grid 2x3 de Botones de Acción */}
@@ -3753,8 +3781,8 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
             )}
 
             {/* 2. Modal: Vista Previa (Preview) de la Factura antes de Enviar */}
-            {emailPreviewModalOpen && emailPreviewData && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+            {emailPreviewModalOpen && emailPreviewData && createPortal(
+                <div className="fixed inset-0 z-[100000] bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 animate-fade-in">
                     <div className="bg-white border border-[#E2DFD7] shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col animate-in fade-in duration-200">
                         {/* Header Modal */}
                         <div className="p-4 sm:p-5 border-b border-[#E2DFD7] flex items-center justify-between bg-white shrink-0">
@@ -3857,12 +3885,13 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* 3. Modal: Historial General de Envíos de Correo */}
-            {globalEmailHistoryModalOpen && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+            {globalEmailHistoryModalOpen && createPortal(
+                <div className="fixed inset-0 z-[100000] bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 animate-fade-in">
                     <div className="bg-white border border-[#E2DFD7] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col animate-in fade-in duration-200">
                         {/* Header */}
                         <div className="p-4 sm:p-5 border-b border-[#E2DFD7] flex items-center justify-between bg-white shrink-0">
@@ -3978,7 +4007,8 @@ Remitente: ${emailPreviewData.senderEmail} (Gmail Oficial)`);
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             <HistoricalInvoicesModal
