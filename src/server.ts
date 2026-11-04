@@ -2507,19 +2507,19 @@ app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
     return res.status(400).send("No se recibió ningún código de autorización de Google.");
   }
 
+  // Validar estado anti-CSRF ANTES de cualquier intercambio de tokens (RFC 6749 Sec 10.12 / Google CASA)
+  const tenantState = req.query.state ? verifyOAuthState(String(req.query.state)) : null;
+
+  if (!tenantState || tenantState.type !== 'gmail_tenant' || !tenantState.clientId) {
+    console.warn('[OAuth Callback] Estado OAuth inválido, ausente o expirado:', req.query.state);
+    return res.status(400).send("Estado de autorización OAuth inválido o expirado. Por favor intenta vincular tu cuenta nuevamente desde el panel.");
+  }
+
   try {
     const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
     
-    // Intercambiar el código por los tokens
+    // Intercambiar el código por los tokens una vez validado el estado
     const { tokens } = await oauth2Client.getToken(code);
-
-    // Validar estado anti-CSRF firmado criptográficamente (RFC 6749 / Google CASA)
-    const tenantState = req.query.state ? verifyOAuthState(String(req.query.state)) : null;
-
-    if (!tenantState || tenantState.type !== 'gmail_tenant' || !tenantState.clientId) {
-      console.warn('[OAuth Callback] Estado OAuth inválido o expirado:', req.query.state);
-      return res.status(400).send("Estado de autorización OAuth inválido o expirado. Por favor intenta vincular tu cuenta nuevamente desde el panel.");
-    }
 
     if (tenantState && tenantState.type === 'gmail_tenant' && tenantState.clientId) {
       oauth2Client.setCredentials(tokens);
