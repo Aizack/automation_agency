@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface LegalDocsModalProps {
     isOpen: boolean;
@@ -12,6 +12,12 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
     initialTab = 'terminos'
 }) => {
     const [activeTab, setActiveTab] = useState<'terminos' | 'privacidad' | 'ia_transparency'>(initialTab);
+
+    useEffect(() => {
+        if (isOpen && initialTab) {
+            setActiveTab(initialTab);
+        }
+    }, [isOpen, initialTab]);
 
     if (!isOpen) return null;
 
@@ -30,14 +36,14 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                 Marco Legal & Transparencia
                             </h2>
                             <p className="text-xs text-[#6B6862] font-sans m-0 mt-0.5">
-                                Frant by Diaz Lab Automation — Términos de servicio, Habeas Data y cumplimiento Meta
+                                Frant by Diaz Lab Automation — Términos de servicio, Habeas Data, Google OAuth y cumplimiento Meta
                             </p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <a 
-                            href={activeTab === 'privacidad' ? '/privacy' : '/terms'} 
+                            href={activeTab === 'privacidad' || activeTab === 'ia_transparency' ? '/privacy' : '/terms'} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="hidden sm:inline-flex items-center gap-1 text-[11px] text-[#6B6862] hover:text-[#D9381E] border border-[#E2DFD7] px-2.5 py-1.5 bg-white transition"
@@ -106,7 +112,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                         Términos y Condiciones Generales de Uso
                                     </h3>
                                     <p className="text-xs text-[#6B6862] font-mono mt-1 mb-0">
-                                        Última actualización: 19 de octubre de 2026 • Frant by Diaz Lab Automation
+                                        Última actualización: Noviembre 2026 • Frant by Diaz Lab Automation
                                     </p>
                                 </div>
                                 <a 
@@ -134,7 +140,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                     2. Descripción del Servicio y Ecosistema
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    Diaz Lab Automation provee una solución multi-inquilino en la nube que integra gestión empresarial (ERP), sistema de punto de venta (POS), facturación electrónica con cumplimiento DIAN, cotizaciones, órdenes de compra y asistentes de Inteligencia Artificial para atención y ventas mediante la API Oficial de Meta (WhatsApp Business Cloud API).
+                                    Diaz Lab Automation provee una solución multi-inquilino en la nube que integra gestión empresarial (ERP), sistema de punto de venta (POS), facturación electrónica con cumplimiento DIAN, cotizaciones, órdenes de compra, despacho transaccional de comprobantes vía Google OAuth 2.0 (<code>gmail.send</code>) y asistentes de Inteligencia Artificial para atención y ventas mediante la API Oficial de Meta (WhatsApp Business Cloud API).
                                 </p>
                             </div>
 
@@ -158,10 +164,10 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
 
                             <div className="space-y-2 bg-white p-5 border border-[#E2DFD7] shadow-xs">
                                 <h4 className="font-bold text-[#161616] text-xs uppercase tracking-wider flex items-center gap-2 m-0 border-l-2 border-[#161616] pl-2.5">
-                                    5. Uso Aceptable y Normas de WhatsApp (Meta)
+                                    5. Uso Aceptable y Normas de WhatsApp (Meta) y Google API
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    Queda estrictamente prohibido el envío de SPAM, acoso, venta de productos restringidos o cualquier actividad violatoria de la <em>WhatsApp Commerce Policy</em> y los <em>Meta Platform Terms</em>. Diaz Lab Automation se reserva el derecho de suspender conectores de mensajería que incurran en prácticas fraudulentas o reportes masivos de spam.
+                                    Queda estrictamente prohibido el envío de SPAM, acoso, venta de productos restringidos o cualquier actividad violatoria de la <em>WhatsApp Commerce Policy</em>, los <em>Meta Platform Terms</em> y la <em>Google API Services User Data Policy</em>. Diaz Lab Automation se reserva el derecho de suspender conectores de mensajería o correo que incurran en prácticas fraudulentas o reportes masivos de spam.
                                 </p>
                             </div>
 
@@ -170,7 +176,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                     6. Niveles de Servicio, IA y Limitación de Responsabilidad
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    Frant tiene un objetivo de disponibilidad del 99.5%. No asumimos responsabilidad por caídas atribuibles a fallas globales de Meta, Google, OpenAI o proveedores de conectividad. Las sugerencias de IA son de asistencia operativa y deben ser supervisadas por el personal del comercio. La legislación aplicable es la de la República de Colombia, con domicilio en Barranquilla, Atlántico, Colombia
+                                    Frant tiene un objetivo de disponibilidad del 99.5%. No asumimos responsabilidad por caídas atribuibles a fallas globales de Meta, Google, OpenAI o proveedores de conectividad. Las sugerencias de IA son de asistencia operativa y deben ser supervisadas por el personal del comercio. La legislación aplicable es la de la República de Colombia, con domicilio en Barranquilla, Atlántico, Colombia.
                                 </p>
                             </div>
                         </div>
@@ -184,7 +190,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                         Política de Tratamiento de Datos Personales
                                     </h3>
                                     <p className="text-xs text-[#6B6862] font-mono mt-1 mb-0">
-                                        Habeas Data Ley 1581 de 2012 • Cumplimiento Meta Platform • Octubre 2026
+                                        Habeas Data Ley 1581 de 2012 • Cumplimiento Google OAuth & Meta Platform • Noviembre 2026
                                     </p>
                                 </div>
                                 <a 
@@ -203,7 +209,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                     1. Responsable del Tratamiento de Datos
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    <strong>Diaz Lab Automation</strong>, con domicilio principal en Barranquilla, Atlántico, Colombia, es el Responsable del tratamiento de los datos personales recolectados a través de Frant. Canales de contacto: <code>contacto@diazlab.online</code> y <code>contacto@diazlab.online</code>.
+                                    <strong>Diaz Lab Automation</strong>, con domicilio principal en Barranquilla, Atlántico, Colombia, es el Responsable del tratamiento de los datos personales recolectados a través de Frant ERP (<code>https://frant.app</code>). Canal oficial de contacto y privacidad: <code>contacto@diazlab.online</code>.
                                 </p>
                             </div>
 
@@ -212,7 +218,7 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                     2. Finalidad y Prohibición de Venta de Datos
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    Los datos se utilizan exclusivamente para operar los módulos ERP, emitir comprobantes fiscales, sincronizar pedidos con WhatsApp Business y brindar soporte técnico. <strong>NUNCA vendemos, cedemos ni comercializamos</strong> datos con terceros o intermediarios publicitarios.
+                                    Los datos se utilizan exclusivamente para operar los módulos ERP, emitir comprobantes fiscales, despachar facturas y cotizaciones por correo electrónico, sincronizar pedidos con WhatsApp Business y brindar soporte técnico. <strong>NUNCA vendemos, cedemos ni comercializamos</strong> datos con terceros o intermediarios publicitarios.
                                 </p>
                             </div>
 
@@ -225,34 +231,54 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                 </p>
                             </div>
 
-                            <div className="space-y-2 bg-white p-5 border border-[#E2DFD7] shadow-xs">
-                                <h4 className="font-bold text-[#161616] text-xs uppercase tracking-wider flex items-center gap-2 m-0 border-l-2 border-[#161616] pl-2.5">
                             <div className="space-y-2 bg-white p-5 border border-[#4285F4]/30 shadow-xs border-l-4 border-l-[#4285F4]">
                                 <h4 className="font-bold text-[#161616] text-xs uppercase tracking-wider flex items-center gap-2 m-0">
                                     <span className="material-symbols-outlined text-[16px] text-[#4285F4]">verified_user</span>
-                                    4. Cumplimiento Google API (Acceso, Uso, Almacenamiento y Compartición)
+                                    4. Cumplimiento Google API — Acceso, Uso, Almacenamiento y Compartición
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    El uso y la transferencia de información recibida a través de las API de Google se apegan a la <em>Política de Datos de Usuario de los Servicios de la API de Google</em>, incluidos los requisitos de <strong>Uso Limitado</strong>:
+                                    El uso y la transferencia a cualquier otra aplicación por parte de <strong>Frant ERP</strong> de la información recibida a través de las API de Google se apegan estrictamente a la <em>Política de Datos de Usuario de los Servicios de la API de Google (Google API Services User Data Policy)</em>, incluidos los requisitos de <strong>Uso Limitado (Limited Use Requirements)</strong>:
                                 </p>
-                                <ul className="text-xs text-[#555] space-y-1 list-disc pl-4 pt-1 m-0">
-                                    <li><strong>Acceso:</strong> Solo mediante OAuth 2.0 previa autorización expresa para el alcance <code>gmail.send</code> e identidad básica. No se solicita acceso a buzón ni lectura de mensajes.</li>
-                                    <li><strong>Uso:</strong> Únicamente para despachar facturas y cotizaciones a los clientes finales del comercio titular.</li>
-                                    <li><strong>Almacenamiento:</strong> Guardamos únicamente el refresh token cifrado con seguridad simétrica en base de datos protegida. No se guardan contraseñas ni correos personales.</li>
-                                    <li><strong>Compartición:</strong> NUNCA vendemos, transferimos ni compartimos datos de Google con terceros, redes publicitarias ni para entrenamiento de modelos IA.</li>
+                                <ul className="text-xs text-[#444] space-y-1.5 list-disc pl-4 pt-1 m-0">
+                                    <li><strong>Acceso (Permisos Mínimos):</strong> Solo se solicita autorización OAuth 2.0 para el permiso sensible <code>https://www.googleapis.com/auth/gmail.send</code> y los permisos de identidad básica (<code>userinfo.email</code> y <code>userinfo.profile</code>). Frant ERP <strong>no lee, no modifica, no elimina ni indexa</strong> la bandeja de entrada del usuario.</li>
+                                    <li><strong>Uso Operativo:</strong> Exclusivamente para enviar facturas electrónicas, recibos de caja, cotizaciones y estados de cuenta a los clientes finales del comercio titular desde su propia dirección de Gmail corporativa.</li>
+                                    <li><strong>Compartición Prohibida:</strong> NUNCA vendemos, alquilamos ni transferimos datos obtenidos de Google APIs a terceros, brokers de datos ni plataformas publicitarias.</li>
                                 </ul>
                             </div>
 
-                                    5. Mecanismos Autónomos de Eliminación (Meta Data Deletion Callback)
+                            <div className="space-y-2.5 bg-white p-5 border border-[#4285F4]/30 shadow-xs border-l-4 border-l-[#161616]">
+                                <h4 className="font-bold text-[#161616] text-xs uppercase tracking-wider flex items-center gap-2 m-0">
+                                    <span className="material-symbols-outlined text-[16px] text-[#161616]">shield_lock</span>
+                                    5. Mecanismos de Protección de Datos Sensibles (Data Protection Mechanisms)
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
-                                    Garantizamos eliminación inmediata a través de: (i) Botón <em>"Desconectar y Eliminar Datos"</em> en el Dashboard; (ii) Webhook automático oficial de Meta en <code className="font-mono bg-[#FAF8F3] px-1 border border-[#E2DFD7]">https://frant.app/api/v1/meta/data-deletion</code>; o (iii) Solicitud a <code>contacto@diazlab.online</code>.
+                                    En cumplimiento con los requisitos de seguridad de verificación de Google Cloud OAuth, Frant ERP protege todos los datos sensibles y credenciales mediante:
+                                </p>
+                                <ul className="text-xs text-[#444] space-y-1.5 list-disc pl-4 pt-1 m-0">
+                                    <li><strong>Cifrado en Tránsito (Encryption in Transit):</strong> Todas las comunicaciones entre el navegador, los servidores de Frant y las APIs de Google utilizan obligatoriamente <strong>TLS 1.2 y TLS 1.3 sobre HTTPS</strong>.</li>
+                                    <li><strong>Cifrado en Reposo (Encryption at Rest):</strong> Las credenciales y tokens OAuth 2.0 (<code>refresh_token</code> y <code>access_token</code>) se almacenan cifrados bajo el estándar <strong>AES-256</strong> en bases de datos PostgreSQL aisladas sin acceso público a internet.</li>
+                                    <li><strong>Controles de Acceso y Aislamiento Multi-Tenant (RBAC):</strong> Aislamiento estricto por comercio (<code>client_id</code>) bajo principio de mínimo privilegio; solo administradores autorizados (<code>admin_tenant</code>) pueden gestionar la vinculación OAuth.</li>
+                                    <li><strong>Política de Retención y Purgado Inmediato (0 días):</strong> Al presionar <em>"Desvincular Gmail"</em> en el ERP o revocar el acceso en <code>myaccount.google.com/permissions</code>, los tokens OAuth se purgan de forma inmediata, permanente e irreversible (<code>NULL</code>), con 0 días de retención residual.</li>
+                                </ul>
+                                <div className="bg-[#FAF8F3] border-l-4 border-[#0EA5E9] p-3 mt-2 text-xs text-[#161616]">
+                                    <strong>Prohibición de Entrenamiento de Modelos IA/ML con Google Workspace APIs:</strong><br />
+                                    <em>"Frant does not use data obtained through Google Workspace APIs (including Gmail APIs) to develop, train, or improve generalized or non-personalized artificial intelligence (AI) and/or machine learning (ML) models."</em><br />
+                                    <span className="text-[#555]">(Frant no utiliza los datos obtenidos a través de las API de Google Workspace, incluidas las API de Gmail, para desarrollar, entrenar o mejorar modelos de inteligencia artificial y/o aprendizaje automático generalizados o no personalizados).</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 bg-white p-5 border border-[#E2DFD7] shadow-xs">
+                                <h4 className="font-bold text-[#161616] text-xs uppercase tracking-wider flex items-center gap-2 m-0 border-l-2 border-[#161616] pl-2.5">
+                                    6. Mecanismos Autónomos de Eliminación (Meta Data Deletion Callback)
+                                </h4>
+                                <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
+                                    Garantizamos eliminación inmediata a través de: (i) Botón <em>"Desvincular Gmail"</em> o <em>"Desconectar y Eliminar Datos"</em> en el Dashboard; (ii) Webhook automático oficial de Meta en <code className="font-mono bg-[#FAF8F3] px-1 border border-[#E2DFD7]">https://frant.app/api/v1/meta/data-deletion</code>; o (iii) Solicitud directa a <code>contacto@diazlab.online</code>.
                                 </p>
                             </div>
 
                             <div className="space-y-2 bg-white p-5 border border-[#E2DFD7] shadow-xs">
                                 <h4 className="font-bold text-[#161616] text-xs uppercase tracking-wider flex items-center gap-2 m-0 border-l-2 border-[#161616] pl-2.5">
-                                    6. Derechos ARCO y Tiempos de Respuesta Legales
+                                    7. Derechos ARCO y Tiempos de Respuesta Legales
                                 </h4>
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
                                     Conforme a la Ley 1581 de 2012, cualquier titular puede conocer, actualizar o solicitar la supresión de sus datos. Las consultas se responden en un plazo legal máximo de <strong>10 días hábiles</strong> y los reclamos en <strong>15 días hábiles</strong>.
@@ -263,13 +289,24 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
 
                     {activeTab === 'ia_transparency' && (
                         <div className="space-y-5">
-                            <div className="border-b border-[#E2DFD7] pb-3">
-                                <h3 className="text-xl sm:text-2xl font-serif text-[#161616] font-normal uppercase tracking-wide m-0 flex items-center gap-2">
-                                    <span>🤖</span> Transparencia en Inteligencia Artificial
-                                </h3>
-                                <p className="text-xs text-[#6B6862] font-mono mt-1 mb-0">
-                                    Declaración oficial de uso de Inteligencia Artificial (AI Disclosure)
-                                </p>
+                            <div className="border-b border-[#E2DFD7] pb-3 flex justify-between items-end flex-wrap gap-2">
+                                <div>
+                                    <h3 className="text-xl sm:text-2xl font-serif text-[#161616] font-normal uppercase tracking-wide m-0 flex items-center gap-2">
+                                        <span>🤖</span> Transparencia en Inteligencia Artificial & OAuth
+                                    </h3>
+                                    <p className="text-xs text-[#6B6862] font-mono mt-1 mb-0">
+                                        Declaración oficial de uso de Inteligencia Artificial y Políticas de Google Workspace APIs
+                                    </p>
+                                </div>
+                                <a 
+                                    href="/privacy" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-[11px] font-semibold text-[#D9381E] hover:underline flex items-center gap-1"
+                                >
+                                    <span>https://frant.app/privacy</span>
+                                    <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                                </a>
                             </div>
 
                             <div className="space-y-2 bg-[#FAF8F3] p-5 border border-[#D9381E]/40 shadow-xs">
@@ -297,6 +334,22 @@ export const LegalDocsModal: React.FC<LegalDocsModalProps> = ({
                                 <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
                                     Garantizamos que las conversaciones, inventarios y prompts de los clientes <strong>NUNCA se usan para re-entrenar modelos fundacionales públicos de IA</strong> ni se transfieren a terceros con fines de minería de datos.
                                 </p>
+                            </div>
+
+                            <div className="space-y-2 bg-white p-5 border border-[#4285F4]/40 shadow-xs border-l-4 border-l-[#4285F4]">
+                                <h4 className="font-bold text-[#161616] text-xs uppercase tracking-wider flex items-center gap-2 m-0">
+                                    <span className="material-symbols-outlined text-[16px] text-[#4285F4]">verified_user</span>
+                                    4. Cumplimiento Google Workspace APIs — Prohibición de Entrenamiento IA/ML
+                                </h4>
+                                <p className="text-[#333333] text-xs sm:text-[0.83rem] m-0 pt-1 leading-relaxed">
+                                    En estricto apego a la <em>Google API Services User Data Policy</em> y las políticas de <em>Google Workspace APIs</em>:
+                                </p>
+                                <div className="bg-[#FAF8F3] border border-[#E2DFD7] p-3 mt-1 text-xs text-[#161616]">
+                                    <em>"Frant does not use data obtained through Google Workspace APIs (including Gmail APIs) to develop, train, or improve generalized or non-personalized artificial intelligence (AI) and/or machine learning (ML) models."</em>
+                                    <div className="text-[#555] mt-1">
+                                        Frant no utiliza bajo ninguna circunstancia los datos obtenidos a través de las API de Google Workspace (incluidas las API de Gmail) para desarrollar, entrenar o mejorar modelos de inteligencia artificial (IA) y/o aprendizaje automático (ML) generalizados o no personalizados.
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
