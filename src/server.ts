@@ -2499,9 +2499,9 @@ app.get('/api/clients/:clientId/email-settings', authenticateToken as any, autho
 app.post('/api/clients/:clientId/email-settings/test', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const clientId = String(req.params.clientId);
-    const { testEmail } = req.body;
+    const { testEmail, to, recipient } = req.body;
     const config = await getStoreEmailConfig(clientId);
-    const targetTo = testEmail || config?.gmailAccountEmail || config?.storeEmail;
+    const targetTo = (to || testEmail || recipient || '').trim() || config?.gmailAccountEmail || config?.storeEmail;
 
     if (!targetTo) {
       return res.status(400).json({ success: false, error: 'Debes proporcionar un correo destino para la prueba.' });
@@ -6163,7 +6163,8 @@ function buildInvoiceEmailContent(invoice: any, items: any[], store: any, recipi
   `;
 
   const subject = `Factura #${invoice.invoice_number} - ${storeName}`;
-  const text = `Hola ${invoice.customer_name || 'Cliente'},\n\nAdjuntamos el resumen de tu Factura #${invoice.invoice_number} de ${storeName}.\nTotal: ${formattedTotal}\nEstado: ${invoice.status === 'paid' ? 'PAGADO' : 'PENDIENTE'}\n\n¡Gracias por elegirnos!`;
+  const itemsText = (items || []).map((it: any) => `• ${it.product_name || 'Producto'} (x${it.quantity}): ${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(parseFloat(it.price || 0) * (it.quantity || 1))}`).join('\n');
+  const text = `Comprobante de Venta - ${storeName}\nFactura #${invoice.invoice_number}\nFecha: ${formattedDate}\n\nCliente: ${invoice.customer_name || 'Consumidor Final'}\nEstado: ${invoice.status === 'paid' ? 'PAGADO' : 'PENDIENTE'}${invoice.payment_method ? ` | Método: ${invoice.payment_method}` : ''}\n\nDETALLE DE PRODUCTOS:\n${itemsText || 'Sin items'}\n\nTOTAL: ${formattedTotal}\n\n${store.invoice_footer || '¡Gracias por su compra y confianza!'}\nComprobante electrónico emitido por la plataforma Frant ERP • ${storeName}`;
 
   return { html, subject, text, formattedTotal, formattedDate, storeName };
 }

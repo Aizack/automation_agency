@@ -129,19 +129,23 @@ export async function sendEmailForClient(
 
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
         
-        // Formatear mensaje MIME RFC 2822 para Gmail REST API
-        const utf8Subject = `=?utf-8?B?${Buffer.from(options.subject).toString('base64')}?=`;
-        const messageParts = [
-          `From: "${senderName}" <${client.gmail_account_email}>`,
-          `To: ${options.to}`,
-          `Content-Type: text/html; charset=utf-8`,
-          `MIME-Version: 1.0`,
-          `Subject: ${utf8Subject}`,
-          '',
-          options.html || options.text || ''
-        ];
-        const rawMessage = messageParts.join('\r\n');
-        const encoded = Buffer.from(rawMessage)
+        // Compilar mensaje MIME RFC 2822 oficial con Nodemailer para evitar filtros antispam (Date, Message-ID, multipart/alternative)
+        const mimeTransport = nodemailer.createTransport({ streamTransport: true, buffer: true });
+        const mailInfo = await mimeTransport.sendMail({
+          from: `"${senderName.replace(/"/g, '')}" <${client.gmail_account_email}>`,
+          to: options.to,
+          subject: options.subject,
+          text: options.text || '',
+          html: options.html,
+          attachments: options.attachments,
+          headers: {
+            'X-Mailer': 'Frant ERP Business Engine',
+            'Precedence': 'bulk'
+          }
+        });
+
+        const rawBuffer = mailInfo.message as Buffer;
+        const encoded = rawBuffer
           .toString('base64')
           .replace(/\+/g, '-')
           .replace(/\//g, '_')

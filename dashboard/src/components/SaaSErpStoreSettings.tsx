@@ -167,7 +167,7 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
       const res = await fetch(`/api/clients/${clientId}/email-settings/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: testEmailAddress })
+        body: JSON.stringify({ to: testEmailAddress, testEmail: testEmailAddress })
       });
       const json = await res.json();
       if (json.success) {
