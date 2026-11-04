@@ -5,7 +5,7 @@ services:
     build: .
     container_name: agency_bot_app
     ports:
-      - "3000:3000" # Puerto principal del servidor
+      - "127.0.0.1:3000:3000" # Puerto principal del servidor (restringido a loopback local)
     volumes:
       - .:/app
       - /app/node_modules
@@ -24,7 +24,7 @@ services:
     image: ankane/pgvector:latest # PostgreSQL optimizado con extensión vectorial (para el RAG)
     container_name: agency_bot_db
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432" # Blindaje ISO 27002 / CIS: Exclusivo para loopback local (127.0.0.1), no expuesto a Internet
     environment:
       POSTGRES_USER: agency_user
       POSTGRES_PASSWORD: agency_pass
