@@ -174,22 +174,36 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
     return (
         <div className="w-full">
             {label && (
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-[11px] font-bold text-[#6B6862] uppercase tracking-wider">
                         {label} {required && <span className="text-[#D9381E]">*</span>}
                     </label>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setSearchQuery('');
-                            setIsSearchOpen(true);
-                        }}
-                        className="text-[10px] font-bold text-[#6B6862] hover:text-[#D9381E] flex items-center gap-1 cursor-pointer transition uppercase tracking-wider bg-transparent border-0"
-                        title={`Buscar y administrar ${displayTitle}`}
-                    >
-                        <span className="material-symbols-outlined text-[13px]">tune</span>
-                        Gestionar / Borrar
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setNewOptionValue('');
+                                setIsAddModalOpen(true);
+                            }}
+                            className="text-[10px] font-bold text-[#161616] hover:text-[#D9381E] bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#161616] px-2 py-0.5 rounded-none flex items-center gap-1 cursor-pointer transition uppercase tracking-wider shadow-2xs"
+                            title={`Agregar nueva opción a ${displayTitle}`}
+                        >
+                            <span className="material-symbols-outlined text-[13px] text-[#D9381E]">add</span>
+                            + Nueva Opción
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearchQuery('');
+                                setIsSearchOpen(true);
+                            }}
+                            className="text-[10px] font-bold text-[#D9381E] hover:text-white bg-[#FFF5F5] hover:bg-[#D9381E] border border-[#FAD2CF] hover:border-[#D9381E] px-2 py-0.5 rounded-none flex items-center gap-1 cursor-pointer transition uppercase tracking-wider shadow-2xs"
+                            title={`Eliminar o gestionar opciones de ${displayTitle}`}
+                        >
+                            <span className="material-symbols-outlined text-[13px]">delete</span>
+                            🗑️ Borrar / Gestionar
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -202,6 +216,15 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                     className={`${className} flex-1`}
                 >
                     <option value="">{loading ? 'Cargando opciones...' : placeholder}</option>
+                    <option value="__ADD_NEW__" className="font-bold text-[#D9381E] bg-[#FAF8F5]">
+                        ➕ + Agregar nueva opción...
+                    </option>
+                    <option value="__MANAGE_OPTIONS__" className="font-bold text-[#D9381E] bg-[#FFF5F5]">
+                        🗑️ Eliminar / Gestionar marcas...
+                    </option>
+                    <option disabled className="text-gray-400">
+                        ─────────── OPCIONES DISPONIBLES ───────────
+                    </option>
                     {sortedOptions.map((opt) => (
                         <option key={opt} value={opt}>
                             {opt}
@@ -210,13 +233,20 @@ export const DynamicSelect: React.FC<DynamicSelectProps> = ({
                     {value && !sortedOptions.includes(value) && (
                         <option value={value}>{value}</option>
                     )}
-                    <option value="__ADD_NEW__" className="font-bold text-[#D9381E] bg-[#FAF8F5]">
-                        ➕ Agregar nueva opción...
-                    </option>
-                    <option value="__MANAGE_OPTIONS__" className="font-bold text-[#D9381E] bg-[#FFF5F5]">
-                        🗑️ Eliminar / Gestionar marcas...
-                    </option>
                 </select>
+
+                <button
+                    type="button"
+                    onClick={() => {
+                        setNewOptionValue('');
+                        setIsAddModalOpen(true);
+                    }}
+                    title={`Crear nueva opción (+)`}
+                    disabled={disabled || loading}
+                    className="px-2.5 bg-white hover:bg-[#FAF8F5] border border-[#E2DFD7] hover:border-[#D9381E] text-[#D9381E] transition cursor-pointer flex items-center justify-center shrink-0 disabled:opacity-50"
+                >
+                    <span className="material-symbols-outlined text-[16px]">add</span>
+                </button>
 
                 <button
                     type="button"
