@@ -117,9 +117,9 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     const [useFormulaVariant, setUseFormulaVariant] = useState<boolean>(false);
     const [useDetailVariant, setUseDetailVariant] = useState<boolean>(false);
     const [stock, setStock] = useState<number | string>('');
-    const [minStock, setMinStock] = useState<number | string>(5);
+    const [minStock, setMinStock] = useState<number | string>(1);
     const [variantList, setVariantList] = useState<Array<{ id?: string, color: string, formula?: string, detail?: string, sku: string, stock: number | string, min_stock: number | string, image_url?: string }>>([
-        { color: 'Negro', formula: '', detail: '', sku: '', stock: 10, min_stock: 2, image_url: '' }
+        { color: 'Negro', formula: '', detail: '', sku: '', stock: 10, min_stock: 1, image_url: '' }
     ]);
     const [activePhotoColorIdx, setActivePhotoColorIdx] = useState<number>(0);
     const [customAttrs, setCustomAttrs] = useState<Record<string, any>>({});
@@ -197,7 +197,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
             setHasVariants(editingProduct.has_variants ?? true);
             const cleanStock = (editingProduct.stock === 999999 || editingProduct.stock === '999999') ? '' : (editingProduct.stock ?? '');
             setStock(cleanStock);
-            setMinStock(editingProduct.min_stock ?? 5);
+            setMinStock(editingProduct.min_stock ?? 1);
 
             const catName = (categories.find((c: any) => String(c.id) === String(editingProduct.category_id))?.name || '').toLowerCase();
             const isLiquidOrAcc = catName.includes('liquido') || catName.includes('líquido') || catName.includes('solucion') || catName.includes('solución') || catName.includes('gotas') || catName.includes('accesorio') || catName.includes('limpiador');
@@ -232,7 +232,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                         detail: dVal,
                         sku: v.sku || '',
                         stock: (v.stock === 999999 || v.stock === '999999') ? 0 : (v.stock ?? 0),
-                        min_stock: v.min_stock ?? 2,
+                        min_stock: v.min_stock ?? 1,
                         image_url: v.image_url || ''
                     };
                 });
@@ -247,7 +247,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                     setUseDetailVariant(hasDetailFromVariants);
                 }
             } else {
-                setVariantList([{ color: isLens ? 'Transparente' : (isLiquidOrAcc ? '' : 'Negro'), formula: '', detail: '', sku: editingProduct.sku || '', stock: (editingProduct.stock === 999999 || editingProduct.stock === '999999') ? 10 : (editingProduct.stock || 10), min_stock: editingProduct.min_stock || 2, image_url: editingProduct.image_url || '' }]);
+                setVariantList([{ color: isLens ? 'Transparente' : (isLiquidOrAcc ? '' : 'Negro'), formula: '', detail: '', sku: editingProduct.sku || '', stock: (editingProduct.stock === 999999 || editingProduct.stock === '999999') ? 10 : (editingProduct.stock || 10), min_stock: editingProduct.min_stock || 1, image_url: editingProduct.image_url || '' }]);
                 if (isLiquidOrAcc) {
                     setUseColorVariant(false);
                     setUseFormulaVariant(false);
@@ -290,7 +290,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
         setUseDetailVariant(false);
         setStock('');
         setMinStock(5);
-        setVariantList([{ color: 'Negro', formula: '', detail: '', sku: '', stock: 10, min_stock: 2, image_url: '' }]);
+        setVariantList([{ color: 'Negro', formula: '', detail: '', sku: '', stock: 10, min_stock: 1, image_url: '' }]);
         setActivePhotoColorIdx(0);
         setCustomAttrs({});
     };
@@ -386,7 +386,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                 color_hex: null,
                 sku: v.sku ? v.sku.trim() : '',
                 stock: v.stock === '' ? 0 : (parseInt(v.stock.toString()) || 0),
-                min_stock: v.min_stock === '' ? 2 : (parseInt(v.min_stock.toString()) || 2),
+                min_stock: v.min_stock === '' ? 1 : (parseInt(v.min_stock.toString()) || 1),
                 image_url: v.image_url || null
             };
         }) : [];
@@ -401,7 +401,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
             ? 0
             : (hasVarBool 
                 ? (variantList.length > 0 ? (parseInt(variantList[0].min_stock?.toString() || '1') || 1) : 2)
-                : (minStock === '' ? 2 : (parseInt(minStock.toString()) || 2)));
+                : (minStock === '' ? 1 : (parseInt(minStock.toString()) || 1)));
 
         const finalSku = hasVarBool 
             ? null 
@@ -1134,7 +1134,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setVariantList([...variantList, { color: useColorVariant ? (isLensMode ? 'Transparente' : 'Negro') : '', formula: '', detail: '', sku: '', stock: 1, min_stock: 2, image_url: '' }])}
+                                                        onClick={() => setVariantList([...variantList, { color: useColorVariant ? (isLensMode ? 'Transparente' : 'Negro') : '', formula: '', detail: '', sku: '', stock: 1, min_stock: 1, image_url: '' }])}
                                                         className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[10px] font-bold py-2 px-3 rounded-none flex items-center gap-1 transition uppercase tracking-wider cursor-pointer"
                                                     >
                                                         <span className="material-symbols-outlined text-[14px] text-[#D9381E]">add</span>
@@ -1407,7 +1407,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                             className="bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] font-mono outline-none rounded-none"
                                                             value={minStock}
                                                             onChange={(e) => setMinStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0))}
-                                                            placeholder="5"
+                                                            placeholder="1"
                                                         />
                                                     </div>
                                                 </div>

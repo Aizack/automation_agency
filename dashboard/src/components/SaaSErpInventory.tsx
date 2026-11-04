@@ -908,7 +908,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     color_hex: v.color_hex || null,
                     sku: v.sku,
                     stock: (parseInt(v.stock?.toString() || '0') || 0) + addedForThisVar,
-                    min_stock: v.min_stock || 2,
+                    min_stock: v.min_stock || 1,
                     image_url: v.image_url || null
                 };
             });
@@ -941,7 +941,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             price: refillProduct.price,
             stock: newStock,
             cost_price: refillProduct.cost_price || 0,
-            min_stock: refillProduct.min_stock || 5,
+            min_stock: refillProduct.min_stock || 1,
             supplier_name: refillProduct.supplier_name || null,
             supplier_phone: refillProduct.supplier_phone || null,
             brand: refillProduct.brand || null,
@@ -1021,7 +1021,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         }
 
         const itemStock = prod.stock || 0;
-        const itemMinStock = prod.min_stock || 2;
+        const itemMinStock = prod.min_stock !== undefined ? prod.min_stock : 1;
         let matchesStock = true;
         if (filterStock === 'in_stock') matchesStock = itemStock > 0;
         else if (filterStock === 'low_stock') matchesStock = itemStock > 0 && itemStock <= itemMinStock;
@@ -1213,7 +1213,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                     <span className="text-[11px] uppercase tracking-widest text-[#6B6862] font-semibold">ALERTAS DE STOCK BAJO</span>
                     <div className="mt-4">
                         <div className="font-serif text-4xl sm:text-5xl text-[#D9381E] font-normal leading-none flex items-baseline gap-2">
-                            {products.filter(p => p.product_type !== 'service' && (p.stock || 0) < 999999 && (p.stock || 0) <= (p.min_stock !== undefined ? p.min_stock : 5)).length} <span className="font-sans text-sm text-[#6B6862] font-normal">Alertas</span>
+                            {products.filter(p => p.product_type !== 'service' && (p.stock || 0) < 999999 && (p.stock || 0) <= (p.min_stock !== undefined ? p.min_stock : 1)).length} <span className="font-sans text-sm text-[#6B6862] font-normal">Alertas</span>
                         </div>
                         <p className="text-[#6B6862] text-xs mt-3 font-sans">Ítems por debajo del stock mínimo</p>
                     </div>
@@ -1568,7 +1568,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                         const stockUnits = prod.stock || 0;
                                         const unitPrice = parseFloat(prod.price?.toString() || '0') || 0;
                                         const totalValue = unitPrice * stockUnits;
-                                        const isLowStock = stockUnits <= (prod.min_stock !== undefined ? prod.min_stock : 5);
+                                        const isLowStock = stockUnits <= (prod.min_stock !== undefined ? prod.min_stock : 1);
                                         const variantCount = prod.variants?.length || 0;
                                         const hasDiscount = (parseFloat(prod.promo_discount?.toString() || '0') || 0) > 0;
                                         const isSelected = selectedProductIds.includes(prod.id);
@@ -2220,7 +2220,7 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             </p>
                             <p className="text-[11px] text-[#6B6862]">
                                 Stock Actual: <strong className="text-[#161616] font-mono">{refillProduct.stock} uds</strong> 
-                                <span className="opacity-70 ml-1.5">(Mínimo: {refillProduct.min_stock !== undefined ? refillProduct.min_stock : 5} uds)</span>
+                                <span className="opacity-70 ml-1.5">(Mínimo: {refillProduct.min_stock !== undefined ? refillProduct.min_stock : 1} uds)</span>
                             </p>
                         </div>
 

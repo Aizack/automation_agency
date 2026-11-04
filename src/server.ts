@@ -3263,7 +3263,7 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
        RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type, has_variants, created_at`,
       [
         targetClientId, name, finalProductSku || null, description || null, price, finalStock, 
-        cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null,
+        cost_price || 0.00, min_stock || 1, supplier_name || null, supplier_phone || null,
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
         modsJson, image_url || null, resolvedType, hasVarBool
@@ -3287,7 +3287,7 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
         await pool.query(
           `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, stock, min_stock, image_url, formula)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [insertedProduct.id, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null, v.formula ? v.formula.trim() : null]
+          [insertedProduct.id, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 1, v.image_url || null, v.formula ? v.formula.trim() : null]
         );
       }
       if (firstVariantSku && !insertedProduct.sku) {
@@ -3379,7 +3379,7 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
        RETURNING id, name, sku, description, price, stock, cost_price, min_stock, supplier_name, supplier_phone, brand, material, style, color, promo_discount, category_id, attributes, available_modifiers, image_url, product_type, has_variants, created_at`,
       [
         name, finalProductSku || null, description || null, price, finalStock, 
-        cost_price || 0.00, min_stock || 5, supplier_name || null, supplier_phone || null, 
+        cost_price || 0.00, min_stock || 1, supplier_name || null, supplier_phone || null, 
         brand || null, material || null, style || null, color || null, promo_discount || 0.00,
         category_id || null, attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : '{}',
         modsJson, image_url || null, resolvedType, hasVarBool,
@@ -3407,7 +3407,7 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
         await pool.query(
           `INSERT INTO product_variants (product_id, client_id, variant_name, color_hex, sku, stock, min_stock, image_url, formula)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [productId, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 2, v.image_url || null, v.formula ? v.formula.trim() : null]
+          [productId, targetClientId, v.variant_name || 'Variante', v.color_hex || null, vSku, parseInt(v.stock) || 0, parseInt(v.min_stock) || 1, v.image_url || null, v.formula ? v.formula.trim() : null]
         );
       }
       if (firstVariantSku && (!finalProductSku || finalProductSku === '')) {
@@ -13831,7 +13831,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
             srcProd.material || null,
             srcProd.style || null,
             qty,
-            srcProd.min_stock || 2,
+            srcProd.min_stock || 1,
             srcProd.image_url || null,
             srcProd.attributes ? (typeof srcProd.attributes === 'string' ? srcProd.attributes : JSON.stringify(srcProd.attributes)) : null,
             Boolean(srcProd.has_variants)
@@ -13937,7 +13937,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
               srcProd.material || null,
               srcProd.style || null,
               qty,
-              srcProd.min_stock || 2,
+              srcProd.min_stock || 1,
               srcProd.image_url || null,
               srcProd.attributes ? (typeof srcProd.attributes === 'string' ? srcProd.attributes : JSON.stringify(srcProd.attributes)) : null,
               Boolean(srcProd.has_variants)
