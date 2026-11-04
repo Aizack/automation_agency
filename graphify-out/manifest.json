@@ -60,9 +60,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/LegalDocsModal.tsx": {
-    "mtime": 1792595031.0644512,
-    "seen": 1792598951.6647336,
-    "ast_hash": "9050af09993d03f49e738b08ca1b1b97",
+    "mtime": 1793753542.6217992,
+    "seen": 1793753575.839581,
+    "ast_hash": "8802294ff3e2cecef0f23b97ccf0a5e0",
     "semantic_hash": ""
   },
   "dashboard/src/components/Login.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpInvoices.tsx": {
-    "mtime": 1793300591.5747983,
-    "seen": 1793300743.3646147,
-    "ast_hash": "65fccd91c3250e76efbfe5463dc99b87",
+    "mtime": 1793820618.605258,
+    "seen": 1793820688.0845945,
+    "ast_hash": "c92756032694eb2bc1150753dee12b97",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpMarketing.tsx": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpStoreSettings.tsx": {
-    "mtime": 1792854550.1813524,
-    "seen": 1793203793.345785,
-    "ast_hash": "ea1c18cbca762e45af18cf26d837ca19",
+    "mtime": 1793815954.1585684,
+    "seen": 1793816105.525148,
+    "ast_hash": "5295b229a4c66dfb119e77b5ca741f41",
     "semantic_hash": ""
   },
   "dashboard/src/components/SaaSErpSuppliers.tsx": {
@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "src/server.ts": {
-    "mtime": 1793306423.5831203,
-    "seen": 1793306730.9376364,
-    "ast_hash": "c7af47429e7de791e605884504c64947",
+    "mtime": 1793820483.7398403,
+    "seen": 1793820688.084786,
+    "ast_hash": "2014cb02f2459eda24fe1b798ea502c4",
     "semantic_hash": ""
   },
   "src/services/auditService.ts": {
@@ -2514,9 +2514,9 @@
     "semantic_hash": ""
   },
   "dashboard/src/components/DynamicSelect.tsx": {
-    "mtime": 1792523400.4061234,
-    "seen": 1792523489.4821877,
-    "ast_hash": "878401e02e26d2bd96ddefc47bbcfac4",
+    "mtime": 1793820435.1830552,
+    "seen": 1793820688.084529,
+    "ast_hash": "4a9e6835cd68840950fad94695e2e908",
     "semantic_hash": ""
   },
   "scratch/update_ti.py": {
@@ -2616,9 +2616,9 @@
     "semantic_hash": ""
   },
   "src/services/emailService.ts": {
-    "mtime": 1792559541.3528633,
-    "seen": 1792598951.664982,
-    "ast_hash": "71f54c7672b3de0b84a4a32e402d2482",
+    "mtime": 1793815863.523754,
+    "seen": 1793816105.5253434,
+    "ast_hash": "ab61eb06ab6e2dc79e6c64c0c94c4ece",
     "semantic_hash": ""
   },
   "src/services/termsOfService.ts": {

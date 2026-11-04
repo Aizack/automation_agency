@@ -144,7 +144,7 @@
       "file_type": "code",
       "norm_label": "invoiceiteminput",
       "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
-      "source_location": "L59"
+      "source_location": "L67"
     },
     {
       "id": "dashboard_src_components_saaserpinvoices_product",
@@ -157,7 +157,7 @@
       "file_type": "code",
       "norm_label": "product",
       "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
-      "source_location": "L42"
+      "source_location": "L50"
     },
     {
       "id": "dashboard_src_components_saaserpinvoices_saaserpinvoicesprops",
@@ -170,7 +170,7 @@
       "file_type": "code",
       "norm_label": "saaserpinvoicesprops",
       "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
-      "source_location": "L75"
+      "source_location": "L83"
     },
     {
       "id": "dashboard_src_components_auditlogmodal_auditlogitem",
@@ -2909,7 +2909,7 @@
       "file_type": "code",
       "norm_label": "saaserpinvoices()",
       "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
-      "source_location": "L79"
+      "source_location": "L87"
     },
     {
       "id": "dashboard_src_utils_datetime_formatlocaldate",
@@ -4025,7 +4025,7 @@
       "file_type": "code",
       "norm_label": "sendemailotp()",
       "source_file": "src/services/emailService.ts",
-      "source_location": "L193"
+      "source_location": "L197"
     },
     {
       "id": "dashboard_src_components_saaserpaiagentmodule_saaserpaiagentmodule",
@@ -6293,7 +6293,7 @@
       "file_type": "code",
       "norm_label": "resolveproductclientid()",
       "source_file": "src/server.ts",
-      "source_location": "L3076"
+      "source_location": "L3089"
     },
     {
       "id": "src_services_metawhatsappservice_metawhatsappservice_exchangeembeddedsignupcode",
@@ -9185,7 +9185,7 @@
       "file_type": "code",
       "norm_label": "buildinvoiceemailcontent()",
       "source_file": "src/server.ts",
-      "source_location": "L6051"
+      "source_location": "L6073"
     },
     {
       "id": "src_server_minutestotime",
@@ -9197,7 +9197,7 @@
       "file_type": "code",
       "norm_label": "minutestotime()",
       "source_file": "src/server.ts",
-      "source_location": "L7202"
+      "source_location": "L7292"
     },
     {
       "id": "src_server_registeractivesession",
@@ -9221,7 +9221,7 @@
       "file_type": "code",
       "norm_label": "resolveauditusername()",
       "source_file": "src/server.ts",
-      "source_location": "L3198"
+      "source_location": "L3211"
     },
     {
       "id": "src_server_startmarketingcampaignworker",
@@ -9233,7 +9233,7 @@
       "file_type": "code",
       "norm_label": "startmarketingcampaignworker()",
       "source_file": "src/server.ts",
-      "source_location": "L9466"
+      "source_location": "L9595"
     },
     {
       "id": "src_server_timetominutes",
@@ -9245,7 +9245,7 @@
       "file_type": "code",
       "norm_label": "timetominutes()",
       "source_file": "src/server.ts",
-      "source_location": "L7196"
+      "source_location": "L7286"
     },
     {
       "id": "src_services_mfaservice_base32decode",
@@ -18146,7 +18146,7 @@
       "file_type": "code",
       "norm_label": "server",
       "source_file": "src/server.ts",
-      "source_location": "L10722"
+      "source_location": "L10851"
     },
     {
       "id": "src_services_metawhatsappservice",
@@ -29654,7 +29654,7 @@
       "file_type": "code",
       "norm_label": "cvupload",
       "source_file": "src/server.ts",
-      "source_location": "L2092"
+      "source_location": "L2105"
     },
     {
       "id": "src_server_default_dropdown_options",
@@ -29676,7 +29676,7 @@
       "file_type": "code",
       "norm_label": "diskupload",
       "source_file": "src/server.ts",
-      "source_location": "L3478"
+      "source_location": "L3491"
     },
     {
       "id": "src_server_mediadir",
@@ -31692,7 +31692,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
-      "source_location": "L2793",
+      "source_location": "L2813",
       "weight": 1.0
     },
     {
@@ -31704,7 +31704,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
-      "source_location": "L2796",
+      "source_location": "L2816",
       "weight": 1.0
     },
     {
@@ -32316,7 +32316,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L10730",
+      "source_location": "L10859",
       "weight": 1.0
     },
     {
@@ -32328,7 +32328,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L13049",
+      "source_location": "L13178",
       "weight": 1.0
     },
     {
@@ -32340,7 +32340,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L13095",
+      "source_location": "L13224",
       "weight": 1.0
     },
     {
@@ -32352,7 +32352,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L13922",
+      "source_location": "L14065",
       "weight": 1.0
     },
     {
@@ -32364,7 +32364,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L13927",
+      "source_location": "L14070",
       "weight": 1.0
     },
     {
@@ -32376,7 +32376,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L13952",
+      "source_location": "L14095",
       "weight": 1.0
     },
     {
@@ -32388,7 +32388,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L13963",
+      "source_location": "L14106",
       "weight": 1.0
     },
     {
@@ -32400,7 +32400,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L14082",
+      "source_location": "L14225",
       "weight": 1.0
     },
     {
@@ -32412,7 +32412,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L14106",
+      "source_location": "L14249",
       "weight": 1.0
     },
     {
@@ -32424,7 +32424,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/server.ts",
-      "source_location": "L14109",
+      "source_location": "L14252",
       "weight": 1.0
     },
     {
@@ -32712,7 +32712,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/emailService.ts",
-      "source_location": "L161",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -32724,7 +32724,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/services/emailService.ts",
-      "source_location": "L195",
+      "source_location": "L199",
       "weight": 1.0
     },
     {
@@ -42278,7 +42278,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/server.ts",
-      "source_location": "L10832",
+      "source_location": "L10961",
       "weight": 1.0
     },
     {
@@ -48014,7 +48014,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "src/server.ts",
-      "source_location": "L10832",
+      "source_location": "L10961",
       "weight": 1.0
     },
     {
@@ -53705,7 +53705,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
-      "source_location": "L42",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -53716,29 +53716,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
-      "source_location": "L59",
-      "weight": 1.0
-    },
-    {
-      "source": "dashboard_src_components_saaserpinvoices",
-      "target": "dashboard_src_components_saaserpinvoices_saaserpinvoicesprops",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
-      "source_location": "L75",
-      "weight": 1.0
-    },
-    {
-      "source": "dashboard_src_components_saaserpinvoices",
-      "target": "dashboard_src_components_saaserpinvoices_saaserpinvoices",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
-      "source_location": "L79",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -53750,6 +53728,28 @@
       "confidence_score": 1.0,
       "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
       "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_saaserpinvoices",
+      "target": "dashboard_src_components_saaserpinvoices_saaserpinvoicesprops",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_src_components_saaserpinvoices",
+      "target": "dashboard_src_components_saaserpinvoices_saaserpinvoices",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "dashboard/src/components/SaaSErpInvoices.tsx",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -64254,7 +64254,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L10722",
+      "source_location": "L10851",
       "weight": 1.0
     },
     {
@@ -64320,7 +64320,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L2092",
+      "source_location": "L2105",
       "weight": 1.0
     },
     {
@@ -64331,7 +64331,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L3076",
+      "source_location": "L3089",
       "weight": 1.0
     },
     {
@@ -64342,7 +64342,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L3198",
+      "source_location": "L3211",
       "weight": 1.0
     },
     {
@@ -64353,7 +64353,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L3478",
+      "source_location": "L3491",
       "weight": 1.0
     },
     {
@@ -64364,7 +64364,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L6051",
+      "source_location": "L6073",
       "weight": 1.0
     },
     {
@@ -64375,7 +64375,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L7196",
+      "source_location": "L7286",
       "weight": 1.0
     },
     {
@@ -64386,7 +64386,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L7202",
+      "source_location": "L7292",
       "weight": 1.0
     },
     {
@@ -64408,7 +64408,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/server.ts",
-      "source_location": "L9466",
+      "source_location": "L9595",
       "weight": 1.0
     },
     {
@@ -64771,7 +64771,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/services/emailService.ts",
-      "source_location": "L193",
+      "source_location": "L197",
       "weight": 1.0
     },
     {
@@ -73837,7 +73837,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "src/server.ts",
-      "source_location": "L10719",
+      "source_location": "L10848",
       "weight": 1.0
     },
     {
@@ -74090,5 +74090,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "d8b0abad941411e2df1d8309c0ed1c19e0068cf8"
+  "built_at_commit": "5e752dc15c39b4a23e0475ee2e24afe593993afa"
 }
