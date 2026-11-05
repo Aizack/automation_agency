@@ -592,10 +592,24 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [selectedPrintVariant, setSelectedPrintVariant] = useState<any>(null);
     const [printQuantity, setPrintQuantity] = useState(1);
     const [isRefillPrompt, setIsRefillPrompt] = useState(false);
+    const [printMode, setPrintMode] = useState<'single' | 'all_variants'>('single');
+    const [variantPrintQuantities, setVariantPrintQuantities] = useState<Record<string, number>>({});
 
     const openPrintModal = (prod: Product, targetVariant?: any) => {
         setPrintProduct(prod);
         setIsRefillPrompt(false);
+        setPrintMode('single');
+
+        // Inicializar cantidades de variantes por defecto en 1 para ahorro en cadena
+        const initialVarQtys: Record<string, number> = {};
+        if (prod.variants && prod.variants.length > 0) {
+            prod.variants.forEach((v: any) => {
+                const k = v.sku || v.variant_name || v.color;
+                initialVarQtys[k] = 1;
+            });
+        }
+        setVariantPrintQuantities(initialVarQtys);
+
         if (targetVariant) {
             setSelectedPrintVariant(targetVariant);
             setPrintQuantity(targetVariant.stock || 1);
@@ -609,36 +623,59 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
         setIsPrintModalOpen(true);
     };
 
-    const handlePrintBarcodes = () => {
-        if (!printProduct) return;
+    const getItemsToPrint = (): any[] => {
+        if (!printProduct) return [];
+        const hasVars = Boolean(printProduct.variants && printProduct.variants.length > 0);
+
+        if (hasVars && printMode === 'all_variants') {
+            const list: any[] = [];
+            printProduct.variants?.forEach((v: any, idx: number) => {
+                const k = v.sku || v.variant_name || v.color || `var_${idx}`;
+                const qty = parseInt((variantPrintQuantities[k] ?? 0).toString()) || 0;
+                if (qty > 0) {
+                    const vLabel = v.variant_name || v.color || '';
+                    list.push({
+                        name: vLabel ? `${printProduct.name} (${vLabel})` : printProduct.name,
+                        sku: v.sku || printProduct.sku || '',
+                        price: printProduct.price,
+                        quantity: qty
+                    });
+                }
+            });
+            return list;
+        }
+
+        // Modo individual tradicional
         const activeSku = selectedPrintVariant ? (selectedPrintVariant.sku || printProduct.sku || '') : (printProduct.sku || '');
         const activeVariantName = selectedPrintVariant ? (selectedPrintVariant.variant_name || selectedPrintVariant.color) : '';
         const activeName = activeVariantName ? `${printProduct.name} (${activeVariantName})` : printProduct.name;
-        const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
-        
-        printBarcodes([{
+        return [{
             name: activeName,
             sku: activeSku,
             price: printProduct.price,
             quantity: parseInt(printQuantity.toString()) || 1
-        }], selectedSettings);
+        }];
+    };
 
+    const handlePrintBarcodes = () => {
+        const items = getItemsToPrint();
+        if (items.length === 0) {
+            alert('Por favor, ingresa al menos 1 copia para imprimir.');
+            return;
+        }
+        const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
+        printBarcodes(items, selectedSettings);
         setIsPrintModalOpen(false);
     };
 
     const handlePreviewBarcodes = () => {
-        if (!printProduct) return;
-        const activeSku = selectedPrintVariant ? (selectedPrintVariant.sku || printProduct.sku || '') : (printProduct.sku || '');
-        const activeVariantName = selectedPrintVariant ? (selectedPrintVariant.variant_name || selectedPrintVariant.color) : '';
-        const activeName = activeVariantName ? `${printProduct.name} (${activeVariantName})` : printProduct.name;
+        const items = getItemsToPrint();
+        if (items.length === 0) {
+            alert('Por favor, ingresa al menos 1 copia para previsualizar.');
+            return;
+        }
         const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
-
-        previewBarcodes([{
-            name: activeName,
-            sku: activeSku,
-            price: printProduct.price,
-            quantity: parseInt(printQuantity.toString()) || 1
-        }], selectedSettings);
+        previewBarcodes(items, selectedSettings);
     };
 
     // Categories and Refill States
@@ -2030,67 +2067,205 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                             <div className="space-y-4">
                                 {/* Selector de Variante / Color si el producto tiene variantes */}
                                 {printProduct.variants && printProduct.variants.length > 0 && (
-                                    <div className="space-y-1.5">
-                                        <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
-                                            Variante / Color de la Referencia
-                                        </label>
-                                        <select
-                                            value={selectedPrintVariant?.sku || selectedPrintVariant?.variant_name || selectedPrintVariant?.color || ''}
-                                            onChange={(e) => {
-                                                const found = printProduct.variants?.find((v: any) => (
-                                                    v.sku === e.target.value || 
-                                                    v.variant_name === e.target.value || 
-                                                    v.color === e.target.value
-                                                ));
-                                                if (found) {
-                                                    setSelectedPrintVariant(found);
-                                                    setPrintQuantity(found.stock || 1);
-                                                }
-                                            }}
-                                            className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs font-bold text-[#161616] outline-none focus:border-[#161616] cursor-pointer rounded-none"
-                                        >
-                                            {printProduct.variants.map((v: any, idx: number) => (
-                                                <option key={idx} value={v.sku || v.variant_name || v.color}>
-                                                    {v.variant_name || v.color} — (SKU: {v.sku || 'N/A'}) — Stock: {v.stock} uds
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
-
-                                {/* Tarjeta Visual Wabi-Sabi: SKU, Precio y Código de Barras Renderizado en Vivo */}
-                                <div className="bg-white p-4 border border-[#E2DFD7] rounded-none shadow-2xs space-y-3">
-                                    <div className="flex items-center justify-between gap-4 border-b border-[#E2DFD7] pb-2.5">
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] text-[#6B6862] uppercase font-bold tracking-wider">Código SKU</p>
-                                            <p className="text-sm font-mono text-[#161616] font-bold mt-0.5 truncate">
-                                                {activePrintSku || 'Sin SKU asignado'}
-                                                {activeVariantLabel && (
-                                                    <span className="ml-2 text-[11px] text-[#D9381E] font-sans font-semibold uppercase">
-                                                        • {activeVariantLabel}
-                                                    </span>
-                                                )}
-                                            </p>
+                                    <div className="space-y-3">
+                                        {/* Selector de Modo: Individual o Todas Juntas */}
+                                        <div className="flex border border-[#E2DFD7] bg-[#FAF8F5] p-1 gap-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPrintMode('single')}
+                                                className={`flex-1 py-1.5 px-3 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                                                    printMode === 'single'
+                                                        ? 'bg-white text-[#161616] border border-[#161616] shadow-2xs'
+                                                        : 'bg-transparent text-[#6B6862] hover:text-[#161616]'
+                                                }`}
+                                            >
+                                                <span className="material-symbols-outlined text-[15px]">tag</span>
+                                                Variante Individual
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPrintMode('all_variants')}
+                                                className={`flex-1 py-1.5 px-3 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                                                    printMode === 'all_variants'
+                                                        ? 'bg-[#161616] text-white border border-[#161616] shadow-2xs'
+                                                        : 'bg-transparent text-[#6B6862] hover:text-[#161616]'
+                                                }`}
+                                            >
+                                                <span className="material-symbols-outlined text-[15px]">style</span>
+                                                Todas las Variantes (Lote Ahorro)
+                                            </button>
                                         </div>
-                                        <div className="text-right shrink-0">
-                                            <p className="text-[10px] text-[#6B6862] uppercase font-bold tracking-wider">Precio de Venta</p>
-                                            <p className="text-sm text-[#161616] font-bold font-mono mt-0.5">{formatPrice(printProduct.price)}</p>
-                                        </div>
-                                    </div>
 
-                                    {/* Previsualización del Código de Barras del Color Seleccionado */}
-                                    <div className="flex flex-col items-center justify-center p-3 bg-[#FAF8F5] border border-[#E2DFD7]">
-                                        {activePrintSku ? (
-                                            <BarcodeSVG value={activePrintSku} size="md" />
+                                        {printMode === 'single' ? (
+                                            <div className="space-y-1.5">
+                                                <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                                                    Variante / Color de la Referencia
+                                                </label>
+                                                <select
+                                                    value={selectedPrintVariant?.sku || selectedPrintVariant?.variant_name || selectedPrintVariant?.color || ''}
+                                                    onChange={(e) => {
+                                                        const found = printProduct.variants?.find((v: any) => (
+                                                            v.sku === e.target.value || 
+                                                            v.variant_name === e.target.value || 
+                                                            v.color === e.target.value
+                                                        ));
+                                                        if (found) {
+                                                            setSelectedPrintVariant(found);
+                                                            setPrintQuantity(found.stock || 1);
+                                                        }
+                                                    }}
+                                                    className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs font-bold text-[#161616] outline-none focus:border-[#161616] cursor-pointer rounded-none"
+                                                >
+                                                    {printProduct.variants.map((v: any, idx: number) => (
+                                                        <option key={idx} value={v.sku || v.variant_name || v.color}>
+                                                            {v.variant_name || v.color} — (SKU: {v.sku || 'N/A'}) — Stock: {v.stock} uds
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         ) : (
-                                            <div className="py-2 text-center">
-                                                <span className="text-[11px] text-[#6B6862] italic">
-                                                    Sin código de barras asignado a esta variante
-                                                </span>
+                                            <div className="space-y-2 bg-[#FAF8F5] border border-[#E2DFD7] p-3">
+                                                <div className="flex items-center justify-between pb-2 border-b border-[#E2DFD7]">
+                                                    <span className="text-[11px] font-bold text-[#161616] uppercase tracking-wider flex items-center gap-1">
+                                                        <span className="material-symbols-outlined text-[15px] text-[#D9381E]">savings</span>
+                                                        Imprimir Variantes en Cadena
+                                                    </span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const updated: Record<string, number> = {};
+                                                                printProduct.variants?.forEach((v: any, idx: number) => {
+                                                                    const k = v.sku || v.variant_name || v.color || `var_${idx}`;
+                                                                    updated[k] = 1;
+                                                                });
+                                                                setVariantPrintQuantities(updated);
+                                                            }}
+                                                            className="px-2 py-1 bg-white hover:bg-[#EAE7DE] border border-[#E2DFD7] text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                                                            title="1 etiqueta por cada variante"
+                                                        >
+                                                            1 c/u
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const updated: Record<string, number> = {};
+                                                                printProduct.variants?.forEach((v: any, idx: number) => {
+                                                                    const k = v.sku || v.variant_name || v.color || `var_${idx}`;
+                                                                    updated[k] = Math.max(0, parseInt((v.stock || 0).toString()) || 0);
+                                                                });
+                                                                setVariantPrintQuantities(updated);
+                                                            }}
+                                                            className="px-2 py-1 bg-white hover:bg-[#EAE7DE] border border-[#E2DFD7] text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                                                            title="Cantidad igual al stock de cada variante"
+                                                        >
+                                                            Según Stock
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="max-h-48 overflow-y-auto divide-y divide-[#E2DFD7] bg-white border border-[#E2DFD7]">
+                                                    {printProduct.variants.map((v: any, idx: number) => {
+                                                        const k = v.sku || v.variant_name || v.color || `var_${idx}`;
+                                                        const qty = variantPrintQuantities[k] ?? 1;
+                                                        return (
+                                                            <div key={idx} className="flex items-center justify-between p-2 text-xs">
+                                                                <div className="min-w-0 flex-1 pr-2">
+                                                                    <div className="font-bold text-[#161616] truncate">
+                                                                        {v.variant_name || v.color || `Variante ${idx + 1}`}
+                                                                    </div>
+                                                                    <div className="text-[10px] text-[#6B6862] font-mono">
+                                                                        SKU: {v.sku || 'Sin SKU'} • Stock: {v.stock || 0} uds
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                                    <span className="text-[10px] text-[#6B6862] uppercase font-bold">Copias:</span>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="0"
+                                                                        max="500"
+                                                                        value={qty}
+                                                                        onChange={(e) => {
+                                                                            const val = Math.max(0, parseInt(e.target.value) || 0);
+                                                                            setVariantPrintQuantities({
+                                                                                ...variantPrintQuantities,
+                                                                                [k]: val
+                                                                            });
+                                                                        }}
+                                                                        className="w-16 bg-[#FAF8F5] border border-[#E2DFD7] p-1 text-center font-mono font-bold text-xs outline-none focus:border-[#161616]"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {/* Resumen de ahorro para rollo doble */}
+                                                {(() => {
+                                                    const totalStickers = Object.values(variantPrintQuantities).reduce((acc, q) => acc + (Number(q) || 0), 0);
+                                                    const totalRows = Math.ceil(totalStickers / 2);
+                                                    const wastedStickers = totalStickers % 2 === 0 ? 0 : 1;
+                                                    return (
+                                                        <div className="p-2 bg-[#FFFDF5] border border-[#F3E7C4] text-[11px] space-y-0.5">
+                                                            <div className="flex justify-between font-bold text-[#161616]">
+                                                                <span>Total Etiquetas a Imprimir:</span>
+                                                                <span className="font-mono text-[#D9381E]">{totalStickers} stickers</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-[#6B6862]">
+                                                                <span>Filas en Rollo Doble:</span>
+                                                                <span className="font-mono">{totalRows} filas</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-[#6B6862] text-[10px]">
+                                                                <span>Aprovechamiento de papel:</span>
+                                                                <span className={wastedStickers === 0 ? "text-green-700 font-bold" : "text-amber-700 font-bold"}>
+                                                                    {wastedStickers === 0 
+                                                                        ? '✓ 100% aprovechado (0 stickers desperdiciados)' 
+                                                                        : 'Aprovechado (solo 1 sticker final sin usar en vez de 1 por cada variante)'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
                                         )}
                                     </div>
-                                </div>
+                                )}
+
+                                {/* Tarjeta Visual Wabi-Sabi: SKU, Precio y Código de Barras Renderizado en Vivo (Solo en modo individual) */}
+                                {(!printProduct.variants || printProduct.variants.length === 0 || printMode === 'single') && (
+                                    <div className="bg-white p-4 border border-[#E2DFD7] rounded-none shadow-2xs space-y-3">
+                                        <div className="flex items-center justify-between gap-4 border-b border-[#E2DFD7] pb-2.5">
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[10px] text-[#6B6862] uppercase font-bold tracking-wider">Código SKU</p>
+                                                <p className="text-sm font-mono text-[#161616] font-bold mt-0.5 truncate">
+                                                    {activePrintSku || 'Sin SKU asignado'}
+                                                    {activeVariantLabel && (
+                                                        <span className="ml-2 text-[11px] text-[#D9381E] font-sans font-semibold uppercase">
+                                                            • {activeVariantLabel}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                <p className="text-[10px] text-[#6B6862] uppercase font-bold tracking-wider">Precio de Venta</p>
+                                                <p className="text-sm text-[#161616] font-bold font-mono mt-0.5">{formatPrice(printProduct.price)}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Previsualización del Código de Barras del Color Seleccionado */}
+                                        <div className="flex flex-col items-center justify-center p-3 bg-[#FAF8F5] border border-[#E2DFD7]">
+                                            {activePrintSku ? (
+                                                <BarcodeSVG value={activePrintSku} size="md" />
+                                            ) : (
+                                                <div className="py-2 text-center">
+                                                    <span className="text-[11px] text-[#6B6862] italic">
+                                                        Sin código de barras asignado a esta variante
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
@@ -2109,61 +2284,65 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     </select>
                                 </div>
 
-                                <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
-                                        Cantidad a Imprimir
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <button 
-                                            type="button"
-                                            onClick={() => setPrintQuantity(1)}
-                                            className={`flex-1 py-2 px-3 border text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none ${
-                                                printQuantity === 1 
-                                                    ? 'bg-white border-2 border-[#D9381E] text-[#D9381E]' 
-                                                    : 'bg-white border-[#E2DFD7] text-[#6B6862] hover:border-[#161616] hover:text-[#161616]'
-                                            }`}
-                                        >
-                                            1 Copia (Prueba)
-                                        </button>
-                                        {isRefillPrompt && (
-                                            <button 
-                                                type="button"
-                                                onClick={() => setPrintQuantity(printQuantity)}
-                                                className={`flex-1 py-2 px-3 border text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none bg-white border-2 border-[#D9381E] text-[#D9381E]`}
-                                            >
-                                                {printQuantity} Copias (Refill)
-                                            </button>
-                                        )}
-                                        <button 
-                                            type="button"
-                                            onClick={() => setPrintQuantity(selectedPrintVariant ? (selectedPrintVariant.stock || 1) : printProduct.stock)}
-                                            className={`flex-1 py-2 px-3 border text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none ${
-                                                printQuantity === (selectedPrintVariant ? selectedPrintVariant.stock : printProduct.stock)
-                                                    ? 'bg-white border-2 border-[#D9381E] text-[#D9381E]' 
-                                                    : 'bg-white border-[#E2DFD7] text-[#6B6862] hover:border-[#161616] hover:text-[#161616]'
-                                            }`}
-                                        >
-                                            Stock Completo ({selectedPrintVariant ? selectedPrintVariant.stock : printProduct.stock})
-                                        </button>
-                                    </div>
-                                </div>
+                                {(!printProduct.variants || printProduct.variants.length === 0 || printMode === 'single') && (
+                                    <>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                                                Cantidad a Imprimir
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setPrintQuantity(1)}
+                                                    className={`flex-1 py-2 px-3 border text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none ${
+                                                        printQuantity === 1 
+                                                            ? 'bg-white border-2 border-[#D9381E] text-[#D9381E]' 
+                                                            : 'bg-white border-[#E2DFD7] text-[#6B6862] hover:border-[#161616] hover:text-[#161616]'
+                                                    }`}
+                                                >
+                                                    1 Copia (Prueba)
+                                                </button>
+                                                {isRefillPrompt && (
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setPrintQuantity(printQuantity)}
+                                                        className={`flex-1 py-2 px-3 border text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none bg-white border-2 border-[#D9381E] text-[#D9381E]`}
+                                                    >
+                                                        {printQuantity} Copias (Refill)
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setPrintQuantity(selectedPrintVariant ? (selectedPrintVariant.stock || 1) : printProduct.stock)}
+                                                    className={`flex-1 py-2 px-3 border text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none ${
+                                                        printQuantity === (selectedPrintVariant ? selectedPrintVariant.stock : printProduct.stock)
+                                                            ? 'bg-white border-2 border-[#D9381E] text-[#D9381E]' 
+                                                            : 'bg-white border-[#E2DFD7] text-[#6B6862] hover:border-[#161616] hover:text-[#161616]'
+                                                    }`}
+                                                >
+                                                    Stock Completo ({selectedPrintVariant ? selectedPrintVariant.stock : printProduct.stock})
+                                                </button>
+                                            </div>
+                                        </div>
 
-                                <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
-                                        Cantidad Personalizada
-                                    </label>
-                                    <div className="flex items-center gap-2">
-                                        <input 
-                                            type="number" 
-                                            min="1" 
-                                            max="500"
-                                            value={printQuantity}
-                                            onChange={(e) => setPrintQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                            className="bg-white border border-[#E2DFD7] p-2 text-xs font-mono font-bold text-[#161616] outline-none w-24 text-center focus:border-[#161616] rounded-none"
-                                        />
-                                        <span className="text-[11px] text-[#6B6862] font-sans">etiquetas autoadhesivas</span>
-                                    </div>
-                                </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[11px] font-bold text-[#6B6862] uppercase tracking-wider block">
+                                                Cantidad Personalizada
+                                            </label>
+                                            <div className="flex items-center gap-2">
+                                                <input 
+                                                    type="number" 
+                                                    min="1" 
+                                                    max="500"
+                                                    value={printQuantity}
+                                                    onChange={(e) => setPrintQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                                    className="bg-white border border-[#E2DFD7] p-2 text-xs font-mono font-bold text-[#161616] outline-none w-24 text-center focus:border-[#161616] rounded-none"
+                                                />
+                                                <span className="text-[11px] text-[#6B6862] font-sans">etiquetas autoadhesivas</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4 border-t border-[#E2DFD7] mt-5">
