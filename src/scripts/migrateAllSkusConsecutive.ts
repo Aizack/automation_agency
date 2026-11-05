@@ -58,7 +58,13 @@ export async function runGlobalSkuMigration() {
                       UPDATE products 
                       SET sku = first_v_sku 
                       WHERE id = prod.id;
+                  ELSE
+                      UPDATE products 
+                      SET sku = curr_sku::TEXT 
+                      WHERE id = prod.id;
+                      curr_sku := curr_sku + 1;
                   END IF;
+                  total_prods := total_prods + 1;
               END IF;
           END LOOP;
           

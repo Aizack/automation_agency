@@ -958,8 +958,8 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                             type="text"
                                             className="w-full bg-white border border-[#E2DFD7] p-3 text-xs text-[#161616] outline-none focus:border-[#161616] transition font-mono uppercase rounded-none"
                                             value={sku}
-                                            onChange={(e) => setSku(e.target.value)}
-                                            placeholder="Disparar pistola lectora o dejar en blanco..."
+                                            onChange={(e) => setSku(e.target.value.replace(/[^0-9A-Za-z]/g, ''))}
+                                            placeholder="Automático (8 dígitos) o código de barras de fábrica..."
                                         />
                                     </div>
                                 ) : (
@@ -1290,7 +1290,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                                                 updated[idx].sku = e.target.value;
                                                                                 setVariantList(updated);
                                                                             }}
-                                                                            placeholder="SKU / Barras"
+                                                                            placeholder="Auto (8 dígitos)"
                                                                             className="bg-white border border-[#E2DFD7] p-2 text-xs text-[#161616] font-mono outline-none rounded-none w-full uppercase"
                                                                         />
                                                                     </td>

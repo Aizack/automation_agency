@@ -3229,6 +3229,13 @@ const resolveAuditUserName = async (req: Request, clientId: string): Promise<str
   return 'Administrador de Sede';
 };
 
+// Validador estricto de SKU: solo números puros (8 a 14 dígitos). Rechaza texto, espacios, signos $
+const isValidNumericSku = (val: any): boolean => {
+  if (!val || typeof val !== 'string') return false;
+  const clean = val.trim();
+  return /^[0-9]{8,14}$/.test(clean);
+};
+
 // Crear nuevo producto en inventario (soporta modo simple y modo con variantes de color)
 app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
@@ -3249,8 +3256,8 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
 
     const modsJson = available_modifiers ? (typeof available_modifiers === 'string' ? available_modifiers : JSON.stringify(available_modifiers)) : '[]';
 
-    // Regla del sistema: Generar SKU consecutivo de 8 dígitos si no se suministra
-    let finalProductSku = sku ? sku.trim() : null;
+    // Regla del sistema: Validar SKU estricto (numérico limpio 8-14 dígitos). Si no cumple o está vacío, generar consecutivo oficial.
+    let finalProductSku = isValidNumericSku(sku) ? sku.trim() : null;
     if (!hasVarBool && !finalProductSku) {
       const seqRes = await pool.query(`SELECT nextval('product_sku_seq')::TEXT as next_sku`);
       finalProductSku = seqRes.rows[0].next_sku;
@@ -3277,7 +3284,7 @@ app.post('/api/clients/:clientId/products', authenticateToken as any, authorizeC
       let firstVariantSku: string | null = null;
       for (let i = 0; i < variants.length; i++) {
         const v = variants[i];
-        let vSku = v.sku ? v.sku.trim() : '';
+        let vSku = isValidNumericSku(v.sku) ? v.sku.trim() : '';
         if (!vSku) {
           const seqRes = await pool.query(`SELECT nextval('product_sku_seq')::TEXT as next_sku`);
           vSku = seqRes.rows[0].next_sku;
@@ -3356,11 +3363,11 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
 
     const modsJson = available_modifiers ? (typeof available_modifiers === 'string' ? available_modifiers : JSON.stringify(available_modifiers)) : '[]';
 
-    // Regla del sistema: Generar SKU consecutivo de 8 dígitos si no se suministra
-    let finalProductSku = sku ? sku.trim() : null;
+    // Regla del sistema: Validar SKU estricto en edición. Si no es numérico válido, conservar el existente si es válido o generar nuevo.
+    let finalProductSku = isValidNumericSku(sku) ? sku.trim() : null;
     if (!hasVarBool && !finalProductSku) {
       const existing = await pool.query(`SELECT sku FROM products WHERE id = $1 AND client_id = $2`, [productId, targetClientId]);
-      if (existing.rows[0]?.sku) {
+      if (existing.rows[0]?.sku && isValidNumericSku(existing.rows[0].sku)) {
         finalProductSku = existing.rows[0].sku;
       } else {
         const seqRes = await pool.query(`SELECT nextval('product_sku_seq')::TEXT as next_sku`);
@@ -3397,7 +3404,7 @@ app.put('/api/clients/:clientId/products/:productId', authenticateToken as any, 
       let firstVariantSku: string | null = null;
       for (let i = 0; i < variants.length; i++) {
         const v = variants[i];
-        let vSku = v.sku ? v.sku.trim() : '';
+        let vSku = isValidNumericSku(v.sku) ? v.sku.trim() : '';
         if (!vSku) {
           const seqRes = await pool.query(`SELECT nextval('product_sku_seq')::TEXT as next_sku`);
           vSku = seqRes.rows[0].next_sku;
