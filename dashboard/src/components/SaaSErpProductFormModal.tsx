@@ -87,6 +87,10 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
     onProductSaved,
     fetchCategories
 }) => {
+    // Bloquear edición manual de stock únicamente si el producto ya existe Y el usuario no es admin.
+    // Al crear un producto nuevo, los colaboradores pueden definir libremente el stock inicial físico.
+    const isStockBlocked = Boolean(editingProduct && !isAdmin);
+
     const [productFormStep, setProductFormStep] = useState<number>(1);
     const [name, setName] = useState('');
     const [sku, setSku] = useState('');
@@ -1134,7 +1138,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                     </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setVariantList([...variantList, { color: useColorVariant ? (isLensMode ? 'Transparente' : 'Negro') : '', formula: '', detail: '', sku: '', stock: 1, min_stock: 1, image_url: '' }])}
+                                                        onClick={() => setVariantList([...variantList, { color: useColorVariant ? (isLensMode ? 'Transparente' : 'Negro') : '', formula: '', detail: '', sku: '', stock: isStockBlocked ? 0 : 1, min_stock: 1, image_url: '' }])}
                                                         className="bg-white border border-[#E2DFD7] hover:border-[#161616] text-[#161616] text-[10px] font-bold py-2 px-3 rounded-none flex items-center gap-1 transition uppercase tracking-wider cursor-pointer"
                                                     >
                                                         <span className="material-symbols-outlined text-[14px] text-[#D9381E]">add</span>
@@ -1294,17 +1298,17 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                                         <input
                                                                             type="number"
                                                                             min="0"
-                                                                            disabled={!isAdmin}
+                                                                            disabled={isStockBlocked}
                                                                             value={v.stock}
                                                                             onChange={(e) => {
-                                                                                if (!isAdmin) return;
+                                                                                if (isStockBlocked) return;
                                                                                 const updated = [...variantList];
                                                                                 updated[idx].stock = e.target.value === '' ? '' : (parseInt(e.target.value) || 0);
                                                                                 setVariantList(updated);
                                                                             }}
-                                                                            title={!isAdmin ? 'El stock solo puede ser modificado por administradores' : undefined}
+                                                                            title={isStockBlocked ? 'El stock existente solo puede ser modificado por administradores' : undefined}
                                                                             className={`p-2 text-xs font-mono font-bold text-center outline-none rounded-none w-20 border transition ${
-                                                                                !isAdmin 
+                                                                                isStockBlocked 
                                                                                     ? 'bg-[#F2EFE9] text-[#8F8C84] cursor-not-allowed border-[#D1CCC0] select-none opacity-80' 
                                                                                     : 'bg-white text-[#161616] border-[#E2DFD7] focus:border-[#161616]'
                                                                             }`}
@@ -1370,7 +1374,7 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                     <div className="flex flex-col gap-1.5">
                                                         <label className="text-[11px] uppercase tracking-wider text-[#6B6862] font-semibold flex items-center justify-between">
                                                             <span>{isDraftMode ? 'Cantidad a Pedir *' : 'Stock Disponible *'}</span>
-                                                            {!isAdmin && (
+                                                            {isStockBlocked && (
                                                                 <span className="text-[9px] text-[#D9381E] font-bold tracking-normal uppercase bg-[#FFF5F5] px-1.5 py-0.5 border border-[#FAD2CF]">
                                                                     🔒 Solo Administrador
                                                                 </span>
@@ -1379,23 +1383,23 @@ export const SaaSErpProductFormModal: React.FC<SaaSErpProductFormModalProps> = (
                                                         <input 
                                                             type="number"
                                                             min="0"
-                                                            disabled={!isAdmin}
+                                                            disabled={isStockBlocked}
                                                             className={`p-3 text-xs font-mono font-bold outline-none rounded-none border transition ${
-                                                                !isAdmin 
+                                                                isStockBlocked 
                                                                     ? 'bg-[#F2EFE9] text-[#8F8C84] cursor-not-allowed border-[#D1CCC0] select-none opacity-80' 
                                                                     : 'bg-white text-[#161616] border-[#E2DFD7] focus:border-[#161616]'
                                                             }`}
                                                             value={stock}
                                                             onChange={(e) => {
-                                                                if (!isAdmin) return;
+                                                                if (isStockBlocked) return;
                                                                 setStock(e.target.value === '' ? '' : (parseInt(e.target.value) || 0));
                                                             }}
                                                             placeholder="Ej: 15"
                                                             required
                                                         />
-                                                        {!isAdmin && (
+                                                        {isStockBlocked && (
                                                             <span className="text-[10px] text-[#8F8C84]">
-                                                                El stock no puede modificarse directamente por colaboradores. Solo un administrador o compras pueden alterarlo.
+                                                                El stock existente no puede modificarse directamente por colaboradores. Solo un administrador o compras/entradas pueden alterarlo.
                                                             </span>
                                                         )}
                                                     </div>
