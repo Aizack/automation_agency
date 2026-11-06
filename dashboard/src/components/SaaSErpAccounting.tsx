@@ -188,7 +188,9 @@ export const SaaSErpAccounting: React.FC<SaaSErpAccountingProps> = ({ clientId, 
   const maxTrendRevenue = Math.max(1, ...dailyTrend.map(t => t.revenue));
   const totalFixedExpensesSum = fixedExpenses.reduce((acc, curr) => acc + parseFloat(curr.amount || '0'), 0);
 
-  const filteredInvoices = invoicesList.filter(inv => {
+  const filteredInvoices = invoicesList
+    .filter(inv => inv.status !== 'annulled' && (inv.status as any) !== 'anulada' && inv.status !== 'cancelled')
+    .filter(inv => {
     if (!tableSearch.trim()) return true;
     const q = tableSearch.toLowerCase();
     return (

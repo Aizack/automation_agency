@@ -13,6 +13,8 @@ interface Invoice {
   customer_phone: string;
   customer_document_number: string;
   total_amount: string;
+  balance_due?: string | number;
+  total_paid?: string | number;
   status: string;
   payment_method: string;
   installments_count: number;
@@ -57,8 +59,9 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
       const res = await fetch(`/api/clients/${clientId}/invoices`);
       const json = await res.json();
       if (json.success) {
-        // Filtrar exclusivamente facturas vendidas a crédito o cuotas
+        // Filtrar exclusivamente facturas vendidas a crédito o cuotas (excluyendo estrictamente anuladas)
         const isCreditInvoice = (inv: Invoice) => {
+          if (inv.status === ('annulled' as any) || inv.status === ('anulada' as any) || (inv.status as any) === 'cancelled') return false;
           const method = (inv.payment_method || '').toLowerCase();
           return ['credito', 'crédito', 'cuotas', 'financiamiento'].includes(method);
         };
@@ -66,7 +69,7 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
         setInvoices(creditList);
 
         // Auto-seleccionar la primera pendiente
-        const pendingList = creditList.filter((inv: Invoice) => inv.status !== 'paid');
+        const pendingList = creditList.filter((inv: Invoice) => inv.status !== 'paid' && inv.status !== ('annulled' as any) && inv.status !== ('anulada' as any) && (inv.status as any) !== 'cancelled');
         if (pendingList.length > 0) {
           handleSelectInvoice(pendingList[0]);
         } else if (creditList.length > 0) {
@@ -150,9 +153,10 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(num);
   };
 
-  // Filtrado por pestaña (Pendientes vs Liquidadas) y búsqueda
-  const pendingInvoices = invoices.filter(inv => inv.status !== 'paid');
-  const paidInvoices = invoices.filter(inv => inv.status === 'paid');
+  // Filtrado por pestaña (Pendientes vs Liquidadas) excluyendo facturas anuladas
+  const activeInvoices = invoices.filter(inv => inv.status !== ('annulled' as any) && inv.status !== ('anulada' as any) && (inv.status as any) !== 'cancelled');
+  const pendingInvoices = activeInvoices.filter(inv => inv.status !== 'paid');
+  const paidInvoices = activeInvoices.filter(inv => inv.status === 'paid');
 
   const tabInvoices = carteraTab === 'pendientes' ? pendingInvoices : paidInvoices;
 
@@ -162,7 +166,11 @@ export const SaaSErpCartera: React.FC<CarteraProps> = ({ clientId: rawClientId }
     (inv.customer_document_number && inv.customer_document_number.includes(searchQuery))
   );
 
-  const totalCarteraPendiente = pendingInvoices.reduce((sum, inv) => sum + parseFloat(inv.total_amount || '0'), 0);
+  // El saldo pendiente de cartera suma el saldo por cobrar real (balance_due)
+  const totalCarteraPendiente = pendingInvoices.reduce((sum, inv) => {
+    const balance = parseFloat(String(inv.balance_due ?? inv.total_amount ?? '0'));
+    return sum + (isNaN(balance) ? 0 : balance);
+  }, 0);
 
   return (
     <div className="space-y-6 text-[#161616] font-sans antialiased">

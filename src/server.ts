@@ -2037,6 +2037,13 @@ app.post('/api/clients/:clientId/invoices/:invoiceId/annul', authenticateToken a
       // Ignorar si no aplica
     }
 
+    // Cancelar cuotas asociadas en invoice_installments (Cartera)
+    try {
+      await dbClient.query(`UPDATE invoice_installments SET status = 'cancelled' WHERE invoice_id = $1`, [invoiceId]);
+    } catch (instErr) {
+      console.warn('[Invoice Annul] Warning al cancelar cuotas de cartera:', instErr);
+    }
+
     // Registrar en tabla de anulaciones (Sanitización estricta de UUID para prevenir abortos en PostgreSQL)
     const rawUserId = reqUser?.userId || reqUser?.id || reqUser?.employeeId || null;
     const isValUUID = (val: any) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
@@ -2453,10 +2460,31 @@ app.get('/api/clients/:clientId/auth/gmail/url', authenticateToken as any, autho
   return res.json({ success: true, authUrl, url: authUrl });
 });
 
-// 7.8.1 Desvincular Gmail de una tienda
+// 7.8.1 Desvincular Gmail de una tienda (y revocar permiso en Google OAuth 2.0)
 app.post('/api/clients/:clientId/auth/gmail/disconnect', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
   try {
     const clientId = String(req.params.clientId);
+    const existingRes = await pool.query(
+      'SELECT gmail_refresh_token FROM clients WHERE id = $1',
+      [clientId]
+    );
+    const rawEncryptedToken = existingRes.rows[0]?.gmail_refresh_token;
+    if (rawEncryptedToken) {
+      try {
+        const plainRefreshToken = decryptToken(rawEncryptedToken);
+        if (plainRefreshToken) {
+          const oauth2Client = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            process.env.GOOGLE_REDIRECT_URI
+          );
+          await oauth2Client.revokeToken(plainRefreshToken);
+          console.log(`[Gmail OAuth] Token OAuth revocado en Google para tienda ${clientId}`);
+        }
+      } catch (revokeErr: any) {
+        console.warn(`[Gmail OAuth] Aviso al revocar token en Google para tienda ${clientId}:`, revokeErr?.message || revokeErr);
+      }
+    }
     await pool.query(
       `UPDATE clients 
        SET gmail_account_email = NULL, 
@@ -4431,10 +4459,10 @@ app.get('/api/clients/:clientId/invoices', authenticateToken as any, authorizeCl
               (SELECT el.recipient_email FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent' ORDER BY el.created_at DESC LIMIT 1) as last_email_recipient,
               (SELECT el.message_id FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent' ORDER BY el.created_at DESC LIMIT 1) as last_email_message_id,
               (SELECT COUNT(*)::int FROM invoice_email_logs el WHERE el.invoice_id = i.id AND el.status = 'sent') as email_sent_count,
-              (SELECT COALESCE(SUM(ii.paid_amount), 0)::numeric FROM invoice_installments ii WHERE ii.invoice_id = i.id) as total_paid,
-              (SELECT COALESCE(SUM(ii.amount - ii.paid_amount), 0)::numeric FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.status != 'paid') as balance_due,
-              (SELECT COUNT(*)::int FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.installment_number > 0) as total_installments_count,
-              (SELECT COUNT(*)::int FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.status = 'pending' AND ii.installment_number > 0) as pending_installments_count
+              (CASE WHEN i.status IN ('annulled', 'anulada', 'cancelled') THEN 0 ELSE (SELECT COALESCE(SUM(ii.paid_amount), 0)::numeric FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.status NOT IN ('cancelled', 'annulled', 'anulada')) END) as total_paid,
+              (CASE WHEN i.status IN ('annulled', 'anulada', 'cancelled') THEN 0 ELSE (SELECT COALESCE(SUM(ii.amount - ii.paid_amount), 0)::numeric FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.status NOT IN ('paid', 'cancelled')) END) as balance_due,
+              (CASE WHEN i.status IN ('annulled', 'anulada', 'cancelled') THEN 0 ELSE (SELECT COUNT(*)::int FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.installment_number > 0 AND ii.status NOT IN ('cancelled', 'annulled', 'anulada')) END) as total_installments_count,
+              (CASE WHEN i.status IN ('annulled', 'anulada', 'cancelled') THEN 0 ELSE (SELECT COUNT(*)::int FROM invoice_installments ii WHERE ii.invoice_id = i.id AND ii.status = 'pending' AND ii.installment_number > 0) END) as pending_installments_count
        FROM invoices i 
        LEFT JOIN employees e ON i.seller_employee_id = e.id
        WHERE i.client_id = $1 
@@ -10222,7 +10250,7 @@ app.get('/api/clients/:clientId/dashboard-metrics', authenticateToken as any, au
 
     // 1. Suma de ventas totales
     const salesRes = await pool.query(
-      `SELECT COALESCE(SUM(total_amount), 0) as "totalSales" FROM invoices WHERE client_id = $1`,
+      `SELECT COALESCE(SUM(total_amount), 0) as "totalSales" FROM invoices WHERE client_id = $1 AND status NOT IN ('cancelled', 'annulled', 'anulada')`,
       [clientId]
     );
     const totalSales = parseFloat(salesRes.rows[0].totalSales);
@@ -11018,7 +11046,7 @@ export const server = app.listen(PORT, () => {
         WHERE client_id = $1
           AND created_at >= $2
           AND created_at <= $3
-          AND status != 'cancelled'
+          AND status NOT IN ('cancelled', 'annulled', 'anulada')
         GROUP BY LOWER(payment_method)
         ORDER BY total DESC
       `, [clientId, dateFromStr, dateToStr]);
@@ -11098,7 +11126,7 @@ export const server = app.listen(PORT, () => {
         WHERE i.client_id = $1
           AND i.created_at >= $2
           AND i.created_at <= $3
-          AND i.status != 'cancelled'
+          AND i.status NOT IN ('cancelled', 'annulled', 'anulada')
         GROUP BY p.id, p.name
         ORDER BY total_sold DESC
         LIMIT $4
@@ -11135,7 +11163,7 @@ export const server = app.listen(PORT, () => {
         WHERE client_id = $1
           AND created_at >= $2
           AND created_at <= $3
-          AND status != 'cancelled'
+          AND status NOT IN ('cancelled', 'annulled', 'anulada')
         GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
         ORDER BY date ASC
       `, [clientId, dateFromStr, dateToStr]);
@@ -11168,7 +11196,7 @@ export const server = app.listen(PORT, () => {
         WHERE i.client_id = $1
           AND i.created_at >= $2
           AND i.created_at <= $3
-          AND i.status != 'cancelled'
+          AND i.status NOT IN ('cancelled', 'annulled', 'anulada')
         ORDER BY i.created_at DESC
       `, [clientId, dateFromStr, dateToStr]);
 
@@ -11292,7 +11320,7 @@ export const server = app.listen(PORT, () => {
           AND i.client_id = $1 
           AND i.created_at >= $2 
           AND i.created_at <= $3 
-          AND i.status != 'cancelled'
+          AND i.status NOT IN ('cancelled', 'annulled', 'anulada')
         WHERE p.client_id = $1
         GROUP BY p.id, p.name, p.stock
         ORDER BY units_sold DESC
@@ -11914,7 +11942,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       // 1. Promedio de ticket real y total de facturas
       const invRes = await pool.query(
         `SELECT AVG(total_amount) as avg_ticket, COUNT(*) as total_invoices, SUM(total_amount) as total_revenue
-         FROM invoices WHERE client_id = $1 AND status != 'cancelled'`,
+         FROM invoices WHERE client_id = $1 AND status NOT IN ('cancelled', 'annulled', 'anulada')`,
         [clientId]
       );
       const avgTicket = parseFloat(invRes.rows[0]?.avg_ticket || 0);
@@ -11924,7 +11952,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
       // 2. Día de la semana con menor facturación histórica (0=Domingo, 1=Lunes, 2=Martes, etc.)
       const dayRes = await pool.query(
         `SELECT EXTRACT(DOW FROM created_at) as dow, SUM(total_amount) as total
-         FROM invoices WHERE client_id = $1 AND status != 'cancelled'
+         FROM invoices WHERE client_id = $1 AND status NOT IN ('cancelled', 'annulled', 'anulada')
          GROUP BY dow ORDER BY total ASC LIMIT 1`,
         [clientId]
       );
@@ -12003,7 +12031,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
            COALESCE(SUM(total_amount), 0)::numeric as total
          FROM invoices
          WHERE client_id = $1 
-           AND status != 'cancelled'
+           AND status NOT IN ('cancelled', 'annulled', 'anulada')
            AND (
              created_at >= $2 
              OR (
@@ -12215,7 +12243,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
            COALESCE(SUM(total_amount), 0)::numeric as total
          FROM invoices
          WHERE client_id = $1 
-           AND status != 'cancelled'
+           AND status NOT IN ('cancelled', 'annulled', 'anulada')
            AND (
              created_at >= $2 
              OR (
@@ -12383,7 +12411,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
            LOWER(COALESCE(payment_method, 'efectivo')) as method,
            COALESCE(SUM(total_amount), 0)::numeric as total
          FROM invoices
-         WHERE client_id = $1 AND DATE(created_at) = CURRENT_DATE AND status != 'cancelled'
+         WHERE client_id = $1 AND DATE(created_at) = CURRENT_DATE AND status NOT IN ('cancelled', 'annulled', 'anulada')
          GROUP BY LOWER(COALESCE(payment_method, 'efectivo'))`,
         [clientId]
       );
@@ -12467,7 +12495,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
         `SELECT id, invoice_number, total_amount, payment_method, created_at, customer_name, customer_phone
          FROM invoices
          WHERE client_id = $1 
-           AND status != 'cancelled'
+           AND status NOT IN ('cancelled', 'annulled', 'anulada')
            AND LOWER(COALESCE(payment_method, 'efectivo')) IN ('efectivo', 'contado')
            AND created_at >= $2 
            AND ($3::timestamp IS NULL OR created_at <= $3)
@@ -13413,7 +13441,7 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
            FROM invoices 
            WHERE client_id = $3 AND (seller_employee_id = $1 OR employee_id = $1) 
              AND TO_CHAR(created_at, 'YYYY-MM') = $2 
-             AND (status IS NULL OR status != 'cancelled')`,
+             AND (status IS NULL OR status NOT IN ('cancelled', 'annulled', 'anulada'))`,
           [emp.id, monthYear, clientId]
         );
 
