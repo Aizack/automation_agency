@@ -242,7 +242,55 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
     setShowDisconnectModal(true);
   };
 
-  const handleConfirmConnect = () => {
+  const ensureFbSdk = (): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      if ((window as any).FB) {
+        try {
+          (window as any).FB.init({
+            appId: '1534078441779001',
+            autoLogAppEvents: true,
+            xfbml: true,
+            version: 'v21.0'
+          });
+        } catch (e) {}
+        return resolve((window as any).FB);
+      }
+
+      let script = document.getElementById('facebook-jssdk') as HTMLScriptElement;
+      if (!script) {
+        script = document.createElement('script');
+        script.id = 'facebook-jssdk';
+        script.src = 'https://connect.facebook.net/en_US/sdk.js';
+        script.async = true;
+        script.defer = true;
+        script.crossOrigin = 'anonymous';
+        script.onerror = () => reject(new Error('ADBLOCK_OR_NETWORK'));
+        document.body.appendChild(script);
+      }
+
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if ((window as any).FB) {
+          clearInterval(interval);
+          try {
+            (window as any).FB.init({
+              appId: '1534078441779001',
+              autoLogAppEvents: true,
+              xfbml: true,
+              version: 'v21.0'
+            });
+          } catch (e) {}
+          resolve((window as any).FB);
+        } else if (attempts > 25) {
+          clearInterval(interval);
+          reject(new Error('TIMEOUT_OR_BLOCKED'));
+        }
+      }, 200);
+    });
+  };
+
+  const handleConfirmConnect = async () => {
     if (!checkWarning1 || !checkWarning2) {
       setCaptchaError('Debes marcar las casillas confirmando que leíste y cumpliste las condiciones de Meta.');
       return;
@@ -252,6 +300,18 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
       setCaptchaError('El resultado matemático es incorrecto. Resuelve la operación mostrada en la imagen.');
       setMathCaptcha(generateCaptcha());
       setCaptchaInput('');
+      return;
+    }
+
+    setIsConnectingMeta(true);
+    setCaptchaError(null);
+
+    let fbInstance: any = null;
+    try {
+      fbInstance = await ensureFbSdk();
+    } catch (err: any) {
+      setIsConnectingMeta(false);
+      setCaptchaError('⚠️ No se pudo conectar con el servicio de Facebook. Si tienes un bloqueador de anuncios (AdBlock, uBlock o Brave Shields), desactívalo para frant.app y recarga la página.');
       return;
     }
 
@@ -269,48 +329,43 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
     };
     window.addEventListener('message', sessionHandler);
 
-    if ((window as any).FB) {
-      setIsConnectingMeta(true);
-      (window as any).FB.login(async (response: any) => {
-        window.removeEventListener('message', sessionHandler);
-        if (response.authResponse?.code) {
-          try {
-            const res = await fetch('/api/v1/meta/oauth/callback', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                clientId,
-                code: response.authResponse.code,
-                phoneNumberId: capturedSessionData?.phone_number_id,
-                wabaId: capturedSessionData?.waba_id
-              })
-            });
-            const json = await res.json();
-            if (json.success) {
-              if (capturedSessionData?.phone_number_id) setMetaPhoneNumberId(capturedSessionData.phone_number_id);
-              if (capturedSessionData?.waba_id) setMetaWabaId(capturedSessionData.waba_id);
-              if (json.data?.accessToken) setMetaToken(json.data.accessToken);
-              alert('🎉 ¡Número oficial de WhatsApp Business vinculado y conectado con Meta Cloud API exitosamente!');
-            } else {
-              alert(`❌ Error vinculando con Meta: ${json.error || 'Código rechazado'}`);
-            }
-          } catch (err: any) {
-            alert(`❌ Error de conexión con el servidor: ${err.message}`);
-          } finally {
-            setIsConnectingMeta(false);
+    fbInstance.login(async (response: any) => {
+      window.removeEventListener('message', sessionHandler);
+      if (response.authResponse?.code) {
+        try {
+          const res = await fetch('/api/v1/meta/oauth/callback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientId,
+              code: response.authResponse.code,
+              phoneNumberId: capturedSessionData?.phone_number_id,
+              wabaId: capturedSessionData?.waba_id
+            })
+          });
+          const json = await res.json();
+          if (json.success) {
+            if (capturedSessionData?.phone_number_id) setMetaPhoneNumberId(capturedSessionData.phone_number_id);
+            if (capturedSessionData?.waba_id) setMetaWabaId(capturedSessionData.waba_id);
+            if (json.data?.accessToken) setMetaToken(json.data.accessToken);
+            alert('🎉 ¡Número oficial de WhatsApp Business vinculado y conectado con Meta Cloud API exitosamente!');
+          } else {
+                        alert('❌ Error vinculando con Meta: ' + (json.error || 'Código rechazado'));
           }
-        } else {
+        } catch (err: any) {
+                    alert('❌ Error de conexión con el servidor: ' + (err.message || 'Error desconocido'));
+        } finally {
           setIsConnectingMeta(false);
         }
-      }, {
-        config_id: '1789269002280145',
-        response_type: 'code',
-        override_default_response_type: true,
-        extras: { version: 'v4' }
-      });
-    } else {
-      alert('⚠️ El SDK de Facebook se está inicializando. Por favor intenta de nuevo en unos segundos.');
-    }
+      } else {
+        setIsConnectingMeta(false);
+      }
+    }, {
+      config_id: '1789269002280145',
+      response_type: 'code',
+      override_default_response_type: true,
+      extras: { version: 'v4' }
+    });
   };
 
   const handleConfirmDisconnect = async () => {
