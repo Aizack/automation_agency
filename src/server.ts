@@ -14107,17 +14107,39 @@ Responde ÚNICAMENTE en formato JSON válido estricto sin bloques de markdown:
   // 3. Callback de Embedded Signup OAuth (POST /api/v1/meta/oauth/callback)
   app.post('/api/v1/meta/oauth/callback', authenticateToken as any, async (req: Request, res: Response) => {
     try {
-      const { clientId, code } = req.body;
+      const { clientId, code, phoneNumberId, wabaId } = req.body;
       if (!clientId || !code) {
         return res.status(400).json({ success: false, error: 'clientId y code son requeridos.' });
       }
 
-      const result = await MetaWhatsAppService.exchangeEmbeddedSignupCode(clientId, code);
+      const result = await MetaWhatsAppService.exchangeEmbeddedSignupCode(clientId, code, phoneNumberId, wabaId);
       if (!result.success) {
         return res.status(400).json({ success: false, error: result.error });
       }
 
       res.json({ success: true, message: 'Cuenta de Meta del cliente configurada exitosamente.', data: result.data });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 3.1 Desvincular Meta WhatsApp de un Cliente (POST /api/v1/meta/disconnect)
+  app.post('/api/v1/meta/disconnect', authenticateToken as any, authorizeClientAccess as any, async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.body;
+      if (!clientId) {
+        return res.status(400).json({ success: false, error: 'clientId es requerido.' });
+      }
+      await pool.query(
+        `UPDATE clients 
+         SET meta_wa_token = NULL, 
+             meta_phone_number_id = NULL, 
+             meta_waba_id = NULL, 
+             updated_at = NOW() 
+         WHERE id = $1`,
+        [clientId]
+      );
+      res.json({ success: true, message: 'Canal de Meta WhatsApp desvinculado exitosamente.' });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

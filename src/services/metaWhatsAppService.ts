@@ -209,7 +209,12 @@ export class MetaWhatsAppService {
   /**
    * Intercambia el código de autorización de Embedded Signup por un token de acceso permanente de Meta.
    */
-  static async exchangeEmbeddedSignupCode(clientId: string, code: string): Promise<{ success: boolean; data?: any; error?: string }> {
+  static async exchangeEmbeddedSignupCode(
+    clientId: string, 
+    code: string,
+    phoneNumberId?: string,
+    wabaId?: string
+  ): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
       const appId = process.env.META_APP_ID || '';
       const appSecret = process.env.META_APP_SECRET || '';
@@ -228,13 +233,44 @@ export class MetaWhatsAppService {
 
       const accessToken = resData.access_token;
 
-      // Guardar el token devuelto en la base de datos para este cliente
+      // Guardar token y credenciales en base de datos para este cliente
       await pool.query(
-        `UPDATE clients SET meta_wa_token = $1, updated_at = NOW() WHERE id = $2`,
-        [accessToken, clientId]
+        `UPDATE clients 
+         SET meta_wa_token = $1, 
+             meta_phone_number_id = COALESCE($3, meta_phone_number_id),
+             meta_waba_id = COALESCE($4, meta_waba_id),
+             updated_at = NOW() 
+         WHERE id = $2`,
+        [accessToken, clientId, phoneNumberId || null, wabaId || null]
       );
 
-      return { success: true, data: { accessToken } };
+      // Auto-registrar número en Meta Cloud API si fue provisto
+      if (phoneNumberId) {
+        try {
+          await this.registerPhoneNumber(phoneNumberId, accessToken);
+          console.log(`[Meta Embedded Signup] Número ${phoneNumberId} autoregistrado con éxito.`);
+        } catch (regErr) {
+          console.warn('[Meta Embedded Signup] Advertencia al autoregistrar número:', regErr);
+        }
+      }
+
+      // Auto-suscribir app a webhooks de WABA si fue provisto
+      if (wabaId) {
+        try {
+          await fetch(`https://graph.facebook.com/v20.0/${wabaId}/subscribed_apps`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          console.log(`[Meta Embedded Signup] Webhook suscrito a WABA ${wabaId}.`);
+        } catch (subErr) {
+          console.warn('[Meta Embedded Signup] Advertencia suscribiendo WABA a webhooks:', subErr);
+        }
+      }
+
+      return { success: true, data: { accessToken, phoneNumberId, wabaId } };
     } catch (err: any) {
       console.error('[Meta Embedded Signup] Error en intercambio de token:', err);
       return { success: false, error: err.message };

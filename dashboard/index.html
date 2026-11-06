@@ -24,6 +24,20 @@
         } catch (e) {}
       })();
     </script>
+    <!-- Meta WhatsApp Cloud API Embedded Signup SDK -->
+    <script>
+      window.fbAsyncInit = function() {
+        if (window.FB) {
+          window.FB.init({
+            appId            : '1534078441779001',
+            autoLogAppEvents : true,
+            xfbml            : true,
+            version          : 'v21.0'
+          });
+        }
+      };
+    </script>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
   </head>
   <body class="notranslate" translate="no">
     <div id="root"></div>
