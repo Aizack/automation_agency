@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estudio Estratégico Sectorial, Comercial y Tributario para Frant ERP (Colombia 2026)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --primary: #0F2D59;
+    --primary-light: #1E4E8C;
+    --accent: #25D366;
+    --accent-dark: #128C7E;
+    --warning: #D97706;
+    --danger: #DC2626;
+    --text-main: #1F2937;
+    --text-muted: #4B5563;
+    --bg-main: #F3F4F6;
+    --card-bg: #FFFFFF;
+    --border: #E5E7EB;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg-main);
+    line-height: 1.65;
+  }
+  .container { max-width: 1280px; margin: 0 auto; padding: 30px 20px; }
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, #081B36 100%);
+    color: white;
+    padding: 50px 40px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 25px rgba(15, 45, 89, 0.15);
+  }
+  .header h1 { font-size: 2.1rem; font-weight: 800; margin-bottom: 15px; line-height: 1.25; }
+  .header p.lead { font-size: 1.1rem; color: #D1D5DB; margin-bottom: 25px; max-width: 950px; }
+  .meta-badges { display: flex; flex-wrap: wrap; gap: 10px; }
+  .badge { background: rgba(255,255,255,0.15); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; }
+  .badge.green { background: #059669; }
+  .badge.orange { background: var(--warning); }
+  
+  .layout { display: grid; grid-template-columns: 280px 1fr; gap: 30px; }
+  @media (max-width: 950px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } }
+  
+  .sidebar {
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .sidebar h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 15px; }
+  .sidebar ul { list-style: none; }
+  .sidebar li { margin-bottom: 8px; }
+  .sidebar a { text-decoration: none; color: var(--text-main); font-size: 0.88rem; transition: color 0.2s; display: block; padding: 5px 8px; border-radius: 6px; }
+  .sidebar a:hover { background: #EEF2F6; color: var(--primary-light); font-weight: 600; }
+
+  .content-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 35px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  }
+  h2 { font-size: 1.55rem; color: var(--primary); margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #E5E7EB; }
+  h3 { font-size: 1.22rem; color: var(--primary-light); margin: 24px 0 12px 0; }
+  p { margin-bottom: 14px; font-size: 1rem; color: #374151; }
+  
+  .callout {
+    background: #EFF6FF;
+    border-left: 4px solid var(--primary-light);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 20px 0;
+  }
+  .callout.warning { background: #FFFBEB; border-left-color: var(--warning); }
+  .callout.danger { background: #FEF2F2; border-left-color: var(--danger); }
+  .callout h4 { margin-bottom: 6px; font-size: 1rem; color: var(--primary); }
+  .callout.warning h4 { color: #92400E; }
+  .callout.danger h4 { color: #991B1B; }
+  
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 0.92rem;
+  }
+  table.data-table th, table.data-table td {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  table.data-table th {
+    background: #F3F4F6;
+    color: var(--primary);
+    font-weight: 700;
+  }
+  table.data-table tr:nth-child(even) { background: #F9FAFB; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+  @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+  
+  .metric-card {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .metric-value { font-size: 2.1rem; font-weight: 800; color: var(--primary); margin: 6px 0; }
+  .metric-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+
+  .chart-box {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0; }
+  @media (max-width: 950px) { .pricing-grid { grid-template-columns: 1fr; } }
+  .pricing-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 25px;
+    background: #FFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .pricing-card.featured {
+    border: 2px solid var(--primary-light);
+    box-shadow: 0 10px 25px rgba(30, 78, 140, 0.12);
+    position: relative;
+  }
+  .pricing-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-light);
+    color: #fff;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .price { font-size: 1.9rem; font-weight: 800; color: var(--primary); margin: 15px 0; }
+  .price span { font-size: 0.9rem; font-weight: 500; color: var(--text-muted); }
+  .plan-features { list-style: none; margin: 20px 0; }
+  .plan-features li { padding: 8px 0; border-bottom: 1px solid #F3F4F6; font-size: 0.9rem; }
+  
+  .timeline { border-left: 3px solid var(--primary-light); margin: 20px 0 20px 10px; padding-left: 20px; }
+  .timeline-item { margin-bottom: 20px; position: relative; }
+  .timeline-item::before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    background: var(--primary);
+    border-radius: 50%;
+    position: absolute;
+    left: -28px;
+    top: 5px;
+  }
+  .timeline-title { font-weight: 700; color: var(--primary); font-size: 1rem; }
+  .timeline-desc { font-size: 0.92rem; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="meta-badges">
+      <span class="badge green">Documento de Junta Directiva</span>
+      <span class="badge">Vigencia: Noviembre 2026</span>
+      <span class="badge orange">Estatuto Tributario & DIAN</span>
+      <span class="badge">Meta Cloud API Official</span>
+    </div>
+    <h1 style="margin-top:20px;">ESTUDIO ESTRATÉGICO SECTORIAL, COMERCIAL, REGULATORIO Y OPERATIVO PARA FRANT ERP (ARM) EN COLOMBIA</h1>
+    <p class="lead">Auditoría de Mercado PyME, Customer Journey Omnicanal, Marco Tributario DIAN (UVT 2024-2026, Facturación Electrónica y POS Electrónico), Calificación Algorítmica de Prospectos (Lead Scoring IA) y Hoja de Ruta de Comercialización B2B.</p>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <h3>Navegación del Informe</h3>
+      <ul>
+        <li><a href="#sec1">1. Resumen Ejecutivo</a></li>
+        <li><a href="#sec2">2. Tejido PyME en Colombia</a></li>
+        <li><a href="#sec3">3. Customer Journey y Psicología</a></li>
+        <li><a href="#sec4">4. Fricciones por Vertical</a></li>
+        <li><a href="#sec5">5. Marco Tributario DIAN</a></li>
+        <li><a href="#sec6">6. Marco Legal & Meta Cloud</a></li>
+        <li><a href="#sec7">7. Lead Scoring Algorítmico</a></li>
+        <li><a href="#sec8">8. Planes, Precios y Unit Economics</a></li>
+        <li><a href="#sec9">9. Plan Go-To-Market 30 Días</a></li>
+        <li><a href="#sec10">10. Conclusiones Directivas</a></li>
+        <li><a href="#sec11">11. Referencias Bibliográficas</a></li>
+      </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+      <!-- SECCION 1 -->
+      <div class="content-card" id="sec1">
+        <h2>1. Resumen Ejecutivo y Tesis de Negocio</h2>
+        <p>El mercado de software para micro, pequeñas y medianas empresas (PyMEs) en Colombia y América Latina se encuentra en un punto de inflexión. Durante los últimos 15 años, la digitalización empresarial estuvo dominada por los <strong>Sistemas de Registro (Systems of Record)</strong>: plataformas contables y administrativas pasivas (como Siigo, Alegra, Loggro o World Office) concebidas exclusivamente para archivar transacciones pasadas, conciliar balances y expedir declaraciones ante la DIAN.</p>
+        <p>Sin embargo, la realidad operativa del comercio minorista y de servicios en Colombia se transformó radicalmente tras la masificación de los canales conversacionales. Hoy, <strong>más del 87% de las transacciones comerciales iniciales se atienden y discuten por WhatsApp</strong>, pero menos del 20% de los negocios cuentan con una sincronización en tiempo real entre sus chats, su inventario físico y su recaudo financiero.</p>
+        
+        <div class="callout">
+          <h4>💡 La Gran Tesis de Posicionamiento (ARM - Agentic Relationship Management)</h4>
+          <p>Frant ERP (frant.app) no debe comercializarse como un software contable que compite por precio contra las soluciones tradicionales. Frant es un <strong>Empleado Digital Autónomo y Supervisado que vende, cobra y factura en WhatsApp 24/7</strong>, respaldado por la infraestructura de Meta Cloud API oficial y conectado a PostgreSQL. Su propuesta de valor no es 'llevar la contabilidad', sino <strong>sustituir o potenciar al asesor comercial humano</strong>, ahorrando más de $2.700.000 COP mensuales por tienda y recuperando ventas y cartera fuera de horario laboral.</p>
+        </div>
+
+        <div class="grid-2">
+          <div class="metric-card">
+            <div class="metric-label">Tiempo de Respuesta Óptimo (MIT/HBR)</div>
+            <div class="metric-value">&lt; 5 Min</div>
+            <p style="font-size:0.85rem; color:var(--text-muted);">Multiplica por 21x la probabilidad de calificar y cerrar un prospecto.</p>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Costo Real Empleador Asesor Humano (2026)</div>
+            <div class="metric-value">$2.765.500</div>
+            <p style="font-size:0.85rem; color:var(--text-muted);">SMLMV + Auxilio + Seguridad Social + Prestaciones por 8h/día.</p>
+          </div>
+        </div>
+
+        <div class="chart-box">
+          <h4 style="margin-bottom:15px; color:var(--primary);">Comparativa Económica Mensual: Asesor Humano vs. Frant ERP (COP 2026)</h4>
+          <canvas id="chartCostoLaboral" height="100"></canvas>
+        </div>
+      </div>
+
+      <!-- SECCION 2 -->
+      <div class="content-card" id="sec2">
+        <h2>2. Estructura y Dinámica del Tejido Empresarial PyME en Colombia</h2>
+        <p>Para proyectar la penetración de mercado de Frant se analizó la clasificación empresarial legal fijada en el <strong>Decreto 957 de 2019</strong>, el cual determina el tamaño de las empresas en Colombia exclusivamente con base en sus ingresos ordinarios anuales expresados en Unidades de Valor Tributario (UVT):</p>
+        
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Sector Económico</th>
+              <th>Microempresa (UVT)</th>
+              <th>Pequeña Empresa (UVT)</th>
+              <th>Mediana Empresa (UVT)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Sector Comercio</strong> (Retail, Ópticas, Moda, Almacenes)</td>
+              <td>Hasta 44.769 UVT<br><em>(≤ $2.344 M COP en 2026)</em></td>
+              <td>De 44.770 a 431.196 UVT<br><em>($2.344 M a $22.583 M COP)</em></td>
+              <td>De 431.197 a 2.160.692 UVT<br><em>($22.583 M a $113.164 M COP)</em></td>
+            </tr>
+            <tr>
+              <td><strong>Sector Servicios</strong> (Restaurantes, Clínicas, Software)</td>
+              <td>Hasta 32.988 UVT<br><em>(≤ $1.727 M COP en 2026)</em></td>
+              <td>De 32.989 a 131.951 UVT<br><em>($1.727 M a $6.910 M COP)</em></td>
+              <td>De 131.952 a 483.034 UVT<br><em>($6.910 M a $25.298 M COP)</em></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p><strong>Censo y Tasa de Supervivencia (Confecámaras / DANE):</strong></p>
+        <p>En Colombia existen más de 1.750.000 empresas formales activas registradas en Cámaras de Comercio. El 92,3% son microempresas y el 5,8% son pequeñas empresas. Sin embargo, el 62% de los nuevos emprendimientos fracasan antes de alcanzar su quinto año de operación. Los diagnósticos gremiales atribuyen este fracaso a tres factores: asfixia de caja por mala gestión de cartera (37%), falta de control sobre costos e inventarios (29%) e incapacidad de generar un flujo predecible de ventas y retención (24%).</p>
+        
+        <div class="chart-box">
+          <h4 style="margin-bottom:15px; color:var(--primary);">Causas Principales de Fracaso en PyMEs Colombianas (Confecámaras / ANIF)</h4>
+          <canvas id="chartCausasFracaso" height="90"></canvas>
+        </div>
+      </div>
+
+      <!-- SECCION 3 -->
+      <div class="content-card" id="sec3">
+        <h2>3. El Recorrido del Cliente Digital y Mixto: Ciencia de Conversión</h2>
+        <p>El comportamiento del consumidor en entornos omnicanal (físico + digital) se rige por principios rigurosamente estudiados por la academia y las principales consultoras globales:</p>
+        
+        <h3>3.1 Modelos Fundacionales</h3>
+        <p>• <strong>McKinsey Consumer Decision Journey (Court et al., 2009):</strong> Superó el embudo tradicional AIDA demostrando que la compra moderna es un ciclo circular. Las marcas que interactúan proactivamente durante la 'evaluación activa' y generan un bucle de fidelización fluido logran retener a más del 70% de sus clientes sin reinvertir en adquisición.</p>
+        <p>• <strong>Google 'The Messy Middle' (2020):</strong> Describe el espacio caótico entre el estímulo publicitario y la decisión de compra, dominado por sesgos cognitivos como el 'sesgo de inmediatez' (disponibilidad instantánea) y la 'prueba social'. En WhatsApp, si el comercio no responde de inmediato en este espacio, el usuario salta a la competencia.</p>
+        <p>• <strong>Harvard Business Review (Sopadjieva et al., 2017):</strong> Estudio sobre 46.000 compradores que probó que los clientes que combinan canales físicos y digitales (omnicanales) gastan un 4% más en tiendas físicas y un 10% más en digital, incrementando sustancialmente su valor de vida (CLV).</p>
+
+        <h3>3.2 La Regla de los 5 Minutos (Speed-to-Lead)</h3>
+        <p>El <em>Lead Response Management Study</em> (Oldroyd, InsideSales / MIT) y el artículo canónico de Harvard Business Review (<em>The Short Life of Online Sales Leads</em>) probaron empíricamente que contactar a un prospecto dentro de los primeros 5 minutos multiplica por 21 veces la probabilidad de calificarlo con éxito frente a tardar 30 minutos, y por 7 veces frente a tardar una hora. En mensajería instantánea (WhatsApp), más del 60% de los usuarios abandona el chat si la espera supera los 3 minutos.</p>
+
+        <div class="chart-box">
+          <h4 style="margin-bottom:15px; color:var(--primary);">Decadencia Exponencial de la Probabilidad de Calificación del Lead (HBR / MIT)</h4>
+          <canvas id="chartSpeedToLead" height="100"></canvas>
+        </div>
+
+        <h3>3.3 Aversión y Confianza en IA (Luo et al., Marketing Science 2019)</h3>
+        <p>Un estudio seminal con 50.000 clientes reveló que los agentes de IA empáticos son tan efectivos cerrando ventas como los vendedores humanos de alto rendimiento. No obstante, advertir prematuramente que se trata de un 'bot' antes de demostrar su capacidad genera una caída del 80% en la intención de compra debido a experiencias previas con chatbots rígidos de botones. Por ello, Frant debe proyectar una interacción fluida, natural y siempre respaldada por un escalamiento humano inmediato.</p>
+      </div>
+
+      <!-- SECCION 4 -->
+      <div class="content-card" id="sec4">
+        <h2>4. Anatomía de Fricciones y Necesidades por Tipo de Negocio</h2>
+        
+        <h3>A. Centros de Salud Visual y Ópticas</h3>
+        <p>• <strong>El problema del No-Show:</strong> Inasistencia a consultas visuales entre el 25% y el 40%. La revisión sistemática Cochrane (Gurol-Urganci et al., 2013) demostró que recordatorios por mensajería móvil reducen el ausentismo en salud entre un 34% y un 50%.</p>
+        <p>• <strong>Fuga con la fórmula médica:</strong> El paciente acude a la consulta, recibe su receta óptica y se marcha a cotizar monturas en la competencia. Frant mitiga esta pérdida enviando al instante una cotización formal estructurada por WhatsApp con seguimiento a las 48 horas.</p>
+        <p>• <strong>Seguimiento de tallado de laboratorio:</strong> Ansiedad del cliente por sus lentes. Frant notifica automáticamente el cambio de estado del trabajo de laboratorio.</p>
+        <p>• <strong>El ciclo de renovación anual:</strong> La recomendación clínica de revisión visual cada 12 meses es monetizada por Frant reactivando automáticamente al paciente a los 365 días.</p>
+
+        <h3>B. Restaurantes y Negocios Gastronómicos</h3>
+        <p>• <strong>La asfixia de los agregadores (Rappi):</strong> Comisiones abusivas del 25% al 32% sobre el valor bruto del plato más IVA sobre comisiones. En un plato de $30.000 COP, el local cede hasta $9.500 COP.</p>
+        <p>• <strong>Desintermediación del cliente:</strong> Las apps retienen los datos y los números de WhatsApp. La estrategia Frant migra a los comensales recurrentes al canal directo de WhatsApp mediante códigos QR en el empaque físico, procesando pedidos con menú interactivo y KDS propio sin pagar comisión.</p>
+
+        <h3>C. Comercio Minorista Físico (Moda, Calzado, Retail)</h3>
+        <p>• <strong>Desincronización de existencias:</strong> Incapacidad de saber si hay talla o color en bodega en tiempo real. La IA de Frant consulta el stock en milisegundos mediante Function Calling en PostgreSQL.</p>
+        <p>• <strong>Crédito informal y cobro de cartera:</strong> El 'fiado' en libretas manuales ocasiona pérdidas del 15% al 20%. Frant automatiza el cobro con recordatorios educados y links de pago.</p>
+
+        <h3>D. Venta Digital y Pago Contraentrega (Cash on Delivery)</h3>
+        <div class="callout danger">
+          <h4>🚨 El Desangre Financiero del Contraentrega en Colombia</h4>
+          <p>Sin confirmación previa, la tasa de rechazo de paquetes en la puerta de la casa oscila entre el <strong>30% y el 45%</strong>. Cada paquete devuelto genera una pérdida neta compuesta de $40.000 a $50.000 COP (flete de ida, flete de retorno, empaque dañado y pauta publicitaria consumida).</p>
+          <p><strong>El Filtro Frant:</strong> La IA exige la confirmación estructurada del pedido por WhatsApp antes del empaque (nombre, cédula, dirección y teléfono). Si no confirma, no se despacha. Esto reduce las devoluciones a menos del 12%, blindando el flujo de caja del negocio.</p>
+        </div>
+
+        <div class="chart-box">
+          <h4 style="margin-bottom:15px; color:var(--primary);">Tasa de Devoluciones en Contraentrega: Sin Filtro vs. Con Filtro Frant IA</h4>
+          <canvas id="chartContraentrega" height="80"></canvas>
+        </div>
+      </div>
+
+      <!-- SECCION 5 -->
+      <div class="content-card" id="sec5">
+        <h2>5. Marco Tributario, Contable y Regulatorio DIAN (2024-2026)</h2>
+
+        <h3>5.1 Evolución de la UVT y Umbrales Legales</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Año Gravable</th>
+              <th>Resolución Oficial DIAN</th>
+              <th>Valor UVT</th>
+              <th>Umbral 3.500 UVT (No Responsable IVA)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2024</td>
+              <td>Resolución 000187 del 28-Nov-2023</td>
+              <td>$47.065 COP</td>
+              <td>$164.727.500 COP</td>
+            </tr>
+            <tr>
+              <td>2025</td>
+              <td>Resolución 000193 del 04-Dic-2024</td>
+              <td>$49.799 COP</td>
+              <td><strong>$174.296.500 COP</strong> <em>(Origen del mito)</em></td>
+            </tr>
+            <tr>
+              <td>2026</td>
+              <td>Resolución 000238 del 15-Dic-2025</td>
+              <td>$52.374 COP</td>
+              <td><strong>$183.309.000 COP</strong> <em>(Vigente)</em></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout warning">
+          <h4>⚖️ Aclaración Jurídica sobre el Umbral de los $174 Millones</h4>
+          <p>Los comerciales suelen repetir que la obligación tributaria nace a los '$174 millones'. Esa cifra corresponde estrictamente al cálculo de 3.500 UVT con la tarifa del año 2025 ($49.799 × 3.500 = $174.296.500 COP). Para el año 2026, el umbral real es de <strong>$183.309.000 COP</strong> anuales ($15.275.750 COP al mes). Además, las <strong>Personas Jurídicas son responsables de IVA desde el primer peso</strong> que vendan, sin importar el monto.</p>
+        </div>
+
+        <h3>5.2 Facturación Electrónica y POS Electrónico (Resolución 000165 de 2023)</h3>
+        <p>• <strong>Fin del tiquete POS físico tradicional:</strong> Entre mayo y julio de 2024 concluyó el calendario de obligatoriedad del Documento Equivalente Electrónico Tiquete POS (Resolución 000008 de 2024). Los negocios obligados a facturar deben transmitir electrónicamente cada tiquete POS a la DIAN con validación previa y código CUDE.</p>
+        <p>• <strong>Eliminación del límite de 5 UVT para POS Electrónico:</strong> Con el POS Electrónico ya no existe restricción de monto máximo para expedir tiquete de caja, siempre que se transmita a la DIAN. No obstante, si el cliente exige Factura Electrónica de Venta para deducir costos en su declaración de renta, el comercio está obligado a emitirla.</p>
+
+        <h3>5.3 Tratamiento de IVA por Tipo de Producto</h3>
+        <p>• <strong>Ópticas (Salud Visual):</strong></p>
+        <p>  - Lentes de contacto y lentes oftálmicos graduados (Partida 90.01): <strong>EXCLUIDOS DE IVA</strong> (Art. 424 E.T.).</p>
+        <p>  - Monturas para gafas (Partida 90.03): <strong>GRAVADAS CON IVA DEL 19%</strong>.</p>
+        <p>  - Gafas de sol y protectoras (Partida 90.04): <strong>GRAVADAS CON IVA DEL 19%</strong>.</p>
+        <p>  - Consulta de Optometría: <strong>EXCLUIDA DE IVA</strong> (Art. 476 Numeral 1 E.T. - Salud humana).</p>
+        <p>• <strong>Restaurantes (INC vs. IVA):</strong></p>
+        <p>  - Tarifa del Impuesto Nacional al Consumo: <strong>8%</strong> sobre el valor de la comida y bebida servida o despachada.</p>
+        <p>  - El INC <strong>NO es descontable</strong> para el comerciante (es mayor valor del costo/gasto).</p>
+        <p>  - Si el restaurante opera como franquicia o explotación de intangibles, <strong>NO cobra INC, sino IVA del 19%</strong>.</p>
+        <p>• <strong>Régimen Simple de Tributación (RST - Art. 908 E.T.):</strong> Los restaurantes en el SIMPLE pagan una tarifa unificada de entre 3,1% y 4,5% sobre ingresos brutos que ya integra el INC. Las tiendas pagan entre 1,2% y 5,6%. Todos los inscritos en el SIMPLE están legalmente obligados a facturar electrónicamente.</p>
+      </div>
+
+      <!-- SECCION 6 -->
+      <div class="content-card" id="sec6">
+        <h2>6. Marco Legal Complementario y Cumplimiento Normativo</h2>
+        <p>• <strong>Protección de Datos Sensibles (Ley 1581 de 2012):</strong> Los datos de historia clínica optométrica son legalmente 'datos sensibles'. La IA de Frant no debe divulgar fórmulas ni antecedentes médicos por WhatsApp sin autenticación previa del titular.</p>
+        <p>• <strong>Horarios de Contacto al Consumidor (Ley 2300 de 2023 'Dejen de Fregar'):</strong> Solo se puede contactar a clientes de lunes a viernes de 7:00 a.m. a 7:00 p.m., y sábados de 8:00 a.m. a 3:00 p.m. Prohibido domingos y festivos. Frant debe incorporar un bloqueador nativo de horarios en sus módulos de Campañas y Cartera.</p>
+        <p>• <strong>Políticas Oficiales de Meta Cloud API (2026):</strong> Meta factura por mensaje entregado según categoría: Marketing ($0,0125 USD, aprox. $50 COP), Utilidad ($0,0008 USD, aprox. $3,2 COP) y Autenticación ($0,0008 USD). Los mensajes de servicio son gratuitos dentro de la ventana de 24 horas.</p>
+        <p>• <strong>Costo Laboral Real Asesor de WhatsApp (2026):</strong> Con el Salario Mínimo 2026 fijado en $1.750.905 COP y auxilio de transporte de $249.095 COP, la carga prestacional completa eleva el costo a <strong>$2.765.500 COP mensuales</strong> por cada asesor humano. Frant ofrece cobertura 24/7 por el 13% de dicho valor.</p>
+      </div>
+
+      <!-- SECCION 7 -->
+      <div class="content-card" id="sec7">
+        <h2>7. Arquitectura de Calificación Algorítmica de Prospectos (Lead Scoring IA)</h2>
+        <p>Frant implementa un sistema de calificación basado en micro-compromisos y señales de comportamiento extraídas en tiempo real por el LLM:</p>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Dimensión</th>
+              <th>Señal de Comprador Real (Hot Lead)</th>
+              <th>Señal de Curioso (Window-Shopper)</th>
+              <th>Ponderación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Especificidad</strong></td>
+              <td>Menciona referencia, talla, color o fórmula exacta</td>
+              <td>Preguntas abstractas ('¿qué venden?', '¿catálogo?')</td>
+              <td>25%</td>
+            </tr>
+            <tr>
+              <td><strong>Urgencia</strong></td>
+              <td>Expresa necesidad inmediata ('para el viernes', 'cita hoy')</td>
+              <td>Expresiones vagas ('solo pregunto', 'más adelante')</td>
+              <td>20%</td>
+            </tr>
+            <tr>
+              <td><strong>Logística / Datos</strong></td>
+              <td>Proporciona dirección, barrio, ciudad y cédula</td>
+              <td>Se niega a entregar datos de ubicación</td>
+              <td>25%</td>
+            </tr>
+            <tr>
+              <td><strong>Ritmo Conversacional</strong></td>
+              <td>Respuestas rápidas, interacción fluida</td>
+              <td>Monosílabos, pausas de más de 4 horas</td>
+              <td>15%</td>
+            </tr>
+            <tr>
+              <td><strong>Historial ERP</strong></td>
+              <td>Cliente recurrente sin mora registrada</td>
+              <td>Historial de paquetes contraentrega devueltos</td>
+              <td>15%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <h4>🎯 Bucle de Optimización con Meta Conversions API (ctwa_clid)</h4>
+          <p>Cuando un prospecto entra por un anuncio de Click-to-WhatsApp, Frant captura el parámetro <code>referral.ctwa_clid</code>. Al cerrarse la venta (en POS o link de pago), el backend envía un evento server-to-server <code>Purchase</code> a Meta. Esto le permite al algoritmo publicitario de Meta aprender quiénes son los compradores reales y dejar de mostrar anuncios a usuarios que solo abren chats para curiosear, reduciendo el Costo por Adquisición (CPA) hasta en un 40%.</p>
+        </div>
+      </div>
+
+      <!-- SECCION 8 -->
+      <div class="content-card" id="sec8">
+        <h2>8. Estructura Definitiva de Planes, Precios y Unit Economics</h2>
+        
+        <div class="pricing-grid">
+          <!-- PLAN 1 -->
+          <div class="pricing-card">
+            <div>
+              <h3>Esencial</h3>
+              <p style="color:var(--text-muted); font-size:0.9rem;">Para microcomercios y puntos de venta que inician con IA.</p>
+              <div class="price">$169.000 <span>COP/mes</span></div>
+              <p style="font-size:0.85rem; color:#059669; font-weight:600;">Pago anual: $135.000 COP/mes</p>
+              <ul class="plan-features">
+                <li>✓ 1 Sede / 2 Usuarios</li>
+                <li>✓ 400 conversaciones IA/mes</li>
+                <li>✓ POS y turnos de caja</li>
+                <li>✓ Inventario básico y catálogo web</li>
+                <li>✓ Envío de facturas por WhatsApp</li>
+                <li>✓ Traspaso a humano (Human Takeover)</li>
+              </ul>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">Setup asistido: $450.000 COP</p>
+          </div>
+
+          <!-- PLAN 2 -->
+          <div class="pricing-card featured">
+            <span class="pricing-badge">Plan Estrella</span>
+            <div>
+              <h3>Crecimiento</h3>
+              <p style="color:var(--text-muted); font-size:0.9rem;">Para negocios consolidados que buscan maximizar ventas y cobranza.</p>
+              <div class="price">$369.000 <span>COP/mes</span></div>
+              <p style="font-size:0.85rem; color:#059669; font-weight:600;">Pago anual: $295.000 COP/mes</p>
+              <ul class="plan-features">
+                <li>✓ <strong>2 Sedes / 5 Usuarios</strong></li>
+                <li>✓ <strong>1.500 conversaciones IA/mes</strong></li>
+                <li>✓ Todo lo del plan Esencial</li>
+                <li>✓ <strong>Cartera automática con cobro por IA</strong></li>
+                <li>✓ <strong>Cotizaciones y Citas automatizadas</strong></li>
+                <li>✓ <strong>Domicilios y tracking de pedidos</strong></li>
+                <li>✓ <strong>Incluye 1 Vertical Pro (Óptica o Restaurante)</strong></li>
+                <li>✓ Campañas y segmentación CRM</li>
+              </ul>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">Setup asistido: $750.000 COP (Gratis anual)</p>
+          </div>
+
+          <!-- PLAN 3 -->
+          <div class="pricing-card">
+            <div>
+              <h3>Corporativo / Pro</h3>
+              <p style="color:var(--text-muted); font-size:0.9rem;">Para cadenas comerciales, distribuidores y multi-sucursales.</p>
+              <div class="price">$799.000 <span>COP/mes</span></div>
+              <p style="font-size:0.85rem; color:#059669; font-weight:600;">Pago anual: $639.000 COP/mes</p>
+              <ul class="plan-features">
+                <li>✓ <strong>5 Sedes / 15 Usuarios</strong></li>
+                <li>✓ <strong>5.000 conversaciones IA/mes</strong></li>
+                <li>✓ Todo lo del plan Crecimiento</li>
+                <li>✓ Compras y órdenes a proveedores</li>
+                <li>✓ Portal de empleados y asistencia</li>
+                <li>✓ Multi-bodega y Kardex avanzado</li>
+                <li>✓ Auditoría integral y planeación</li>
+                <li>✓ Todas las verticales habilitadas</li>
+              </ul>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); text-align:center;">Setup asistido: $1.200.000 COP (Gratis anual)</p>
+          </div>
+        </div>
+
+        <h3>Unit Economics del Plan Crecimiento ($369.000 COP / ~$88 USD)</h3>
+        <p>• <strong>Costo API de IA (Gemini Flash con Function Calling y Caching):</strong> $7,50 USD/mes (~$31.500 COP) para 1.500 conversaciones activas.</p>
+        <p>• <strong>Infraestructura Nube prorrateada (PostgreSQL + Docker + S3):</strong> $4,00 USD/mes (~$16.800 COP).</p>
+        <p>• <strong>Facturación Electrónica DIAN (Factus):</strong> Se comercializa en paquetes de recarga prepagados con margen protegido del 40%.</p>
+        <p>• <strong>Margen Bruto de Contribución:</strong> 86,9% ($76,50 USD netos por cuenta mensual), blindando la rentabilidad operativa del SaaS.</p>
+      </div>
+
+      <!-- SECCION 9 -->
+      <div class="content-card" id="sec9">
+        <h2>9. Plan de Lanzamiento de los Primeros 30 Días (Programa Fundadores)</h2>
+        <p>Estrategia de guerrilla comercial para cerrar los primeros 15 a 20 clientes de pago con cero desperdicio de recursos:</p>
+        
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-title">Días 1 a 5: Focalización Vertical en Ópticas</div>
+            <div class="timeline-desc">Definir como único nicho inicial las Ópticas y Centros Visuales en Bogotá/Medellín. Preparar catálogo precargado de monturas de demostración y flujo de agendamiento visual en vivo.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-title">Días 6 a 12: Prospección Directa de Alto Impacto (20 Cupos Fundadores)</div>
+            <div class="timeline-desc">Visitar clústeres ópticos presenciales (Calle 19, Restrepo, Chapinero). Oferta: Precio congelado de por vida ($299.000 COP/mes) + Onboarding asistido 100% bonificado a cambio de pago semestral anticipado ($1.794.000 COP).</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-title">Días 13 a 20: Demostración en el Celular del Dueño (3 Minutos)</div>
+            <div class="timeline-desc">Hacer que el dueño de la óptica le escriba al bot de Frant desde su propio teléfono: consultar una montura, agendar una cita y ver cómo se refleja al instante en el POS.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-title">Días 21 a 30: Implementación de Guante Blanco y Testimonios</div>
+            <div class="timeline-desc">Realizar la carga de inventario de las primeras 15 ópticas cerradas, activar la facturación DIAN y recolectar testimonios en video para iniciar la pauta escalable en el segundo mes.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCION 10 -->
+      <div class="content-card" id="sec10">
+        <h2>10. Conclusiones y Decisiones para la Junta Directiva</h2>
+        <p>1. <strong>Aprobación de Cambio de Narrativa:</strong> Erradicar la venta de 'Software Contable' y centrar la propuesta de valor en el 'Empleado Digital de WhatsApp que Aumenta Ventas y Cobra Cartera'.</p>
+        <p>2. <strong>Aprobación Tarifaria:</strong> Validar la matriz de $169k / $369k / $799k COP con cobro asistido de onboarding.</p>
+        <p>3. <strong>Retiro de Riesgos Técnicos:</strong> Depurar definitivamente del repositorio cualquier módulo residual de automatización no oficial (puppeteer/whatsapp-web.js) para preservar la cuenta oficial de Meta Cloud API.</p>
+        <p>4. <strong>Prioridad de Desarrollo:</strong> Implementar en el sprint inmediato la captura de <code>ctwa_clid</code> y la Conversions API de Meta para consolidar el argumento de venta ante marcas digitales.</p>
+      </div>
+
+      <!-- SECCION 11 -->
+      <div class="content-card" id="sec11">
+        <h2>11. Referencias Bibliográficas (APA 7ma Edición)</h2>
+        <ul style="padding-left:20px; font-size:0.9rem; color:var(--text-muted); line-height:1.7;">
+          <li>Asociación Americana de Optometría - AOA. (2023). <em>Comprehensive adult eye and vision examination guideline</em>. AOA.</li>
+          <li>Cámara Colombiana de Comercio Electrónico - CCCE. (2025). <em>Reporte anual de comercio electrónico en Colombia: Tendencias y medios de pago</em>. CCCE.</li>
+          <li>Confecámaras. (2024). <em>Demografía empresarial en Colombia: Tasa de supervivencia de las micro y pequeñas empresas</em>. Red de Cámaras de Comercio.</li>
+          <li>Congreso de la República de Colombia. (1989). <em>Decreto 624 de 1989: Estatuto Tributario Nacional</em>. Diario Oficial No. 38.756.</li>
+          <li>Congreso de la República de Colombia. (2012). <em>Ley 1581 de 2012: Protección de Datos Personales (Habeas Data)</em>. Diario Oficial No. 48.587.</li>
+          <li>Congreso de la República de Colombia. (2022). <em>Ley 2277 de 2022: Reforma Tributaria para la Igualdad y la Justicia Social</em>. Diario Oficial No. 52.247.</li>
+          <li>Congreso de la República de Colombia. (2023). <em>Ley 2300 de 2023: Protección al derecho a la intimidad de los consumidores ('Dejen de fregar')</em>. Diario Oficial No. 52.452.</li>
+          <li>Court, D., Elzinga, D., Mulder, S., & Vetvik, O. J. (2009). The consumer decision journey. <em>McKinsey Quarterly</em>, 3(1), 96-107.</li>
+          <li>Dirección de Impuestos y Aduanas Nacionales - DIAN. (2023). <em>Resolución 000165 de 2023: Desarrollo del sistema de facturación electrónica y documentos equivalentes electrónicos</em>. DIAN.</li>
+          <li>Dirección de Impuestos y Aduanas Nacionales - DIAN. (2025). <em>Resolución 000238 de 2025: Por la cual se fija el valor de la UVT para el año 2026</em>. DIAN.</li>
+          <li>Google & The Behavioural Architects. (2020). <em>Decoding decisions: Making sense of the messy middle of purchase intent</em>. Think with Google.</li>
+          <li>Gurol-Urganci, I., de Jongh, T., Vodopivec-Jamsek, V., Atun, R., & Car, J. (2013). Mobile phone messaging reminders for attendance at healthcare appointments. <em>Cochrane Database of Systematic Reviews</em>, (12), CD007458.</li>
+          <li>Luo, X., Qin, M. S., Fang, Z., & Qu, Z. (2019). Frontiers: Machines vs. humans: The impact of artificial intelligence chatbot disclosure on customer purchases. <em>Marketing Science</em>, 38(6), 937-947.</li>
+          <li>Meta Platforms Inc. (2025). <em>WhatsApp Business Platform: Cloud API documentation and message category pricing</em>. Meta for Developers.</li>
+          <li>Ministerio del Trabajo. (2025). <em>Decretos 1469 y 1470 de diciembre de 2025: Salario mínimo legal y auxilio de transporte para 2026</em>. Presidencia de la República.</li>
+          <li>Oldroyd, J. B., McElheran, K., & Elkington, D. (2011). The short life of online sales leads. <em>Harvard Business Review</em>, 89(3), 28-29.</li>
+          <li>Sopadjieva, E., Dholakia, U. M., & Benjamin, B. (2017). A study of 46,000 shoppers shows that omnichannel retailing works. <em>Harvard Business Review</em>, 3(1), 1-6.</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Grafico 1: Costo Laboral Humano vs Frant
+  new Chart(document.getElementById('chartCostoLaboral'), {
+    type: 'bar',
+    data: {
+      labels: ['Asesor Humano Completo (SMLMV+Prestaciones)', 'Plan Crecimiento Frant ERP (24/7)'],
+      datasets: [{
+        label: 'Costo Mensual (COP)',
+        data: [2765500, 369000],
+        backgroundColor: ['#DC2626', '#059669'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v.toLocaleString('es-CO') } } }
+    }
+  });
+
+  // Grafico 2: Causas Fracaso PyME
+  new Chart(document.getElementById('chartCausasFracaso'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Estrangulamiento de Cartera y Cobranza', 'Falta de Control en Inventario y Costos', 'Incapacidad de Ventas y Retención', 'Otras Causas Operativas'],
+      datasets: [{
+        data: [37, 29, 24, 10],
+        backgroundColor: ['#0F2D59', '#1E4E8C', '#25D366', '#9CA3AF']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'right' } }
+    }
+  });
+
+  // Grafico 3: Speed to Lead
+  new Chart(document.getElementById('chartSpeedToLead'), {
+    type: 'line',
+    data: {
+      labels: ['< 5 Min', '10 Min', '30 Min', '1 Hora', '24 Horas'],
+      datasets: [{
+        label: 'Probabilidad Relativa de Calificación Exitosa (x)',
+        data: [21, 8, 1, 0.3, 0.05],
+        borderColor: '#0F2D59',
+        backgroundColor: 'rgba(15, 45, 89, 0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: true } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // Grafico 4: Contraentrega
+  new Chart(document.getElementById('chartContraentrega'), {
+    type: 'bar',
+    data: {
+      labels: ['Sin Confirmación (Estándar e-commerce)', 'Con Filtro Frant IA (Confirmado)'],
+      datasets: [{
+        label: 'Tasa de Devoluciones / Rechazos (%)',
+        data: [38, 11],
+        backgroundColor: ['#DC2626', '#25D366'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, max: 50, ticks: { callback: v => v + '%' } } }
+    }
+  });
+</script>
+
+</body>
+</html>
