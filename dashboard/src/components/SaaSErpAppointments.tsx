@@ -280,8 +280,8 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
             return;
         }
 
-        if (availabilityMeta?.blocked && !availableSlots.includes(apptOnlyTime)) {
-            setErrorMsg('El horario seleccionado no está disponible para este día. Selecciona otro slot o desbloquea el día.');
+        if (isSlotBusy(apptOnlyDate, apptOnlyTime)) {
+            setErrorMsg('El horario seleccionado ya se encuentra reservado por otra cita activa. Por favor selecciona otro horario.');
             return;
         }
 
@@ -950,6 +950,13 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                 </div>
                             </div>
 
+                            {availabilityMeta?.blocked && (
+                                <div className="p-2.5 bg-[#FEF7EC] border border-[#FEEFC3] text-[#A05E03] text-[11px] font-mono flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[16px]">info</span>
+                                    <span>{availabilityMeta.reason || 'Día no laboral configurado'}. Puedes registrar la consulta igualmente como atención especial.</span>
+                                </div>
+                            )}
+
                             {/* Separated Date & Time fields */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
@@ -977,9 +984,10 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                         {GENERATED_30MIN_SLOTS.map(slot => {
                                             const busy = isSlotBusy(apptOnlyDate, slot);
                                             const formatted = formatApptTime(`2000-01-01T${slot}:00`);
+                                            const isAvailableSlot = availableSlots.length === 0 || availableSlots.includes(slot);
                                             return (
                                                 <option key={slot} value={slot} disabled={busy}>
-                                                    {formatted} {busy ? '🔴 (Ocupado)' : '🟢 (Disponible)'}
+                                                    {formatted} {busy ? '🔴 (Ocupado)' : (isAvailableSlot ? '🟢 (Disponible)' : '🟡 (Fuera de turno regular)')}
                                                 </option>
                                             );
                                         })}
@@ -1198,6 +1206,13 @@ export const SaaSErpAppointments: React.FC<SaaSErpAppointmentsProps> = ({ client
                                     />
                                 </div>
                             </div>
+
+                            {availabilityMeta?.blocked && (
+                                <div className="p-2.5 bg-[#FEF7EC] border border-[#FEEFC3] text-[#A05E03] text-[11px] font-mono flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[16px]">info</span>
+                                    <span>{availabilityMeta.reason || 'Día no laboral configurado'}. Puedes registrar la consulta igualmente como atención especial.</span>
+                                </div>
+                            )}
 
                             {/* Separated Date & Time fields */}
                             <div className="grid grid-cols-2 gap-3">

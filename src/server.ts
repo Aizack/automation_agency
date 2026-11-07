@@ -7375,10 +7375,16 @@ app.get('/api/clients/:clientId/appointments/availability', authenticateToken as
     }
 
     const selectedDate = new Date(`${date}T00:00:00`);
-    const dayOfWeek = selectedDate.getDay();
-    const normalizedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const dayOfWeek = selectedDate.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+    const isoDay = dayOfWeek === 0 ? 7 : dayOfWeek; // 1 = Lunes, ..., 7 = Domingo
+    const normalizedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 0 = Lunes, ..., 6 = Domingo
 
-    if (!workingDays.includes(normalizedDay)) {
+    // Acepta coincidencia ya sea que esté guardado en base 1 (ISO 1=Lun..7=Dom o 0..6)
+    const isWorkingDay = workingDays.includes(dayOfWeek) || 
+                         workingDays.includes(isoDay) || 
+                         workingDays.includes(normalizedDay);
+
+    if (!isWorkingDay) {
       return res.json({
         success: true,
         date,
@@ -7386,7 +7392,7 @@ app.get('/api/clients/:clientId/appointments/availability', authenticateToken as
         availableSlots: [],
         unavailableSlots: [],
         blocked: true,
-        reason: 'Día no laborable para la clínica'
+        reason: 'Día no laborable configurado para la clínica'
       });
     }
 
