@@ -345,11 +345,11 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
 
     try {
       console.log('[Meta] Lanzando FB.login con config_id 1789269002280145...');
-      fbInstance.login(async (response: any) => {
+      const handleFbResponse = async (response: any) => {
         if (safetyTimer) clearTimeout(safetyTimer);
-        console.log('[Meta] Respuesta de FB.login:', response);
+        console.log('[Meta] Respuesta de FB.login recibida:', response);
         window.removeEventListener('message', sessionHandler);
-        if (response.authResponse?.code) {
+        if (response?.authResponse?.code) {
           try {
             console.log('[Meta] Enviando código OAuth a backend...');
             const res = await fetch('/api/v1/meta/oauth/callback', {
@@ -380,6 +380,11 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
           console.warn('[Meta] El usuario cerró o canceló la ventana de login de Facebook.');
           setIsConnectingMeta(false);
         }
+      };
+
+      // Facebook SDK exige estrictamente una función estándar (Function), no AsyncFunction
+      fbInstance.login(function(response: any) {
+        handleFbResponse(response);
       }, {
         config_id: '1789269002280145',
         response_type: 'code',
