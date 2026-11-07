@@ -147,15 +147,16 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com",
+    "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://connect.facebook.net https://graph.facebook.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "img-src 'self' data: blob: https:",
-    "connect-src 'self' https: wss: ws:",
+    "img-src 'self' data: blob: https: https://*.facebook.com https://*.fbcdn.net",
+    "connect-src 'self' https: wss: ws: https://*.facebook.com https://*.fbcdn.net https://graph.facebook.com",
+    "frame-src 'self' https://*.facebook.com https://*.fbcdn.net https://web.facebook.com",
     "frame-ancestors 'self'",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self' https://accounts.google.com"
+    "form-action 'self' https://accounts.google.com https://*.facebook.com"
   ].join('; ');
   res.setHeader('Content-Security-Policy', cspDirectives);
   next();

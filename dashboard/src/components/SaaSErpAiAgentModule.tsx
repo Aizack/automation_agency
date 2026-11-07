@@ -233,6 +233,8 @@ export const SaaSErpAiAgentModule: React.FC<SaaSErpAiAgentModuleProps> = (props)
     setCheckWarning2(false);
     setMathCaptcha(generateCaptcha());
     setShowConnectModal(true);
+    // Precargar el SDK de Facebook en segundo plano
+    ensureFbSdk().catch((e) => console.log('[Meta] Precarga SDK:', e));
   };
 
   const openDisconnectWarning = () => {
