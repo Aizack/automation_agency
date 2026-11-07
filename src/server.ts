@@ -7357,45 +7357,15 @@ app.get('/api/clients/:clientId/appointments/availability', authenticateToken as
     const settings = settingsRes.rows[0] || {
       slot_duration_minutes: 30,
       opening_time: '08:00:00',
-      closing_time: '18:00:00',
-      working_days: [1, 2, 3, 4, 5]
+      closing_time: '19:00:00'
     };
 
     const slotDuration = Number(settings.slot_duration_minutes || 30);
     const openingTime = settings.opening_time || '08:00:00';
-    const closingTime = settings.closing_time || '18:00:00';
+    const closingTime = settings.closing_time || '19:00:00';
 
-    let workingDays: number[] = [1, 2, 3, 4, 5];
-    try {
-      workingDays = Array.isArray(settings.working_days)
-        ? settings.working_days
-        : JSON.parse(settings.working_days || '[1,2,3,4,5]');
-    } catch {
-      workingDays = [1, 2, 3, 4, 5];
-    }
-
-    const selectedDate = new Date(`${date}T00:00:00`);
-    const dayOfWeek = selectedDate.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
-    const isoDay = dayOfWeek === 0 ? 7 : dayOfWeek; // 1 = Lunes, ..., 7 = Domingo
-    const normalizedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 0 = Lunes, ..., 6 = Domingo
-
-    // Acepta coincidencia ya sea que esté guardado en base 1 (ISO 1=Lun..7=Dom o 0..6)
-    const isWorkingDay = workingDays.includes(dayOfWeek) || 
-                         workingDays.includes(isoDay) || 
-                         workingDays.includes(normalizedDay);
-
-    if (!isWorkingDay) {
-      return res.json({
-        success: true,
-        date,
-        slotDurationMinutes: slotDuration,
-        availableSlots: [],
-        unavailableSlots: [],
-        blocked: true,
-        reason: 'Día no laborable configurado para la clínica'
-      });
-    }
-
+    // Agenda 100% abierta por defecto. El negocio tiene el control total de sus citas.
+    // Solo se bloquea si el propio negocio registró un bloqueo manual explícito en appointment_schedule_blocks:
     const fullDayBlock = await pool.query(
       `SELECT reason FROM appointment_schedule_blocks
        WHERE client_id = $1 AND is_active = TRUE AND block_type = 'day' AND target_date = $2`,
@@ -7434,6 +7404,10 @@ app.get('/api/clients/:clientId/appointments/availability', authenticateToken as
     );
 
     const occupiedSlots = new Set<string>(occupiedRes.rows.map(r => r.slot_time));
+
+    const selectedDate = new Date(`${date}T00:00:00`);
+    const dayOfWeek = selectedDate.getDay();
+    const normalizedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
     const blockRes = await pool.query(
       `SELECT start_time, end_time
