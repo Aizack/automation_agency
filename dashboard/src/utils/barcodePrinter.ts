@@ -49,15 +49,20 @@ export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = 
     'two-column': {
         id: 'two-column',
         name: '2 Columnas - Óptica / Joyería (65.5 x 15 mm)',
-        pageWidthMm: 70.5,
+        // [MODO MANUAL CON LINER COMPLETO]:
+        // pageWidthMm: 70.5,
+        // paddingLeftMm: 3.0,
+        // paddingRightMm: 1.0,
+        // [MODO GOBERNADO POR EL DRIVER - MATERIAL DOBLE 65.5 x 15 mm]:
+        pageWidthMm: 65.5,
         rowHeightMm: 15,
         pageOrientation: 'portrait',
         columns: 2,
         stickerWidthMm: 31.5,
         stickerGapMm: 2.5,
         paddingMm: 1,
-        paddingLeftMm: 3.0,
-        paddingRightMm: 1.0
+        paddingLeftMm: 0,
+        paddingRightMm: 0
     },
     'single-column': {
         id: 'single-column',
@@ -146,11 +151,16 @@ export const buildBarcodePrintHtml = (
     if (!items || items.length === 0) return '';
 
     const isTwoCol = settings.columns === 2;
-    const paddingLeft = settings.paddingLeftMm ?? (isTwoCol ? 3.0 : 0);
-    const paddingRight = settings.paddingRightMm ?? (isTwoCol ? 1.0 : 0);
+    // [MODO MANUAL CON LINER COMPLETO]:
+    // const paddingLeft = settings.paddingLeftMm ?? (isTwoCol ? 3.0 : 0);
+    // const paddingRight = settings.paddingRightMm ?? (isTwoCol ? 1.0 : 0);
+    // const totalPageWidth = isTwoCol ? 70.5 : settings.pageWidthMm;
+    // [MODO GOBERNADO POR EL DRIVER - MATERIAL 65.5 x 15 mm]:
+    const paddingLeft = settings.paddingLeftMm ?? 0;
+    const paddingRight = settings.paddingRightMm ?? 0;
     const stickerWidth = isTwoCol ? 31.5 : settings.pageWidthMm;
     const gap = isTwoCol ? (settings.stickerGapMm || 2.5) : 0;
-    const totalPageWidth = isTwoCol ? 70.5 : settings.pageWidthMm;
+    const totalPageWidth = settings.pageWidthMm || 65.5;
 
     const rowGroups = normalizePrintItems(items, settings.columns);
     const rowsHtml = rowGroups.map((row) => {
@@ -191,7 +201,8 @@ export const buildBarcodePrintHtml = (
     <title>Imprimir Códigos de Barras</title>
     <style>
         @page {
-            size: ${totalPageWidth}mm ${settings.rowHeightMm}mm;
+            /* [TAMAÑO FORZADO POR CSS ANTERIOR]: */
+            /* size: ${totalPageWidth}mm ${settings.rowHeightMm}mm; */
             margin: 0mm !important;
         }
         *, *::before, *::after {
@@ -204,9 +215,11 @@ export const buildBarcodePrintHtml = (
         html, body {
             margin: 0 !important;
             padding: 0 !important;
-            width: ${totalPageWidth}mm !important;
-            min-width: ${totalPageWidth}mm !important;
-            max-width: ${totalPageWidth}mm !important;
+            /* [ANCHOS FORZADOS POR CSS ANTERIOR]: */
+            /* width: ${totalPageWidth}mm !important; */
+            /* min-width: ${totalPageWidth}mm !important; */
+            /* max-width: ${totalPageWidth}mm !important; */
+            width: 100% !important;
             background: #ffffff !important;
             color: #000000 !important;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
@@ -219,7 +232,10 @@ export const buildBarcodePrintHtml = (
             overflow: hidden !important;
         }
         .fila-etiquetas {
-            width: ${totalPageWidth}mm;
+            /* [ANCHO Y PADDINGS FORZADOS POR CSS ANTERIOR]: */
+            /* width: ${totalPageWidth}mm; */
+            /* padding-left: 3.0mm; padding-right: 1.0mm; */
+            width: 100%;
             height: ${settings.rowHeightMm}mm;
             max-height: ${settings.rowHeightMm}mm;
             box-sizing: border-box;
