@@ -64,8 +64,8 @@ export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = 
         paddingMm: 1,
         paddingLeftMm: 0,
         paddingRightMm: 0,
-        // Desplazamiento vertical para centrar el contenido y evitar la ranura de corte entre filas:
-        offsetYMm: 3.5
+        // Desplazamiento vertical (en 0 para no empujar):
+        offsetYMm: 0
     },
     'single-column': {
         id: 'single-column',
