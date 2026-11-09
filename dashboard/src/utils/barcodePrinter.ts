@@ -43,6 +43,7 @@ export interface LabelPrintSettings {
     paddingMm: number;
     paddingLeftMm?: number;
     paddingRightMm?: number;
+    offsetYMm?: number;
 }
 
 export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = {
@@ -62,7 +63,9 @@ export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = 
         stickerGapMm: 2.5,
         paddingMm: 1,
         paddingLeftMm: 0,
-        paddingRightMm: 0
+        paddingRightMm: 0,
+        // Desplazamiento vertical para centrar el contenido y evitar la ranura de corte entre filas:
+        offsetYMm: 3.5
     },
     'single-column': {
         id: 'single-column',
@@ -161,6 +164,7 @@ export const buildBarcodePrintHtml = (
     const stickerWidth = isTwoCol ? 31.5 : settings.pageWidthMm;
     const gap = isTwoCol ? (settings.stickerGapMm || 2.5) : 0;
     const totalPageWidth = settings.pageWidthMm || 65.5;
+    const offsetY = settings.offsetYMm ?? 0;
 
     const rowGroups = normalizePrintItems(items, settings.columns);
     const rowsHtml = rowGroups.map((row) => {
@@ -183,9 +187,11 @@ export const buildBarcodePrintHtml = (
 
             return `
                 <div class="sticker-individual" style="width:${stickerWidth}mm;height:${settings.rowHeightMm}mm;${marginStyle}">
-                    <div class="sticker-titulo">${safeName}</div>
-                    <div class="sticker-barcode">${svg}</div>
-                    <div class="sticker-detalle">${cleanSku} &nbsp; ${priceFormatted}</div>
+                    <div class="sticker-content" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;${offsetY !== 0 ? `transform:translateY(${offsetY}mm);` : ''}">
+                        <div class="sticker-titulo">${safeName}</div>
+                        <div class="sticker-barcode">${svg}</div>
+                        <div class="sticker-detalle">${cleanSku} &nbsp; ${priceFormatted}</div>
+                    </div>
                 </div>
             `;
         }).join('');
