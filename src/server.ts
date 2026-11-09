@@ -7022,7 +7022,7 @@ app.put('/api/clients/:clientId/invoices/:invoiceId/installments/:installmentId/
 
     // Obtener cuota actual
     const instRes = await dbClient.query(
-      `SELECT id, installment_number, amount, paid_amount, status FROM invoice_installments WHERE id = $1 AND invoice_id = $2`,
+      `SELECT id, installment_number, due_date, amount, paid_amount, status FROM invoice_installments WHERE id = $1 AND invoice_id = $2`,
       [installmentId, invoiceId]
     );
     if (instRes.rows.length === 0) {
@@ -7146,7 +7146,7 @@ app.put('/api/clients/:clientId/invoices/:invoiceId/installments/:installmentId/
         await dbClient.query(
           `INSERT INTO invoice_installments (invoice_id, installment_number, due_date, amount, status, paid_amount)
            VALUES ($1, $2, $3, $4, 'pending', 0.00)`,
-          [invoiceId, inst.installment_number + 1, inst.due_date, remainingBalance]
+          [invoiceId, inst.installment_number + 1, (inst.due_date ? new Date(inst.due_date) : new Date()), remainingBalance]
         );
       }
     }
