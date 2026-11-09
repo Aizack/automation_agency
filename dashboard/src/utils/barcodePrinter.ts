@@ -1,9 +1,9 @@
 import JsBarcode from 'jsbarcode';
 
-const renderCode128Svg = (value: string, width = 1.8, height = 42): string => {
+const renderCode128Svg = (value: string, width = 1.8, height = 40): string => {
     const cleanValue = (value || '').toUpperCase().replace(/[^0-9A-Z\-\.\s]/g, '').trim();
     if (!cleanValue) {
-        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 42"></svg>';
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 40"></svg>';
     }
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -14,14 +14,13 @@ const renderCode128Svg = (value: string, width = 1.8, height = 42): string => {
         displayValue: false,
         width,
         height,
-        margin: 4,
+        margin: 0,
         background: '#ffffff',
         lineColor: '#000000',
-        fontSize: 12,
+        fontSize: 10,
         textMargin: 0
     });
 
-    // Remove hardcoded px width & height so SVG stays 100% vector-fluid across all screen scales and DPIs
     svg.removeAttribute('width');
     svg.removeAttribute('height');
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
@@ -42,19 +41,23 @@ export interface LabelPrintSettings {
     stickerWidthMm: number;
     stickerGapMm: number;
     paddingMm: number;
+    paddingLeftMm?: number;
+    paddingRightMm?: number;
 }
 
 export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = {
     'two-column': {
         id: 'two-column',
         name: '2 Columnas - Óptica / Joyería (65.5 x 15 mm)',
-        pageWidthMm: 65.5,
+        pageWidthMm: 70.5,
         rowHeightMm: 15,
         pageOrientation: 'portrait',
         columns: 2,
         stickerWidthMm: 31.5,
         stickerGapMm: 2.5,
-        paddingMm: 1
+        paddingMm: 1,
+        paddingLeftMm: 3.0,
+        paddingRightMm: 1.0
     },
     'single-column': {
         id: 'single-column',
@@ -65,7 +68,9 @@ export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = 
         columns: 1,
         stickerWidthMm: 50,
         stickerGapMm: 0,
-        paddingMm: 2
+        paddingMm: 2,
+        paddingLeftMm: 0,
+        paddingRightMm: 0
     },
     pos: {
         id: 'pos',
@@ -76,7 +81,9 @@ export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = 
         columns: 1,
         stickerWidthMm: 80,
         stickerGapMm: 0,
-        paddingMm: 1.5
+        paddingMm: 1.5,
+        paddingLeftMm: 0,
+        paddingRightMm: 0
     }
 };
 
@@ -92,7 +99,7 @@ export const formatPrice = (p: number | string) => {
 };
 
 export const generateBarcodeSvg = (sku: string): string => {
-    return renderCode128Svg(sku, 1.8, 42);
+    return renderCode128Svg(sku, 1.8, 40);
 };
 
 export interface PrintItem {
@@ -138,17 +145,23 @@ export const buildBarcodePrintHtml = (
 ) => {
     if (!items || items.length === 0) return '';
 
-    const cellWidth = settings.columns === 2 ? (settings.stickerWidthMm || 31.5) : settings.pageWidthMm;
-    const gap = settings.columns === 2 ? (settings.stickerGapMm || 2.5) : 0;
+    const isTwoCol = settings.columns === 2;
+    const paddingLeft = settings.paddingLeftMm ?? (isTwoCol ? 3.0 : 0);
+    const paddingRight = settings.paddingRightMm ?? (isTwoCol ? 1.0 : 0);
+    const stickerWidth = isTwoCol ? 31.5 : settings.pageWidthMm;
+    const gap = isTwoCol ? (settings.stickerGapMm || 2.5) : 0;
+    const totalPageWidth = isTwoCol ? 70.5 : settings.pageWidthMm;
 
     const rowGroups = normalizePrintItems(items, settings.columns);
     const rowsHtml = rowGroups.map((row) => {
-        const rowCells = row.map((item) => {
+        const rowCells = row.map((item, idx) => {
             const isEmpty = !item.sku && !item.name;
+            const isFirst = idx === 0 && isTwoCol;
+            const marginStyle = isFirst ? `margin-right:${gap}mm;` : '';
+
             if (isEmpty) {
                 return `
-                    <div class="label-cell empty" style="width:${cellWidth}mm;height:${settings.rowHeightMm}mm;">
-                        <div class="label-inner"></div>
+                    <div class="sticker-individual empty" style="width:${stickerWidth}mm;height:${settings.rowHeightMm}mm;${marginStyle}visibility:hidden;">
                     </div>
                 `;
             }
@@ -159,18 +172,15 @@ export const buildBarcodePrintHtml = (
             const safeName = (item.name || 'Producto').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
             return `
-                <div class="label-cell" style="width:${cellWidth}mm;height:${settings.rowHeightMm}mm;">
-                    <div class="label-inner">
-                        <div class="product-name">${safeName}</div>
-                        <div class="barcode-wrap">${svg}</div>
-                        <div class="barcode-text">${cleanSku}</div>
-                        <div class="price">${priceFormatted}</div>
-                    </div>
+                <div class="sticker-individual" style="width:${stickerWidth}mm;height:${settings.rowHeightMm}mm;${marginStyle}">
+                    <div class="sticker-titulo">${safeName}</div>
+                    <div class="sticker-barcode">${svg}</div>
+                    <div class="sticker-detalle">${cleanSku} &nbsp; ${priceFormatted}</div>
                 </div>
             `;
         }).join('');
 
-        return `<div class="label-row">${rowCells}</div>`;
+        return `<div class="fila-etiquetas">${rowCells}</div>`;
     }).join('');
 
     return `<!DOCTYPE html>
@@ -181,7 +191,7 @@ export const buildBarcodePrintHtml = (
     <title>Imprimir Códigos de Barras</title>
     <style>
         @page {
-            size: ${settings.pageWidthMm}mm ${settings.rowHeightMm}mm;
+            size: ${totalPageWidth}mm ${settings.rowHeightMm}mm;
             margin: 0mm !important;
         }
         *, *::before, *::after {
@@ -194,9 +204,9 @@ export const buildBarcodePrintHtml = (
         html, body {
             margin: 0 !important;
             padding: 0 !important;
-            width: ${settings.pageWidthMm}mm !important;
-            min-width: ${settings.pageWidthMm}mm !important;
-            max-width: ${settings.pageWidthMm}mm !important;
+            width: ${totalPageWidth}mm !important;
+            min-width: ${totalPageWidth}mm !important;
+            max-width: ${totalPageWidth}mm !important;
             background: #ffffff !important;
             color: #000000 !important;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
@@ -208,17 +218,18 @@ export const buildBarcodePrintHtml = (
             text-size-adjust: 100% !important;
             overflow: hidden !important;
         }
-        .label-row {
-            width: ${settings.pageWidthMm}mm;
+        .fila-etiquetas {
+            width: ${totalPageWidth}mm;
             height: ${settings.rowHeightMm}mm;
             max-height: ${settings.rowHeightMm}mm;
             box-sizing: border-box;
-            display: ${settings.columns === 2 ? 'grid' : 'flex'};
-            ${settings.columns === 2 
-                ? `grid-template-columns: ${cellWidth}mm ${cellWidth}mm; column-gap: ${gap}mm; justify-content: flex-start; margin-left: -3.0mm;` 
-                : 'justify-content: center; align-items: center; margin: 0 auto;'}
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
             align-items: center;
-            padding: 0;
+            padding-left: ${paddingLeft}mm;
+            padding-right: ${paddingRight}mm;
+            margin: 0;
             overflow: hidden;
             page-break-after: always;
             break-after: page;
@@ -226,88 +237,66 @@ export const buildBarcodePrintHtml = (
             break-inside: avoid;
             background: #ffffff;
         }
-        .label-row:last-child {
+        .fila-etiquetas:last-child {
             page-break-after: avoid;
             break-after: avoid;
         }
-        .label-cell {
-            width: ${cellWidth}mm;
+        .sticker-individual {
+            width: ${stickerWidth}mm;
             height: ${settings.rowHeightMm}mm;
             max-height: ${settings.rowHeightMm}mm;
             box-sizing: border-box;
-            padding: 0.8mm 1mm;
+            padding: 1mm 1.5mm;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
+            justify-content: space-evenly;
             overflow: hidden;
-            margin: 0;
             flex-shrink: 0;
+            text-align: center;
         }
-        .label-cell.empty {
+        .sticker-individual.empty {
             visibility: hidden;
         }
-        .label-inner {
-            width: 100%;
-            height: 100%;
-            max-height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            overflow: hidden;
-            gap: 0.2mm;
-        }
-        .product-name {
+        .sticker-titulo {
             font-size: 6.5px;
             font-weight: 700;
-            line-height: 1.1;
-            max-width: 100%;
-            white-space: nowrap;
+            line-height: 1;
+            max-width: 28mm;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap;
             text-align: center;
             margin: 0;
             color: #000000;
         }
-        .barcode-wrap {
+        .sticker-barcode {
             display: flex;
             align-items: center;
             justify-content: center;
             width: 100%;
-            max-width: 29mm;
-            height: 6.2mm;
-            max-height: 6.2mm;
+            max-width: 28mm;
+            height: 6mm !important;
+            max-height: 6mm !important;
             overflow: hidden;
-            margin: 0.3mm 0;
+            margin: 0.2mm 0;
         }
-        .barcode-wrap svg {
+        .sticker-barcode svg {
             display: block;
             width: 100%;
             height: 100%;
             max-height: 100%;
             object-fit: contain;
         }
-        .barcode-text {
+        .sticker-detalle {
             font-size: 6.5px;
-            line-height: 1;
             font-weight: 700;
+            line-height: 1;
             text-align: center;
             white-space: nowrap;
-            letter-spacing: 0.4px;
             margin: 0;
             color: #000000;
             font-family: 'Courier New', Courier, monospace;
-        }
-        .price {
-            font-size: 6.5px;
-            line-height: 1;
-            font-weight: 800;
-            text-align: center;
-            white-space: nowrap;
-            margin: 0;
-            color: #000000;
         }
     </style>
 </head>
