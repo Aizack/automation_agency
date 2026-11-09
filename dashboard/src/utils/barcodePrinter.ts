@@ -30,7 +30,7 @@ const renderCode128Svg = (value: string, width = 1.8, height = 42): string => {
     return svg.outerHTML;
 };
 
-export type LabelProfileId = 'two-column' | 'single-column' | 'pos';
+export type LabelProfileId = 'two-column' | 'butterfly' | 'single-column' | 'pos';
 
 export interface LabelPrintSettings {
     id: LabelProfileId;
@@ -42,19 +42,33 @@ export interface LabelPrintSettings {
     stickerWidthMm: number;
     stickerGapMm: number;
     paddingMm: number;
+    offsetXmm?: number;
 }
 
 export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = {
     'two-column': {
         id: 'two-column',
-        name: '2 Columnas - Óptica / Joyería (65.5 x 15 mm)',
+        name: '2 Columnas - Rectangular (65 x 15 mm)',
+        pageWidthMm: 65,
+        rowHeightMm: 15,
+        pageOrientation: 'portrait',
+        columns: 2,
+        stickerWidthMm: 31.5,
+        stickerGapMm: 2.0,
+        paddingMm: 1,
+        offsetXmm: 0
+    },
+    'butterfly': {
+        id: 'butterfly',
+        name: 'Óptica Mariposa con Cola (65.5 x 15 mm)',
         pageWidthMm: 65.5,
         rowHeightMm: 15,
         pageOrientation: 'portrait',
         columns: 2,
-        stickerWidthMm: 30.5,
-        stickerGapMm: 4.5,
-        paddingMm: 1
+        stickerWidthMm: 30.0,
+        stickerGapMm: 5.5,
+        paddingMm: 1,
+        offsetXmm: 0
     },
     'single-column': {
         id: 'single-column',
@@ -65,7 +79,8 @@ export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = 
         columns: 1,
         stickerWidthMm: 50,
         stickerGapMm: 0,
-        paddingMm: 2
+        paddingMm: 2,
+        offsetXmm: 0
     },
     pos: {
         id: 'pos',
@@ -76,7 +91,8 @@ export const LABEL_PRINT_PROFILES: Record<LabelProfileId, LabelPrintSettings> = 
         columns: 1,
         stickerWidthMm: 80,
         stickerGapMm: 0,
-        paddingMm: 1.5
+        paddingMm: 1.5,
+        offsetXmm: 0
     }
 };
 
@@ -138,7 +154,10 @@ export const buildBarcodePrintHtml = (
 ) => {
     if (!items || items.length === 0) return '';
 
-    const cellWidth = settings.columns === 2 ? (settings.stickerWidthMm || 30.5) : settings.pageWidthMm;
+    const cellWidth = settings.columns === 2 ? (settings.stickerWidthMm || 31.5) : settings.pageWidthMm;
+    const gap = settings.columns === 2 ? (settings.stickerGapMm || 2.0) : 0;
+    const offsetX = Number(settings.offsetXmm) || 0;
+
     const rowGroups = normalizePrintItems(items, settings.columns);
     const rowsHtml = rowGroups.map((row) => {
         const rowCells = row.map((item) => {
@@ -180,7 +199,7 @@ export const buildBarcodePrintHtml = (
     <style>
         @page {
             size: ${settings.pageWidthMm}mm ${settings.rowHeightMm}mm;
-            margin: 0mm;
+            margin: 0mm !important;
         }
         *, *::before, *::after {
             box-sizing: border-box;
@@ -204,6 +223,7 @@ export const buildBarcodePrintHtml = (
             zoom: 1 !important;
             -webkit-text-size-adjust: 100% !important;
             text-size-adjust: 100% !important;
+            overflow: hidden !important;
         }
         .label-row {
             width: ${settings.pageWidthMm}mm;
@@ -212,10 +232,12 @@ export const buildBarcodePrintHtml = (
             box-sizing: border-box;
             display: flex;
             flex-direction: row;
-            justify-content: ${settings.columns === 2 ? 'space-between' : 'center'};
+            justify-content: flex-start;
             align-items: center;
+            column-gap: ${gap}mm;
             margin: 0;
             padding: 0;
+            transform: translateX(${offsetX}mm);
             overflow: hidden;
             page-break-after: always;
             break-after: page;
@@ -239,6 +261,7 @@ export const buildBarcodePrintHtml = (
             align-items: center;
             overflow: hidden;
             margin: 0;
+            flex-shrink: 0;
         }
         .label-cell.empty {
             visibility: hidden;

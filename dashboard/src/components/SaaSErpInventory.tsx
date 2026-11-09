@@ -301,7 +301,13 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [activeTab, setActiveTab] = useState<'catalog' | 'promotions' | 'rotation'>('catalog');
     const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set());
-    const [printProfileId, setPrintProfileId] = useState<LabelProfileId>('two-column');
+    const [printProfileId, setPrintProfileId] = useState<LabelProfileId>(() => {
+        return (localStorage.getItem('frant_barcode_profile') as LabelProfileId) || 'two-column';
+    });
+    const [printOffsetX, setPrintOffsetX] = useState<number>(() => {
+        const saved = localStorage.getItem('frant_barcode_offset_x');
+        return saved !== null ? parseFloat(saved) : 0;
+    });
 
     // Cross-Branch Stock Modal State
     const [crossStockModalOpen, setCrossStockModalOpen] = useState(false);
@@ -663,7 +669,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             alert('Por favor, ingresa al menos 1 copia para imprimir.');
             return;
         }
-        const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
+        const selectedSettings = {
+            ...(LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS),
+            offsetXmm: printOffsetX
+        };
         printBarcodes(items, selectedSettings);
         setIsPrintModalOpen(false);
     };
@@ -674,7 +683,10 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             alert('Por favor, ingresa al menos 1 copia para previsualizar.');
             return;
         }
-        const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
+        const selectedSettings = {
+            ...(LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS),
+            offsetXmm: printOffsetX
+        };
         previewBarcodes(items, selectedSettings);
     };
 
@@ -2273,7 +2285,11 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     </label>
                                     <select
                                         value={printProfileId}
-                                        onChange={(e) => setPrintProfileId(e.target.value as LabelProfileId)}
+                                        onChange={(e) => {
+                                            const val = e.target.value as LabelProfileId;
+                                            setPrintProfileId(val);
+                                            localStorage.setItem('frant_barcode_profile', val);
+                                        }}
                                         className="w-full bg-white border border-[#E2DFD7] p-2.5 text-xs text-[#161616] font-medium outline-none focus:border-[#161616] rounded-none cursor-pointer"
                                     >
                                         {Object.values(LABEL_PRINT_PROFILES).map((profile) => (
@@ -2282,6 +2298,41 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                             </option>
                                         ))}
                                     </select>
+                                </div>
+
+                                {/* Calibración de Alineación Horizontal */}
+                                <div className="space-y-2 bg-[#EFECE6] p-3 border border-[#E2DFD7]">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-[11px] font-bold text-[#161616] uppercase tracking-wider flex items-center gap-1.5">
+                                            <span className="material-symbols-outlined text-[15px] text-[#6B6862]">tune</span>
+                                            Calibración Horizontal (Offset)
+                                        </label>
+                                        <span className={`text-[11px] font-mono font-bold ${printOffsetX !== 0 ? 'text-[#D9381E]' : 'text-[#6B6862]'}`}>
+                                            {printOffsetX > 0 ? `+${printOffsetX}` : printOffsetX} mm
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-1">
+                                        {[-4, -3, -2, 0, 2].map((mm) => (
+                                            <button
+                                                key={mm}
+                                                type="button"
+                                                onClick={() => {
+                                                    setPrintOffsetX(mm);
+                                                    localStorage.setItem('frant_barcode_offset_x', mm.toString());
+                                                }}
+                                                className={`py-1.5 text-center text-xs font-mono font-bold border transition cursor-pointer ${
+                                                    printOffsetX === mm
+                                                        ? 'bg-[#161616] border-[#161616] text-white'
+                                                        : 'bg-white border-[#E2DFD7] text-[#161616] hover:border-[#161616]'
+                                                }`}
+                                            >
+                                                {mm === 0 ? 'Centro' : `${mm > 0 ? `+${mm}` : mm}mm`}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-[#6B6862] leading-tight">
+                                        Si la etiqueta física sale desplazada a la derecha, usa <strong>-2mm</strong> o <strong>-3mm</strong>. Se guarda en este equipo.
+                                    </p>
                                 </div>
 
                                 {(!printProduct.variants || printProduct.variants.length === 0 || printMode === 'single') && (
