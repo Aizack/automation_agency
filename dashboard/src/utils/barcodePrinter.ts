@@ -213,12 +213,12 @@ export const buildBarcodePrintHtml = (
             height: ${settings.rowHeightMm}mm;
             max-height: ${settings.rowHeightMm}mm;
             box-sizing: border-box;
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-start;
+            display: ${settings.columns === 2 ? 'grid' : 'flex'};
+            ${settings.columns === 2 
+                ? `grid-template-columns: ${cellWidth}mm ${cellWidth}mm; column-gap: ${gap}mm; justify-content: center;` 
+                : 'justify-content: center; align-items: center;'}
             align-items: center;
-            column-gap: ${gap}mm;
-            margin: 0;
+            margin: 0 auto;
             padding: 0;
             overflow: hidden;
             page-break-after: always;
