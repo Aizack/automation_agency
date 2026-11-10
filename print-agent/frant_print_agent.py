@@ -3,28 +3,88 @@ Frant Print Agent - Micro-Servicio Local de Impresión Térmica
 Autor: Frant Cloud / DiazLab
 Versión: 1.0.0
 
-Permite al ERP Web (app.diazlab.online) comunicarse de forma directa,
+Servicio residente en la bandeja del sistema (System Tray) para Windows.
+Se auto-instala en el arranque de Windows (HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run).
+Permite al ERP Web (https://app.diazlab.online) comunicarse de forma directa,
 silenciosa y precisa con impresoras térmicas (TSPL / ESC-POS) en Windows
 mediante la API nativa winspool.drv en modo RAW.
 """
 
 import sys
+import os
 import json
 import logging
 import ctypes
 from ctypes import wintypes
+import winreg
+import shutil
+import threading
+import webbrowser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
+from PIL import Image
+import pystray
+from pystray import MenuItem as item
 
 PORT = 19890
 VERSION = "1.0.0"
 
+# Configurar logging seguro
+log_dir = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local")), "FrantPrintAgent")
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, "agent.log")
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)]
+    handlers=[
+        logging.FileHandler(log_file, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
 )
 logger = logging.getLogger("FrantPrintAgent")
+
+# ----------------- CONTROL DE INSTANCIA ÚNICA -----------------
+mutex_handle = None
+def is_already_running() -> bool:
+    global mutex_handle
+    kernel32 = ctypes.windll.kernel32
+    mutex_handle = kernel32.CreateMutexW(None, False, "FrantPrintAgent_SingleInstance_Mutex")
+    last_error = kernel32.GetLastError()
+    ERROR_ALREADY_EXISTS = 183
+    return last_error == ERROR_ALREADY_EXISTS
+
+# ----------------- AUTO-ARRANQUE CON WINDOWS -----------------
+def setup_windows_startup():
+    """Registra la aplicación para que arranque automáticamente con Windows"""
+    try:
+        current_exe = os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__)
+        if not getattr(sys, 'frozen', False):
+            logger.info("Modo desarrollo detectado; omitiendo registro de Windows.")
+            return
+
+        local_app_data = os.environ.get("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local"))
+        install_dir = os.path.join(local_app_data, "FrantPrintAgent")
+        os.makedirs(install_dir, exist_ok=True)
+        target_exe = os.path.join(install_dir, "FrantPrintAgent.exe")
+
+        # Si se ejecuta desde Descargas, copiarse a AppData\Local\FrantPrintAgent
+        if os.path.normcase(current_exe) != os.path.normcase(target_exe):
+            try:
+                shutil.copy2(current_exe, target_exe)
+                current_exe = target_exe
+                logger.info(f"Binario respaldado en: {target_exe}")
+            except Exception as e:
+                logger.warning(f"No se pudo copiar a AppData: {e}")
+
+        # Escribir en el Registro de Windows (HKCU no pide permisos de administrador)
+        key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as reg_key:
+            winreg.SetValueEx(reg_key, "FrantPrintAgent", 0, winreg.REG_SZ, f'"{current_exe}"')
+
+        logger.info(f"[OK] Auto-arranque registrado en Windows: {current_exe}")
+    except Exception as e:
+        logger.error(f"[X] Error configurando auto-arranque en Windows: {e}")
 
 # ----------------- WIN32 PRINTING PRIMITIVES -----------------
 winspool = ctypes.WinDLL("winspool.drv")
@@ -98,99 +158,112 @@ def send_raw_bytes_to_printer(printer_name: str, raw_data: bytes, doc_name: str 
         raise RuntimeError(f"No se pudo abrir la impresora '{printer_name}'. ¿Está conectada y encendida?")
 
     try:
-        docInfo = DOC_INFO_1(doc_name, None, "RAW")
-        jobId = winspool.StartDocPrinterW(hPrinter, 1, ctypes.byref(docInfo))
-        if jobId <= 0:
+        doc_info = DOC_INFO_1(
+            pDocName=doc_name,
+            pOutputFile=None,
+            pDatatype="RAW"
+        )
+
+        job_id = winspool.StartDocPrinterW(hPrinter, 1, ctypes.byref(doc_info))
+        if job_id <= 0:
             err = ctypes.GetLastError()
-            raise RuntimeError(f"Error al iniciar trabajo de impresión en '{printer_name}' (Código error Windows: {err})")
+            raise RuntimeError(f"Error al iniciar trabajo de impresión. Código de error Win32: {err}")
 
         try:
-            winspool.StartPagePrinter(hPrinter)
-            written = wintypes.DWORD(0)
-            ok = winspool.WritePrinter(hPrinter, raw_data, len(raw_data), ctypes.byref(written))
-            if not ok or written.value != len(raw_data):
-                err = ctypes.GetLastError()
-                raise RuntimeError(f"Error al escribir datos en la impresora (Código: {err})")
+            if not winspool.StartPagePrinter(hPrinter):
+                raise RuntimeError("No se pudo iniciar la página en la impresora.")
+
+            bytes_written = wintypes.DWORD(0)
+            ok = winspool.WritePrinter(
+                hPrinter,
+                raw_data,
+                len(raw_data),
+                ctypes.byref(bytes_written)
+            )
+
+            if not ok or bytes_written.value != len(raw_data):
+                raise RuntimeError("No se pudieron escribir todos los bytes en el búfer de la impresora.")
+
             winspool.EndPagePrinter(hPrinter)
         finally:
             winspool.EndDocPrinter(hPrinter)
     finally:
         winspool.ClosePrinter(hPrinter)
 
-    return True
+# ----------------- GENERADOR TSPL / TSPL2 -----------------
+def sanitize_text(text: str) -> str:
+    """Limpia caracteres problemáticos para el motor de fuentes de la impresora"""
+    if not text:
+        return ""
+    replacements = {
+        'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+        'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U',
+        'ñ': 'n', 'Ñ': 'N', '"': "'", '\\': '/', '\r': '', '\n': ' '
+    }
+    for orig, rep in replacements.items():
+        text = text.replace(orig, rep)
+    return text.strip()
 
-# ----------------- GENERADOR DE COMANDOS TSPL -----------------
+def format_cop_currency(amount) -> str:
+    try:
+        val = int(amount)
+        return f"$ {val:,}".replace(",", ".")
+    except Exception:
+        return f"$ {amount}"
+
 def generate_tspl_labels_two_column(items: list, density: int = 8, speed: int = 3) -> bytes:
     """
-    Genera comandos TSPL nativos para rollo troquelado de 2 columnas:
-    - Ancho etiqueta: 65.5mm (2x 31.5mm + gap central 2.5mm)
-    - Alto etiqueta: 15.0mm
-    - Gap vertical: 2.5mm
-    - Margen izquierdo de liner: 3.0mm (24 dots @ 203 DPI)
-    - 203 DPI = 8 dots por mm
+    Genera comandos TSPL2 de ultra-precisión para el rollo térmico dual de Frant:
+    Ancho total: 65.5 mm (524 dots a 203 DPI)
+    Alto sticker: 15.0 mm (120 dots a 203 DPI)
+    Separación (GAP): 2 mm (16 dots)
     """
-    # Expandir items por cantidad
-    flat_items = []
+    labels = []
     for it in items:
         qty = max(1, int(it.get("quantity", 1)))
         for _ in range(qty):
-            flat_items.append({
-                "name": str(it.get("name", "Producto")).strip(),
-                "sku": str(it.get("sku", "")).upper().strip(),
-                "price": it.get("price", 0)
+            labels.append({
+                "name": sanitize_text(it.get("name", "")),
+                "sku": sanitize_text(it.get("sku", "")),
+                "price": format_cop_currency(it.get("price", 0))
             })
 
-    # Agrupar en filas de 2 stickers
-    commands = []
-    
-    # Encabezado TSPL de configuración física del material
-    commands.append("SIZE 65.5 mm, 15 mm")
-    commands.append("GAP 2.5 mm, 0 mm")
-    commands.append(f"SPEED {speed}")
-    commands.append(f"DENSITY {density}")
-    commands.append("DIRECTION 1")
-    commands.append("REFERENCE 0,0")
+    commands = [
+        "SIZE 65.5 mm, 15 mm",
+        "GAP 2 mm, 0",
+        f"DENSITY {density}",
+        f"SPEED {speed}",
+        "DIRECTION 1",
+        "REFERENCE 0,0",
+        "OFFSET 0 mm"
+    ]
 
-    # Coordenadas exactas en dots (8 dots / mm)
-    # Columna 1 (Izquierda): X = 24 dots (3.0mm liner)
-    # Columna 2 (Derecha): X = 296 dots (3.0mm liner + 31.5mm sticker + 2.5mm gap = 37.0mm = 296 dots)
-    col_x = [24, 296]
+    total_labels = len(labels)
+    for i in range(0, total_labels, 2):
+        left_label = labels[i]
+        right_label = labels[i + 1] if (i + 1 < total_labels) else None
 
-    for i in range(0, len(flat_items), 2):
-        row_items = flat_items[i:i+2]
-        commands.append("CLS") # Limpia buffer de la fila
+        commands.append("CLS")
 
-        for col_idx, item in enumerate(row_items):
-            base_x = col_x[col_idx]
-            sku = item["sku"]
-            name = item["name"][:20] # Truncar a 20 chars para no salirse
-            price_val = item["price"]
-            try:
-                price_str = f"$ {int(float(price_val)):,}".replace(",", ".")
-            except Exception:
-                price_str = f"$ {price_val}"
+        # COLUMNA IZQUIERDA (X: 10 a 240 dots)
+        name_l = left_label["name"][:22]
+        commands.append(f'TEXT 16,10,"1",0,1,1,"{name_l}"')
+        commands.append(f'BARCODE 16,36,"128",48,1,0,2,2,"{left_label["sku"]}"')
+        commands.append(f'TEXT 16,94,"1",0,1,1,"{left_label["price"]}"')
 
-            # 1. Título (Arriba): Y=14 dots (~1.7mm)
-            # TEXT x, y, "font", rotation, x_mult, y_mult, "content"
-            # Font "1" es 8x12 dots, Font "2" es 12x20 dots
-            commands.append(f'TEXT {base_x + 10},12,"1",0,1,1,"{name}"')
+        # COLUMNA DERECHA (X: 280 a 510 dots)
+        if right_label:
+            name_r = right_label["name"][:22]
+            commands.append(f'TEXT 286,10,"1",0,1,1,"{name_r}"')
+            commands.append(f'BARCODE 286,36,"128",48,1,0,2,2,"{right_label["sku"]}"')
+            commands.append(f'TEXT 286,94,"1",0,1,1,"{right_label["price"]}"')
 
-            # 2. Código de Barras Code 128 (Centro): Y=32 dots (~4.0mm), Alto=50 dots (~6.2mm)
-            # BARCODE x, y, "code_type", height, human_readable, rotation, narrow, wide, "content"
-            if sku:
-                commands.append(f'BARCODE {base_x + 15},32,"128",48,0,0,2,2,"{sku}"')
-
-            # 3. SKU y Precio (Abajo): Y=88 dots (~11.0mm)
-            footer_text = f"{sku}  {price_str}"
-            commands.append(f'TEXT {base_x + 10},88,"1",0,1,1,"{footer_text}"')
-
-        # Imprimir la fila (1 copia)
         commands.append("PRINT 1,1")
 
     full_script = "\r\n".join(commands) + "\r\n"
     return full_script.encode("ascii", errors="replace")
 
-# ----------------- SERVIDOR HTTP CON CORS Y SEGURIDAD REFORZADA -----------------
+# ----------------- SERVIDOR HTTP CON CORS Y PNA -----------------
 ALLOWED_ORIGINS = {
     "https://app.diazlab.online",
     "http://localhost:5173",
@@ -206,7 +279,6 @@ class PrintRequestHandler(BaseHTTPRequestHandler):
     def _get_validated_origin(self) -> str:
         origin = self.headers.get("Origin", "")
         if not origin:
-            # Peticiones directas locales (curl, script de prueba)
             return "https://app.diazlab.online"
         if origin in ALLOWED_ORIGINS or origin.startswith("http://localhost:") or origin.startswith("http://127.0.0.1:"):
             return origin
@@ -215,7 +287,10 @@ class PrintRequestHandler(BaseHTTPRequestHandler):
     def _send_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", self._get_validated_origin())
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Access-Control-Request-Private-Network")
+        # Header esencial para Chrome / Edge Private Network Access (PNA):
+        self.send_header("Access-Control-Allow-Private-Network", "true")
+        self.send_header("Access-Control-Max-Age", "86400")
 
     def do_OPTIONS(self):
         self.send_response(200)
@@ -253,7 +328,6 @@ class PrintRequestHandler(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         content_length = int(self.headers.get("Content-Length", 0))
 
-        # Protección contra ataques de denegación de servicio / buffer overflow (> 2MB)
         if content_length > 2 * 1024 * 1024:
             self._respond_json(413, {"success": False, "error": "Carga útil excesiva (máx. 2MB)."})
             return
@@ -268,7 +342,6 @@ class PrintRequestHandler(BaseHTTPRequestHandler):
 
         printer_name = body.get("printer")
         if not printer_name:
-            # Buscar impresora térmica predeterminada
             printers = get_installed_printers()
             target = next((p["name"] for p in printers if "etiqueta" in p["name"].lower() or "barcode" in p["name"].lower() or "3b-365" in p["name"].lower()), None)
             if not target and printers:
@@ -276,41 +349,29 @@ class PrintRequestHandler(BaseHTTPRequestHandler):
             printer_name = target
 
         if not printer_name:
-            self._respond_json(400, {"success": False, "error": "No se encontró ninguna impresora instalada."})
+            self._respond_json(400, {"success": False, "error": "No hay impresoras térmicas disponibles en Windows."})
             return
 
-        if path == "/print/raw":
-            raw_text = body.get("commands", "")
-            if not raw_text:
-                self._respond_json(400, {"success": False, "error": "Faltan 'commands' en el cuerpo."})
-                return
-            try:
-                raw_bytes = raw_text.encode("latin-1", errors="replace")
-                send_raw_bytes_to_printer(printer_name, raw_bytes, "Frant Raw Print")
-                logger.info(f"Trabajo RAW enviado a '{printer_name}' ({len(raw_bytes)} bytes)")
-                self._respond_json(200, {"success": True, "message": f"Datos enviados a {printer_name}"})
-            except Exception as e:
-                logger.error(f"Error en /print/raw: {e}")
-                self._respond_json(500, {"success": False, "error": str(e)})
-
-        elif path == "/print/labels":
+        if path == "/print/labels":
             items = body.get("items", [])
-            if not items:
-                self._respond_json(400, {"success": False, "error": "La lista de 'items' está vacía."})
+            if not items or not isinstance(items, list):
+                self._respond_json(400, {"success": False, "error": "La lista de items para imprimir está vacía."})
                 return
+
             try:
                 density = int(body.get("density", 8))
                 speed = int(body.get("speed", 3))
                 tspl_bytes = generate_tspl_labels_two_column(items, density=density, speed=speed)
-                send_raw_bytes_to_printer(printer_name, tspl_bytes, "Frant Barcodes TSPL")
-                logger.info(f"Impresión de {len(items)} items enviada a '{printer_name}' en TSPL nativo")
+                send_raw_bytes_to_printer(printer_name, tspl_bytes, "Frant Barcode Batch")
+                logger.info(f"Lote de {len(items)} items impreso exitosamente en '{printer_name}'")
                 self._respond_json(200, {
                     "success": True,
                     "printer": printer_name,
-                    "message": f"{len(items)} etiquetas enviadas a {printer_name} correctamente."
+                    "labels_count": len(items),
+                    "message": f"Impresión completada en {printer_name}"
                 })
             except Exception as e:
-                logger.error(f"Error en /print/labels: {e}")
+                logger.error(f"Error imprimiendo lote de etiquetas: {e}")
                 self._respond_json(500, {"success": False, "error": str(e)})
 
         elif path == "/test-label":
@@ -336,34 +397,79 @@ class PrintRequestHandler(BaseHTTPRequestHandler):
         else:
             self._respond_json(404, {"success": False, "error": "Endpoint POST no encontrado."})
 
-def main():
-    if hasattr(sys.stdout, 'reconfigure'):
+# ----------------- TRAY ICON (BANDEJA DEL SISTEMA) -----------------
+def get_tray_icon_image():
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    icon_path = os.path.join(base_path, "app_icon.ico")
+    if os.path.exists(icon_path):
         try:
-            sys.stdout.reconfigure(encoding='utf-8')
+            return Image.open(icon_path)
         except Exception:
             pass
 
-    print("=" * 65)
-    print(f"       FRANT PRINT AGENT v{VERSION} - SERVICIO LOCAL")
-    print("       Impresion Termica Nativa Directa (TSPL / ESC-POS)")
-    print("=" * 65)
-    
-    printers = get_installed_printers()
-    print(f"\n[+] Impresoras detectadas en Windows ({len(printers)}):")
-    for p in printers:
-        print(f"    * {p['name']} (Driver: {p['driver']}, Puerto: {p['port']})")
+    # Fallback: Icono dinámico púrpura con letra F
+    img = Image.new('RGBA', (64, 64), color=(147, 51, 234, 255))
+    return img
+
+def run_system_tray(httpd: HTTPServer):
+    icon_image = get_tray_icon_image()
+
+    def on_open_erp(icon, item_):
+        webbrowser.open("https://app.diazlab.online")
+
+    def on_test_print(icon, item_):
+        printers = get_installed_printers()
+        target = next((p["name"] for p in printers if "etiqueta" in p["name"].lower() or "barcode" in p["name"].lower() or "3b-365" in p["name"].lower()), None)
+        if not target and printers:
+            target = printers[0]["name"]
+        if target:
+            test_item = [{"name": "TEST BANDEJA", "sku": "10000429", "price": 90000, "quantity": 2}]
+            try:
+                tspl = generate_tspl_labels_two_column(test_item)
+                send_raw_bytes_to_printer(target, tspl, "Test Tray")
+            except Exception as e:
+                logger.error(f"Error desde tray test: {e}")
+
+    def on_quit(icon, item_):
+        icon.stop()
+        try:
+            httpd.shutdown()
+        except Exception:
+            pass
+        sys.exit(0)
+
+    menu = (
+        item(f"Frant Print Agent v{VERSION} (Activo)", None, enabled=False),
+        item("Puerto: 19890 (Local)", None, enabled=False),
+        item("🏷️ Imprimir Etiqueta de Prueba", on_test_print),
+        item("🌐 Abrir ERP (diazlab.online)", on_open_erp),
+        item("❌ Salir", on_quit)
+    )
+
+    icon = pystray.Icon("FrantPrintAgent", icon_image, "Frant Print Agent (Activo)", menu)
+    icon.run()
+
+def main():
+    if is_already_running():
+        logger.warning("Ya existe una instancia de Frant Print Agent ejecutándose en este equipo.")
+        sys.exit(0)
+
+    # Configurar auto-arranque en el registro de Windows
+    setup_windows_startup()
 
     server_address = ("127.0.0.1", PORT)
     try:
         httpd = ThreadedHTTPServer(server_address, PrintRequestHandler)
-        print(f"\n[OK] Servidor activo escuchando en http://127.0.0.1:{PORT}")
-        print("[OK] Listo para recibir ordenes de impresion desde el ERP.")
-        print("\n(Presiona Ctrl + C para detener el servicio)\n")
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\n[!] Deteniendo Frant Print Agent...")
+        logger.info(f"Servidor activo en http://127.0.0.1:{PORT}")
+
+        # Ejecutar servidor HTTP en hilo de fondo
+        server_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+        server_thread.start()
+
+        # Iniciar icono en la bandeja del sistema (System Tray) en el hilo principal
+        run_system_tray(httpd)
     except Exception as e:
-        print(f"\n[X] Error fatal al iniciar el servidor: {e}")
+        logger.error(f"Error fatal: {e}")
 
 if __name__ == "__main__":
     main()

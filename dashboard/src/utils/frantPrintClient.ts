@@ -20,7 +20,7 @@ export interface AgentStatusResponse {
 export const checkPrintAgentStatus = async (): Promise<AgentStatusResponse> => {
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1200);
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
         const res = await fetch(`${AGENT_URL}/status`, {
             method: 'GET',
             signal: controller.signal
@@ -37,7 +37,8 @@ export const checkPrintAgentStatus = async (): Promise<AgentStatusResponse> => {
             };
         }
         return { online: false, printers: [] };
-    } catch {
+    } catch (err) {
+        console.warn('[FrantPrintClient] Agent offline o bloqueado:', err);
         return { online: false, printers: [] };
     }
 };
