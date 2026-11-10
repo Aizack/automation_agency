@@ -190,13 +190,30 @@ def generate_tspl_labels_two_column(items: list, density: int = 8, speed: int = 
     full_script = "\r\n".join(commands) + "\r\n"
     return full_script.encode("ascii", errors="replace")
 
-# ----------------- SERVIDOR HTTP CON CORS -----------------
+# ----------------- SERVIDOR HTTP CON CORS Y SEGURIDAD REFORZADA -----------------
+ALLOWED_ORIGINS = {
+    "https://app.diazlab.online",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000"
+}
+
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
 
 class PrintRequestHandler(BaseHTTPRequestHandler):
+    def _get_validated_origin(self) -> str:
+        origin = self.headers.get("Origin", "")
+        if not origin:
+            # Peticiones directas locales (curl, script de prueba)
+            return "https://app.diazlab.online"
+        if origin in ALLOWED_ORIGINS or origin.startswith("http://localhost:") or origin.startswith("http://127.0.0.1:"):
+            return origin
+        return "https://app.diazlab.online"
+
     def _send_cors_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Origin", self._get_validated_origin())
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 
@@ -235,6 +252,12 @@ class PrintRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         path = self.path.split("?")[0]
         content_length = int(self.headers.get("Content-Length", 0))
+
+        # Protección contra ataques de denegación de servicio / buffer overflow (> 2MB)
+        if content_length > 2 * 1024 * 1024:
+            self._respond_json(413, {"success": False, "error": "Carga útil excesiva (máx. 2MB)."})
+            return
+
         body_bytes = self.rfile.read(content_length)
 
         try:
