@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
     checkPrintAgentStatus, 
     printTestLabelViaAgent, 
+    triggerProtocolPrint,
     getSavedThermalPrinter, 
     setSavedThermalPrinter, 
     AGENT_DOWNLOAD_URL, 
@@ -65,6 +66,10 @@ export const SaaSErpPrintingSettings: React.FC = () => {
         localStorage.setItem('frant_receipt_printer_name', name);
     };
 
+    const handleDirectProtocolTest = () => {
+        triggerProtocolPrint('test', null, selectedLabelPrinter);
+    };
+
     const handleTestPrint = async () => {
         if (!selectedLabelPrinter) {
             alert('Por favor selecciona una impresora de etiquetas primero.');
@@ -99,7 +104,7 @@ export const SaaSErpPrintingSettings: React.FC = () => {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         {agentOnline ? (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F0FDF4] border border-[#BBF7D0] text-emerald-900 text-xs font-mono font-bold">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -122,6 +127,15 @@ export const SaaSErpPrintingSettings: React.FC = () => {
                                 refresh
                             </span>
                             {checking ? 'Verificando...' : 'Verificar'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleDirectProtocolTest}
+                            className="px-3 py-1.5 bg-[#D9381E] hover:bg-[#B82E17] text-white text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1 cursor-pointer transition shadow-xs"
+                            title="Dispara la impresión directamente a Windows (funciona incluso con VPN o sin HTTP)"
+                        >
+                            <span className="material-symbols-outlined text-[16px]">bolt</span>
+                            Imprimir Prueba Directa
                         </button>
                     </div>
                 </div>

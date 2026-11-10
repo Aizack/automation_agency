@@ -78,8 +78,34 @@ export const printDirectLabelsViaAgent = async (
         }
         return { success: false, message: json.error || 'Error al imprimir en el agente.' };
     } catch (err: any) {
-        return { success: false, message: 'No se pudo conectar con Frant Print Agent.' };
+        // Si HTTP está bloqueado por Opera VPN o Mixed Content de Firefox, disparar directo por protocolo de Windows:
+        triggerProtocolPrint('print', { items, printer, density: 8, speed: 3 }, printer);
+        return { success: true, message: 'Orden de impresión enviada a Windows vía FrantPrint.' };
     }
+};
+
+export const triggerProtocolPrint = (action: 'test' | 'print', payload?: any, targetPrinter?: string): void => {
+    const printer = targetPrinter || getSavedThermalPrinter() || '';
+    let url = `frantprint://${action}?printer=${encodeURIComponent(printer)}`;
+    if (payload) {
+        try {
+            const jsonStr = JSON.stringify(payload);
+            const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+            url += `&data=${encodeURIComponent(b64)}`;
+        } catch (e) {
+            console.error('Error serializing print payload for protocol:', e);
+        }
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+        try {
+            document.body.removeChild(iframe);
+        } catch {}
+    }, 3000);
 };
 
 export const printTestLabelViaAgent = async (
@@ -98,7 +124,12 @@ export const printTestLabelViaAgent = async (
             success: Boolean(json.success),
             message: json.message || json.error || ''
         };
-    } catch (err: any) {
-        return { success: false, message: 'Agente no disponible.' };
+    } catch {
+        // Si el HTTP falla por VPN o Mixed Content, disparar por protocolo nativo de Windows:
+        triggerProtocolPrint('test', null, printer);
+        return {
+            success: true,
+            message: 'Orden enviada a Windows vía protocolo FrantPrint.'
+        };
     }
 };

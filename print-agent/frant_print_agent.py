@@ -54,9 +54,9 @@ def is_already_running() -> bool:
     ERROR_ALREADY_EXISTS = 183
     return last_error == ERROR_ALREADY_EXISTS
 
-# ----------------- AUTO-ARRANQUE CON WINDOWS -----------------
+# ----------------- AUTO-ARRANQUE CON WINDOWS Y ACCESO DIRECTO -----------------
 def setup_windows_startup():
-    """Registra la aplicación para que arranque automáticamente con Windows"""
+    """Registra la aplicación en el arranque y crea acceso directo en el Menú Inicio"""
     try:
         current_exe = os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__)
         if not getattr(sys, 'frozen', False):
@@ -77,10 +77,34 @@ def setup_windows_startup():
             except Exception as e:
                 logger.warning(f"No se pudo copiar a AppData: {e}")
 
-        # Escribir en el Registro de Windows (HKCU no pide permisos de administrador)
+        # 1. Escribir en el Registro de Windows (Arranque con el sistema)
         key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as reg_key:
             winreg.SetValueEx(reg_key, "FrantPrintAgent", 0, winreg.REG_SZ, f'"{current_exe}"')
+
+        # 2. Crear Acceso Directo en el Menú de Inicio de Windows
+        try:
+            programs_dir = os.path.join(os.environ.get("APPDATA", ""), r"Microsoft\Windows\Start Menu\Programs")
+            if os.path.exists(programs_dir):
+                shortcut_path = os.path.join(programs_dir, "Frant Print Agent.lnk")
+                ps_script = f'$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut("{shortcut_path}"); $Shortcut.TargetPath = "{current_exe}"; $Shortcut.WorkingDirectory = "{install_dir}"; $Shortcut.Description = "Agente de Impresion Termica Frant"; $Shortcut.Save()'
+                import subprocess
+                subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], capture_output=True, timeout=5)
+                logger.info(f"[OK] Acceso directo creado en Menú Inicio: {shortcut_path}")
+        except Exception as e:
+            logger.warning(f"No se pudo crear acceso en Menú Inicio: {e}")
+
+        # 3. Registrar Protocolo frantprint:// en el Registro de Windows
+        try:
+            proto_path = r"Software\Classes\frantprint"
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, proto_path) as k:
+                winreg.SetValueEx(k, "", 0, winreg.REG_SZ, "URL:Frant Print Protocol")
+                winreg.SetValueEx(k, "URL Protocol", 0, winreg.REG_SZ, "")
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, proto_path + r"\shell\open\command") as k:
+                winreg.SetValueEx(k, "", 0, winreg.REG_SZ, f'"{current_exe}" "%1"')
+            logger.info("[OK] Protocolo frantprint:// registrado con éxito.")
+        except Exception as e:
+            logger.warning(f"No se pudo registrar protocolo: {e}")
 
         logger.info(f"[OK] Auto-arranque registrado en Windows: {current_exe}")
     except Exception as e:
@@ -264,14 +288,6 @@ def generate_tspl_labels_two_column(items: list, density: int = 8, speed: int = 
     return full_script.encode("ascii", errors="replace")
 
 # ----------------- SERVIDOR HTTP CON CORS Y PNA -----------------
-ALLOWED_ORIGINS = {
-    "https://app.diazlab.online",
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000"
-}
-
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
 
@@ -279,10 +295,11 @@ class PrintRequestHandler(BaseHTTPRequestHandler):
     def _get_validated_origin(self) -> str:
         origin = self.headers.get("Origin", "")
         if not origin:
-            return "https://app.diazlab.online"
-        if origin in ALLOWED_ORIGINS or origin.startswith("http://localhost:") or origin.startswith("http://127.0.0.1:"):
+            return "https://frant.app"
+        # Permitir cualquier dominio de Frant o DiazLab o entornos locales
+        if "frant.app" in origin or "diazlab.online" in origin or "localhost" in origin or "127.0.0.1" in origin:
             return origin
-        return "https://app.diazlab.online"
+        return "https://frant.app"
 
     def _send_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", self._get_validated_origin())
@@ -415,7 +432,7 @@ def run_system_tray(httpd: HTTPServer):
     icon_image = get_tray_icon_image()
 
     def on_open_erp(icon, item_):
-        webbrowser.open("https://app.diazlab.online")
+        webbrowser.open("https://frant.app")
 
     def on_test_print(icon, item_):
         printers = get_installed_printers()
@@ -449,7 +466,57 @@ def run_system_tray(httpd: HTTPServer):
     icon = pystray.Icon("FrantPrintAgent", icon_image, "Frant Print Agent (Activo)", menu)
     icon.run()
 
+def handle_protocol_invocation(url: str):
+    """Maneja la invocación directa desde cualquier navegador via frantprint:// sin depender de HTTP ni de VPNs"""
+    import urllib.parse
+    import base64
+    logger.info(f"Invocación por protocolo: {url}")
+
+    try:
+        parsed = urllib.parse.urlparse(url)
+        action = parsed.netloc or parsed.path.lstrip("/")
+        query = urllib.parse.parse_qs(parsed.query)
+
+        printers = get_installed_printers()
+        target_printer = query.get("printer", [None])[0]
+        if not target_printer:
+            target_printer = next((p["name"] for p in printers if "etiqueta" in p["name"].lower() or "barcode" in p["name"].lower() or "3b-365" in p["name"].lower()), None)
+        if not target_printer and printers:
+            target_printer = printers[0]["name"]
+
+        if not target_printer:
+            logger.error("No se detectó impresora para el protocolo.")
+            return
+
+        if "test" in action or "test" in url:
+            test_item = [{"name": "TEST CALIBRACION", "sku": "10000429", "price": 90000, "quantity": 2}]
+            tspl = generate_tspl_labels_two_column(test_item, density=8, speed=3)
+            send_raw_bytes_to_printer(target_printer, tspl, "Frant Protocol Test")
+            logger.info(f"[OK] Prueba enviada a '{target_printer}' via protocolo.")
+            return
+
+        if "print" in action or "print" in url:
+            raw_b64 = query.get("data", [""])[0]
+            if raw_b64:
+                raw_b64 += "=" * ((4 - len(raw_b64) % 4) % 4)
+                data_json = base64.b64decode(raw_b64).decode("utf-8")
+                payload = json.loads(data_json)
+                items = payload.get("items", [])
+                density = int(payload.get("density", 8))
+                speed = int(payload.get("speed", 3))
+                if items:
+                    tspl = generate_tspl_labels_two_column(items, density=density, speed=speed)
+                    send_raw_bytes_to_printer(target_printer, tspl, "Frant Protocol Batch")
+                    logger.info(f"[OK] Lote de {len(items)} items impreso via protocolo en '{target_printer}'.")
+    except Exception as e:
+        logger.error(f"[X] Error procesando orden por protocolo: {e}")
+
 def main():
+    # 1. Si se invoca como protocolo frantprint:// desde el navegador
+    if len(sys.argv) > 1 and sys.argv[1].startswith("frantprint:"):
+        handle_protocol_invocation(sys.argv[1])
+        sys.exit(0)
+
     if is_already_running():
         logger.warning("Ya existe una instancia de Frant Print Agent ejecutándose en este equipo.")
         sys.exit(0)
