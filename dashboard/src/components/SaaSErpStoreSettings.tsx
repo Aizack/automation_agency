@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { authFetch as fetch } from '../utils/api';
 import { SaaSErpAppearanceSettings } from './SaaSErpAppearanceSettings';
+import { SaaSErpPrintingSettings } from './SaaSErpPrintingSettings';
 
 interface StoreSettingsProps {
   clientId: string;
   onProfileUpdated: () => void;
-  initialSubTab?: 'profile' | 'security' | 'email' | 'appearance';
+  initialSubTab?: 'profile' | 'security' | 'email' | 'appearance' | 'printing';
 }
 
 export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, onProfileUpdated, initialSubTab }) => {
@@ -21,7 +22,7 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
   const [logos, setLogos] = useState<Array<{ fileName: string, url: string }>>([]);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoBuster, setLogoBuster] = useState(Date.now());
-  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'security' | 'email' | 'appearance'>(initialSubTab || 'profile');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'security' | 'email' | 'appearance' | 'printing'>(initialSubTab || 'profile');
 
   useEffect(() => {
     if (initialSubTab) {
@@ -555,6 +556,18 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
             NUEVO
           </span>
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('printing')}
+          className={`pb-3.5 border-b-2 transition cursor-pointer flex items-center gap-2 ${
+            activeSubTab === 'printing'
+              ? 'border-[#D9381E] text-[#D9381E] font-bold'
+              : 'border-transparent text-[#6B6862] hover:text-[#161616]'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">print</span>
+          <span>Estación de Impresión (Agente)</span>
+        </button>
       </div>
 
       {/* Alertas Nativas Wabi-Sabi */}
@@ -580,6 +593,10 @@ export const SaaSErpStoreSettings: React.FC<StoreSettingsProps> = ({ clientId, o
       {/* RENDER PESTAÑA 4: APARIENCIA, TEMAS & LEGIBILIDAD EN PORTÁTIL */}
       {activeSubTab === 'appearance' && (
         <SaaSErpAppearanceSettings />
+      )}
+
+      {activeSubTab === 'printing' && (
+        <SaaSErpPrintingSettings />
       )}
 
       {/* RENDER PESTAÑA 2: SEGURIDAD & AUTENTICACIÓN MFA */}
