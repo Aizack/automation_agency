@@ -19,3 +19,7 @@ logs/
 scratch/
 shutdown_state.json
 graphify-out/
+
+# Print Agent build artifacts
+print-agent/build/
+*.spec
