@@ -5,11 +5,10 @@ import JsBarcode from 'jsbarcode';
 import { printBarcodes, previewBarcodes, LABEL_PRINT_PROFILES, DEFAULT_LABEL_PRINT_SETTINGS, type LabelProfileId } from '../utils/barcodePrinter';
 import { 
     checkPrintAgentStatus, 
-    printDirectLabelsViaAgent, 
-    printTestLabelViaAgent, 
+     
+    triggerProtocolPrint,
     getSavedThermalPrinter, 
     setSavedThermalPrinter, 
-    AGENT_DOWNLOAD_URL, 
     type AgentPrinter 
 } from '../utils/frantPrintClient';
 import { AuditLogModal } from './AuditLogModal';
@@ -607,9 +606,9 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
     const [variantPrintQuantities, setVariantPrintQuantities] = useState<Record<string, number>>({});
 
     // Frant Print Agent States
-    const [agentStatus, setAgentStatus] = useState<{ online: boolean; printers: AgentPrinter[] }>({ online: false, printers: [] });
+    const [, setAgentStatus] = useState<{ online: boolean; printers: AgentPrinter[] }>({ online: false, printers: [] });
     const [selectedAgentPrinter, setSelectedAgentPrinter] = useState<string>(getSavedThermalPrinter());
-    const [isDirectPrinting, setIsDirectPrinting] = useState(false);
+    // isDirectPrinting removed
 
     const refreshAgentStatus = () => {
         checkPrintAgentStatus().then((res) => {
@@ -698,28 +697,20 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
             return;
         }
 
-        // Si el micro-agente local esta activo, imprimir DIRECTO sin dialogos del navegador:
-        if (agentStatus.online && selectedAgentPrinter) {
-            setIsDirectPrinting(true);
-            try {
-                const result = await printDirectLabelsViaAgent(items, selectedAgentPrinter);
-                if (result.success) {
-                    setIsPrintModalOpen(false);
-                    alert(`✓ ${result.message}`);
-                    return;
-                } else {
-                    alert('Error en agente: ' + (result.message || 'desconocido') + '. Abriendo modo alternativo...');
-                }
-            } catch (err: any) {
-                console.error('Error al imprimir por agente:', err);
-            } finally {
-                setIsDirectPrinting(false);
-            }
-        }
-
         // Fallback estandar al dialogo del navegador
         const selectedSettings = LABEL_PRINT_PROFILES[printProfileId] || DEFAULT_LABEL_PRINT_SETTINGS;
         printBarcodes(items, selectedSettings);
+        setIsPrintModalOpen(false);
+    };
+
+    const handlePrintDirectWindows = () => {
+        const items = getItemsToPrint();
+        if (items.length === 0) {
+            alert('Por favor, ingresa al menos 1 copia para imprimir.');
+            return;
+        }
+        const printer = selectedAgentPrinter || getSavedThermalPrinter() || 'Print Etiquetas y recibos';
+        triggerProtocolPrint('print', { items, printer, density: 8, speed: 3 }, printer);
         setIsPrintModalOpen(false);
     };
 
@@ -2119,81 +2110,31 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                 </p>
                             )}
 
-                            {/* Banner Frant Print Agent (Modo Nativo Directo vs Navegador) */}
-                            <div className="border border-[#E2DFD7] p-3 bg-[#FAF8F5]">
-                                {agentStatus.online ? (
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-[#F0FDF4] border border-[#BBF7D0] p-3">
-                                        <div className="flex items-center gap-2.5 min-w-0">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                                            <div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="font-bold text-xs text-emerald-950 font-mono">Frant Print Agent</span>
-                                                    <span className="text-[9px] bg-emerald-200 text-emerald-900 px-1 py-0.2 font-mono font-bold">ONLINE</span>
-                                                </div>
-                                                <span className="text-[10px] text-emerald-800 block">Impresión TSPL directa sin navegador</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <select
-                                                value={selectedAgentPrinter}
-                                                onChange={(e) => {
-                                                    setSelectedAgentPrinter(e.target.value);
-                                                    setSavedThermalPrinter(e.target.value);
-                                                }}
-                                                className="bg-white border border-[#BBF7D0] text-xs font-mono font-bold text-emerald-950 px-2 py-1 outline-none cursor-pointer max-w-[200px] truncate"
-                                                title="Seleccionar impresora en Windows"
-                                            >
-                                                {agentStatus.printers.map((p) => (
-                                                    <option key={p.name} value={p.name}>
-                                                        🖨️ {p.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <button
-                                                type="button"
-                                                onClick={async () => {
-                                                    const res = await printTestLabelViaAgent(selectedAgentPrinter);
-                                                    alert(res.message);
-                                                }}
-                                                className="px-2 py-1 bg-white hover:bg-emerald-100 border border-emerald-300 text-emerald-950 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
-                                                title="Tirar 1 fila de prueba"
-                                            >
-                                                Test
-                                            </button>
+                            {/* Banner Frant Print Agent (Modo Nativo Directo) */}
+                            <div className="border border-[#BFDBFE] p-3 bg-[#EFF6FF]">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[20px] text-blue-600">bolt</span>
+                                        <div>
+                                            <span className="font-bold text-xs text-blue-950 block">Impresión Térmica Directa (Windows)</span>
+                                            <span className="text-[10px] text-blue-800">Control de cabezal TSPL nativo al milímetro sin márgenes de navegador</span>
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white border border-[#E2DFD7] p-3">
-                                        <div className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-[20px] text-[#D9381E]">bolt</span>
-                                            <div>
-                                                <span className="font-bold text-xs text-[#161616] block">¿Impresión instantánea sin cuadros de diálogo?</span>
-                                                <span className="text-[10px] text-[#6B6862]">Descarga el Agente Local para Windows y controla las etiquetas al milímetro</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <a
-                                                href={AGENT_DOWNLOAD_URL}
-                                                download="FrantPrintAgent.exe"
-                                                className="px-3 py-1.5 bg-[#161616] hover:bg-[#333] text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 no-underline cursor-pointer shadow-2xs"
-                                                title="Descargar ejecutable liviano de 8 MB para Windows"
-                                            >
-                                                <span className="material-symbols-outlined text-[13px]">download</span>
-                                                Descargar Agente (.exe)
-                                            </a>
-                                            <button
-                                                type="button"
-                                                onClick={refreshAgentStatus}
-                                                className="p-1.5 bg-white hover:bg-[#EAE7DE] border border-[#E2DFD7] text-[#6B6862] hover:text-[#161616] cursor-pointer"
-                                                title="Reintentar conexión con agente"
-                                            >
-                                                <span className="material-symbols-outlined text-[15px]">refresh</span>
-                                            </button>
-                                        </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const p = selectedAgentPrinter || getSavedThermalPrinter() || 'Print Etiquetas y recibos';
+                                                triggerProtocolPrint('test', null, p);
+                                            }}
+                                            className="px-2.5 py-1 bg-white hover:bg-blue-50 border border-blue-300 text-blue-950 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                                            title="Tirar 1 fila de prueba a la 4BARCODE"
+                                        >
+                                            Probar Impresora
+                                        </button>
                                     </div>
-                                )}
+                                </div>
                             </div>
-
                             <div className="space-y-4">
                                 {/* Selector de Variante / Color si el producto tiene variantes */}
                                 {printProduct.variants && printProduct.variants.length > 0 && (
@@ -2496,18 +2437,21 @@ export const SaaSErpInventory: React.FC<SaaSErpInventoryProps> = ({ clientId: ra
                                     Cancelar
                                 </button>
                                 <button 
+                                    type="button"
                                     onClick={handlePrintBarcodes}
-                                    disabled={isDirectPrinting}
-                                    className="px-6 py-2.5 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 rounded-none border-0 shadow-xs disabled:opacity-50"
+                                    className="px-3 py-2.5 bg-white hover:bg-[#EAE7DE] border border-[#E2DFD7] text-[#6B6862] text-xs font-bold uppercase tracking-wider transition cursor-pointer rounded-none"
+                                    title="Imprimir usando el diálogo tradicional del navegador"
                                 >
-                                    <span className="material-symbols-outlined text-[16px]">
-                                        {agentStatus.online ? 'bolt' : 'print'}
-                                    </span>
-                                    {isDirectPrinting 
-                                        ? 'Enviando a Impresora...' 
-                                        : agentStatus.online 
-                                            ? 'Imprimir Directo (TSPL)' 
-                                            : 'Confirmar e Imprimir'}
+                                    Navegador
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={handlePrintDirectWindows}
+                                    className="px-6 py-2.5 bg-[#D9381E] hover:bg-[#b82e18] text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 rounded-none border-0 shadow-xs"
+                                    title="Imprimir directo al cabezal térmico por USB mediante el agente de Windows"
+                                >
+                                    <span className="material-symbols-outlined text-[16px]">bolt</span>
+                                    Imprimir Directo (Agente Windows)
                                 </button>
                             </div>
                         </div>
